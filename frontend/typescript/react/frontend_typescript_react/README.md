@@ -1,6 +1,6 @@
 # frontend_typescript_react
 
-Product UI — TypeScript + React (same screens as `frontend_javascript_react` / vanillajs).
+Product UI — TypeScript + React (same screens as `frontend_javascript_react` / vanilla).
 
 Vite + React 19 + React Router. Built on the `@zero-design-system/react` component
 library (ADR 007), aliased to monorepo `packages/react-ui/src`.

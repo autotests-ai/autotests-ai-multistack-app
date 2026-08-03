@@ -1,4 +1,4 @@
-# TypeScript vanillajs
+# TypeScript vanilla
 
 | Folder | Role |
 |--------|------|

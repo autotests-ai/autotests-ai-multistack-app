@@ -22,4 +22,4 @@ done
 
 rsync -a "$FRONTEND_JS_VANILLA/" "$BACKEND_STATIC/"
 
-echo "sync-app-static: frontend/_shared + javascript/vanillajs → backend/java/backend_java_spring/src/main/resources/static/"
+echo "sync-app-static: frontend/_shared + javascript/vanilla → backend/java/backend_java_spring/src/main/resources/static/"

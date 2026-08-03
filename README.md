@@ -22,15 +22,15 @@ reference-app-copy/
 `{zone}_{language}_{stack}` — underscores between segments.  
 Hyphen **only** in compound tool names, e.g. `tests_typescript_react-testing-library`, `tests_java_gradle_junit5_no-allure_selenide`.
 
-Frontend layout: language → UI stack (`react` / `vanillajs`) → product + co-located component tests.  
+Frontend layout: language → UI stack (`react` / `vanilla`) → product + co-located component tests.  
 Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/NAMING.md).
 
 | Zone | Current modules | Future slots |
 |------|-----------------|--------------|
 | **frontend/javascript/react/** | `frontend_javascript_react`, `tests_javascript_react-testing-library` (slots) | — |
-| **frontend/javascript/vanillajs/** | `frontend_javascript_vanilla` (active) | vanilla component tests |
+| **frontend/javascript/vanilla/** | `frontend_javascript_vanilla` (active) | vanilla component tests |
 | **frontend/typescript/react/** | `frontend_typescript_react`, `tests_typescript_react-testing-library` | — |
-| **frontend/typescript/vanillajs/** | `frontend_typescript_vanilla` (slot) | vanilla component tests |
+| **frontend/typescript/vanilla/** | `frontend_typescript_vanilla` (slot) | vanilla component tests |
 | **frontend/_shared/** | `frontend_javascript_embed` | — |
 | **frontend/_catalog/** | `frontend_javascript_preview` | — |
 | **backend/java/** | `backend_java_spring` | `backend_kotlin_spring`, … |

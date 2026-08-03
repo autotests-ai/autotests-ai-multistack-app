@@ -12,14 +12,14 @@ frontend/
     react/
       frontend_javascript_react/
       tests_javascript_react-testing-library/
-    vanillajs/
+    vanilla/
       frontend_javascript_vanilla/   # default app pages (was static)
       # later: tests_javascript_vanilla_… (component)
   typescript/
     react/
       frontend_typescript_react/
       tests_typescript_react-testing-library/
-    vanillajs/
+    vanilla/
       frontend_typescript_vanilla/
       # later: tests_typescript_vanilla_… (component)
 ```
@@ -43,4 +43,4 @@ Example: `https://backend_java_spring.reference-app-copy.autotests.ai/frontend_t
 - subdomain → backend stack  
 - path → product frontend module  
 
-Materialize vanillajs into backend: `backend/scripts/sync-app-static.sh`
+Materialize vanilla into backend: `backend/scripts/sync-app-static.sh`

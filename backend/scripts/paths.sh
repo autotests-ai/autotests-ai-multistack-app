@@ -13,16 +13,16 @@ FRONTEND_JS_EMBED="$REPO_ROOT/frontend/_shared/frontend_javascript_embed"
 FRONTEND_JS_PREVIEW="$REPO_ROOT/frontend/_catalog/frontend_javascript_preview"
 
 # Product frontends — javascript
-FRONTEND_JS_VANILLA="$REPO_ROOT/frontend/javascript/vanillajs/frontend_javascript_vanilla"
+FRONTEND_JS_VANILLA="$REPO_ROOT/frontend/javascript/vanilla/frontend_javascript_vanilla"
 FRONTEND_JS_REACT="$REPO_ROOT/frontend/javascript/react/frontend_javascript_react"
 FRONTEND_JS_RTL="$REPO_ROOT/frontend/javascript/react/tests_javascript_react-testing-library"
 
 # Product frontends — typescript
 FRONTEND_TS_REACT="$REPO_ROOT/frontend/typescript/react/frontend_typescript_react"
 FRONTEND_TS_RTL="$REPO_ROOT/frontend/typescript/react/tests_typescript_react-testing-library"
-FRONTEND_TS_VANILLA="$REPO_ROOT/frontend/typescript/vanillajs/frontend_typescript_vanilla"
+FRONTEND_TS_VANILLA="$REPO_ROOT/frontend/typescript/vanilla/frontend_typescript_vanilla"
 
-# Compat alias: sync-app-static still materializes the vanillajs product UI
+# Compat alias: sync-app-static still materializes the vanilla product UI
 FRONTEND_JS_STATIC="$FRONTEND_JS_VANILLA"
 
 # Active Java automation module (Gradle · JUnit 5 · Allure 3 · Selenide)

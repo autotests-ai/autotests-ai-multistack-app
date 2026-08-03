@@ -1,4 +1,4 @@
-# JavaScript vanillajs
+# JavaScript vanilla
 
 | Folder | Role |
 |--------|------|
