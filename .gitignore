@@ -1,0 +1,45 @@
+# Wired design-system embed (local dev; materialized via sync-app-static.sh)
+frontend/css
+frontend/js
+frontend/templates
+frontend/allure-shell.css
+frontend/allure-shell.js
+
+# Build
+backend/build/
+backend/.gradle/
+backend/bin/
+tests/build/
+tests/.gradle/
+tests/bin/
+java/gradle-junit5-selenium/build/
+java/gradle-junit5-selenium/.gradle/
+java/gradle-junit5-selenium/bin/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Runtime
+*.log
+.env
+
+# Local notification dogfood (jar write-outs)
+notifications/chart.png
+notifications/config.runtime.json
+notifications/message.txt
+
+# Test artifacts
+allure-results/
+allure-report/
+test-results/
+node_modules/
+.venv/
+playwright-report/
+
+
+# OS
+.DS_Store
+tests-java/build/
+tests-java/.gradle/

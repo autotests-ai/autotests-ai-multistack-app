@@ -1,0 +1,93 @@
+name: Telegram topic probe
+
+on:
+  workflow_dispatch:
+    inputs:
+      topic_id:
+        description: "message_thread_id (empty = only dump getUpdates / create)"
+        required: false
+        type: string
+      create_topic:
+        description: "If set, createForumTopic with this name and print message_thread_id"
+        required: false
+        type: string
+      text:
+        description: "Probe message text"
+        required: false
+        default: "reference-app topic probe"
+        type: string
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Discover / create / send Telegram topic
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TOPIC_ID: ${{ inputs.topic_id || vars.TELEGRAM_REFERENCE_APP_TOPIC_ID || secrets.TELEGRAM_REFERENCE_APP_TOPIC_ID }}
+          CREATE_TOPIC: ${{ inputs.create_topic }}
+          TEXT: ${{ inputs.text }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os, urllib.error, urllib.request
+
+          token = os.environ["TELEGRAM_BOT_TOKEN"]
+          chat = os.environ["TELEGRAM_CHAT_ID"]
+          topic = (os.environ.get("TOPIC_ID") or "").strip()
+          create_name = (os.environ.get("CREATE_TOPIC") or "").strip()
+          text = os.environ.get("TEXT") or "reference-app topic probe"
+          base = f"https://api.telegram.org/bot{token}"
+
+          def call(method, payload=None):
+              url = f"{base}/{method}"
+              data = None
+              headers = {}
+              if payload is not None:
+                  data = json.dumps(payload).encode()
+                  headers["Content-Type"] = "application/json"
+              req = urllib.request.Request(url, data=data, headers=headers)
+              try:
+                  with urllib.request.urlopen(req, timeout=30) as resp:
+                      return json.load(resp)
+              except urllib.error.HTTPError as exc:
+                  detail = exc.read().decode("utf-8", errors="replace")
+                  print(f"HTTP {exc.code}: {detail}", flush=True)
+                  raise
+
+          if create_name:
+              result = call("createForumTopic", {"chat_id": chat, "name": create_name})
+              print(json.dumps(result, ensure_ascii=False, indent=2), flush=True)
+              if not result.get("ok"):
+                  raise SystemExit(1)
+              tid = result["result"]["message_thread_id"]
+              print(f"CREATED topic_id={tid} name={create_name!r} chat={chat}", flush=True)
+              raise SystemExit(0)
+
+          updates = call("getUpdates", {"limit": 100, "allowed_updates": ["message", "channel_post"]})
+          print("## getUpdates summary", flush=True)
+          for upd in updates.get("result", []):
+              msg = upd.get("message") or upd.get("channel_post") or {}
+              thread = msg.get("message_thread_id")
+              name = None
+              if "forum_topic_created" in msg:
+                  name = msg["forum_topic_created"].get("name")
+              preview = (msg.get("text") or "")[:80]
+              print(f"- update_id={upd.get('update_id')} thread={thread} topic_created={name!r} text={preview!r}", flush=True)
+
+          if not topic:
+              print("TOPIC_ID empty — set workflow input or TELEGRAM_REFERENCE_APP_TOPIC_ID", flush=True)
+              raise SystemExit(0)
+
+          payload = {
+              "chat_id": chat,
+              "message_thread_id": int(topic),
+              "text": text,
+          }
+          result = call("sendMessage", payload)
+          print(json.dumps(result, ensure_ascii=False, indent=2), flush=True)
+          if not result.get("ok"):
+              raise SystemExit(1)
+          print(f"Sent to chat={chat} topic={topic}", flush=True)
+          PY

@@ -1,0 +1,45 @@
+name: reference-app-copy Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+run-name: reference-app-copy deploy (${{ github.ref_name }} @ ${{ github.sha }})
+
+concurrency:
+  group: deploy-reference-app-copy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Require deploy secrets
+        run: |
+          test -n "${{ secrets.DEPLOY_SSH_KEY }}" || {
+            echo "::error::Missing secret DEPLOY_SSH_KEY — see README § Deploy"
+            exit 1
+          }
+
+      - name: Deploy on production host
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ vars.DEPLOY_HOST || '212.92.101.15' }}
+          username: ${{ vars.DEPLOY_USER || 'selenoid' }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          command_timeout: 15m
+          script: |
+            set -euo pipefail
+            APP_DIR="${APP_DIR:-/home/selenoid/reference-app-copy}"
+            export SERVER_PORT="${SERVER_PORT:-8084}"
+            PUBLIC_URL="${PUBLIC_URL:-https://reference-app-copy.autotests.ai}"
+            cd "$APP_DIR"
+            git fetch --all
+            git reset --hard origin/main
+            docker compose build backend
+            docker compose up -d --remove-orphans
+            bash deploy/health-poll.sh
+            bash deploy/smoke-remote.sh "$PUBLIC_URL"
+            echo "Deploy OK: ${PUBLIC_URL} ($(git rev-parse --short HEAD))"

@@ -1,0 +1,100 @@
+<!-- Full-width row — label column left, options right (components.html #plaque-field) -->
+<label class="plaque-field plaque-field--divided plaque-field--stretch" data-testid="plaque-field-stretch-select">
+  <span class="plaque-field__label">configStand</span>
+  <span class="plaque-divider" aria-hidden="true"></span>
+  <select class="plaque-field__control">
+    <option>local_http</option>
+    <option>prod</option>
+  </select>
+</label>
+
+<div class="plaque-field plaque-field--divided plaque-field--stretch" data-testid="plaque-field-stretch-seg">
+  <span class="plaque-field__label">headless</span>
+  <span class="plaque-divider" aria-hidden="true"></span>
+  <div class="plaque-field-seg-track plaque-field-seg-track--2 plaque-field__control">
+    <div class="plaque-field-seg" role="radiogroup" aria-label="headless">
+      <button type="button" class="plaque-field-seg__btn plaque-field-seg__btn--on" aria-pressed="true">true</button>
+      <button type="button" class="plaque-field-seg__btn" aria-pressed="false">false</button>
+    </div>
+  </div>
+</div>
+
+<!-- Param id label + select -->
+<label class="plaque-field plaque-field--divided" data-testid="plaque-field-select">
+  <span class="plaque-field__label">configStand</span>
+  <span class="plaque-divider" aria-hidden="true"></span>
+  <select class="plaque-field__control">
+    <option>local_http</option>
+    <option>prod</option>
+  </select>
+</label>
+
+<!-- Human caption (not param id) + text input -->
+<label class="plaque-field plaque-field--divided" data-testid="plaque-field-caption-input">
+  <span class="plaque-field__text">Метка бенчмарка</span>
+  <span class="plaque-divider" aria-hidden="true"></span>
+  <input type="text" class="plaque-field__control" value="smoke-local" placeholder="label">
+</label>
+
+<!-- Param id label + text input -->
+<label class="plaque-field plaque-field--divided" data-testid="plaque-field-text">
+  <span class="plaque-field__label">benchmarkLabel</span>
+  <span class="plaque-divider" aria-hidden="true"></span>
+  <input type="text" class="plaque-field__control" value="smoke-local" placeholder="label">
+</label>
+
+<!-- Read-only value (not an input) -->
+<div class="plaque-field plaque-field--divided" data-testid="plaque-field-value">
+  <span class="plaque-field__label">testSuite</span>
+  <span class="plaque-divider" aria-hidden="true"></span>
+  <span class="plaque-field__value">login</span>
+</div>
+
+<!-- 2-option seg inside divided plaque — канон boolean true/false и не-boolean 2-opt -->
+<div class="plaque-field plaque-field--divided" data-testid="plaque-field-seg">
+  <span class="plaque-field__label">headless</span>
+  <span class="plaque-divider" aria-hidden="true"></span>
+  <div class="plaque-field-seg-track plaque-field-seg-track--2 plaque-field__control">
+    <div class="plaque-field-seg" role="radiogroup" aria-label="headless">
+      <button type="button" class="plaque-field-seg__btn plaque-field-seg__btn--on" aria-pressed="true">true</button>
+      <button type="button" class="plaque-field-seg__btn" aria-pressed="false">false</button>
+    </div>
+  </div>
+</div>
+
+<!-- Chip-style option (3–5 radio options) -->
+<button type="button" class="plaque-field-option" data-testid="plaque-field-option">allure3</button>
+
+<!-- Checkstrip — compact multi-select (autotests-builder junitTags) -->
+<div class="plaque-field-checkstrip" data-testid="plaque-field-checkstrip" role="group" aria-label="JUnit tags">
+  <label class="plaque-field-checkstrip__item" data-testid="plaque-field-checkstrip-item">
+    <input type="checkbox" class="plaque-field-checkstrip__input" checked>
+    <span>smoke</span>
+  </label>
+</div>
+
+<!-- Checkstrip MD — custom 18×18 box (junit-tags-variants B) -->
+<div class="plaque-field-checkstrip plaque-field-checkstrip--md" data-testid="plaque-field-checkstrip-md" role="group" aria-label="JUnit tags">
+  <label class="plaque-field-checkstrip__item" data-testid="plaque-field-checkstrip-md-item">
+    <input type="checkbox" class="plaque-field-checkstrip__input" checked>
+    <span>smoke</span>
+  </label>
+</div>
+
+<!-- Tagstrip — chip-like multi-select (junit-tags-variants D) -->
+<div class="plaque-field-tagstrip" data-testid="plaque-field-tagstrip" role="group" aria-label="JUnit tags">
+  <label class="plaque-field-tagstrip__item" data-testid="plaque-field-tagstrip-item">
+    <input type="checkbox" class="plaque-field-tagstrip__input" checked>
+    <span>smoke</span>
+  </label>
+</div>
+
+<!-- Multi checkbox list -->
+<ul class="plaque-field-list plaque-field-list--dense" data-testid="plaque-field-checklist">
+  <li data-testid="plaque-field-checklist-item">
+    <label class="plaque-field-check">
+      <input type="checkbox" class="plaque-field-check__input" checked>
+      <span>attachBrowserConsoleLogs</span>
+    </label>
+  </li>
+</ul>

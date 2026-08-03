@@ -1,0 +1,513 @@
+# reference-app monolith pyramid on GitHub Actions (archetype: {env_base}-pyramid.yml).
+# SSOT runnable: reference-app → sync-chain-reference.sh → ethalon _ethalon/
+#
+# | Trigger              | Job           | Slices                                      |
+# |----------------------|---------------|---------------------------------------------|
+# | push / pull_request  | ci-pyramid    | unit + api + integration + component + e2e + visual |
+# | workflow_run deploy  | prod-pyramid  | api + e2e smoke (Selenoid, parallel=1)   |
+# | workflow_dispatch    | pick target   | ci_pyramid | prod_api | prod_e2e | prod_visual |
+#
+# Visual baseline refresh (Linux PNG SSOT): reference_visual_baselines.yml
+
+name: reference-app Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_run:
+    workflows: ["Deploy production"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Pyramid slice"
+        required: true
+        default: ci_pyramid
+        type: choice
+        options:
+          - ci_pyramid
+          - prod_api
+          - prod_e2e
+          - prod_visual
+      test_class:
+        description: "Fully qualified test (prod slices only)"
+        required: false
+        type: string
+      test_case_id:
+        description: "Allure TestOps case ID (prod slices only)"
+        required: false
+        type: string
+
+concurrency:
+  group: reference-github-pyramid-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_run' }}
+
+permissions:
+  contents: write
+
+jobs:
+  ci-pyramid:
+    name: CI pyramid
+    if: >-
+      github.event_name == 'push' ||
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'workflow_dispatch' && inputs.target == 'ci_pyramid')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: tests
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: wrapper
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          # No npm cache: frontend-react has no package-lock in repo; setup-node
+          # fails hard when cache-dependency-path is unresolved.
+          node-version: 26
+
+      - name: Install Chrome for Testing
+        run: |
+          CFT_PATH="$HOME/.local/share/chrome-for-testing"
+          npx --yes @puppeteer/browsers install chrome@148.0.7778.178 --platform linux --path "$CFT_PATH"
+          npx --yes @puppeteer/browsers install chromedriver@148.0.7778.178 --platform linux --path "$CFT_PATH"
+
+      - name: Materialize static + build React SPA
+        working-directory: .
+        run: bash scripts/sync-app-static.sh
+
+      - name: Start app stack
+        working-directory: .
+        run: docker compose up -d --build --wait
+
+      - name: Backend unit + JaCoCo
+        working-directory: backend
+        run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification
+
+      - name: Backend coverage summary
+        if: always()
+        working-directory: backend
+        run: |
+          python - <<'PY'
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          report = Path("build/reports/jacoco/test/jacocoTestReport.xml")
+          if not report.exists():
+              print("JaCoCo report missing", flush=True)
+              raise SystemExit(0)
+
+          root = ET.parse(report).getroot()
+          counters = {c.attrib["type"]: int(c.attrib["missed"]) + int(c.attrib["covered"])
+                      for c in root.findall("counter")}
+          lines = counters.get("LINE", 0)
+          covered = next(int(c.attrib["covered"]) for c in root.findall("counter") if c.attrib["type"] == "LINE")
+          pct = (covered / lines * 100) if lines else 0.0
+          print(f"backend line coverage: {pct:.1f}% ({covered}/{lines})")
+          with open("${GITHUB_STEP_SUMMARY}", "a", encoding="utf-8") as out:
+              out.write(f"- backend JaCoCo line coverage: **{pct:.1f}%** ({covered}/{lines})\n")
+              out.write("- HTML report: `backend/build/reports/jacoco/test/html/index.html`\n")
+          PY
+
+      - name: Upload backend JaCoCo report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jacoco
+          path: backend/build/reports/jacoco/test/
+          if-no-files-found: ignore
+
+      - name: Pyramid unit (tests)
+        run: ./gradlew testUnit jacocoTestUnitCoverageVerification -DpyramidStand=reference_ci -DallureReportMode=none
+
+      - name: Pyramid unit coverage summary
+        if: always()
+        run: |
+          python - <<'PY'
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          report = Path("build/reports/jacoco/jacocoTestUnitReport/jacocoTestUnitReport.xml")
+          if not report.exists():
+              print("Pyramid unit JaCoCo report missing", flush=True)
+              raise SystemExit(0)
+
+          root = ET.parse(report).getroot()
+          lines = sum(int(c.attrib["missed"]) + int(c.attrib["covered"])
+                      for c in root.findall("counter") if c.attrib["type"] == "LINE")
+          covered = next(int(c.attrib["covered"]) for c in root.findall("counter") if c.attrib["type"] == "LINE")
+          pct = (covered / lines * 100) if lines else 0.0
+          print(f"pyramid unit line coverage: {pct:.1f}% ({covered}/{lines})")
+          with open("${GITHUB_STEP_SUMMARY}", "a", encoding="utf-8") as out:
+              out.write(f"- pyramid unit JaCoCo line coverage: **{pct:.1f}%** ({covered}/{lines})\n")
+              out.write("- HTML report: `tests/build/reports/jacoco/jacocoTestUnitReport/html/index.html`\n")
+          PY
+
+      - name: Upload pyramid unit JaCoCo report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pyramid-unit-jacoco
+          path: tests/build/reports/jacoco/jacocoTestUnitReport/
+          if-no-files-found: ignore
+
+      - name: Pyramid api
+        run: ./gradlew testApi -DpyramidStand=reference_ci -DallureReportMode=none
+
+      - name: Pyramid integration
+        run: ./gradlew testIntegration -DpyramidStand=reference_ci -DallureReportMode=none -Dheadless=true
+
+      - name: Pyramid e2e smoke
+        run: ./gradlew testE2e -Denv=reference_ci_e2e -DallureReportMode=none -Dheadless=true
+
+      - name: Start component preview
+        working-directory: preview
+        run: |
+          python -m http.server 3000 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:3000/components.html >/dev/null && exit 0
+            sleep 1
+          done
+          echo "component preview failed to start on :3000" >&2
+          exit 1
+
+      - name: Pyramid component
+        run: ./gradlew testComponent -DpyramidStand=reference_ci -DallureReportMode=none -Dheadless=true
+
+      - name: Pyramid visual
+        run: ./gradlew testVisual -Denv=reference_ci_visual -DallureReportMode=none -Dheadless=true
+
+      - name: Pyramid summary
+        if: always()
+        run: |
+          {
+            echo "## reference CI pyramid"
+            echo "- backend unit + JaCoCo + pyramid unit JaCoCo + testApi + testIntegration + testComponent + testE2e + testVisual"
+            echo "- baselines SSOT: Linux headless Chrome 148 (\`reference_visual_baselines.yml\`)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  prod-pyramid:
+    name: Prod pyramid
+    if: >-
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'workflow_dispatch' &&
+        (inputs.target == 'prod_api' || inputs.target == 'prod_e2e' || inputs.target == 'prod_visual'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: tests
+    env:
+      ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}
+      ALLURE_RESULTS: build/allure-results
+      BROWSER_VERSION: "148"
+      REPORT_ID: ${{ github.run_id }}
+      TEST_CLASS: ${{ github.event.inputs.test_class || '' }}
+      TEST_CASE_ID: ${{ github.event.inputs.test_case_id || '' }}
+      PROD_TARGET: ${{ github.event_name == 'workflow_run' && 'prod_pyramid' || github.event.inputs.target }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Load Allure history
+        uses: actions/checkout@v7
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+          sparse-checkout: history.jsonl
+          sparse-checkout-cone-mode: false
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: wrapper
+
+      - name: Restore Allure history
+        run: |
+          if [ -f ../gh-pages/history.jsonl ]; then
+            cp ../gh-pages/history.jsonl history.jsonl
+          fi
+
+      - name: Install allurectl
+        if: vars.ALLURE_PROJECT_ID != ''
+        continue-on-error: true
+        id: setup-allurectl
+        uses: allure-framework/setup-allurectl@v1
+        with:
+          allure-endpoint: ${{ env.ALLURE_ENDPOINT }}
+          allure-token: ${{ secrets.ALLURE_TOKEN }}
+          allure-project-id: ${{ vars.ALLURE_PROJECT_ID }}
+
+      - name: Run prod pyramid slices
+        run: |
+          set +e
+          COMMON=(
+            -DbrowserVersion="${BROWSER_VERSION}"
+          )
+          EXIT=0
+
+          run_slice() {
+            local label="$1"
+            shift
+            echo "::group::${label}"
+            if [ -n "$TEST_CLASS" ]; then
+              ./gradlew test --tests "$TEST_CLASS" "$@"
+            else
+              ./gradlew "$@"
+            fi
+            local code=$?
+            echo "::endgroup::"
+            if [ "$code" -ne 0 ]; then
+              EXIT=$code
+            fi
+          }
+
+          case "${PROD_TARGET}" in
+            prod_pyramid)
+              run_slice "prod api" testApi "${COMMON[@]}" -DpyramidStand=reference_prod
+              run_slice "prod e2e smoke" testE2e "${COMMON[@]}" -DpyramidStand=reference_prod
+              ;;
+            prod_api)
+              run_slice "prod api" testApi "${COMMON[@]}" -DpyramidStand=reference_prod
+              ;;
+            prod_e2e)
+              run_slice "prod e2e smoke" testE2e "${COMMON[@]}" -DpyramidStand=reference_prod
+              ;;
+            prod_visual)
+              run_slice "prod visual" testVisual "${COMMON[@]}" -DpyramidStand=reference_prod
+              ;;
+            *)
+              echo "Unknown PROD_TARGET=${PROD_TARGET}" >&2
+              exit 1
+              ;;
+          esac
+
+          GATE_EXIT=0
+          if [ -d build/allure-results ] && [ -n "$(ls -A build/allure-results 2>/dev/null)" ]; then
+            ./gradlew allureQualityGate || GATE_EXIT=$?
+          fi
+          echo "QUALITY_GATE_EXIT=${GATE_EXIT}" >> "$GITHUB_ENV"
+
+          echo "TEST_EXIT=${EXIT}" >> "$GITHUB_ENV"
+          exit "${EXIT}"
+
+      - name: Upload results to Allure TestOps
+        if: always() && steps.setup-allurectl.outcome == 'success' && hashFiles('tests/build/allure-results/**') != ''
+        continue-on-error: true
+        id: testops-upload
+        env:
+          ALLURE_PROJECT_ID: ${{ vars.ALLURE_PROJECT_ID }}
+        run: |
+          set +e
+          if [ -n "$TEST_CASE_ID" ]; then
+            export ALLURE_LAUNCH_NAME="TestOps #${TEST_CASE_ID} — ${GITHUB_REPOSITORY} #${GITHUB_RUN_NUMBER}"
+          else
+            export ALLURE_LAUNCH_NAME="Prod pyramid — ${GITHUB_REPOSITORY} #${GITHUB_RUN_NUMBER}"
+          fi
+          allurectl upload build/allure-results 2>&1 | tee allurectl-upload.log
+          UPLOAD_EXIT=${PIPESTATUS[0]}
+          echo "TESTOPS_UPLOAD_EXIT=${UPLOAD_EXIT}" >> "$GITHUB_ENV"
+          if [ "$UPLOAD_EXIT" -eq 0 ]; then
+            LAUNCH_URL=$(grep -Eo 'https://[^ ]+/launch/[0-9]+' allurectl-upload.log | head -1 || true)
+            if [ -z "$LAUNCH_URL" ] && allurectl job-run env >/tmp/allure-env 2>/dev/null; then
+              # shellcheck disable=SC1091
+              source /tmp/allure-env
+              LAUNCH_URL="${ALLURE_LAUNCH_URL:-}"
+            fi
+            if [ -n "$LAUNCH_URL" ]; then
+              echo "TESTOPS_LAUNCH_URL=${LAUNCH_URL}" >> "$GITHUB_ENV"
+            fi
+          fi
+          set -e
+
+      - name: Close TestOps launch
+        if: >-
+          always() &&
+          steps.testops-upload.outcome == 'success' &&
+          env.TEST_EXIT == '0' &&
+          env.TESTOPS_LAUNCH_URL != ''
+        continue-on-error: true
+        env:
+          ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
+        run: |
+          LAUNCH_ID="${TESTOPS_LAUNCH_URL##*/}"
+          curl -fsS -X POST \
+            "${ALLURE_ENDPOINT%/}/api/rs/launch/${LAUNCH_ID}/close" \
+            -H "Authorization: Bearer ${ALLURE_TOKEN}" \
+            -H "Accept: application/json"
+
+      - name: Download Selenoid video
+        if: always()
+        run: |
+          VIDEO_URL=$(grep -rhoE 'https://[^"]+/video/[a-f0-9-]+\.mp4' build/allure-results 2>/dev/null | head -1 || true)
+          if [ -n "$VIDEO_URL" ]; then
+            curl -fsSL "$VIDEO_URL" -o test-video.mp4
+            echo "VIDEO_URL=$VIDEO_URL" >> "$GITHUB_ENV"
+          fi
+
+      - name: Generate Allure 3 report
+        if: always() && hashFiles('tests/build/allure-results/**') != ''
+        id: allure-report
+        continue-on-error: true
+        run: |
+          mkdir -p build/allure-results
+          cat > build/allure-results/executor.json <<EOF
+          {
+            "reportName": "Run #${{ github.run_number }}",
+            "buildOrder": ${{ github.run_number }},
+            "reportUrl": "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/reports/${REPORT_ID}/awesome/index.html",
+            "buildUrl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          }
+          EOF
+          ./gradlew allureReport
+
+      - name: Install Allure publish deps
+        if: always() && steps.allure-report.outcome == 'success'
+        uses: actions/setup-node@v6
+        with:
+          node-version: 26
+
+      - name: Publish Allure (theme + Telegram plugin)
+        if: always() && steps.allure-report.outcome == 'success'
+        continue-on-error: true
+        working-directory: tests
+        env:
+          NOTIFICATION_MODE: ${{ github.event_name == 'pull_request' && 'dry-run' || 'live' }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID || '-1004381150566' }}
+          TELEGRAM_TOPIC_ID: ${{ secrets.TELEGRAM_REFERENCE_APP_TOPIC_ID || vars.TELEGRAM_REFERENCE_APP_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || vars.TELEGRAM_TOPIC_ID }}
+          ALLURE_REPORT_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/reports/latest/awesome/index.html
+          ALLURE_DASHBOARD_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/reports/latest/dashboard/index.html
+          BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TESTOPS_LAUNCH_URL: ${{ env.TESTOPS_LAUNCH_URL }}
+          NOTIFICATION_PROJECT: Reference App #${{ github.run_number }}
+        run: |
+          AWESOME="build/reports/allure-report/allureReport/awesome"
+          if [ ! -f "$AWESOME/summary.json" ]; then
+            echo "No Allure summary — skip publish"
+            exit 0
+          fi
+          npm install --no-save
+          node scripts/allure-publish.mjs
+
+      - name: Generate README dashboard assets
+        if: always() && steps.allure-report.outcome == 'success' && hashFiles('tests/build/allure-results/**') != ''
+        run: |
+          mkdir -p pages/readme
+          BUILD="#${{ github.run_number }}"
+          bash ../.github/scripts/generate-readme-badge.sh \
+            build/allure-results pages/readme main "${BUILD}" \
+            "" "Reference App" "Java 21 · Spring Boot · Allure 3" ""
+
+      - name: Prepare GitHub Pages
+        if: always() && steps.allure-report.outcome == 'success' && hashFiles('tests/build/reports/allure-report/allureReport/awesome/index.html') != ''
+        run: |
+          mkdir -p pages/reports/${REPORT_ID}
+          cp -r build/reports/allure-report/allureReport/. "pages/reports/${REPORT_ID}/"
+          rm -rf pages/reports/latest
+          cp -r "pages/reports/${REPORT_ID}" pages/reports/latest
+          if [ -f history.jsonl ]; then
+            cp history.jsonl pages/history.jsonl
+          elif [ -f build/reports/allure-report/allureReport/history.jsonl ]; then
+            cp build/reports/allure-report/allureReport/history.jsonl pages/history.jsonl
+          fi
+          echo "${REPORT_ID}" > pages/latest-run-id.txt
+          touch pages/.nojekyll
+
+      - name: Setup Node for dashboard preview capture
+        if: always() && steps.allure-report.outcome == 'success' && hashFiles('tests/pages/reports/latest/dashboard/index.html') != ''
+        uses: actions/setup-node@v6
+        with:
+          node-version: 26
+
+      - name: Capture dashboard preview for README
+        if: always() && steps.allure-report.outcome == 'success' && hashFiles('tests/pages/reports/latest/dashboard/index.html') != ''
+        continue-on-error: true
+        # playwright install --with-deps has hung past 30m; keep Pages deploy unblocked
+        timeout-minutes: 5
+        run: |
+          npm install --no-save playwright@1.50.1
+          npx playwright install chromium --with-deps
+          npx --yes serve pages -l 8765 >/tmp/serve.log 2>&1 &
+          SERVE_PID=$!
+          for _ in $(seq 1 30); do
+            curl -sf http://127.0.0.1:8765/reports/latest/dashboard/ >/dev/null && break
+            sleep 1
+          done
+          PREVIEW_URL="http://127.0.0.1:8765/reports/latest/dashboard/" \
+            PREVIEW_OUTPUT_DIR="pages/readme" \
+            node ../.github/scripts/capture-dashboard-preview.mjs
+          kill "${SERVE_PID}" || true
+
+      - name: Deploy Allure report to GitHub Pages
+        if: always() && hashFiles('tests/pages/reports/**/awesome/index.html') != ''
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: tests/pages
+          enable_jekyll: false
+          keep_files: true
+
+      - name: Upload test video
+        if: always() && hashFiles('tests/test-video.mp4') != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-video-${{ env.TEST_CASE_ID || github.run_id }}
+          path: tests/test-video.mp4
+          retention-days: 14
+
+      - name: Job summary
+        if: always()
+        run: |
+          REPORT_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/reports/${REPORT_ID}/awesome/index.html"
+          echo "## reference prod pyramid" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Target: \`${PROD_TARGET}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- [GitHub Actions run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f build/reports/allure-report/allureReport/awesome/index.html ]; then
+            echo "- [Allure 3 report](${REPORT_URL})" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -n "${TESTOPS_LAUNCH_URL:-}" ]; then
+            echo "- [Allure TestOps launch](${TESTOPS_LAUNCH_URL})" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -n "${VIDEO_URL:-}" ]; then
+            echo "- Selenoid video: \`${VIDEO_URL}\`" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Fail if tests or quality gate failed
+        if: >-
+          always() &&
+          (env.TEST_EXIT != '0' ||
+           (env.QUALITY_GATE_EXIT != '' && env.QUALITY_GATE_EXIT != '0'))
+        run: |
+          if [ "${TEST_EXIT}" != "0" ]; then
+            exit "${TEST_EXIT}"
+          fi
+          exit "${QUALITY_GATE_EXIT}"
