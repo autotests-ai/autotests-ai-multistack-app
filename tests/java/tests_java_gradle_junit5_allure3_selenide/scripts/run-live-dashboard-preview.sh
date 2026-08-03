@@ -6,7 +6,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 FRONTEND_DIR="$REPO_ROOT/frontend"
-INDEX_OUTPUT="$REPO_ROOT/tests_java_gradle/build/analytics-index.json"
+INDEX_OUTPUT="$REPO_ROOT/tests_java_gradle_junit5_allure3_selenide/build/analytics-index.json"
 POLL_MS=300
 INTERVAL_MS=""
 STEPS=8
@@ -63,7 +63,7 @@ else
   echo "run-live-dashboard-preview: http.server :3000 already running"
 fi
 
-ln -sfn ../tests_java_gradle/build/analytics-index.json "$FRONTEND_DIR/analytics-index.json"
+ln -sfn ../tests_java_gradle_junit5_allure3_selenide/build/analytics-index.json "$FRONTEND_DIR/analytics-index.json"
 
 if command -v open >/dev/null 2>&1; then
   open "$DASHBOARD_URL"

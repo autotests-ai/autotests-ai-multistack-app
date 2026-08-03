@@ -6,7 +6,7 @@ set -euo pipefail
 
 # shellcheck source=paths.sh
 source "$(cd "$(dirname "$0")" && pwd)/paths.sh"
-cd "$TESTS_JAVA_GRADLE"
+cd "$TESTS_JAVA"
 
 export SONAR_HOST_URL="${SONAR_HOST_URL:-https://sonar.qa.guru}"
 export SONAR_PROJECT_KEY="${SONAR_PROJECT_KEY:-reference-app-tests}"

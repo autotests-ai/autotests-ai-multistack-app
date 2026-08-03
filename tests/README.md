@@ -1,19 +1,26 @@
 # Tests
 
-Automation outside backend unit tests — by **language** → **runner** (`_` between segments).
+Automation outside backend unit / frontend RTL — by **language** → **stack dimensions**.
+
+Full naming canon: **[NAMING.md](NAMING.md)**  
+Pattern: `tests_{lang}_{build}_{framework}_{reporting}_{automation}`
 
 ```
 tests/
   java/
-    tests_java_gradle/              # api, e2e, component-browser (Selenide)
+    tests_java_gradle_junit5_allure3_selenide/   # active
+    # planned: …_junit4_…, …_testng_…, …_no-allure_…, maven_…
   javascript/
-    tests_javascript_playwright/    # Playwright UI smoke
+    tests_javascript_playwright/                   # → npm_playwright_no-allure (block 2+)
   python/
-    tests_python_selenium/          # pytest + Selenium page objects
-  _deferred/                        # block 2+ — not wired in CI yet
+    tests_python_selenium/                         # → pip_pytest_… (block 2+)
+  _deferred/
 ```
 
-**Unit tests ≠ this tree.** Backend unit tests stay in `backend/java/backend_java_spring/src/test/`.  
-**RTL component tests** stay in `frontend/typescript/frontend_typescript_react-testing-library/`.
+| Kind | Where |
+|------|-------|
+| Backend unit | `backend/java/backend_java_spring/src/test/` |
+| RTL component | `frontend/typescript/frontend_typescript_react-testing-library/` |
+| Browser/api/e2e | `tests/java/tests_java_gradle_junit5_allure3_selenide/` |
 
-Block 2: **one** `test.yml`; add layers incrementally.
+Block 2: one `test.yml`; add jobs incrementally.

@@ -1,5 +1,8 @@
 # SSOT path constants for reference-app-copy (source from backend/scripts/*.sh).
-# Naming: zone_language_stack with _ separators; hyphen only in compound tool names (e.g. react-testing-library).
+#
+# Naming: tests_{lang}_{build}_{framework}_{reporting}_{automation}
+#   _ between segments; - only in compounds (no-allure, react-testing-library).
+# See tests/NAMING.md for the full matrix.
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 BACKEND_JAVA_SPRING="$REPO_ROOT/backend/java/backend_java_spring"
@@ -10,7 +13,10 @@ FRONTEND_JS_STATIC="$REPO_ROOT/frontend/javascript/frontend_javascript_static"
 FRONTEND_JS_PREVIEW="$REPO_ROOT/frontend/javascript/frontend_javascript_preview"
 FRONTEND_TS_RTL="$REPO_ROOT/frontend/typescript/frontend_typescript_react-testing-library"
 
-TESTS_JAVA_GRADLE="$REPO_ROOT/tests/java/tests_java_gradle"
+# Active Java automation module (Gradle · JUnit 5 · Allure 3 · Selenide)
+TESTS_JAVA_GRADLE_JUNIT5_ALLURE3_SELENIDE="$REPO_ROOT/tests/java/tests_java_gradle_junit5_allure3_selenide"
+TESTS_JAVA="$TESTS_JAVA_GRADLE_JUNIT5_ALLURE3_SELENIDE"
+
 TESTS_JS_PLAYWRIGHT="$REPO_ROOT/tests/javascript/tests_javascript_playwright"
 TESTS_PYTHON_SELENIUM="$REPO_ROOT/tests/python/tests_python_selenium"
 

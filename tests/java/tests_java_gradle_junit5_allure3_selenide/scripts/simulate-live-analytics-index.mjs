@@ -49,7 +49,7 @@ const STEPS = [
 function parseArgs(argv) {
   const options = {
     mockFile: path.join(repoRoot, "frontend/analytics-index.mock.json"),
-    outputFile: path.join(repoRoot, "tests_java_gradle/build/analytics-index.json"),
+    outputFile: path.join(repoRoot, "tests_java_gradle_junit5_allure3_selenide/build/analytics-index.json"),
     steps: STEPS.length,
     intervalMs: 300,
     pollMs: 300,

@@ -619,7 +619,7 @@ import { highlightJson, highlightShell } from './code-highlight.js';
       );
     }
     if (mode === "allure2") {
-      return "\n# Локальный HTML (Allure 2 CLI): allure serve tests_java_gradle/build/allure-results";
+      return "\n# Локальный HTML (Allure 2 CLI): allure serve tests_java_gradle_junit5_allure3_selenide/build/allure-results";
     }
     return "";
   }
@@ -798,8 +798,8 @@ import { highlightJson, highlightShell } from './code-highlight.js';
       lines.push(
         "",
         "## Канон vs ladder ethalon",
-        "- CI / pyramid: `tests_java_gradle/` — smoke `LoginTests`, `LoginFormTests`, `LoginEmbedTests`; `@Manual` на методе в `LoginTests`",
-        "- Ladder code: `tests_java_gradle/src/test/java/_ethalon/ladder/` — full style ladder `LoginTests`/`LogoutTests` (`@Tag(\"ladder-ethalon\")`, `" +
+        "- CI / pyramid: `tests_java_gradle_junit5_allure3_selenide/` — smoke `LoginTests`, `LoginFormTests`, `LoginEmbedTests`; `@Manual` на методе в `LoginTests`",
+        "- Ladder code: `tests_java_gradle_junit5_allure3_selenide/src/test/java/_ethalon/ladder/` — full style ladder `LoginTests`/`LogoutTests` (`@Tag(\"ladder-ethalon\")`, `" +
           buildToolBin() +
           " testLadderEthalon`)",
         "- RAG split: `test-pyramid` (канон), `test-style-ladder` + `test-logout-flow` (паттерны)"
@@ -848,7 +848,7 @@ import { highlightJson, highlightShell } from './code-highlight.js';
       buildGradleCommand(),
       "```",
       "",
-      "Канон: ADR 002, `tests_java_gradle/` в template-project. Ladder ethalon — `_ethalon/ladder/`. Один тест — один стиль шагов."
+      "Канон: ADR 002, `tests_java_gradle_junit5_allure3_selenide/` в template-project. Ladder ethalon — `_ethalon/ladder/`. Один тест — один стиль шагов."
     );
 
     return lines.join("\n");

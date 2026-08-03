@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-CONFIG_DIR = Path(__file__).resolve().parents[2] / "tests/java/tests_java_gradle/src/test/resources/config"
+CONFIG_DIR = Path(__file__).resolve().parents[2] / "tests/java/tests_java_gradle_junit5_allure3_selenide/src/test/resources/config"
 LAYERS = ("unit", "component", "integration", "api", "e2e", "visual", "manual")
 KEEP = frozenset({"default.properties"})
 

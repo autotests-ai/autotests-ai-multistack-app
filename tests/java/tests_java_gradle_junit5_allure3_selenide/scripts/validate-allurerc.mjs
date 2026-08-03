@@ -7,7 +7,7 @@
  *
  * Usage:
  *   node scripts/validate-allurerc.mjs [path/to/allurerc.mjs]
- * Default: ./allurerc.mjs (cwd) or ethalon _ethalon/allurerc.mjs when run from generators/ethalon/tests_java_gradle.
+ * Default: ./allurerc.mjs (cwd) or ethalon _ethalon/allurerc.mjs when run from generators/ethalon/tests_java_gradle_junit5_allure3_selenide.
  */
 import { pathToFileURL } from "node:url";
 import fs from "node:fs";

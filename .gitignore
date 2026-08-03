@@ -9,9 +9,9 @@ frontend/javascript/frontend_javascript_embed/allure-shell.js
 backend/java/backend_java_spring/build/
 backend/java/backend_java_spring/.gradle/
 backend/java/backend_java_spring/bin/
-tests/java/tests_java_gradle/build/
-tests/java/tests_java_gradle/.gradle/
-tests/java/tests_java_gradle/bin/
+tests/java/tests_java_gradle_junit5_allure3_selenide/build/
+tests/java/tests_java_gradle_junit5_allure3_selenide/.gradle/
+tests/java/tests_java_gradle_junit5_allure3_selenide/bin/
 tests/_deferred/java_gradle_junit5_selenium/build/
 tests/_deferred/java_gradle_junit5_selenium/.gradle/
 tests/_deferred/java_gradle_junit5_selenium/bin/

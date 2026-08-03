@@ -1,6 +1,6 @@
 /**
  * Test-run parameter schema for autotests-builder (all pyramid layers, Gradle -D*, TestConfig keys).
- * Канон осей: ADR 002, docs/rag/config/* + docs/rag/testing/*, ladder ethalon — tests_java_gradle/src/test/java/_ethalon/ladder/.
+ * Канон осей: ADR 002, docs/rag/config/* + docs/rag/testing/*, ladder ethalon — tests_java_gradle_junit5_allure3_selenide/src/test/java/_ethalon/ladder/.
  * Синхронизировать при добавлении новых RAG-чанков (sync-agent-meta).
  */
 window.testParamsMap = {
@@ -328,7 +328,7 @@ window.testParamsMap = {
       showWhen: { buildTool: ["gradle"] },
       options: [
         { value: "gradle", label: "gradle", hint: "system gradle в PATH" },
-        { value: "gradlew", label: "gradlew", hint: "./gradlew (wrapper в tests_java_gradle/)" },
+        { value: "gradlew", label: "gradlew", hint: "./gradlew (wrapper в tests_java_gradle_junit5_allure3_selenide/)" },
       ],
     },
     {

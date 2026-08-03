@@ -20,14 +20,16 @@ reference-app-copy/
 ### Naming convention
 
 `{zone}_{language}_{stack}` — underscores between segments.  
-Hyphen **only** in compound tool names, e.g. `frontend_typescript_react-testing-library`.
+Hyphen **only** in compound tool names, e.g. `frontend_typescript_react-testing-library`, `tests_java_gradle_junit5_no-allure_selenide`.
+
+Full test-module matrix: [tests/NAMING.md](tests/NAMING.md).
 
 | Zone | Current modules | Future slots |
 |------|-----------------|--------------|
 | **frontend/javascript/** | `embed`, `static`, `preview` | `vanilla`, `jquery` |
 | **frontend/typescript/** | `react-testing-library` | `angular` |
 | **backend/java/** | `backend_java_spring` | `backend_kotlin_spring`, … |
-| **tests/java/** | `tests_java_gradle` | TestNG, … |
+| **tests/java/** | `tests_java_gradle_junit5_allure3_selenide` | junit4, testng, allure2, selenium, … — [tests/NAMING.md](tests/NAMING.md) |
 | **tests/javascript/** | `tests_javascript_playwright` | Cypress, … |
 | **tests/python/** | `tests_python_selenium` | playwright, … |
 
@@ -39,7 +41,7 @@ Path SSOT: `backend/scripts/paths.sh`
 |------|-------|
 | **Unit** (backend) | `backend/java/backend_java_spring/src/test/java/` |
 | **RTL component** | `frontend/typescript/frontend_typescript_react-testing-library/` |
-| **Browser/api/e2e** (block 2) | `tests/java/tests_java_gradle/` |
+| **Browser/api/e2e** (block 2) | `tests/java/tests_java_gradle_junit5_allure3_selenide/` |
 
 ## Quick start
 
