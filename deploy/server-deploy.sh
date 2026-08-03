@@ -3,7 +3,7 @@ set -euo pipefail
 
 APP_DIR="${APP_DIR:-/home/reference_app_copy/reference-app-copy}"
 REPO_URL="${REPO_URL:-https://github.com/autotests-ai/reference-app-copy.git}"
-export SERVER_PORT="${SERVER_PORT:-8084}"
+export SERVER_PORT="${SERVER_PORT:-8800}"
 PUBLIC_URL="${PUBLIC_URL:-https://backend-java-spring.reference-app-copy.autotests.ai}"
 SKIP_BUILD="${SKIP_BUILD:-0}"
 HEALTH_URL="http://127.0.0.1:${SERVER_PORT}/api/health"

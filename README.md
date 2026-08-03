@@ -75,7 +75,7 @@ Switch UI stack via compose `UI_MODULE` / `UI_RUNTIME` (SPA: point at `dist/`).
 | Setting | Value |
 |---------|-------|
 | `APP_DIR` | `/home/reference_app_copy/reference-app-copy` |
-| `SERVER_PORT` | `8084` |
+| `SERVER_PORT` | `8800` |
 | `PUBLIC_URL` | `https://backend-java-spring.reference-app-copy.autotests.ai` |
 
 **CD:** [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) — `build` (image on GHA) → `deploy` (SSH `docker load` + `SKIP_BUILD=1` [`deploy/server-deploy.sh`](deploy/server-deploy.sh)).
