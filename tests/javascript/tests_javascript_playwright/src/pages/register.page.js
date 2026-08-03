@@ -15,7 +15,7 @@ exports.RegisterPage = class RegisterPage {
   }
 
   async open() {
-    await this.page.goto('/register');
+    await this.page.goto('/register.html');
   }
 
   async signup(username, password, confirmPassword = password) {

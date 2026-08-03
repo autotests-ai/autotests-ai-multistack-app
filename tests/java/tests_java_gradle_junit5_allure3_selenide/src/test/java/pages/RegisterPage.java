@@ -25,7 +25,7 @@ public class RegisterPage {
 
     @Step("Open register page")
     public RegisterPage openPage() {
-        open("/register");
+        open("/register.html");
         return this;
     }
 

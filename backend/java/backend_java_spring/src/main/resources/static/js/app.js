@@ -96,7 +96,7 @@ async function loadSession() {
 if (logoutButton) {
   logoutButton.addEventListener('click', async () => {
     await ReferenceAuth.logout();
-    window.location.href = '/login';
+    window.location.href = '/login.html';
   });
 }
 

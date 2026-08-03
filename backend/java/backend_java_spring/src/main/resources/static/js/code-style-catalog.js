@@ -76,7 +76,7 @@ void shouldLoginWithValidCredentials() {
       code: `@Test
 @DisplayName("User is logged in with valid credentials")
 void shouldLoginWithValidCredentials() {
-    open("/login");
+    open("/login.html");
     $("[data-testid='login-input']").setValue("user1");
     $("[data-testid='password-input']").setValue("password1");
     $("[data-testid='submit-button']").click();
@@ -103,7 +103,7 @@ void shouldLoginWithValidCredentials() {
 @Test
 @DisplayName("User is logged in with valid credentials")
 void shouldLoginWithValidCredentials() {
-    step("Open login page", () -> open("/login"));
+    step("Open login page", () -> open("/login.html"));
     step("Fill and submit form", () -> {
         step("Type username", () ->
                 $("[data-testid='login-input']").setValue("user1"));
@@ -134,7 +134,7 @@ void shouldLoginWithValidCredentials() {
 @Test
 @DisplayName("User is logged in with valid credentials")
 void shouldLoginWithValidCredentials() {
-    step("Open login page", () -> open("/login"));
+    step("Open login page", () -> open("/login.html"));
     step("Type username", () -> $("[data-testid='login-input']").setValue("user1"));
     step("Type password", () -> $("[data-testid='password-input']").setValue("password1"));
     step("Click submit", () -> $("[data-testid='submit-button']").click());
@@ -170,7 +170,7 @@ static void enableAllureSelenideListener() {
 @Test
 @DisplayName("User is logged in with valid credentials")
 void shouldLoginWithValidCredentials() {
-    open("/login");
+    open("/login.html");
     $("[data-testid='login-input']").setValue("user1");
     $("[data-testid='password-input']").setValue("password1");
     $("[data-testid='submit-button']").click();
@@ -180,7 +180,7 @@ void shouldLoginWithValidCredentials() {
         lead: "AllureSelenide пишет в отчёт технические логи Selenide — не «Open login page», как в step(). Человекочитаемые имена — только через step() или @Step в PO.",
         tree: [
           { level: 0, label: "shouldLoginWithValidCredentials", kind: "test" },
-          { level: 1, label: "open(/login)", kind: "step" },
+          { level: 1, label: "open(/login.html)", kind: "step" },
           { level: 1, label: '[$("[data-testid=\'login-input\')] set value(user1)', kind: "step" },
           { level: 1, label: '[$("[data-testid=\'password-input\')] set value(password1)', kind: "step" },
           { level: 1, label: '[$("[data-testid=\'submit-button\')] click()', kind: "step" },

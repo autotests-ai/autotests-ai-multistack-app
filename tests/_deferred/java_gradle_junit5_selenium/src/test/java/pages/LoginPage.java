@@ -21,7 +21,7 @@ public class LoginPage extends BasePage {
 
     @Step("Open login page")
     public LoginPage openPage() {
-        openPath("/login");
+        openPath("/login.html");
         return this;
     }
 

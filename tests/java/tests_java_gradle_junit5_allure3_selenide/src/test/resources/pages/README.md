@@ -5,7 +5,7 @@
 | Page | Class | Open |
 |------|-------|------|
 | Home | `HomePage` | `open("")` → `GET /` |
-| Login | `LoginPage` | `open("/login")` |
+| Login | `LoginPage` | `open("/login.html")` |
 
 Post-auth state (welcome message, logout) lives on `HomePage` at `/`.
 

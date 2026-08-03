@@ -18,7 +18,7 @@ class RegisterPage(BasePage):
 
     @allure.step("Open register page")
     def open_page(self) -> RegisterPage:
-        self.open_path("/register")
+        self.open_path("/register.html")
         return self
 
     @allure.step("Click 'Login' link under the register form")

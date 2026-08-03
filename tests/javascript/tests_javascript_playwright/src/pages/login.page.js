@@ -14,7 +14,7 @@ exports.LoginPage = class LoginPage {
   }
 
   async open() {
-    await this.page.goto('/login');
+    await this.page.goto('/login.html');
   }
 
   async login(username, password) {

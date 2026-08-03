@@ -41,7 +41,7 @@ public class HomePage {
                 .extract()
                 .path("token");
 
-        open("/login");
+        open("/login.html");
         executeJavaScript(
                 "localStorage.setItem(arguments[0], arguments[1]);",
                 "authToken",

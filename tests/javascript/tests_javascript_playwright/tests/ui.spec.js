@@ -60,7 +60,7 @@ test('Home загружает health и items', async ({ webApp }) => {
   await expect(webApp.home.itemsList).toContainText('Alpha');
 });
 
-test('Прямой /login подсвечивает Login в header', async ({ webApp }) => {
+test('Прямой /login.html подсвечивает Login в header', async ({ webApp }) => {
   await webApp.login.open();
   await expect(webApp.header.activeNav('header-nav-login')).toHaveClass(/is-active/);
   await expect(webApp.header.activeNav('header-nav-login')).toHaveAttribute(
