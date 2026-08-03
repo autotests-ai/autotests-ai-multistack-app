@@ -62,7 +62,9 @@ docker compose up -d --build
 curl -fsS http://localhost:8080/api/health
 ```
 
-UI lives in `frontend/`; the backend Docker image packs it into the jar (see `backend/java/backend_java_spring/Dockerfile`).
+UI lives in `frontend/`. Compose passes `UI_MODULE` / `UI_RUNTIME` into the backend image build
+(defaults: vanilla product + lean DS runtime). To ship React later: build the SPA, point
+`UI_MODULE` at its `dist/`, rebuild — no Dockerfile edits.
 
 ## Deploy
 

@@ -21,6 +21,11 @@ services:
     build:
       context: .
       dockerfile: backend/java/backend_java_spring/Dockerfile
+      args:
+        # Active product UI (repo-relative). Switch module here when deploying another stack
+        # (e.g. a React `dist/` after `npm run build`). Dockerfile stays stack-agnostic.
+        UI_MODULE: ${UI_MODULE:-frontend/javascript/vanilla/frontend_javascript_vanilla}
+        UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend_javascript_app}
     restart: unless-stopped
     environment:
       DB_HOST: postgres

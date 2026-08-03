@@ -1,17 +1,24 @@
 # Build context: repository root (see docker-compose.yml).
-# Packs frontend/ into Spring static for a single deployable jar — no sync scripts.
+# Packs the active UI module into Spring static. Paths come from build-args —
+# this file must not name a frontend stack (vanilla / react / …).
+ARG UI_MODULE
+ARG UI_RUNTIME
+
 FROM eclipse-temurin:21-jdk-alpine AS build
+ARG UI_MODULE
+ARG UI_RUNTIME
 WORKDIR /repo
 
-COPY frontend/_shared/frontend_javascript_app /tmp/ui-app
-COPY frontend/javascript/vanilla/frontend_javascript_vanilla /tmp/ui-vanilla
+COPY ${UI_RUNTIME} /tmp/ui-runtime
+COPY ${UI_MODULE} /tmp/ui
 COPY backend/java/backend_java_spring backend/java/backend_java_spring
 
-RUN STATIC=backend/java/backend_java_spring/src/main/resources/static \
+RUN test -n "$UI_MODULE" && test -n "$UI_RUNTIME" \
+  && STATIC=backend/java/backend_java_spring/src/main/resources/static \
   && rm -rf "$STATIC" \
   && mkdir -p "$STATIC" \
-  && cp -a /tmp/ui-app/. "$STATIC/" \
-  && cp -a /tmp/ui-vanilla/. "$STATIC/" \
+  && cp -a /tmp/ui-runtime/. "$STATIC/" \
+  && cp -a /tmp/ui/. "$STATIC/" \
   && rm -f "$STATIC/README.md"
 
 WORKDIR /repo/backend/java/backend_java_spring
