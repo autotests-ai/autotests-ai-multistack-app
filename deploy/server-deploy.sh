@@ -9,11 +9,11 @@ PUBLIC_URL="${PUBLIC_URL:-https://reference-app-copy.autotests.ai}"
 if [[ ! -d "$APP_DIR/.git" ]]; then
   sudo mkdir -p "$APP_DIR"
   sudo chown "$(whoami):$(whoami)" "$APP_DIR"
-  git clone "$REPO_URL" "$APP_DIR"
+  git -c http.proxy= -c https.proxy= clone "$REPO_URL" "$APP_DIR"
 fi
 
 cd "$APP_DIR"
-git fetch --all
+git -c http.proxy= -c https.proxy= fetch --all
 git reset --hard origin/main
 
 docker compose build backend

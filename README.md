@@ -54,6 +54,8 @@ bash deploy/smoke-remote.sh https://reference-app-copy.autotests.ai
 
 **Autodeploy (GitHub Actions):** push to `main` or `workflow_dispatch` runs [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml).
 
+Image build runs on the GHA runner (`linux/amd64`) and is loaded on box3 — the host Docker daemon cannot pull from Docker Hub via the box2 proxy (Access denied). On-server steps: `git fetch` → `docker compose up --no-build` → health poll → public smoke.
+
 ### GitHub secrets & variables
 
 Configure in repo **Settings → Secrets and variables → Actions**:

@@ -8,7 +8,7 @@ MAX_ATTEMPTS="${HEALTH_POLL_ATTEMPTS:-30}"
 SLEEP_SECS="${HEALTH_POLL_SLEEP:-2}"
 
 for i in $(seq 1 "$MAX_ATTEMPTS"); do
-  if curl -fsS "$HEALTH_URL" | grep -q '"status":"ok"'; then
+  if curl --noproxy '*' -fsS "$HEALTH_URL" | grep -q '"status":"ok"'; then
     echo "Health OK: $HEALTH_URL (attempt $i)"
     exit 0
   fi
