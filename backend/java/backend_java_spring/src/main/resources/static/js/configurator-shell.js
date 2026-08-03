@@ -1,4 +1,5 @@
 import { copyToClipboard } from './dom-utils.js';
+import { mountHighlightedOutput } from './code-highlight.js';
 
 const seg = document.getElementById('configurator-headless-seg');
 const output = document.getElementById('configurator-output');
@@ -11,10 +12,11 @@ if (!seg || !output) {
 const state = { headless: true };
 
 function renderOutput() {
-  output.textContent =
+  const text =
     './gradlew clean test -Denv=local_e2e \\\n' +
     '  -Dheadless=' + state.headless + ' \\\n' +
     '  -DallureReportMode=allure3';
+  mountHighlightedOutput(output, text, 'shell');
 }
 
 function setHeadless(value) {

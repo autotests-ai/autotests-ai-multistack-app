@@ -1,0 +1,25 @@
+<!-- Compose sketch: session name chrome + kill CTA.
+     Glyph: IconTrash (same as Stats Sessions/Archive session-delete).
+     Controls: .btn.btn--danger | .icon-btn | .window-control--danger
+     Wiring: SessionInfo Panel.actions (IconTrash) → DELETE /wd/hub/session/{id} → `/`. -->
+<div class="demo-session-chrome" data-testid="session-kill-chrome">
+  <span class="demo-session-chrome__name">Manual session</span>
+  <button type="button" class="btn btn--danger" aria-label="Убить контейнер" title="Убить контейнер">
+    <span class="icon" aria-hidden="true">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2.5 4.5h11"/>
+        <path d="M6 4.5V3.5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1"/>
+        <path d="M4.5 4.5l.7 8a1.5 1.5 0 0 0 1.5 1.3h3.6a1.5 1.5 0 0 0 1.5-1.3l.7-8"/>
+        <path d="M6.5 7v4M9.5 7v4"/>
+      </svg>
+    </span>
+    Убить контейнер
+  </button>
+</div>
+
+<!-- Stats-identical control (no label): -->
+<!--
+<button type="button" class="icon-btn session-delete" aria-label="Delete" title="Delete">
+  <span class="icon" aria-hidden="true"><!-- IconTrash --></span>
+</button>
+-->

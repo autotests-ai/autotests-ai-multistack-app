@@ -22,15 +22,20 @@
 
 @media (min-width: 769px) {
   .grid--2x1 {
-    align-items: stretch;
+    /* Default: independent column heights (no bottom magnet). */
+    align-items: start;
   }
 
-  /* Main keeps natural height; aside fills row so section--sticky can stick */
   .grid--2x1 > :first-child {
     align-self: start;
   }
 
-  .grid--2x1 > :last-child {
+  /*
+   * Sticky aside only: stretch containing block so panel--sticky / section--sticky
+   * can travel along main. Panel chrome itself must stay content-height
+   * (see configurator__layout--terminal .panel { flex: 0 1 auto }).
+   */
+  .grid--2x1:has(.panel--sticky, .section--sticky) > :last-child {
     align-self: stretch;
   }
 }

@@ -1,8 +1,11 @@
-<!-- JSON highlight: CodeHighlight.highlightJson(json) → innerHTML on pre.ch-code -->
-<!-- Canonical palette — VS Code Dark+ (default on .ch-code); alt — .ch-theme--github | --muted | --contrast -->
+<!-- Terminal / JSON highlight canon:
+     1. No leading/trailing blank lines (trimOutputBlankLines / mountHighlightedOutput).
+     2. Always colored — .ch-code + highlightOutput(kind) / mountHighlightedOutput; never plain textContent for structured output.
+     3. Palette — VS Code Dark+ (default on .ch-code); alt — .ch-theme--github | --muted | --contrast on panel. -->
 <pre class="ch-code" data-testid="code-highlight" aria-label="JSON"></pre>
 
-<!-- With panel terminal chrome — panel__code inherits mono sizing; theme on panel root -->
+<!-- With panel terminal chrome — panel__code inherits mono sizing; theme on panel root.
+     Prefer direct .panel > .panel__code (no .panel__body). If React wraps in __body, panel.css zeroes terminal body pad. -->
 <div class="panel panel--terminal ch-theme--vscode" data-testid="code-highlight-panel">
   <div class="panel__bar">
     <div class="panel__dots" aria-hidden="true">

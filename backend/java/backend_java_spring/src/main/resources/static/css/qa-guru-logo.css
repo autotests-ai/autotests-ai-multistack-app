@@ -1,0 +1,9 @@
+/* QA.GURU brand mark (SSOT: assets/qa-guru-logo.svg). Fixed square; favicon + UI. */
+.qa-guru-logo {
+  display: block;
+  width: var(--qa-guru-logo-size, 32px);
+  height: var(--qa-guru-logo-size, 32px);
+  max-width: 100%;
+  object-fit: contain;
+  flex-shrink: 0;
+}

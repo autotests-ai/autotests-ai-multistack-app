@@ -156,3 +156,11 @@
 .configurator-option-presets__panel-group-desc {
   margin: 0 0 var(--space-1);
 }
+
+.configurator-option-presets__panel-group-action {
+  margin: 0;
+}
+
+/* Seg: always --many; shell full-width, chips content-hug + flex-end.
+   --stretch remains for select/input only. Remote hub enable* — --pair.
+   No per-panel seg overrides — same rule for Allure / Driver / Tests filters / …. */

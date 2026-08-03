@@ -11,7 +11,7 @@ from pages.register_page import RegisterPage
 @allure.story("Header active nav follows the route")
 @allure.title("Header active nav follows the route")
 class TestHeaderActiveNav:
-    @allure.title("Direct /login.html load highlights Login")
+    @allure.title("Direct /login load highlights Login")
     @allure.severity(allure.severity_level.MINOR)
     @pytest.mark.smoke
     def test_direct_login_load_highlights_login(
@@ -20,7 +20,7 @@ class TestHeaderActiveNav:
         login_page.open_page()
         header.should_have_active_nav("header-nav-login")
 
-    @allure.title("Direct /register.html load highlights Register")
+    @allure.title("Direct /register load highlights Register")
     @allure.severity(allure.severity_level.MINOR)
     @pytest.mark.smoke
     def test_direct_register_load_highlights_register(

@@ -1,0 +1,141 @@
+@import url("../tokens.css");
+@import url("../plaque-field.css");
+@import url("../panel.css");
+
+/* Tagstrip wrap-rule variants — exploration (divider vs chip border merge) */
+
+.tagstrip-wrap-variants .field-variants__section {
+  margin-bottom: var(--space-6);
+}
+
+.tagstrip-wrap-variants .field-variants__section-title {
+  margin: 0 0 var(--space-1);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.tagstrip-wrap-variants .field-variants__section-desc {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+.twv-problems {
+  margin: 0;
+  padding-left: 1.25rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.twv-problems li + li {
+  margin-top: var(--space-2);
+}
+
+/* Force wrap like Capabilities Playwright row */
+.twv-demo {
+  max-width: 28rem;
+}
+
+.twv-demo .plaque-field--divided:has(> .plaque-field-seg-track--many) {
+  --plaque-mixed-label-col: 5.75rem;
+}
+
+/* ── A · legacy equal strokes (pre-split) ── */
+.twv--legacy.plaque-field--divided:has(> .plaque-field-seg-track--many) {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent var(--plaque-seg-band-height),
+    var(--color-border) var(--plaque-seg-band-height),
+    var(--color-border) calc(var(--plaque-seg-band-height) + var(--plaque-seg-row-gap))
+  );
+}
+
+.twv--legacy.plaque-field--divided:has(> .plaque-field-seg-track--many) > .plaque-divider {
+  background: var(--color-border);
+}
+
+.twv--legacy.plaque-field--divided:has(> .plaque-field-seg-track--many) .plaque-field-seg__btn:not(.plaque-field-seg__btn--on) {
+  border-color: var(--color-border);
+}
+
+/* ── B · air gap: thicker inter-row air, thin 1px rule centered ── */
+.twv--gap.plaque-field--divided:has(> .plaque-field-seg-track--many) {
+  --plaque-seg-row-gap: 8px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--plaque-seg-band-height) + 3.5px),
+    var(--plaque-seg-rule) calc(var(--plaque-seg-band-height) + 3.5px),
+    var(--plaque-seg-rule) calc(var(--plaque-seg-band-height) + 4.5px),
+    transparent calc(var(--plaque-seg-band-height) + 4.5px),
+    transparent calc(var(--plaque-seg-band-height) + var(--plaque-seg-row-gap))
+  );
+}
+
+/* ── C · soft rule — production default (--plaque-seg-rule @ 40%) ── */
+/* no overrides */
+
+/* ── D · fill chips: no outline — only structural rules remain ── */
+.twv--fill.plaque-field--divided:has(> .plaque-field-seg-track--many) .plaque-field-seg__btn {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--color-border) 22%, var(--color-surface));
+}
+
+.twv--fill.plaque-field--divided:has(> .plaque-field-seg-track--many) .plaque-field-seg__btn--on {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--color-primary) 22%, var(--color-surface));
+  color: var(--color-text);
+}
+
+/* ── E · no wrap rule: air only between bands ── */
+.twv--norule.plaque-field--divided:has(> .plaque-field-seg-track--many) {
+  --plaque-seg-row-gap: 6px;
+  background-image: none;
+  background-color: var(--color-surface);
+}
+
+/* ── F · chip ↑ · rule ↓ (rejected contrast-split trial) ── */
+.twv--contrast.plaque-field--divided:has(> .plaque-field-seg-track--many) {
+  --plaque-seg-rule: color-mix(in srgb, var(--color-border) 55%, transparent);
+}
+
+.twv--contrast.plaque-field--divided:has(> .plaque-field-seg-track--many) .plaque-field-seg__btn:not(.plaque-field-seg__btn--on) {
+  border-color: color-mix(in srgb, var(--color-border) 55%, var(--color-text-muted) 45%);
+}
+
+/* ── G · no vertical divider (gap-only label) ── */
+.twv--nodiv.plaque-field--divided:has(> .plaque-field-seg-track--many) > .plaque-divider {
+  display: none;
+}
+
+.twv--nodiv.plaque-field--divided:has(> .plaque-field-seg-track--many) > .plaque-field__label {
+  padding-right: var(--space-3);
+}
+
+/* Side-by-side compare at problem width */
+.twv-compare {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 959px) {
+  .twv-compare {
+    grid-template-columns: 1fr;
+  }
+}
+
+.twv-compare__col {
+  min-width: 0;
+}
+
+.twv-compare__label {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}

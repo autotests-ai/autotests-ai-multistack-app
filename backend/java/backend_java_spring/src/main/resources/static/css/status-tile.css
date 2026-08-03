@@ -1,29 +1,32 @@
 /* Status tile — compact label + state for dashboard rows and header slots */
 
 .status-tile {
-  --status-tile-label-size: 0.5625rem;
-  --status-tile-state-size: 0.8125rem;
+  --status-tile-label-size: 0.5rem;
+  --status-tile-state-size: 0.5625rem;
 
   position: relative;
   display: inline-flex;
   flex-direction: column;
   justify-content: center;
   flex-shrink: 0;
+  width: max-content;
   gap: 0;
-  min-height: var(--control-height-md);
-  padding: var(--space-1) var(--space-3) calc(var(--space-1) + 2px) var(--space-2);
+  min-height: calc(var(--control-height-md) - 4px);
+  padding: 2px var(--space-2) calc(2px + 2px) var(--space-2);
 }
 
 .status-tile--tile {
-  padding-right: var(--space-4);
+  box-sizing: border-box;
   border-right: 1px dashed var(--color-border);
   background: color-mix(in srgb, black 28%, var(--color-surface));
 }
 
 .status-tile--header {
-  padding-right: 0;
-  padding-left: var(--space-3);
-  border-left: 1px solid var(--color-border);
+  box-sizing: border-box;
+  align-items: center;
+  text-align: center;
+  padding-right: var(--space-2);
+  padding-left: var(--space-2);
   background: transparent;
 }
 
@@ -41,25 +44,39 @@
 .status-tile__label {
   font-size: var(--status-tile-label-size);
   font-weight: 300;
-  line-height: 1.2;
-  letter-spacing: 0.12em;
+  line-height: 1.15;
+  letter-spacing: 0.1em;
   color: var(--color-text);
   text-transform: uppercase;
 }
 
 .status-tile__state {
+  /* Ghost longest label — CONNECTED→STALE must not shift the row. */
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  white-space: nowrap;
   font-size: var(--status-tile-state-size);
   font-weight: 600;
-  line-height: 1.15;
-  letter-spacing: 0.06em;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.status-tile__state::before {
+  content: "CONNECTED";
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .status-tile--connected .status-tile__state {
   color: var(--color-success);
 }
 
-.status-tile--disconnected .status-tile__state {
+.status-tile--disconnected .status-tile__state,
+.status-tile--stale .status-tile__state {
   color: var(--color-text-muted);
 }
 

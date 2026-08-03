@@ -1,6 +1,6 @@
 /**
  * Test-run parameter schema for autotests-builder (all pyramid layers, Gradle -D*, TestConfig keys).
- * Канон осей: ADR 002, docs/rag/config/* + docs/rag/testing/*, ladder ethalon — tests_java_gradle_junit5_allure3_selenide/src/test/java/_ethalon/ladder/.
+ * Канон осей: ADR 002, docs/rag/config/* + docs/rag/testing/*, ladder ethalon — tests-java/src/test/java/_ethalon/ladder/.
  * Синхронизировать при добавлении новых RAG-чанков (sync-agent-meta).
  */
 window.testParamsMap = {
@@ -14,7 +14,7 @@ window.testParamsMap = {
         pyramidLayer: "e2e",
         testSuite: "login",
         headless: "true",
-        closeBrowserAfterEach: "false",
+        closeBrowserAfterEach: "true",
         parallelism: "1",
         testStyle: "page_object",
         poFluent: "true",
@@ -164,6 +164,7 @@ window.testParamsMap = {
       id: "run",
       title: "Прогон",
       desc: "Цель и фильтр JUnit",
+      groupLayout: "wide",
     },
     {
       id: "driver",
@@ -241,15 +242,24 @@ window.testParamsMap = {
   runPanelStackParamIds: ["configStand", "pyramidLayer", "testSuite", "testMethod"],
   /** Driver — plaque-field-grid-stack (configurator-option-presets#driver) */
   driverGridParamIds: [
-    "browser",
-    "browserVersion",
     "headless",
     "browserSize",
+    "browser",
+    "browserVersion",
     "closeBrowserAfterEach",
     "closeBrowserAfterAll",
   ],
   /** Parallel — plaque-field-grid-stack--parallel (configurator-option-presets#parallel) */
-  parallelGridParamIds: ["testFramework", "testFrameworkVersion", "junitParallelMode", "parallelism"],
+  parallelGridParamIds: [
+    "testFramework",
+    "testFrameworkVersion",
+    "junitParallelEnabled",
+    "junitParallelStrategy",
+    "junitParallelMode",
+    "parallelism",
+    "junitParallelModeClasses",
+    "junitParallelFactor",
+  ],
   testFrameworkVersions: {
     junit4: ["4.13.2", "4.13.1", "4.13", "4.12"],
     junit5: ["5.14.4", "5.11.4", "5.10.2", "5.9.3"],
@@ -328,7 +338,7 @@ window.testParamsMap = {
       showWhen: { buildTool: ["gradle"] },
       options: [
         { value: "gradle", label: "gradle", hint: "system gradle в PATH" },
-        { value: "gradlew", label: "gradlew", hint: "./gradlew (wrapper в tests_java_gradle_junit5_allure3_selenide/)" },
+        { value: "gradlew", label: "gradlew", hint: "./gradlew (wrapper в tests-java/)" },
       ],
     },
     {
@@ -393,8 +403,8 @@ window.testParamsMap = {
         { value: "selenoid_jenkins", label: "selenoid_jenkins", hint: "selenoid-home — Jenkins" },
         { value: "selenoid-ui_local", label: "selenoid-ui_local", hint: "selenoid-ui — local dev" },
         { value: "selenoid-ui_github", label: "selenoid-ui_github", hint: "selenoid-ui — GitHub Actions" },
-        { value: "selenoid-autotests-cloud_local", label: "selenoid-autotests-cloud_local", hint: "cloud hub — local run" },
-        { value: "selenoid-autotests-cloud_github", label: "selenoid-autotests-cloud_github", hint: "cloud hub — GitHub CI" },
+        { value: "selenoid-qa-guru_local", label: "selenoid-qa-guru_local", hint: "cloud hub — local run" },
+        { value: "selenoid-qa-guru_github", label: "selenoid-qa-guru_github", hint: "cloud hub — GitHub CI" },
       ],
     },
     {
@@ -405,7 +415,7 @@ window.testParamsMap = {
       default: "e2e",
       gradle: false,
       options: [
-        { value: "unit", label: "unit", hint: "tests.unit.testinfra.* / test-infra" },
+        { value: "unit", label: "unit", hint: "helpers/*Test, config/*Test" },
         { value: "component", label: "component", hint: "@Layer(component)" },
         { value: "integration", label: "integration", hint: "@Layer(integration)" },
         { value: "api", label: "api", hint: "@Layer(api) @Tag(api)" },
@@ -524,7 +534,7 @@ window.testParamsMap = {
       group: "driver",
       type: "radio",
       label: "closeBrowserAfterEach",
-      default: "false",
+      default: "true",
       gradle: true,
       gradleKey: "closeBrowserAfterEach",
       options: [
@@ -577,6 +587,32 @@ window.testParamsMap = {
       ],
     },
     {
+      id: "junitParallelEnabled",
+      group: "parallel",
+      type: "radio",
+      label: "Parallel enabled",
+      default: "true",
+      gradle: true,
+      gradleKey: "junit.jupiter.execution.parallel.enabled",
+      options: [
+        { value: "true", label: "true", hint: "junit-platform.properties parallel.enabled" },
+        { value: "false", label: "false", hint: "serial run — default reference stack" },
+      ],
+    },
+    {
+      id: "junitParallelStrategy",
+      group: "parallel",
+      type: "radio",
+      label: "Strategy",
+      default: "fixed",
+      gradle: true,
+      gradleKey: "junit.jupiter.execution.parallel.config.strategy",
+      options: [
+        { value: "fixed", label: "fixed", hint: "fixed.parallelism = Parallel threads" },
+        { value: "dynamic", label: "dynamic", hint: "dynamic.factor × available processors" },
+      ],
+    },
+    {
       id: "junitParallelMode",
       group: "parallel",
       type: "radio",
@@ -585,6 +621,19 @@ window.testParamsMap = {
       options: [
         { value: "concurrent", label: "CONCURRENT", hint: "ExecutionMode.CONCURRENT — default для login/logout" },
         { value: "same_thread", label: "SAME_THREAD", hint: "ExecutionMode.SAME_THREAD — visual baselines" },
+      ],
+    },
+    {
+      id: "junitParallelModeClasses",
+      group: "parallel",
+      type: "radio",
+      label: "Classes mode",
+      default: "same_thread",
+      gradle: true,
+      gradleKey: "junit.jupiter.execution.parallel.mode.classes.default",
+      options: [
+        { value: "concurrent", label: "CONCURRENT", hint: "классы параллельно" },
+        { value: "same_thread", label: "SAME_THREAD", hint: "классы последовательно — safer для UI" },
       ],
     },
     {
@@ -600,6 +649,22 @@ window.testParamsMap = {
         { value: "2", label: "2" },
         { value: "3", label: "3", hint: "e2e-debug-run rule" },
         { value: "4", label: "4" },
+        { value: "5", label: "5" },
+      ],
+    },
+    {
+      id: "junitParallelFactor",
+      group: "parallel",
+      type: "select",
+      label: "Factor",
+      default: "1",
+      gradle: true,
+      gradleKey: "junit.jupiter.execution.parallel.config.dynamic.factor",
+      options: [
+        { value: "0.5", label: "0.5", hint: "половина processors" },
+        { value: "1", label: "1", hint: "1 × available processors" },
+        { value: "1.5", label: "1.5" },
+        { value: "2", label: "2", hint: "2 × available processors" },
       ],
     },
 
@@ -755,9 +820,8 @@ window.testParamsMap = {
       default: "false",
       gradle: true,
       gradleKey: "attachHarLogs",
-      warn: "stub — бросает exception, только для негативного бенча",
       options: [
-        { value: "true", label: "true ⚠" },
+        { value: "true", label: "true", hint: "нужен enableHar + Chrome/Edge" },
         { value: "false", label: "false" },
       ],
     },

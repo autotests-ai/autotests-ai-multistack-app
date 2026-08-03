@@ -8,7 +8,15 @@
   var titleEl = document.getElementById("cse-sample-title");
   var metaEl = document.getElementById("cse-sample-meta");
   var builderLinkEl = document.getElementById("cse-builder-link");
-  var previewId = "canon-smoke";
+  function initialTopicId() {
+    try {
+      var id = new URLSearchParams(window.location.search).get("catalog");
+      if (id && topicById(id)) return id;
+    } catch (e) {}
+    return "canon-smoke";
+  }
+
+  var previewId = initialTopicId();
 
   function topicById(id) {
     return catalog.topics.find(function (t) {
@@ -109,6 +117,8 @@
 
     if (builderLinkEl) {
       builderLinkEl.href = "autotests-builder.html?catalog=" + encodeURIComponent(topic.id);
+      builderLinkEl.target = "_blank";
+      builderLinkEl.rel = "noopener";
       builderLinkEl.hidden = false;
     }
   }

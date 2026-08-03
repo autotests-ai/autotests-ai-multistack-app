@@ -1,0 +1,89 @@
+/* Brand logo — Selenoid 3 + reusable qa.guru attribution (primitive)
+   Token-driven inline lockup: nested-square mark + wordmark + version accent.
+   Colour follows tokens, so light/dark switch automatically (см. tokens.css).
+   Mark height is capped to the wordmark cap-height, so it is never taller than "S". */
+
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42em;
+  font-family: var(--font-sans);
+  font-size: var(--brand-logo-size, 20px);
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--color-brand-logo);
+}
+
+.brand-logo__mark {
+  display: block;
+  width: auto;
+  height: 0.72em; /* ≈ cap-height → не выше буквы S */
+  flex-shrink: 0;
+  color: var(--color-info); /* accent drives currentColor inside the mark */
+}
+
+/* Neon bloom only on dark surfaces; on light it stays a clean flat shape. */
+html:not(.theme-light) .brand-logo__mark {
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--color-info) 60%, transparent));
+}
+
+.brand-logo__word {
+  font-weight: 500;
+  letter-spacing: -0.018em;
+  color: var(--color-brand-logo);
+}
+
+.brand-logo__ver {
+  display: inline-block;
+  margin-left: 0.18em;
+  font-family: "Arial Rounded MT Bold", "Trebuchet MS", var(--font-sans);
+  font-size: 1.06em;
+  font-weight: 700;
+  line-height: 0.8;
+  color: var(--color-info);
+}
+
+.brand-logo__copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.12em;
+}
+
+.brand-attribution {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3em;
+  font-size: 0.36em;
+  font-weight: 500;
+  letter-spacing: 0.025em;
+  line-height: 1;
+  color: var(--color-text-muted);
+}
+
+.brand-attribution > :first-child {
+  font-size: 0.82em;
+}
+
+.brand-attribution__name {
+  font-size: 1.08em;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--color-brand-logo);
+  opacity: 0.55;
+}
+
+.brand-attribution__dot {
+  color: var(--color-info);
+}
+
+.brand-logo--endorsed .brand-logo__mark {
+  height: 0.92em;
+}
+
+.brand-logo-link:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}

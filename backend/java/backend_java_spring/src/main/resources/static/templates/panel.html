@@ -1,5 +1,6 @@
-<!-- mode: panel--terminal (dark __code) | panel--content (warm __body) -->
+<!-- mode: panel--terminal (dark #1a1917 __code) | panel--terminal panel--terminal-light (paper __code) | panel--content (warm __body) -->
 <div class="panel panel--terminal" data-testid="panel">
+  <!-- light tone: add panel--terminal-light -->
   <div class="panel__bar">
     <div class="panel__dots" aria-hidden="true">
       <span class="panel__dot"></span>
@@ -16,7 +17,10 @@
   </div>
   <!-- content mode: -->
   <!-- <div class="panel__body">…</div> -->
-  <!-- terminal mode: -->
-  <pre class="panel__code" aria-label="Output"></pre>
+  <!-- terminal mode: direct __code (no __body pad). Always .ch-code + CodeHighlight
+       (highlightOutput / mountHighlightedOutput) — no blank lines before `{` / after `}`.
+       Theme: .ch-theme--vscode on .panel (canonical). -->
+  <pre class="panel__code ch-code" aria-label="Output"></pre>
   <!-- optional: <div class="panel__foot">status / actions</div> -->
+  <!-- rail: add panel--foot-rail on .panel → foot becomes right column (langs top→bottom) -->
 </div>

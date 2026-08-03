@@ -44,7 +44,7 @@ const I18N = {
     liveBadge: "Live",
     liveWaiting: "Waiting for run…",
     reportMissing:
-      "No local report yet. Run: cd tests_java_gradle_junit5_allure3_selenide && ./gradlew test && ./gradlew allureReport, then ln -sfn ../tests_java_gradle_junit5_allure3_selenide/build/reports/allure-report/allureReport allure-report",
+      "No local report yet. Run: cd tests-java && ./gradlew test && ./gradlew allureReport, then ln -sfn ../tests-java/build/reports/allure-report/allureReport allure-report",
   },
   ru: {
     dashboardTitle: "Дашборд автотестов template-project",
@@ -89,24 +89,24 @@ const I18N = {
     liveBadge: "Live",
     liveWaiting: "Ожидание прогона…",
     reportMissing:
-      "Локальный отчёт не найден. cd tests_java_gradle_junit5_allure3_selenide && ./gradlew test && ./gradlew allureReport, затем ln -sfn ../tests_java_gradle_junit5_allure3_selenide/build/reports/allure-report/allureReport allure-report",
+      "Локальный отчёт не найден. cd tests-java && ./gradlew test && ./gradlew allureReport, затем ln -sfn ../tests-java/build/reports/allure-report/allureReport allure-report",
   },
 };
 
 const DASHBOARD_CANDIDATES = [
   "allure-report/dashboard/index.html",
-  "../tests_java_gradle_junit5_allure3_selenide/build/reports/allure-report/allureReport/dashboard/index.html",
+  "../tests-java/build/reports/allure-report/allureReport/dashboard/index.html",
 ];
 
 const REPORT_CANDIDATES = [
   "allure-report/awesome/index.html",
-  "../tests_java_gradle_junit5_allure3_selenide/build/reports/allure-report/allureReport/awesome/index.html",
+  "../tests-java/build/reports/allure-report/allureReport/awesome/index.html",
 ];
 
 const ANALYTICS_CANDIDATES = [
   "analytics-index.json",
   "allure-report/analytics-index.json",
-  "../tests_java_gradle_junit5_allure3_selenide/build/analytics-index.json",
+  "../tests-java/build/analytics-index.json",
 ];
 
 const LIVE_POLL_MS_DEFAULT = 500;

@@ -11,7 +11,7 @@ window.codeStyleSamples = {
     language: "java",
     code: `@Test
 void wrongPasswordAuthorizationTest() {
-    open("/login.html");
+    open("/login");
     $("[data-testid='login-input']").setValue("user1");
     $("[data-testid='password-input']").setValue("wrong");
     $("[data-testid='submit-button']").click();
@@ -25,7 +25,7 @@ void wrongPasswordAuthorizationTest() {
     language: "java",
     code: `@Test
 void emptyPasswordAuthorizationTest() {
-    Allure.step("Open login page", () -> open("/login.html"));
+    Allure.step("Open login page", () -> open("/login"));
     Allure.step("Submit empty password", () -> {
         $("[data-testid='login-input']").setValue("user1");
         $("[data-testid='submit-button']").click();
@@ -146,7 +146,7 @@ Allure.step("Submit form", () -> $("[data-testid='submit-button']").click());`,
     code: `@Test
 @EnableAllureSelenideListener
 void emptyLoginAuthorizationTest() {
-    open("/login.html");
+    open("/login");
     $("[data-testid='submit-button']").click();
     // шаги Selenide → Allure автоматически, без Allure.step()
 }`,
@@ -159,7 +159,7 @@ void emptyLoginAuthorizationTest() {
     code: `@Test
 @DisplayName("Wrong password shows readable error")
 void shouldShowErrorWhenPasswordIsWrong() {
-    open("/login.html");
+    open("/login");
     $("[data-testid='password-input']").setValue("wrong");
     $("[data-testid='submit-button']").click();
 }`,
@@ -178,7 +178,7 @@ void shouldShowErrorWhenPasswordIsWrong() {
     rag: "test-negative",
     language: "java",
     code: `Allure.step("Validate empty password", () -> {
-    Allure.step("Open login page", () -> open("/login.html"));
+    Allure.step("Open login page", () -> open("/login"));
     Allure.step("Submit", () -> $("[data-testid='submit-button']").click());
 });`,
   },
@@ -208,7 +208,7 @@ void shortLoginAuthorizationTest() {
     source: "ADR 002",
     rag: "test-negative",
     language: "java",
-    code: `Allure.step("Open login", () -> open("/login.html"));`,
+    code: `Allure.step("Open login", () -> open("/login"));`,
   },
   "stepsInlineSyntax:arrow_multiline": {
     title: "steps.inline_syntax=arrow_multiline",

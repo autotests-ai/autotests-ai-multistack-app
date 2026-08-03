@@ -15,6 +15,8 @@ HTML **фрагменты** для копирования в downstream-прое
 | `button.html` | `components.html#section-button` | exploration: `button-variants.html`, `button-color-variants.html` |
 | `callout.html` | — | только в tooling (`autotests-builder.html`) |
 | `chart-tile.html` | `components.html#section-chart-tile` | |
+| `widget-tile.html` | `components.html#section-widget-tile` | exploration: `widget-tile-variants.html`, `widget-tile-layouts.html`, `widget-tile-placement-matrix.html`, `widget-tile-telegram-chrome.html` |
+| `widget-mosaic.html` | `components.html#section-widget-tile` | square mosaic + spans/`--post-N`; pages: `widget-tile-layouts.html`, `widget-tile-collage-4x4.html` |
 | `checkbox.html` | `components.html#section-checkbox` | |
 | `checkbox-card.html` | `components.html#section-checkbox-card` | |
 | `chip.html` | `components.html#section-chip` | |
@@ -24,6 +26,7 @@ HTML **фрагменты** для копирования в downstream-прое
 | `grid.html` | `components.html#section-grid` | |
 | `header.html` | `header.html`, `header-examples.html` | gallery: `header-variant-*.html`; mount — HTTP-only |
 | `icon.html` | `components.html#section-icon` | |
+| `indicator.html` | `components.html#section-indicator` | сигнальная точка; пример «все индикаторы» — `#section-panel` (`panel-all-indicators-demo`) |
 | `icon-btn.html` | `components.html#section-icon-btn` | |
 | `icon-copy.html` | `panel-action-icon-variants.html` | pair with `icon-reset.html` |
 | `icon-reset.html` | `panel-action-icon-variants.html` | pair with `icon-copy.html` |
@@ -38,9 +41,9 @@ HTML **фрагменты** для копирования в downstream-прое
 | `radio-card.html` | `components.html#section-radio-card` | |
 | `section.html` | `components.html#section-section` | |
 | `segmented-control.html` | `components.html#section-segmented-control` | |
-| `selenoid-dashboard-row.html` | `components.html#section-selenoid-metrics` | SSE + status ×2 + metrics ряд; page: `selenoid-ui.html` |
-| `selenoid-metrics.html` | `components.html#section-selenoid-metrics` | page: `selenoid-ui.html` |
-| `status-tile.html` | `components.html#section-status-tile` | page: `selenoid-ui.html` |
+| `selenoid-dashboard-row.html` | `components.html#section-selenoid-metrics` | SSE + status ×2 + metrics ряд |
+| `selenoid-metrics.html` | `components.html#section-selenoid-metrics` | |
+| `status-tile.html` | `components.html#section-status-tile` | |
 | `stack.html` | `components.html#section-stack` | |
 | `tab.html` | `components.html#section-tab` | |
 | `text.html` | `components.html#section-text` | |
@@ -58,6 +61,11 @@ Exploration и tooling — только в `preview/`, не дублироват
 | `autotests-builder.html` | e2e configurator |
 | `playground.html` | header config editor |
 | `prompt-builder.html` | prompt map editor |
-| `selenoid-ui.html` | Status tile + metrics (HTTP-only) |
 | `allure-dashboard.html` | Allure dashboard (HTTP-only) |
+| `dashboard-proportions.html` | exploration пропорций тайлов (квадрат) |
+| `widget-tile-variants.html` | widget-tile reference (square body, bar 34) |
+| `widget-tile-layouts.html` | widget-mosaic square presets |
+| `widget-tile-placement-matrix.html` | canvas × substrate N × span + content tiers |
+| `widget-tile-telegram-chrome.html` | bar/title matrix @ TG post width |
+| `widget-tile-collage-4x4.html` | Telegram collage probe (4×4) |
 | `*-variants.html` | exploration матриц (button, field, boolean, …); layout CSS — `css/variants/*-variants.css` |

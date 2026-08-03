@@ -3,7 +3,7 @@
 .page-header-preview main {
   max-width: none;
   margin: 0;
-  padding: calc(var(--header-height) + var(--space-6)) 0 var(--space-6);
+  padding: calc(var(--header-occupied-height) + var(--space-6)) 0 var(--space-6);
 }
 
 .page-header-preview main > :not(.header-preview):not(.header-preview__embed) {

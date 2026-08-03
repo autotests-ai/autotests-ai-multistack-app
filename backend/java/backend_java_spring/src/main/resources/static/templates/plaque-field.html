@@ -8,10 +8,10 @@
   </select>
 </label>
 
-<div class="plaque-field plaque-field--divided plaque-field--stretch" data-testid="plaque-field-stretch-seg">
+<div class="plaque-field plaque-field--divided" data-testid="plaque-field-stretch-seg">
   <span class="plaque-field__label">headless</span>
   <span class="plaque-divider" aria-hidden="true"></span>
-  <div class="plaque-field-seg-track plaque-field-seg-track--2 plaque-field__control">
+  <div class="plaque-field-seg-track plaque-field-seg-track--many plaque-field__control">
     <div class="plaque-field-seg" role="radiogroup" aria-label="headless">
       <button type="button" class="plaque-field-seg__btn plaque-field-seg__btn--on" aria-pressed="true">true</button>
       <button type="button" class="plaque-field-seg__btn" aria-pressed="false">false</button>
@@ -43,6 +43,17 @@
   <input type="text" class="plaque-field__control" value="smoke-local" placeholder="label">
 </label>
 
+<!-- Number — ± sides (canon). Or bare input[type=number].plaque-field__control + plaque-number.js -->
+<label class="plaque-field plaque-field--divided plaque-field--stretch" data-testid="plaque-field-number">
+  <span class="plaque-field__label">headerHeight</span>
+  <span class="plaque-divider" aria-hidden="true"></span>
+  <span class="plaque-number">
+    <button type="button" class="plaque-number__btn" data-plaque-number-dir="-1" tabindex="-1" aria-label="Уменьшить"><svg viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2 5h6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+    <input type="number" class="plaque-field__control" value="22" min="16" max="120" step="1">
+    <button type="button" class="plaque-number__btn" data-plaque-number-dir="1" tabindex="-1" aria-label="Увеличить"><svg viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2 5h6M5 2v6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+  </span>
+</label>
+
 <!-- Read-only value (not an input) -->
 <div class="plaque-field plaque-field--divided" data-testid="plaque-field-value">
   <span class="plaque-field__label">testSuite</span>
@@ -54,7 +65,7 @@
 <div class="plaque-field plaque-field--divided" data-testid="plaque-field-seg">
   <span class="plaque-field__label">headless</span>
   <span class="plaque-divider" aria-hidden="true"></span>
-  <div class="plaque-field-seg-track plaque-field-seg-track--2 plaque-field__control">
+  <div class="plaque-field-seg-track plaque-field-seg-track--many plaque-field__control">
     <div class="plaque-field-seg" role="radiogroup" aria-label="headless">
       <button type="button" class="plaque-field-seg__btn plaque-field-seg__btn--on" aria-pressed="true">true</button>
       <button type="button" class="plaque-field-seg__btn" aria-pressed="false">false</button>

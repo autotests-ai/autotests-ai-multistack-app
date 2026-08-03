@@ -323,23 +323,8 @@
   max-width: 100%;
 }
 
-/* —— Variant E: 2-col build row —— */
-.psv-variant-e .plaque-field--stretch > .plaque-field-seg-track.plaque-field__control {
-  justify-self: stretch;
-  width: 100%;
-  max-width: 100%;
-}
-
-.psv-variant-e .plaque-field--stretch .plaque-field-seg-track .plaque-field-seg {
-  flex: 1 1 auto;
-  width: 100%;
-}
-
-.psv-variant-e .plaque-field--stretch .plaque-field-seg-track .plaque-field-seg .plaque-field-seg__btn {
-  flex: 1 1 50%;
-  min-width: 0;
+/* —— Variant E: 2-col build row (content-hug only; seg stretch removed) —— */
+.psv-variant-e .plaque-field-seg-track .plaque-field-seg__btn {
   padding: 0 2px;
   font-size: 0.625rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }

@@ -2,7 +2,9 @@
 <!--
   Left: panel.panel--content — config form (plaque-field, sections, stack)
   Right: panel.panel--terminal.panel--sticky + configurator__output-* chain
-  Layout: grid grid--2x1 (2fr:3fr ≥769px via configurator__layout--terminal); modifier — sticky chain + panel__code
+  Layout: grid grid--2x1 + configurator__layout--terminal 6-col session
+    (wide 1░+cfg 2–3+term 4–6 · shed 6→1→2→5→ stack cfg 3–4 / term under);
+    modifier — sticky chain + panel__code
   Variants: toolbar (configurator__toolbar + panel--content), output-only (empty main), prompt (panel--sticky)
   Options layout inside panel__body: preview/configurator-options.html (flat stack, groups, grid, tabs, dense, scroll)
   Option presets (reusable field bundles, ≠ layout): preview/configurator-option-presets.html (driver, remote-hub)

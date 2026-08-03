@@ -25,7 +25,7 @@ public class LoginPage {
 
     @Step("Open login page")
     public LoginPage openPage() {
-        open("/login.html");
+        open("/login");
         return this;
     }
 

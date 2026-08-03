@@ -1,0 +1,411 @@
+@import url("../tokens.css");
+
+/* Exploration — plaque number spinner / stepper variants */
+
+.pnv__intro {
+  margin-bottom: var(--space-6);
+}
+
+.pnv__title {
+  margin: 0 0 var(--space-1);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.pnv__lead {
+  margin: 0;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.pnv__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.pnv__section {
+  margin-bottom: var(--space-6);
+}
+
+.pnv__section-title {
+  margin: 0 0 var(--space-1);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.pnv__section-desc {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+.pnv__problems {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: var(--font-size-sm);
+  line-height: 1.55;
+  color: var(--color-text-muted);
+}
+
+.pnv__problems li + li {
+  margin-top: var(--space-1);
+}
+
+.pnv__grid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 959px) {
+  .pnv__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pnv__card {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-soft);
+}
+
+.pnv__card--rec {
+  border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.pnv__card-id {
+  margin: 0 0 var(--space-1);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.pnv__card-title {
+  margin: 0 0 var(--space-1);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.pnv__card-desc {
+  margin: 0 0 var(--space-3);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+  flex: 1 1 auto;
+}
+
+.pnv__mock {
+  max-width: 280px;
+}
+
+.pnv__mock .plaque-field {
+  width: 100%;
+}
+
+/* Shared: kill native spinners when custom UI takes over */
+.pnv-kill-native::-webkit-outer-spin-button,
+.pnv-kill-native::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.pnv-kill-native {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Stepper shell — sits in control slot (grid col 3) */
+.plaque-field--divided.plaque-field--stretch > .pnv-step {
+  grid-column: 3;
+  justify-self: stretch;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.pnv-step {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-1);
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: calc(var(--plaque-control-height) - 2px);
+}
+
+.pnv-step > input.plaque-field__control {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 2.5ch;
+  padding-right: 0;
+}
+
+.pnv-btn {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  line-height: 1;
+  font: inherit;
+}
+
+.pnv-btn:hover {
+  color: var(--color-text);
+}
+
+.pnv-btn:focus-visible {
+  outline: 1px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.pnv-btn svg {
+  display: block;
+  width: 10px;
+  height: 10px;
+}
+
+.pnv-v5 .pnv-btn,
+.pnv-v9 .pnv-btn {
+  line-height: 0;
+}
+
+/* —— 0 baseline: native —— */
+.pnv-v0 input.plaque-field__control {
+  padding-right: var(--space-1);
+}
+
+/* —— 1 ghost chevrons —— */
+.pnv-v1 .pnv-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex-shrink: 0;
+  margin-right: 2px;
+}
+
+.pnv-v1 .pnv-btn {
+  width: 14px;
+  height: 11px;
+  opacity: 0.55;
+}
+
+.pnv-v1 .pnv-btn:hover {
+  opacity: 1;
+}
+
+/* —— 2 soft rail —— */
+.pnv-v2 .pnv-stack {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  margin-right: 2px;
+  padding: 1px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--color-text) 8%, transparent);
+}
+
+.pnv-v2 .pnv-btn {
+  width: 16px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.pnv-v2 .pnv-btn:hover {
+  background: color-mix(in srgb, var(--color-text) 10%, transparent);
+}
+
+/* —— 3 hairline —— */
+.pnv-v3 .pnv-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+  margin-right: 2px;
+  padding-left: var(--space-1);
+  border-left: 1px solid var(--color-border);
+}
+
+.pnv-v3 .pnv-btn {
+  width: 14px;
+  height: 10px;
+}
+
+.pnv-v3 .pnv-btn svg {
+  stroke-width: 1.25;
+}
+
+/* —— 4 plus / minus stack —— */
+.pnv-v4 .pnv-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex-shrink: 0;
+  margin-right: 2px;
+}
+
+.pnv-v4 .pnv-btn {
+  width: 16px;
+  height: 13px;
+  font-size: 11px;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--color-text) 55%, transparent);
+}
+
+.pnv-v4 .pnv-btn:hover {
+  color: var(--color-text);
+}
+
+/* —— 5 plus / minus sides —— */
+.pnv-v5 .pnv-step {
+  gap: var(--space-2);
+  padding-right: 2px;
+}
+
+.pnv-v5 .pnv-btn {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--color-text) 55%, transparent);
+}
+
+.pnv-v5 .pnv-btn:hover {
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-text) 8%, transparent);
+}
+
+.pnv-v5 input.plaque-field__control {
+  flex: 0 1 auto;
+  text-align: center;
+  min-width: 3ch;
+}
+
+/* —— 6 reveal on hover/focus —— */
+.pnv-v6 .pnv-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex-shrink: 0;
+  margin-right: 2px;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.pnv-v6 .plaque-field:hover .pnv-stack,
+.pnv-v6 .plaque-field:focus-within .pnv-stack {
+  opacity: 1;
+}
+
+.pnv-v6 .pnv-btn {
+  width: 14px;
+  height: 11px;
+}
+
+/* —— 7 text only —— */
+.pnv-v7 input.plaque-field__control {
+  padding-right: var(--plaque-select-trail);
+}
+
+/* —— 8 edge split —— */
+.pnv-v8 .pnv-stack {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  flex-shrink: 0;
+  margin: 0 calc(-1 * var(--plaque-shell-pad-x) + 1px) 0 var(--space-1);
+  border-left: 1px solid var(--color-border);
+}
+
+.pnv-v8 .pnv-btn {
+  flex: 1 1 50%;
+  width: 22px;
+  min-height: 0;
+  border-radius: 0;
+}
+
+.pnv-v8 .pnv-btn + .pnv-btn {
+  border-top: 1px solid var(--color-border);
+}
+
+.pnv-v8 .pnv-btn:hover {
+  background: color-mix(in srgb, var(--color-text) 8%, transparent);
+}
+
+.pnv-v8 .pnv-btn:first-child {
+  border-top-right-radius: calc(var(--radius-sm) - 1px);
+}
+
+.pnv-v8 .pnv-btn:last-child {
+  border-bottom-right-radius: calc(var(--radius-sm) - 1px);
+}
+
+/* —— 9 capsule —— */
+.pnv-v9 .pnv-step {
+  gap: 0;
+  max-width: 7.5rem;
+  margin-left: auto;
+  padding: 1px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+}
+
+.pnv-v9 .pnv-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.pnv-v9 .pnv-btn:hover {
+  background: color-mix(in srgb, var(--color-text) 10%, transparent);
+  color: var(--color-text);
+}
+
+.pnv-v9 input.plaque-field__control {
+  flex: 1 1 auto;
+  min-width: 2.5ch;
+  text-align: center;
+  padding-inline: var(--space-1);
+}
+
+/* —— 10 seg ticks (bonus → keep as #10 in 1–10 set) —— */
+/* re-map: variants are 1–10 without baseline in grid; baseline separate */
+
+.pnv-v10 .pnv-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+  margin-right: 2px;
+}
+
+.pnv-v10 .pnv-btn {
+  width: 18px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.pnv-v10 .pnv-btn:hover {
+  border-color: color-mix(in srgb, var(--color-text) 28%, transparent);
+  color: var(--color-text);
+}

@@ -1,0 +1,309 @@
+/* Exploration layout for widget-tile-variants / widget-tile-layouts */
+
+.wt-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--page-padding-x) var(--space-8);
+}
+
+.wt-page__status {
+  margin: 0 0 var(--space-1);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.wt-page__title {
+  margin: 0 0 var(--space-2);
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.wt-page__lead {
+  margin: 0 0 var(--space-4);
+  max-width: 72ch;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.wt-page__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+.wt-page__section {
+  margin-bottom: var(--space-8);
+}
+
+.wt-page__section-title {
+  margin: 0 0 var(--space-1);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.wt-page__subhead {
+  margin: var(--space-6) 0 var(--space-3);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.wt-page__section-desc {
+  margin: 0 0 var(--space-4);
+  max-width: 72ch;
+  font-size: var(--font-size-sm);
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.wt-density-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.wt-density-strip__col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.wt-density-strip__label {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.wt-density-strip__meta {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.wt-telegram-frame {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface-soft) 88%, var(--color-info));
+}
+
+/* Local preview only: soft plate behind collage (not TG wallpaper bleed) */
+.wt-telegram-wallpaper {
+  max-width: 1024px;
+  margin: 0 auto;
+  padding: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+}
+
+/* Collage: opaque tiles + opaque canvas (sendPhoto → JPEG; alpha not viable) */
+.wt-telegram-frame--substrate {
+  max-width: 1024px;
+  margin: 0;
+  /* Outer gutter = inter-tile gap (ref ~14px @1024) */
+  padding: var(--tg-gap, 14px);
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+  background: var(--color-surface-soft);
+}
+
+.wt-telegram-frame--substrate .wt-telegram-frame__hint {
+  display: none;
+}
+
+.wt-telegram-frame__hint {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.wt-telegram-frame__row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.wt-telegram-frame--substrate .wt-telegram-frame__row {
+  /* Ref collage @1024: ~13–14px gutter between panel outer edges */
+  gap: var(--tg-gap, 14px);
+  background: transparent; /* gap color = substrate fill */
+}
+
+.wt-telegram-frame--substrate .widget-tile {
+  width: 100%;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.wt-layout-card {
+  margin: 0 0 var(--space-6);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+}
+
+.wt-layout-card__head {
+  margin-bottom: var(--space-3);
+}
+
+.wt-layout-card__id {
+  margin: 0 0 var(--space-1);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.wt-layout-card__title {
+  margin: 0 0 var(--space-1);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.wt-layout-card__desc {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+/* ---- Layout matrix (1×1 … 4×4 per ChartType) ---- */
+
+.wt-aspect-matrix {
+  --wt-unit: 72px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-3);
+  align-items: flex-start;
+}
+
+.wt-aspect-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.wt-aspect-item__label {
+  margin: 0;
+  padding: 0 2px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.wt-aspect-item .widget-tile {
+  width: calc(var(--wt-cols, 1) * var(--wt-unit));
+  max-width: 100%;
+}
+
+@media (max-width: 959px) {
+  .wt-density-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .wt-aspect-matrix {
+    --wt-unit: 56px;
+  }
+}
+
+/* ---- Telegram chrome exploration (bar / title; canvas = post width) ---- */
+
+.wt-page--chrome {
+  max-width: none;
+}
+
+/* Page under chrome matrix = canon surface (dark #2c2a26 / light #f2f2f2) */
+html:has(.wt-page--chrome),
+html:has(.wt-page--chrome) body {
+  background: var(--color-surface);
+}
+
+.wt-chrome-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  margin: 0 0 var(--space-6);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+  font-size: var(--font-size-sm);
+}
+
+.wt-chrome-toolbar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  color: var(--color-text-muted);
+}
+
+.wt-chrome-toolbar select {
+  font: inherit;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.2em 0.5em;
+}
+
+.wt-chrome-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  align-items: flex-start;
+}
+
+.wt-chrome-card {
+  width: var(--tg-post-width, 1024px);
+  max-width: 100%;
+}
+
+.wt-chrome-card__meta {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.wt-chrome-card .wt-telegram-wallpaper {
+  max-width: none;
+  width: 100%;
+}
+
+.wt-chrome-card .wt-telegram-frame--substrate {
+  max-width: none;
+  width: 100%;
+}
+
+/* Title chrome probes — exploration only, not primitive defaults */
+.widget-tile--title-start .widget-tile__title {
+  text-align: left;
+}
+
+.widget-tile--title-soft .widget-tile__title {
+  color: color-mix(in srgb, var(--color-text) 72%, transparent);
+}
+
+.widget-tile--title-strong .widget-tile__title {
+  color: var(--color-text);
+}

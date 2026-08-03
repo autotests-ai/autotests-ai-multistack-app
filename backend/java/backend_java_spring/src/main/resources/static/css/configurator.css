@@ -60,7 +60,9 @@
 }
 
 .configurator__layout.grid {
-  gap: var(--space-6);
+  /* Same gap cfg↔term as stacked panels in __main (space-3) */
+  --configurator-gap: var(--space-3);
+  gap: var(--configurator-gap);
 }
 
 .configurator__main,
@@ -80,37 +82,120 @@
   }
 }
 
-/* Terminal output — grid--2x1 base (1fr:1fr ≥769px); sticky panel chain (autotests-builder, autotests.ai) */
-.configurator__layout--terminal {
-  align-items: start;
+/*
+ * Terminal shell — 6-col session constant (continuous shed, no media jumps).
+ *
+ * Mental: 1░ + cfg 2–3 + term 4–6.
+ * ░ = padding-left (not a grid track — avoids phantom column-gap when ░→0).
+ * Tracks: cfg | term. span-2 = 2×rest + gap.
+ *
+ * One formula ≥769 — stages via clamp:
+ *   1) term shrinks; gutter=rest, cfg=span-2 — cfg does not move
+ *   2) gutter → 0; cfg+term stay span-2 — group slides left
+ *   3) cfg → rest; term stays span-2
+ *   4) term → rest; cfg stays rest
+ *   ≤768 stack (grid--2x1)
+ *
+ * BAN: discrete media (900/1100/1280/1600) that rebuild grid-template-columns;
+ * BAN: 1fr 2fr 2fr / 2fr 2fr stage recipes (Capabilities regress → 1:2:2).
+ * Consumers (selenoid-ui .capabilities-body) copy this clamp — see RAG cfg-terminal-6col.
+ *
+ * When gutter>0, pad = gutter+gap (mental track + gap). When gutter=0, pad=0
+ * (no leftover gap — left page-pad matches right page-pad).
+ *
+ * Rest @1600: (1600px - 2×page-padding-x - 5×configurator-gap) / 6
+ * (1600 = col-rest anchor only — NOT a track-rebuild breakpoint)
+ */
+.configurator.page-shell:has(.configurator__layout--terminal) {
+  max-width: none;
+  width: 100%;
+  box-sizing: border-box;
+  margin-inline: 0;
 }
 
+.configurator__layout--terminal {
+  /* cfg + term chrome heights independent — no bottom magnet */
+  align-items: start;
+  width: 100%;
+  justify-content: start;
+  --configurator-col-rest: calc(
+    (1600px - 2 * var(--page-padding-x) - 5 * var(--configurator-gap, var(--space-3))) / 6
+  );
+  --configurator-span-2: calc(
+    2 * var(--configurator-col-rest) + var(--configurator-gap, var(--space-3))
+  );
+}
+
+.configurator__layout--terminal > .configurator__main,
+.configurator__layout--terminal > .configurator__aside {
+  grid-column: auto;
+}
+
+/* Continuous stages 1–4 — padding gutter + cfg|term, no track rebuild */
 @media (min-width: 769px) {
   .configurator__layout--terminal {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: stretch;
+    box-sizing: border-box;
+    /*
+     * Reserve cfg+term at span-2 (+ gaps as in 3-track mental model).
+     * 100% → padding containing block ≈ layout width.
+     */
+    --configurator-gutter: clamp(
+      0px,
+      calc(100% - 2 * var(--configurator-span-2) - 2 * var(--configurator-gap, var(--space-3))),
+      var(--configurator-col-rest)
+    );
+    /* gap after ░ shrinks with gutter (not binary gap↔0 — that jumped) */
+    --configurator-gutter-gap: min(
+      var(--configurator-gap, var(--space-3)),
+      var(--configurator-gutter)
+    );
+    padding-left: calc(
+      var(--configurator-gutter) + var(--configurator-gutter-gap)
+    );
+    /* 100% below = content box (width − padding-left) */
+    --configurator-cfg: clamp(
+      var(--configurator-col-rest),
+      calc(100% - var(--configurator-span-2) - var(--configurator-gap, var(--space-3))),
+      var(--configurator-span-2)
+    );
+    --configurator-term: calc(
+      100% - var(--configurator-cfg) - var(--configurator-gap, var(--space-3))
+    );
+    grid-template-columns: var(--configurator-cfg) var(--configurator-term);
+    align-items: start;
   }
 
   .configurator__layout--terminal > .configurator__main {
+    grid-column: 1 / 2;
     align-self: start;
   }
 
+  /*
+   * Aside stretches as sticky containing block (travel along main),
+   * but panel chrome stays content-height — no equal-bottom magnet.
+   */
   .configurator__layout--terminal > .configurator__aside {
+    grid-column: 2 / 3;
     align-self: stretch;
     display: flex;
     flex-direction: column;
+    align-items: stretch;
   }
 
   .configurator__output-panel {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     min-height: 0;
     display: flex;
     flex-direction: column;
   }
 
   .configurator__aside .configurator__output-sticky {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     min-height: 0;
+  }
+
+  .configurator__layout--terminal .panel {
+    flex: 0 1 auto;
   }
 
   .configurator__output-sticky .panel--sticky {
@@ -130,12 +215,12 @@
   }
 }
 
-/* autotests-builder params grid — card flow inside configurator__main */
+/* Params grid — 1-col by default; 2-up only at rest (≥1600) */
 .autotests-builder__params-grid {
   display: grid;
   gap: var(--space-3);
   align-items: stretch;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .autotests-builder__params-grid > .autotests-builder__group {
@@ -144,46 +229,30 @@
 
 /*
  * Wide groups — plaque-field-grid-stack / panel-stack bundles (build, driver, parallel, remote).
- * Span full params-grid width so __cell--lg rows are not squeezed to half-card (~18rem stress).
+ * Span full params-grid width when 2-up is on.
  */
 .configurator__group--wide {
-  grid-column: span 2;
+  grid-column: span 1;
 }
 
-/* Dense groups — flat 5+ params, 2-col field grid inside panel__body */
+/* Dense groups — flat 5+ params; 2-col only at rest */
 .configurator__group--dense .panel__body {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-2) var(--space-3);
 }
 
-@media (min-width: 769px) and (max-width: 1279px) {
+@media (min-width: 1600px) {
   .autotests-builder__params-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .configurator__group--wide,
-  .configurator__group--dense {
-    grid-column: span 1;
+  .configurator__group--wide {
+    grid-column: span 2;
   }
 
   .configurator__group--dense .panel__body {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 768px) {
-  .autotests-builder__params-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .configurator__group--wide,
-  .configurator__group--dense {
-    grid-column: span 1;
-  }
-
-  .configurator__group--dense .panel__body {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

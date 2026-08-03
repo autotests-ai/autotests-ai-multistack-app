@@ -21,7 +21,7 @@ public class RegisterPage extends BasePage {
 
     @Step("Open register page")
     public RegisterPage openPage() {
-        openPath("/register.html");
+        openPath("/register");
         return this;
     }
 

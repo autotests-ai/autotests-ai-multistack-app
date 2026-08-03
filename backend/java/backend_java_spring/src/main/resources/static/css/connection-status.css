@@ -1,0 +1,28 @@
+/* Connection status — non-interactive square indicator for VNC lifecycle. */
+.connection-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 var(--window-control-size);
+  width: var(--window-control-size);
+  height: var(--window-control-size);
+  background: var(--window-control-info);
+  color: #fff;
+}
+
+.connection-status > .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.connection-status--disconnecting {
+  background: var(--connection-status-disconnecting);
+}
+
+.connection-status--disconnected {
+  background: var(--window-control-danger);
+}
+
+.connection-status--connected {
+  display: none;
+}

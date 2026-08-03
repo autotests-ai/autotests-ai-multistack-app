@@ -18,7 +18,7 @@ class HeaderActiveNavTests extends TestBase {
     @Test
     @Tag("smoke")
     @Severity(SeverityLevel.MINOR)
-    @DisplayName("Direct /login.html load highlights Login")
+    @DisplayName("Direct /login load highlights Login")
     void directLoginLoadHighlightsLogin() {
         loginPage.openPage();
         header.shouldHaveActiveNav("header-nav-login");
@@ -27,7 +27,7 @@ class HeaderActiveNavTests extends TestBase {
     @Test
     @Tag("smoke")
     @Severity(SeverityLevel.MINOR)
-    @DisplayName("Direct /register.html load highlights Register")
+    @DisplayName("Direct /register load highlights Register")
     void directRegisterLoadHighlightsRegister() {
         registerPage.openPage();
         header.shouldHaveActiveNav("header-nav-register");

@@ -15,4 +15,6 @@ dev.reference.app/
   config/ controller/ dto/ entity/ exception/ repository/ service/
 ```
 
+Public auth URLs: `/login` and `/register` (`PageController` forwards to static `*.html`). Tests and nav must not use `/login.html`.
+
 Future: `backend_kotlin_spring/`, etc.
