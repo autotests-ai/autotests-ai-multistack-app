@@ -55,21 +55,24 @@ jobs:
         with:
           gradle-version: wrapper
 
-      - name: Materialize static into backend
-        run: bash backend/scripts/sync-app-static.sh
-
-      - name: Unit gate + bootJar
+      - name: Unit gate
         working-directory: backend/java/backend_java_spring
-        run: ./gradlew test bootJar --no-daemon
+        run: ./gradlew test --no-daemon
 
-      - name: Build Docker image
+      - name: Build Docker image (packs frontend/ into jar)
         run: docker compose build backend
+
+      - name: Extract bootJar from image
+        run: |
+          cid="$(docker create reference-app-copy-backend:latest)"
+          docker cp "$cid:/app/app.jar" /tmp/app.jar
+          docker rm "$cid"
 
       - name: Upload bootJar
         uses: actions/upload-artifact@v7
         with:
           name: reference-backend-bootJar-${{ github.run_id }}
-          path: backend/java/backend_java_spring/build/libs/*.jar
+          path: /tmp/app.jar
           if-no-files-found: error
 
       - name: Push Docker image

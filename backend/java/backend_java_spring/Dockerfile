@@ -1,14 +1,18 @@
 # Build context: repository root (see docker-compose.yml).
+# Packs frontend/ into Spring static for a single deployable jar — no sync scripts.
 FROM eclipse-temurin:21-jdk-alpine AS build
-RUN apk add --no-cache bash rsync
 WORKDIR /repo
 
-COPY backend/scripts backend/scripts
-COPY frontend/_shared/frontend_javascript_app frontend/_shared/frontend_javascript_app
-COPY frontend/javascript/vanilla/frontend_javascript_vanilla frontend/javascript/vanilla/frontend_javascript_vanilla
+COPY frontend/_shared/frontend_javascript_app /tmp/ui-app
+COPY frontend/javascript/vanilla/frontend_javascript_vanilla /tmp/ui-vanilla
 COPY backend/java/backend_java_spring backend/java/backend_java_spring
 
-RUN bash backend/scripts/sync-app-static.sh
+RUN STATIC=backend/java/backend_java_spring/src/main/resources/static \
+  && rm -rf "$STATIC" \
+  && mkdir -p "$STATIC" \
+  && cp -a /tmp/ui-app/. "$STATIC/" \
+  && cp -a /tmp/ui-vanilla/. "$STATIC/" \
+  && rm -f "$STATIC/README.md"
 
 WORKDIR /repo/backend/java/backend_java_spring
 RUN chmod +x gradlew && ./gradlew bootJar --no-daemon

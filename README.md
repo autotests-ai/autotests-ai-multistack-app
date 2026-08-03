@@ -58,10 +58,11 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · CI: [`.github/workflows/test.yml`](
 ## Quick start
 
 ```bash
-./backend/scripts/sync-app-static.sh
 docker compose up -d --build
 curl -fsS http://localhost:8080/api/health
 ```
+
+UI lives in `frontend/`; the backend Docker image packs it into the jar (see `backend/java/backend_java_spring/Dockerfile`).
 
 ## Deploy
 

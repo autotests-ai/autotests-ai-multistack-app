@@ -89,10 +89,6 @@ jobs:
           npx --yes @puppeteer/browsers install chrome@148.0.7778.178 --platform linux --path "$CFT_PATH"
           npx --yes @puppeteer/browsers install chromedriver@148.0.7778.178 --platform linux --path "$CFT_PATH"
 
-      - name: Materialize static into backend
-        working-directory: .
-        run: bash backend/scripts/sync-app-static.sh
-
       - name: Start app stack
         working-directory: .
         run: docker compose up -d --build --wait

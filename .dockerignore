@@ -10,13 +10,14 @@
 **/test-results
 **/.DS_Store
 *.md
-!frontend/_shared/frontend_javascript_app/README.md
 .env
 .env.*
 tests
 deploy
 preview
+frontend/scripts
 frontend/_catalog
 frontend/_shared/frontend_javascript_embed
 frontend/javascript/react
 frontend/typescript
+backend/scripts

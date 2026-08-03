@@ -4,6 +4,7 @@ UI by **language** → **UI stack** → product module + co-located component te
 
 ```
 frontend/
+  scripts/                         # wire-ui, catalog sync (not product pages)
   _shared/
     frontend_javascript_app/       # lean DS runtime for product UI (committed)
     frontend_javascript_embed/     # full DS symlinks (wire-ui) — catalog only
@@ -44,4 +45,4 @@ Example: `https://backend_java_spring.reference-app-copy.autotests.ai/frontend_t
 - subdomain → backend stack  
 - path → product frontend module  
 
-Materialize product UI into backend static (build artifact): `backend/scripts/sync-app-static.sh`
+Deploy packs product UI into the Spring image via Dockerfile `COPY` (no sync script under `backend/`).

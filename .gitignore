@@ -1,9 +1,9 @@
-# Wired design-system embed (local catalog; wire-ui.sh)
+# Wired design-system embed (local catalog; frontend/scripts/wire-ui.sh)
 frontend/_shared/frontend_javascript_embed/css
 frontend/_shared/frontend_javascript_embed/js
 frontend/_shared/frontend_javascript_embed/templates
 
-# Generated into backend at sync/docker build — SSOT is frontend/
+# Do not keep UI under backend — SSOT is frontend/; Docker packs into the image
 backend/java/backend_java_spring/src/main/resources/static/
 
 # Build

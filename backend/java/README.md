@@ -15,8 +15,8 @@ dev.reference.app/
   config/ controller/ dto/ entity/ exception/ repository/ service/
 ```
 
-Public auth URLs: `/login` and `/register` (`PageController` forwards to static `*.html`). Tests and nav must not use `/login.html`.
+Public auth URLs: `/login` and `/register` (`PageController` forwards to `login.html` / `register.html` packed into the image). Tests and nav must not use `/login.html`.
 
-`src/main/resources/static/` is **generated** (gitignored). SSOT is `frontend/` — run `backend/scripts/sync-app-static.sh` before local `./gradlew bootRun`, or build via Docker (sync runs in the image). Catalog stays in `frontend/_catalog`.
+UI source: `frontend/` (not under this module). `docker compose build` copies it into `src/main/resources/static` inside the image only. Local `./gradlew bootRun` is API-focused unless you pack UI yourself. Catalog: `frontend/_catalog`.
 
 Future: `backend_kotlin_spring/`, etc.

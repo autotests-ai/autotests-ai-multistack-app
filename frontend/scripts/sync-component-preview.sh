@@ -2,8 +2,8 @@
 # Materialize design-system preview pages for component tests.
 set -euo pipefail
 
-# shellcheck source=paths.sh
-source "$(cd "$(dirname "$0")" && pwd)/paths.sh"
+# shellcheck source=../../backend/scripts/paths.sh
+source "$(cd "$(dirname "$0")/../.." && pwd)/backend/scripts/paths.sh"
 
 DS="$MONOREPO_ROOT/projects/design-system-home/design-system"
 DEST="$FRONTEND_JS_PREVIEW"

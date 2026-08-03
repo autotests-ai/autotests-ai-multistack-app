@@ -2,8 +2,8 @@
 # Wire design-system primitives into frontend/_shared/frontend_javascript_embed (symlinks).
 set -euo pipefail
 
-# shellcheck source=paths.sh
-source "$(cd "$(dirname "$0")" && pwd)/paths.sh"
+# shellcheck source=../../backend/scripts/paths.sh
+source "$(cd "$(dirname "$0")/../.." && pwd)/backend/scripts/paths.sh"
 export MONOREPO_ROOT UI="${UI:-design-system-embed}" SCREENS="${SCREENS:-}"
 MANIFEST="${MANIFEST:-$MONOREPO_ROOT/stacks/_contract/ui.manifest.yaml}"
 
