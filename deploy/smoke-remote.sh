@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Post-deploy smoke for reference-app-copy.autotests.ai (strict TLS — no curl -k).
+# Post-deploy smoke for backend-java-spring.reference-app-copy.autotests.ai (strict TLS — no curl -k).
 set -euo pipefail
 
-BASE_URL="${1:-https://reference-app-copy.autotests.ai}"
+BASE_URL="${1:-https://backend-java-spring.reference-app-copy.autotests.ai}"
 BASE_URL="${BASE_URL%/}"
 SERVICE_NAME="${SMOKE_SERVICE_NAME:-reference-app-copy}"
 

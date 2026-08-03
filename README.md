@@ -4,7 +4,7 @@ Clean teaching fork of [reference-app](https://github.com/autotests-ai/reference
 
 GitHub: **[github.com/autotests-ai/reference-app-copy](https://github.com/autotests-ai/reference-app-copy)** · monorepo: `projects/reference-home/reference-app-copy/`
 
-Production: [reference-app-copy.autotests.ai](https://reference-app-copy.autotests.ai)
+Production: [backend-java-spring.reference-app-copy.autotests.ai](https://backend-java-spring.reference-app-copy.autotests.ai)
 
 ## Layout (3 product folders)
 
@@ -39,8 +39,8 @@ Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/N
 | **tests/javascript/** | `tests_javascript_playwright` | Cypress, … |
 | **tests/python/** | `tests_python_selenium` | playwright, … |
 
-**Prod routing (planned):** `https://{backend}.reference-app-copy.autotests.ai/{frontend}/`  
-Example: `https://backend_java_spring.reference-app-copy.autotests.ai/frontend_typescript_react`
+**Prod routing:** `https://{backend}.reference-app-copy.autotests.ai/{frontend}/`  
+Current backend host: [backend-java-spring.reference-app-copy.autotests.ai](https://backend-java-spring.reference-app-copy.autotests.ai) (hyphens in DNS). Path matrix for frontends — later.
 
 Path SSOT: `backend/scripts/paths.sh`
 
@@ -70,13 +70,13 @@ Switch UI stack via compose `UI_MODULE` / `UI_RUNTIME` (SPA: point at `dist/`).
 
 ## Deploy
 
-**Production URL:** https://reference-app-copy.autotests.ai
+**Production URL:** https://backend-java-spring.reference-app-copy.autotests.ai
 
 | Setting | Value |
 |---------|-------|
 | `APP_DIR` | `/home/reference_app_copy/reference-app-copy` |
 | `SERVER_PORT` | `8084` |
-| `PUBLIC_URL` | `https://reference-app-copy.autotests.ai` |
+| `PUBLIC_URL` | `https://backend-java-spring.reference-app-copy.autotests.ai` |
 
 **CD:** [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) — `build` (image on GHA) → `deploy` (SSH `docker load` + `SKIP_BUILD=1` [`deploy/server-deploy.sh`](deploy/server-deploy.sh)).
 

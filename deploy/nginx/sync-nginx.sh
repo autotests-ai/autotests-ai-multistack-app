@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Apply reference-app-copy.autotests.ai nginx vhost (requires passwordless sudo for this script path).
+# Apply backend-java-spring.reference-app-copy.autotests.ai nginx vhost (requires passwordless sudo for this script path).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONF_SRC="${NGINX_CONF_SRC:-${SCRIPT_DIR}/reference-app-copy.autotests.ai.conf}"
-SITE_NAME="${NGINX_SITE_NAME:-reference-app-copy}"
+CONF_SRC="${NGINX_CONF_SRC:-${SCRIPT_DIR}/backend-java-spring.reference-app-copy.autotests.ai.conf}"
+SITE_NAME="${NGINX_SITE_NAME:-backend-java-spring.reference-app-copy}"
 SITE_PATH="/etc/nginx/sites-available/${SITE_NAME}"
 TMP="/tmp/nginx-${SITE_NAME}.generated"
 SSL_SNIPPET="/tmp/nginx-${SITE_NAME}.ssl-snippet"
-SSL_DOMAIN="${SSL_DOMAIN:-reference-app-copy.autotests.ai}"
+SSL_DOMAIN="${SSL_DOMAIN:-backend-java-spring.reference-app-copy.autotests.ai}"
 
 if [[ ! -f "$CONF_SRC" ]]; then
   echo "Missing $CONF_SRC" >&2
@@ -51,6 +51,11 @@ fi
 
 cp "$TMP" "$SITE_PATH"
 ln -sf "$SITE_PATH" "/etc/nginx/sites-enabled/${SITE_NAME}"
+
+# Apex off: drop legacy site if present
+rm -f /etc/nginx/sites-enabled/reference-app-copy
+rm -f /etc/nginx/sites-available/reference-app-copy
+
 nginx -t
 systemctl reload nginx
 echo "OK: nginx reloaded ($SITE_PATH)"

@@ -40,7 +40,7 @@ frontend/
 https://{backend}.reference-app-copy.autotests.ai/{frontend}/
 ```
 
-Example: `https://backend_java_spring.reference-app-copy.autotests.ai/frontend_typescript_react`
+Example: `https://backend-java-spring.reference-app-copy.autotests.ai/frontend_typescript_react` (hyphens in DNS)
 
 - subdomain → backend stack  
 - path → product frontend module  
