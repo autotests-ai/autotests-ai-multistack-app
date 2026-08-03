@@ -1,5 +1,6 @@
-package tests.unit;
+package tests.unit.testinfra;
 
+import annotations.Layer;
 import helpers.HarCapture;
 import java.util.List;
 import java.util.logging.Level;
@@ -10,7 +11,8 @@ import org.openqa.selenium.logging.LogEntry;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Tag("unit")
+@Layer("test-infra")
+@Tag("test-infra")
 class HarCaptureTest {
 
     @Test

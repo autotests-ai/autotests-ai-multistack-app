@@ -1,10 +1,11 @@
-package tests.unit;
+package tests.unit.testinfra;
 
 import annotations.Layer;
 import config.ConfigReader;
 import config.TestConfig;
 import org.aeonbits.owner.ConfigFactory;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.parallel.Execution;
@@ -18,7 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Layer("unit")
+@Layer("test-infra")
+@Tag("test-infra")
 @DisplayName("ConfigReader")
 @Execution(ExecutionMode.SAME_THREAD)
 class ConfigReaderTest {

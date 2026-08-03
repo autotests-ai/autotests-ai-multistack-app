@@ -1,5 +1,6 @@
-package tests.unit;
+package tests.unit.testinfra;
 
+import annotations.Layer;
 import helpers.HarViewerHtml;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -8,7 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Tag("unit")
+@Layer("test-infra")
+@Tag("test-infra")
 class HarViewerHtmlTest {
 
     @Test
