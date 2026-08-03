@@ -23,26 +23,6 @@ jobs:
             exit 1
           }
 
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Build backend image (linux/amd64)
-        run: |
-          docker compose build backend
-          docker inspect reference-app-copy-backend:latest --format '{{.Architecture}}' | grep -q amd64
-
-      - name: Transfer backend image
-        env:
-          DEPLOY_HOST: ${{ vars.DEPLOY_HOST || '212.92.101.15' }}
-          DEPLOY_USER: ${{ vars.DEPLOY_USER || 'selenoid' }}
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          docker save reference-app-copy-backend:latest | \
-            ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
-              "${DEPLOY_USER}@${DEPLOY_HOST}" docker load
-
       - name: Deploy on production host
         uses: appleboy/ssh-action@v1.2.5
         with:
@@ -58,7 +38,8 @@ jobs:
             cd "$APP_DIR"
             git -c http.proxy= -c https.proxy= fetch --all
             git reset --hard origin/main
-            docker compose up -d --no-build --remove-orphans
+            docker compose build backend
+            docker compose up -d --remove-orphans
             bash deploy/health-poll.sh
             bash deploy/smoke-remote.sh "$PUBLIC_URL"
             echo "Deploy OK: ${PUBLIC_URL} ($(git rev-parse --short HEAD))"
