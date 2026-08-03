@@ -22,9 +22,10 @@ services:
       context: .
       dockerfile: backend/java/backend_java_spring/Dockerfile
       args:
-        # Active product UI (repo-relative). Switch module here when deploying another stack
-        # (e.g. a React `dist/` after `npm run build`). Dockerfile stays stack-agnostic.
+        # Built static tree to pack (MPA folder or SPA dist/). Backend serves any of them.
         UI_MODULE: ${UI_MODULE:-frontend/javascript/vanilla/frontend_javascript_vanilla}
+        # Extra files merged into static (e.g. shared header CSS). For a self-contained
+        # SPA dist, set UI_RUNTIME to the same path as UI_MODULE.
         UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend_javascript_app}
     restart: unless-stopped
     environment:

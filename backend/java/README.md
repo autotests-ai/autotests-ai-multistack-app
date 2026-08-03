@@ -15,10 +15,14 @@ dev.reference.app/
   config/ controller/ dto/ entity/ exception/ repository/ service/
 ```
 
-Public auth URLs: `/login` and `/register` (`PageController` forwards to `login.html` / `register.html` packed into the image). Tests and nav must not use `/login.html`.
+**Universal UI host:** `PageController` soft-routes `/{page}` (no dots) as:
+- `static/{page}.html` if present (MPA / vanilla)
+- else `index.html` (SPA / React / Angular client router)
 
-UI source: `frontend/` (not under this module). `docker compose build` packs whichever module
-compose sets as `UI_MODULE` (+ `UI_RUNTIME`) into the image — see root `docker-compose.yml`.
-Local `./gradlew bootRun` is API-focused unless you pack UI yourself. Catalog: `frontend/_catalog`.
+Tests and nav use `/login` and `/register`, not `*.html`. API is only `/api/**` (+ CORS for other origins).
+
+UI source: `frontend/` (not under this module). Compose `UI_MODULE` (+ optional `UI_RUNTIME`) packs
+the built static tree into the image. Local `./gradlew bootRun` is API-focused unless you pack UI.
+Catalog: `frontend/_catalog`.
 
 Future: `backend_kotlin_spring/`, etc.
