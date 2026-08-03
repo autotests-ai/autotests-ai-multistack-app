@@ -6,6 +6,7 @@ COPY src src/
 RUN chmod +x gradlew && ./gradlew bootJar --no-daemon
 
 FROM eclipse-temurin:21-jre-alpine
+RUN apk add --no-cache wget
 WORKDIR /app
 COPY --from=build /workspace/build/libs/*.jar app.jar
 ENV SERVER_PORT=8080
