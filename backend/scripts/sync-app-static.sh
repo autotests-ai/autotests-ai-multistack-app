@@ -14,12 +14,6 @@ for d in css js templates; do
   rsync -a "$FRONTEND_JS_EMBED/$d/" "$BACKEND_STATIC/$d/"
 done
 
-for f in allure-shell.css allure-shell.js; do
-  if [[ -f "$FRONTEND_JS_EMBED/$f" ]]; then
-    cp -a "$FRONTEND_JS_EMBED/$f" "$BACKEND_STATIC/"
-  fi
-done
-
 rsync -a "$FRONTEND_JS_VANILLA/" "$BACKEND_STATIC/"
 
 echo "sync-app-static: frontend/_shared + javascript/vanilla → backend/java/backend_java_spring/src/main/resources/static/"

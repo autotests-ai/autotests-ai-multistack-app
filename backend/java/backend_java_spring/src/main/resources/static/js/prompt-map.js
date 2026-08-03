@@ -125,7 +125,7 @@ window.promptMap = {
       id: "embed-header",
       group: "cold",
       phase: "6",
-      when: "Встроить header в сторонний HTML (#app-header + header.js); пилот ✓ /login",
+      when: "Встроить header в сторонний HTML (#app-header + header.js); пилот ✓ login.html",
       path: "docs/cursor-skills-cold/embed-header/",
       rules: ["layout-standard"],
     },

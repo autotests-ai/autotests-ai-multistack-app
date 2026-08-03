@@ -2,8 +2,6 @@
 frontend/_shared/frontend_javascript_embed/css
 frontend/_shared/frontend_javascript_embed/js
 frontend/_shared/frontend_javascript_embed/templates
-frontend/_shared/frontend_javascript_embed/allure-shell.css
-frontend/_shared/frontend_javascript_embed/allure-shell.js
 
 # Build
 backend/java/backend_java_spring/build/

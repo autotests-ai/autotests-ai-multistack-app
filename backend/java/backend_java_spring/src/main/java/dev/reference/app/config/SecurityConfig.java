@@ -47,9 +47,7 @@ public class SecurityConfig {
                                 "/register.html",
                                 "/css/**",
                                 "/js/**",
-                                "/templates/**",
-                                "/allure-shell.js",
-                                "/allure-shell.css"
+                                "/templates/**"
                         ).permitAll()
                         .anyRequest().permitAll()
                 )

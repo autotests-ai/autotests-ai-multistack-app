@@ -13,11 +13,6 @@ DS="$MONOREPO_ROOT/projects/design-system-home/design-system"
 mkdir -p "$FRONTEND"
 
 if [[ "$UI" == "design-system-embed" ]]; then
-  for f in allure-shell.css allure-shell.js; do
-    if [[ -f "$DS/$f" ]]; then
-      cp -a "$DS/$f" "$FRONTEND/"
-    fi
-  done
   for d in css js templates; do
     rel="$(python -c "import os; print(os.path.relpath('$DS/$d', '$FRONTEND'))")"
     ln -sfn "$rel" "$FRONTEND/$d"
