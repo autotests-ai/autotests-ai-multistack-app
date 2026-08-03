@@ -6,4 +6,4 @@
 | `sync-component-preview.sh` | Materialize DS preview pages into `_catalog/` for component tests |
 
 Product UI lives under `frontend/javascript/…` and `frontend/_shared/frontend_javascript_app/`.
-Docker packs those into the Spring jar at image build (see `backend/java/backend_java_spring/Dockerfile`).
+`deploy/web` (nginx) packs `UI_MODULE` / `UI_RUNTIME` at image build; backend stays API-only.

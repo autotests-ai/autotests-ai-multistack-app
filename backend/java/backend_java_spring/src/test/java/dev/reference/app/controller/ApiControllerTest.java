@@ -1,5 +1,6 @@
 package dev.reference.app.controller;
 
+import dev.reference.app.config.CorsConfig;
 import dev.reference.app.config.SecurityConfig;
 import dev.reference.app.dto.HealthResponse;
 import dev.reference.app.dto.ItemDto;
@@ -22,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = ApiController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, CorsConfig.class})
 @DisplayName("ApiController")
 class ApiControllerTest {
 

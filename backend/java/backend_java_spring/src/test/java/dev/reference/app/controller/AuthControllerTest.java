@@ -1,5 +1,6 @@
 package dev.reference.app.controller;
 
+import dev.reference.app.config.CorsConfig;
 import dev.reference.app.config.SecurityConfig;
 import dev.reference.app.dto.AuthResponse;
 import dev.reference.app.dto.LoginRequest;
@@ -30,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = AuthController.class)
-@Import({AuthExceptionHandler.class, SecurityConfig.class})
+@Import({AuthExceptionHandler.class, SecurityConfig.class, CorsConfig.class})
 @DisplayName("AuthController")
 class AuthControllerTest {
 
