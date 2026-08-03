@@ -34,16 +34,15 @@ frontend/
 | Component tests (jsdom) | no | `tests_*_react-testing-library` |
 | Shared / catalog | no | `_shared/app`, `_shared/embed`, `_catalog/preview` |
 
-## Prod routing
+## Prod routing (planned)
 
 ```
 https://{backend}.reference-app-copy.autotests.ai/{frontend}/
 ```
 
-Active: `https://backend-java-spring.reference-app-copy.autotests.ai/frontend_typescript_react/`  
-Host `/` is empty (404). `/api/**` stays on the backend host root.
+Example: `https://backend-java-spring.reference-app-copy.autotests.ai/frontend_typescript_react` (hyphens in DNS)
 
 - subdomain → backend stack  
-- path → product frontend module (`UI_MOUNT`)
+- path → product frontend module  
 
-Deploy: `deploy/web` (nginx) packs `UI_MODULE` / `UI_RUNTIME` into `UI_MOUNT`. Backend stays API-only.
+Deploy: `deploy/web` (nginx) packs `UI_MODULE` / `UI_RUNTIME` from compose. Backend stays API-only.
