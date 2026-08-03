@@ -48,7 +48,7 @@ class ApiControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/items returns seeded items")
+    @DisplayName("GET /api/items returns items from service")
     void itemsReturnsList() throws Exception {
         when(itemService.listItems()).thenReturn(new ItemsResponse(
                 List.of(new ItemDto(1L, "Alpha", "First item")),

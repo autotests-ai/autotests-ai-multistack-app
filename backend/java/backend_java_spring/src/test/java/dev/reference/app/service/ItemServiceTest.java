@@ -1,7 +1,6 @@
 package dev.reference.app.service;
 
 import dev.reference.app.dto.HealthResponse;
-import dev.reference.app.dto.ItemDto;
 import dev.reference.app.dto.ItemsResponse;
 import dev.reference.app.entity.ItemEntity;
 import dev.reference.app.repository.ItemRepository;
