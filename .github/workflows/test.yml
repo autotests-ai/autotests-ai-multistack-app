@@ -8,8 +8,11 @@
 # | 2c | + integration |
 # | 2d | + component_browser |
 # | 2e | + e2e |
-# | 2f | + prod_api, prod_e2e (after Deploy) |
+# | 2f | prod_api after successful Deploy (workflow_run); prod_e2e later |
 # | 3+ | visual, manual |
+#
+# CD: Deploy workflow = build (GHA image) → deploy (SSH load + server-deploy).
+# This workflow: unit on PR/push; prod_api after Deploy success.
 
 name: reference-app-copy Tests
 
@@ -247,7 +250,12 @@ jobs:
 
   prod_api:
     name: prod_api
-    if: false
+    if: >-
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'workflow_dispatch' &&
+       (github.event.inputs.layers == 'prod-only' ||
+        github.event.inputs.layers == 'all-enabled'))
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -255,6 +263,8 @@ jobs:
         working-directory: ${{ env.TESTS_JAVA }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

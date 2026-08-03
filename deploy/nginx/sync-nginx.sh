@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
-# Apply reference-app.autotests.ai nginx vhost (requires passwordless sudo for this script path).
+# Apply reference-app-copy.autotests.ai nginx vhost (requires passwordless sudo for this script path).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONF_SRC="${NGINX_CONF_SRC:-${SCRIPT_DIR}/reference-app.autotests.ai.conf}"
-SITE_NAME="${NGINX_SITE_NAME:-reference-app.autotests.ai}"
+CONF_SRC="${NGINX_CONF_SRC:-${SCRIPT_DIR}/reference-app-copy.autotests.ai.conf}"
+SITE_NAME="${NGINX_SITE_NAME:-reference-app-copy}"
 SITE_PATH="/etc/nginx/sites-available/${SITE_NAME}"
 TMP="/tmp/nginx-${SITE_NAME}.generated"
 SSL_SNIPPET="/tmp/nginx-${SITE_NAME}.ssl-snippet"
+SSL_DOMAIN="${SSL_DOMAIN:-reference-app-copy.autotests.ai}"
 
 if [[ ! -f "$CONF_SRC" ]]; then
   echo "Missing $CONF_SRC" >&2
@@ -16,7 +17,7 @@ fi
 
 if [[ "$(id -u)" -ne 0 ]]; then
   if sudo -n true 2>/dev/null; then
-    exec sudo env NGINX_CONF_SRC="$CONF_SRC" NGINX_SITE_NAME="$SITE_NAME" "$0" "$@"
+    exec sudo env NGINX_CONF_SRC="$CONF_SRC" NGINX_SITE_NAME="$SITE_NAME" SSL_DOMAIN="$SSL_DOMAIN" "$0" "$@"
   fi
   echo "Run as root or with passwordless sudo for sync-nginx.sh" >&2
   exit 1
@@ -25,18 +26,12 @@ fi
 cp "$CONF_SRC" "$TMP"
 
 : >"$SSL_SNIPPET"
-if [[ ! -s "$SSL_SNIPPET" ]]; then
-  for domain in reference-app-copy.autotests.ai reference-app.autotests.ai autotests.ai autotests.ai-0001 autotests.cloud-0001; do
-    if [[ -f "/etc/letsencrypt/live/${domain}/fullchain.pem" ]]; then
-      {
-        echo "    ssl_certificate /etc/letsencrypt/live/${domain}/fullchain.pem;"
-        echo "    ssl_certificate_key /etc/letsencrypt/live/${domain}/privkey.pem;"
-      } >>"$SSL_SNIPPET"
-      break
-    fi
-  done
-fi
-if [[ ! -s "$SSL_SNIPPET" && -f "$SITE_PATH" ]]; then
+if [[ -f "/etc/letsencrypt/live/${SSL_DOMAIN}/fullchain.pem" ]]; then
+  {
+    echo "    ssl_certificate /etc/letsencrypt/live/${SSL_DOMAIN}/fullchain.pem;"
+    echo "    ssl_certificate_key /etc/letsencrypt/live/${SSL_DOMAIN}/privkey.pem;"
+  } >>"$SSL_SNIPPET"
+elif [[ -f "$SITE_PATH" ]]; then
   grep -E '^\s*ssl_certificate(_key)? ' "$SITE_PATH" | awk '!seen[$0]++' >>"$SSL_SNIPPET" || true
 fi
 

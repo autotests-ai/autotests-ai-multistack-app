@@ -64,7 +64,11 @@ curl -fsS http://localhost:8080/api/health
 | `SERVER_PORT` | `8084` |
 | `PUBLIC_URL` | `https://reference-app-copy.autotests.ai` |
 
-**Autodeploy:** [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)
+**CD:** [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) — `build` (image on GHA) → `deploy` (SSH `docker load` + `SKIP_BUILD=1` [`deploy/server-deploy.sh`](deploy/server-deploy.sh)).
+
+**Tests:** [`.github/workflows/test.yml`](.github/workflows/test.yml) — unit on PR/push; `prod_api` after successful Deploy (`workflow_run`).
+
+Manual on host: `bash deploy/server-deploy.sh` (builds locally). CD path: `SKIP_BUILD=1 bash deploy/server-deploy.sh`.
 
 ### GitHub secrets & variables
 

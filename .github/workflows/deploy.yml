@@ -12,9 +12,35 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build backend image (linux/amd64)
+        run: |
+          docker compose build backend
+          docker inspect reference-app-copy-backend:latest --format '{{.Architecture}}' | grep -q amd64
+
+      - name: Save image artifact
+        run: docker save reference-app-copy-backend:latest | gzip > /tmp/backend-image.tar.gz
+
+      - name: Upload backend image
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-image
+          path: /tmp/backend-image.tar.gz
+          retention-days: 1
+
   deploy:
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    env:
+      DEPLOY_HOST: ${{ vars.DEPLOY_HOST || '212.92.101.15' }}
+      DEPLOY_USER: ${{ vars.DEPLOY_USER || 'selenoid' }}
     steps:
       - name: Require deploy secrets
         run: |
@@ -23,23 +49,35 @@ jobs:
             exit 1
           }
 
+      - name: Download backend image
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-image
+          path: /tmp
+
+      - name: Setup SSH agent
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Transfer backend image
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+          gunzip -c /tmp/backend-image.tar.gz | \
+            ssh "${DEPLOY_USER}@${DEPLOY_HOST}" docker load
+
       - name: Deploy on production host
         uses: appleboy/ssh-action@v1.2.5
         with:
-          host: ${{ vars.DEPLOY_HOST || '212.92.101.15' }}
-          username: ${{ vars.DEPLOY_USER || 'selenoid' }}
+          host: ${{ env.DEPLOY_HOST }}
+          username: ${{ env.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           command_timeout: 15m
           script: |
             set -euo pipefail
             APP_DIR="${APP_DIR:-/home/selenoid/reference-app-copy}"
-            export SERVER_PORT="${SERVER_PORT:-8084}"
-            PUBLIC_URL="${PUBLIC_URL:-https://reference-app-copy.autotests.ai}"
             cd "$APP_DIR"
             git -c http.proxy= -c https.proxy= fetch --all
             git reset --hard origin/main
-            docker compose build backend
-            docker compose up -d --remove-orphans
-            bash deploy/health-poll.sh
-            bash deploy/smoke-remote.sh "$PUBLIC_URL"
-            echo "Deploy OK: ${PUBLIC_URL} ($(git rev-parse --short HEAD))"
+            SKIP_BUILD=1 bash deploy/server-deploy.sh
