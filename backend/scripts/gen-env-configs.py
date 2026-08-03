@@ -20,7 +20,7 @@ GRADLE_HINT = {
 }
 
 LAYER_DESC = {
-    "unit": "pure Java — helpers/*Test, config/*Test",
+    "unit": "pure Java — tests.unit.*",
     "component": "@Tag(component) — frontend_javascript_preview on :3000 (componentCatalogUrl)",
     "integration": "@Tag(layout,mount) — mount probes",
     "api": "@Layer(api) @Tag(api) — Rest Assured /api/health|items",

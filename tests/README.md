@@ -21,7 +21,7 @@ tests/
 | Kind | Job id | Where |
 |------|--------|-------|
 | Product unit | `unit_backend` | `backend/java/backend_java_spring/src/test/` |
-| Test-infra unit | `unit_test-infra` | `helpers/`, `config/` in Java module |
+| Test-infra unit | `unit_test-infra` | `…/tests/unit/` in Java module |
 | RTL | `component_rtl` | `frontend/typescript/frontend_typescript_react-testing-library/` |
 | Browser/api/e2e | `api` … `e2e` | `tests/java/tests_java_gradle_junit5_allure3_selenide/` |
 

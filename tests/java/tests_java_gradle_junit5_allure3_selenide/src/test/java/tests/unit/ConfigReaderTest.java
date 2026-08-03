@@ -1,6 +1,8 @@
-package config;
+package tests.unit;
 
 import annotations.Layer;
+import config.ConfigReader;
+import config.TestConfig;
 import org.aeonbits.owner.ConfigFactory;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

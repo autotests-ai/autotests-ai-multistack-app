@@ -405,7 +405,7 @@ window.testParamsMap = {
       default: "e2e",
       gradle: false,
       options: [
-        { value: "unit", label: "unit", hint: "helpers/*Test, config/*Test" },
+        { value: "unit", label: "unit", hint: "tests.unit.*" },
         { value: "component", label: "component", hint: "@Layer(component)" },
         { value: "integration", label: "integration", hint: "@Layer(integration)" },
         { value: "api", label: "api", hint: "@Layer(api) @Tag(api)" },

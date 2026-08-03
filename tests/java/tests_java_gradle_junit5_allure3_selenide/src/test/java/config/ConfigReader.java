@@ -24,7 +24,7 @@ public final class ConfigReader {
         return resolveComponentCatalogUrl(testConfig);
     }
 
-    static String resolveComponentCatalogUrl(TestConfig config) {
+    public static String resolveComponentCatalogUrl(TestConfig config) {
         var url = config.componentCatalogUrl().trim();
         if (!url.isEmpty()) {
             return url.replaceAll("/+$", "");

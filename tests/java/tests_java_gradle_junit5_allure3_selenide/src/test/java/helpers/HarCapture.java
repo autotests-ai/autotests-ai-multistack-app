@@ -76,7 +76,7 @@ public final class HarCapture {
     }
 
     @SuppressWarnings("unchecked")
-    static String toHar(LogEntries entries) {
+    public static String toHar(LogEntries entries) {
         Map<String, Map<String, Object>> requests = new LinkedHashMap<>();
         Map<String, Map<String, Object>> responses = new LinkedHashMap<>();
         Map<String, Double> finishedMs = new LinkedHashMap<>();

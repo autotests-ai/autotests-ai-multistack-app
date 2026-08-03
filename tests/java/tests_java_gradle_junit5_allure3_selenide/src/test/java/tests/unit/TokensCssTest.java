@@ -1,6 +1,7 @@
-package helpers;
+package tests.unit;
 
 import annotations.Layer;
+import helpers.TokensCss;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -34,7 +35,7 @@ class TokensCssTest {
                 Arguments.of("--control-height-md", "36px"),
                 Arguments.of("--icon-size-md", "18px"),
                 Arguments.of("--input-min-width", "200px"),
-                Arguments.of("--header-height", "40px")
+                Arguments.of("--header-height", "56px")
         );
     }
 
