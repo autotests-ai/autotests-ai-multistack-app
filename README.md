@@ -1,26 +1,45 @@
 # reference-app-copy
 
-Clean teaching fork of [reference-app](https://github.com/autotests-ai/reference-app) — same Spring Boot + static/React UI stack, **deploy-only** CI for block 1.
+Clean teaching fork of [reference-app](https://github.com/autotests-ai/reference-app) — **3-folder layout**, deploy-only CI (block 1).
 
-GitHub: **[github.com/autotests-ai/reference-app-copy](https://github.com/autotests-ai/reference-app-copy)** · monorepo workspace: `projects/reference-home/reference-app-copy/`
+GitHub: **[github.com/autotests-ai/reference-app-copy](https://github.com/autotests-ai/reference-app-copy)** · monorepo: `projects/reference-home/reference-app-copy/`
 
 Production: [reference-app-copy.autotests.ai](https://reference-app-copy.autotests.ai)
 
-| Path | Role |
-|------|------|
-| `backend/` | Spring Boot — `GET /api/health`, `GET /api/items`, JWT auth API, static UI, Flyway + Postgres |
-| `frontend/` | design-system embed symlinks (`scripts/wire-ui.sh`) |
-| `frontend-react/` | React SPA (Vite + React Router) |
-| `tests/` | Browser + API tests (block 2 — not wired in CI yet) |
-| `deploy/` | nginx vhost, server deploy, health poll, smoke |
-| `.github/workflows/deploy.yml` | **Only** runnable workflow — autodeploy on push `main` |
+## Layout (3 product folders)
 
-Sibling prod (do not touch): [reference-app.autotests.ai](https://reference-app.autotests.ai) on the same host, port `8083`.
+```
+reference-app-copy/
+  frontend/          # UI by language → framework
+  backend/           # server by language → stack (+ build scripts/)
+  tests/             # automation by language → runner (not backend unit tests)
+  deploy/            # prod nginx, smoke, health
+  .github/workflows/ # deploy.yml only (runnable)
+```
 
-## Quick start (local)
+| Zone | Current modules | Future slots (empty until needed) |
+|------|-----------------|-----------------------------------|
+| **frontend/javascript/** | `embed`, `static`, `preview` | `vanilla`, `jquery` |
+| **frontend/typescript/** | `react` | `angular` |
+| **backend/java/** | `backend-java-spring` | `kotlin-spring`, … |
+| **tests/java/** | `tests-java-gradle` | TestNG, … |
+| **tests/javascript/** | `tests-javascript-playwright` | Cypress, … |
+| **tests/python/** | `tests-python-selenium` | playwright, … |
+
+Path SSOT for scripts: `backend/scripts/paths.sh`
+
+### Unit tests vs pyramid tests
+
+| Kind | Where | Example |
+|------|-------|---------|
+| **Unit** (backend) | `backend/java/backend-java-spring/src/test/java/` | `ItemServiceTest`, JaCoCo 100% gate |
+| **Pyramid** (block 2) | `tests/java/tests-java-gradle/` | api, e2e, component, visual |
+| **Other languages** | `tests/javascript/`, `tests/python/` | Playwright, pytest |
+
+## Quick start
 
 ```bash
-./scripts/sync-app-static.sh
+./backend/scripts/sync-app-static.sh
 docker compose up -d --build
 curl -fsS http://localhost:8080/api/health
 ```
@@ -29,55 +48,32 @@ curl -fsS http://localhost:8080/api/health
 
 **Production URL:** https://reference-app-copy.autotests.ai
 
-**Host:** `212.92.101.15` (box3-zoo, same metal as reference-app) · user `selenoid`
-
 | Setting | Value |
 |---------|-------|
 | `APP_DIR` | `/home/selenoid/reference-app-copy` |
 | `SERVER_PORT` | `8084` |
 | `PUBLIC_URL` | `https://reference-app-copy.autotests.ai` |
 
-**Manual bootstrap (first time on server):**
+**Autodeploy:** [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) — push `main` or `workflow_dispatch`.
 
-```bash
-export APP_DIR=/home/selenoid/reference-app-copy
-export SERVER_PORT=8084
-git clone https://github.com/autotests-ai/reference-app-copy.git "$APP_DIR"
-cd "$APP_DIR"
-docker compose up -d --build
-bash deploy/health-poll.sh
-sudo NGINX_CONF_SRC=./deploy/nginx/reference-app-copy.autotests.ai.conf \
-  NGINX_SITE_NAME=reference-app-copy \
-  bash deploy/nginx/sync-nginx.sh
-bash deploy/smoke-remote.sh https://reference-app-copy.autotests.ai
-```
-
-**Autodeploy (GitHub Actions):** push to `main` or `workflow_dispatch` runs [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml).
-
-Image build runs on the GHA runner (`linux/amd64`) and is loaded on box3 — the host Docker daemon cannot pull from Docker Hub via the box2 proxy (Access denied). On-server steps: `git fetch` → `docker compose up --no-build` → health poll → public smoke.
+Image build on GHA (`linux/amd64`) → `docker save|ssh load` → on-server `git fetch` → `compose up --no-build` → health → smoke.
 
 ### GitHub secrets & variables
 
-Configure in repo **Settings → Secrets and variables → Actions**:
-
 | Name | Kind | Value |
 |------|------|-------|
-| `DEPLOY_SSH_KEY` | secret | deploy SSH private key (Ed25519) for `selenoid@212.92.101.15` |
-| `DEPLOY_HOST` | variable (optional) | `212.92.101.15` |
-| `DEPLOY_USER` | variable (optional) | `selenoid` |
+| `DEPLOY_SSH_KEY` | secret | deploy SSH key for `selenoid@212.92.101.15` |
+| `DEPLOY_HOST` | variable | `212.92.101.15` |
+| `DEPLOY_USER` | variable | `selenoid` |
 
-**DNS:** `reference-app-copy.autotests.ai` → `212.92.101.15` (A record, GoDaddy `autotests.ai` zone).
+Sibling prod (do not touch): [reference-app.autotests.ai](https://reference-app.autotests.ai) · port `8083`.
 
-**TLS:** reuses wildcard cert `autotests.ai` on box3 (same pattern as reference-app nginx vhost).
+### Deferred (block 2+)
 
-**Ports on prod host:** copy backend `8084` · reference-app `8083` · autotests.ai `8081` · Jenkins `8082` · Selenoid UI `8080`.
-
-### Deferred CI (block 2+)
-
-Pyramid / build / sonar / visual workflows from the upstream fork live in [`.github/workflows/_deferred/`](.github/workflows/_deferred/) — **not executed** by GHA. Block 2 will add **one** test workflow with pyramid layers added incrementally.
+- Workflows: [`.github/workflows/_deferred/`](.github/workflows/_deferred/)
+- Legacy samples: [`tests/_deferred/`](tests/_deferred/) (notifications, Jenkinsfile, old java sample)
 
 ## Related
 
-- Upstream SSOT: [autotests-ai/reference-app](https://github.com/autotests-ai/reference-app)
-- CI roles canon: `docs/rag/config/ci-workflow-ethalon.md` (monorepo)
-- Design system: `projects/design-system-home/design-system/`
+- Upstream: [autotests-ai/reference-app](https://github.com/autotests-ai/reference-app)
+- CI roles: `docs/rag/config/ci-workflow-ethalon.md` (monorepo)

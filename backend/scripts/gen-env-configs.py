@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-CONFIG_DIR = Path(__file__).resolve().parents[1] / "tests/src/test/resources/config"
+CONFIG_DIR = Path(__file__).resolve().parents[2] / "tests/java/tests-java-gradle/src/test/resources/config"
 LAYERS = ("unit", "component", "integration", "api", "e2e", "visual", "manual")
 KEEP = frozenset({"default.properties"})
 
@@ -21,7 +21,7 @@ GRADLE_HINT = {
 
 LAYER_DESC = {
     "unit": "pure Java — helpers/*Test, config/*Test",
-    "component": "@Tag(component) — reference-app/preview on :3000 (componentCatalogUrl)",
+    "component": "@Tag(component) — frontend-javascript-preview on :3000 (componentCatalogUrl)",
     "integration": "@Tag(layout,mount) — mount probes",
     "api": "@Layer(api) @Tag(api) — Rest Assured /api/health|items",
     "e2e": "@Layer(e2e) — smoke via testE2e",

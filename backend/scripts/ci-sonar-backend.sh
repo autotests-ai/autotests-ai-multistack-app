@@ -4,8 +4,9 @@
 # Env: SONAR_TOKEN, SONAR_HOST_URL (default https://sonar.qa.guru), SONAR_PROJECT_KEY
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$ROOT/backend"
+# shellcheck source=paths.sh
+source "$(cd "$(dirname "$0")" && pwd)/paths.sh"
+cd "$BACKEND_JAVA_SPRING"
 
 export SONAR_HOST_URL="${SONAR_HOST_URL:-https://sonar.qa.guru}"
 export SONAR_PROJECT_KEY="${SONAR_PROJECT_KEY:-reference-app-backend}"

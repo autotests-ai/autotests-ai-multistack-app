@@ -1,20 +1,20 @@
-# Wired design-system embed (local dev; materialized via sync-app-static.sh)
-frontend/css
-frontend/js
-frontend/templates
-frontend/allure-shell.css
-frontend/allure-shell.js
+# Wired design-system embed (local dev; materialized via backend/scripts/sync-app-static.sh)
+frontend/javascript/frontend-javascript-embed/css
+frontend/javascript/frontend-javascript-embed/js
+frontend/javascript/frontend-javascript-embed/templates
+frontend/javascript/frontend-javascript-embed/allure-shell.css
+frontend/javascript/frontend-javascript-embed/allure-shell.js
 
 # Build
-backend/build/
-backend/.gradle/
-backend/bin/
-tests/build/
-tests/.gradle/
-tests/bin/
-java/gradle-junit5-selenium/build/
-java/gradle-junit5-selenium/.gradle/
-java/gradle-junit5-selenium/bin/
+backend/java/backend-java-spring/build/
+backend/java/backend-java-spring/.gradle/
+backend/java/backend-java-spring/bin/
+tests/java/tests-java-gradle/build/
+tests/java/tests-java-gradle/.gradle/
+tests/java/tests-java-gradle/bin/
+tests/_deferred/java-gradle-junit5-selenium/build/
+tests/_deferred/java-gradle-junit5-selenium/.gradle/
+tests/_deferred/java-gradle-junit5-selenium/bin/
 
 # IDE
 .idea/
@@ -26,9 +26,9 @@ java/gradle-junit5-selenium/bin/
 .env
 
 # Local notification dogfood (jar write-outs)
-notifications/chart.png
-notifications/config.runtime.json
-notifications/message.txt
+tests/_deferred/notifications/chart.png
+tests/_deferred/notifications/config.runtime.json
+tests/_deferred/notifications/message.txt
 
 # Test artifacts
 allure-results/
@@ -38,8 +38,5 @@ node_modules/
 .venv/
 playwright-report/
 
-
 # OS
 .DS_Store
-tests-java/build/
-tests-java/.gradle/

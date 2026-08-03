@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
-# Wire design-system primitives and optional contract screens into a rendered project.
-# Called by render.sh; also copied to stacks/<stack>/scripts/wire-ui.sh on derive.
+# Wire design-system primitives into frontend-javascript-embed (symlinks).
 set -euo pipefail
 
-PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-MONOREPO_ROOT="${MONOREPO_ROOT:?MONOREPO_ROOT required}"
-UI="${UI:-design-system-embed}"
-SCREENS="${SCREENS:-}"
+# shellcheck source=paths.sh
+source "$(cd "$(dirname "$0")" && pwd)/paths.sh"
+export MONOREPO_ROOT UI="${UI:-design-system-embed}" SCREENS="${SCREENS:-}"
 MANIFEST="${MANIFEST:-$MONOREPO_ROOT/stacks/_contract/ui.manifest.yaml}"
 
-FRONTEND="$PROJECT_ROOT/frontend"
+FRONTEND="$FRONTEND_JS_EMBED"
 DS="$MONOREPO_ROOT/projects/design-system-home/design-system"
 
 mkdir -p "$FRONTEND"
@@ -24,7 +22,7 @@ if [[ "$UI" == "design-system-embed" ]]; then
     rel="$(python -c "import os; print(os.path.relpath('$DS/$d', '$FRONTEND'))")"
     ln -sfn "$rel" "$FRONTEND/$d"
   done
-  echo "wire-ui: design-system → frontend/ (embed)"
+  echo "wire-ui: design-system → frontend/javascript/frontend-javascript-embed"
 elif [[ "$UI" == "plain" ]]; then
   echo "wire-ui: plain (skip design-system embed)"
 else
@@ -37,7 +35,7 @@ if [[ -n "$SCREENS" ]]; then
     echo "STOP: ui manifest missing at $MANIFEST" >&2
     exit 1
   fi
-  python - "$MANIFEST" "$MONOREPO_ROOT" "$PROJECT_ROOT" "$SCREENS" <<'PY'
+  python - "$MANIFEST" "$MONOREPO_ROOT" "$REPO_ROOT" "$SCREENS" <<'PY'
 import os
 import shutil
 import sys

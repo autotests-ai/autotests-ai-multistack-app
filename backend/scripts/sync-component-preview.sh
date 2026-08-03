@@ -1,17 +1,12 @@
 #!/usr/bin/env bash
-# Materialize design-system preview pages for component tests (HTML + CSS/JS closure).
-# SSOT: monorepo projects/design-system-home/design-system/
-# Target: reference-app/preview/ (committed snapshot for standalone CI).
+# Materialize design-system preview pages for component tests.
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-MONOREPO_ROOT="$(cd "$ROOT/../../.." && pwd)"
-while [[ "$MONOREPO_ROOT" != "/" && ! -f "$MONOREPO_ROOT/generators/matrix.yaml" ]]; do
-  MONOREPO_ROOT="$(dirname "$MONOREPO_ROOT")"
-done
+# shellcheck source=paths.sh
+source "$(cd "$(dirname "$0")" && pwd)/paths.sh"
 
 DS="$MONOREPO_ROOT/projects/design-system-home/design-system"
-DEST="$ROOT/preview"
+DEST="$FRONTEND_JS_PREVIEW"
 
 PREVIEW_PAGES=(
   components.html
