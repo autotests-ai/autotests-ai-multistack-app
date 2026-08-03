@@ -58,8 +58,8 @@ jobs:
       run:
         working-directory: ${{ env.BACKEND_JAVA }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
@@ -79,8 +79,8 @@ jobs:
       run:
         working-directory: ${{ env.TESTS_JAVA }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
@@ -99,8 +99,8 @@ jobs:
       run:
         working-directory: ${{ env.FRONTEND_RTL }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
         with:
           node-version: "22"
       - name: Vitest + React Testing Library
@@ -117,7 +117,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Start postgres + backend
         run: |
           docker compose up -d --build --wait
@@ -133,8 +133,8 @@ jobs:
       run:
         working-directory: ${{ env.TESTS_JAVA }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
@@ -152,8 +152,8 @@ jobs:
       run:
         working-directory: ${{ env.TESTS_JAVA }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
@@ -171,8 +171,8 @@ jobs:
       run:
         working-directory: ${{ env.TESTS_JAVA }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
@@ -200,8 +200,8 @@ jobs:
       run:
         working-directory: ${{ env.TESTS_JAVA }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
@@ -219,8 +219,8 @@ jobs:
       run:
         working-directory: ${{ env.TESTS_JAVA }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
@@ -237,8 +237,8 @@ jobs:
       run:
         working-directory: ${{ env.TESTS_JAVA }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
@@ -262,10 +262,10 @@ jobs:
       run:
         working-directory: ${{ env.TESTS_JAVA }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
@@ -283,8 +283,8 @@ jobs:
       run:
         working-directory: ${{ env.TESTS_JAVA }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
