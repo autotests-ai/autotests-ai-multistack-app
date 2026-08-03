@@ -18,7 +18,7 @@ Canonical Java automation module for reference-app-copy block 2 (`test.yml`).
 
 | Layer | Gradle task | Notes |
 |-------|-------------|--------|
-| unit / test-infra | `testUnit` | `src/test/java/tests/unit/testinfra/` · Allure layer/tag `test-infra` |
+| unit / test-infra | `testUnit` | `src/test/java/tests/unit/testinfra/` · `@Layer("unit")` + `@Tag("test-infra")` |
 | api | `testApi` | Rest Assured |
 | integration | `testIntegration` | mount probes |
 | component (browser) | `testComponent` | preview on :3000 |

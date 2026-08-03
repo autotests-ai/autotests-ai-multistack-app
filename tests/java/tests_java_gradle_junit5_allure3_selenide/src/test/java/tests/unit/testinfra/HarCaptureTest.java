@@ -11,7 +11,7 @@ import org.openqa.selenium.logging.LogEntry;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Layer("test-infra")
+@Layer("unit")
 @Tag("test-infra")
 class HarCaptureTest {
 

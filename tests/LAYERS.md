@@ -19,7 +19,7 @@ Jobs = layers; enable gradually (block 2a → 2f). Naming: `_` between segments,
                     ├─────────────┤
                     │     api     │  REST, no UI
                     ├─────────────┤
-                    │unit_test-infra│ tests/unit/testinfra (Allure: test-infra)
+                    │unit_test-infra│ tests/unit/testinfra (@Layer unit, @Tag test-infra)
                     ├─────────────┤
                     │ unit_backend │ Spring, JaCoCo (product code)
                     └─────────────┘
@@ -32,7 +32,7 @@ Jobs = layers; enable gradually (block 2a → 2f). Naming: `_` between segments,
 | Layer (job id) | Zone | Where | Selector | Run | Target URL |
 |----------------|------|-------|----------|-----|------------|
 | `unit_backend` | backend | `backend/java/backend_java_spring/src/test/` | all backend tests | `./gradlew test` (+ JaCoCo) | n/a |
-| `unit_test-infra` | tests | `…/tests/unit/testinfra/` | `tests.unit.testinfra.*` · `@Layer`/`@Tag("test-infra")` | `./gradlew testUnit` | n/a |
+| `unit_test-infra` | tests | `…/tests/unit/testinfra/` | `tests.unit.testinfra.*` · `@Layer("unit")` + `@Tag("test-infra")` | `./gradlew testUnit` | n/a |
 | `component_rtl` | frontend | `frontend/typescript/frontend_typescript_react-testing-library/` | Vitest | `npm test` | jsdom |
 | `api` | tests | `…/tests/api/` | `@Tag("api")` | `./gradlew testApi` | app `:8080` |
 | `integration` | tests | e.g. `LoginFormTests`, `LoginEmbedTests` | `@Tag("layout")` / `@Tag("mount")` | `./gradlew testIntegration` | app `:8080` |

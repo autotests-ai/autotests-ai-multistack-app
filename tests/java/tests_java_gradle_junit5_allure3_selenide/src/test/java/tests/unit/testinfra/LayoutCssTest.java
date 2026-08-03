@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Layer("test-infra")
+@Layer("unit")
 @Tag("test-infra")
 @DisplayName("LayoutCss")
 class LayoutCssTest {

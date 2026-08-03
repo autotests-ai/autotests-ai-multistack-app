@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Layer("test-infra")
+@Layer("unit")
 @Tag("test-infra")
 @DisplayName("ConfigReader")
 @Execution(ExecutionMode.SAME_THREAD)
