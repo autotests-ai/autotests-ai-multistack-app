@@ -102,7 +102,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: "26"
       - name: Vitest + React Testing Library
         run: |
           npm ci
