@@ -10,6 +10,7 @@ BACKEND_STATIC="$BACKEND_JAVA_SPRING/src/main/resources/static"
 
 # Shared / catalog (not product URL matrix)
 FRONTEND_JS_EMBED="$REPO_ROOT/frontend/_shared/frontend_javascript_embed"
+FRONTEND_JS_APP="$REPO_ROOT/frontend/_shared/frontend_javascript_app"
 FRONTEND_JS_PREVIEW="$REPO_ROOT/frontend/_catalog/frontend_javascript_preview"
 
 # Product frontends — javascript

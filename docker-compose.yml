@@ -17,8 +17,10 @@ services:
       retries: 10
 
   backend:
+    image: reference-app-copy-backend:latest
     build:
-      context: ./backend/java/backend_java_spring
+      context: .
+      dockerfile: backend/java/backend_java_spring/Dockerfile
     restart: unless-stopped
     environment:
       DB_HOST: postgres

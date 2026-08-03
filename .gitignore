@@ -1,7 +1,10 @@
-# Wired design-system embed (local dev; materialize via backend/scripts/sync-app-static.sh)
+# Wired design-system embed (local catalog; wire-ui.sh)
 frontend/_shared/frontend_javascript_embed/css
 frontend/_shared/frontend_javascript_embed/js
 frontend/_shared/frontend_javascript_embed/templates
+
+# Generated into backend at sync/docker build — SSOT is frontend/
+backend/java/backend_java_spring/src/main/resources/static/
 
 # Build
 backend/java/backend_java_spring/build/

@@ -5,7 +5,8 @@ UI by **language** → **UI stack** → product module + co-located component te
 ```
 frontend/
   _shared/
-    frontend_javascript_embed/     # design-system symlinks (wire-ui) — not a product URL
+    frontend_javascript_app/       # lean DS runtime for product UI (committed)
+    frontend_javascript_embed/     # full DS symlinks (wire-ui) — catalog only
   _catalog/
     frontend_javascript_preview/   # DS component catalog for browser @Tag(component)
   javascript/
@@ -30,7 +31,7 @@ frontend/
 |------|----------------|----------|
 | Product UI | yes | `frontend_*_react`, `frontend_*_vanilla` |
 | Component tests (jsdom) | no | `tests_*_react-testing-library` |
-| Shared / catalog | no | `_shared/embed`, `_catalog/preview` |
+| Shared / catalog | no | `_shared/app`, `_shared/embed`, `_catalog/preview` |
 
 ## Prod routing (planned)
 
@@ -43,4 +44,4 @@ Example: `https://backend_java_spring.reference-app-copy.autotests.ai/frontend_t
 - subdomain → backend stack  
 - path → product frontend module  
 
-Materialize vanilla into backend: `backend/scripts/sync-app-static.sh`
+Materialize product UI into backend static (build artifact): `backend/scripts/sync-app-static.sh`

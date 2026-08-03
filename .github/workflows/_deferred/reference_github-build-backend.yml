@@ -13,18 +13,16 @@ on:
     branches: [main]
     paths:
       - "backend/**"
-      - "app-static/**"
+      - "frontend/_shared/frontend_javascript_app/**"
+      - "frontend/javascript/vanilla/frontend_javascript_vanilla/**"
       - "docker-compose.yml"
-      - "scripts/sync-app-static.sh"
-      - "scripts/wire-ui.sh"
   pull_request:
     branches: [main]
     paths:
       - "backend/**"
-      - "app-static/**"
+      - "frontend/_shared/frontend_javascript_app/**"
+      - "frontend/javascript/vanilla/frontend_javascript_vanilla/**"
       - "docker-compose.yml"
-      - "scripts/sync-app-static.sh"
-      - "scripts/wire-ui.sh"
   workflow_dispatch:
   workflow_call:
 
@@ -58,11 +56,10 @@ jobs:
           gradle-version: wrapper
 
       - name: Materialize static into backend
-        continue-on-error: true
-        run: bash scripts/sync-app-static.sh
+        run: bash backend/scripts/sync-app-static.sh
 
       - name: Unit gate + bootJar
-        working-directory: backend
+        working-directory: backend/java/backend_java_spring
         run: ./gradlew test bootJar --no-daemon
 
       - name: Build Docker image
@@ -72,7 +69,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: reference-backend-bootJar-${{ github.run_id }}
-          path: backend/build/libs/*.jar
+          path: backend/java/backend_java_spring/build/libs/*.jar
           if-no-files-found: error
 
       - name: Push Docker image

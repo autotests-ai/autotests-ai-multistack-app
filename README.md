@@ -31,7 +31,7 @@ Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/N
 | **frontend/javascript/vanilla/** | `frontend_javascript_vanilla` (active) | vanilla component tests |
 | **frontend/typescript/react/** | `frontend_typescript_react`, `tests_typescript_react-testing-library` | — |
 | **frontend/typescript/vanilla/** | `frontend_typescript_vanilla` (slot) | vanilla component tests |
-| **frontend/_shared/** | `frontend_javascript_embed` | — |
+| **frontend/_shared/** | `frontend_javascript_app`, `frontend_javascript_embed` | — |
 | **frontend/_catalog/** | `frontend_javascript_preview` | — |
 | **backend/java/** | `backend_java_spring` | `backend_kotlin_spring`, … |
 | **backend/python/** | — | `backend_python_fastapi`, `backend_python_flask` |

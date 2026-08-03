@@ -17,6 +17,6 @@ dev.reference.app/
 
 Public auth URLs: `/login` and `/register` (`PageController` forwards to static `*.html`). Tests and nav must not use `/login.html`.
 
-`src/main/resources/static/` is a **lean** materialization (`backend/scripts/sync-app-static.sh`): app pages + required header/CSS only. Full design-system catalog lives under `frontend/` (`_shared`, `_catalog`).
+`src/main/resources/static/` is **generated** (gitignored). SSOT is `frontend/` — run `backend/scripts/sync-app-static.sh` before local `./gradlew bootRun`, or build via Docker (sync runs in the image). Catalog stays in `frontend/_catalog`.
 
 Future: `backend_kotlin_spring/`, etc.
