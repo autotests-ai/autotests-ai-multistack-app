@@ -3,7 +3,7 @@ frontend/_shared/frontend_javascript_embed/css
 frontend/_shared/frontend_javascript_embed/js
 frontend/_shared/frontend_javascript_embed/templates
 
-# Do not keep UI under backend — SSOT is frontend/; Docker packs into the image
+# Backend is API-only — never commit UI under Spring resources
 backend/java/backend_java_spring/src/main/resources/static/
 
 # Build

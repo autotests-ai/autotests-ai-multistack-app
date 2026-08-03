@@ -19,14 +19,7 @@ services:
   backend:
     image: reference-app-copy-backend:latest
     build:
-      context: .
-      dockerfile: backend/java/backend_java_spring/Dockerfile
-      args:
-        # Built static tree to pack (MPA folder or SPA dist/). Backend serves any of them.
-        UI_MODULE: ${UI_MODULE:-frontend/javascript/vanilla/frontend_javascript_vanilla}
-        # Extra files merged into static (e.g. shared header CSS). For a self-contained
-        # SPA dist, set UI_RUNTIME to the same path as UI_MODULE.
-        UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend_javascript_app}
+      context: ./backend/java/backend_java_spring
     restart: unless-stopped
     environment:
       DB_HOST: postgres
@@ -34,13 +27,28 @@ services:
       DB_NAME: reference_app
       DB_USER: reference
       DB_PASSWORD: reference
-      SERVER_PORT: ${SERVER_PORT:-8080}
+      SERVER_PORT: 8080
       JWT_SECRET: ${JWT_SECRET:-reference-app-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - reference_internal
+    # API only — not published; browsers hit `web`.
+
+  web:
+    image: reference-app-copy-web:latest
+    build:
+      context: .
+      dockerfile: deploy/web/Dockerfile
+      args:
+        UI_MODULE: ${UI_MODULE:-frontend/javascript/vanilla/frontend_javascript_vanilla}
+        UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend_javascript_app}
+    restart: unless-stopped
+    depends_on:
+      - backend
     ports:
-      - "${SERVER_PORT:-8080}:${SERVER_PORT:-8080}"
+      - "${SERVER_PORT:-8080}:80"
     networks:
       - reference_internal
 

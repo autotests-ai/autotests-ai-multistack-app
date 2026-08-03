@@ -15,14 +15,7 @@ dev.reference.app/
   config/ controller/ dto/ entity/ exception/ repository/ service/
 ```
 
-**Universal UI host:** `PageController` soft-routes `/{page}` (no dots) as:
-- `static/{page}.html` if present (MPA / vanilla)
-- else `index.html` (SPA / React / Angular client router)
-
-Tests and nav use `/login` and `/register`, not `*.html`. API is only `/api/**` (+ CORS for other origins).
-
-UI source: `frontend/` (not under this module). Compose `UI_MODULE` (+ optional `UI_RUNTIME`) packs
-the built static tree into the image. Local `./gradlew bootRun` is API-focused unless you pack UI.
-Catalog: `frontend/_catalog`.
+**API-only.** Controllers expose `/api/**`. UI is not in this module — `deploy/web` (nginx)
+serves `frontend/` and proxies `/api` here. Soft routes `/login` / `/register` live in nginx.
 
 Future: `backend_kotlin_spring/`, etc.

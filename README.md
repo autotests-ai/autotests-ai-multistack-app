@@ -60,11 +60,13 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · CI: [`.github/workflows/test.yml`](
 ```bash
 docker compose up -d --build
 curl -fsS http://localhost:8080/api/health
+curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/login
 ```
 
-UI lives in `frontend/`. Compose passes `UI_MODULE` / `UI_RUNTIME` into the image build.
-Backend hosting is stack-agnostic: MPA `{page}.html` or SPA `index.html` fallback, JSON under `/api`.
-To ship React/Angular: build → point `UI_MODULE` at `dist/` → rebuild.
+- `backend` — Spring JSON API only (`/api/**`)
+- `web` — nginx serves `frontend/` and proxies `/api` → backend
+
+Switch UI stack via compose `UI_MODULE` / `UI_RUNTIME` (SPA: point at `dist/`).
 
 ## Deploy
 

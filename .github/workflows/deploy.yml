@@ -19,19 +19,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Build backend image (linux/amd64)
+      - name: Build images (linux/amd64)
         run: |
-          docker compose build backend
+          docker compose build backend web
           docker inspect reference-app-copy-backend:latest --format '{{.Architecture}}' | grep -q amd64
+          docker inspect reference-app-copy-web:latest --format '{{.Architecture}}' | grep -q amd64
 
-      - name: Save image artifact
-        run: docker save reference-app-copy-backend:latest | gzip > /tmp/backend-image.tar.gz
+      - name: Save image artifacts
+        run: |
+          docker save \
+            reference-app-copy-backend:latest \
+            reference-app-copy-web:latest \
+            | gzip > /tmp/app-images.tar.gz
 
-      - name: Upload backend image
+      - name: Upload app images
         uses: actions/upload-artifact@v7
         with:
-          name: backend-image
-          path: /tmp/backend-image.tar.gz
+          name: app-images
+          path: /tmp/app-images.tar.gz
           retention-days: 1
 
   deploy:
@@ -49,10 +54,10 @@ jobs:
             exit 1
           }
 
-      - name: Download backend image
+      - name: Download app images
         uses: actions/download-artifact@v8
         with:
-          name: backend-image
+          name: app-images
           path: /tmp
 
       - name: Setup SSH agent
@@ -60,11 +65,11 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
 
-      - name: Transfer backend image
+      - name: Transfer app images
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
-          gunzip -c /tmp/backend-image.tar.gz | \
+          gunzip -c /tmp/app-images.tar.gz | \
             ssh "${DEPLOY_USER}@${DEPLOY_HOST}" docker load
 
       - name: Deploy on production host

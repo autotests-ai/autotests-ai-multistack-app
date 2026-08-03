@@ -45,5 +45,4 @@ Example: `https://backend_java_spring.reference-app-copy.autotests.ai/frontend_t
 - subdomain → backend stack  
 - path → product frontend module  
 
-Deploy: root `docker-compose.yml` sets `UI_MODULE` / `UI_RUNTIME`; the backend Dockerfile packs
-those paths only (no stack name hard-coded). Switch the compose args to deploy another frontend.
+Deploy: `deploy/web` (nginx) packs `UI_MODULE` / `UI_RUNTIME` from compose. Backend stays API-only.

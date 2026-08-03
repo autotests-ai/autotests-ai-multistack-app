@@ -59,8 +59,8 @@ jobs:
         working-directory: backend/java/backend_java_spring
         run: ./gradlew test --no-daemon
 
-      - name: Build Docker image (packs frontend/ into jar)
-        run: docker compose build backend
+      - name: Build Docker images
+        run: docker compose build backend web
 
       - name: Extract bootJar from image
         run: |

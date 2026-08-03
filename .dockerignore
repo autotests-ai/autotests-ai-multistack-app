@@ -13,7 +13,6 @@
 .env
 .env.*
 tests
-deploy
 preview
 frontend/scripts
 frontend/_catalog
@@ -21,3 +20,5 @@ frontend/_shared/frontend_javascript_embed
 frontend/javascript/react
 frontend/typescript
 backend/scripts
+deploy/nginx
+deploy/*.sh

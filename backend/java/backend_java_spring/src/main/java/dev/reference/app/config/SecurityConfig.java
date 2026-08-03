@@ -27,6 +27,8 @@ public class SecurityConfig {
      * CSRF is disabled on purpose: auth is Bearer JWT ({@link JwtAuthFilter}) with
      * {@link SessionCreationPolicy#STATELESS} — no ambient cookie credential for CSRF to exploit.
      * Enabling CSRF would break JSON API clients that do not echo an XSRF token.
+     *
+     * <p>This module is API-only. UI is served by {@code deploy/web} (nginx).
      */
     @Bean
     @SuppressWarnings("java:S4502")
@@ -40,20 +42,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/logout").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
-                        // Static UI (any stack) + soft client routes — public; API auth is path-based above.
-                        .requestMatchers(
-                                "/",
-                                "/index.html",
-                                "/login",
-                                "/register",
-                                "/*.html",
-                                "/css/**",
-                                "/js/**",
-                                "/assets/**",
-                                "/templates/**",
-                                "/favicon.ico"
-                        ).permitAll()
-                        .anyRequest().permitAll()
+                        .requestMatchers("/api/**").authenticated()
+                        .anyRequest().denyAll()
                 )
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) ->

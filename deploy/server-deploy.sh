@@ -23,7 +23,7 @@ git reset --hard origin/main
 if [[ "$SKIP_BUILD" == "1" ]]; then
   docker compose up -d --no-build --remove-orphans
 else
-  docker compose build backend
+  docker compose build backend web
   docker compose up -d --remove-orphans
 fi
 
