@@ -8,7 +8,8 @@ library (ADR 007), aliased to monorepo `packages/react-ui/src`.
 RTL / Vitest live in [`../tests_typescript_react-testing-library/`](../tests_typescript_react-testing-library/)
 (`component_rtl`), not in this folder name.
 
-Prod URL (planned): `https://{backend}.reference-app-copy.autotests.ai/frontend_typescript_react`
+Prod URL: `https://{backend}.reference-app-copy.autotests.ai/frontend_typescript_react/`  
+(Host `/` is empty. Until this module’s SPA is wired, deploy mounts the active `UI_MODULE` here via `UI_MOUNT`.)
 
 ## Routes
 
