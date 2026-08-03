@@ -1,0 +1,283 @@
+# reference-app-copy Tests — one workflow, jobs = layers (see tests/LAYERS.md).
+# Flip job-level `if: false` → event conditions when wiring a layer.
+#
+# | Phase | Jobs |
+# |-------|------|
+# | 2a | unit_backend, unit_test-infra (on); component_rtl when SPA restored |
+# | 2b | + api (+ compose_up) |
+# | 2c | + integration |
+# | 2d | + component_browser |
+# | 2e | + e2e |
+# | 2f | + prod_api, prod_e2e (after Deploy) |
+# | 3+ | visual, manual |
+
+name: reference-app-copy Tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_run:
+    workflows: ["reference-app-copy Deploy"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      layers:
+        description: "all-enabled | prod-only | (ignored until layers wired)"
+        required: false
+        default: all-enabled
+
+run-name: reference-app-copy tests (${{ github.event_name }} @ ${{ github.sha }})
+
+concurrency:
+  group: test-reference-app-copy-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_run' }}
+
+env:
+  TESTS_JAVA: tests/java/tests_java_gradle_junit5_allure3_selenide
+  BACKEND_JAVA: backend/java/backend_java_spring
+  FRONTEND_RTL: frontend/typescript/frontend_typescript_react-testing-library
+  FRONTEND_PREVIEW: frontend/javascript/frontend_javascript_preview
+
+jobs:
+  # ── 2a: unit (product + test-infra) ────────────────────────────────
+
+  unit_backend:
+    name: unit_backend
+    if: >-
+      github.event_name == 'pull_request' ||
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.BACKEND_JAVA }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - name: Backend unit + JaCoCo
+        run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification --no-daemon
+
+  unit_test-infra:
+    name: unit_test-infra
+    if: >-
+      github.event_name == 'pull_request' ||
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: ${{ env.TESTS_JAVA }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - name: Test-infra unit (helpers + config)
+        run: ./gradlew testUnit jacocoTestUnitCoverageVerification -DpyramidStand=reference_ci -DallureReportMode=none --no-daemon
+
+  # ── 2a later: RTL (off until frontend SPA + package.json restored) ─
+
+  component_rtl:
+    name: component_rtl
+    if: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: ${{ env.FRONTEND_RTL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Vitest + React Testing Library
+        run: |
+          npm ci
+          npm test
+
+  # ── 2b+: compose + api / integration / e2e ─────────────────────────
+
+  compose_up:
+    name: compose_up
+    if: false
+    needs: [unit_backend, unit_test-infra]
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start postgres + backend
+        run: |
+          docker compose up -d --build --wait
+          curl -fsS "http://127.0.0.1:8080/api/health" | grep -q '"status":"ok"'
+
+  api:
+    name: api
+    if: false
+    needs: [compose_up]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.TESTS_JAVA }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - name: API layer
+        run: ./gradlew testApi -DpyramidStand=reference_ci -DallureReportMode=none --no-daemon
+
+  integration:
+    name: integration
+    if: false
+    needs: [compose_up]
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: ${{ env.TESTS_JAVA }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - name: Integration (mount / layout)
+        run: ./gradlew testIntegration -DpyramidStand=reference_ci -DallureReportMode=none -Dheadless=true --no-daemon
+
+  component_browser:
+    name: component_browser
+    if: false
+    needs: [unit_backend, unit_test-infra]
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: ${{ env.TESTS_JAVA }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - name: Catalog preview :3000
+        working-directory: ${{ env.FRONTEND_PREVIEW }}
+        run: |
+          python -m http.server 3000 &
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:3000/components.html >/dev/null && exit 0
+            sleep 1
+          done
+          echo "preview failed on :3000" >&2
+          exit 1
+      - name: Component browser (DS catalog)
+        run: ./gradlew testComponent -DpyramidStand=reference_ci -DallureReportMode=none -Dheadless=true --no-daemon
+
+  e2e:
+    name: e2e
+    if: false
+    needs: [api]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: ${{ env.TESTS_JAVA }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - name: E2E smoke (local)
+        run: ./gradlew testE2e -Denv=reference_ci_e2e -DallureReportMode=none -Dheadless=true --no-daemon
+
+  visual:
+    name: visual
+    if: false
+    needs: [compose_up]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: ${{ env.TESTS_JAVA }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - name: Visual baselines
+        run: ./gradlew testVisual -Denv=reference_ci_visual -DallureReportMode=none -Dheadless=true --no-daemon
+
+  manual:
+    name: manual
+    if: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ${{ env.TESTS_JAVA }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - name: Manual stubs
+        run: ./gradlew testManual -DpyramidStand=reference_ci -DallureReportMode=none --no-daemon
+
+  # ── 2f: after Deploy ───────────────────────────────────────────────
+
+  prod_api:
+    name: prod_api
+    if: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ env.TESTS_JAVA }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - name: Prod API
+        run: ./gradlew testApi -DpyramidStand=reference_prod -DallureReportMode=none --no-daemon
+
+  prod_e2e:
+    name: prod_e2e
+    if: false
+    needs: [prod_api]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: ${{ env.TESTS_JAVA }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - name: Prod E2E smoke (Selenoid)
+        run: ./gradlew testE2e -Denv=reference_prod_e2e -DallureReportMode=none --no-daemon

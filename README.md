@@ -35,13 +35,16 @@ Full test-module matrix: [tests/NAMING.md](tests/NAMING.md).
 
 Path SSOT: `backend/scripts/paths.sh`
 
-### Unit vs other tests
+### Layers (block 2)
 
-| Kind | Where |
-|------|-------|
-| **Unit** (backend) | `backend/java/backend_java_spring/src/test/java/` |
-| **RTL component** | `frontend/typescript/frontend_typescript_react-testing-library/` |
-| **Browser/api/e2e** (block 2) | `tests/java/tests_java_gradle_junit5_allure3_selenide/` |
+Canon: [tests/LAYERS.md](tests/LAYERS.md) · CI: [`.github/workflows/test.yml`](.github/workflows/test.yml)
+
+| Job | Where |
+|-----|-------|
+| `unit_backend` | `backend/java/backend_java_spring/src/test/` |
+| `unit_test-infra` | helpers/config in Java tests module |
+| `component_rtl` | `frontend/typescript/frontend_typescript_react-testing-library/` |
+| `api` … `e2e` / `component_browser` / `visual` | `tests/java/tests_java_gradle_junit5_allure3_selenide/` |
 
 ## Quick start
 
