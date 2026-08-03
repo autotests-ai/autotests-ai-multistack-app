@@ -10,31 +10,36 @@ Production: [reference-app-copy.autotests.ai](https://reference-app-copy.autotes
 
 ```
 reference-app-copy/
-  frontend/          # UI by language → framework
-  backend/           # server by language → stack (+ build scripts/)
-  tests/             # automation by language → runner (not backend unit tests)
+  frontend/          # UI by language → stack
+  backend/           # server by language → stack (+ scripts/)
+  tests/             # automation by language → runner
   deploy/            # prod nginx, smoke, health
   .github/workflows/ # deploy.yml only (runnable)
 ```
 
-| Zone | Current modules | Future slots (empty until needed) |
-|------|-----------------|-----------------------------------|
+### Naming convention
+
+`{zone}_{language}_{stack}` — underscores between segments.  
+Hyphen **only** in compound tool names, e.g. `frontend_typescript_react-testing-library`.
+
+| Zone | Current modules | Future slots |
+|------|-----------------|--------------|
 | **frontend/javascript/** | `embed`, `static`, `preview` | `vanilla`, `jquery` |
-| **frontend/typescript/** | `react` | `angular` |
-| **backend/java/** | `backend-java-spring` | `kotlin-spring`, … |
-| **tests/java/** | `tests-java-gradle` | TestNG, … |
-| **tests/javascript/** | `tests-javascript-playwright` | Cypress, … |
-| **tests/python/** | `tests-python-selenium` | playwright, … |
+| **frontend/typescript/** | `react-testing-library` | `angular` |
+| **backend/java/** | `backend_java_spring` | `backend_kotlin_spring`, … |
+| **tests/java/** | `tests_java_gradle` | TestNG, … |
+| **tests/javascript/** | `tests_javascript_playwright` | Cypress, … |
+| **tests/python/** | `tests_python_selenium` | playwright, … |
 
-Path SSOT for scripts: `backend/scripts/paths.sh`
+Path SSOT: `backend/scripts/paths.sh`
 
-### Unit tests vs pyramid tests
+### Unit vs other tests
 
-| Kind | Where | Example |
-|------|-------|---------|
-| **Unit** (backend) | `backend/java/backend-java-spring/src/test/java/` | `ItemServiceTest`, JaCoCo 100% gate |
-| **Pyramid** (block 2) | `tests/java/tests-java-gradle/` | api, e2e, component, visual |
-| **Other languages** | `tests/javascript/`, `tests/python/` | Playwright, pytest |
+| Kind | Where |
+|------|-------|
+| **Unit** (backend) | `backend/java/backend_java_spring/src/test/java/` |
+| **RTL component** | `frontend/typescript/frontend_typescript_react-testing-library/` |
+| **Browser/api/e2e** (block 2) | `tests/java/tests_java_gradle/` |
 
 ## Quick start
 
@@ -54,9 +59,7 @@ curl -fsS http://localhost:8080/api/health
 | `SERVER_PORT` | `8084` |
 | `PUBLIC_URL` | `https://reference-app-copy.autotests.ai` |
 
-**Autodeploy:** [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) — push `main` or `workflow_dispatch`.
-
-Image build on GHA (`linux/amd64`) → `docker save|ssh load` → on-server `git fetch` → `compose up --no-build` → health → smoke.
+**Autodeploy:** [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)
 
 ### GitHub secrets & variables
 
@@ -71,9 +74,8 @@ Sibling prod (do not touch): [reference-app.autotests.ai](https://reference-app.
 ### Deferred (block 2+)
 
 - Workflows: [`.github/workflows/_deferred/`](.github/workflows/_deferred/)
-- Legacy samples: [`tests/_deferred/`](tests/_deferred/) (notifications, Jenkinsfile, old java sample)
+- Legacy: [`tests/_deferred/`](tests/_deferred/)
 
 ## Related
 
 - Upstream: [autotests-ai/reference-app](https://github.com/autotests-ai/reference-app)
-- CI roles: `docs/rag/config/ci-workflow-ethalon.md` (monorepo)

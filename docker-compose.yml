@@ -18,7 +18,7 @@ services:
 
   backend:
     build:
-      context: ./backend/java/backend-java-spring
+      context: ./backend/java/backend_java_spring
     restart: unless-stopped
     environment:
       DB_HOST: postgres

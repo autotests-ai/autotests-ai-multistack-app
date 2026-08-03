@@ -2,8 +2,8 @@
 
 | Folder | Role |
 |--------|------|
-| `frontend-javascript-embed/` | Design-system CSS/JS/templates (symlinks via `wire-ui.sh`) |
-| `frontend-javascript-static/` | App-specific static pages overlay |
-| `frontend-javascript-preview/` | Committed component catalog for `@Tag(component)` tests |
+| `frontend_javascript_embed/` | Design-system CSS/JS/templates (symlinks via `wire-ui.sh`) |
+| `frontend_javascript_static/` | App-specific static pages overlay |
+| `frontend_javascript_preview/` | Committed component catalog for browser `@Tag(component)` tests |
 
-Future slots: `frontend-javascript-vanilla/`, `frontend-javascript-jquery/`.
+Future: `frontend_javascript_vanilla/`, `frontend_javascript_jquery/`.

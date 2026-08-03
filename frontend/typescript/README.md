@@ -2,6 +2,8 @@
 
 | Folder | Role |
 |--------|------|
-| `frontend-typescript-react/` | React + Vite SPA (build output → backend static) |
+| `frontend_typescript_react-testing-library/` | React + Vite SPA; Vitest + RTL (`npm test`) |
 
-Future slots: `frontend-typescript-angular/`.
+Future: `frontend_typescript_angular/`.
+
+Compound `-` in folder name marks the **test/runtime stack** (React Testing Library), not a generic framework slot.

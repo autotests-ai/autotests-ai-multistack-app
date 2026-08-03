@@ -1,18 +1,19 @@
 # Tests
 
-Automated checks outside backend unit tests — by **language** → **runner/framework**.
+Automation outside backend unit tests — by **language** → **runner** (`_` between segments).
 
 ```
 tests/
   java/
-    tests-java-gradle/              # pyramid: api, e2e, component, visual (Selenide)
+    tests_java_gradle/              # api, e2e, component-browser (Selenide)
   javascript/
-    tests-javascript-playwright/    # Playwright UI smoke
+    tests_javascript_playwright/    # Playwright UI smoke
   python/
-    tests-python-selenium/          # pytest + Selenium page objects
+    tests_python_selenium/          # pytest + Selenium page objects
   _deferred/                        # block 2+ — not wired in CI yet
 ```
 
-**Unit tests ≠ this tree.** Backend unit tests stay in `backend/java/backend-java-spring/src/test/`.
+**Unit tests ≠ this tree.** Backend unit tests stay in `backend/java/backend_java_spring/src/test/`.  
+**RTL component tests** stay in `frontend/typescript/frontend_typescript_react-testing-library/`.
 
-Block 2 plan: **one** CI workflow; add pyramid layers inside it incrementally.
+Block 2: **one** `test.yml`; add layers incrementally.

@@ -1,20 +1,20 @@
-# Wired design-system embed (local dev; materialized via backend/scripts/sync-app-static.sh)
-frontend/javascript/frontend-javascript-embed/css
-frontend/javascript/frontend-javascript-embed/js
-frontend/javascript/frontend-javascript-embed/templates
-frontend/javascript/frontend-javascript-embed/allure-shell.css
-frontend/javascript/frontend-javascript-embed/allure-shell.js
+# Wired design-system embed (local dev; materialize via backend/scripts/sync-app-static.sh)
+frontend/javascript/frontend_javascript_embed/css
+frontend/javascript/frontend_javascript_embed/js
+frontend/javascript/frontend_javascript_embed/templates
+frontend/javascript/frontend_javascript_embed/allure-shell.css
+frontend/javascript/frontend_javascript_embed/allure-shell.js
 
 # Build
-backend/java/backend-java-spring/build/
-backend/java/backend-java-spring/.gradle/
-backend/java/backend-java-spring/bin/
-tests/java/tests-java-gradle/build/
-tests/java/tests-java-gradle/.gradle/
-tests/java/tests-java-gradle/bin/
-tests/_deferred/java-gradle-junit5-selenium/build/
-tests/_deferred/java-gradle-junit5-selenium/.gradle/
-tests/_deferred/java-gradle-junit5-selenium/bin/
+backend/java/backend_java_spring/build/
+backend/java/backend_java_spring/.gradle/
+backend/java/backend_java_spring/bin/
+tests/java/tests_java_gradle/build/
+tests/java/tests_java_gradle/.gradle/
+tests/java/tests_java_gradle/bin/
+tests/_deferred/java_gradle_junit5_selenium/build/
+tests/_deferred/java_gradle_junit5_selenium/.gradle/
+tests/_deferred/java_gradle_junit5_selenium/bin/
 
 # IDE
 .idea/

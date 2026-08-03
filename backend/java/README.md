@@ -2,9 +2,9 @@
 
 | Folder | Stack |
 |--------|-------|
-| `backend-java-spring/` | Spring Boot 3 · Gradle · Postgres · JWT |
+| `backend_java_spring/` | Spring Boot 3 · Gradle · Postgres · JWT |
 
 Unit tests: `src/test/java/` (same module).  
-Run: `cd backend-java-spring && ./gradlew test`
+Run: `cd backend_java_spring && ./gradlew test`
 
-Future slots: `backend-kotlin-spring/`, etc.
+Future: `backend_kotlin_spring/`, etc.
