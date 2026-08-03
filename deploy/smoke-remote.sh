@@ -7,12 +7,12 @@ BASE_URL="${BASE_URL%/}"
 SERVICE_NAME="${SMOKE_SERVICE_NAME:-reference-app-copy}"
 
 echo "=== TLS + GET ${BASE_URL}/ ==="
-code="$(curl -s -o /dev/null -w '%{http_code}' "${BASE_URL}/")"
+code="$(curl --noproxy '*' -s -o /dev/null -w '%{http_code}' "${BASE_URL}/")"
 echo "HTTP ${code}"
 [[ "$code" == "200" ]] || { echo "FAIL: expected 200" >&2; exit 1; }
 
 echo "=== GET ${BASE_URL}/api/health ==="
-body="$(curl -fsSL "${BASE_URL}/api/health")"
+body="$(curl --noproxy '*' -fsSL "${BASE_URL}/api/health")"
 echo "$body" | grep -q '"status":"ok"' || { echo "FAIL: missing ok status" >&2; exit 1; }
 echo "$body" | grep -q "$SERVICE_NAME" || { echo "FAIL: missing ${SERVICE_NAME} service" >&2; exit 1; }
 
