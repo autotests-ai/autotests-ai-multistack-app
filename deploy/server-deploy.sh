@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-/home/selenoid/reference-app-copy}"
+APP_DIR="${APP_DIR:-/home/reference_app_copy/reference-app-copy}"
 REPO_URL="${REPO_URL:-https://github.com/autotests-ai/reference-app-copy.git}"
 export SERVER_PORT="${SERVER_PORT:-8084}"
 PUBLIC_URL="${PUBLIC_URL:-https://reference-app-copy.autotests.ai}"

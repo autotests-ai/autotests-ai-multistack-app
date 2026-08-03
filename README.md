@@ -60,7 +60,7 @@ curl -fsS http://localhost:8080/api/health
 
 | Setting | Value |
 |---------|-------|
-| `APP_DIR` | `/home/selenoid/reference-app-copy` |
+| `APP_DIR` | `/home/reference_app_copy/reference-app-copy` |
 | `SERVER_PORT` | `8084` |
 | `PUBLIC_URL` | `https://reference-app-copy.autotests.ai` |
 
@@ -74,9 +74,9 @@ Manual on host: `bash deploy/server-deploy.sh` (builds locally). CD path: `SKIP_
 
 | Name | Kind | Value |
 |------|------|-------|
-| `DEPLOY_SSH_KEY` | secret | deploy SSH key for `selenoid@212.92.101.15` |
+| `DEPLOY_SSH_KEY` | secret | deploy SSH key for `reference_app_copy@212.92.101.15` |
 | `DEPLOY_HOST` | variable | `212.92.101.15` |
-| `DEPLOY_USER` | variable | `selenoid` |
+| `DEPLOY_USER` | variable | `reference_app_copy` |
 
 Sibling prod (do not touch): [reference-app.autotests.ai](https://reference-app.autotests.ai) · port `8083`.
 

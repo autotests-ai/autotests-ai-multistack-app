@@ -40,7 +40,7 @@ jobs:
     timeout-minutes: 25
     env:
       DEPLOY_HOST: ${{ vars.DEPLOY_HOST || '212.92.101.15' }}
-      DEPLOY_USER: ${{ vars.DEPLOY_USER || 'selenoid' }}
+      DEPLOY_USER: ${{ vars.DEPLOY_USER || 'reference_app_copy' }}
     steps:
       - name: Require deploy secrets
         run: |
@@ -76,7 +76,7 @@ jobs:
           command_timeout: 15m
           script: |
             set -euo pipefail
-            APP_DIR="${APP_DIR:-/home/selenoid/reference-app-copy}"
+            APP_DIR="${APP_DIR:-/home/reference_app_copy/reference-app-copy}"
             cd "$APP_DIR"
             git -c http.proxy= -c https.proxy= fetch --all
             git reset --hard origin/main
