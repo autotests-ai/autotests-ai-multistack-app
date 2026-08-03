@@ -1,9 +1,9 @@
 # Wired design-system embed (local dev; materialize via backend/scripts/sync-app-static.sh)
-frontend/javascript/frontend_javascript_embed/css
-frontend/javascript/frontend_javascript_embed/js
-frontend/javascript/frontend_javascript_embed/templates
-frontend/javascript/frontend_javascript_embed/allure-shell.css
-frontend/javascript/frontend_javascript_embed/allure-shell.js
+frontend/_shared/frontend_javascript_embed/css
+frontend/_shared/frontend_javascript_embed/js
+frontend/_shared/frontend_javascript_embed/templates
+frontend/_shared/frontend_javascript_embed/allure-shell.css
+frontend/_shared/frontend_javascript_embed/allure-shell.js
 
 # Build
 backend/java/backend_java_spring/build/

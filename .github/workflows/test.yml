@@ -40,8 +40,9 @@ concurrency:
 env:
   TESTS_JAVA: tests/java/tests_java_gradle_junit5_allure3_selenide
   BACKEND_JAVA: backend/java/backend_java_spring
-  FRONTEND_RTL: frontend/typescript/frontend_typescript_react-testing-library
-  FRONTEND_PREVIEW: frontend/javascript/frontend_javascript_preview
+  FRONTEND_TS_REACT: frontend/typescript/react/frontend_typescript_react
+  FRONTEND_RTL: frontend/typescript/react/tests_typescript_react-testing-library
+  FRONTEND_PREVIEW: frontend/_catalog/frontend_javascript_preview
 
 jobs:
   # ── 2a: unit (product + test-infra) ────────────────────────────────

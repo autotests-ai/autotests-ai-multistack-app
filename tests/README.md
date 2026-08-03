@@ -22,7 +22,7 @@ tests/
 |------|--------|-------|
 | Product unit | `unit_backend` | `backend/java/backend_java_spring/src/test/` |
 | Test-infra unit | `unit_test-infra` | `…/tests/unit/testinfra/` · `@Layer("unit")` + `@Tag("test-infra")` |
-| RTL | `component_rtl` | `frontend/typescript/frontend_typescript_react-testing-library/` |
+| RTL | `component_rtl` | `frontend/typescript/react/tests_typescript_react-testing-library/` |
 | Browser/api/e2e | `api` … `e2e` | `tests/java/tests_java_gradle_junit5_allure3_selenide/` |
 
 CI: [`.github/workflows/test.yml`](../.github/workflows/test.yml) — flip `if: false` per phase.

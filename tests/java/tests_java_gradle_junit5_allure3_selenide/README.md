@@ -5,7 +5,7 @@ Gradle · JUnit 5 · Allure 3 · Selenide · Rest Assured.
 Canonical Java automation module for reference-app-copy block 2 (`test.yml`).
 
 **Not** backend unit tests → `backend/java/backend_java_spring/src/test/java/`.  
-**Not** RTL → `frontend/typescript/frontend_typescript_react-testing-library/`.
+**Not** RTL → `frontend/typescript/react/tests_typescript_react-testing-library/`.
 
 ## Siblings (other languages)
 

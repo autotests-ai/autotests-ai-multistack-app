@@ -20,18 +20,27 @@ reference-app-copy/
 ### Naming convention
 
 `{zone}_{language}_{stack}` — underscores between segments.  
-Hyphen **only** in compound tool names, e.g. `frontend_typescript_react-testing-library`, `tests_java_gradle_junit5_no-allure_selenide`.
+Hyphen **only** in compound tool names, e.g. `tests_typescript_react-testing-library`, `tests_java_gradle_junit5_no-allure_selenide`.
 
-Full test-module matrix: [tests/NAMING.md](tests/NAMING.md).
+Frontend layout: language → UI stack (`react` / `vanillajs`) → product + co-located component tests.  
+Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/NAMING.md).
 
 | Zone | Current modules | Future slots |
 |------|-----------------|--------------|
-| **frontend/javascript/** | `embed`, `static`, `preview` | `vanilla`, `jquery` |
-| **frontend/typescript/** | `react-testing-library` | `angular` |
+| **frontend/javascript/react/** | `frontend_javascript_react`, `tests_javascript_react-testing-library` (slots) | — |
+| **frontend/javascript/vanillajs/** | `frontend_javascript_vanilla` (active) | vanilla component tests |
+| **frontend/typescript/react/** | `frontend_typescript_react`, `tests_typescript_react-testing-library` | — |
+| **frontend/typescript/vanillajs/** | `frontend_typescript_vanilla` (slot) | vanilla component tests |
+| **frontend/_shared/** | `frontend_javascript_embed` | — |
+| **frontend/_catalog/** | `frontend_javascript_preview` | — |
 | **backend/java/** | `backend_java_spring` | `backend_kotlin_spring`, … |
+| **backend/python/** | — | `backend_python_fastapi`, `backend_python_flask` |
 | **tests/java/** | `tests_java_gradle_junit5_allure3_selenide` | junit4, testng, allure2, selenium, … — [tests/NAMING.md](tests/NAMING.md) |
 | **tests/javascript/** | `tests_javascript_playwright` | Cypress, … |
 | **tests/python/** | `tests_python_selenium` | playwright, … |
+
+**Prod routing (planned):** `https://{backend}.reference-app-copy.autotests.ai/{frontend}/`  
+Example: `https://backend_java_spring.reference-app-copy.autotests.ai/frontend_typescript_react`
 
 Path SSOT: `backend/scripts/paths.sh`
 
@@ -43,7 +52,7 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · CI: [`.github/workflows/test.yml`](
 |-----|-------|
 | `unit_backend` | `backend/java/backend_java_spring/src/test/` |
 | `unit_test-infra` | `…/tests/unit/testinfra/` (`@Layer("unit")` + `@Tag("test-infra")`) |
-| `component_rtl` | `frontend/typescript/frontend_typescript_react-testing-library/` |
+| `component_rtl` | `frontend/typescript/react/tests_typescript_react-testing-library/` |
 | `api` … `e2e` / `component_browser` / `visual` | `tests/java/tests_java_gradle_junit5_allure3_selenide/` |
 
 ## Quick start

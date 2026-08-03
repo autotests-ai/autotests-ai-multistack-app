@@ -1,17 +1,46 @@
 # Frontend
 
-UI slices by **language** → **stack** (underscores between segments; hyphen only in compound tool names).
+UI by **language** → **UI stack** → product module + co-located component tests.
 
 ```
 frontend/
+  _shared/
+    frontend_javascript_embed/     # design-system symlinks (wire-ui) — not a product URL
+  _catalog/
+    frontend_javascript_preview/   # DS component catalog for browser @Tag(component)
   javascript/
-    frontend_javascript_embed/       # design-system symlinks (wire-ui)
-    frontend_javascript_static/      # legacy static overlay (app pages)
-    frontend_javascript_preview/     # component catalog snapshot (:3000)
-    # future: frontend_javascript_vanilla, frontend_javascript_jquery
+    react/
+      frontend_javascript_react/
+      tests_javascript_react-testing-library/
+    vanillajs/
+      frontend_javascript_vanilla/   # default app pages (was static)
+      # later: tests_javascript_vanilla_… (component)
   typescript/
-    frontend_typescript_react-testing-library/   # React SPA + Vitest/RTL
-    # future: frontend_typescript_angular
+    react/
+      frontend_typescript_react/
+      tests_typescript_react-testing-library/
+    vanillajs/
+      frontend_typescript_vanilla/
+      # later: tests_typescript_vanilla_… (component)
 ```
 
-Materialize into backend: `backend/scripts/sync-app-static.sh`
+## Product vs shared
+
+| Kind | In URL matrix? | Examples |
+|------|----------------|----------|
+| Product UI | yes | `frontend_*_react`, `frontend_*_vanilla` |
+| Component tests (jsdom) | no | `tests_*_react-testing-library` |
+| Shared / catalog | no | `_shared/embed`, `_catalog/preview` |
+
+## Prod routing (planned)
+
+```
+https://{backend}.reference-app-copy.autotests.ai/{frontend}/
+```
+
+Example: `https://backend_java_spring.reference-app-copy.autotests.ai/frontend_typescript_react`
+
+- subdomain → backend stack  
+- path → product frontend module  
+
+Materialize vanillajs into backend: `backend/scripts/sync-app-static.sh`

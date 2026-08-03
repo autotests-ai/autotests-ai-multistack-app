@@ -20,6 +20,6 @@ for f in allure-shell.css allure-shell.js; do
   fi
 done
 
-rsync -a "$FRONTEND_JS_STATIC/" "$BACKEND_STATIC/"
+rsync -a "$FRONTEND_JS_VANILLA/" "$BACKEND_STATIC/"
 
-echo "sync-app-static: frontend/javascript/* → backend/java/backend_java_spring/src/main/resources/static/"
+echo "sync-app-static: frontend/_shared + javascript/vanillajs → backend/java/backend_java_spring/src/main/resources/static/"

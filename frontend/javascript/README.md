@@ -1,9 +1,9 @@
 # JavaScript frontends
 
-| Folder | Role |
-|--------|------|
-| `frontend_javascript_embed/` | Design-system CSS/JS/templates (symlinks via `wire-ui.sh`) |
-| `frontend_javascript_static/` | App-specific static pages overlay |
-| `frontend_javascript_preview/` | Committed component catalog for browser `@Tag(component)` tests |
+| Path | Role |
+|------|------|
+| `react/frontend_javascript_react/` | Product UI — JS + React (slot) |
+| `react/tests_javascript_react-testing-library/` | Vitest + RTL for JS React (slot) |
+| `vanillajs/frontend_javascript_vanilla/` | Product UI — vanilla JS pages (active; sync → backend static) |
 
-Future: `frontend_javascript_vanilla/`, `frontend_javascript_jquery/`.
+Shared embed / preview catalog live under `frontend/_shared/` and `frontend/_catalog/` — not product URLs.

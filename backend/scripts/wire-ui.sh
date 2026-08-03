@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Wire design-system primitives into frontend_javascript_embed (symlinks).
+# Wire design-system primitives into frontend/_shared/frontend_javascript_embed (symlinks).
 set -euo pipefail
 
 # shellcheck source=paths.sh
@@ -22,7 +22,7 @@ if [[ "$UI" == "design-system-embed" ]]; then
     rel="$(python -c "import os; print(os.path.relpath('$DS/$d', '$FRONTEND'))")"
     ln -sfn "$rel" "$FRONTEND/$d"
   done
-  echo "wire-ui: design-system → frontend/javascript/frontend_javascript_embed"
+  echo "wire-ui: design-system → frontend/_shared/frontend_javascript_embed"
 elif [[ "$UI" == "plain" ]]; then
   echo "wire-ui: plain (skip design-system embed)"
 else

@@ -1,8 +1,14 @@
-# reference-app frontend (React SPA)
+# frontend_typescript_react
 
-Vite + React 19 + React Router single-page app for reference-app. Built on the
-`@zero-design-system/react` component library (ADR 007), aliased directly to the
-monorepo source at `packages/react-ui/src`.
+Product UI — TypeScript + React (same screens as `frontend_javascript_react` / vanillajs).
+
+Vite + React 19 + React Router. Built on the `@zero-design-system/react` component
+library (ADR 007), aliased to monorepo `packages/react-ui/src`.
+
+RTL / Vitest live in [`../tests_typescript_react-testing-library/`](../tests_typescript_react-testing-library/)
+(`component_rtl`), not in this folder name.
+
+Prod URL (planned): `https://{backend}.reference-app-copy.autotests.ai/frontend_typescript_react`
 
 ## Routes
 
@@ -27,19 +33,18 @@ sets `window.headerConfig` and `main.tsx` injects `/js/header.js` at runtime.
 
 | | |
 |--|--|
-| Matrix id | `react-vitest-rtl` ([`generators/matrix-capabilities.yaml`](../../../../generators/matrix-capabilities.yaml)) |
-| Pyramid layer | `frontend_rtl` in [`stacks/_contract/pyramid-map.yaml`](../../../../stacks/_contract/pyramid-map.yaml) |
-| Not the same as | Selenide `@Tag("component")` in [`../tests/`](../tests/) (`testComponent`) |
-
-Allure labels from `npm test`: `layer=component`, `scope=react`, `framework=react-testing-library` — React component scope, not the browser component slice.
+| Matrix id | `react-vitest-rtl` (monorepo `generators/matrix-capabilities.yaml`) |
+| Product module | this folder |
+| RTL job | `component_rtl` → [`../tests_typescript_react-testing-library/`](../tests_typescript_react-testing-library/) |
+| Not the same as | Selenide `@Tag("component")` on `_catalog/preview` |
 
 ## Scripts
 
 ```bash
 npm run dev        # Vite dev server
-npm run build      # -> ../backend/src/main/resources/static (index.html + assets/)
+npm run build      # -> backend static (index.html + assets/)
 npm run typecheck  # tsc --noEmit
-npm test           # Vitest + React Testing Library (= pyramid frontend_rtl)
+# npm test → run from ../tests_typescript_react-testing-library/
 ```
 
 ## Build notes

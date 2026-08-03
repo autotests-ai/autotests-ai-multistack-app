@@ -1,9 +1,9 @@
 # TypeScript frontends
 
-| Folder | Role |
-|--------|------|
-| `frontend_typescript_react-testing-library/` | React + Vite SPA; Vitest + RTL (`npm test`) |
+| Path | Role |
+|------|------|
+| `react/frontend_typescript_react/` | Product UI — TS + React (same product as JS React) |
+| `react/tests_typescript_react-testing-library/` | Vitest + RTL for TS React (`component_rtl`) |
+| `vanillajs/frontend_typescript_vanilla/` | Product UI — vanilla TS (slot) |
 
-Future: `frontend_typescript_angular/`.
-
-Compound `-` in folder name marks the **test/runtime stack** (React Testing Library), not a generic framework slot.
+Compound `-` only in test-stack names (`react-testing-library`), not in product frontend folders.

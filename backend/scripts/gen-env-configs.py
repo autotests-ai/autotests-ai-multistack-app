@@ -21,7 +21,7 @@ GRADLE_HINT = {
 
 LAYER_DESC = {
     "unit": "pure Java — tests.unit.testinfra.* (@Layer unit, @Tag test-infra)",
-    "component": "@Tag(component) — frontend_javascript_preview on :3000 (componentCatalogUrl)",
+    "component": "@Tag(component) — frontend/_catalog/frontend_javascript_preview on :3000 (componentCatalogUrl)",
     "integration": "@Tag(layout,mount) — mount probes",
     "api": "@Layer(api) @Tag(api) — Rest Assured /api/health|items",
     "e2e": "@Layer(e2e) — smoke via testE2e",
