@@ -74,7 +74,7 @@ Manual on host: `bash deploy/server-deploy.sh` (builds locally). CD path: `SKIP_
 
 | Name | Kind | Value |
 |------|------|-------|
-| `DEPLOY_SSH_KEY` | secret | deploy SSH key for `reference_app_copy@212.92.101.15` |
+| `DEPLOY_SSH_KEY` | secret | **project-only** ed25519 for `reference_app_copy@212.92.101.15` (local: `~/.ssh/reference_app_copy_deploy`; not shared with `selenoid` / sibling apps) |
 | `DEPLOY_HOST` | variable | `212.92.101.15` |
 | `DEPLOY_USER` | variable | `reference_app_copy` |
 
