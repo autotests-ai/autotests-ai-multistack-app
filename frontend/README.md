@@ -16,6 +16,7 @@ frontend/
     frontend-javascript-react/     # product + src/test/ (slot)
     frontend-javascript-angular/   # product + src/test/ (slot)
     frontend-javascript-vue/       # product + src/test/ (slot)
+    frontend-javascript-jquery/    # product slot (static + jQuery)
     frontend-javascript-vanilla/   # active static app
   typescript/
     frontend-typescript-react/     # product + src/test/ (component_rtl)
@@ -28,7 +29,7 @@ frontend/
 
 | Kind | In URL matrix? | Examples |
 |------|----------------|----------|
-| Product UI | yes | `frontend-*-react`, `frontend-*-angular`, `frontend-*-vue`, `frontend-*-vanilla` |
+| Product UI | yes | `frontend-*-react`, `frontend-*-angular`, `frontend-*-vue`, `frontend-*-vanilla`, `frontend-javascript-jquery` |
 | Component tests (jsdom) | no | `frontend-*-{react,angular,vue}/src/test/` |
 | Shared / catalog | no | `_shared/app`, `_shared/embed`, `_catalog/preview` |
 
@@ -58,6 +59,7 @@ Same numbers = compose publish ports (host nginx upstreams).
 |------|--------|
 | 9800 | `frontend-javascript-vanilla` |
 | 9801–9803 | javascript react / angular / vue |
+| 9804 | `frontend-javascript-jquery` |
 | 9810 | `frontend-typescript-vanilla` |
 | 9811 | `frontend-typescript-react` |
 | 9812 | `frontend-typescript-angular` |

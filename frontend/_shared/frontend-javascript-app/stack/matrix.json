@@ -69,6 +69,12 @@
       "module": "frontend/javascript/frontend-javascript-vue"
     },
     {
+      "id": "frontend-javascript-jquery",
+      "status": "slot",
+      "kind": "static",
+      "module": "frontend/javascript/frontend-javascript-jquery"
+    },
+    {
       "id": "frontend-typescript-vanilla",
       "status": "slot",
       "kind": "static",

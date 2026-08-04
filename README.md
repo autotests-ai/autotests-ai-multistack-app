@@ -27,7 +27,7 @@ Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/N
 
 | Zone | Current modules | Future slots |
 |------|-----------------|--------------|
-| **frontend/javascript/** | `frontend-javascript-vanilla` (active), `react` / `angular` / `vue` (slots) | — |
+| **frontend/javascript/** | `frontend-javascript-vanilla` (active), `react` / `angular` / `vue` / `jquery` (slots) | — |
 | **frontend/typescript/** | `frontend-typescript-react` (+ RTL), `frontend-typescript-vue` (+ VTU), `angular` / `vanilla` (slots) | — |
 | **frontend/_shared/** | `frontend-javascript-app`, `frontend-javascript-embed` | — |
 | **frontend/_catalog/** | `frontend-javascript-preview` | — |
@@ -93,6 +93,7 @@ SSOT: [`deploy/matrix.yaml`](deploy/matrix.yaml). Language base **+10**, stack w
 | **9801** | `frontend-javascript-react` | slot |
 | **9802** | `frontend-javascript-angular` | slot |
 | **9803** | `frontend-javascript-vue` | slot |
+| **9804** | `frontend-javascript-jquery` | slot |
 | **9810** | `frontend-typescript-vanilla` | slot |
 | **9811** | `frontend-typescript-react` | compose publish |
 | **9812** | `frontend-typescript-angular` | slot |

@@ -5,7 +5,7 @@
 #
 # Port canon (local publish = prod host upstream; same numbers):
 #   backend: language base +10 · stack +1 within language
-#     8800 java · 8810 kotlin · 8820 python · 8830 go · next lang 8840…
+#     8800 java · 8810 kotlin · 8820 python · 8830 go · 8840 node · next lang 8850…
 #   frontend (compose publish = host nginx upstream): language base +10 · stack +1
 #     9800 javascript · 9810 typescript · next lang 9820…
 # Container-internal listen stays 8080 (backends) / 80 (frontends).
@@ -103,6 +103,30 @@ backends:
     db_name: reference_app_go_stdlib
     health_service: backend-go-stdlib
 
+  - id: backend-node-express
+    status: slot
+    language: node
+    module: backend/node/backend-node-express
+    compose_service: backend-node-express
+    compose_profile: node-express
+    image: reference-app-copy-backend-node-express:latest
+    internal_port: 8080
+    publish_port: 8840
+    db_name: reference_app_node_express
+    health_service: backend-node-express
+
+  - id: backend-node-nest
+    status: slot
+    language: node
+    module: backend/node/backend-node-nest
+    compose_service: backend-node-nest
+    compose_profile: node-nest
+    image: reference-app-copy-backend-node-nest:latest
+    internal_port: 8080
+    publish_port: 8841
+    db_name: reference_app_node_nest
+    health_service: backend-node-nest
+
 frontends:
   - id: frontend-javascript-vanilla
     status: active
@@ -133,6 +157,13 @@ frontends:
     module: frontend/javascript/frontend-javascript-vue
     mount: frontend-javascript-vue
     publish_port: 9803
+
+  - id: frontend-javascript-jquery
+    status: slot
+    kind: static
+    module: frontend/javascript/frontend-javascript-jquery
+    mount: frontend-javascript-jquery
+    publish_port: 9804
 
   - id: frontend-typescript-vanilla
     status: slot
