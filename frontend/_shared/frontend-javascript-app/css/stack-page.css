@@ -75,6 +75,11 @@
   min-width: 0;
 }
 
+.stack-page__board--tests {
+  margin-top: var(--space-4);
+  width: 100%;
+}
+
 .stack-page__board-body {
   padding: 0;
   overflow: auto;

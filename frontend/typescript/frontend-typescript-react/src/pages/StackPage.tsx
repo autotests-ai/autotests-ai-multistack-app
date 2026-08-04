@@ -3,16 +3,22 @@ import { Badge, Link, Panel } from '@zero-design-system/react';
 import { appPath } from '../lib/appBase';
 import {
   comboHref,
+  componentTestsPath,
   fetchStackMatrix,
+  findById,
   GITHUB_MARK_PATH,
   githubModuleHref,
   isOpenable,
   parseMount,
+  parseTestsId,
+  resolveTestsId,
   stackHref,
   summarizeMatrix,
+  unitTestsPath,
   type BackendModule,
   type FrontendModule,
   type StackMatrix,
+  type TestsModule,
 } from '../../../../_shared/stack-matrix';
 
 type LoadState =
@@ -25,9 +31,9 @@ function GithubModuleLink({
   id,
   modulePath,
 }: {
-  kind: 'backend' | 'frontend';
+  kind: 'backend' | 'frontend' | 'tests';
   id: string;
-  modulePath?: string;
+  modulePath?: string | null;
 }) {
   const href = githubModuleHref(modulePath);
   if (!href) return null;
@@ -38,7 +44,7 @@ function GithubModuleLink({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={`GitHub ${id}`}
-      title={modulePath}
+      title={modulePath || undefined}
       data-testid={`stack-gh-${kind}-${id}`}
     >
       <span className="icon" aria-hidden="true">
@@ -55,11 +61,13 @@ function ModuleRows({
   items,
   currentBackend,
   currentFrontend,
+  currentTests,
 }: {
   kind: 'backend' | 'frontend';
   items: Array<BackendModule | FrontendModule>;
   currentBackend: string | null;
   currentFrontend: string | null;
+  currentTests: string | null;
 }) {
   return (
     <table className="stack-page__table">
@@ -82,7 +90,7 @@ function ModuleRows({
           const isCurrent = kind === 'backend' ? id === currentBackend : id === currentFrontend;
           const targetBackend = kind === 'backend' ? id : currentBackend;
           const targetFrontend = kind === 'frontend' ? id : currentFrontend;
-          const href = stackHref(targetBackend, targetFrontend);
+          const href = stackHref(targetBackend, targetFrontend, currentTests);
           const openable = isOpenable(status) && Boolean(targetBackend && targetFrontend);
 
           return (
@@ -136,8 +144,153 @@ function ModuleRows({
   );
 }
 
+function TestsBoard({
+  tests,
+  currentBackend,
+  currentFrontend,
+  currentTests,
+  backend,
+  frontend,
+}: {
+  tests: TestsModule[];
+  currentBackend: string | null;
+  currentFrontend: string | null;
+  currentTests: string | null;
+  backend: BackendModule | null;
+  frontend: FrontendModule | null;
+}) {
+  const unitPath = unitTestsPath(backend);
+  const componentPath = componentTestsPath(frontend);
+  const unitMeta = currentBackend
+    ? `← ${currentBackend}${unitPath ? ` · ${unitPath}` : ''}`
+    : 'pick a backend';
+  const componentMeta = currentFrontend
+    ? componentPath
+      ? `← ${currentFrontend} · ${componentPath}`
+      : `← ${currentFrontend} · no src/test`
+    : 'pick a frontend';
+
+  const derived = [
+    {
+      layer: 'unit',
+      bound: currentBackend,
+      path: unitPath,
+      meta: unitMeta,
+      present: Boolean(unitPath),
+    },
+    {
+      layer: 'component',
+      bound: currentFrontend,
+      path: componentPath,
+      meta: componentMeta,
+      present: Boolean(componentPath),
+    },
+  ] as const;
+
+  return (
+    <table className="stack-page__table">
+      <thead>
+        <tr>
+          <th>Module</th>
+          <th className="stack-page__gh-cell">GH</th>
+          <th>Status</th>
+          <th>Select</th>
+        </tr>
+      </thead>
+      <tbody>
+        {derived.map((row) => {
+          const status = row.present ? 'derived' : 'slot';
+          const isActive = Boolean(row.bound);
+          return (
+            <tr key={row.layer} className={isActive ? 'stack-page__row--active' : undefined}>
+              <td>
+                <span
+                  className={`stack-page__id stack-page__id--disabled${isActive ? ' is-active' : ''}`}
+                  data-testid={`stack-tests-${row.layer}`}
+                >
+                  {row.layer}
+                </span>
+                <div className="text text--sm text--muted stack-page__meta">{row.meta}</div>
+              </td>
+              <td className="stack-page__gh-cell">
+                {githubModuleHref(row.path) ? (
+                  <GithubModuleLink kind="tests" id={row.layer} modulePath={row.path} />
+                ) : (
+                  <span className="text text--sm text--muted">—</span>
+                )}
+              </td>
+              <td>
+                <Badge>{status}</Badge>
+              </td>
+              <td>
+                <span className="text text--sm text--muted">—</span>
+              </td>
+            </tr>
+          );
+        })}
+        {tests.map((item) => {
+          const id = item.id;
+          const status = item.status || 'active';
+          const layers = (item.layers || []).join(' · ');
+          const meta = `${item.language || 'tests'}${layers ? ` · ${layers}` : ''} · ${status}`;
+          const isCurrent = id === currentTests;
+          const selectable =
+            isOpenable(status) && Boolean(currentBackend && currentFrontend);
+          const href = stackHref(currentBackend, currentFrontend, id);
+          return (
+            <tr key={id} className={isCurrent ? 'stack-page__row--active' : undefined}>
+              <td>
+                {selectable ? (
+                  <Link
+                    className={`stack-page__id${isCurrent ? ' is-active' : ''}`}
+                    href={href}
+                    data-testid={`stack-tests-${id}`}
+                  >
+                    {id}
+                  </Link>
+                ) : (
+                  <span
+                    className={`stack-page__id stack-page__id--disabled${isCurrent ? ' is-active' : ''}`}
+                    data-testid={`stack-tests-${id}`}
+                  >
+                    {id}
+                  </span>
+                )}
+                <div className="text text--sm text--muted stack-page__meta">{meta}</div>
+              </td>
+              <td className="stack-page__gh-cell">
+                {githubModuleHref(item.module) ? (
+                  <GithubModuleLink kind="tests" id={id} modulePath={item.module} />
+                ) : (
+                  <span className="text text--sm text--muted">—</span>
+                )}
+              </td>
+              <td>
+                <Badge variant={status === 'active' ? 'primary' : 'default'}>{status}</Badge>
+              </td>
+              <td>
+                {selectable ? (
+                  <Link
+                    className={`stack-page__open${isCurrent ? ' is-active' : ''}`}
+                    href={href}
+                  >
+                    select →
+                  </Link>
+                ) : (
+                  <span className="text text--sm text--muted">—</span>
+                )}
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  );
+}
+
 export function StackPage() {
   const mount = useMemo(() => parseMount(window.location.pathname), []);
+  const requestedTests = useMemo(() => parseTestsId(window.location.search), []);
   const [state, setState] = useState<LoadState>({ status: 'loading' });
 
   useEffect(() => {
@@ -155,12 +308,21 @@ export function StackPage() {
   }, []);
 
   const summary = state.status === 'loaded' ? summarizeMatrix(state.data) : null;
-  const label =
-    mount.backendId && mount.frontendId
-      ? `${mount.backendId} · ${mount.frontendId}`
-      : mount.frontendId
-        ? `(no backend prefix) · ${mount.frontendId}`
-        : 'path without /{backend}/{frontend}/';
+  const currentTests =
+    state.status === 'loaded' ? resolveTestsId(state.data, requestedTests) : null;
+  const backend = summary ? findById(summary.backends, mount.backendId) : null;
+  const frontend = summary ? findById(summary.frontends, mount.frontendId) : null;
+
+  const labelParts: string[] = [];
+  if (mount.backendId && mount.frontendId) {
+    labelParts.push(`${mount.backendId} · ${mount.frontendId}`);
+  } else if (mount.frontendId) {
+    labelParts.push(`(no backend prefix) · ${mount.frontendId}`);
+  } else {
+    labelParts.push('path without /{backend}/{frontend}/');
+  }
+  if (currentTests) labelParts.push(currentTests);
+  const label = labelParts.join(' · ');
   const homeHref = comboHref(mount.backendId, mount.frontendId, '/');
 
   return (
@@ -193,24 +355,43 @@ export function StackPage() {
       )}
 
       {summary && (
-        <div className="stack-page__boards">
-          <Panel title="Backend" bodyClassName="stack-page__board-body" className="stack-page__board">
-            <ModuleRows
-              kind="backend"
-              items={summary.backends}
+        <>
+          <div className="stack-page__boards">
+            <Panel title="Backend" bodyClassName="stack-page__board-body" className="stack-page__board">
+              <ModuleRows
+                kind="backend"
+                items={summary.backends}
+                currentBackend={mount.backendId}
+                currentFrontend={mount.frontendId}
+                currentTests={currentTests}
+              />
+            </Panel>
+            <Panel title="Frontend" bodyClassName="stack-page__board-body" className="stack-page__board">
+              <ModuleRows
+                kind="frontend"
+                items={summary.frontends}
+                currentBackend={mount.backendId}
+                currentFrontend={mount.frontendId}
+                currentTests={currentTests}
+              />
+            </Panel>
+          </div>
+          <Panel
+            title="Tests"
+            bodyClassName="stack-page__board-body"
+            className="stack-page__board stack-page__board--tests"
+            testId="stack-tests-board"
+          >
+            <TestsBoard
+              tests={summary.tests}
               currentBackend={mount.backendId}
               currentFrontend={mount.frontendId}
+              currentTests={currentTests}
+              backend={backend}
+              frontend={frontend}
             />
           </Panel>
-          <Panel title="Frontend" bodyClassName="stack-page__board-body" className="stack-page__board">
-            <ModuleRows
-              kind="frontend"
-              items={summary.frontends}
-              currentBackend={mount.backendId}
-              currentFrontend={mount.frontendId}
-            />
-          </Panel>
-        </div>
+        </>
       )}
     </main>
   );

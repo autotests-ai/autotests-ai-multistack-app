@@ -165,3 +165,25 @@ frontends:
     compose_service: frontend-typescript-vue
     image: reference-app-copy-frontend-typescript-vue:latest
     publish_port: 9813
+
+# Test modules — no compose / publish ports (CI runners, not containers).
+# unit ← selected backend …/src/test|tests · component ← selected frontend …/src/test
+# api / integration / e2e ← pick a module below (layers declare coverage).
+tests:
+  - id: tests-java-gradle-junit5-allure3-selenide
+    status: active
+    language: java
+    module: tests/java/tests-java-gradle-junit5-allure3-selenide
+    layers: [api, integration, e2e]
+
+  - id: tests-javascript-playwright
+    status: active
+    language: javascript
+    module: tests/javascript/tests-javascript-playwright
+    layers: [e2e]
+
+  - id: tests-python-selenium
+    status: active
+    language: python
+    module: tests/python/tests-python-selenium
+    layers: [e2e]

@@ -50,12 +50,23 @@ def main() -> int:
             }
             for f in data.get("frontends", [])
         ],
+        "tests": [
+            {
+                "id": t["id"],
+                "status": t.get("status", "active"),
+                "language": t.get("language"),
+                "module": t.get("module"),
+                "layers": list(t.get("layers") or []),
+            }
+            for t in data.get("tests", [])
+        ],
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     print(
         f"wrote {OUT.relative_to(ROOT)} "
-        f"({len(payload['backends'])} be · {len(payload['frontends'])} fe)"
+        f"({len(payload['backends'])} be · {len(payload['frontends'])} fe · "
+        f"{len(payload['tests'])} tests)"
     )
     return 0
 

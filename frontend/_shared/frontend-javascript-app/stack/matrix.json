@@ -92,5 +92,36 @@
       "kind": "vite",
       "module": "frontend/typescript/frontend-typescript-vue"
     }
+  ],
+  "tests": [
+    {
+      "id": "tests-java-gradle-junit5-allure3-selenide",
+      "status": "active",
+      "language": "java",
+      "module": "tests/java/tests-java-gradle-junit5-allure3-selenide",
+      "layers": [
+        "api",
+        "integration",
+        "e2e"
+      ]
+    },
+    {
+      "id": "tests-javascript-playwright",
+      "status": "active",
+      "language": "javascript",
+      "module": "tests/javascript/tests-javascript-playwright",
+      "layers": [
+        "e2e"
+      ]
+    },
+    {
+      "id": "tests-python-selenium",
+      "status": "active",
+      "language": "python",
+      "module": "tests/python/tests-python-selenium",
+      "layers": [
+        "e2e"
+      ]
+    }
   ]
 }
