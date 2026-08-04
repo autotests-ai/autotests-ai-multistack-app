@@ -75,15 +75,7 @@ function rowHref(kind: 'backend' | 'frontend', item: BackendModule | FrontendMod
 <template>
   <main class="page-shell page-shell--below-header stack-page" data-testid="stack-page">
     <div class="stack-page__header">
-      <div class="stack-page__heading">
-        <h1 class="stack-page__title">Stack</h1>
-        <div v-if="summary" class="stack-page__summary" data-testid="stack-summary">
-          <span class="badge badge--primary">be {{ summary.activeBe }}</span>
-          <span class="badge">slot {{ summary.slotBe }}</span>
-          <span class="badge badge--primary">fe {{ summary.activeFe }}</span>
-          <span class="badge">slot {{ summary.slotFe }}</span>
-        </div>
-      </div>
+      <h1 class="stack-page__title">Stack</h1>
       <a
         class="badge badge--primary stack-page__current"
         :href="homeHref"

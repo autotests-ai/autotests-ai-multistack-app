@@ -28,14 +28,6 @@
   margin-bottom: var(--space-4);
 }
 
-.stack-page__heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
 .stack-page__title {
   margin: 0;
   font-size: 1.35rem;
@@ -53,12 +45,6 @@
 
 .stack-page__current:hover {
   filter: brightness(1.08);
-}
-
-.stack-page__summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
 }
 
 .stack-page__boards {

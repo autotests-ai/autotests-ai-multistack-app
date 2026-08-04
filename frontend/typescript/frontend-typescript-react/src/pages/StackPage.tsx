@@ -129,17 +129,7 @@ export function StackPage() {
       data-testid="stack-page"
     >
       <div className="stack-page__header">
-        <div className="stack-page__heading">
-          <h1 className="stack-page__title">Stack</h1>
-          {summary && (
-            <div className="stack-page__summary" data-testid="stack-summary">
-              <Badge variant="primary">be {summary.activeBe}</Badge>
-              <Badge>slot {summary.slotBe}</Badge>
-              <Badge variant="primary">fe {summary.activeFe}</Badge>
-              <Badge>slot {summary.slotFe}</Badge>
-            </div>
-          )}
-        </div>
+        <h1 className="stack-page__title">Stack</h1>
         <a
           className="badge badge--primary stack-page__current"
           href={homeHref}

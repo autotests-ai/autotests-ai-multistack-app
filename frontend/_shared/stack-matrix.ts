@@ -65,17 +65,9 @@ export function stackHref(backendId: string | null, frontendId: string | null): 
 }
 
 export function summarizeMatrix(data: StackMatrix) {
-  const backends = data.backends ?? [];
-  const frontends = data.frontends ?? [];
-  const activeBe = backends.filter((b) => isOpenable(b.status)).length;
-  const activeFe = frontends.filter((f) => isOpenable(f.status)).length;
   return {
-    backends,
-    frontends,
-    activeBe,
-    activeFe,
-    slotBe: backends.length - activeBe,
-    slotFe: frontends.length - activeFe,
+    backends: data.backends ?? [],
+    frontends: data.frontends ?? [],
   };
 }
 

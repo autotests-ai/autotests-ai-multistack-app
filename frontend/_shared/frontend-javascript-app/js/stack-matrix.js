@@ -35,17 +35,9 @@ export function stackHref(backendId, frontendId) {
 }
 
 export function summarizeMatrix(data) {
-  const backends = data?.backends || [];
-  const frontends = data?.frontends || [];
-  const activeBe = backends.filter((b) => isOpenable(b.status)).length;
-  const activeFe = frontends.filter((f) => isOpenable(f.status)).length;
   return {
-    backends,
-    frontends,
-    activeBe,
-    activeFe,
-    slotBe: backends.length - activeBe,
-    slotFe: frontends.length - activeFe,
+    backends: data?.backends || [],
+    frontends: data?.frontends || [],
   };
 }
 
@@ -127,15 +119,7 @@ export function mountStackPage(root, data, pathname = window.location.pathname) 
 
   root.innerHTML = `
     <div class="stack-page__header">
-      <div class="stack-page__heading">
-        <h1 class="stack-page__title">Stack</h1>
-        <div class="stack-page__summary" data-testid="stack-summary">
-          <span class="badge badge--primary">be ${summary.activeBe}</span>
-          <span class="badge">slot ${summary.slotBe}</span>
-          <span class="badge badge--primary">fe ${summary.activeFe}</span>
-          <span class="badge">slot ${summary.slotFe}</span>
-        </div>
-      </div>
+      <h1 class="stack-page__title">Stack</h1>
       <a class="badge badge--primary stack-page__current" href="${escapeHtml(homeHref)}" title="open app home" data-testid="stack-current-pair">${escapeHtml(label)}</a>
     </div>
     <div class="stack-page__boards">
