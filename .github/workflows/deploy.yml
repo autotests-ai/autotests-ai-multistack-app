@@ -153,7 +153,7 @@ jobs:
             set -euo pipefail
             APP_DIR="${APP_DIR:-/home/reference_app_copy/reference-app-copy}"
             cd "$APP_DIR"
-            git -c http.proxy= -c https.proxy= fetch --all
+            git fetch --all
             git reset --hard origin/main
             SKIP_BUILD=1 bash deploy/server-deploy.sh
 
@@ -170,7 +170,7 @@ jobs:
             set -euo pipefail
             APP_DIR="${APP_DIR:-/home/reference_app_copy/reference-app-copy}"
             cd "$APP_DIR"
-            git -c http.proxy= -c https.proxy= fetch --all
+            git fetch --all
             git reset --hard origin/main
 
             services=(postgres postgres-ensure-dbs)
@@ -202,7 +202,7 @@ jobs:
               esac
               url="http://127.0.0.1:${port}/api/health"
               for i in $(seq 1 "$MAX_ATTEMPTS"); do
-                if body="$(curl --noproxy '*' -fsS "$url" 2>/dev/null)" \
+                if body="$(curl -fsS "$url" 2>/dev/null)" \
                   && echo "$body" | grep -q '"status":"ok"' \
                   && echo "$body" | grep -q "$expect"; then
                   echo "Health OK: $url ($expect, attempt $i)"
@@ -227,7 +227,7 @@ jobs:
               esac
               url="http://127.0.0.1:${port}/"
               for i in $(seq 1 "$MAX_ATTEMPTS"); do
-                code="$(curl --noproxy '*' -s -o /dev/null -w '%{http_code}' "$url" 2>/dev/null || true)"
+                code="$(curl -s -o /dev/null -w '%{http_code}' "$url" 2>/dev/null || true)"
                 if [[ "$code" == "200" ]]; then
                   echo "Health OK: $url (HTTP $code, attempt $i)"
                   break

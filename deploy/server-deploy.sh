@@ -21,11 +21,11 @@ SLEEP_SECS="${HEALTH_POLL_SLEEP:-2}"
 if [[ ! -d "$APP_DIR/.git" ]]; then
   sudo mkdir -p "$APP_DIR"
   sudo chown "$(whoami):$(whoami)" "$APP_DIR"
-  git -c http.proxy= -c https.proxy= clone "$REPO_URL" "$APP_DIR"
+  git clone "$REPO_URL" "$APP_DIR"
 fi
 
 cd "$APP_DIR"
-git -c http.proxy= -c https.proxy= fetch --all
+git fetch --all
 git reset --hard origin/main
 
 if [[ "$SKIP_BUILD" == "1" ]]; then
@@ -49,7 +49,7 @@ for entry in "${health_ports[@]}"; do
   expect="${entry##*:}"
   url="http://127.0.0.1:${port}/api/health"
   for i in $(seq 1 "$MAX_ATTEMPTS"); do
-    if body="$(curl --noproxy '*' -fsS "$url" 2>/dev/null)" \
+    if body="$(curl -fsS "$url" 2>/dev/null)" \
       && echo "$body" | grep -q '"status":"ok"' \
       && echo "$body" | grep -q "$expect"; then
       echo "Health OK: $url ($expect, attempt $i)"
@@ -73,7 +73,7 @@ frontend_ports=(
 for port in "${frontend_ports[@]}"; do
   url="http://127.0.0.1:${port}/"
   for i in $(seq 1 "$MAX_ATTEMPTS"); do
-    code="$(curl --noproxy '*' -s -o /dev/null -w '%{http_code}' "$url" 2>/dev/null || true)"
+    code="$(curl -s -o /dev/null -w '%{http_code}' "$url" 2>/dev/null || true)"
     if [[ "$code" == "200" ]]; then
       echo "Health OK: $url (HTTP $code, attempt $i)"
       break
