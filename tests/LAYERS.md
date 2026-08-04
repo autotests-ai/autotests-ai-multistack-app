@@ -82,8 +82,8 @@ Not duplicates — different failure modes.
 
 | Module | Role | Composite action | Job (`if: false`) |
 |--------|------|------------------|-------------------|
-| `tests/javascript/tests-javascript-playwright/` | e2e smoke, another language (**active**) | `.github/actions/e2e` | `e2e_playwright` |
-| `tests/python/tests-python-selenium/` | e2e smoke, pytest (**active**) | `.github/actions/e2e` | `e2e_python` |
+| `tests/javascript/tests-javascript-playwright/` | e2e smoke, another language (**active**) | `.github/actions/e2e` | `tests_javascript_playwright` |
+| `tests/python/tests-python-selenium/` | e2e smoke, pytest (**active**) | `.github/actions/e2e` | `tests_python_selenium` |
 | `tests/typescript/…`, `kotlin/…`, `go/…`, Cypress, … | slots in [`deploy/matrix.yaml`](../deploy/matrix.yaml) | — | — |
 
 Same app under test; not separate pyramid layers — parallel teaching stacks ([NAMING.md](NAMING.md)). Enable with LAYERS block 3+.

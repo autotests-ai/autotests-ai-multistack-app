@@ -197,8 +197,8 @@ jobs:
       - uses: actions/checkout@v7
       - uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/prod-e2e
 
-  e2e_playwright:
-    name: e2e_playwright
+  tests_javascript_playwright:
+    name: tests_javascript_playwright
     if: false
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -206,8 +206,8 @@ jobs:
       - uses: actions/checkout@v7
       - uses: ./tests/javascript/tests-javascript-playwright/.github/actions/e2e
 
-  e2e_python:
-    name: e2e_python
+  tests_python_selenium:
+    name: tests_python_selenium
     if: false
     runs-on: ubuntu-latest
     timeout-minutes: 30
