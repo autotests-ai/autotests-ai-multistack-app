@@ -15,7 +15,6 @@ export const router = createRouter({
     { path: '/', name: 'home', component: HomePage },
     { path: '/login', name: 'login', component: LoginPage },
     { path: '/register', name: 'register', component: RegisterPage },
-    { path: '/stack', name: 'stack', component: StackPage },
-    { path: '/stack/', name: 'stack-slash', component: StackPage },
+    { path: '/stack/:pathMatch(.*)*', name: 'stack', component: StackPage },
   ],
 });

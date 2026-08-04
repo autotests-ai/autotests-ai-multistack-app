@@ -88,7 +88,7 @@ async function handleLogout(): Promise<void> {
       body-class-name="reference-app__welcome-body"
     >
       <p id="welcome-message" class="text" data-testid="welcome-message">
-        {{ welcome ?? 'Welcome!' }}
+        {{ welcome }}
       </p>
       <Button id="logout-button" variant="primary" data-testid="logout-button" @click="handleLogout">
         Logout
@@ -108,7 +108,7 @@ async function handleLogout(): Promise<void> {
       </p>
     </Panel>
 
-    <div class="reference-app__items grid" data-testid="items-list" aria-live="polite">
+    <div class="grid" data-testid="items-list" aria-live="polite">
       <Panel v-if="items.status === 'loading'" title="Items">
         <p class="text text--muted">→ Loading items…</p>
       </Panel>
