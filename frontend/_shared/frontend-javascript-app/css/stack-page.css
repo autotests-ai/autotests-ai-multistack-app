@@ -25,16 +25,6 @@
   margin-bottom: var(--space-4);
 }
 
-.stack-page__pair {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-  max-width: 100%;
-  text-align: center;
-}
-
 .stack-page__current {
   text-decoration: none;
   max-width: 100%;
@@ -46,29 +36,45 @@
   filter: brightness(1.08);
 }
 
-.stack-page__gh {
+.stack-page__name {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--space-3);
-  font-family: var(--font-mono, ui-monospace, Menlo, monospace);
-  font-size: 0.78rem;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
 }
 
-.stack-page__gh-link {
-  white-space: nowrap;
+.stack-page__name .stack-page__id,
+.stack-page__name .stack-page__id--disabled {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.stack-page__gh-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.stack-page__gh-icon:hover {
+  color: var(--color-text);
+}
+
+.stack-page__gh-icon .icon {
+  width: 0.95rem;
+  height: 0.95rem;
 }
 
 .stack-page__boards {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-4);
-  align-items: start;
+  align-items: stretch;
 }
 
 @media (max-width: 900px) {
   .stack-page__boards {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -84,6 +90,7 @@
 .stack-page__table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .stack-page__table th,
@@ -93,6 +100,22 @@
   border-bottom: 1px solid var(--color-border);
   vertical-align: top;
   font-size: var(--font-size-sm, 0.9rem);
+}
+
+/* Same Module / Status / Open track weights in both boards */
+.stack-page__table th:nth-child(1),
+.stack-page__table td:nth-child(1) {
+  width: 58%;
+}
+
+.stack-page__table th:nth-child(2),
+.stack-page__table td:nth-child(2) {
+  width: 22%;
+}
+
+.stack-page__table th:nth-child(3),
+.stack-page__table td:nth-child(3) {
+  width: 20%;
 }
 
 .stack-page__table th {

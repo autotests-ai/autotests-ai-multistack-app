@@ -5,7 +5,7 @@ import { appPath } from '../lib/appBase';
 import {
   comboHref,
   fetchStackMatrix,
-  findModuleById,
+  GITHUB_MARK_PATH,
   githubModuleHref,
   isOpenable,
   parseMount,
@@ -23,6 +23,7 @@ type LoadState =
 
 const mount = parseMount(window.location.pathname);
 const state = ref<LoadState>({ status: 'loading' });
+const githubMarkPath = GITHUB_MARK_PATH;
 
 let active = true;
 
@@ -54,15 +55,6 @@ const label =
 
 const homeHref = comboHref(mount.backendId, mount.frontendId, '/');
 
-const beModule = computed(() =>
-  summary.value ? findModuleById(summary.value.backends, mount.backendId) : null,
-);
-const feModule = computed(() =>
-  summary.value ? findModuleById(summary.value.frontends, mount.frontendId) : null,
-);
-const beGh = computed(() => githubModuleHref(beModule.value));
-const feGh = computed(() => githubModuleHref(feModule.value));
-
 function metaFor(kind: 'backend' | 'frontend', item: BackendModule | FrontendModule): string {
   const status = item.status || 'active';
   return kind === 'backend'
@@ -81,45 +73,23 @@ function rowHref(kind: 'backend' | 'frontend', item: BackendModule | FrontendMod
   const targetFrontend = kind === 'frontend' ? item.id : mount.frontendId;
   return stackHref(targetBackend, targetFrontend);
 }
+
+function moduleGh(item: BackendModule | FrontendModule): string | null {
+  return githubModuleHref(item.module);
+}
 </script>
 
 <template>
   <main class="page-shell page-shell--below-header stack-page" data-testid="stack-page">
     <div class="stack-page__header">
-      <div class="stack-page__pair">
-        <a
-          class="badge badge--primary stack-page__current"
-          :href="homeHref"
-          title="open app home"
-          data-testid="stack-current-pair"
-        >
-          {{ label }}
-        </a>
-        <div v-if="beGh || feGh" class="stack-page__gh" data-testid="stack-gh-links">
-          <a
-            v-if="beGh"
-            class="link stack-page__gh-link"
-            :href="beGh"
-            target="_blank"
-            rel="noopener noreferrer"
-            data-testid="stack-gh-backend"
-            :title="beModule ?? undefined"
-          >
-            backend ↗
-          </a>
-          <a
-            v-if="feGh"
-            class="link stack-page__gh-link"
-            :href="feGh"
-            target="_blank"
-            rel="noopener noreferrer"
-            data-testid="stack-gh-frontend"
-            :title="feModule ?? undefined"
-          >
-            frontend ↗
-          </a>
-        </div>
-      </div>
+      <a
+        class="badge badge--primary stack-page__current"
+        :href="homeHref"
+        title="open app home"
+        data-testid="stack-current-pair"
+      >
+        {{ label }}
+      </a>
     </div>
 
     <div v-if="state.status === 'error'" class="stack-page__error" data-testid="stack-error">
@@ -148,23 +118,41 @@ function rowHref(kind: 'backend' | 'frontend', item: BackendModule | FrontendMod
               :class="{ 'stack-page__row--active': item.id === mount.backendId }"
             >
               <td>
-                <a
-                  v-if="rowOpenable('backend', item)"
-                  class="link stack-page__id"
-                  :class="{ 'is-active': item.id === mount.backendId }"
-                  :href="rowHref('backend', item)"
-                  :data-testid="`stack-backend-${item.id}`"
-                >
-                  {{ item.id }}
-                </a>
-                <span
-                  v-else
-                  class="stack-page__id stack-page__id--disabled"
-                  :class="{ 'is-active': item.id === mount.backendId }"
-                  :data-testid="`stack-backend-${item.id}`"
-                >
-                  {{ item.id }}
-                </span>
+                <div class="stack-page__name">
+                  <a
+                    v-if="rowOpenable('backend', item)"
+                    class="link stack-page__id"
+                    :class="{ 'is-active': item.id === mount.backendId }"
+                    :href="rowHref('backend', item)"
+                    :data-testid="`stack-backend-${item.id}`"
+                  >
+                    {{ item.id }}
+                  </a>
+                  <span
+                    v-else
+                    class="stack-page__id stack-page__id--disabled"
+                    :class="{ 'is-active': item.id === mount.backendId }"
+                    :data-testid="`stack-backend-${item.id}`"
+                  >
+                    {{ item.id }}
+                  </span>
+                  <a
+                    v-if="moduleGh(item)"
+                    class="icon-btn stack-page__gh-icon"
+                    :href="moduleGh(item)!"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    :aria-label="`GitHub ${item.id}`"
+                    :title="item.module"
+                    :data-testid="`stack-gh-backend-${item.id}`"
+                  >
+                    <span class="icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path :d="githubMarkPath" />
+                      </svg>
+                    </span>
+                  </a>
+                </div>
                 <div class="text text--sm text--muted stack-page__meta">
                   {{ metaFor('backend', item) }}
                 </div>
@@ -209,23 +197,41 @@ function rowHref(kind: 'backend' | 'frontend', item: BackendModule | FrontendMod
               :class="{ 'stack-page__row--active': item.id === mount.frontendId }"
             >
               <td>
-                <a
-                  v-if="rowOpenable('frontend', item)"
-                  class="link stack-page__id"
-                  :class="{ 'is-active': item.id === mount.frontendId }"
-                  :href="rowHref('frontend', item)"
-                  :data-testid="`stack-frontend-${item.id}`"
-                >
-                  {{ item.id }}
-                </a>
-                <span
-                  v-else
-                  class="stack-page__id stack-page__id--disabled"
-                  :class="{ 'is-active': item.id === mount.frontendId }"
-                  :data-testid="`stack-frontend-${item.id}`"
-                >
-                  {{ item.id }}
-                </span>
+                <div class="stack-page__name">
+                  <a
+                    v-if="rowOpenable('frontend', item)"
+                    class="link stack-page__id"
+                    :class="{ 'is-active': item.id === mount.frontendId }"
+                    :href="rowHref('frontend', item)"
+                    :data-testid="`stack-frontend-${item.id}`"
+                  >
+                    {{ item.id }}
+                  </a>
+                  <span
+                    v-else
+                    class="stack-page__id stack-page__id--disabled"
+                    :class="{ 'is-active': item.id === mount.frontendId }"
+                    :data-testid="`stack-frontend-${item.id}`"
+                  >
+                    {{ item.id }}
+                  </span>
+                  <a
+                    v-if="moduleGh(item)"
+                    class="icon-btn stack-page__gh-icon"
+                    :href="moduleGh(item)!"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    :aria-label="`GitHub ${item.id}`"
+                    :title="item.module"
+                    :data-testid="`stack-gh-frontend-${item.id}`"
+                  >
+                    <span class="icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path :d="githubMarkPath" />
+                      </svg>
+                    </span>
+                  </a>
+                </div>
                 <div class="text text--sm text--muted stack-page__meta">
                   {{ metaFor('frontend', item) }}
                 </div>

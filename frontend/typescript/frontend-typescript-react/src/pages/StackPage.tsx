@@ -4,7 +4,7 @@ import { appPath } from '../lib/appBase';
 import {
   comboHref,
   fetchStackMatrix,
-  findModuleById,
+  GITHUB_MARK_PATH,
   githubModuleHref,
   isOpenable,
   parseMount,
@@ -19,6 +19,36 @@ type LoadState =
   | { status: 'loading' }
   | { status: 'error'; message: string }
   | { status: 'loaded'; data: StackMatrix };
+
+function GithubModuleLink({
+  kind,
+  id,
+  modulePath,
+}: {
+  kind: 'backend' | 'frontend';
+  id: string;
+  modulePath?: string;
+}) {
+  const href = githubModuleHref(modulePath);
+  if (!href) return null;
+  return (
+    <a
+      className="icon-btn stack-page__gh-icon"
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`GitHub ${id}`}
+      title={modulePath}
+      data-testid={`stack-gh-${kind}-${id}`}
+    >
+      <span className="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d={GITHUB_MARK_PATH} />
+        </svg>
+      </span>
+    </a>
+  );
+}
 
 function ModuleRows({
   kind,
@@ -57,22 +87,25 @@ function ModuleRows({
           return (
             <tr key={id} className={isCurrent ? 'stack-page__row--active' : undefined}>
               <td>
-                {openable ? (
-                  <Link
-                    className={`stack-page__id${isCurrent ? ' is-active' : ''}`}
-                    href={href}
-                    data-testid={`stack-${kind}-${id}`}
-                  >
-                    {id}
-                  </Link>
-                ) : (
-                  <span
-                    className={`stack-page__id stack-page__id--disabled${isCurrent ? ' is-active' : ''}`}
-                    data-testid={`stack-${kind}-${id}`}
-                  >
-                    {id}
-                  </span>
-                )}
+                <div className="stack-page__name">
+                  {openable ? (
+                    <Link
+                      className={`stack-page__id${isCurrent ? ' is-active' : ''}`}
+                      href={href}
+                      data-testid={`stack-${kind}-${id}`}
+                    >
+                      {id}
+                    </Link>
+                  ) : (
+                    <span
+                      className={`stack-page__id stack-page__id--disabled${isCurrent ? ' is-active' : ''}`}
+                      data-testid={`stack-${kind}-${id}`}
+                    >
+                      {id}
+                    </span>
+                  )}
+                  <GithubModuleLink kind={kind} id={id} modulePath={item.module} />
+                </div>
                 <div className="text text--sm text--muted stack-page__meta">{meta}</div>
               </td>
               <td>
@@ -124,10 +157,6 @@ export function StackPage() {
         ? `(no backend prefix) · ${mount.frontendId}`
         : 'path without /{backend}/{frontend}/';
   const homeHref = comboHref(mount.backendId, mount.frontendId, '/');
-  const beModule = summary ? findModuleById(summary.backends, mount.backendId) : null;
-  const feModule = summary ? findModuleById(summary.frontends, mount.frontendId) : null;
-  const beGh = githubModuleHref(beModule);
-  const feGh = githubModuleHref(feModule);
 
   return (
     <main
@@ -135,44 +164,14 @@ export function StackPage() {
       data-testid="stack-page"
     >
       <div className="stack-page__header">
-        <div className="stack-page__pair">
-          <a
-            className="badge badge--primary stack-page__current"
-            href={homeHref}
-            title="open app home"
-            data-testid="stack-current-pair"
-          >
-            {label}
-          </a>
-          {(beGh || feGh) && (
-            <div className="stack-page__gh" data-testid="stack-gh-links">
-              {beGh && (
-                <a
-                  className="link stack-page__gh-link"
-                  href={beGh}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-testid="stack-gh-backend"
-                  title={beModule ?? undefined}
-                >
-                  backend ↗
-                </a>
-              )}
-              {feGh && (
-                <a
-                  className="link stack-page__gh-link"
-                  href={feGh}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-testid="stack-gh-frontend"
-                  title={feModule ?? undefined}
-                >
-                  frontend ↗
-                </a>
-              )}
-            </div>
-          )}
-        </div>
+        <a
+          className="badge badge--primary stack-page__current"
+          href={homeHref}
+          title="open app home"
+          data-testid="stack-current-pair"
+        >
+          {label}
+        </a>
       </div>
 
       {state.status === 'error' && (
