@@ -45,6 +45,11 @@ npm run typecheck  # tsc --noEmit
 npm test           # Vitest + RTL (src/test/)
 ```
 
+`npm test` runs Vitest under `--no-experimental-webstorage`: Node 26 owns a `localStorage`
+global that stays undefined without `--localstorage-file`, and Vitest keeps globals the
+runtime already defined instead of installing the jsdom ones. Without the flag every test
+touching `localStorage` fails on `Cannot read properties of undefined`.
+
 ## Build notes
 
 - `outDir` is module-local `dist/` with `emptyOutDir: true`.

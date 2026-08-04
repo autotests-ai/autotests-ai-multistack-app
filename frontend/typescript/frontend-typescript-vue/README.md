@@ -43,6 +43,9 @@ npm run typecheck  # vue-tsc --noEmit
 npm test           # Vitest + Testing Library (src/test/)
 ```
 
+`npm test` runs Vitest under `--no-experimental-webstorage` for the same reason as the React
+module: on Node 26 the runtime's own empty `localStorage` global wins over the jsdom one.
+
 ## Build notes
 
 - `outDir` is module-local `dist/` with `emptyOutDir: true`.
