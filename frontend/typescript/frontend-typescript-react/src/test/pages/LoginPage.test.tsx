@@ -38,7 +38,9 @@ describe('LoginPage', () => {
     expect(screen.getByTestId('login-panel')).toBeInTheDocument();
     expect(screen.getByTestId('login-form-title')).toHaveTextContent('Login Form');
     expect(screen.getByTestId('login-input')).toBeInTheDocument();
+    expect(screen.getByTestId('login-input')).toHaveAttribute('name', 'username');
     expect(screen.getByTestId('password-input')).toBeInTheDocument();
+    expect(screen.getByTestId('password-input')).toHaveAttribute('name', 'password');
     expect(screen.getByTestId('submit-button')).toHaveTextContent('Login');
     expect(screen.getByTestId('register-link')).toBeInTheDocument();
   });

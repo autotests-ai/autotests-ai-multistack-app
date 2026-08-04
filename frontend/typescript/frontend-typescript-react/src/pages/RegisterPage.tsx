@@ -71,6 +71,7 @@ export function RegisterPage() {
             <PlaqueField
               label="Login"
               id="login-input"
+              name="username"
               type="text"
               autoComplete="username"
               data-testid="login-input"
@@ -80,6 +81,7 @@ export function RegisterPage() {
             <PlaqueField
               label="Password"
               id="password-input"
+              name="password"
               type="password"
               autoComplete="new-password"
               data-testid="password-input"
@@ -89,6 +91,7 @@ export function RegisterPage() {
             <PlaqueField
               label="Confirm"
               id="confirm-password-input"
+              name="confirm-password"
               type="password"
               autoComplete="new-password"
               data-testid="confirm-password-input"

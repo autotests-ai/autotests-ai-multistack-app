@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { useAttrs } from 'vue';
+import { computed, useAttrs } from 'vue';
 
 defineOptions({ inheritAttrs: false });
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     label: string;
     id?: string;
+    name?: string;
     type?: string;
     autocomplete?: string;
     modelValue?: string;
@@ -29,6 +30,10 @@ const emit = defineEmits<{
 
 const attrs = useAttrs();
 
+/** Autofill / DevTools: every form control needs id or name. */
+const controlId = computed(() => props.id);
+const controlName = computed(() => props.name ?? props.id);
+
 const labelClass = (variant: 'param' | 'caption') =>
   variant === 'param' ? 'plaque-field__label' : 'plaque-field__text';
 </script>
@@ -49,7 +54,8 @@ const labelClass = (variant: 'param' | 'caption') =>
     </span>
     <span v-if="divided" class="plaque-divider" aria-hidden="true" />
     <input
-      :id="id"
+      :id="controlId"
+      :name="controlName"
       class="input plaque-field__control"
       :type="type"
       :autocomplete="autocomplete"

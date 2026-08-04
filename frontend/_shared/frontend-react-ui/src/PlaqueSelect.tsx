@@ -53,6 +53,8 @@ export function PlaqueSelect({
   const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
     onChange?.(event.target.value);
   };
+  const controlId = id ?? paramId;
+  const controlName = paramId ?? id;
 
   return (
     <label
@@ -70,13 +72,14 @@ export function PlaqueSelect({
       </span>
       <span className="plaque-divider" aria-hidden="true" />
       <select
-        id={id}
         className="plaque-field__control"
         value={value}
         defaultValue={value === undefined ? defaultValue : undefined}
         disabled={disabled}
         aria-label={ariaLabel ?? label}
         onChange={handleChange}
+        id={controlId}
+        name={controlName}
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

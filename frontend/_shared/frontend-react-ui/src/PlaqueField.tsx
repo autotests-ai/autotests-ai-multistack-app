@@ -34,10 +34,15 @@ export function PlaqueField({
   paramId,
   labelVariant = 'caption',
   id,
+  name,
   ...inputProps
 }: PlaqueFieldProps) {
   const labelClass =
     labelVariant === 'param' ? 'plaque-field__label' : 'plaque-field__text';
+  // Autofill / DevTools: form controls need id or name. Prefer explicit props,
+  // then configurator paramId (Capabilities / remote-hub).
+  const controlId = id ?? paramId;
+  const controlName = name ?? paramId ?? id;
 
   return (
     <label
@@ -53,7 +58,12 @@ export function PlaqueField({
         {label}
       </span>
       {divided ? <span className="plaque-divider" aria-hidden="true" /> : null}
-      <Input id={id} className="plaque-field__control" {...inputProps} />
+      <Input
+        className="plaque-field__control"
+        {...inputProps}
+        id={controlId}
+        name={controlName}
+      />
     </label>
   );
 }

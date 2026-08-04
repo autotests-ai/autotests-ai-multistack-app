@@ -290,6 +290,8 @@ function buildHeaderMenu(root, config) {
   menuSearch.dataset.testid = 'header-menu-search';
   const searchInput = document.createElement('input');
   searchInput.type = 'search';
+  searchInput.id = 'header-menu-search-input';
+  searchInput.name = 'header-menu-search';
   searchInput.className = 'input';
   searchInput.placeholder = 'Поиск';
   searchInput.dataset.testid = 'header-menu-search-input';

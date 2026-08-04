@@ -62,6 +62,7 @@ export function LoginPage() {
             <PlaqueField
               label="Login"
               id="login-input"
+              name="username"
               type="text"
               autoComplete="username"
               data-testid="login-input"
@@ -71,6 +72,7 @@ export function LoginPage() {
             <PlaqueField
               label="Password"
               id="password-input"
+              name="password"
               type="password"
               autoComplete="current-password"
               data-testid="password-input"
