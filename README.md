@@ -67,18 +67,19 @@ Host `/` is empty (404). One public host — no backend subdomains.
 
 Path constants: `backend/scripts/paths.sh`
 
-### Layers (block 2)
+### Layers
 
 Canon: [tests/LAYERS.md](tests/LAYERS.md) · all jobs live in [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 
 | Job | Where |
 |-----|-------|
-| `unit` | `backend/java/backend-java-spring/` — `./gradlew test` + JaCoCo |
-| `test-infra` | `tests/java/…` — `./gradlew testInfra` |
-| `component` | `frontend/typescript/frontend-typescript-react/` — `npm test` |
-| `prod-api` | `tests/java/…` — `./gradlew testApi -Denv=reference_prod` after deploy |
+| `unit-tests` | `backend/java/backend-java-spring/` — `./gradlew test` + JaCoCo |
+| `test-infra-tests` | `tests/java/…` — `./gradlew test -Denv=reference_ci -DincludeTags=test-infra` |
+| `component-tests` | `frontend/typescript/frontend-typescript-react/` — `npm test` |
+| `api-tests` | `tests/java/…` — `./gradlew test -Denv=reference_prod -DincludeTags=api` after deploy |
 
-Remaining layers (`api`, `integration`, `e2e`, `visual`, python backends, alt runners) are not in the workflow yet — add a job when the layer is turned on.
+The first three block a pull request. Browser layers (integration, e2e, visual, manual), Playwright and
+pytest have no scheduled job — dispatch the workflow with `includeTags` / `runners` when you want them.
 
 ## Ports (local = prod host upstream)
 
