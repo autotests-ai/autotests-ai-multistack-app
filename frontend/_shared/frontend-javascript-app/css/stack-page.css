@@ -21,28 +21,18 @@
 
 .stack-page__header {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
+  justify-content: center;
   margin-bottom: var(--space-4);
-}
-
-.stack-page__title {
-  margin: 0;
-  font-size: 1.35rem;
-  font-weight: 650;
-  letter-spacing: -0.02em;
-  color: var(--color-text);
 }
 
 .stack-page__pair {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   gap: var(--space-2);
   min-width: 0;
   max-width: 100%;
+  text-align: center;
 }
 
 .stack-page__current {
@@ -59,7 +49,7 @@
 .stack-page__gh {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: center;
   gap: var(--space-3);
   font-family: var(--font-mono, ui-monospace, Menlo, monospace);
   font-size: 0.78rem;

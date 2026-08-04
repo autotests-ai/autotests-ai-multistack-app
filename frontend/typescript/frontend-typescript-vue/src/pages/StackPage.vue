@@ -86,7 +86,6 @@ function rowHref(kind: 'backend' | 'frontend', item: BackendModule | FrontendMod
 <template>
   <main class="page-shell page-shell--below-header stack-page" data-testid="stack-page">
     <div class="stack-page__header">
-      <h1 class="stack-page__title">Stack</h1>
       <div class="stack-page__pair">
         <a
           class="badge badge--primary stack-page__current"

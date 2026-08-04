@@ -135,7 +135,6 @@ export function StackPage() {
       data-testid="stack-page"
     >
       <div className="stack-page__header">
-        <h1 className="stack-page__title">Stack</h1>
         <div className="stack-page__pair">
           <a
             className="badge badge--primary stack-page__current"

@@ -151,7 +151,6 @@ export function mountStackPage(root, data, pathname = window.location.pathname) 
 
   root.innerHTML = `
     <div class="stack-page__header">
-      <h1 class="stack-page__title">Stack</h1>
       <div class="stack-page__pair">
         <a class="badge badge--primary stack-page__current" href="${escapeHtml(homeHref)}" title="open app home" data-testid="stack-current-pair">${escapeHtml(label)}</a>
         ${
