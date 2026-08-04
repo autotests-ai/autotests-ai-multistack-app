@@ -145,24 +145,19 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:9800/
 
 **Production URL:** https://reference-app-copy.autotests.ai/backend-java-spring/frontend-typescript-react/
 
+Ports, compose service ids, and health `expect` strings — **SSOT** [`deploy/matrix.yaml`](deploy/matrix.yaml). Host entrypoint [`deploy/server-deploy.sh`](deploy/server-deploy.sh) reads them via [`deploy/matrix_query.py`](deploy/matrix_query.py) (no port tables in the workflow).
+
 | Setting | Value |
 |---------|-------|
 | `APP_DIR` | `/home/reference_app_copy/reference-app-copy` |
-| `BACKEND_JAVA_PORT` | `8800` |
-| `BACKEND_KOTLIN_PORT` | `8810` |
-| `BACKEND_FLASK_PORT` | `8820` |
-| `BACKEND_FASTAPI_PORT` | `8821` |
-| `BACKEND_DJANGO_PORT` | `8822` |
-| `FRONTEND_TS_REACT_PORT` | `9811` |
-| `FRONTEND_TS_VUE_PORT` | `9813` |
-| `FRONTEND_JS_VANILLA_PORT` | `9800` |
+| Default stacks | `backend-java-spring` + `frontend-typescript-react` |
 
 **CD (does not run autotests):**
 
 | Workflow | Role |
 |----------|------|
-| [`deploy.yml`](.github/workflows/deploy.yml) | Default CD on `push` main: `backend-java-spring` + `frontend-typescript-react` → SSH load → compose up selected services |
-| [`deploy_all.yml`](.github/workflows/deploy_all.yml) | Manual: all active backends + frontends, then full [`deploy/server-deploy.sh`](deploy/server-deploy.sh) |
+| [`deploy.yml`](.github/workflows/deploy.yml) | Default CD on `push` main: build selected images → SSH `docker load` → `SKIP_BUILD=1 deploy/server-deploy.sh` (health + nginx + smoke for those stacks) |
+| [`deploy_all.yml`](.github/workflows/deploy_all.yml) | Manual: `deploy_mode=all` → every **active** backend/frontend from `matrix.yaml` |
 
 Stack build steps live next to modules, e.g. [`backend/java/backend-java-spring/.github/actions/build`](backend/java/backend-java-spring/.github/actions/build/action.yml).
 
@@ -173,7 +168,7 @@ Stack build steps live next to modules, e.g. [`backend/java/backend-java-spring/
 | [`test.yml`](.github/workflows/test.yml) | Default: java-spring `unit`, `test-infra`; `prod_api` after successful Deploy (`workflow_run`) |
 | [`test_all.yml`](.github/workflows/test_all.yml) | Manual: same + python backend unit matrix |
 
-Manual on host: `bash deploy/server-deploy.sh` (builds locally). CD `deploy_mode=all`: `SKIP_BUILD=1 bash deploy/server-deploy.sh`.
+Manual on host: `bash deploy/server-deploy.sh` (builds locally). CD: `SKIP_BUILD=1 bash deploy/server-deploy.sh`. All active stacks: `DEPLOY_MODE=all SKIP_BUILD=1 bash deploy/server-deploy.sh`.
 
 ### GitHub secrets & variables
 

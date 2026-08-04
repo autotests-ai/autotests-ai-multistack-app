@@ -1,5 +1,6 @@
 # Universal deploy — defaults: backend-java-spring + frontend-typescript-react.
-# Expand via workflow_dispatch inputs or deploy_all.yml.
+# Expand via workflow_dispatch inputs or deploy_all.yml (deploy_mode=all → matrix active).
+# Host logic SSOT: deploy/server-deploy.sh + deploy/matrix.yaml.
 # Does not run autotests (see test.yml).
 
 name: reference-app-copy Deploy
@@ -18,7 +19,7 @@ on:
         required: false
         default: frontend-typescript-react
       deploy_mode:
-        description: "default = selected services; all = full server-deploy.sh"
+        description: "default = selected services; all = every active id from matrix.yaml"
         required: false
         default: default
   workflow_call:
@@ -51,9 +52,30 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    outputs:
+      backends: ${{ steps.stacks.outputs.backends }}
+      frontends: ${{ steps.stacks.outputs.frontends }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      - name: Resolve target stacks
+        id: stacks
+        run: |
+          set -euo pipefail
+          if [[ "${DEPLOY_MODE}" == "all" ]]; then
+            BACKENDS="$(python deploy/matrix_query.py ids backends --mode all --csv)"
+            FRONTENDS="$(python deploy/matrix_query.py ids frontends --mode all --csv)"
+          fi
+          {
+            echo "BACKENDS=${BACKENDS}"
+            echo "FRONTENDS=${FRONTENDS}"
+          } >> "$GITHUB_ENV"
+          {
+            echo "backends=${BACKENDS}"
+            echo "frontends=${FRONTENDS}"
+          } >> "$GITHUB_OUTPUT"
+          echo "Deploy targets: backends=${BACKENDS} frontends=${FRONTENDS}"
 
       - name: Init image list
         run: truncate -s 0 .ci-images.txt
@@ -115,6 +137,8 @@ jobs:
     env:
       DEPLOY_HOST: ${{ vars.DEPLOY_HOST || '212.92.101.15' }}
       DEPLOY_USER: ${{ vars.DEPLOY_USER || 'reference_app_copy' }}
+      BACKENDS: ${{ needs.build.outputs.backends }}
+      FRONTENDS: ${{ needs.build.outputs.frontends }}
     steps:
       - name: Require deploy secrets
         run: |
@@ -141,106 +165,19 @@ jobs:
           gunzip -c /tmp/app-images.tar.gz | \
             ssh "${DEPLOY_USER}@${DEPLOY_HOST}" docker load
 
-      - name: Deploy on production host (all)
-        if: env.DEPLOY_MODE == 'all'
+      - name: Deploy on production host
         uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ env.DEPLOY_HOST }}
           username: ${{ env.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           command_timeout: 15m
+          envs: BACKENDS,FRONTENDS,DEPLOY_MODE
           script: |
             set -euo pipefail
             APP_DIR="${APP_DIR:-/home/reference_app_copy/reference-app-copy}"
             cd "$APP_DIR"
+            # Sync first so this run executes the commit's server-deploy.sh / matrix_query.py
             git fetch --all
             git reset --hard origin/main
             SKIP_BUILD=1 bash deploy/server-deploy.sh
-
-      - name: Deploy on production host (default stacks)
-        if: env.DEPLOY_MODE != 'all'
-        uses: appleboy/ssh-action@v1.2.5
-        with:
-          host: ${{ env.DEPLOY_HOST }}
-          username: ${{ env.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          command_timeout: 15m
-          envs: BACKENDS,FRONTENDS
-          script: |
-            set -euo pipefail
-            APP_DIR="${APP_DIR:-/home/reference_app_copy/reference-app-copy}"
-            cd "$APP_DIR"
-            git fetch --all
-            git reset --hard origin/main
-
-            services=(postgres postgres-ensure-dbs)
-            IFS=',' read -r -a backends <<< "${BACKENDS:-backend-java-spring}"
-            for b in "${backends[@]}"; do
-              b="$(echo "$b" | xargs)"
-              [[ -n "$b" ]] && services+=("$b")
-            done
-            IFS=',' read -r -a frontends <<< "${FRONTENDS:-frontend-typescript-react}"
-            for f in "${frontends[@]}"; do
-              f="$(echo "$f" | xargs)"
-              [[ -n "$f" ]] && services+=("$f")
-            done
-
-            docker compose up -d --force-recreate --no-build "${services[@]}"
-
-            MAX_ATTEMPTS="${HEALTH_POLL_ATTEMPTS:-30}"
-            SLEEP_SECS="${HEALTH_POLL_SLEEP:-2}"
-            for b in "${backends[@]}"; do
-              b="$(echo "$b" | xargs)"
-              [[ -z "$b" ]] && continue
-              case "$b" in
-                backend-java-spring) port=8800; expect=reference-app-copy ;;
-                backend-kotlin-spring) port=8810; expect=backend-kotlin-spring ;;
-                backend-python-flask) port=8820; expect=backend-python-flask ;;
-                backend-python-fastapi) port=8821; expect=backend-python-fastapi ;;
-                backend-python-django) port=8822; expect=backend-python-django ;;
-                *) echo "skip health for unknown backend: $b"; continue ;;
-              esac
-              url="http://127.0.0.1:${port}/api/health"
-              for i in $(seq 1 "$MAX_ATTEMPTS"); do
-                if body="$(curl -fsS "$url" 2>/dev/null)" \
-                  && echo "$body" | grep -q '"status":"ok"' \
-                  && echo "$body" | grep -q "$expect"; then
-                  echo "Health OK: $url ($expect, attempt $i)"
-                  break
-                fi
-                if [[ "$i" -eq "$MAX_ATTEMPTS" ]]; then
-                  echo "FAIL: health not ok after ${MAX_ATTEMPTS} attempts: $url" >&2
-                  exit 1
-                fi
-                sleep "$SLEEP_SECS"
-              done
-            done
-
-            for f in "${frontends[@]}"; do
-              f="$(echo "$f" | xargs)"
-              [[ -z "$f" ]] && continue
-              case "$f" in
-                frontend-javascript-vanilla) port=9800 ;;
-                frontend-typescript-react) port=9811 ;;
-                frontend-typescript-vue) port=9813 ;;
-                *) echo "skip health for unknown frontend: $f"; continue ;;
-              esac
-              url="http://127.0.0.1:${port}/"
-              for i in $(seq 1 "$MAX_ATTEMPTS"); do
-                code="$(curl -s -o /dev/null -w '%{http_code}' "$url" 2>/dev/null || true)"
-                if [[ "$code" == "200" ]]; then
-                  echo "Health OK: $url (HTTP $code, attempt $i)"
-                  break
-                fi
-                if [[ "$i" -eq "$MAX_ATTEMPTS" ]]; then
-                  echo "FAIL: frontend not ok after ${MAX_ATTEMPTS} attempts: $url (got $code)" >&2
-                  exit 1
-                fi
-                sleep "$SLEEP_SECS"
-              done
-            done
-
-            if [[ -f deploy/nginx/sync-nginx.sh ]]; then
-              bash deploy/nginx/sync-nginx.sh
-            fi
-            echo "Deploy OK ($(git rev-parse --short HEAD)) mode=default backends=${BACKENDS} frontends=${FRONTENDS}"

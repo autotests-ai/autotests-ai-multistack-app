@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Smoke active/stub backends × active frontends over HTTPS (strict TLS)."""
+"""Smoke selected (or all active) backends × frontends over HTTPS (strict TLS)."""
 
 from __future__ import annotations
 
@@ -11,7 +11,9 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "deploy"))
 sys.path.insert(0, str(ROOT / "deploy" / "nginx"))
+from matrix_query import resolve_backends, resolve_frontends  # noqa: E402
 from render_vhosts import load_matrix, public_host  # noqa: E402
 
 
@@ -67,6 +69,16 @@ def main() -> int:
     parser.add_argument("--backend", default="backend-java-spring")
     parser.add_argument("--ui-mount", default="frontend-typescript-react")
     parser.add_argument("--service", default="reference-app-copy")
+    parser.add_argument(
+        "--backends",
+        default="",
+        help="Comma-separated backend ids (default: all active/stub in matrix)",
+    )
+    parser.add_argument(
+        "--frontends",
+        default="",
+        help="Comma-separated frontend ids (default: all active in matrix)",
+    )
     args = parser.parse_args()
     ctx = ssl.create_default_context()
 
@@ -76,8 +88,9 @@ def main() -> int:
 
     matrix = load_matrix(args.matrix)
     origin = f"https://{public_host(matrix)}"
-    backends = [b for b in matrix["backends"] if b.get("status") in ("active", "stub")]
-    frontends = [f for f in matrix["frontends"] if f.get("status") == "active"]
+    mode = "default" if args.backends or args.frontends else "all"
+    backends = resolve_backends(matrix, args.backends or None, mode)
+    frontends = resolve_frontends(matrix, args.frontends or None, mode)
     if not backends or not frontends:
         print("FAIL: no backends/frontends to smoke", file=sys.stderr)
         return 1

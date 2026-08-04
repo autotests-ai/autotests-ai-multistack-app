@@ -1,4 +1,4 @@
-# Expand deploy.yml to every active backend + frontend.
+# Expand deploy.yml to every active backend + frontend from deploy/matrix.yaml.
 
 name: reference-app-copy Deploy all
 
@@ -12,8 +12,4 @@ jobs:
     uses: ./.github/workflows/deploy.yml
     secrets: inherit
     with:
-      backends: >-
-        backend-java-spring,backend-kotlin-spring,backend-python-flask,backend-python-fastapi,backend-python-django
-      frontends: >-
-        frontend-javascript-vanilla,frontend-typescript-react,frontend-typescript-vue
       deploy_mode: all
