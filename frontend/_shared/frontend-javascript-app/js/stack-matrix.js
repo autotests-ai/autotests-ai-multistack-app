@@ -3,6 +3,8 @@
  * Data: ../stack/matrix.json ← python frontend/scripts/sync-stack-matrix.py
  */
 
+import { mountHeaderPollToggle, POLL_DEFAULT_MS } from './poll-toggle.js';
+
 const PATH_RE = /^\/(backend-[^/]+)\/(frontend-[^/]+)/;
 
 /** Nested product repo on GitHub — tree URLs for matrix `module` paths. */
@@ -172,6 +174,14 @@ function rowHtml(item, kind, currentBackend, currentFrontend, currentTests) {
   </tr>`;
 }
 
+function layersCell(layers) {
+  const list = Array.isArray(layers) ? layers.filter(Boolean) : [];
+  if (!list.length) {
+    return '<td class="stack-page__layers-cell"><span class="text text--sm text--muted">—</span></td>';
+  }
+  return `<td class="stack-page__layers-cell"><span class="stack-page__layers" data-testid="stack-tests-layers">${escapeHtml(list.join(' · '))}</span></td>`;
+}
+
 function derivedLayerRow(layer, boundId, modulePath, meta, present) {
   const status = present ? 'derived' : 'slot';
   const isActive = Boolean(boundId);
@@ -184,6 +194,7 @@ function derivedLayerRow(layer, boundId, modulePath, meta, present) {
       ${name}
       <div class="text text--sm text--muted stack-page__meta">${escapeHtml(meta)}</div>
     </td>
+    ${layersCell([layer])}
     <td class="stack-page__gh-cell">${ghCell}</td>
     <td>${statusBadge(status)}</td>
     <td><span class="text text--sm text--muted">—</span></td>
@@ -193,8 +204,8 @@ function derivedLayerRow(layer, boundId, modulePath, meta, present) {
 function testsModuleRow(item, currentBackend, currentFrontend, currentTests) {
   const id = item.id;
   const status = item.status || 'active';
-  const layers = Array.isArray(item.layers) ? item.layers.join(' · ') : '';
-  const meta = `${escapeHtml(item.language || 'tests')}${layers ? ` · ${escapeHtml(layers)}` : ''} · ${escapeHtml(status)}`;
+  const layers = Array.isArray(item.layers) ? item.layers : [];
+  const meta = `${escapeHtml(item.language || 'tests')} · ${escapeHtml(status)}`;
   const isCurrent = id === currentTests;
   const selectable = isOpenable(status) && currentBackend && currentFrontend;
   const href = stackHref(currentBackend, currentFrontend, id);
@@ -210,6 +221,7 @@ function testsModuleRow(item, currentBackend, currentFrontend, currentTests) {
       ${nameCell}
       <div class="text text--sm text--muted stack-page__meta">${meta}</div>
     </td>
+    ${layersCell(layers)}
     <td class="stack-page__gh-cell">${ghCell}</td>
     <td>${statusBadge(status)}</td>
     <td>${
@@ -296,8 +308,8 @@ export function mountStackPage(root, data, pathname = window.location.pathname, 
         <div class="panel__trail"><span class="panel__title">Tests</span></div>
       </div>
       <div class="panel__body stack-page__board-body">
-        <table class="stack-page__table">
-          <thead><tr><th>Module</th><th class="stack-page__gh-cell">GH</th><th>Status</th><th>Select</th></tr></thead>
+        <table class="stack-page__table stack-page__table--tests">
+          <thead><tr><th>Module</th><th>Layers</th><th class="stack-page__gh-cell">GH</th><th>Status</th><th>Select</th></tr></thead>
           <tbody>
             ${derivedLayerRow('unit', backendId, unitPath, unitMeta, Boolean(unitPath))}
             ${derivedLayerRow('component', frontendId, componentPath, componentMeta, Boolean(componentPath))}
@@ -309,7 +321,7 @@ export function mountStackPage(root, data, pathname = window.location.pathname, 
   `;
 }
 
-export async function bootStackPage(root, options = {}) {
+async function loadStackPage(root, options = {}) {
   const errEl = options.errEl || null;
   try {
     if (errEl) {
@@ -333,4 +345,48 @@ export async function bootStackPage(root, options = {}) {
       root.innerHTML = `<p class="text reference-app__error" data-testid="stack-error">Не удалось загрузить matrix.json — ${escapeHtml(String(e))}</p>`;
     }
   }
+}
+
+function bindStackHeaderPoll(root, options = {}) {
+  const intervalMs = options.pollMs ?? POLL_DEFAULT_MS;
+  if (options.poll === false) {
+    return () => {};
+  }
+
+  let disposePoll = null;
+  let observer = null;
+
+  const attach = () => {
+    const slot = document.querySelector('[data-testid="header-slot"]');
+    if (!slot) return false;
+    disposePoll?.();
+    disposePoll = mountHeaderPollToggle({
+      intervalMs,
+      defaultOn: options.pollDefaultOn !== false,
+      onTick: () => {
+        void loadStackPage(root, options);
+      },
+    });
+    return true;
+  };
+
+  if (!attach()) {
+    observer = new MutationObserver(() => {
+      if (attach()) {
+        observer?.disconnect();
+        observer = null;
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  return () => {
+    observer?.disconnect();
+    disposePoll?.();
+  };
+}
+
+export async function bootStackPage(root, options = {}) {
+  await loadStackPage(root, options);
+  return bindStackHeaderPoll(root, options);
 }

@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { Badge, Link, Panel } from '@zero-design-system/react';
 import { appPath } from '../lib/appBase';
 import {
+  mountHeaderPollToggle,
+  whenHeaderReady,
+} from '../../../../_shared/poll-toggle';
+import {
   comboHref,
   componentTestsPath,
   fetchStackMatrix,
@@ -188,10 +192,11 @@ function TestsBoard({
   ] as const;
 
   return (
-    <table className="stack-page__table">
+    <table className="stack-page__table stack-page__table--tests">
       <thead>
         <tr>
           <th>Module</th>
+          <th>Layers</th>
           <th className="stack-page__gh-cell">GH</th>
           <th>Status</th>
           <th>Select</th>
@@ -211,6 +216,11 @@ function TestsBoard({
                   {row.layer}
                 </span>
                 <div className="text text--sm text--muted stack-page__meta">{row.meta}</div>
+              </td>
+              <td className="stack-page__layers-cell">
+                <span className="stack-page__layers" data-testid="stack-tests-layers">
+                  {row.layer}
+                </span>
               </td>
               <td className="stack-page__gh-cell">
                 {githubModuleHref(row.path) ? (
@@ -232,7 +242,7 @@ function TestsBoard({
           const id = item.id;
           const status = item.status || 'active';
           const layers = (item.layers || []).join(' · ');
-          const meta = `${item.language || 'tests'}${layers ? ` · ${layers}` : ''} · ${status}`;
+          const meta = `${item.language || 'tests'} · ${status}`;
           const isCurrent = id === currentTests;
           const selectable =
             isOpenable(status) && Boolean(currentBackend && currentFrontend);
@@ -257,6 +267,15 @@ function TestsBoard({
                   </span>
                 )}
                 <div className="text text--sm text--muted stack-page__meta">{meta}</div>
+              </td>
+              <td className="stack-page__layers-cell">
+                {layers ? (
+                  <span className="stack-page__layers" data-testid="stack-tests-layers">
+                    {layers}
+                  </span>
+                ) : (
+                  <span className="text text--sm text--muted">—</span>
+                )}
               </td>
               <td className="stack-page__gh-cell">
                 {githubModuleHref(item.module) ? (
@@ -292,6 +311,7 @@ export function StackPage() {
   const mount = useMemo(() => parseMount(window.location.pathname), []);
   const requestedTests = useMemo(() => parseTestsId(window.location.search), []);
   const [state, setState] = useState<LoadState>({ status: 'loading' });
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -305,6 +325,15 @@ export function StackPage() {
     return () => {
       active = false;
     };
+  }, [reloadToken]);
+
+  useEffect(() => {
+    return whenHeaderReady(() =>
+      mountHeaderPollToggle({
+        defaultOn: true,
+        onTick: () => setReloadToken((n) => n + 1),
+      }),
+    );
   }, []);
 
   const summary = state.status === 'loaded' ? summarizeMatrix(state.data) : null;

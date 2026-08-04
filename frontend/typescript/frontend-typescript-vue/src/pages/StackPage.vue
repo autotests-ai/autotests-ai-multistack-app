@@ -3,6 +3,10 @@ import { computed, onMounted, onUnmounted, ref } from 'vue';
 import Panel from '../components/Panel.vue';
 import { appPath } from '../lib/appBase';
 import {
+  mountHeaderPollToggle,
+  whenHeaderReady,
+} from '../../../../_shared/poll-toggle';
+import {
   comboHref,
   componentTestsPath,
   fetchStackMatrix,
@@ -33,9 +37,9 @@ const state = ref<LoadState>({ status: 'loading' });
 const githubMarkPath = GITHUB_MARK_PATH;
 
 let active = true;
+let disposePoll: (() => void) | null = null;
 
-onMounted(() => {
-  active = true;
+function loadMatrix() {
   fetchStackMatrix(appPath('/stack/matrix.json'))
     .then((data) => {
       if (active) state.value = { status: 'loaded', data };
@@ -43,10 +47,23 @@ onMounted(() => {
     .catch((error: Error) => {
       if (active) state.value = { status: 'error', message: error.message };
     });
+}
+
+onMounted(() => {
+  active = true;
+  loadMatrix();
+  disposePoll = whenHeaderReady(() =>
+    mountHeaderPollToggle({
+      defaultOn: true,
+      onTick: () => loadMatrix(),
+    }),
+  );
 });
 
 onUnmounted(() => {
   active = false;
+  disposePoll?.();
+  disposePoll = null;
 });
 
 const summary = computed(() =>
@@ -108,8 +125,11 @@ function metaFor(kind: 'backend' | 'frontend', item: BackendModule | FrontendMod
 
 function testsMeta(item: TestsModule): string {
   const status = item.status || 'active';
-  const layers = (item.layers || []).join(' · ');
-  return `${item.language || 'tests'}${layers ? ` · ${layers}` : ''} · ${status}`;
+  return `${item.language || 'tests'} · ${status}`;
+}
+
+function layersLabel(layers?: string[]): string {
+  return (layers || []).join(' · ');
 }
 
 function rowOpenable(kind: 'backend' | 'frontend', item: BackendModule | FrontendModule): boolean {
@@ -330,10 +350,11 @@ function moduleGh(modulePath?: string | null): string | null {
         class-name="stack-page__board stack-page__board--tests"
         test-id="stack-tests-board"
       >
-        <table class="stack-page__table">
+        <table class="stack-page__table stack-page__table--tests">
           <thead>
             <tr>
               <th>Module</th>
+              <th>Layers</th>
               <th class="stack-page__gh-cell">GH</th>
               <th>Status</th>
               <th>Select</th>
@@ -350,6 +371,9 @@ function moduleGh(modulePath?: string | null): string | null {
                   unit
                 </span>
                 <div class="text text--sm text--muted stack-page__meta">{{ unitMeta }}</div>
+              </td>
+              <td class="stack-page__layers-cell">
+                <span class="stack-page__layers" data-testid="stack-tests-layers">unit</span>
               </td>
               <td class="stack-page__gh-cell">
                 <a
@@ -386,6 +410,9 @@ function moduleGh(modulePath?: string | null): string | null {
                   component
                 </span>
                 <div class="text text--sm text--muted stack-page__meta">{{ componentMeta }}</div>
+              </td>
+              <td class="stack-page__layers-cell">
+                <span class="stack-page__layers" data-testid="stack-tests-layers">component</span>
               </td>
               <td class="stack-page__gh-cell">
                 <a
@@ -438,6 +465,16 @@ function moduleGh(modulePath?: string | null): string | null {
                 <div class="text text--sm text--muted stack-page__meta">
                   {{ testsMeta(item) }}
                 </div>
+              </td>
+              <td class="stack-page__layers-cell">
+                <span
+                  v-if="layersLabel(item.layers)"
+                  class="stack-page__layers"
+                  data-testid="stack-tests-layers"
+                >
+                  {{ layersLabel(item.layers) }}
+                </span>
+                <span v-else class="text text--sm text--muted">—</span>
               </td>
               <td class="stack-page__gh-cell">
                 <a
