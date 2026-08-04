@@ -1,9 +1,13 @@
 # backend-python-fastapi
 
-Python FastAPI JSON API — same OpenAPI contract as `backend-java-spring`.
+Python FastAPI JSON API — same OpenAPI contract as `backend-java-spring`.  
+Postgres DB: `reference_app_python_fastapi`.
 
-**Status:** slot (not wired in compose until implemented).
+**Status:** active.
 
 ```
 https://reference-app-copy.autotests.ai/backend-python-fastapi/{frontend}/
+https://reference-app-copy.autotests.ai/backend-python-fastapi/api/
 ```
+
+Unit tests: `tests/`. Run: `python -m pytest`

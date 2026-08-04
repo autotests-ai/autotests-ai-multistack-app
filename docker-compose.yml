@@ -84,10 +84,69 @@ services:
     build:
       context: ./backend/python/backend-python-flask
     restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: reference_app_python_flask
+      DB_USER: reference
+      DB_PASSWORD: reference
+      SERVER_PORT: 8080
+      JWT_SECRET: ${JWT_SECRET:-reference-app-dev-secret-change-in-production-min-32-chars}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      postgres-ensure-dbs:
+        condition: service_completed_successfully
     networks:
       - reference_internal
     ports:
       - "${BACKEND_FLASK_PORT:-8820}:8080"
+
+  backend-python-fastapi:
+    image: reference-app-copy-backend-python-fastapi:latest
+    build:
+      context: ./backend/python/backend-python-fastapi
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: reference_app_python_fastapi
+      DB_USER: reference
+      DB_PASSWORD: reference
+      SERVER_PORT: 8080
+      JWT_SECRET: ${JWT_SECRET:-reference-app-dev-secret-change-in-production-min-32-chars}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      postgres-ensure-dbs:
+        condition: service_completed_successfully
+    networks:
+      - reference_internal
+    ports:
+      - "${BACKEND_FASTAPI_PORT:-8821}:8080"
+
+  backend-python-django:
+    image: reference-app-copy-backend-python-django:latest
+    build:
+      context: ./backend/python/backend-python-django
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: reference_app_python_django
+      DB_USER: reference
+      DB_PASSWORD: reference
+      SERVER_PORT: 8080
+      JWT_SECRET: ${JWT_SECRET:-reference-app-dev-secret-change-in-production-min-32-chars}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      postgres-ensure-dbs:
+        condition: service_completed_successfully
+    networks:
+      - reference_internal
+    ports:
+      - "${BACKEND_DJANGO_PORT:-8822}:8080"
 
   web:
     image: reference-app-copy-web:latest
@@ -112,8 +171,10 @@ services:
     depends_on:
       - web
       - backend-java-spring
-      - backend-python-flask
       - backend-kotlin-spring
+      - backend-python-flask
+      - backend-python-fastapi
+      - backend-python-django
     ports:
       - "${SERVER_PORT:-8700}:80"
     networks:

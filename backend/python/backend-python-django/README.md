@@ -1,9 +1,13 @@
 # backend-python-django
 
-Python Django JSON API — same OpenAPI contract as `backend-java-spring`.
+Python Django JSON API — same OpenAPI contract as `backend-java-spring`.  
+Postgres DB: `reference_app_python_django`.
 
-**Status:** slot (not wired in compose until implemented).
+**Status:** active.
 
 ```
 https://reference-app-copy.autotests.ai/backend-python-django/{frontend}/
+https://reference-app-copy.autotests.ai/backend-python-django/api/
 ```
+
+Unit tests: `tests/`. Run: `python -m pytest`

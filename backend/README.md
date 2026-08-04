@@ -9,9 +9,9 @@ backend/
   kotlin/
     backend-kotlin-spring/     # Spring Boot Kotlin + Postgres + Flyway — JSON API (active)
   python/
-    backend-python-flask/      # stub (/api/health) for multi-backend routing
-    backend-python-fastapi/    # slot
-    backend-python-django/     # slot
+    backend-python-flask/      # Flask + Postgres — JSON API (active)
+    backend-python-fastapi/    # FastAPI + Postgres — JSON API (active)
+    backend-python-django/     # Django + Postgres — JSON API (active)
   go/
     backend-go-gin/            # slot (Gin — product REST)
     backend-go-stdlib/         # slot (net/http — Selenoid-style)
@@ -36,6 +36,7 @@ Language base **+10**, stack **+1** from **8800** — see root [README](../READM
 Container listen stays `:8080`. Backend does not host HTML/JS.
 
 **Unit tests** live inside each backend module:  
-`backend/java/backend-java-spring/src/test/java/` — JaCoCo gate, `./gradlew test`.
+`backend/java/backend-java-spring/src/test/java/` — JaCoCo gate, `./gradlew test`.  
+`backend/python/backend-python-*/tests/` — `python -m pytest`.
 
 Integration / e2e / api slices → `tests/java/tests-java-gradle-junit5-allure3-selenide/`.

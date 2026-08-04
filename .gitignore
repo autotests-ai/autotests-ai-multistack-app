@@ -26,6 +26,7 @@ tests/_deferred/java-gradle-junit5-selenium/bin/
 .vscode/
 **/__pycache__/
 *.py[cod]
+backend/python/**/.venv/
 
 # Runtime
 *.log

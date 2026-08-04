@@ -33,7 +33,7 @@ Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/N
 | **frontend/_catalog/** | `frontend-javascript-preview` | — |
 | **backend/java/** | `backend-java-spring` (active) | — |
 | **backend/kotlin/** | `backend-kotlin-spring` (active) | — |
-| **backend/python/** | `backend-python-flask` (stub health) | `backend-python-fastapi`, `backend-python-django` |
+| **backend/python/** | `backend-python-flask`, `backend-python-fastapi`, `backend-python-django` (active) | — |
 | **backend/go/** | — | `backend-go-gin`, `backend-go-stdlib` |
 | **tests/java/** | `tests-java-gradle-junit5-allure3-selenide` | junit4, testng, allure2, selenium, … — [tests/NAMING.md](tests/NAMING.md) |
 | **tests/javascript/** | `tests-javascript-playwright` | Cypress, … |
@@ -55,7 +55,8 @@ Examples:
 - […/backend-java-spring/frontend-typescript-react/](https://reference-app-copy.autotests.ai/backend-java-spring/frontend-typescript-react/)
 - […/backend-java-spring/frontend-typescript-vue/](https://reference-app-copy.autotests.ai/backend-java-spring/frontend-typescript-vue/)
 - `…/backend-python-flask/frontend-typescript-react/`
-- `…/backend-python-flask/frontend-javascript-vanilla/`
+- `…/backend-python-fastapi/frontend-typescript-react/`
+- `…/backend-python-django/frontend-javascript-vanilla/`
 
 Host `/` is empty (404). One public host — no backend subdomains.
 
@@ -68,6 +69,7 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · CI: [`.github/workflows/test.yml`](
 | Job | Where |
 |-----|-------|
 | `unit_backend` | `backend/java/backend-java-spring/src/test/` |
+| `unit_backend_python` | `backend/python/backend-python-{flask,fastapi,django}/tests/` |
 | `test-infra` | `…/tests/testinfra/` (`@Layer("test-infra")` + `@Tag("test-infra")`) |
 | `component_rtl` | `frontend/typescript/frontend-typescript-react/src/test/` |
 | `component_vue` | `frontend/typescript/frontend-typescript-vue/src/test/` |
@@ -84,8 +86,8 @@ SSOT: [`deploy/matrix.yaml`](deploy/matrix.yaml). Language base **+10**, stack w
 | **8800** | `backend-java-spring` | |
 | **8810** | `backend-kotlin-spring` | |
 | **8820** | `backend-python-flask` | |
-| **8821** | `backend-python-fastapi` | slot |
-| **8822** | `backend-python-django` | slot |
+| **8821** | `backend-python-fastapi` | |
+| **8822** | `backend-python-django` | |
 | **8830** | `backend-go-gin` | slot |
 | **8831** | `backend-go-stdlib` | slot |
 | **9800** | `frontend-javascript-vanilla` | local serve / vite |
@@ -108,8 +110,10 @@ docker compose up -d --build
 curl -fsS http://localhost:8700/backend-java-spring/api/health
 curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8700/backend-java-spring/frontend-typescript-react/
 curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8700/backend-java-spring/frontend-javascript-vanilla/
-# flask stub — same UI mounts, different /{backend}/api
+# python backends — same UI mounts, different /{backend}/api
 curl -fsS http://localhost:8700/backend-python-flask/api/health
+curl -fsS http://localhost:8700/backend-python-fastapi/api/health
+curl -fsS http://localhost:8700/backend-python-django/api/health
 curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8700/   # 404
 # direct backend (same ports on prod host)
 curl -fsS http://localhost:8800/api/health
@@ -121,7 +125,9 @@ curl -fsS http://localhost:8800/api/health
 | `web` | shared static UIs only (no `/api`) |
 | `backend-java-spring` | Spring JSON API (`:8800`) |
 | `backend-kotlin-spring` | Spring Kotlin JSON API (`:8810`) |
-| `backend-python-flask` | health stub for routing demos (`:8820`) |
+| `backend-python-flask` | Flask JSON API (`:8820`) |
+| `backend-python-fastapi` | FastAPI JSON API (`:8821`) |
+| `backend-python-django` | Django JSON API (`:8822`) |
 | `postgres` | one instance, DB per backend (`reference_app_java_spring`, `reference_app_python_flask`, …) |
 
 ## Deploy
@@ -136,6 +142,8 @@ curl -fsS http://localhost:8800/api/health
 | `BACKEND_JAVA_PORT` | `8800` |
 | `BACKEND_KOTLIN_PORT` | `8810` |
 | `BACKEND_FLASK_PORT` | `8820` |
+| `BACKEND_FASTAPI_PORT` | `8821` |
+| `BACKEND_DJANGO_PORT` | `8822` |
 
 **CD:** [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) — `build` (images on GHA) → `deploy` (SSH `docker load` + `SKIP_BUILD=1` [`deploy/server-deploy.sh`](deploy/server-deploy.sh)).
 

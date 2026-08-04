@@ -55,7 +55,7 @@ backends:
     health_service: backend-kotlin-spring
 
   - id: backend-python-flask
-    status: stub
+    status: active
     language: python
     module: backend/python/backend-python-flask
     compose_service: backend-python-flask
@@ -67,11 +67,11 @@ backends:
     health_service: backend-python-flask
 
   - id: backend-python-fastapi
-    status: slot
+    status: active
     language: python
     module: backend/python/backend-python-fastapi
     compose_service: backend-python-fastapi
-    compose_profile: python-fastapi
+    compose_profile: null
     image: reference-app-copy-backend-python-fastapi:latest
     internal_port: 8080
     publish_port: 8821
@@ -79,11 +79,11 @@ backends:
     health_service: backend-python-fastapi
 
   - id: backend-python-django
-    status: slot
+    status: active
     language: python
     module: backend/python/backend-python-django
     compose_service: backend-python-django
-    compose_profile: python-django
+    compose_profile: null
     image: reference-app-copy-backend-python-django:latest
     internal_port: 8080
     publish_port: 8822

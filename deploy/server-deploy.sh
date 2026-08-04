@@ -10,6 +10,8 @@ export WEB_PORT="${WEB_PORT:-8701}"
 export BACKEND_JAVA_PORT="${BACKEND_JAVA_PORT:-8800}"
 export BACKEND_KOTLIN_PORT="${BACKEND_KOTLIN_PORT:-8810}"
 export BACKEND_FLASK_PORT="${BACKEND_FLASK_PORT:-8820}"
+export BACKEND_FASTAPI_PORT="${BACKEND_FASTAPI_PORT:-8821}"
+export BACKEND_DJANGO_PORT="${BACKEND_DJANGO_PORT:-8822}"
 
 SKIP_BUILD="${SKIP_BUILD:-0}"
 MAX_ATTEMPTS="${HEALTH_POLL_ATTEMPTS:-30}"
@@ -37,6 +39,8 @@ health_ports=(
   "${BACKEND_JAVA_PORT}:reference-app-copy"
   "${BACKEND_KOTLIN_PORT}:backend-kotlin-spring"
   "${BACKEND_FLASK_PORT}:backend-python-flask"
+  "${BACKEND_FASTAPI_PORT}:backend-python-fastapi"
+  "${BACKEND_DJANGO_PORT}:backend-python-django"
 )
 
 for entry in "${health_ports[@]}"; do

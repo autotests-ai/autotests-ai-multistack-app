@@ -1,0 +1,26 @@
+from __future__ import annotations
+
+from flask import Flask
+from flask_cors import CORS
+
+from app.db import apply_schema
+from app.routes.api import api_bp
+from app.routes.auth_routes import auth_bp
+from app.seed import seed_data
+
+
+def create_app(*, init_db: bool = True) -> Flask:
+    app = Flask(__name__)
+    CORS(
+        app,
+        resources={r"/api/*": {"origins": "*", "expose_headers": ["Authorization"]}},
+        supports_credentials=False,
+    )
+    app.register_blueprint(api_bp, url_prefix="/api")
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
+
+    if init_db:
+        apply_schema()
+        seed_data()
+
+    return app
