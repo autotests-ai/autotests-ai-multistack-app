@@ -1,5 +1,6 @@
 # Leaf deploy — called by ci.yml (main) or deploy_all.yml / workflow_dispatch.
-# CD matrix artifact: deploy/gha-cd.json (sync locally: python deploy/matrix_query.py sync-gha).
+# Deploy matrix artifact: deploy/deploy-matrix.json
+# (sync locally: python deploy/matrix_query.py sync-deploy-matrix).
 # Host logic SSOT: deploy/server-deploy.sh + deploy/matrix.yaml.
 # Does not run autotests (see test.yml / ci.yml).
 
@@ -63,9 +64,9 @@ jobs:
         id: stacks
         run: |
           set -euo pipefail
-          ARTIFACT=deploy/gha-cd.json
+          ARTIFACT=deploy/deploy-matrix.json
           if [[ ! -f "$ARTIFACT" ]]; then
-            echo "::error::Missing $ARTIFACT — run locally: python deploy/matrix_query.py sync-gha"
+            echo "::error::Missing $ARTIFACT — run locally: python deploy/matrix_query.py sync-deploy-matrix"
             exit 1
           fi
           MODE="${DEPLOY_MODE}"

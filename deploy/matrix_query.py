@@ -13,7 +13,7 @@ sys.path.insert(0, str(ROOT / "deploy" / "nginx"))
 from render_vhosts import load_matrix  # noqa: E402
 
 DEFAULT_MATRIX = ROOT / "deploy" / "matrix.yaml"
-GHA_CD_JSON = ROOT / "deploy" / "gha-cd.json"
+DEPLOY_MATRIX_JSON = ROOT / "deploy" / "deploy-matrix.json"
 DEFAULT_BACKENDS = "backend-java-spring"
 DEFAULT_FRONTENDS = "frontend-typescript-react"
 ACTIVE_BACKEND = ("active", "stub")
@@ -122,8 +122,8 @@ def cmd_build_matrix(matrix: dict, args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_sync_gha(matrix: dict, args: argparse.Namespace) -> int:
-    """Write deploy/gha-cd.json for GHA (no Python in workflows)."""
+def cmd_sync_deploy_matrix(matrix: dict, args: argparse.Namespace) -> int:
+    """Write deploy/deploy-matrix.json for GHA (no Python in workflows)."""
     backends = resolve_backends(matrix, None, "all")
     frontends = resolve_frontends(matrix, None, "all")
     targets = []
@@ -132,7 +132,7 @@ def cmd_sync_gha(matrix: dict, args: argparse.Namespace) -> int:
     for row in frontends:
         targets.append({"kind": "frontend", **_build_row(row)})
     if not targets:
-        raise SystemExit("FAIL: empty gha-cd targets")
+        raise SystemExit("FAIL: empty deploy-matrix targets")
     payload = {
         "source": "deploy/matrix.yaml",
         "defaults": {
@@ -186,11 +186,11 @@ def main() -> int:
     p_build.set_defaults(func=cmd_build_matrix)
 
     p_sync = sub.add_parser(
-        "sync-gha",
-        help="Regenerate deploy/gha-cd.json after matrix.yaml changes (commit the JSON)",
+        "sync-deploy-matrix",
+        help="Regenerate deploy/deploy-matrix.json after matrix.yaml changes (commit the JSON)",
     )
-    p_sync.add_argument("--out", type=Path, default=GHA_CD_JSON)
-    p_sync.set_defaults(func=cmd_sync_gha)
+    p_sync.add_argument("--out", type=Path, default=DEPLOY_MATRIX_JSON)
+    p_sync.set_defaults(func=cmd_sync_deploy_matrix)
 
     args = parser.parse_args()
     matrix = load_matrix(args.matrix)
