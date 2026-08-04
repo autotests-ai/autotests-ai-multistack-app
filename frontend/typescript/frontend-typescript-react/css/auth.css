@@ -1,7 +1,3 @@
-body {
-  line-height: normal;
-}
-
 .auth-page {
   display: grid;
   place-items: center;
@@ -28,7 +24,7 @@ body {
 .auth-error {
   min-height: 1.2em;
   margin: 0;
-  color: #b91c1c;
+  color: var(--color-danger);
   font-size: var(--font-size-sm);
 }
 
@@ -46,21 +42,6 @@ body {
 
 .auth-footer-link a:hover {
   text-decoration: underline;
-}
-
-.auth-success-panel {
-  text-align: center;
-}
-
-.auth-success-panel p {
-  margin: 0 0 var(--space-5);
-  font-size: var(--font-size-base);
-  color: var(--color-text);
-}
-
-.auth-success-panel .auth-form__actions {
-  display: flex;
-  justify-content: center;
 }
 
 @media (max-width: 768px) {

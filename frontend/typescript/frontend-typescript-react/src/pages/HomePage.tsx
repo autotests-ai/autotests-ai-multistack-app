@@ -73,7 +73,7 @@ export function HomePage() {
     >
       <Panel title="Reference App">
         <p className="text text--muted">
-          Generic Spring Boot + static JS demo — items loaded from <code>/api/items</code>.
+          Spring Boot + React SPA — items loaded from <code>/api/items</code>.
         </p>
       </Panel>
 
