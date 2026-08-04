@@ -1,4 +1,4 @@
-package tests.unit.testinfra;
+package tests.testinfra;
 
 import annotations.Layer;
 import config.ConfigReader;
@@ -95,13 +95,13 @@ class ConfigReaderTest {
     @Test
     @DisplayName("resolveWebBaseUrl strips trailing slash from loaded config")
     void resolveWebBaseUrlStripsTrailingSlashFromLoadedConfig() {
-        assertEquals("http://localhost:8080", ConfigReader.resolveWebBaseUrl());
+        assertEquals("http://localhost:8080/frontend-typescript-react", ConfigReader.resolveWebBaseUrl());
     }
 
     @Test
     @DisplayName("resolveBaseUrl uses loaded config")
     void resolveBaseUrlUsesLoadedConfig() {
-        assertEquals("http://localhost:8080/", ConfigReader.resolveBaseUrl());
+        assertEquals("http://localhost:8080/frontend-typescript-react/", ConfigReader.resolveBaseUrl());
     }
 
     @Test

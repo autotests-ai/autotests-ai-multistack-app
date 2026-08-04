@@ -1,4 +1,4 @@
-package tests.unit.testinfra;
+package tests.testinfra;
 
 import annotations.Layer;
 import helpers.LayoutCss;

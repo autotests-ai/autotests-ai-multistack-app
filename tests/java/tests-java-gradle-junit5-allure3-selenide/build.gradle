@@ -339,8 +339,8 @@ def layerEnvName = { String layer ->
 // Pyramid CI slices — ADR 005; `./gradlew test` = full suite, not these
 def layerTestSlices = [
         [name: 'testUnit',        layer: 'unit',
-         description: 'Pyramid test-infra — tests.unit.testinfra.* (@Layer test-infra, @Tag test-infra)',
-         testPatterns: ['tests.unit.testinfra.*']],
+         description: 'Pyramid test-infra — tests.testinfra.* (@Layer test-infra, @Tag test-infra)',
+         testPatterns: ['tests.testinfra.*']],
         [name: 'testComponent',   layer: 'component',
          description: 'Pyramid component — @Tag(component)',
          includeTags: 'component'],
