@@ -2,6 +2,6 @@
 
 | Folder | Runner |
 |--------|--------|
-| `tests_python_selenium/` | pytest · Selenium · Java-style page objects |
+| `tests-python-selenium/` | pytest · Selenium · Java-style page objects |
 
-Future: `tests_python_playwright/`, etc.
+Future: `tests-python-playwright/`, etc.

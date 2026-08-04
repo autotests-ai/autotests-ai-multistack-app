@@ -6,32 +6,32 @@ UI by **language** → **UI stack** → product module + co-located component te
 frontend/
   scripts/                         # wire-ui, catalog sync (not product pages)
   _shared/
-    frontend_javascript_app/       # lean DS runtime for product UI (committed)
-    frontend_javascript_embed/     # full DS symlinks (wire-ui) — catalog only
+    frontend-javascript-app/       # lean DS runtime for product UI (committed)
+    frontend-javascript-embed/     # full DS symlinks (wire-ui) — catalog only
   _catalog/
-    frontend_javascript_preview/   # DS component catalog for browser @Tag(component)
+    frontend-javascript-preview/   # DS component catalog for browser @Tag(component)
   javascript/
     react/
-      frontend_javascript_react/
-      tests_javascript_react-testing-library/
+      frontend-javascript-react/
+      frontend-javascript-react_testing_library/
     vanilla/
-      frontend_javascript_vanilla/   # default app pages (was static)
-      # later: tests_javascript_vanilla_… (component)
+      frontend-javascript-vanilla/   # default app pages (was static)
+      # later: frontend-javascript-vanilla_… (component)
   typescript/
     react/
-      frontend_typescript_react/
-      tests_typescript_react-testing-library/
+      frontend-typescript-react/
+      frontend-typescript-react_testing_library/
     vanilla/
-      frontend_typescript_vanilla/
-      # later: tests_typescript_vanilla_… (component)
+      frontend-typescript-vanilla/
+      # later: frontend-typescript-vanilla_… (component)
 ```
 
 ## Product vs shared
 
 | Kind | In URL matrix? | Examples |
 |------|----------------|----------|
-| Product UI | yes | `frontend_*_react`, `frontend_*_vanilla` |
-| Component tests (jsdom) | no | `tests_*_react-testing-library` |
+| Product UI | yes | `frontend-*-react`, `frontend-*-vanilla` |
+| Component tests (jsdom) | no | `frontend-*-react_testing_library` |
 | Shared / catalog | no | `_shared/app`, `_shared/embed`, `_catalog/preview` |
 
 ## Prod routing
@@ -40,7 +40,7 @@ frontend/
 https://{backend}.reference-app-copy.autotests.ai/{frontend}/
 ```
 
-Active: `https://backend-java-spring.reference-app-copy.autotests.ai/frontend_typescript_react/`  
+Active: `https://backend-java-spring.reference-app-copy.autotests.ai/frontend-typescript-react/`  
 Host `/` is empty (404). `/api/**` stays on the backend host root.
 
 - subdomain → backend stack  

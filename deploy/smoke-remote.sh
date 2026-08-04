@@ -4,7 +4,7 @@ set -euo pipefail
 
 BASE_URL="${1:-https://backend-java-spring.reference-app-copy.autotests.ai}"
 BASE_URL="${BASE_URL%/}"
-UI_PATH="${SMOKE_UI_PATH:-/frontend_typescript_react/}"
+UI_PATH="${SMOKE_UI_PATH:-/frontend-typescript-react/}"
 SERVICE_NAME="${SMOKE_SERVICE_NAME:-reference-app-copy}"
 
 echo "=== TLS + GET ${BASE_URL}/ (expect 404 — empty root) ==="

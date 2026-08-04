@@ -7,4 +7,4 @@ Layout mirrors qa-guru-refs: **language first**, then `{build}-{framework}-{driv
 | [`../tests/`](../tests/) | `java/gradle-junit5-selenide` | **SSOT** — full pyramid (short path kept for ergonomics) |
 | [`gradle-junit5-selenium/`](gradle-junit5-selenium/) | `java/gradle-junit5-selenium` | UI smoke sibling (WebDriver) |
 
-Python / JS siblings stay language-rooted at repo top (`tests_python_selenium/`, `tests_javascript_playwright/`) until migrated to `python/pip-pytest-selenium` / `javascript/…` if needed.
+Python / JS siblings stay language-rooted at repo top (`tests-python-selenium/`, `tests-javascript-playwright/`) until migrated to `python/pip-pytest-selenium` / `javascript/…` if needed.

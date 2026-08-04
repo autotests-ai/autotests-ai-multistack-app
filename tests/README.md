@@ -10,19 +10,19 @@ Automation outside backend unit / frontend RTL — by **language** → **stack d
 ```
 tests/
   java/
-    tests_java_gradle_junit5_allure3_selenide/   # active
+    tests-java-gradle-junit5-allure3-selenide/   # active
   javascript/
-    tests_javascript_playwright/
+    tests-javascript-playwright/
   python/
-    tests_python_selenium/
+    tests-python-selenium/
   _deferred/
 ```
 
 | Kind | Job id | Where |
 |------|--------|-------|
-| Product unit | `unit_backend` | `backend/java/backend_java_spring/src/test/` |
+| Product unit | `unit_backend` | `backend/java/backend-java-spring/src/test/` |
 | Test-infra unit | `unit_test-infra` | `…/tests/unit/testinfra/` · `@Layer("unit")` + `@Tag("test-infra")` |
-| RTL | `component_rtl` | `frontend/typescript/react/tests_typescript_react-testing-library/` |
-| Browser/api/e2e | `api` … `e2e` | `tests/java/tests_java_gradle_junit5_allure3_selenide/` |
+| RTL | `component_rtl` | `frontend/typescript/react/frontend-typescript-react_testing_library/` |
+| Browser/api/e2e | `api` … `e2e` | `tests/java/tests-java-gradle-junit5-allure3-selenide/` |
 
 CI: [`.github/workflows/test.yml`](../.github/workflows/test.yml) — flip `if: false` per phase.

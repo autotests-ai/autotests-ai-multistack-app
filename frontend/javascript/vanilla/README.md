@@ -2,6 +2,6 @@
 
 | Folder | Role |
 |--------|------|
-| `frontend_javascript_vanilla/` | Active product pages (former `frontend_javascript_static`) |
+| `frontend-javascript-vanilla/` | Active product pages (former static MPA slot) |
 
 Future: component tests for vanilla beside this folder.

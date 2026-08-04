@@ -1,7 +1,7 @@
 # Build context: repository root. Serves UI under UI_MOUNT; proxies /api to backend.
 ARG UI_MODULE
 ARG UI_RUNTIME
-ARG UI_MOUNT=frontend_typescript_react
+ARG UI_MOUNT=frontend-typescript-react
 
 FROM nginx:1.27-alpine
 ARG UI_MODULE

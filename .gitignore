@@ -1,21 +1,21 @@
 # Wired design-system embed (local catalog; frontend/scripts/wire-ui.sh)
-frontend/_shared/frontend_javascript_embed/css
-frontend/_shared/frontend_javascript_embed/js
-frontend/_shared/frontend_javascript_embed/templates
+frontend/_shared/frontend-javascript-embed/css
+frontend/_shared/frontend-javascript-embed/js
+frontend/_shared/frontend-javascript-embed/templates
 
 # Backend is API-only — never commit UI under Spring resources
-backend/java/backend_java_spring/src/main/resources/static/
+backend/java/backend-java-spring/src/main/resources/static/
 
 # Build
-backend/java/backend_java_spring/build/
-backend/java/backend_java_spring/.gradle/
-backend/java/backend_java_spring/bin/
-tests/java/tests_java_gradle_junit5_allure3_selenide/build/
-tests/java/tests_java_gradle_junit5_allure3_selenide/.gradle/
-tests/java/tests_java_gradle_junit5_allure3_selenide/bin/
-tests/_deferred/java_gradle_junit5_selenium/build/
-tests/_deferred/java_gradle_junit5_selenium/.gradle/
-tests/_deferred/java_gradle_junit5_selenium/bin/
+backend/java/backend-java-spring/build/
+backend/java/backend-java-spring/.gradle/
+backend/java/backend-java-spring/bin/
+tests/java/tests-java-gradle-junit5-allure3-selenide/build/
+tests/java/tests-java-gradle-junit5-allure3-selenide/.gradle/
+tests/java/tests-java-gradle-junit5-allure3-selenide/bin/
+tests/_deferred/java-gradle-junit5-selenium/build/
+tests/_deferred/java-gradle-junit5-selenium/.gradle/
+tests/_deferred/java-gradle-junit5-selenium/bin/
 
 # IDE
 .idea/

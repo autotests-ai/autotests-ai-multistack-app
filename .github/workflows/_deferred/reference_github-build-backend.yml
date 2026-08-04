@@ -13,15 +13,15 @@ on:
     branches: [main]
     paths:
       - "backend/**"
-      - "frontend/_shared/frontend_javascript_app/**"
-      - "frontend/javascript/vanilla/frontend_javascript_vanilla/**"
+      - "frontend/_shared/frontend-javascript-app/**"
+      - "frontend/javascript/vanilla/frontend-javascript-vanilla/**"
       - "docker-compose.yml"
   pull_request:
     branches: [main]
     paths:
       - "backend/**"
-      - "frontend/_shared/frontend_javascript_app/**"
-      - "frontend/javascript/vanilla/frontend_javascript_vanilla/**"
+      - "frontend/_shared/frontend-javascript-app/**"
+      - "frontend/javascript/vanilla/frontend-javascript-vanilla/**"
       - "docker-compose.yml"
   workflow_dispatch:
   workflow_call:
@@ -56,7 +56,7 @@ jobs:
           gradle-version: wrapper
 
       - name: Unit gate
-        working-directory: backend/java/backend_java_spring
+        working-directory: backend/java/backend-java-spring
         run: ./gradlew test --no-daemon
 
       - name: Build Docker images

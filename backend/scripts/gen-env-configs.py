@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-CONFIG_DIR = Path(__file__).resolve().parents[2] / "tests/java/tests_java_gradle_junit5_allure3_selenide/src/test/resources/config"
+CONFIG_DIR = Path(__file__).resolve().parents[2] / "tests/java/tests-java-gradle-junit5-allure3-selenide/src/test/resources/config"
 LAYERS = ("unit", "component", "integration", "api", "e2e", "visual", "manual")
 KEEP = frozenset({"default.properties"})
 
@@ -21,7 +21,7 @@ GRADLE_HINT = {
 
 LAYER_DESC = {
     "unit": "pure Java — tests.unit.testinfra.* (@Layer unit, @Tag test-infra)",
-    "component": "@Tag(component) — frontend/_catalog/frontend_javascript_preview on :3000 (componentCatalogUrl)",
+    "component": "@Tag(component) — frontend/_catalog/frontend-javascript-preview on :3000 (componentCatalogUrl)",
     "integration": "@Tag(layout,mount) — mount probes",
     "api": "@Layer(api) @Tag(api) — Rest Assured /api/health|items",
     "e2e": "@Layer(e2e) — smoke via testE2e",

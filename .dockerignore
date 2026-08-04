@@ -16,7 +16,7 @@ tests
 preview
 frontend/scripts
 frontend/_catalog
-frontend/_shared/frontend_javascript_embed
+frontend/_shared/frontend-javascript-embed
 frontend/javascript/react
 frontend/typescript
 backend/scripts

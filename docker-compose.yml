@@ -19,7 +19,7 @@ services:
   backend:
     image: reference-app-copy-backend:latest
     build:
-      context: ./backend/java/backend_java_spring
+      context: ./backend/java/backend-java-spring
     restart: unless-stopped
     environment:
       DB_HOST: postgres
@@ -42,9 +42,9 @@ services:
       context: .
       dockerfile: deploy/web/Dockerfile
       args:
-        UI_MODULE: ${UI_MODULE:-frontend/javascript/vanilla/frontend_javascript_vanilla}
-        UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend_javascript_app}
-        UI_MOUNT: ${UI_MOUNT:-frontend_typescript_react}
+        UI_MODULE: ${UI_MODULE:-frontend/javascript/vanilla/frontend-javascript-vanilla}
+        UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
+        UI_MOUNT: ${UI_MOUNT:-frontend-typescript-react}
     restart: unless-stopped
     depends_on:
       - backend

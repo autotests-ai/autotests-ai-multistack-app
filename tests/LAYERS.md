@@ -1,7 +1,7 @@
 # Test layers (canonical map)
 
 Teaching pyramid for reference-app-copy. **One** CI file: [`.github/workflows/test.yml`](../.github/workflows/test.yml).  
-Jobs = layers; enable gradually (block 2a → 2f). Naming: `_` between segments, `-` in compounds (`test-infra`, `react-testing-library`).
+Jobs = layers; enable gradually (block 2a → 2f). Module folders: `-` between segments, `_` in compounds (`react_testing_library`, `no_allure`).
 
 ```
                     ┌─────────────┐
@@ -31,9 +31,9 @@ Jobs = layers; enable gradually (block 2a → 2f). Naming: `_` between segments,
 
 | Layer (job id) | Zone | Where | Selector | Run | Target URL |
 |----------------|------|-------|----------|-----|------------|
-| `unit_backend` | backend | `backend/java/backend_java_spring/src/test/` | all backend tests | `./gradlew test` (+ JaCoCo) | n/a |
+| `unit_backend` | backend | `backend/java/backend-java-spring/src/test/` | all backend tests | `./gradlew test` (+ JaCoCo) | n/a |
 | `unit_test-infra` | tests | `…/tests/unit/testinfra/` | `tests.unit.testinfra.*` · `@Layer("unit")` + `@Tag("test-infra")` | `./gradlew testUnit` | n/a |
-| `component_rtl` | frontend | `frontend/typescript/react/tests_typescript_react-testing-library/` | Vitest | `npm test` | jsdom |
+| `component_rtl` | frontend | `frontend/typescript/react/frontend-typescript-react_testing_library/` | Vitest | `npm test` | jsdom |
 | `api` | tests | `…/tests/api/` | `@Tag("api")` | `./gradlew testApi` | app `:8080` |
 | `integration` | tests | e.g. `LoginFormTests`, `LoginEmbedTests` | `@Tag("layout")` / `@Tag("mount")` | `./gradlew testIntegration` | app `:8080` |
 | `component_browser` | tests | `…/tests/component/` | `@Tag("component")` | `./gradlew testComponent` | catalog `:3000` |
@@ -43,7 +43,7 @@ Jobs = layers; enable gradually (block 2a → 2f). Naming: `_` between segments,
 | `prod_api` | tests | same api | after successful Deploy (`workflow_run`) | `testApi` + `reference_prod` | [backend-java-spring.reference-app-copy.autotests.ai](https://backend-java-spring.reference-app-copy.autotests.ai) |
 | `prod_e2e` | tests | same e2e | deferred | `testE2e` + `reference_prod_*` | prod + Selenoid |
 
-Active Java module: `tests/java/tests_java_gradle_junit5_allure3_selenide/`  
+Active Java module: `tests/java/tests-java-gradle-junit5-allure3-selenide/`  
 Gradle slices SSOT: `build.gradle` → `layerTestSlices`.  
 Paths SSOT: `backend/scripts/paths.sh`. Module naming: [NAMING.md](NAMING.md).
 
@@ -82,7 +82,7 @@ Not duplicates — different failure modes.
 
 | Module | Role |
 |--------|------|
-| `tests/javascript/tests_javascript_playwright/` | e2e smoke, another language |
-| `tests/python/tests_python_selenium/` | e2e smoke, pytest |
+| `tests/javascript/tests-javascript-playwright/` | e2e smoke, another language |
+| `tests/python/tests-python-selenium/` | e2e smoke, pytest |
 
 Same app under test; not separate pyramid layers — parallel teaching stacks ([NAMING.md](NAMING.md)).

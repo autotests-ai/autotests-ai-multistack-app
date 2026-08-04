@@ -2,6 +2,6 @@
 
 | Folder | Runner |
 |--------|--------|
-| `tests_javascript_playwright/` | Playwright · RealWorld-style page objects |
+| `tests-javascript-playwright/` | Playwright · RealWorld-style page objects |
 
-Future: `tests_javascript_cypress/`, etc.
+Future: `tests-javascript-cypress/`, etc.

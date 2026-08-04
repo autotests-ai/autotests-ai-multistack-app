@@ -19,28 +19,28 @@ reference-app-copy/
 
 ### Naming convention
 
-`{zone}_{language}_{stack}` — underscores between segments.  
-Hyphen **only** in compound tool names, e.g. `tests_typescript_react-testing-library`, `tests_java_gradle_junit5_no-allure_selenide`.
+`{zone}-{language}-{stack}` — hyphens between segments.  
+Underscore **only** in compound tool names, e.g. `frontend-typescript-react_testing_library`, `tests-java-gradle-junit5-no_allure-selenide`.
 
 Frontend layout: language → UI stack (`react` / `vanilla`) → product + co-located component tests.  
 Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/NAMING.md).
 
 | Zone | Current modules | Future slots |
 |------|-----------------|--------------|
-| **frontend/javascript/react/** | `frontend_javascript_react`, `tests_javascript_react-testing-library` (slots) | — |
-| **frontend/javascript/vanilla/** | `frontend_javascript_vanilla` (active) | vanilla component tests |
-| **frontend/typescript/react/** | `frontend_typescript_react`, `tests_typescript_react-testing-library` | — |
-| **frontend/typescript/vanilla/** | `frontend_typescript_vanilla` (slot) | vanilla component tests |
-| **frontend/_shared/** | `frontend_javascript_app`, `frontend_javascript_embed` | — |
-| **frontend/_catalog/** | `frontend_javascript_preview` | — |
-| **backend/java/** | `backend_java_spring` | `backend_kotlin_spring`, … |
-| **backend/python/** | — | `backend_python_fastapi`, `backend_python_flask` |
-| **tests/java/** | `tests_java_gradle_junit5_allure3_selenide` | junit4, testng, allure2, selenium, … — [tests/NAMING.md](tests/NAMING.md) |
-| **tests/javascript/** | `tests_javascript_playwright` | Cypress, … |
-| **tests/python/** | `tests_python_selenium` | playwright, … |
+| **frontend/javascript/react/** | `frontend-javascript-react`, `frontend-javascript-react_testing_library` (slots) | — |
+| **frontend/javascript/vanilla/** | `frontend-javascript-vanilla` (active) | vanilla component tests |
+| **frontend/typescript/react/** | `frontend-typescript-react`, `frontend-typescript-react_testing_library` | — |
+| **frontend/typescript/vanilla/** | `frontend-typescript-vanilla` (slot) | vanilla component tests |
+| **frontend/_shared/** | `frontend-javascript-app`, `frontend-javascript-embed` | — |
+| **frontend/_catalog/** | `frontend-javascript-preview` | — |
+| **backend/java/** | `backend-java-spring` | `backend-kotlin-spring`, … |
+| **backend/python/** | — | `backend-python-fastapi`, `backend-python-flask` |
+| **tests/java/** | `tests-java-gradle-junit5-allure3-selenide` | junit4, testng, allure2, selenium, … — [tests/NAMING.md](tests/NAMING.md) |
+| **tests/javascript/** | `tests-javascript-playwright` | Cypress, … |
+| **tests/python/** | `tests-python-selenium` | playwright, … |
 
 **Prod routing:** `https://{backend}.reference-app-copy.autotests.ai/{frontend}/`  
-Current: [backend_java_spring…/frontend_typescript_react/](https://backend-java-spring.reference-app-copy.autotests.ai/frontend_typescript_react/) (DNS host uses hyphens — Let's Encrypt rejects `_` in hostnames; module id stays `backend_java_spring`. Host `/` empty).
+Current: [backend-java-spring…/frontend-typescript-react/](https://backend-java-spring.reference-app-copy.autotests.ai/frontend-typescript-react/) (module id = DNS label; Let's Encrypt rejects `_` in hostnames. Host `/` empty).
 
 Path SSOT: `backend/scripts/paths.sh`
 
@@ -50,28 +50,28 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · CI: [`.github/workflows/test.yml`](
 
 | Job | Where |
 |-----|-------|
-| `unit_backend` | `backend/java/backend_java_spring/src/test/` |
+| `unit_backend` | `backend/java/backend-java-spring/src/test/` |
 | `unit_test-infra` | `…/tests/unit/testinfra/` (`@Layer("unit")` + `@Tag("test-infra")`) |
-| `component_rtl` | `frontend/typescript/react/tests_typescript_react-testing-library/` |
-| `api` … `e2e` / `component_browser` / `visual` | `tests/java/tests_java_gradle_junit5_allure3_selenide/` |
+| `component_rtl` | `frontend/typescript/react/frontend-typescript-react_testing_library/` |
+| `api` … `e2e` / `component_browser` / `visual` | `tests/java/tests-java-gradle-junit5-allure3-selenide/` |
 
 ## Quick start
 
 ```bash
 docker compose up -d --build
 curl -fsS http://localhost:8080/api/health
-curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/frontend_typescript_react/
+curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/frontend-typescript-react/
 curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/   # 404 — empty root
 ```
 
 - `backend` — Spring JSON API only (`/api/**`)
-- `web` — nginx serves UI at `/frontend_typescript_react/` and proxies `/api` → backend; host `/` is empty (404)
+- `web` — nginx serves UI at `/frontend-typescript-react/` and proxies `/api` → backend; host `/` is empty (404)
 
 Switch UI stack via compose `UI_MODULE` / `UI_RUNTIME` / `UI_MOUNT` (SPA: point at `dist/`).
 
 ## Deploy
 
-**Production URL:** https://backend-java-spring.reference-app-copy.autotests.ai/frontend_typescript_react/
+**Production URL:** https://backend-java-spring.reference-app-copy.autotests.ai/frontend-typescript-react/
 
 | Setting | Value |
 |---------|-------|
