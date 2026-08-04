@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { resolve } from 'node:path';
 
-const reactUiSrc = resolve(__dirname, '../../../_shared/frontend-react-ui/src/index.ts');
+const reactUiSrc = resolve(__dirname, '../../_shared/frontend-react-ui/src/index.ts');
 const mountBase = '/frontend-typescript-react/';
 
 export default defineConfig({

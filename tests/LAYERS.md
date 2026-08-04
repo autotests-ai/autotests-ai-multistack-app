@@ -33,7 +33,7 @@ Jobs = layers; enable gradually (block 2a → 2f). Module folders: `-` between s
 |----------------|------|-------|----------|-----|------------|
 | `unit_backend` | backend | `backend/java/backend-java-spring/src/test/` | all backend tests | `./gradlew test` (+ JaCoCo) | n/a |
 | `test-infra` | tests | `…/tests/testinfra/` | `tests.testinfra.*` · `@Layer("test-infra")` + `@Tag("test-infra")` | `./gradlew testInfra` | n/a |
-| `component_rtl` | frontend | `frontend/typescript/react/frontend-typescript-react/src/test/` | Vitest | `npm test` | jsdom |
+| `component_rtl` | frontend | `frontend/typescript/frontend-typescript-react/src/test/` | Vitest | `npm test` | jsdom |
 | `api` | tests | `…/tests/api/` | `@Tag("api")` | `./gradlew testApi` | app `:8080` |
 | `integration` | tests | e.g. `LoginFormTests`, `LoginEmbedTests` | `@Tag("layout")` / `@Tag("mount")` | `./gradlew testIntegration` | app `:8080` |
 | `component_browser` | tests | `…/tests/component/` | `@Tag("component")` | `./gradlew testComponent` | catalog `:3000` |

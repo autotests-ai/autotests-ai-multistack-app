@@ -3,8 +3,8 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 
-const reactUiSrc = resolve(__dirname, '../../../_shared/frontend-react-ui/src/index.ts');
-const sharedRoot = resolve(__dirname, '../../../_shared');
+const reactUiSrc = resolve(__dirname, '../../_shared/frontend-react-ui/src/index.ts');
+const sharedRoot = resolve(__dirname, '../../_shared');
 
 export default defineConfig({
   base: '/frontend-typescript-react/',

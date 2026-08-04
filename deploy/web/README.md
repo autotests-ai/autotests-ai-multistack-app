@@ -14,7 +14,7 @@ Compose build-args:
 
 | Arg | Default |
 |-----|---------|
-| `UI_MODULE` | `frontend/typescript/react/frontend-typescript-react` |
+| `UI_MODULE` | `frontend/typescript/frontend-typescript-react` |
 | `UI_RUNTIME` | `frontend/_shared/frontend-javascript-app` |
 | `UI_MOUNT` | `frontend-typescript-react` |
 | `REACT_UI` | `frontend/_shared/frontend-react-ui` (build stage alias) |

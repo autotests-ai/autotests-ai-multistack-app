@@ -1,6 +1,7 @@
 # Frontend
 
-UI by **language** → **UI stack** → product module (component tests co-located in `src/test/`).
+UI by **language** → product module (component tests co-located in `src/test/`).
+Stack is in the module name (`-react`, `-vanilla`).
 
 ```
 frontend/
@@ -12,17 +13,13 @@ frontend/
   _catalog/
     frontend-javascript-preview/   # DS component catalog for browser @Tag(component)
   javascript/
-    react/
-      frontend-javascript-react/   # product + src/test/ (slot)
+    frontend-javascript-react/     # product + src/test/ (slot)
     vanilla/
       frontend-javascript-vanilla/   # default app pages (was static)
-      # later: src/test/ for vanilla component checks
   typescript/
-    react/
-      frontend-typescript-react/   # product + src/test/ (component_rtl)
+    frontend-typescript-react/     # product + src/test/ (component_rtl)
     vanilla/
       frontend-typescript-vanilla/
-      # later: src/test/ for vanilla component checks
 ```
 
 ## Product vs shared

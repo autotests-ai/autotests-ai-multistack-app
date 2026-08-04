@@ -1,6 +1,6 @@
 # Build context: repository root.
 # Multi-stage: Vite SPA → nginx under UI_MOUNT; overlays UI_RUNTIME (header.js).
-ARG UI_MODULE=frontend/typescript/react/frontend-typescript-react
+ARG UI_MODULE=frontend/typescript/frontend-typescript-react
 ARG UI_RUNTIME=frontend/_shared/frontend-javascript-app
 ARG UI_MOUNT=frontend-typescript-react
 ARG REACT_UI=frontend/_shared/frontend-react-ui

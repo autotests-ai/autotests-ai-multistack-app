@@ -40,7 +40,7 @@ concurrency:
 env:
   TESTS_JAVA: tests/java/tests-java-gradle-junit5-allure3-selenide
   BACKEND_JAVA: backend/java/backend-java-spring
-  FRONTEND_TS_REACT: frontend/typescript/react/frontend-typescript-react
+  FRONTEND_TS_REACT: frontend/typescript/frontend-typescript-react
   FRONTEND_PREVIEW: frontend/_catalog/frontend-javascript-preview
 
 jobs:

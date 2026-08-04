@@ -22,14 +22,14 @@ reference-app-copy/
 `{zone}-{language}-{stack}` — hyphens between segments.  
 Underscore **only** in compound tool names, e.g. `tests-java-gradle-junit5-no_allure-selenide`.
 
-Frontend layout: language → UI stack (`react` / `vanilla`) → product module; component tests in `src/test/`.  
+Frontend layout: language → product module (stack in the name); component tests in `src/test/`.  
 Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/NAMING.md).
 
 | Zone | Current modules | Future slots |
 |------|-----------------|--------------|
-| **frontend/javascript/react/** | `frontend-javascript-react` (+ `src/test/` slot) | — |
+| **frontend/javascript/** | `frontend-javascript-react` (+ `src/test/` slot) | — |
 | **frontend/javascript/vanilla/** | `frontend-javascript-vanilla` (active) | vanilla `src/test/` |
-| **frontend/typescript/react/** | `frontend-typescript-react` (+ `src/test/` RTL) | — |
+| **frontend/typescript/** | `frontend-typescript-react` (+ `src/test/` RTL) | — |
 | **frontend/typescript/vanilla/** | `frontend-typescript-vanilla` (slot) | vanilla `src/test/` |
 | **frontend/_shared/** | `frontend-javascript-app`, `frontend-javascript-embed` | — |
 | **frontend/_catalog/** | `frontend-javascript-preview` | — |
@@ -52,7 +52,7 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · CI: [`.github/workflows/test.yml`](
 |-----|-------|
 | `unit_backend` | `backend/java/backend-java-spring/src/test/` |
 | `test-infra` | `…/tests/testinfra/` (`@Layer("test-infra")` + `@Tag("test-infra")`) |
-| `component_rtl` | `frontend/typescript/react/frontend-typescript-react/src/test/` |
+| `component_rtl` | `frontend/typescript/frontend-typescript-react/src/test/` |
 | `api` … `e2e` / `component_browser` / `visual` | `tests/java/tests-java-gradle-junit5-allure3-selenide/` |
 
 ## Quick start

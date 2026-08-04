@@ -23,7 +23,7 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "paths": {
-      "@zero-design-system/react": ["../../../_shared/frontend-react-ui/src/index.ts"]
+      "@zero-design-system/react": ["../../_shared/frontend-react-ui/src/index.ts"]
     }
   },
   "include": ["src", "vite.config.ts", "vitest.config.ts"]

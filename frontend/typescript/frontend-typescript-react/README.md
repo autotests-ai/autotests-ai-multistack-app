@@ -4,7 +4,7 @@ Product UI — TypeScript + React (same screens as `frontend-javascript-react` /
 
 Vite + React 19 + React Router (`basename=/frontend-typescript-react/`). Built on
 `@zero-design-system/react`, aliased to committed
-[`frontend/_shared/frontend-react-ui`](../../../_shared/frontend-react-ui/)
+[`frontend/_shared/frontend-react-ui`](../../_shared/frontend-react-ui/)
 (refresh: `bash frontend/scripts/sync-react-ui.sh`).
 
 RTL / Vitest live in [`src/test/`](src/test/) (`component_rtl`) — same module as the product,
