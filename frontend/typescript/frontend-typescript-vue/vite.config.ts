@@ -68,7 +68,7 @@ export default defineConfig({
       manifest: {
         name: 'Reference App',
         short_name: 'Reference',
-        description: 'Reference application — Spring Boot + Vue SPA',
+        description: 'Reference application — TypeScript Vue SPA',
         start_url: mountBase,
         scope: mountBase,
         display: 'standalone',

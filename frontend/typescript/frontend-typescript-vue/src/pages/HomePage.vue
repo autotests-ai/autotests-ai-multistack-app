@@ -81,7 +81,7 @@ async function handleLogout(): Promise<void> {
   >
     <Panel title="Reference App">
       <p class="text text--muted">
-        Generic Spring Boot + static JS demo — items loaded from <code>/api/items</code>.
+        TypeScript Vue SPA — items loaded from <code>/api/items</code>.
       </p>
     </Panel>
 

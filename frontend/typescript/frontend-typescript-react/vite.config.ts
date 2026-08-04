@@ -69,7 +69,7 @@ export default defineConfig({
       manifest: {
         name: 'Reference App',
         short_name: 'Reference',
-        description: 'Reference application — Spring Boot + React SPA pilot',
+        description: 'Reference application — TypeScript React SPA',
         start_url: mountBase,
         scope: mountBase,
         display: 'standalone',

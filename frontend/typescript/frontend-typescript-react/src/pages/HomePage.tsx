@@ -77,7 +77,7 @@ export function HomePage() {
     >
       <Panel title="Reference App">
         <p className="text text--muted">
-          Spring Boot + React SPA — items loaded from <code>/api/items</code>.
+          TypeScript React SPA — items loaded from <code>/api/items</code>.
         </p>
       </Panel>
 
