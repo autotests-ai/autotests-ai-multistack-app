@@ -11,4 +11,4 @@
 | `frontend-javascript-jquery/` | Product UI — JS + jQuery (slot) |
 | `frontend-javascript-vanilla/` | Product UI — vanilla JS pages (active) |
 
-Shared embed / preview catalog live under `frontend/_shared/` and `frontend/_catalog/` — not product URLs.
+Shared embed / lean runtime live under `frontend/_shared/` — not product URLs.

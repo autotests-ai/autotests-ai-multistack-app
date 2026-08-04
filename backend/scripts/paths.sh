@@ -16,11 +16,10 @@ BACKEND_GO_STDLIB="$REPO_ROOT/backend/go/backend-go-stdlib"
 # Deploy routing SSOT (Host × path)
 DEPLOY_MATRIX="$REPO_ROOT/deploy/matrix.yaml"
 
-# Shared / catalog (not product URL matrix)
+# Shared (not product URL matrix)
 FRONTEND_JS_EMBED="$REPO_ROOT/frontend/_shared/frontend-javascript-embed"
 FRONTEND_JS_APP="$REPO_ROOT/frontend/_shared/frontend-javascript-app"
 FRONTEND_REACT_UI="$REPO_ROOT/frontend/_shared/frontend-react-ui"
-FRONTEND_JS_PREVIEW="$REPO_ROOT/frontend/_catalog/frontend-javascript-preview"
 
 # Product frontends — javascript
 FRONTEND_JS_VANILLA="$REPO_ROOT/frontend/javascript/frontend-javascript-vanilla"

@@ -20,7 +20,7 @@ public final class TokensCss {
     public static Path defaultTokensPath() {
         // cwd = tests/java/tests-java-gradle-junit5-allure3-selenide
         return resolveTokensCssPath(
-                Path.of("..", "..", "..", "frontend", "_catalog", "frontend-javascript-preview",
+                Path.of("..", "..", "..", "frontend", "_shared", "frontend-javascript-app",
                         "css", "tokens.css").normalize().toAbsolutePath(),
                 Path.of("..", "..", "..", "backend", "java", "backend-java-spring",
                         "src", "main", "resources", "static", "css", "tokens.css")

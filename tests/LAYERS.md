@@ -11,9 +11,7 @@ Jobs = layers; enable gradually (block 2a → 2f). Module folders: `-` between s
                     ├─────────────┤
                     │     e2e     │  user flows, UI :9811 + api :8800 / prod
                     ├─────────────┤
-                    │ integration │  mount / wiring on app page
-                    ├─────────────┤
-                    │component_br.│  DS catalog :3000 (Selenide)
+                    │ integration │  mount / wiring on SPA (header, login form)
                     ├─────────────┤
                     │component_rtl│  React in jsdom (Vitest) — sideways
                     ├─────────────┤
@@ -25,7 +23,8 @@ Jobs = layers; enable gradually (block 2a → 2f). Module folders: `-` between s
                     └─────────────┘
 ```
 
-`component_rtl` sits **beside** the Java ladder (frontend zone), not inside `tests/java/…`.
+`component_rtl` sits **beside** the Java ladder (frontend zone), not inside `tests/java/…`.  
+DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
 ## Layer table
 
@@ -36,9 +35,8 @@ Jobs = layers; enable gradually (block 2a → 2f). Module folders: `-` between s
 | `component_rtl` | frontend | `frontend/typescript/frontend-typescript-react/src/test/` | Vitest | `npm test` | jsdom |
 | `api` | tests | `…/tests/api/` | `@Tag("api")` | `./gradlew testApi` | API `:8800` |
 | `integration` | tests | e.g. `LoginFormTests`, `LoginEmbedTests` | `@Tag("layout")` / `@Tag("mount")` | `./gradlew testIntegration` | UI `:9811` |
-| `component_browser` | tests | `…/tests/component/` | `@Tag("component")` | `./gradlew testComponent` | catalog `:3000` |
 | `e2e` | tests | `…/tests/`, `…/tests/e2e/` | `@Tag("smoke")` | `./gradlew testE2e` | UI `:9811` + API `:8800` (CI) / prod (post-deploy) |
-| `visual` | tests | baselines | `@Tag("visual")` | `./gradlew testVisual` | app / catalog |
+| `visual` | tests | baselines | `@Tag("visual")` | `./gradlew testVisual` | app SPA |
 | `manual` | tests | stubs | `@Tag("manual")` | `./gradlew testManual` | n/a |
 | `prod_api` | tests | same api | `ci.yml` → `test(prod-only)` after deploy | `testApi` + `reference_prod` | [reference-app-copy.autotests.ai/backend-java-spring](https://reference-app-copy.autotests.ai/backend-java-spring) |
 | `prod_e2e` | tests | same e2e | deferred | `testE2e` + `reference_prod_*` | prod + Selenoid |
@@ -56,15 +54,15 @@ Paths SSOT: `backend/scripts/paths.sh`. Module naming: [NAMING.md](NAMING.md).
 
 Students: one product unit layer (`unit_backend`); `test-infra` = harness checks that drive higher layers.
 
-## Why `component_rtl` and `component_browser`?
+## Why `component_rtl` and `integration`?
 
-| | `component_rtl` | `component_browser` |
-|---|-----------------|---------------------|
+| | `component_rtl` | `integration` |
+|---|-----------------|---------------|
 | Runtime | jsdom | real Chrome |
-| Object | React SPA units | DS catalog primitives |
+| Object | React SPA units | mounted product pages (header, forms) |
 | Lesson | logic / props / a11y | real CSS / layout / embed |
 
-Not duplicates — different failure modes.
+Not duplicates — different failure modes. Chrome layout for the app is `integration`, not a DS catalog job.
 
 ## Enable order (block 2)
 
@@ -73,9 +71,8 @@ Not duplicates — different failure modes.
 | 2a | `unit_backend`, `test-infra`, `component_rtl` |
 | 2b | + `api` (+ compose) |
 | 2c | + `integration` |
-| 2d | + `component_browser` (+ preview `:3000`) |
-| 2e | + `e2e` |
-| 2f | + `prod_api`, `prod_e2e` after successful Deploy |
+| 2d | + `e2e` |
+| 2e | + `prod_api`, `prod_e2e` after successful Deploy |
 | 3+ | `visual`, `manual`, Playwright / pytest runners |
 
 ## Alt runners (side stacks)
@@ -98,6 +95,6 @@ Same app under test; not separate pyramid layers — parallel teaching stacks ([
 | `backend/python/backend-python-{flask,fastapi,django}/` | `build`, `unit` |
 | `frontend/typescript/frontend-typescript-react/` | `build`, `component` |
 | `frontend/typescript/frontend-typescript-vue/` | `build`, `component` |
-| `tests/java/tests-java-gradle-junit5-allure3-selenide/` | `test-infra`, `api`, `integration`, `component-browser`, `e2e`, `visual`, `manual`, `prod-api`, `prod-e2e` |
+| `tests/java/tests-java-gradle-junit5-allure3-selenide/` | `test-infra`, `api`, `integration`, `e2e`, `visual`, `manual`, `prod-api`, `prod-e2e` |
 | `tests/javascript/tests-javascript-playwright/` | `e2e` |
 | `tests/python/tests-python-selenium/` | `e2e` |

@@ -29,8 +29,7 @@ Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/N
 |------|-----------------|--------------|
 | **frontend/javascript/** | `frontend-javascript-vanilla` (active), `react` / `angular` / `vue` / `jquery` (slots) | — |
 | **frontend/typescript/** | `frontend-typescript-react` (+ RTL), `frontend-typescript-vue` (+ VTU), `angular` / `vanilla` / `jquery` (slots) | — |
-| **frontend/_shared/** | `frontend-javascript-app`, `frontend-javascript-embed` | — |
-| **frontend/_catalog/** | `frontend-javascript-preview` | — |
+| **frontend/_shared/** | `frontend-javascript-app`, `frontend-javascript-embed`, `frontend-react-ui` | — |
 | **backend/java/** | `backend-java-spring` (active) | — |
 | **backend/kotlin/** | `backend-kotlin-spring` (active) | — |
 | **backend/python/** | `backend-python-flask`, `backend-python-fastapi`, `backend-python-django` (active) | — |
@@ -79,7 +78,7 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · entry: [`.github/workflows/ci.yml`]
 | `test-infra` | `tests/java/…` (action `test-infra`) |
 | `component_rtl` | `frontend/typescript/frontend-typescript-react/` (action `component`, off) |
 | `component_vue` | `frontend/typescript/frontend-typescript-vue/src/test/` |
-| `api` … `e2e` / `component_browser` / `visual` | `tests/java/tests-java-gradle-junit5-allure3-selenide/` |
+| `api` … `e2e` / `integration` / `visual` | `tests/java/tests-java-gradle-junit5-allure3-selenide/` |
 
 ## Ports (local = prod host upstream)
 

@@ -20,8 +20,7 @@ Canonical Java automation module for reference-app-copy block 2 (`test.yml`).
 |-------|-------------|--------|
 | test-infra | `testInfra` | `src/test/java/tests/testinfra/` · `@Layer("test-infra")` + `@Tag("test-infra")` |
 | api | `testApi` | Rest Assured |
-| integration | `testIntegration` | mount probes |
-| component (browser) | `testComponent` | preview on :3000 |
+| integration | `testIntegration` | mount probes (header, login form on SPA) |
 | e2e / visual | `testE2e`, `testVisual` | Selenide |
 
 Naming matrix for other Java stacks: [../../NAMING.md](../../NAMING.md).

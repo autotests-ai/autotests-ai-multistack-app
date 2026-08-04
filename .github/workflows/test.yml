@@ -2,7 +2,7 @@
 # Flip job-level `if: false` when wiring a deferred layer (see tests/LAYERS.md).
 #
 # layers: ci | prod-only | all-enabled
-#   ci          → unit_backend + test-infra (+ component when enabled)
+#   ci          → unit_backend + test-infra (+ component_rtl when enabled)
 #   prod-only   → prod_api (+ prod_e2e when enabled)
 #   all-enabled → ci + prod (manual / test_all)
 
@@ -135,16 +135,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/integration
-
-  component_browser:
-    name: component_browser
-    if: false
-    needs: [unit_backend, test-infra]
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    steps:
-      - uses: actions/checkout@v7
-      - uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/component-browser
 
   e2e:
     name: e2e
