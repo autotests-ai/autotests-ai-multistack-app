@@ -138,7 +138,7 @@ function rowOpenable(kind: 'backend' | 'frontend', item: BackendModule | Fronten
 function rowHref(kind: 'backend' | 'frontend', item: BackendModule | FrontendModule): string {
   const targetBackend = kind === 'backend' ? item.id : mount.backendId;
   const targetFrontend = kind === 'frontend' ? item.id : mount.frontendId;
-  return stackHref(targetBackend, targetFrontend, currentTests.value);
+  return stackHref(targetBackend, targetFrontend);
 }
 
 function testsHref(item: TestsModule): string {

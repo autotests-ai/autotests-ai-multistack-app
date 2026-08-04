@@ -77,6 +77,47 @@ describe('StackPage', () => {
     expect(screen.getByTestId('stack-frontend-frontend-typescript-react')).toBeInTheDocument();
   });
 
+  it('backend/frontend open links stay path-only (no ?tests=)', async () => {
+    const locationSpy = vi
+      .spyOn(window, 'location', 'get')
+      .mockReturnValue({
+        ...window.location,
+        pathname: '/backend-java-spring/frontend-typescript-react/stack/',
+        search: '?tests=tests-java-gradle-junit5-allure3-selenide',
+      } as Location);
+
+    try {
+      renderStack();
+
+      await waitFor(() =>
+        expect(screen.getByTestId('stack-frontend-frontend-typescript-react')).toBeInTheDocument(),
+      );
+
+      const frontendLink = screen.getByTestId('stack-frontend-frontend-typescript-react');
+      expect(frontendLink).toHaveAttribute(
+        'href',
+        '/backend-java-spring/frontend-typescript-react/stack/',
+      );
+      expect(frontendLink.getAttribute('href')).not.toContain('?');
+
+      const backendLink = screen.getByTestId('stack-backend-backend-java-spring');
+      expect(backendLink).toHaveAttribute(
+        'href',
+        '/backend-java-spring/frontend-typescript-react/stack/',
+      );
+      expect(backendLink.getAttribute('href')).not.toContain('?');
+
+      const testsLink = screen.getByTestId(
+        'stack-tests-tests-java-gradle-junit5-allure3-selenide',
+      );
+      expect(testsLink.getAttribute('href')).toContain(
+        '?tests=tests-java-gradle-junit5-allure3-selenide',
+      );
+    } finally {
+      locationSpy.mockRestore();
+    }
+  });
+
   it('shows matrix load error when fetch fails', async () => {
     vi.stubGlobal(
       'fetch',

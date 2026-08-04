@@ -176,7 +176,7 @@ function githubIconHtml(modulePath, kind, id) {
   return `<a class="icon-btn stack-page__gh-icon" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" aria-label="GitHub ${escapeHtml(id)}" title="${escapeHtml(modulePath)}" data-testid="stack-gh-${escapeHtml(kind)}-${escapeHtml(id)}"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="${GITHUB_MARK_PATH}"/></svg></span></a>`;
 }
 
-function rowHtml(item, kind, currentBackend, currentFrontend, currentTests) {
+function rowHtml(item, kind, currentBackend, currentFrontend) {
   const id = item.id;
   const status = item.status || 'active';
   const meta =
@@ -186,7 +186,7 @@ function rowHtml(item, kind, currentBackend, currentFrontend, currentTests) {
   const isCurrent = kind === 'backend' ? id === currentBackend : id === currentFrontend;
   const targetBackend = kind === 'backend' ? id : currentBackend;
   const targetFrontend = kind === 'frontend' ? id : currentFrontend;
-  const href = stackHref(targetBackend, targetFrontend, currentTests);
+  const href = stackHref(targetBackend, targetFrontend);
   const openable = isOpenable(status) && targetBackend && targetFrontend;
 
   const nameCell = openable
@@ -313,7 +313,7 @@ export function mountStackPage(root, data, pathname = window.location.pathname, 
           <table class="stack-page__table">
             <thead><tr><th>Module</th><th class="stack-page__gh-cell">GH</th><th>Status</th><th>Open</th></tr></thead>
             <tbody>
-              ${summary.backends.map((b) => rowHtml(b, 'backend', backendId, frontendId, currentTests)).join('')}
+              ${summary.backends.map((b) => rowHtml(b, 'backend', backendId, frontendId)).join('')}
             </tbody>
           </table>
         </div>
@@ -329,7 +329,7 @@ export function mountStackPage(root, data, pathname = window.location.pathname, 
           <table class="stack-page__table">
             <thead><tr><th>Module</th><th class="stack-page__gh-cell">GH</th><th>Status</th><th>Open</th></tr></thead>
             <tbody>
-              ${summary.frontends.map((f) => rowHtml(f, 'frontend', backendId, frontendId, currentTests)).join('')}
+              ${summary.frontends.map((f) => rowHtml(f, 'frontend', backendId, frontendId)).join('')}
             </tbody>
           </table>
         </div>

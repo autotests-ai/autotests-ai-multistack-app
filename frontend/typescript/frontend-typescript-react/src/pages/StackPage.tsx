@@ -68,13 +68,11 @@ function ModuleRows({
   items,
   currentBackend,
   currentFrontend,
-  currentTests,
 }: {
   kind: 'backend' | 'frontend';
   items: Array<BackendModule | FrontendModule>;
   currentBackend: string | null;
   currentFrontend: string | null;
-  currentTests: string | null;
 }) {
   return (
     <table className="stack-page__table">
@@ -97,7 +95,7 @@ function ModuleRows({
           const isCurrent = kind === 'backend' ? id === currentBackend : id === currentFrontend;
           const targetBackend = kind === 'backend' ? id : currentBackend;
           const targetFrontend = kind === 'frontend' ? id : currentFrontend;
-          const href = stackHref(targetBackend, targetFrontend, currentTests);
+          const href = stackHref(targetBackend, targetFrontend);
           const openable = isOpenable(status) && Boolean(targetBackend && targetFrontend);
 
           return (
@@ -404,7 +402,6 @@ export function StackPage() {
                 items={summary.backends}
                 currentBackend={mount.backendId}
                 currentFrontend={mount.frontendId}
-                currentTests={currentTests}
               />
             </Panel>
             <Panel title="Frontend" bodyClassName="stack-page__board-body" className="stack-page__board">
@@ -413,7 +410,6 @@ export function StackPage() {
                 items={summary.frontends}
                 currentBackend={mount.backendId}
                 currentFrontend={mount.frontendId}
-                currentTests={currentTests}
               />
             </Panel>
           </div>
