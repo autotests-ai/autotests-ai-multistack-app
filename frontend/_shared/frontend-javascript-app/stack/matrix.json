@@ -41,6 +41,18 @@
       "status": "slot",
       "language": "go",
       "module": "backend/go/backend-go-stdlib"
+    },
+    {
+      "id": "backend-node-express",
+      "status": "slot",
+      "language": "node",
+      "module": "backend/node/backend-node-express"
+    },
+    {
+      "id": "backend-node-nest",
+      "status": "slot",
+      "language": "node",
+      "module": "backend/node/backend-node-nest"
     }
   ],
   "frontends": [

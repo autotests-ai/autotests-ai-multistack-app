@@ -15,6 +15,9 @@ backend/
   go/
     backend-go-gin/            # slot (Gin — product REST)
     backend-go-stdlib/         # slot (net/http — Selenoid-style)
+  node/
+    backend-node-express/      # slot (Express — intro REST)
+    backend-node-nest/         # slot (NestJS — TypeScript product)
   scripts/                     # CI helpers (Sonar, env profiles, paths.sh)
 ```
 
@@ -32,6 +35,7 @@ Language base **+10**, stack **+1** from **8800** — see root [README](../READM
 | 8810 | `backend-kotlin-spring` |
 | 8820–8822 | python flask / fastapi / django |
 | 8830–8831 | go gin / stdlib |
+| 8840–8841 | node express / nest |
 
 Container listen stays `:8080`. Backend does not host HTML/JS.
 
