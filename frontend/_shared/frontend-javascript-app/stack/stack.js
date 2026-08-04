@@ -23,11 +23,17 @@
     return status === "active" || status === "stub";
   }
 
-  function comboHref(backendId, frontendId) {
+  function comboHref(backendId, frontendId, path = "/") {
+    let p = path == null || path === "" ? "/" : String(path);
+    if (p.charAt(0) !== "/") p = `/${p}`;
     if (!backendId || !frontendId) {
-      return frontendId ? `/${frontendId}/` : "/";
+      return frontendId ? `/${frontendId}${p === "/" ? "/" : p}` : p;
     }
-    return `/${backendId}/${frontendId}/`;
+    return `/${backendId}/${frontendId}${p === "/" ? "/" : p}`;
+  }
+
+  function stackHref(backendId, frontendId) {
+    return comboHref(backendId, frontendId, "/stack/");
   }
 
   function badge(status) {
@@ -59,7 +65,7 @@
       kind === "backend" ? id === currentBackend : id === currentFrontend;
     const targetBackend = kind === "backend" ? id : currentBackend;
     const targetFrontend = kind === "frontend" ? id : currentFrontend;
-    const href = comboHref(targetBackend, targetFrontend);
+    const href = stackHref(targetBackend, targetFrontend);
     const openable = isOpenable(status) && targetBackend && targetFrontend;
 
     const nameCell = openable
@@ -104,8 +110,8 @@
           : frontendId
             ? `(no backend prefix) · ${frontendId}`
             : "path without /{backend}/{frontend}/";
-      const href = comboHref(backendId, frontendId);
-      currentEl.innerHTML = `<a class="current__link" href="${escapeHtml(href)}">${escapeHtml(label)}</a>`;
+      const href = comboHref(backendId, frontendId, "/");
+      currentEl.innerHTML = `<a class="current__link" href="${escapeHtml(href)}" title="open app home">${escapeHtml(label)}</a>`;
     }
 
     rowsBackendEl.innerHTML = backends
@@ -115,7 +121,8 @@
       .map((f) => rowHtml(f, "frontend", backendId, frontendId))
       .join("");
 
-    footEl.textContent = "matrix.json ← deploy/matrix.yaml · click active row → redirect";
+    footEl.textContent =
+      "matrix.json ← deploy/matrix.yaml · click active → /{backend}/{frontend}/stack/";
   }
 
   async function load() {

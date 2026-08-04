@@ -16,4 +16,4 @@ Static page at `stack/` (served as `/{backend}/{frontend}/stack/` after host ngi
 python frontend/scripts/sync-stack-matrix.py
 ```
 
-Active modules link to `/{backend}/{frontend}/`; current path modules are highlighted. Slots are listed but not clickable.
+Active modules link to `/{backend}/{frontend}/stack/`; current path modules are highlighted. Current-pair badge opens app home. Slots are listed but not clickable.
