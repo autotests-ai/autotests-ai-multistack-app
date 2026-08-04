@@ -14,12 +14,12 @@ from render_vhosts import load_matrix  # noqa: E402
 
 DEFAULT_MATRIX = ROOT / "deploy" / "matrix.yaml"
 DEPLOY_MATRIX_JSON = ROOT / "deploy" / "deploy-matrix.json"
-GHA_OUTPUTS_DIR = ROOT / "deploy" / "gha-outputs"
+STACK_MATRIX_DIR = ROOT / "deploy" / "stack-matrix"
 DEFAULT_BACKENDS = "backend-java-spring"
 DEFAULT_FRONTENDS = "frontend-typescript-react"
 ACTIVE_BACKEND = ("active", "stub")
 ACTIVE_FRONTEND = ("active",)
-GHA_MATRIX_DELIM = "GHA_MATRIX_EOF"
+STACK_MATRIX_DELIM = "STACK_MATRIX_EOF"
 
 
 def _csv_ids(raw: str | None) -> list[str]:
@@ -133,9 +133,9 @@ def _github_output_text(sel: dict) -> str:
         f"backends={sel['backends']}\n"
         f"frontends={sel['frontends']}\n"
         f"images={sel['images']}\n"
-        f"matrix<<{GHA_MATRIX_DELIM}\n"
+        f"matrix<<{STACK_MATRIX_DELIM}\n"
         f"{matrix_json}\n"
-        f"{GHA_MATRIX_DELIM}\n"
+        f"{STACK_MATRIX_DELIM}\n"
     )
 
 
@@ -151,7 +151,7 @@ def cmd_build_matrix(matrix: dict, args: argparse.Namespace) -> int:
 
 
 def cmd_sync_deploy_matrix(matrix: dict, args: argparse.Namespace) -> int:
-    """Write deploy-matrix.json + deploy/gha-outputs/{default,all} for GHA cat → GITHUB_OUTPUT."""
+    """Write deploy-matrix.json + deploy/stack-matrix/{default,all} for GHA cat → GITHUB_OUTPUT."""
     backends_all = resolve_backends(matrix, None, "all")
     frontends_all = resolve_frontends(matrix, None, "all")
     backends_default = resolve_backends(matrix, DEFAULT_BACKENDS, "default")
@@ -183,14 +183,14 @@ def cmd_sync_deploy_matrix(matrix: dict, args: argparse.Namespace) -> int:
     out = args.out
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-    gha_dir = args.gha_outputs
-    gha_dir.mkdir(parents=True, exist_ok=True)
+    stack_dir = args.stack_matrix
+    stack_dir.mkdir(parents=True, exist_ok=True)
     for mode, sel in selections.items():
-        (gha_dir / mode).write_text(_github_output_text(sel), encoding="utf-8")
+        (stack_dir / mode).write_text(_github_output_text(sel), encoding="utf-8")
     sel_def = selections["default"]
     sel_all = selections["all"]
     print(
-        f"wrote {out.relative_to(ROOT)} + {gha_dir.relative_to(ROOT)}/{{default,all}} "
+        f"wrote {out.relative_to(ROOT)} + {stack_dir.relative_to(ROOT)}/{{default,all}} "
         f"(default {len(sel_def['matrix'])} · all {len(sel_all['matrix'])} targets; "
         f"{len(payload['all']['backends'])} be · {len(payload['all']['frontends'])} fe)"
     )
@@ -229,10 +229,10 @@ def main() -> int:
 
     p_sync = sub.add_parser(
         "sync-deploy-matrix",
-        help="Regenerate deploy-matrix.json + gha-outputs/{default,all} (commit both)",
+        help="Regenerate deploy-matrix.json + stack-matrix/{default,all} (commit both)",
     )
     p_sync.add_argument("--out", type=Path, default=DEPLOY_MATRIX_JSON)
-    p_sync.add_argument("--gha-outputs", type=Path, default=GHA_OUTPUTS_DIR)
+    p_sync.add_argument("--stack-matrix", type=Path, default=STACK_MATRIX_DIR)
     p_sync.set_defaults(func=cmd_sync_deploy_matrix)
 
     args = parser.parse_args()

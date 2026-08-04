@@ -144,7 +144,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:9800/
 
 **Production URL:** https://reference-app-copy.autotests.ai/backend-java-spring/frontend-typescript-react/
 
-Ports, compose service ids, and health `expect` strings — **SSOT** [`deploy/matrix.yaml`](deploy/matrix.yaml). Host entrypoint [`deploy/server-deploy.sh`](deploy/server-deploy.sh) reads them via [`deploy/matrix_query.py`](deploy/matrix_query.py). GHA only `cat`s committed [`deploy/gha-outputs/{default,all}`](deploy/gha-outputs/) into `$GITHUB_OUTPUT` (no resolve logic in CI) — after editing `matrix.yaml` run locally and commit JSON + gha-outputs:
+Ports, compose service ids, and health `expect` strings — **SSOT** [`deploy/matrix.yaml`](deploy/matrix.yaml). Host entrypoint [`deploy/server-deploy.sh`](deploy/server-deploy.sh) reads them via [`deploy/matrix_query.py`](deploy/matrix_query.py). GHA only `cat`s committed [`deploy/stack-matrix/{default,all}`](deploy/stack-matrix/) into `$GITHUB_OUTPUT` (`default` = java-spring+react; `all` = every active stack) — after editing `matrix.yaml` run locally and commit JSON + stack-matrix:
 
 ```bash
 python deploy/matrix_query.py sync-deploy-matrix
@@ -160,8 +160,8 @@ python deploy/matrix_query.py sync-deploy-matrix
 | Workflow | Role |
 |----------|------|
 | [`ci.yml`](.github/workflows/ci.yml) | Orchestrator: **PR** → `test(ci)`; **push main** → `test(ci)` → `deploy` → `test(prod)` |
-| [`deploy.yml`](.github/workflows/deploy.yml) | Leaf CD (`workflow_call` / manual): `deploy_mode` → `cat deploy/gha-outputs/<mode>` → build → SSH `docker load` → `SKIP_BUILD=1 deploy/server-deploy.sh` |
-| [`deploy_all.yml`](.github/workflows/deploy_all.yml) | Manual: `deploy_mode=all` → `gha-outputs/all` (every **active** backend/frontend) |
+| [`deploy.yml`](.github/workflows/deploy.yml) | Leaf CD (`workflow_call` / manual): `deploy_mode` → `cat deploy/stack-matrix/<mode>` → build → SSH `docker load` → `SKIP_BUILD=1 deploy/server-deploy.sh` |
+| [`deploy_all.yml`](.github/workflows/deploy_all.yml) | Manual: `deploy_mode=all` → `stack-matrix/all` (every **active** backend/frontend) |
 | [`test.yml`](.github/workflows/test.yml) | Leaf tests: `scope=ci` (unit + test-infra + component) · `prod` (`prod_api`) · `all` (both) |
 | [`test_all.yml`](.github/workflows/test_all.yml) | Manual: `test.yml` + python backend unit matrix |
 

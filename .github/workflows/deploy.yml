@@ -1,5 +1,6 @@
 # Leaf deploy — called by ci.yml (main) or deploy_all.yml / workflow_dispatch.
-# Stacks: cat deploy/gha-outputs/{default,all} → GITHUB_OUTPUT
+# Stacks: cat deploy/stack-matrix/{default,all} → GITHUB_OUTPUT
+#   default = java-spring + react; all = every active stack
 # (sync locally: python deploy/matrix_query.py sync-deploy-matrix).
 # Host logic SSOT: deploy/server-deploy.sh + deploy/matrix.yaml.
 # Does not run autotests (see test.yml / ci.yml).
@@ -10,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       deploy_mode:
-        description: "default | all — file under deploy/gha-outputs/"
+        description: "default (java-spring+react) | all — file under deploy/stack-matrix/"
         required: false
         default: default
   workflow_call:
@@ -44,7 +45,7 @@ jobs:
 
       - name: Resolve target stacks
         id: stacks
-        run: cat "deploy/gha-outputs/${DEPLOY_MODE}" >> "$GITHUB_OUTPUT"
+        run: cat "deploy/stack-matrix/${DEPLOY_MODE}" >> "$GITHUB_OUTPUT"
 
   build:
     needs: resolve
