@@ -5,6 +5,10 @@
 
 const PATH_RE = /^\/(backend-[^/]+)\/(frontend-[^/]+)/;
 
+/** Nested product repo on GitHub — tree URLs for matrix `module` paths. */
+export const GITHUB_TREE_BASE =
+  'https://github.com/autotests-ai/reference-app-copy/tree/main';
+
 export function parseMount(pathname) {
   const match = String(pathname || '').match(PATH_RE);
   if (match) {
@@ -32,6 +36,20 @@ export function comboHref(backendId, frontendId, path = '/') {
 
 export function stackHref(backendId, frontendId) {
   return comboHref(backendId, frontendId, '/stack/');
+}
+
+/** GitHub folder for a matrix module path (`backend/python/...`). */
+export function githubModuleHref(modulePath) {
+  if (!modulePath) return null;
+  const cleaned = String(modulePath).replace(/^\/+/, '').replace(/\/+$/, '');
+  if (!cleaned || cleaned.includes('..')) return null;
+  return `${GITHUB_TREE_BASE}/${cleaned}`;
+}
+
+export function findModuleById(items, id) {
+  if (!id || !Array.isArray(items)) return null;
+  const hit = items.find((item) => item && item.id === id);
+  return hit?.module ?? null;
 }
 
 export function summarizeMatrix(data) {
@@ -116,11 +134,32 @@ export function mountStackPage(root, data, pathname = window.location.pathname) 
         ? `(no backend prefix) · ${frontendId}`
         : 'path without /{backend}/{frontend}/';
   const homeHref = comboHref(backendId, frontendId, '/');
+  const beModule = findModuleById(summary.backends, backendId);
+  const feModule = findModuleById(summary.frontends, frontendId);
+  const beGh = githubModuleHref(beModule);
+  const feGh = githubModuleHref(feModule);
+  const ghLinks = [
+    beGh
+      ? `<a class="link stack-page__gh-link" href="${escapeHtml(beGh)}" target="_blank" rel="noopener noreferrer" data-testid="stack-gh-backend" title="${escapeHtml(beModule)}">backend ↗</a>`
+      : '',
+    feGh
+      ? `<a class="link stack-page__gh-link" href="${escapeHtml(feGh)}" target="_blank" rel="noopener noreferrer" data-testid="stack-gh-frontend" title="${escapeHtml(feModule)}">frontend ↗</a>`
+      : '',
+  ]
+    .filter(Boolean)
+    .join('');
 
   root.innerHTML = `
     <div class="stack-page__header">
       <h1 class="stack-page__title">Stack</h1>
-      <a class="badge badge--primary stack-page__current" href="${escapeHtml(homeHref)}" title="open app home" data-testid="stack-current-pair">${escapeHtml(label)}</a>
+      <div class="stack-page__pair">
+        <a class="badge badge--primary stack-page__current" href="${escapeHtml(homeHref)}" title="open app home" data-testid="stack-current-pair">${escapeHtml(label)}</a>
+        ${
+          ghLinks
+            ? `<div class="stack-page__gh" data-testid="stack-gh-links">${ghLinks}</div>`
+            : ''
+        }
+      </div>
     </div>
     <div class="stack-page__boards">
       <section class="panel panel--content stack-page__board">

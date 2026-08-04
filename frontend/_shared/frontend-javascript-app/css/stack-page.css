@@ -36,6 +36,15 @@
   color: var(--color-text);
 }
 
+.stack-page__pair {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-2);
+  min-width: 0;
+  max-width: 100%;
+}
+
 .stack-page__current {
   text-decoration: none;
   max-width: 100%;
@@ -45,6 +54,19 @@
 
 .stack-page__current:hover {
   filter: brightness(1.08);
+}
+
+.stack-page__gh {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  font-family: var(--font-mono, ui-monospace, Menlo, monospace);
+  font-size: 0.78rem;
+}
+
+.stack-page__gh-link {
+  white-space: nowrap;
 }
 
 .stack-page__boards {

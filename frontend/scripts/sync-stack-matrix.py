@@ -37,6 +37,7 @@ def main() -> int:
                 "id": b["id"],
                 "status": b.get("status", "active"),
                 "language": b.get("language"),
+                "module": b.get("module"),
             }
             for b in data.get("backends", [])
         ],
@@ -45,6 +46,7 @@ def main() -> int:
                 "id": f["id"],
                 "status": f.get("status", "active"),
                 "kind": f.get("kind"),
+                "module": f.get("module"),
             }
             for f in data.get("frontends", [])
         ],

@@ -4,6 +4,8 @@ import { appPath } from '../lib/appBase';
 import {
   comboHref,
   fetchStackMatrix,
+  findModuleById,
+  githubModuleHref,
   isOpenable,
   parseMount,
   stackHref,
@@ -122,6 +124,10 @@ export function StackPage() {
         ? `(no backend prefix) · ${mount.frontendId}`
         : 'path without /{backend}/{frontend}/';
   const homeHref = comboHref(mount.backendId, mount.frontendId, '/');
+  const beModule = summary ? findModuleById(summary.backends, mount.backendId) : null;
+  const feModule = summary ? findModuleById(summary.frontends, mount.frontendId) : null;
+  const beGh = githubModuleHref(beModule);
+  const feGh = githubModuleHref(feModule);
 
   return (
     <main
@@ -130,14 +136,44 @@ export function StackPage() {
     >
       <div className="stack-page__header">
         <h1 className="stack-page__title">Stack</h1>
-        <a
-          className="badge badge--primary stack-page__current"
-          href={homeHref}
-          title="open app home"
-          data-testid="stack-current-pair"
-        >
-          {label}
-        </a>
+        <div className="stack-page__pair">
+          <a
+            className="badge badge--primary stack-page__current"
+            href={homeHref}
+            title="open app home"
+            data-testid="stack-current-pair"
+          >
+            {label}
+          </a>
+          {(beGh || feGh) && (
+            <div className="stack-page__gh" data-testid="stack-gh-links">
+              {beGh && (
+                <a
+                  className="link stack-page__gh-link"
+                  href={beGh}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="stack-gh-backend"
+                  title={beModule ?? undefined}
+                >
+                  backend ↗
+                </a>
+              )}
+              {feGh && (
+                <a
+                  className="link stack-page__gh-link"
+                  href={feGh}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="stack-gh-frontend"
+                  title={feModule ?? undefined}
+                >
+                  frontend ↗
+                </a>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {state.status === 'error' && (

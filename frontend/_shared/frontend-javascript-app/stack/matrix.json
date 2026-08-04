@@ -3,79 +3,94 @@
     {
       "id": "backend-java-spring",
       "status": "active",
-      "language": "java"
+      "language": "java",
+      "module": "backend/java/backend-java-spring"
     },
     {
       "id": "backend-kotlin-spring",
       "status": "active",
-      "language": "kotlin"
+      "language": "kotlin",
+      "module": "backend/kotlin/backend-kotlin-spring"
     },
     {
       "id": "backend-python-flask",
       "status": "active",
-      "language": "python"
+      "language": "python",
+      "module": "backend/python/backend-python-flask"
     },
     {
       "id": "backend-python-fastapi",
       "status": "active",
-      "language": "python"
+      "language": "python",
+      "module": "backend/python/backend-python-fastapi"
     },
     {
       "id": "backend-python-django",
       "status": "active",
-      "language": "python"
+      "language": "python",
+      "module": "backend/python/backend-python-django"
     },
     {
       "id": "backend-go-gin",
       "status": "slot",
-      "language": "go"
+      "language": "go",
+      "module": "backend/go/backend-go-gin"
     },
     {
       "id": "backend-go-stdlib",
       "status": "slot",
-      "language": "go"
+      "language": "go",
+      "module": "backend/go/backend-go-stdlib"
     }
   ],
   "frontends": [
     {
       "id": "frontend-javascript-vanilla",
       "status": "active",
-      "kind": "static"
+      "kind": "static",
+      "module": "frontend/javascript/frontend-javascript-vanilla"
     },
     {
       "id": "frontend-javascript-react",
       "status": "slot",
-      "kind": "vite"
+      "kind": "vite",
+      "module": "frontend/javascript/frontend-javascript-react"
     },
     {
       "id": "frontend-javascript-angular",
       "status": "slot",
-      "kind": "vite"
+      "kind": "vite",
+      "module": "frontend/javascript/frontend-javascript-angular"
     },
     {
       "id": "frontend-javascript-vue",
       "status": "slot",
-      "kind": "vite"
+      "kind": "vite",
+      "module": "frontend/javascript/frontend-javascript-vue"
     },
     {
       "id": "frontend-typescript-vanilla",
       "status": "slot",
-      "kind": "static"
+      "kind": "static",
+      "module": "frontend/typescript/frontend-typescript-vanilla"
     },
     {
       "id": "frontend-typescript-react",
       "status": "active",
-      "kind": "vite"
+      "kind": "vite",
+      "module": "frontend/typescript/frontend-typescript-react"
     },
     {
       "id": "frontend-typescript-angular",
       "status": "slot",
-      "kind": "vite"
+      "kind": "vite",
+      "module": "frontend/typescript/frontend-typescript-angular"
     },
     {
       "id": "frontend-typescript-vue",
       "status": "active",
-      "kind": "vite"
+      "kind": "vite",
+      "module": "frontend/typescript/frontend-typescript-vue"
     }
   ]
 }

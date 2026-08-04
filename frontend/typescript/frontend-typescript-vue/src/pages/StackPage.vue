@@ -5,6 +5,8 @@ import { appPath } from '../lib/appBase';
 import {
   comboHref,
   fetchStackMatrix,
+  findModuleById,
+  githubModuleHref,
   isOpenable,
   parseMount,
   stackHref,
@@ -52,6 +54,15 @@ const label =
 
 const homeHref = comboHref(mount.backendId, mount.frontendId, '/');
 
+const beModule = computed(() =>
+  summary.value ? findModuleById(summary.value.backends, mount.backendId) : null,
+);
+const feModule = computed(() =>
+  summary.value ? findModuleById(summary.value.frontends, mount.frontendId) : null,
+);
+const beGh = computed(() => githubModuleHref(beModule.value));
+const feGh = computed(() => githubModuleHref(feModule.value));
+
 function metaFor(kind: 'backend' | 'frontend', item: BackendModule | FrontendModule): string {
   const status = item.status || 'active';
   return kind === 'backend'
@@ -76,14 +87,40 @@ function rowHref(kind: 'backend' | 'frontend', item: BackendModule | FrontendMod
   <main class="page-shell page-shell--below-header stack-page" data-testid="stack-page">
     <div class="stack-page__header">
       <h1 class="stack-page__title">Stack</h1>
-      <a
-        class="badge badge--primary stack-page__current"
-        :href="homeHref"
-        title="open app home"
-        data-testid="stack-current-pair"
-      >
-        {{ label }}
-      </a>
+      <div class="stack-page__pair">
+        <a
+          class="badge badge--primary stack-page__current"
+          :href="homeHref"
+          title="open app home"
+          data-testid="stack-current-pair"
+        >
+          {{ label }}
+        </a>
+        <div v-if="beGh || feGh" class="stack-page__gh" data-testid="stack-gh-links">
+          <a
+            v-if="beGh"
+            class="link stack-page__gh-link"
+            :href="beGh"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="stack-gh-backend"
+            :title="beModule ?? undefined"
+          >
+            backend ↗
+          </a>
+          <a
+            v-if="feGh"
+            class="link stack-page__gh-link"
+            :href="feGh"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="stack-gh-frontend"
+            :title="feModule ?? undefined"
+          >
+            frontend ↗
+          </a>
+        </div>
+      </div>
     </div>
 
     <div v-if="state.status === 'error'" class="stack-page__error" data-testid="stack-error">
