@@ -9,4 +9,5 @@ Postgres DB: `reference_app_javascript_express`.
 https://reference-app-copy.autotests.ai/backend-javascript-express/{frontend}/
 ```
 
-Language axis is `javascript` (not `node`). TypeScript sibling: [`backend-typescript-nest`](../../typescript/backend-typescript-nest/).
+Same language, Nest: [`backend-javascript-nest`](../backend-javascript-nest/).  
+TypeScript Express: [`backend-typescript-express`](../../typescript/backend-typescript-express/).

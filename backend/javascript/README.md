@@ -2,9 +2,10 @@
 
 Runtime is Node; **language** in the matrix is `javascript` (same axis as frontend).
 
-| Module | Status | Notes |
-|--------|--------|-------|
-| [`backend-javascript-express`](backend-javascript-express/) | slot | [Express](https://expressjs.com/) — usual intro REST course stack |
+| Module | Port | Status | Notes |
+|--------|------|--------|-------|
+| [`backend-javascript-express`](backend-javascript-express/) | 8840 | slot | [Express](https://expressjs.com/) |
+| [`backend-javascript-nest`](backend-javascript-nest/) | 8841 | slot | [NestJS](https://nestjs.com/) in JS |
 
-TypeScript twin: [`../typescript/`](../typescript/).  
+TypeScript twins: [`../typescript/`](../typescript/) (same stacks, `:8850+`).  
 Routing SSOT: [`deploy/matrix.yaml`](../../deploy/matrix.yaml).

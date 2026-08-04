@@ -115,6 +115,30 @@ backends:
     db_name: reference_app_javascript_express
     health_service: backend-javascript-express
 
+  - id: backend-javascript-nest
+    status: slot
+    language: javascript
+    module: backend/javascript/backend-javascript-nest
+    compose_service: backend-javascript-nest
+    compose_profile: javascript-nest
+    image: reference-app-copy-backend-javascript-nest:latest
+    internal_port: 8080
+    publish_port: 8841
+    db_name: reference_app_javascript_nest
+    health_service: backend-javascript-nest
+
+  - id: backend-typescript-express
+    status: slot
+    language: typescript
+    module: backend/typescript/backend-typescript-express
+    compose_service: backend-typescript-express
+    compose_profile: typescript-express
+    image: reference-app-copy-backend-typescript-express:latest
+    internal_port: 8080
+    publish_port: 8850
+    db_name: reference_app_typescript_express
+    health_service: backend-typescript-express
+
   - id: backend-typescript-nest
     status: slot
     language: typescript
@@ -123,7 +147,7 @@ backends:
     compose_profile: typescript-nest
     image: reference-app-copy-backend-typescript-nest:latest
     internal_port: 8080
-    publish_port: 8850
+    publish_port: 8851
     db_name: reference_app_typescript_nest
     health_service: backend-typescript-nest
 

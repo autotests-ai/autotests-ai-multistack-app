@@ -49,6 +49,18 @@
       "module": "backend/javascript/backend-javascript-express"
     },
     {
+      "id": "backend-javascript-nest",
+      "status": "slot",
+      "language": "javascript",
+      "module": "backend/javascript/backend-javascript-nest"
+    },
+    {
+      "id": "backend-typescript-express",
+      "status": "slot",
+      "language": "typescript",
+      "module": "backend/typescript/backend-typescript-express"
+    },
+    {
       "id": "backend-typescript-nest",
       "status": "slot",
       "language": "typescript",
