@@ -1,15 +1,53 @@
+# Universal deploy — defaults: backend-java-spring + web.
+# Expand via workflow_dispatch inputs or deploy_all.yml.
+# Does not run autotests (see test.yml).
+
 name: reference-app-copy Deploy
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      backends:
+        description: "Comma-separated compose backend ids"
+        required: false
+        default: backend-java-spring
+      build_web:
+        description: "Build shared web image"
+        type: boolean
+        required: false
+        default: true
+      deploy_mode:
+        description: "default = selected services; all = full server-deploy.sh"
+        required: false
+        default: default
+  workflow_call:
+    inputs:
+      backends:
+        type: string
+        required: false
+        default: backend-java-spring
+      build_web:
+        type: boolean
+        required: false
+        default: true
+      deploy_mode:
+        type: string
+        required: false
+        default: default
 
 run-name: reference-app-copy deploy (${{ github.ref_name }} @ ${{ github.sha }})
 
 concurrency:
   group: deploy-reference-app-copy-production
   cancel-in-progress: false
+
+env:
+  BACKENDS: ${{ inputs.backends || 'backend-java-spring' }}
+  # push has no inputs → default web on; dispatch/call use inputs.build_web
+  BUILD_WEB: ${{ (github.event_name == 'push' || inputs.build_web) && 'true' || 'false' }}
+  DEPLOY_MODE: ${{ inputs.deploy_mode || 'default' }}
 
 jobs:
   build:
@@ -19,30 +57,43 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Build images (linux/amd64)
-        run: |
-          docker compose build
-          for img in \
-            reference-app-copy-backend-java-spring:latest \
-            reference-app-copy-backend-kotlin-spring:latest \
-            reference-app-copy-backend-python-flask:latest \
-            reference-app-copy-backend-python-fastapi:latest \
-            reference-app-copy-backend-python-django:latest \
-            reference-app-copy-web:latest
-          do
-            docker inspect "$img" --format '{{.Architecture}}' | grep -q amd64
-          done
+      - name: Init image list
+        run: truncate -s 0 .ci-images.txt
+
+      - name: Build backend-java-spring
+        if: contains(format(',{0},', env.BACKENDS), ',backend-java-spring,')
+        uses: ./backend/java/backend-java-spring/.github/actions/build
+
+      - name: Build backend-kotlin-spring
+        if: contains(format(',{0},', env.BACKENDS), ',backend-kotlin-spring,')
+        uses: ./backend/kotlin/backend-kotlin-spring/.github/actions/build
+
+      - name: Build backend-python-flask
+        if: contains(format(',{0},', env.BACKENDS), ',backend-python-flask,')
+        uses: ./backend/python/backend-python-flask/.github/actions/build
+
+      - name: Build backend-python-fastapi
+        if: contains(format(',{0},', env.BACKENDS), ',backend-python-fastapi,')
+        uses: ./backend/python/backend-python-fastapi/.github/actions/build
+
+      - name: Build backend-python-django
+        if: contains(format(',{0},', env.BACKENDS), ',backend-python-django,')
+        uses: ./backend/python/backend-python-django/.github/actions/build
+
+      - name: Build web
+        if: env.BUILD_WEB == 'true'
+        uses: ./deploy/web/.github/actions/build
 
       - name: Save image artifacts
         run: |
-          docker save \
-            reference-app-copy-backend-java-spring:latest \
-            reference-app-copy-backend-kotlin-spring:latest \
-            reference-app-copy-backend-python-flask:latest \
-            reference-app-copy-backend-python-fastapi:latest \
-            reference-app-copy-backend-python-django:latest \
-            reference-app-copy-web:latest \
-            | gzip > /tmp/app-images.tar.gz
+          set -euo pipefail
+          test -s .ci-images.txt || {
+            echo "::error::No images selected to build"
+            exit 1
+          }
+          mapfile -t imgs < .ci-images.txt
+          docker save "${imgs[@]}" | gzip > /tmp/app-images.tar.gz
+          echo "Saved: ${imgs[*]}"
 
       - name: Upload app images
         uses: actions/upload-artifact@v7
@@ -84,7 +135,8 @@ jobs:
           gunzip -c /tmp/app-images.tar.gz | \
             ssh "${DEPLOY_USER}@${DEPLOY_HOST}" docker load
 
-      - name: Deploy on production host
+      - name: Deploy on production host (all)
+        if: env.DEPLOY_MODE == 'all'
         uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ env.DEPLOY_HOST }}
@@ -98,3 +150,63 @@ jobs:
             git -c http.proxy= -c https.proxy= fetch --all
             git reset --hard origin/main
             SKIP_BUILD=1 bash deploy/server-deploy.sh
+
+      - name: Deploy on production host (default stacks)
+        if: env.DEPLOY_MODE != 'all'
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ env.DEPLOY_HOST }}
+          username: ${{ env.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          command_timeout: 15m
+          envs: BACKENDS
+          script: |
+            set -euo pipefail
+            APP_DIR="${APP_DIR:-/home/reference_app_copy/reference-app-copy}"
+            cd "$APP_DIR"
+            git -c http.proxy= -c https.proxy= fetch --all
+            git reset --hard origin/main
+
+            services=(postgres postgres-ensure-dbs)
+            IFS=',' read -r -a backends <<< "${BACKENDS:-backend-java-spring}"
+            for b in "${backends[@]}"; do
+              b="$(echo "$b" | xargs)"
+              [[ -n "$b" ]] && services+=("$b")
+            done
+            services+=(web)
+
+            docker compose up -d --force-recreate --no-build "${services[@]}"
+
+            MAX_ATTEMPTS="${HEALTH_POLL_ATTEMPTS:-30}"
+            SLEEP_SECS="${HEALTH_POLL_SLEEP:-2}"
+            for b in "${backends[@]}"; do
+              b="$(echo "$b" | xargs)"
+              [[ -z "$b" ]] && continue
+              case "$b" in
+                backend-java-spring) port=8800; expect=reference-app-copy ;;
+                backend-kotlin-spring) port=8810; expect=backend-kotlin-spring ;;
+                backend-python-flask) port=8820; expect=backend-python-flask ;;
+                backend-python-fastapi) port=8821; expect=backend-python-fastapi ;;
+                backend-python-django) port=8822; expect=backend-python-django ;;
+                *) echo "skip health for unknown backend: $b"; continue ;;
+              esac
+              url="http://127.0.0.1:${port}/api/health"
+              for i in $(seq 1 "$MAX_ATTEMPTS"); do
+                if body="$(curl --noproxy '*' -fsS "$url" 2>/dev/null)" \
+                  && echo "$body" | grep -q '"status":"ok"' \
+                  && echo "$body" | grep -q "$expect"; then
+                  echo "Health OK: $url ($expect, attempt $i)"
+                  break
+                fi
+                if [[ "$i" -eq "$MAX_ATTEMPTS" ]]; then
+                  echo "FAIL: health not ok after ${MAX_ATTEMPTS} attempts: $url" >&2
+                  exit 1
+                fi
+                sleep "$SLEEP_SECS"
+              done
+            done
+
+            if [[ -f deploy/nginx/sync-nginx.sh ]]; then
+              bash deploy/nginx/sync-nginx.sh
+            fi
+            echo "Deploy OK ($(git rev-parse --short HEAD)) mode=default backends=${BACKENDS}"

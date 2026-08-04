@@ -1,0 +1,21 @@
+name: Build web image
+description: docker compose build + amd64 check for shared web
+
+inputs:
+  service:
+    required: false
+    default: web
+  image:
+    required: false
+    default: reference-app-copy-web:latest
+
+runs:
+  using: composite
+  steps:
+    - name: Compose build + arch check
+      shell: bash
+      run: |
+        set -euo pipefail
+        docker compose build "${{ inputs.service }}"
+        docker inspect "${{ inputs.image }}" --format '{{.Architecture}}' | grep -q amd64
+        echo "${{ inputs.image }}" >> "${GITHUB_WORKSPACE}/.ci-images.txt"

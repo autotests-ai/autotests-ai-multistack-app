@@ -1,18 +1,8 @@
-# reference-app-copy Tests — one workflow, jobs = layers (see tests/LAYERS.md).
-# Flip job-level `if: false` → event conditions when wiring a layer.
+# reference-app-copy Tests — defaults: java-spring unit, test-infra, prod_api.
+# Expand via test_all.yml (include_python) or workflow_dispatch inputs.
+# Flip job-level `if: false` when wiring a deferred layer (see tests/LAYERS.md).
 #
-# | Phase | Jobs |
-# |-------|------|
-# | 2a | unit_backend, test-infra (on); component_rtl when SPA restored |
-# | 2b | + api (+ compose_up) |
-# | 2c | + integration |
-# | 2d | + component_browser |
-# | 2e | + e2e |
-# | 2f | prod_api after successful Deploy (workflow_run); prod_e2e later |
-# | 3+ | visual, manual |
-#
-# CD: Deploy workflow = build (GHA image) → deploy (SSH load + server-deploy).
-# This workflow: unit on PR/push; prod_api after Deploy success.
+# Deploy does not run tests. prod_api runs after successful Deploy (workflow_run).
 
 name: reference-app-copy Tests
 
@@ -27,9 +17,24 @@ on:
   workflow_dispatch:
     inputs:
       layers:
-        description: "all-enabled | prod-only | (ignored until layers wired)"
+        description: "all-enabled | prod-only"
         required: false
         default: all-enabled
+      include_python:
+        description: "Run python backend unit matrix"
+        type: boolean
+        required: false
+        default: false
+  workflow_call:
+    inputs:
+      layers:
+        type: string
+        required: false
+        default: all-enabled
+      include_python:
+        type: boolean
+        required: false
+        default: false
 
 run-name: reference-app-copy tests (${{ github.event_name }} @ ${{ github.sha }})
 
@@ -39,41 +44,31 @@ concurrency:
 
 env:
   TESTS_JAVA: tests/java/tests-java-gradle-junit5-allure3-selenide
-  BACKEND_JAVA: backend/java/backend-java-spring
-  FRONTEND_TS_REACT: frontend/typescript/frontend-typescript-react
   FRONTEND_TS_VUE: frontend/typescript/frontend-typescript-vue
   FRONTEND_PREVIEW: frontend/_catalog/frontend-javascript-preview
 
 jobs:
-  # ── 2a: product unit + test-infra ──────────────────────────────────
-
   unit_backend:
     name: unit_backend
     if: >-
       github.event_name == 'pull_request' ||
       github.event_name == 'push' ||
-      github.event_name == 'workflow_dispatch'
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'workflow_call'
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    defaults:
-      run:
-        working-directory: ${{ env.BACKEND_JAVA }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: "21"
-          cache: gradle
-      - name: Backend unit + JaCoCo
-        run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification --no-daemon
+      - uses: ./backend/java/backend-java-spring/.github/actions/unit
 
   unit_backend_python:
     name: unit_backend_python (${{ matrix.stack }})
     if: >-
-      github.event_name == 'pull_request' ||
-      github.event_name == 'push' ||
-      github.event_name == 'workflow_dispatch'
+      inputs.include_python &&
+      (github.event_name == 'pull_request' ||
+       github.event_name == 'push' ||
+       github.event_name == 'workflow_dispatch' ||
+       github.event_name == 'workflow_call')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -106,41 +101,22 @@ jobs:
     if: >-
       github.event_name == 'pull_request' ||
       github.event_name == 'push' ||
-      github.event_name == 'workflow_dispatch'
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'workflow_call'
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: ${{ env.TESTS_JAVA }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: "21"
-          cache: gradle
-      - name: Test-infra (helpers + config)
-        run: ./gradlew testInfra jacocoTestInfraCoverageVerification -Denv=reference_ci -DallureReportMode=none --no-daemon
-
-  # ── 2a later: RTL (off until frontend SPA + package.json restored) ─
+      - uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/test-infra
 
   component_rtl:
     name: component_rtl
     if: false
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: ${{ env.FRONTEND_TS_REACT }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "26"
-      - name: Vitest + React Testing Library (src/test)
-        run: |
-          npm ci
-          npm test
+      - uses: ./frontend/typescript/frontend-typescript-react/.github/actions/component
 
   component_vue:
     name: component_vue
@@ -159,8 +135,6 @@ jobs:
         run: |
           npm ci
           npm test
-
-  # ── 2b+: compose + api / integration / e2e ─────────────────────────
 
   compose_up:
     name: compose_up
@@ -298,32 +272,23 @@ jobs:
       - name: Manual stubs
         run: ./gradlew testManual -Denv=reference_ci -DallureReportMode=none --no-daemon
 
-  # ── 2f: after Deploy ───────────────────────────────────────────────
-
   prod_api:
     name: prod_api
     if: >-
       (github.event_name == 'workflow_run' &&
        github.event.workflow_run.conclusion == 'success') ||
-      (github.event_name == 'workflow_dispatch' &&
-       (github.event.inputs.layers == 'prod-only' ||
-        github.event.inputs.layers == 'all-enabled'))
+      ((github.event_name == 'workflow_dispatch' ||
+        github.event_name == 'workflow_call') &&
+       (inputs.layers == 'prod-only' ||
+        inputs.layers == 'all-enabled' ||
+        inputs.layers == ''))
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    defaults:
-      run:
-        working-directory: ${{ env.TESTS_JAVA }}
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
-      - uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: "21"
-          cache: gradle
-      - name: Prod API
-        run: ./gradlew testApi -Denv=reference_prod -DallureReportMode=none --no-daemon
+      - uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/prod-api
 
   prod_e2e:
     name: prod_e2e

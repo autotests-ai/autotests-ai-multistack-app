@@ -1,0 +1,23 @@
+name: Build backend-java-spring image
+description: docker compose build + amd64 check for backend-java-spring
+
+inputs:
+  service:
+    description: Compose service name
+    required: false
+    default: backend-java-spring
+  image:
+    description: Image tag to verify and record
+    required: false
+    default: reference-app-copy-backend-java-spring:latest
+
+runs:
+  using: composite
+  steps:
+    - name: Compose build + arch check
+      shell: bash
+      run: |
+        set -euo pipefail
+        docker compose build "${{ inputs.service }}"
+        docker inspect "${{ inputs.image }}" --format '{{.Architecture}}' | grep -q amd64
+        echo "${{ inputs.image }}" >> "${GITHUB_WORKSPACE}/.ci-images.txt"

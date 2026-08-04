@@ -1,0 +1,21 @@
+name: Build backend-python-fastapi image
+description: docker compose build + amd64 check for backend-python-fastapi
+
+inputs:
+  service:
+    required: false
+    default: backend-python-fastapi
+  image:
+    required: false
+    default: reference-app-copy-backend-python-fastapi:latest
+
+runs:
+  using: composite
+  steps:
+    - name: Compose build + arch check
+      shell: bash
+      run: |
+        set -euo pipefail
+        docker compose build "${{ inputs.service }}"
+        docker inspect "${{ inputs.image }}" --format '{{.Architecture}}' | grep -q amd64
+        echo "${{ inputs.image }}" >> "${GITHUB_WORKSPACE}/.ci-images.txt"

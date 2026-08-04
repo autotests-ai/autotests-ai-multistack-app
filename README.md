@@ -10,11 +10,11 @@ Production: [reference-app-copy.autotests.ai](https://reference-app-copy.autotes
 
 ```
 reference-app-copy/
-  frontend/          # UI by language → stack (one source per module)
-  backend/           # server by language → stack (+ scripts/)
-  tests/             # automation by language → runner
-  deploy/            # matrix, shared web, host nginx, smoke
-  .github/workflows/ # deploy.yml + test.yml
+  frontend/          # UI by language → stack (…/.github/actions for CI)
+  backend/           # server by language → stack (…/.github/actions/build|unit)
+  tests/             # automation (…/.github/actions/test-infra|prod-api)
+  deploy/            # matrix, shared web (+ web/.github/actions/build), host nginx, smoke
+  .github/workflows/ # deploy.yml / deploy_all.yml · test.yml / test_all.yml
 ```
 
 ### Naming convention
@@ -68,10 +68,10 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · CI: [`.github/workflows/test.yml`](
 
 | Job | Where |
 |-----|-------|
-| `unit_backend` | `backend/java/backend-java-spring/src/test/` |
-| `unit_backend_python` | `backend/python/backend-python-{flask,fastapi,django}/tests/` |
-| `test-infra` | `…/tests/testinfra/` (`@Layer("test-infra")` + `@Tag("test-infra")`) |
-| `component_rtl` | `frontend/typescript/frontend-typescript-react/src/test/` |
+| `unit_backend` | `backend/java/backend-java-spring/` (action `unit`) |
+| `unit_backend_python` | python backends — only via `test_all` / `include_python` |
+| `test-infra` | `tests/java/…` (action `test-infra`) |
+| `component_rtl` | `frontend/typescript/frontend-typescript-react/` (action `component`, off) |
 | `component_vue` | `frontend/typescript/frontend-typescript-vue/src/test/` |
 | `api` … `e2e` / `component_browser` / `visual` | `tests/java/tests-java-gradle-junit5-allure3-selenide/` |
 
@@ -142,11 +142,23 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8701/frontend-javasc
 | `BACKEND_FASTAPI_PORT` | `8821` |
 | `BACKEND_DJANGO_PORT` | `8822` |
 
-**CD:** [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) — `build` (images on GHA) → `deploy` (SSH `docker load` + `SKIP_BUILD=1` [`deploy/server-deploy.sh`](deploy/server-deploy.sh)).
+**CD (does not run autotests):**
 
-**Tests:** [`.github/workflows/test.yml`](.github/workflows/test.yml) — unit on PR/push; `prod_api` after successful Deploy (`workflow_run`).
+| Workflow | Role |
+|----------|------|
+| [`deploy.yml`](.github/workflows/deploy.yml) | Default CD on `push` main: build `backend-java-spring` + `web` via module composite actions → SSH load → compose up selected services |
+| [`deploy_all.yml`](.github/workflows/deploy_all.yml) | Manual: all active backends + web, then full [`deploy/server-deploy.sh`](deploy/server-deploy.sh) |
 
-Manual on host: `bash deploy/server-deploy.sh` (builds locally). CD path: `SKIP_BUILD=1 bash deploy/server-deploy.sh`.
+Stack build steps live next to modules, e.g. [`backend/java/backend-java-spring/.github/actions/build`](backend/java/backend-java-spring/.github/actions/build/action.yml).
+
+**Tests (separate from deploy):**
+
+| Workflow | Role |
+|----------|------|
+| [`test.yml`](.github/workflows/test.yml) | Default: java-spring `unit`, `test-infra`; `prod_api` after successful Deploy (`workflow_run`) |
+| [`test_all.yml`](.github/workflows/test_all.yml) | Manual: same + python backend unit matrix |
+
+Manual on host: `bash deploy/server-deploy.sh` (builds locally). CD `deploy_mode=all`: `SKIP_BUILD=1 bash deploy/server-deploy.sh`.
 
 ### GitHub secrets & variables
 

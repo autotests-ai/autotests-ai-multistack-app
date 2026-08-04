@@ -1,0 +1,17 @@
+name: prod_api layer
+description: Gradle testApi against reference_prod
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-java@v5
+      with:
+        distribution: temurin
+        java-version: "21"
+        cache: gradle
+        cache-dependency-path: tests/java/tests-java-gradle-junit5-allure3-selenide/**/*.gradle*
+
+    - name: Prod API
+      shell: bash
+      working-directory: tests/java/tests-java-gradle-junit5-allure3-selenide
+      run: ./gradlew testApi -Denv=reference_prod -DallureReportMode=none --no-daemon
