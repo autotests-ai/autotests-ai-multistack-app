@@ -5,6 +5,7 @@ One image for **all** active product UIs. No `/api` proxy.
 | Path | Source |
 |------|--------|
 | `/frontend-typescript-react/**` | Vite `dist/` + `UI_RUNTIME` overlay |
+| `/frontend-typescript-vue/**` | Vite `dist/` + `UI_RUNTIME` overlay |
 | `/frontend-javascript-vanilla/**` | static module + `UI_RUNTIME` overlay |
 | `/`, other | **404** |
 

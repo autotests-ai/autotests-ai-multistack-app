@@ -20,7 +20,7 @@ frontend/
   typescript/
     frontend-typescript-react/     # product + src/test/ (component_rtl)
     frontend-typescript-angular/   # product + src/test/ (slot)
-    frontend-typescript-vue/       # product + src/test/ (slot)
+    frontend-typescript-vue/       # product + src/test/ (component_vue)
     frontend-typescript-vanilla/   # product slot
 ```
 
@@ -42,7 +42,7 @@ https://{backend}.reference-app-copy.autotests.ai/{frontend}/
 - **One `web` image** packs all `status: active` mounts ([`deploy/matrix.yaml`](../deploy/matrix.yaml))
 - UI uses relative `/api/*` → whichever backend hostname you opened
 
-Active mounts in `web`: `frontend-typescript-react`, `frontend-javascript-vanilla`.  
+Active mounts in `web`: `frontend-typescript-react`, `frontend-typescript-vue`, `frontend-javascript-vanilla`.  
 Slots are not deployed until they have a buildable `dist/` / static tree.
 
 Host `/` is empty (404). `/api/**` is routed by edge (local) or host nginx (prod), not by the static image.

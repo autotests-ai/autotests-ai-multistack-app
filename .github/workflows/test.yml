@@ -41,6 +41,7 @@ env:
   TESTS_JAVA: tests/java/tests-java-gradle-junit5-allure3-selenide
   BACKEND_JAVA: backend/java/backend-java-spring
   FRONTEND_TS_REACT: frontend/typescript/frontend-typescript-react
+  FRONTEND_TS_VUE: frontend/typescript/frontend-typescript-vue
   FRONTEND_PREVIEW: frontend/_catalog/frontend-javascript-preview
 
 jobs:
@@ -104,6 +105,24 @@ jobs:
         with:
           node-version: "26"
       - name: Vitest + React Testing Library (src/test)
+        run: |
+          npm ci
+          npm test
+
+  component_vue:
+    name: component_vue
+    if: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: ${{ env.FRONTEND_TS_VUE }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "26"
+      - name: Vitest + Vue Testing Library (src/test)
         run: |
           npm ci
           npm test
