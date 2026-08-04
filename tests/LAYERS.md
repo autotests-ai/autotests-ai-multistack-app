@@ -42,7 +42,7 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 | `prod_e2e` | tests | same e2e | deferred | `testE2e` + `reference_prod_*` | prod + Selenoid |
 
 Active Java module: `tests/java/tests-java-gradle-junit5-allure3-selenide/`  
-Gradle slices SSOT: `build.gradle` → `layerTestSlices`.  
+Gradle profiles SSOT: `build.gradle` → `layerTestProfiles`.  
 Paths SSOT: `backend/scripts/paths.sh`. Module naming: [NAMING.md](NAMING.md).
 
 ## Why `unit_backend` and `test-infra`?

@@ -5,7 +5,7 @@ JaCoCo gates enforced in CI (`reference_github-pyramid` → `ci-pyramid` / `ci_p
 | Module | Scope | Line gate | Command |
 |--------|-------|-----------|---------|
 | `backend/` | Spring services, controllers, filters (excl. `ReferenceApplication`) | **100%** | `./gradlew test jacocoTestCoverageVerification` |
-| `tests/` test-infra slice | `ConfigReader`, `LayoutCss`, `TokensCss` | **100%** | `./gradlew testInfra jacocoTestInfraCoverageVerification -Denv=reference_ci_testinfra` |
+| `tests/` test-infra profile | `ConfigReader`, `LayoutCss`, `TokensCss` | **100%** | `./gradlew testInfra jacocoTestInfraCoverageVerification -Denv=reference_ci_testinfra` |
 
 ## HTML reports (local)
 
@@ -20,7 +20,7 @@ open build/reports/jacoco/jacocoTestInfraReport/html/index.html
 ## CI artifacts
 
 - `backend-jacoco` — backend HTML/XML
-- `pyramid-testinfra-jacoco` — test-infra slice HTML/XML
+- `pyramid-testinfra-jacoco` — test-infra profile HTML/XML
 
 ## SonarQube
 
