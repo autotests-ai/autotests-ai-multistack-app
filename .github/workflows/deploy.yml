@@ -1,6 +1,5 @@
-# Leaf deploy — called by ci.yml (main) or deploy_all.yml / workflow_dispatch.
-# Stacks: cat deploy/stack-matrix/{default,all} → GITHUB_OUTPUT
-#   default = java-spring + react; all = every active stack
+# Leaf deploy — called by ci.yml (main) or workflow_dispatch.
+# Stacks: cat deploy/stack-matrix → GITHUB_OUTPUT
 # (sync locally: python deploy/matrix_query.py sync-deploy-matrix).
 # Host logic SSOT: deploy/server-deploy.sh + deploy/matrix.yaml.
 # Does not run autotests (see test.yml / ci.yml).
@@ -9,26 +8,13 @@ name: reference-app-copy Deploy
 
 on:
   workflow_dispatch:
-    inputs:
-      deploy_mode:
-        description: "default (java-spring+react) | all — file under deploy/stack-matrix/"
-        required: false
-        default: default
   workflow_call:
-    inputs:
-      deploy_mode:
-        type: string
-        required: false
-        default: default
 
 run-name: reference-app-copy deploy (${{ github.ref_name }} @ ${{ github.sha }})
 
 concurrency:
   group: deploy-reference-app-copy-production
   cancel-in-progress: false
-
-env:
-  DEPLOY_MODE: ${{ inputs.deploy_mode || 'default' }}
 
 jobs:
   resolve:
@@ -45,7 +31,7 @@ jobs:
 
       - name: Resolve target stacks
         id: stacks
-        run: cat "deploy/stack-matrix/${DEPLOY_MODE}" >> "$GITHUB_OUTPUT"
+        run: cat deploy/stack-matrix >> "$GITHUB_OUTPUT"
 
   build:
     needs: resolve
@@ -156,7 +142,7 @@ jobs:
           username: ${{ env.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           command_timeout: 15m
-          envs: BACKENDS,FRONTENDS,DEPLOY_MODE
+          envs: BACKENDS,FRONTENDS
           script: |
             set -euo pipefail
             APP_DIR="${APP_DIR:-/home/reference_app_copy/reference-app-copy}"

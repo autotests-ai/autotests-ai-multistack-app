@@ -14,7 +14,7 @@ from render_vhosts import load_matrix  # noqa: E402
 
 DEFAULT_MATRIX = ROOT / "deploy" / "matrix.yaml"
 DEPLOY_MATRIX_JSON = ROOT / "deploy" / "deploy-matrix.json"
-STACK_MATRIX_DIR = ROOT / "deploy" / "stack-matrix"
+STACK_MATRIX_PATH = ROOT / "deploy" / "stack-matrix"
 DEFAULT_BACKENDS = "backend-java-spring"
 DEFAULT_FRONTENDS = "frontend-typescript-react"
 ACTIVE_BACKEND = ("active", "stub")
@@ -151,11 +151,11 @@ def cmd_build_matrix(matrix: dict, args: argparse.Namespace) -> int:
 
 
 def cmd_sync_deploy_matrix(matrix: dict, args: argparse.Namespace) -> int:
-    """Write deploy-matrix.json + deploy/stack-matrix/{default,all} for GHA cat → GITHUB_OUTPUT."""
+    """Write deploy-matrix.json + deploy/stack-matrix (GHA cat → GITHUB_OUTPUT)."""
     backends_all = resolve_backends(matrix, None, "all")
     frontends_all = resolve_frontends(matrix, None, "all")
-    backends_default = resolve_backends(matrix, DEFAULT_BACKENDS, "default")
-    frontends_default = resolve_frontends(matrix, DEFAULT_FRONTENDS, "default")
+    backends_deploy = resolve_backends(matrix, DEFAULT_BACKENDS, "default")
+    frontends_deploy = resolve_frontends(matrix, DEFAULT_FRONTENDS, "default")
     targets = []
     for row in backends_all:
         targets.append({"kind": "backend", **_build_row(row)})
@@ -163,10 +163,7 @@ def cmd_sync_deploy_matrix(matrix: dict, args: argparse.Namespace) -> int:
         targets.append({"kind": "frontend", **_build_row(row)})
     if not targets:
         raise SystemExit("FAIL: empty deploy-matrix targets")
-    selections = {
-        "default": _selection(backends_default, frontends_default),
-        "all": _selection(backends_all, frontends_all),
-    }
+    selection = _selection(backends_deploy, frontends_deploy)
     payload = {
         "source": "deploy/matrix.yaml",
         "defaults": {
@@ -178,21 +175,20 @@ def cmd_sync_deploy_matrix(matrix: dict, args: argparse.Namespace) -> int:
             "frontends": [row["id"] for row in frontends_all],
         },
         "targets": targets,
-        "selections": selections,
+        "selection": selection,
     }
     out = args.out
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-    stack_dir = args.stack_matrix
-    stack_dir.mkdir(parents=True, exist_ok=True)
-    for mode, sel in selections.items():
-        (stack_dir / mode).write_text(_github_output_text(sel), encoding="utf-8")
-    sel_def = selections["default"]
-    sel_all = selections["all"]
+    stack_path = args.stack_matrix
+    if stack_path.is_dir():
+        raise SystemExit(f"FAIL: {stack_path} is a directory — remove it; expected a file")
+    stack_path.parent.mkdir(parents=True, exist_ok=True)
+    stack_path.write_text(_github_output_text(selection), encoding="utf-8")
     print(
-        f"wrote {out.relative_to(ROOT)} + {stack_dir.relative_to(ROOT)}/{{default,all}} "
-        f"(default {len(sel_def['matrix'])} · all {len(sel_all['matrix'])} targets; "
-        f"{len(payload['all']['backends'])} be · {len(payload['all']['frontends'])} fe)"
+        f"wrote {out.relative_to(ROOT)} + {stack_path.relative_to(ROOT)} "
+        f"({len(selection['matrix'])} deploy targets; "
+        f"{len(payload['all']['backends'])} be · {len(payload['all']['frontends'])} fe in inventory)"
     )
     return 0
 
@@ -229,10 +225,10 @@ def main() -> int:
 
     p_sync = sub.add_parser(
         "sync-deploy-matrix",
-        help="Regenerate deploy-matrix.json + stack-matrix/{default,all} (commit both)",
+        help="Regenerate deploy-matrix.json + deploy/stack-matrix (commit both)",
     )
     p_sync.add_argument("--out", type=Path, default=DEPLOY_MATRIX_JSON)
-    p_sync.add_argument("--stack-matrix", type=Path, default=STACK_MATRIX_DIR)
+    p_sync.add_argument("--stack-matrix", type=Path, default=STACK_MATRIX_PATH)
     p_sync.set_defaults(func=cmd_sync_deploy_matrix)
 
     args = parser.parse_args()

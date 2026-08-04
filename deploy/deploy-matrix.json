@@ -80,80 +80,23 @@
       "image": "reference-app-copy-frontend-typescript-vue:latest"
     }
   ],
-  "selections": {
-    "default": {
-      "backends": "backend-java-spring",
-      "frontends": "frontend-typescript-react",
-      "images": "reference-app-copy-backend-java-spring:latest,reference-app-copy-frontend-typescript-react:latest",
-      "matrix": [
-        {
-          "id": "backend-java-spring",
-          "module": "backend/java/backend-java-spring",
-          "compose_service": "backend-java-spring",
-          "image": "reference-app-copy-backend-java-spring:latest"
-        },
-        {
-          "id": "frontend-typescript-react",
-          "module": "frontend/typescript/frontend-typescript-react",
-          "compose_service": "frontend-typescript-react",
-          "image": "reference-app-copy-frontend-typescript-react:latest"
-        }
-      ]
-    },
-    "all": {
-      "backends": "backend-java-spring,backend-kotlin-spring,backend-python-flask,backend-python-fastapi,backend-python-django",
-      "frontends": "frontend-javascript-vanilla,frontend-typescript-react,frontend-typescript-vue",
-      "images": "reference-app-copy-backend-java-spring:latest,reference-app-copy-backend-kotlin-spring:latest,reference-app-copy-backend-python-flask:latest,reference-app-copy-backend-python-fastapi:latest,reference-app-copy-backend-python-django:latest,reference-app-copy-frontend-javascript-vanilla:latest,reference-app-copy-frontend-typescript-react:latest,reference-app-copy-frontend-typescript-vue:latest",
-      "matrix": [
-        {
-          "id": "backend-java-spring",
-          "module": "backend/java/backend-java-spring",
-          "compose_service": "backend-java-spring",
-          "image": "reference-app-copy-backend-java-spring:latest"
-        },
-        {
-          "id": "backend-kotlin-spring",
-          "module": "backend/kotlin/backend-kotlin-spring",
-          "compose_service": "backend-kotlin-spring",
-          "image": "reference-app-copy-backend-kotlin-spring:latest"
-        },
-        {
-          "id": "backend-python-flask",
-          "module": "backend/python/backend-python-flask",
-          "compose_service": "backend-python-flask",
-          "image": "reference-app-copy-backend-python-flask:latest"
-        },
-        {
-          "id": "backend-python-fastapi",
-          "module": "backend/python/backend-python-fastapi",
-          "compose_service": "backend-python-fastapi",
-          "image": "reference-app-copy-backend-python-fastapi:latest"
-        },
-        {
-          "id": "backend-python-django",
-          "module": "backend/python/backend-python-django",
-          "compose_service": "backend-python-django",
-          "image": "reference-app-copy-backend-python-django:latest"
-        },
-        {
-          "id": "frontend-javascript-vanilla",
-          "module": "frontend/javascript/frontend-javascript-vanilla",
-          "compose_service": "frontend-javascript-vanilla",
-          "image": "reference-app-copy-frontend-javascript-vanilla:latest"
-        },
-        {
-          "id": "frontend-typescript-react",
-          "module": "frontend/typescript/frontend-typescript-react",
-          "compose_service": "frontend-typescript-react",
-          "image": "reference-app-copy-frontend-typescript-react:latest"
-        },
-        {
-          "id": "frontend-typescript-vue",
-          "module": "frontend/typescript/frontend-typescript-vue",
-          "compose_service": "frontend-typescript-vue",
-          "image": "reference-app-copy-frontend-typescript-vue:latest"
-        }
-      ]
-    }
+  "selection": {
+    "backends": "backend-java-spring",
+    "frontends": "frontend-typescript-react",
+    "images": "reference-app-copy-backend-java-spring:latest,reference-app-copy-frontend-typescript-react:latest",
+    "matrix": [
+      {
+        "id": "backend-java-spring",
+        "module": "backend/java/backend-java-spring",
+        "compose_service": "backend-java-spring",
+        "image": "reference-app-copy-backend-java-spring:latest"
+      },
+      {
+        "id": "frontend-typescript-react",
+        "module": "frontend/typescript/frontend-typescript-react",
+        "compose_service": "frontend-typescript-react",
+        "image": "reference-app-copy-frontend-typescript-react:latest"
+      }
+    ]
   }
 }
