@@ -10,9 +10,9 @@ Production: [reference-app-copy.autotests.ai](https://reference-app-copy.autotes
 
 ```
 reference-app-copy/
-  frontend/          # UI by language → stack (Dockerfile + .github/actions)
+  frontend/          # UI by language → stack (…/.github/actions/build|component)
   backend/           # server by language → stack (…/.github/actions/build|unit)
-  tests/             # automation (…/.github/actions/test-infra|prod-api)
+  tests/             # automation (…/.github/actions/<layer>) — see tests/LAYERS.md
   deploy/            # matrix, host nginx, smoke
   .github/workflows/ # ci.yml → test.yml + deploy.yml · deploy_all / test_all
 ```
@@ -162,7 +162,7 @@ Ports, compose service ids, and health `expect` strings — **SSOT** [`deploy/ma
 | [`test.yml`](.github/workflows/test.yml) | Leaf tests: `layers=ci` (unit + test-infra) · `prod-only` (`prod_api`) · `all-enabled` (both) |
 | [`test_all.yml`](.github/workflows/test_all.yml) | Manual: `test.yml` + python backend unit matrix |
 
-Module build actions (local/docs): e.g. [`backend/java/backend-java-spring/.github/actions/build`](backend/java/backend-java-spring/.github/actions/build/action.yml). CD uses `deploy/matrix_query.py build-matrix` + compose build per stack.
+Module actions live next to each stack (`build` / `unit` / `component` / test `<layer>`). Inventory: [tests/LAYERS.md](tests/LAYERS.md) · example build: [`backend/java/backend-java-spring/.github/actions/build`](backend/java/backend-java-spring/.github/actions/build/action.yml). CD uses `deploy/matrix_query.py build-matrix` + compose build per stack.
 
 Manual on host: `bash deploy/server-deploy.sh` (builds locally). CD: `SKIP_BUILD=1 bash deploy/server-deploy.sh`. All active stacks: `DEPLOY_MODE=all SKIP_BUILD=1 bash deploy/server-deploy.sh`.
 

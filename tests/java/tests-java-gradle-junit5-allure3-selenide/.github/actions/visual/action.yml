@@ -1,0 +1,17 @@
+name: visual layer
+description: Gradle testVisual baselines for tests-java-gradle-junit5-allure3-selenide
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-java@v5
+      with:
+        distribution: temurin
+        java-version: "21"
+        cache: gradle
+        cache-dependency-path: tests/java/tests-java-gradle-junit5-allure3-selenide/**/*.gradle*
+
+    - name: Visual baselines
+      shell: bash
+      working-directory: tests/java/tests-java-gradle-junit5-allure3-selenide
+      run: ./gradlew testVisual -Denv=reference_ci_visual -DallureReportMode=none -Dheadless=true --no-daemon

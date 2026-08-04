@@ -37,11 +37,6 @@ concurrency:
   group: test-reference-app-copy-${{ github.ref }}-${{ inputs.layers || 'all-enabled' }}
   cancel-in-progress: true
 
-env:
-  TESTS_JAVA: tests/java/tests-java-gradle-junit5-allure3-selenide
-  FRONTEND_TS_VUE: frontend/typescript/frontend-typescript-vue
-  FRONTEND_PREVIEW: frontend/_catalog/frontend-javascript-preview
-
 jobs:
   unit_backend:
     name: unit_backend
@@ -74,20 +69,9 @@ jobs:
             path: backend/python/backend-python-fastapi
           - stack: django
             path: backend/python/backend-python-django
-    defaults:
-      run:
-        working-directory: ${{ matrix.path }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: ${{ matrix.path }}/requirements.txt
-      - name: Install + pytest
-        run: |
-          python -m pip install -r requirements.txt
-          python -m pytest
+      - uses: ./${{ matrix.path }}/.github/actions/unit
 
   test-infra:
     name: test-infra
@@ -115,18 +99,9 @@ jobs:
     if: false
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: ${{ env.FRONTEND_TS_VUE }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "26"
-      - name: Vitest + Vue Testing Library (src/test)
-        run: |
-          npm ci
-          npm test
+      - uses: ./frontend/typescript/frontend-typescript-vue/.github/actions/component
 
   compose_up:
     name: compose_up
@@ -147,18 +122,9 @@ jobs:
     needs: [compose_up]
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    defaults:
-      run:
-        working-directory: ${{ env.TESTS_JAVA }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: "21"
-          cache: gradle
-      - name: API layer
-        run: ./gradlew testApi -Denv=reference_ci -DallureReportMode=none --no-daemon
+      - uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/api
 
   integration:
     name: integration
@@ -166,18 +132,9 @@ jobs:
     needs: [compose_up]
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    defaults:
-      run:
-        working-directory: ${{ env.TESTS_JAVA }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: "21"
-          cache: gradle
-      - name: Integration (mount / layout)
-        run: ./gradlew testIntegration -Denv=reference_ci -DallureReportMode=none -Dheadless=true --no-daemon
+      - uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/integration
 
   component_browser:
     name: component_browser
@@ -185,28 +142,9 @@ jobs:
     needs: [unit_backend, test-infra]
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    defaults:
-      run:
-        working-directory: ${{ env.TESTS_JAVA }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: "21"
-          cache: gradle
-      - name: Catalog preview :3000
-        working-directory: ${{ env.FRONTEND_PREVIEW }}
-        run: |
-          python -m http.server 3000 &
-          for i in $(seq 1 30); do
-            curl -sf http://127.0.0.1:3000/components.html >/dev/null && exit 0
-            sleep 1
-          done
-          echo "preview failed on :3000" >&2
-          exit 1
-      - name: Component browser (DS catalog)
-        run: ./gradlew testComponent -Denv=reference_ci -DallureReportMode=none -Dheadless=true --no-daemon
+      - uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/component-browser
 
   e2e:
     name: e2e
@@ -214,18 +152,9 @@ jobs:
     needs: [api]
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    defaults:
-      run:
-        working-directory: ${{ env.TESTS_JAVA }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: "21"
-          cache: gradle
-      - name: E2E smoke (local)
-        run: ./gradlew testE2e -Denv=reference_ci_e2e -DallureReportMode=none -Dheadless=true --no-daemon
+      - uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/e2e
 
   visual:
     name: visual
@@ -233,36 +162,18 @@ jobs:
     needs: [compose_up]
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    defaults:
-      run:
-        working-directory: ${{ env.TESTS_JAVA }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: "21"
-          cache: gradle
-      - name: Visual baselines
-        run: ./gradlew testVisual -Denv=reference_ci_visual -DallureReportMode=none -Dheadless=true --no-daemon
+      - uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/visual
 
   manual:
     name: manual
     if: false
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: ${{ env.TESTS_JAVA }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: "21"
-          cache: gradle
-      - name: Manual stubs
-        run: ./gradlew testManual -Denv=reference_ci -DallureReportMode=none --no-daemon
+      - uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/manual
 
   prod_api:
     name: prod_api
@@ -282,15 +193,24 @@ jobs:
     needs: [prod_api]
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    defaults:
-      run:
-        working-directory: ${{ env.TESTS_JAVA }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: "21"
-          cache: gradle
-      - name: Prod E2E smoke (Selenoid)
-        run: ./gradlew testE2e -Denv=reference_prod_e2e -DallureReportMode=none --no-daemon
+      - uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/prod-e2e
+
+  e2e_playwright:
+    name: e2e_playwright
+    if: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./tests/javascript/tests-javascript-playwright/.github/actions/e2e
+
+  e2e_python:
+    name: e2e_python
+    if: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./tests/python/tests-python-selenium/.github/actions/e2e

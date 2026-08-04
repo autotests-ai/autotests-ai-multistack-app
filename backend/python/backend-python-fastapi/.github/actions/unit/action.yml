@@ -1,0 +1,18 @@
+name: Unit tests backend-python-fastapi
+description: pip install + pytest for backend-python-fastapi
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v6
+      with:
+        python-version: "3.12"
+        cache: pip
+        cache-dependency-path: backend/python/backend-python-fastapi/requirements.txt
+
+    - name: Install + pytest
+      shell: bash
+      working-directory: backend/python/backend-python-fastapi
+      run: |
+        python -m pip install -r requirements.txt
+        python -m pytest

@@ -80,10 +80,24 @@ Not duplicates — different failure modes.
 
 ## Alt runners (side stacks)
 
-| Module | Role |
-|--------|------|
-| `tests/javascript/tests-javascript-playwright/` | e2e smoke, another language (**active**) |
-| `tests/python/tests-python-selenium/` | e2e smoke, pytest (**active**) |
-| `tests/typescript/…`, `kotlin/…`, `go/…`, Cypress, … | slots in [`deploy/matrix.yaml`](../deploy/matrix.yaml) |
+| Module | Role | Composite action | Job (`if: false`) |
+|--------|------|------------------|-------------------|
+| `tests/javascript/tests-javascript-playwright/` | e2e smoke, another language (**active**) | `.github/actions/e2e` | `e2e_playwright` |
+| `tests/python/tests-python-selenium/` | e2e smoke, pytest (**active**) | `.github/actions/e2e` | `e2e_python` |
+| `tests/typescript/…`, `kotlin/…`, `go/…`, Cypress, … | slots in [`deploy/matrix.yaml`](../deploy/matrix.yaml) | — | — |
 
-Same app under test; not separate pyramid layers — parallel teaching stacks ([NAMING.md](NAMING.md)).
+Same app under test; not separate pyramid layers — parallel teaching stacks ([NAMING.md](NAMING.md)). Enable with LAYERS block 3+.
+
+## Composite actions (job = checkout + uses)
+
+Канон: layer logic lives next to the module under `.github/actions/<layer>/`. Orchestrator: [`test.yml`](../.github/workflows/test.yml).
+
+| Zone / module | Actions |
+|---------------|---------|
+| `backend/java/backend-java-spring/` | `build`, `unit` |
+| `backend/python/backend-python-{flask,fastapi,django}/` | `build`, `unit` |
+| `frontend/typescript/frontend-typescript-react/` | `build`, `component` |
+| `frontend/typescript/frontend-typescript-vue/` | `build`, `component` |
+| `tests/java/tests-java-gradle-junit5-allure3-selenide/` | `test-infra`, `api`, `integration`, `component-browser`, `e2e`, `visual`, `manual`, `prod-api`, `prod-e2e` |
+| `tests/javascript/tests-javascript-playwright/` | `e2e` |
+| `tests/python/tests-python-selenium/` | `e2e` |
