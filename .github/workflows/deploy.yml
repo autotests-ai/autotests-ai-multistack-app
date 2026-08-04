@@ -1,4 +1,5 @@
 # Leaf deploy — called by ci.yml (main) or deploy_all.yml / workflow_dispatch.
+# CD matrix artifact: deploy/gha-cd.json (sync locally: python deploy/matrix_query.py sync-gha).
 # Host logic SSOT: deploy/server-deploy.sh + deploy/matrix.yaml.
 # Does not run autotests (see test.yml / ci.yml).
 
@@ -62,16 +63,49 @@ jobs:
         id: stacks
         run: |
           set -euo pipefail
+          ARTIFACT=deploy/gha-cd.json
+          if [[ ! -f "$ARTIFACT" ]]; then
+            echo "::error::Missing $ARTIFACT — run locally: python deploy/matrix_query.py sync-gha"
+            exit 1
+          fi
           MODE="${DEPLOY_MODE}"
           if [[ "${MODE}" == "all" ]]; then
-            BACKENDS="$(python deploy/matrix_query.py ids backends --mode all --csv)"
-            FRONTENDS="$(python deploy/matrix_query.py ids frontends --mode all --csv)"
+            BACKENDS="$(jq -r '.all.backends | join(",")' "$ARTIFACT")"
+            FRONTENDS="$(jq -r '.all.frontends | join(",")' "$ARTIFACT")"
           fi
-          MATRIX_JSON="$(python deploy/matrix_query.py build-matrix \
-            --mode default \
-            --backends "${BACKENDS}" \
-            --frontends "${FRONTENDS}")"
-          IMAGES="$(python -c 'import json,sys; print(",".join(r["image"] for r in json.loads(sys.argv[1])))' "${MATRIX_JSON}")"
+          MATRIX_JSON="$(
+            jq -c --arg b "$BACKENDS" --arg f "$FRONTENDS" '
+              def csv_ids($s):
+                ($s // "") | split(",") | map(gsub("^\\s+|\\s+$";"")) | map(select(length > 0));
+              (csv_ids($b)) as $bids
+              | (csv_ids($f)) as $fids
+              | ([.targets[] | select(.kind == "backend") | .id]) as $known_b
+              | ([.targets[] | select(.kind == "frontend") | .id]) as $known_f
+              | ($bids - $known_b) as $miss_b
+              | ($fids - $known_f) as $miss_f
+              | if ($miss_b | length) > 0 then
+                  error("unknown backend id(s): \($miss_b | join(", "))")
+                elif ($miss_f | length) > 0 then
+                  error("unknown frontend id(s): \($miss_f | join(", "))")
+                elif (($bids | length) == 0) or (($fids | length) == 0) then
+                  error("empty backends/frontends selection")
+                else
+                  [
+                    .targets[]
+                    | select(
+                        (.kind == "backend" and (.id as $id | $bids | index($id) != null))
+                        or (.kind == "frontend" and (.id as $id | $fids | index($id) != null))
+                      )
+                    | {id, module, compose_service, image}
+                  ]
+                end
+            ' "$ARTIFACT"
+          )"
+          IMAGES="$(jq -r '[.[].image] | join(",")' <<<"${MATRIX_JSON}")"
+          test -n "$IMAGES" || {
+            echo "::error::Resolved empty image list"
+            exit 1
+          }
           {
             echo "BACKENDS=${BACKENDS}"
             echo "FRONTENDS=${FRONTENDS}"
@@ -200,7 +234,7 @@ jobs:
             set -euo pipefail
             APP_DIR="${APP_DIR:-/home/reference_app_copy/reference-app-copy}"
             cd "$APP_DIR"
-            # Sync first so this run executes the commit's server-deploy.sh / matrix_query.py
+            # Sync first so this run executes the commit's server-deploy.sh
             git fetch --all
             git reset --hard origin/main
             SKIP_BUILD=1 bash deploy/server-deploy.sh

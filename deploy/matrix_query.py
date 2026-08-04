@@ -13,6 +13,9 @@ sys.path.insert(0, str(ROOT / "deploy" / "nginx"))
 from render_vhosts import load_matrix  # noqa: E402
 
 DEFAULT_MATRIX = ROOT / "deploy" / "matrix.yaml"
+GHA_CD_JSON = ROOT / "deploy" / "gha-cd.json"
+DEFAULT_BACKENDS = "backend-java-spring"
+DEFAULT_FRONTENDS = "frontend-typescript-react"
 ACTIVE_BACKEND = ("active", "stub")
 ACTIVE_FRONTEND = ("active",)
 
@@ -109,13 +112,46 @@ def _build_row(row: dict) -> dict:
 
 
 def cmd_build_matrix(matrix: dict, args: argparse.Namespace) -> int:
-    """JSON array for GHA strategy.matrix.include (compose build targets)."""
+    """JSON array for compose build targets (local / debug)."""
     backends = resolve_backends(matrix, args.backends, args.mode)
     frontends = resolve_frontends(matrix, args.frontends, args.mode)
     rows = [_build_row(row) for row in backends + frontends]
     if not rows:
         raise SystemExit("FAIL: empty build matrix")
     print(json.dumps(rows))
+    return 0
+
+
+def cmd_sync_gha(matrix: dict, args: argparse.Namespace) -> int:
+    """Write deploy/gha-cd.json for GHA (no Python in workflows)."""
+    backends = resolve_backends(matrix, None, "all")
+    frontends = resolve_frontends(matrix, None, "all")
+    targets = []
+    for row in backends:
+        targets.append({"kind": "backend", **_build_row(row)})
+    for row in frontends:
+        targets.append({"kind": "frontend", **_build_row(row)})
+    if not targets:
+        raise SystemExit("FAIL: empty gha-cd targets")
+    payload = {
+        "source": "deploy/matrix.yaml",
+        "defaults": {
+            "backends": _csv_ids(DEFAULT_BACKENDS),
+            "frontends": _csv_ids(DEFAULT_FRONTENDS),
+        },
+        "all": {
+            "backends": [row["id"] for row in backends],
+            "frontends": [row["id"] for row in frontends],
+        },
+        "targets": targets,
+    }
+    out = args.out
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    print(
+        f"wrote {out.relative_to(ROOT)} "
+        f"({len(payload['all']['backends'])} be · {len(payload['all']['frontends'])} fe)"
+    )
     return 0
 
 
@@ -133,21 +169,28 @@ def main() -> int:
 
     p_compose = sub.add_parser("compose-services", help="Compose service names to up")
     p_compose.add_argument("--mode", choices=("default", "all"), default="default")
-    p_compose.add_argument("--backends", default="backend-java-spring")
-    p_compose.add_argument("--frontends", default="frontend-typescript-react")
+    p_compose.add_argument("--backends", default=DEFAULT_BACKENDS)
+    p_compose.add_argument("--frontends", default=DEFAULT_FRONTENDS)
     p_compose.set_defaults(func=cmd_compose_services)
 
     p_health = sub.add_parser("health", help="TSV health targets from matrix")
     p_health.add_argument("--mode", choices=("default", "all"), default="default")
-    p_health.add_argument("--backends", default="backend-java-spring")
-    p_health.add_argument("--frontends", default="frontend-typescript-react")
+    p_health.add_argument("--backends", default=DEFAULT_BACKENDS)
+    p_health.add_argument("--frontends", default=DEFAULT_FRONTENDS)
     p_health.set_defaults(func=cmd_health)
 
-    p_build = sub.add_parser("build-matrix", help="JSON matrix for CD image builds")
+    p_build = sub.add_parser("build-matrix", help="JSON matrix for CD image builds (local)")
     p_build.add_argument("--mode", choices=("default", "all"), default="default")
-    p_build.add_argument("--backends", default="backend-java-spring")
-    p_build.add_argument("--frontends", default="frontend-typescript-react")
+    p_build.add_argument("--backends", default=DEFAULT_BACKENDS)
+    p_build.add_argument("--frontends", default=DEFAULT_FRONTENDS)
     p_build.set_defaults(func=cmd_build_matrix)
+
+    p_sync = sub.add_parser(
+        "sync-gha",
+        help="Regenerate deploy/gha-cd.json after matrix.yaml changes (commit the JSON)",
+    )
+    p_sync.add_argument("--out", type=Path, default=GHA_CD_JSON)
+    p_sync.set_defaults(func=cmd_sync_gha)
 
     args = parser.parse_args()
     matrix = load_matrix(args.matrix)
