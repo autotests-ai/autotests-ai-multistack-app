@@ -1,5 +1,5 @@
 # Leaf deploy — called by ci.yml (main) or deploy_all.yml / workflow_dispatch.
-# Deploy matrix artifact: deploy/deploy-matrix.json → selections.{default,all}
+# Stacks: cat deploy/gha-outputs/{default,all} → GITHUB_OUTPUT
 # (sync locally: python deploy/matrix_query.py sync-deploy-matrix).
 # Host logic SSOT: deploy/server-deploy.sh + deploy/matrix.yaml.
 # Does not run autotests (see test.yml / ci.yml).
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       deploy_mode:
-        description: "default | all — picks selections.* from deploy-matrix.json"
+        description: "default | all — file under deploy/gha-outputs/"
         required: false
         default: default
   workflow_call:
@@ -44,7 +44,7 @@ jobs:
 
       - name: Resolve target stacks
         id: stacks
-        run: python deploy/matrix_query.py gha-resolve --mode "$DEPLOY_MODE"
+        run: cat "deploy/gha-outputs/${DEPLOY_MODE}" >> "$GITHUB_OUTPUT"
 
   build:
     needs: resolve

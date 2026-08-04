@@ -1,6 +1,6 @@
 # SSOT: backend path × frontend path matrix for reference-app-copy.
 # After edits: python deploy/matrix_query.py sync-deploy-matrix  → commit deploy/deploy-matrix.json
-# (GHA: python deploy/matrix_query.py gha-resolve — selections.default|all).
+# (GHA: cat deploy/gha-outputs/{default,all} → GITHUB_OUTPUT).
 # URL: https://{public_host}/{backend}/{frontend}/
 #      https://{public_host}/{backend}/api/
 # First path segment → API upstream; second → per-frontend container upstream.

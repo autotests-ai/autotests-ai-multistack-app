@@ -1,0 +1,6 @@
+backends=backend-java-spring
+frontends=frontend-typescript-react
+images=reference-app-copy-backend-java-spring:latest,reference-app-copy-frontend-typescript-react:latest
+matrix<<GHA_MATRIX_EOF
+[{"id":"backend-java-spring","module":"backend/java/backend-java-spring","compose_service":"backend-java-spring","image":"reference-app-copy-backend-java-spring:latest"},{"id":"frontend-typescript-react","module":"frontend/typescript/frontend-typescript-react","compose_service":"frontend-typescript-react","image":"reference-app-copy-frontend-typescript-react:latest"}]
+GHA_MATRIX_EOF
