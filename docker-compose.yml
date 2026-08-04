@@ -44,6 +44,7 @@ services:
       args:
         UI_MODULE: ${UI_MODULE:-frontend/javascript/vanilla/frontend_javascript_vanilla}
         UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend_javascript_app}
+        UI_MOUNT: ${UI_MOUNT:-frontend_typescript_react}
     restart: unless-stopped
     depends_on:
       - backend

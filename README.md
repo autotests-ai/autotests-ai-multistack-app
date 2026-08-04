@@ -40,7 +40,7 @@ Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/N
 | **tests/python/** | `tests_python_selenium` | playwright, … |
 
 **Prod routing:** `https://{backend}.reference-app-copy.autotests.ai/{frontend}/`  
-Current backend host: [backend-java-spring.reference-app-copy.autotests.ai](https://backend-java-spring.reference-app-copy.autotests.ai) (hyphens in DNS). Path matrix for frontends — later.
+Current: [backend-java-spring…/frontend_typescript_react/](https://backend-java-spring.reference-app-copy.autotests.ai/frontend_typescript_react/) (hyphens in DNS; host `/` empty).
 
 Path SSOT: `backend/scripts/paths.sh`
 
@@ -60,17 +60,18 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · CI: [`.github/workflows/test.yml`](
 ```bash
 docker compose up -d --build
 curl -fsS http://localhost:8080/api/health
-curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/login
+curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/frontend_typescript_react/
+curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/   # 404 — empty root
 ```
 
 - `backend` — Spring JSON API only (`/api/**`)
-- `web` — nginx serves `frontend/` and proxies `/api` → backend
+- `web` — nginx serves UI at `/frontend_typescript_react/` and proxies `/api` → backend; host `/` is empty (404)
 
-Switch UI stack via compose `UI_MODULE` / `UI_RUNTIME` (SPA: point at `dist/`).
+Switch UI stack via compose `UI_MODULE` / `UI_RUNTIME` / `UI_MOUNT` (SPA: point at `dist/`).
 
 ## Deploy
 
-**Production URL:** https://backend-java-spring.reference-app-copy.autotests.ai
+**Production URL:** https://backend-java-spring.reference-app-copy.autotests.ai/frontend_typescript_react/
 
 | Setting | Value |
 |---------|-------|
