@@ -88,7 +88,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/   # 404
 | `web` | shared static UIs only (no `/api`) |
 | `backend-java-spring` | Spring JSON API |
 | `backend-python-flask` | health stub for routing demos |
-| `postgres` | one instance, DB per backend (`reference_app_java`, …) |
+| `postgres` | one instance, DB per backend (`reference_app_java_spring`, `reference_app_python_flask`, …) |
 
 ## Deploy
 

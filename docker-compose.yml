@@ -41,7 +41,7 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: reference_app_java
+      DB_NAME: reference_app_java_spring
       DB_USER: reference
       DB_PASSWORD: reference
       SERVER_PORT: 8080

@@ -29,7 +29,7 @@ backends:
     image: reference-app-copy-backend-java-spring:latest
     internal_port: 8080
     publish_port: 8810
-    db_name: reference_app_java
+    db_name: reference_app_java_spring
     health_service: reference-app-copy
     local_host: backend-java-spring.localhost
     public_host: backend-java-spring.reference-app-copy.autotests.ai
@@ -43,7 +43,7 @@ backends:
     image: reference-app-copy-backend-python-flask:latest
     internal_port: 8080
     publish_port: 8811
-    db_name: reference_app_flask
+    db_name: reference_app_python_flask
     health_service: backend-python-flask
     local_host: backend-python-flask.localhost
     public_host: backend-python-flask.reference-app-copy.autotests.ai
@@ -57,7 +57,7 @@ backends:
     image: reference-app-copy-backend-python-fastapi:latest
     internal_port: 8080
     publish_port: 8812
-    db_name: reference_app_fastapi
+    db_name: reference_app_python_fastapi
     health_service: backend-python-fastapi
     local_host: backend-python-fastapi.localhost
     public_host: backend-python-fastapi.reference-app-copy.autotests.ai
@@ -71,7 +71,7 @@ backends:
     image: reference-app-copy-backend-python-django:latest
     internal_port: 8080
     publish_port: 8813
-    db_name: reference_app_django
+    db_name: reference_app_python_django
     health_service: backend-python-django
     local_host: backend-python-django.localhost
     public_host: backend-python-django.reference-app-copy.autotests.ai
@@ -85,7 +85,7 @@ backends:
     image: reference-app-copy-backend-kotlin-spring:latest
     internal_port: 8080
     publish_port: 8814
-    db_name: reference_app_kotlin
+    db_name: reference_app_kotlin_spring
     health_service: backend-kotlin-spring
     local_host: backend-kotlin-spring.localhost
     public_host: backend-kotlin-spring.reference-app-copy.autotests.ai
