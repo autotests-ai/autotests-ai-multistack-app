@@ -104,6 +104,20 @@ backends:
     local_host: backend-go-gin.localhost
     public_host: backend-go-gin.reference-app-copy.autotests.ai
 
+  - id: backend-go-stdlib
+    status: slot
+    language: go
+    module: backend/go/backend-go-stdlib
+    compose_service: backend-go-stdlib
+    compose_profile: go-stdlib
+    image: reference-app-copy-backend-go-stdlib:latest
+    internal_port: 8080
+    publish_port: 8816
+    db_name: reference_app_go_stdlib
+    health_service: backend-go-stdlib
+    local_host: backend-go-stdlib.localhost
+    public_host: backend-go-stdlib.reference-app-copy.autotests.ai
+
 frontends:
   - id: frontend-typescript-react
     status: active
@@ -142,7 +156,7 @@ frontends:
     mount: frontend-typescript-angular
 
   - id: frontend-typescript-vue
-    status: slot
+    status: active
     kind: vite
     module: frontend/typescript/frontend-typescript-vue
     mount: frontend-typescript-vue

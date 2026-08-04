@@ -13,7 +13,8 @@ backend/
     backend-python-fastapi/    # slot
     backend-python-django/     # slot
   go/
-    backend-go-gin/            # slot (Gin)
+    backend-go-gin/            # slot (Gin — product REST)
+    backend-go-stdlib/         # slot (net/http — Selenoid-style)
   scripts/                     # CI helpers (Sonar, env profiles, paths.sh)
 ```
 

@@ -11,6 +11,7 @@ BACKEND_PYTHON_FLASK="$REPO_ROOT/backend/python/backend-python-flask"
 BACKEND_PYTHON_FASTAPI="$REPO_ROOT/backend/python/backend-python-fastapi"
 BACKEND_PYTHON_DJANGO="$REPO_ROOT/backend/python/backend-python-django"
 BACKEND_GO_GIN="$REPO_ROOT/backend/go/backend-go-gin"
+BACKEND_GO_STDLIB="$REPO_ROOT/backend/go/backend-go-stdlib"
 
 # Deploy routing SSOT (Host × path)
 DEPLOY_MATRIX="$REPO_ROOT/deploy/matrix.yaml"

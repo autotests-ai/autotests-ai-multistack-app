@@ -9,4 +9,5 @@ Postgres DB: `reference_app_go_gin`.
 https://backend-go-gin.reference-app-copy.autotests.ai/{frontend}/
 ```
 
-Why Gin (not Echo/Chi/Fiber): most common course/tutorial stack for REST + middleware; still thin over `net/http`.
+Why Gin (not Echo/Chi/Fiber): most common course/tutorial stack for REST + middleware; still thin over `net/http`.  
+Sibling without framework: [`backend-go-stdlib`](../backend-go-stdlib/) (Selenoid-style).

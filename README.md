@@ -28,13 +28,13 @@ Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/N
 | Zone | Current modules | Future slots |
 |------|-----------------|--------------|
 | **frontend/javascript/** | `frontend-javascript-vanilla` (active), `react` / `angular` / `vue` (slots) | — |
-| **frontend/typescript/** | `frontend-typescript-react` (+ RTL), `angular` / `vue` / `vanilla` (slots) | — |
+| **frontend/typescript/** | `frontend-typescript-react` (+ RTL), `frontend-typescript-vue` (+ VTU), `angular` / `vanilla` (slots) | — |
 | **frontend/_shared/** | `frontend-javascript-app`, `frontend-javascript-embed` | — |
 | **frontend/_catalog/** | `frontend-javascript-preview` | — |
 | **backend/java/** | `backend-java-spring` (active) | — |
 | **backend/kotlin/** | — | `backend-kotlin-spring` |
 | **backend/python/** | `backend-python-flask` (stub health) | `backend-python-fastapi`, `backend-python-django` |
-| **backend/go/** | — | `backend-go-gin` |
+| **backend/go/** | — | `backend-go-gin`, `backend-go-stdlib` |
 | **tests/java/** | `tests-java-gradle-junit5-allure3-selenide` | junit4, testng, allure2, selenium, … — [tests/NAMING.md](tests/NAMING.md) |
 | **tests/javascript/** | `tests-javascript-playwright` | Cypress, … |
 | **tests/python/** | `tests-python-selenium` | playwright, … |
@@ -52,6 +52,7 @@ https://{backend}.reference-app-copy.autotests.ai/{frontend}/
 Examples:
 
 - [backend-java-spring…/frontend-typescript-react/](https://backend-java-spring.reference-app-copy.autotests.ai/frontend-typescript-react/)
+- [backend-java-spring…/frontend-typescript-vue/](https://backend-java-spring.reference-app-copy.autotests.ai/frontend-typescript-vue/)
 - `backend-python-flask.…/frontend-typescript-react/`
 - `backend-python-flask.…/frontend-javascript-vanilla/`
 
@@ -68,6 +69,7 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · CI: [`.github/workflows/test.yml`](
 | `unit_backend` | `backend/java/backend-java-spring/src/test/` |
 | `test-infra` | `…/tests/testinfra/` (`@Layer("test-infra")` + `@Tag("test-infra")`) |
 | `component_rtl` | `frontend/typescript/frontend-typescript-react/src/test/` |
+| `component_vue` | `frontend/typescript/frontend-typescript-vue/src/test/` |
 | `api` … `e2e` / `component_browser` / `visual` | `tests/java/tests-java-gradle-junit5-allure3-selenide/` |
 
 ## Quick start
