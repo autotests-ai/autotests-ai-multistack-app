@@ -51,7 +51,7 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · CI: [`.github/workflows/test.yml`](
 | Job | Where |
 |-----|-------|
 | `unit_backend` | `backend/java/backend-java-spring/src/test/` |
-| `unit_test-infra` | `…/tests/testinfra/` (`@Layer("test-infra")` + `@Tag("test-infra")`) |
+| `test-infra` | `…/tests/testinfra/` (`@Layer("test-infra")` + `@Tag("test-infra")`) |
 | `component_rtl` | `frontend/typescript/react/frontend-typescript-react_testing_library/` |
 | `api` … `e2e` / `component_browser` / `visual` | `tests/java/tests-java-gradle-junit5-allure3-selenide/` |
 

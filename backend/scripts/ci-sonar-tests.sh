@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Tests (Selenide) unit + JaCoCo + SonarQube upload + quality gate poll.
+# Tests (Selenide) test-infra + JaCoCo + SonarQube upload + quality gate poll.
 # Soft-skip when SONAR_TOKEN unset or host unreachable.
 # Env: SONAR_TOKEN, SONAR_HOST_URL (default https://sonar.qa.guru), SONAR_PROJECT_KEY
 set -euo pipefail
@@ -12,8 +12,8 @@ export SONAR_HOST_URL="${SONAR_HOST_URL:-https://sonar.qa.guru}"
 export SONAR_PROJECT_KEY="${SONAR_PROJECT_KEY:-reference-app-tests}"
 export SONAR_REQUIRED="${SONAR_REQUIRED:-true}"
 
-echo "==> unit + jacoco (${SONAR_PROJECT_KEY})"
-./gradlew testUnit jacocoTestUnitReport --no-daemon
+echo "==> test-infra + jacoco (${SONAR_PROJECT_KEY})"
+./gradlew testInfra jacocoTestInfraReport --no-daemon
 
 if [[ -z "${SONAR_TOKEN:-}" ]]; then
   msg="SONAR_TOKEN unset — skip sonar upload"

@@ -52,8 +52,8 @@ sonar {
         property 'sonar.tests', ''
         property 'sonar.java.binaries', 'build/classes/java/test'
         property 'sonar.coverage.jacoco.xmlReportPaths',
-                "${layout.buildDirectory.get()}/reports/jacoco/jacocoTestUnitReport/jacocoTestUnitReport.xml"
-        // Coverage axis = pyramid unit helpers (100% local); UI/page/test classes excluded.
+                "${layout.buildDirectory.get()}/reports/jacoco/jacocoTestInfraReport/jacocoTestInfraReport.xml"
+        // Coverage axis = pyramid test-infra helpers (100% local); UI/page/test classes excluded.
         property 'sonar.coverage.exclusions',
                 '**/*Test.java,**/*Tests.java,**/pages/**,**/api/**,**/annotations/**,**/allure/**,**/extensions/**,**/tests/**,**/helpers/BrowserSessionHelper.java,**/helpers/HarCapture.java,**/helpers/HarViewerHtml.java,**/helpers/LocalChromePin.java,**/helpers/ScreenshotBaseline.java,**/helpers/ViewportHelper.java,**/config/TestConfig.java'
     }
@@ -129,7 +129,7 @@ def shouldSkipHealthCheck = { String env ->
     if (System.getProperty('skipHealthCheck', 'false') == 'true') {
         return true
     }
-    if (env.endsWith('_unit') || env.endsWith('_api')) {
+    if (env.endsWith('_testinfra') || env.endsWith('_api')) {
         return true
     }
     def includeTags = System.getProperty('includeTags', '').split(',').collect { it.trim() }.findAll { it }
@@ -168,7 +168,7 @@ def runAppHealthCheck = { String env ->
 
 tasks.register('healthCheck') {
     group = 'verification'
-    description = 'GET baseUrl/ — auto-skip for *_unit, *_api, -DincludeTags=api'
+    description = 'GET baseUrl/ — auto-skip for *_testinfra, *_api, -DincludeTags=api'
     doLast {
         runAppHealthCheck(healthCheckEnvRef.env)
     }
@@ -332,13 +332,25 @@ if (allureReportMode == 'none') {
     }
 }
 
+def knownPyramidLayers = ['testinfra', 'component', 'integration', 'api', 'e2e', 'visual', 'manual'] as Set
 def layerEnvName = { String layer ->
-    System.getProperty('env', "reference_ci_${layer}")
+    def env = System.getProperty('env')
+    if (!env) {
+        return "reference_ci_${layer}"
+    }
+    def idx = env.lastIndexOf('_')
+    if (idx > 0) {
+        def suffix = env.substring(idx + 1)
+        if (knownPyramidLayers.contains(suffix)) {
+            return suffix == layer ? env : "${env.substring(0, idx)}_${layer}"
+        }
+    }
+    return "${env}_${layer}"
 }
 
 // Pyramid CI slices — ADR 005; `./gradlew test` = full suite, not these
 def layerTestSlices = [
-        [name: 'testUnit',        layer: 'unit',
+        [name: 'testInfra',       layer: 'testinfra',
          description: 'Pyramid test-infra — tests.testinfra.* (@Layer test-infra, @Tag test-infra)',
          testPatterns: ['tests.testinfra.*']],
         [name: 'testComponent',   layer: 'component',
@@ -376,7 +388,7 @@ layerTestSlices.each { slice ->
     def envName = layerEnvName(slice.layer)
     tasks.register(slice.name, Test) {
         group = 'verification'
-        description = "${slice.description} (env=${envName}; override: -Denv=reference_prod_${slice.layer})"
+        description = "${slice.description} (env=${envName}; override: -Denv=<stand> or -Denv=<stand>_${slice.layer})"
         testClassesDirs = sourceSets.test.output.classesDirs
         classpath = sourceSets.test.runtimeClasspath
         useJUnitPlatform {
@@ -428,7 +440,7 @@ if (allureAgentMode == 'inspect' && allureReportMode != 'none') {
     }
 }
 
-def pyramidUnitClassDirectories = {
+def pyramidTestInfraClassDirectories = {
     sourceSets.test.output.classesDirs.collect { classDir ->
         fileTree(dir: classDir, include: [
                 'config/ConfigReader.class',
@@ -438,23 +450,23 @@ def pyramidUnitClassDirectories = {
     }
 }
 
-tasks.register('jacocoTestUnitReport', JacocoReport) {
+tasks.register('jacocoTestInfraReport', JacocoReport) {
     group = 'verification'
-    description = 'JaCoCo report for pyramid unit slice (config + helpers infrastructure)'
-    dependsOn tasks.named('testUnit')
+    description = 'JaCoCo report for pyramid test-infra slice (config + helpers)'
+    dependsOn tasks.named('testInfra')
     reports {
         xml.required = true
         html.required = true
     }
-    classDirectories.setFrom(files(pyramidUnitClassDirectories()))
+    classDirectories.setFrom(files(pyramidTestInfraClassDirectories()))
     sourceDirectories.setFrom(files(sourceSets.test.java.srcDirs))
-    executionData.setFrom(file("${layout.buildDirectory.get()}/jacoco/testUnit.exec"))
+    executionData.setFrom(file("${layout.buildDirectory.get()}/jacoco/testInfra.exec"))
 }
 
-tasks.register('jacocoTestUnitCoverageVerification', JacocoCoverageVerification) {
+tasks.register('jacocoTestInfraCoverageVerification', JacocoCoverageVerification) {
     group = 'verification'
-    description = 'Fail when pyramid unit helpers/config drop below 100% line coverage'
-    dependsOn tasks.named('jacocoTestUnitReport')
+    description = 'Fail when pyramid test-infra helpers/config drop below 100% line coverage'
+    dependsOn tasks.named('jacocoTestInfraReport')
     violationRules {
         rule {
             limit {
@@ -463,13 +475,13 @@ tasks.register('jacocoTestUnitCoverageVerification', JacocoCoverageVerification)
             }
         }
     }
-    classDirectories.setFrom(tasks.named('jacocoTestUnitReport', JacocoReport).get().classDirectories)
-    executionData.setFrom(tasks.named('jacocoTestUnitReport', JacocoReport).get().executionData)
+    classDirectories.setFrom(tasks.named('jacocoTestInfraReport', JacocoReport).get().classDirectories)
+    executionData.setFrom(tasks.named('jacocoTestInfraReport', JacocoReport).get().executionData)
 }
 
-tasks.named('testUnit', Test).configure {
+tasks.named('testInfra', Test).configure {
     jacoco {
-        destinationFile = layout.buildDirectory.file('jacoco/testUnit.exec').get().asFile
+        destinationFile = layout.buildDirectory.file('jacoco/testInfra.exec').get().asFile
     }
-    finalizedBy 'jacocoTestUnitReport', 'jacocoTestUnitCoverageVerification'
+    finalizedBy 'jacocoTestInfraReport', 'jacocoTestInfraCoverageVerification'
 }

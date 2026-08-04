@@ -3,7 +3,7 @@
 #
 # | Phase | Jobs |
 # |-------|------|
-# | 2a | unit_backend, unit_test-infra (on); component_rtl when SPA restored |
+# | 2a | unit_backend, test-infra (on); component_rtl when SPA restored |
 # | 2b | + api (+ compose_up) |
 # | 2c | + integration |
 # | 2d | + component_browser |
@@ -45,7 +45,7 @@ env:
   FRONTEND_PREVIEW: frontend/_catalog/frontend-javascript-preview
 
 jobs:
-  # ── 2a: unit (product + test-infra) ────────────────────────────────
+  # ── 2a: product unit + test-infra ──────────────────────────────────
 
   unit_backend:
     name: unit_backend
@@ -68,8 +68,8 @@ jobs:
       - name: Backend unit + JaCoCo
         run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification --no-daemon
 
-  unit_test-infra:
-    name: unit_test-infra
+  test-infra:
+    name: test-infra
     if: >-
       github.event_name == 'pull_request' ||
       github.event_name == 'push' ||
@@ -86,8 +86,8 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: gradle
-      - name: Test-infra unit (helpers + config)
-        run: ./gradlew testUnit jacocoTestUnitCoverageVerification -DpyramidStand=reference_ci -DallureReportMode=none --no-daemon
+      - name: Test-infra (helpers + config)
+        run: ./gradlew testInfra jacocoTestInfraCoverageVerification -Denv=reference_ci -DallureReportMode=none --no-daemon
 
   # ── 2a later: RTL (off until frontend SPA + package.json restored) ─
 
@@ -114,7 +114,7 @@ jobs:
   compose_up:
     name: compose_up
     if: false
-    needs: [unit_backend, unit_test-infra]
+    needs: [unit_backend, test-infra]
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -141,7 +141,7 @@ jobs:
           java-version: "21"
           cache: gradle
       - name: API layer
-        run: ./gradlew testApi -DpyramidStand=reference_ci -DallureReportMode=none --no-daemon
+        run: ./gradlew testApi -Denv=reference_ci -DallureReportMode=none --no-daemon
 
   integration:
     name: integration
@@ -160,12 +160,12 @@ jobs:
           java-version: "21"
           cache: gradle
       - name: Integration (mount / layout)
-        run: ./gradlew testIntegration -DpyramidStand=reference_ci -DallureReportMode=none -Dheadless=true --no-daemon
+        run: ./gradlew testIntegration -Denv=reference_ci -DallureReportMode=none -Dheadless=true --no-daemon
 
   component_browser:
     name: component_browser
     if: false
-    needs: [unit_backend, unit_test-infra]
+    needs: [unit_backend, test-infra]
     runs-on: ubuntu-latest
     timeout-minutes: 25
     defaults:
@@ -189,7 +189,7 @@ jobs:
           echo "preview failed on :3000" >&2
           exit 1
       - name: Component browser (DS catalog)
-        run: ./gradlew testComponent -DpyramidStand=reference_ci -DallureReportMode=none -Dheadless=true --no-daemon
+        run: ./gradlew testComponent -Denv=reference_ci -DallureReportMode=none -Dheadless=true --no-daemon
 
   e2e:
     name: e2e
@@ -245,7 +245,7 @@ jobs:
           java-version: "21"
           cache: gradle
       - name: Manual stubs
-        run: ./gradlew testManual -DpyramidStand=reference_ci -DallureReportMode=none --no-daemon
+        run: ./gradlew testManual -Denv=reference_ci -DallureReportMode=none --no-daemon
 
   # ── 2f: after Deploy ───────────────────────────────────────────────
 
@@ -272,7 +272,7 @@ jobs:
           java-version: "21"
           cache: gradle
       - name: Prod API
-        run: ./gradlew testApi -DpyramidStand=reference_prod -DallureReportMode=none --no-daemon
+        run: ./gradlew testApi -Denv=reference_prod -DallureReportMode=none --no-daemon
 
   prod_e2e:
     name: prod_e2e

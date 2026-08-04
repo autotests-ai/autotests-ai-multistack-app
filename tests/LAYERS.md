@@ -19,7 +19,7 @@ Jobs = layers; enable gradually (block 2a → 2f). Module folders: `-` between s
                     ├─────────────┤
                     │     api     │  REST, no UI
                     ├─────────────┤
-                    │unit_test-infra│ tests/testinfra (@Layer test-infra, @Tag test-infra)
+                    │  test-infra   │ tests/testinfra (@Layer test-infra, @Tag test-infra)
                     ├─────────────┤
                     │ unit_backend │ Spring, JaCoCo (product code)
                     └─────────────┘
@@ -32,7 +32,7 @@ Jobs = layers; enable gradually (block 2a → 2f). Module folders: `-` between s
 | Layer (job id) | Zone | Where | Selector | Run | Target URL |
 |----------------|------|-------|----------|-----|------------|
 | `unit_backend` | backend | `backend/java/backend-java-spring/src/test/` | all backend tests | `./gradlew test` (+ JaCoCo) | n/a |
-| `unit_test-infra` | tests | `…/tests/testinfra/` | `tests.testinfra.*` · `@Layer("test-infra")` + `@Tag("test-infra")` | `./gradlew testUnit` | n/a |
+| `test-infra` | tests | `…/tests/testinfra/` | `tests.testinfra.*` · `@Layer("test-infra")` + `@Tag("test-infra")` | `./gradlew testInfra` | n/a |
 | `component_rtl` | frontend | `frontend/typescript/react/frontend-typescript-react_testing_library/` | Vitest | `npm test` | jsdom |
 | `api` | tests | `…/tests/api/` | `@Tag("api")` | `./gradlew testApi` | app `:8080` |
 | `integration` | tests | e.g. `LoginFormTests`, `LoginEmbedTests` | `@Tag("layout")` / `@Tag("mount")` | `./gradlew testIntegration` | app `:8080` |
@@ -47,14 +47,14 @@ Active Java module: `tests/java/tests-java-gradle-junit5-allure3-selenide/`
 Gradle slices SSOT: `build.gradle` → `layerTestSlices`.  
 Paths SSOT: `backend/scripts/paths.sh`. Module naming: [NAMING.md](NAMING.md).
 
-## Why two “unit” jobs?
+## Why `unit_backend` and `test-infra`?
 
 | Job | Product under test |
 |-----|--------------------|
 | `unit_backend` | **Application** (Spring services, controllers, JWT) |
-| `unit_test-infra` | **Test tooling** (ConfigReader, HarCapture, CSS helpers) — not a second pyramid tip for the app |
+| `test-infra` | **Test tooling** (ConfigReader, HarCapture, CSS helpers) — not a second pyramid tip for the app |
 
-Students: one product unit layer (`unit_backend`); `unit_test-infra` = unit for the harness that drives higher layers.
+Students: one product unit layer (`unit_backend`); `test-infra` = harness checks that drive higher layers.
 
 ## Why `component_rtl` and `component_browser`?
 
@@ -70,7 +70,7 @@ Not duplicates — different failure modes.
 
 | Phase | Jobs on |
 |-------|---------|
-| 2a | `unit_backend`, `unit_test-infra`, `component_rtl` |
+| 2a | `unit_backend`, `test-infra`, `component_rtl` |
 | 2b | + `api` (+ compose) |
 | 2c | + `integration` |
 | 2d | + `component_browser` (+ preview `:3000`) |

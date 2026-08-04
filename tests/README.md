@@ -21,7 +21,7 @@ tests/
 | Kind | Job id | Where |
 |------|--------|-------|
 | Product unit | `unit_backend` | `backend/java/backend-java-spring/src/test/` |
-| Test-infra | `unit_test-infra` | `…/tests/testinfra/` · `@Layer("test-infra")` + `@Tag("test-infra")` |
+| Test-infra | `test-infra` | `…/tests/testinfra/` · `@Layer("test-infra")` + `@Tag("test-infra")` |
 | RTL | `component_rtl` | `frontend/typescript/react/frontend-typescript-react_testing_library/` |
 | Browser/api/e2e | `api` … `e2e` | `tests/java/tests-java-gradle-junit5-allure3-selenide/` |
 

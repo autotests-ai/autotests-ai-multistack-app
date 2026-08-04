@@ -130,19 +130,19 @@ jobs:
           path: backend/build/reports/jacoco/test/
           if-no-files-found: ignore
 
-      - name: Pyramid unit (tests)
-        run: ./gradlew testUnit jacocoTestUnitCoverageVerification -DpyramidStand=reference_ci -DallureReportMode=none
+      - name: Pyramid test-infra (tests)
+        run: ./gradlew testInfra jacocoTestInfraCoverageVerification -Denv=reference_ci -DallureReportMode=none
 
-      - name: Pyramid unit coverage summary
+      - name: Pyramid test-infra coverage summary
         if: always()
         run: |
           python - <<'PY'
           import xml.etree.ElementTree as ET
           from pathlib import Path
 
-          report = Path("build/reports/jacoco/jacocoTestUnitReport/jacocoTestUnitReport.xml")
+          report = Path("build/reports/jacoco/jacocoTestInfraReport/jacocoTestInfraReport.xml")
           if not report.exists():
-              print("Pyramid unit JaCoCo report missing", flush=True)
+              print("Pyramid test-infra JaCoCo report missing", flush=True)
               raise SystemExit(0)
 
           root = ET.parse(report).getroot()
@@ -150,25 +150,25 @@ jobs:
                       for c in root.findall("counter") if c.attrib["type"] == "LINE")
           covered = next(int(c.attrib["covered"]) for c in root.findall("counter") if c.attrib["type"] == "LINE")
           pct = (covered / lines * 100) if lines else 0.0
-          print(f"pyramid unit line coverage: {pct:.1f}% ({covered}/{lines})")
+          print(f"pyramid test-infra line coverage: {pct:.1f}% ({covered}/{lines})")
           with open("${GITHUB_STEP_SUMMARY}", "a", encoding="utf-8") as out:
-              out.write(f"- pyramid unit JaCoCo line coverage: **{pct:.1f}%** ({covered}/{lines})\n")
-              out.write("- HTML report: `tests/build/reports/jacoco/jacocoTestUnitReport/html/index.html`\n")
+              out.write(f"- pyramid test-infra JaCoCo line coverage: **{pct:.1f}%** ({covered}/{lines})\n")
+              out.write("- HTML report: `tests/build/reports/jacoco/jacocoTestInfraReport/html/index.html`\n")
           PY
 
-      - name: Upload pyramid unit JaCoCo report
+      - name: Upload pyramid test-infra JaCoCo report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pyramid-unit-jacoco
-          path: tests/build/reports/jacoco/jacocoTestUnitReport/
+          name: pyramid-testinfra-jacoco
+          path: tests/build/reports/jacoco/jacocoTestInfraReport/
           if-no-files-found: ignore
 
       - name: Pyramid api
-        run: ./gradlew testApi -DpyramidStand=reference_ci -DallureReportMode=none
+        run: ./gradlew testApi -Denv=reference_ci -DallureReportMode=none
 
       - name: Pyramid integration
-        run: ./gradlew testIntegration -DpyramidStand=reference_ci -DallureReportMode=none -Dheadless=true
+        run: ./gradlew testIntegration -Denv=reference_ci -DallureReportMode=none -Dheadless=true
 
       - name: Pyramid e2e smoke
         run: ./gradlew testE2e -Denv=reference_ci_e2e -DallureReportMode=none -Dheadless=true
@@ -185,7 +185,7 @@ jobs:
           exit 1
 
       - name: Pyramid component
-        run: ./gradlew testComponent -DpyramidStand=reference_ci -DallureReportMode=none -Dheadless=true
+        run: ./gradlew testComponent -Denv=reference_ci -DallureReportMode=none -Dheadless=true
 
       - name: Pyramid visual
         run: ./gradlew testVisual -Denv=reference_ci_visual -DallureReportMode=none -Dheadless=true
@@ -195,7 +195,7 @@ jobs:
         run: |
           {
             echo "## reference CI pyramid"
-            echo "- backend unit + JaCoCo + pyramid unit JaCoCo + testApi + testIntegration + testComponent + testE2e + testVisual"
+            echo "- backend unit + JaCoCo + pyramid test-infra JaCoCo + testApi + testIntegration + testComponent + testE2e + testVisual"
             echo "- baselines SSOT: Linux headless Chrome 148 (\`reference_visual_baselines.yml\`)"
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -286,17 +286,17 @@ jobs:
 
           case "${PROD_TARGET}" in
             prod_pyramid)
-              run_slice "prod api" testApi "${COMMON[@]}" -DpyramidStand=reference_prod
-              run_slice "prod e2e smoke" testE2e "${COMMON[@]}" -DpyramidStand=reference_prod
+              run_slice "prod api" testApi "${COMMON[@]}" -Denv=reference_prod
+              run_slice "prod e2e smoke" testE2e "${COMMON[@]}" -Denv=reference_prod
               ;;
             prod_api)
-              run_slice "prod api" testApi "${COMMON[@]}" -DpyramidStand=reference_prod
+              run_slice "prod api" testApi "${COMMON[@]}" -Denv=reference_prod
               ;;
             prod_e2e)
-              run_slice "prod e2e smoke" testE2e "${COMMON[@]}" -DpyramidStand=reference_prod
+              run_slice "prod e2e smoke" testE2e "${COMMON[@]}" -Denv=reference_prod
               ;;
             prod_visual)
-              run_slice "prod visual" testVisual "${COMMON[@]}" -DpyramidStand=reference_prod
+              run_slice "prod visual" testVisual "${COMMON[@]}" -Denv=reference_prod
               ;;
             *)
               echo "Unknown PROD_TARGET=${PROD_TARGET}" >&2

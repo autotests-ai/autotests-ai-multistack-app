@@ -6,11 +6,11 @@ from __future__ import annotations
 from pathlib import Path
 
 CONFIG_DIR = Path(__file__).resolve().parents[2] / "tests/java/tests-java-gradle-junit5-allure3-selenide/src/test/resources/config"
-LAYERS = ("unit", "component", "integration", "api", "e2e", "visual", "manual")
+LAYERS = ("testinfra", "component", "integration", "api", "e2e", "visual", "manual")
 KEEP = frozenset({"default.properties"})
 
 GRADLE_HINT = {
-    "unit": "./gradlew testUnit -Denv={env}",
+    "testinfra": "./gradlew testInfra -Denv={env}",
     "component": "./gradlew testComponent -Denv={env}",
     "integration": "./gradlew testIntegration -Denv={env}",
     "api": "./gradlew testApi -Denv={env}",
@@ -20,7 +20,7 @@ GRADLE_HINT = {
 }
 
 LAYER_DESC = {
-    "unit": "pure Java — tests.testinfra.* (@Layer test-infra, @Tag test-infra)",
+    "testinfra": "pure Java — tests.testinfra.* (@Layer test-infra, @Tag test-infra)",
     "component": "@Tag(component) — frontend/_catalog/frontend-javascript-preview on :3000 (componentCatalogUrl)",
     "integration": "@Tag(layout,mount) — mount probes",
     "api": "@Layer(api) @Tag(api) — Rest Assured /api/health|items",
@@ -79,7 +79,7 @@ COMPONENT_BASE = {
 
 
 def layer_overlay(layer: str) -> dict[str, str]:
-    if layer == "unit":
+    if layer == "testinfra":
         return {
             "allureReportMode": "none",
             "allureAgentMode": "none",
@@ -187,7 +187,7 @@ def build_values(stand: str, layer: str) -> dict[str, str]:
     values.setdefault("componentCatalogUrl", "http://localhost:3000/")
     if layer == "component":
         values.update(COMPONENT_BASE)
-    if layer == "unit":
+    if layer == "testinfra":
         values["allureReportMode"] = "none"
     return values
 
