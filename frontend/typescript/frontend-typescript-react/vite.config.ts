@@ -48,7 +48,8 @@ export default defineConfig({
           'icons/pwa-maskable-512.png',
         ],
         navigateFallback: 'index.html',
-        navigateFallbackDenylist: [/\/api\//],
+        // Never SPA-fallback real assets (else /stack/assets/*.css → text/html MIME errors).
+        navigateFallbackDenylist: [/\/api\//, /\.(?:css|js|mjs|map|png|svg|ico|webmanifest|json|woff2?)$/i],
         cleanupOutdatedCaches: true,
       },
       devOptions: {
