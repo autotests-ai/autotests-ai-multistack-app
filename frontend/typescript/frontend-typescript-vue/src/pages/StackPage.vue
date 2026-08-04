@@ -264,9 +264,5 @@ function moduleGh(item: BackendModule | FrontendModule): string | null {
         </table>
       </Panel>
     </div>
-
-    <p class="text text--sm text--muted stack-page__foot">
-      matrix.json ← deploy/matrix.yaml · click active → /{backend}/{frontend}/stack/
-    </p>
   </main>
 </template>

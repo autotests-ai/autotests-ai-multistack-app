@@ -187,9 +187,6 @@ export function mountStackPage(root, data, pathname = window.location.pathname) 
         </div>
       </section>
     </div>
-    <p class="text text--sm text--muted stack-page__foot">
-      matrix.json ← deploy/matrix.yaml · click active → /{backend}/{frontend}/stack/
-    </p>
   `;
 }
 

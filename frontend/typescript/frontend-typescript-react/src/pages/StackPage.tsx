@@ -212,10 +212,6 @@ export function StackPage() {
           </Panel>
         </div>
       )}
-
-      <p className="text text--sm text--muted stack-page__foot">
-        {'matrix.json ← deploy/matrix.yaml · click active → /{backend}/{frontend}/stack/'}
-      </p>
     </main>
   );
 }
