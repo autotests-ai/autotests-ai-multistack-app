@@ -20,6 +20,7 @@ import {
   shortModuleLabel,
   stackHref,
   summarizeMatrix,
+  unitTestsMeta,
   unitTestsPath,
   type BackendModule,
   type FrontendModule,
@@ -167,9 +168,7 @@ function TestsBoard({
 }) {
   const unitPath = unitTestsPath(backend);
   const componentPath = componentTestsPath(frontend);
-  const unitMeta = currentBackend
-    ? `← ${currentBackend}${unitPath ? ` · ${unitPath}` : ''}`
-    : 'pick a backend';
+  const unitMeta = unitTestsMeta(backend);
   const componentMeta = componentTestsMeta(componentPath);
 
   const derived = [
@@ -177,7 +176,7 @@ function TestsBoard({
       layer: 'unit',
       bound: currentBackend,
       path: unitPath,
-      label: 'unit',
+      label: shortModuleLabel(unitPath) || 'unit',
       meta: unitMeta,
       present: Boolean(unitPath),
     },

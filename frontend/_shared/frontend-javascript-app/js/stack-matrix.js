@@ -101,7 +101,18 @@ export function componentTestsPath(frontend) {
 /** Short label for Module column (`frontend-typescript-react/src/test`). */
 export function shortModuleLabel(path) {
   if (!path) return '';
-  return String(path).replace(/^frontend\/(?:javascript|typescript)\//, '');
+  return String(path)
+    .replace(/^frontend\/(?:javascript|typescript)\//, '')
+    .replace(/^backend\/(?:java|kotlin|python|go)\//, '');
+}
+
+/** Meta under unit row — framework caption (path is the Module label). */
+export function unitTestsMeta(backend) {
+  if (!backend) return 'pick a backend';
+  if (backend.language === 'python') return 'pytest';
+  if (backend.language === 'java' || backend.language === 'kotlin') return 'junit5';
+  if (backend.language === 'go') return 'testing';
+  return backend.language || 'unit';
 }
 
 /** Meta under component row — library caption (path is the Module label). */
@@ -283,9 +294,7 @@ export function mountStackPage(root, data, pathname = window.location.pathname, 
   const label = labelParts.join(' · ');
   const homeHref = comboHref(backendId, frontendId, '/');
 
-  const unitMeta = backendId
-    ? `← ${backendId}${unitPath ? ` · ${unitPath}` : ''}`
-    : 'pick a backend';
+  const unitMeta = unitTestsMeta(backend);
   const componentMeta = componentTestsMeta(componentPath);
 
   root.innerHTML = `
@@ -337,7 +346,14 @@ export function mountStackPage(root, data, pathname = window.location.pathname, 
         <table class="stack-page__table stack-page__table--tests">
           <thead><tr><th>Module</th><th>Layers</th><th class="stack-page__gh-cell">GH</th><th>Status</th><th>Select</th></tr></thead>
           <tbody>
-            ${derivedLayerRow('unit', backendId, unitPath, unitMeta, Boolean(unitPath))}
+            ${derivedLayerRow(
+              'unit',
+              backendId,
+              unitPath,
+              unitMeta,
+              Boolean(unitPath),
+              shortModuleLabel(unitPath) || 'unit',
+            )}
             ${derivedLayerRow(
               'component',
               frontendId,

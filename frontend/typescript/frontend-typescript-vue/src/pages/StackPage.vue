@@ -21,6 +21,7 @@ import {
   resolveTestsId,
   stackHref,
   summarizeMatrix,
+  unitTestsMeta,
   unitTestsPath,
   type BackendModule,
   type FrontendModule,
@@ -89,11 +90,8 @@ const frontend = computed(() =>
 const unitPath = computed(() => unitTestsPath(backend.value));
 const componentPath = computed(() => componentTestsPath(frontend.value));
 
-const unitMeta = computed(() =>
-  mount.backendId
-    ? `← ${mount.backendId}${unitPath.value ? ` · ${unitPath.value}` : ''}`
-    : 'pick a backend',
-);
+const unitMeta = computed(() => unitTestsMeta(backend.value));
+const unitLabel = computed(() => shortModuleLabel(unitPath.value) || 'unit');
 
 const componentMeta = computed(() => componentTestsMeta(componentPath.value));
 const componentLabel = computed(
@@ -362,12 +360,24 @@ function moduleGh(modulePath?: string | null): string | null {
           <tbody>
             <tr :class="{ 'stack-page__row--active': Boolean(mount.backendId) }">
               <td>
+                <a
+                  v-if="moduleGh(unitPath)"
+                  class="link stack-page__id"
+                  :class="{ 'is-active': Boolean(mount.backendId) }"
+                  :href="moduleGh(unitPath)!"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="stack-tests-unit"
+                >
+                  {{ unitLabel }}
+                </a>
                 <span
+                  v-else
                   class="stack-page__id stack-page__id--disabled"
                   :class="{ 'is-active': Boolean(mount.backendId) }"
                   data-testid="stack-tests-unit"
                 >
-                  unit
+                  {{ unitLabel }}
                 </span>
                 <div class="text text--sm text--muted stack-page__meta">{{ unitMeta }}</div>
               </td>

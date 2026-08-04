@@ -149,7 +149,18 @@ export function componentTestsPath(frontend: FrontendModule | null): string {
 /** Short label for Module column (`frontend-typescript-react/src/test`). */
 export function shortModuleLabel(path: string | null | undefined): string {
   if (!path) return '';
-  return String(path).replace(/^frontend\/(?:javascript|typescript)\//, '');
+  return String(path)
+    .replace(/^frontend\/(?:javascript|typescript)\//, '')
+    .replace(/^backend\/(?:java|kotlin|python|go)\//, '');
+}
+
+/** Meta under unit row — framework caption (path is the Module label). */
+export function unitTestsMeta(backend: BackendModule | null): string {
+  if (!backend) return 'pick a backend';
+  if (backend.language === 'python') return 'pytest';
+  if (backend.language === 'java' || backend.language === 'kotlin') return 'junit5';
+  if (backend.language === 'go') return 'testing';
+  return backend.language || 'unit';
 }
 
 /** Meta under component row — library caption (path is the Module label). */
