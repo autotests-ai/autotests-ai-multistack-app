@@ -43,16 +43,16 @@
       "module": "backend/go/backend-go-stdlib"
     },
     {
-      "id": "backend-node-express",
+      "id": "backend-javascript-express",
       "status": "slot",
-      "language": "node",
-      "module": "backend/node/backend-node-express"
+      "language": "javascript",
+      "module": "backend/javascript/backend-javascript-express"
     },
     {
-      "id": "backend-node-nest",
+      "id": "backend-typescript-nest",
       "status": "slot",
-      "language": "node",
-      "module": "backend/node/backend-node-nest"
+      "language": "typescript",
+      "module": "backend/typescript/backend-typescript-nest"
     }
   ],
   "frontends": [

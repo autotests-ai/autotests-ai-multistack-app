@@ -5,7 +5,7 @@
 #
 # Port canon (local publish = prod host upstream; same numbers):
 #   backend: language base +10 · stack +1 within language
-#     8800 java · 8810 kotlin · 8820 python · 8830 go · 8840 node · next lang 8850…
+#     8800 java · 8810 kotlin · 8820 python · 8830 go · 8840 javascript · 8850 typescript · next lang 8860…
 #   frontend (compose publish = host nginx upstream): language base +10 · stack +1
 #     9800 javascript · 9810 typescript · next lang 9820…
 # Container-internal listen stays 8080 (backends) / 80 (frontends).
@@ -103,29 +103,29 @@ backends:
     db_name: reference_app_go_stdlib
     health_service: backend-go-stdlib
 
-  - id: backend-node-express
+  - id: backend-javascript-express
     status: slot
-    language: node
-    module: backend/node/backend-node-express
-    compose_service: backend-node-express
-    compose_profile: node-express
-    image: reference-app-copy-backend-node-express:latest
+    language: javascript
+    module: backend/javascript/backend-javascript-express
+    compose_service: backend-javascript-express
+    compose_profile: javascript-express
+    image: reference-app-copy-backend-javascript-express:latest
     internal_port: 8080
     publish_port: 8840
-    db_name: reference_app_node_express
-    health_service: backend-node-express
+    db_name: reference_app_javascript_express
+    health_service: backend-javascript-express
 
-  - id: backend-node-nest
+  - id: backend-typescript-nest
     status: slot
-    language: node
-    module: backend/node/backend-node-nest
-    compose_service: backend-node-nest
-    compose_profile: node-nest
-    image: reference-app-copy-backend-node-nest:latest
+    language: typescript
+    module: backend/typescript/backend-typescript-nest
+    compose_service: backend-typescript-nest
+    compose_profile: typescript-nest
+    image: reference-app-copy-backend-typescript-nest:latest
     internal_port: 8080
-    publish_port: 8841
-    db_name: reference_app_node_nest
-    health_service: backend-node-nest
+    publish_port: 8850
+    db_name: reference_app_typescript_nest
+    health_service: backend-typescript-nest
 
 frontends:
   - id: frontend-javascript-vanilla
