@@ -11,6 +11,6 @@ Post-auth state (welcome message, logout) lives on `HomePage` at `/`.
 
 ## Profiles
 
-`reference_ci_e2e.properties`: `baseUrl=http://localhost:8700/backend-java-spring/frontend-typescript-react/`
+`reference_ci_e2e.properties`: `baseUrl=http://localhost:8701/frontend-typescript-react/`
 
 `reference_ci_component.properties`: `baseUrl=http://localhost:3000/` (design-system preview)

@@ -51,8 +51,9 @@ ATTACH_OFF = {
 
 STANDS = {
     "reference_ci": {
-        "baseUrl": "http://localhost:8700/backend-java-spring/frontend-typescript-react/",
-        "apiBaseUrl": "http://localhost:8700/backend-java-spring/api/",
+        # Local compose publishes ports directly (no path-router container).
+        "baseUrl": "http://localhost:8701/frontend-typescript-react/",
+        "apiBaseUrl": "http://localhost:8800/api/",
         "remoteUrl": "",
         "videoFolder": "",
         "logToConsole": "true",
@@ -74,7 +75,7 @@ STANDS = {
 COMPONENT_BASE = {
     "baseUrl": "http://localhost:3000/",
     "componentCatalogUrl": "http://localhost:3000/",
-    "apiBaseUrl": "http://localhost:8700/backend-java-spring/api/",
+    "apiBaseUrl": "http://localhost:8800/api/",
 }
 
 

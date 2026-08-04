@@ -4,30 +4,25 @@
 # First path segment → API upstream; second → shared static mount (one web image).
 #
 # Port canon (local publish = prod host upstream; same numbers):
-#   infra:  edge 8700 · web (shared static) 8701
+#   infra:  web (shared static) 8701
 #   backend: language base +10 · stack +1 within language
 #     8800 java · 8810 kotlin · 8820 python · 8830 go · next lang 8840…
 #   frontend (local vite / static serve): language base +10 · stack +1
 #     9800 javascript · 9810 typescript · next lang 9820…
-# Container-internal listen stays 8080 (backends) / 80 (web, edge).
+# Container-internal listen stays 8080 (backends) / 80 (web).
+# Path routing SSOT: deploy/nginx (host). Local: hit published ports directly.
 
 public_host: reference-app-copy.autotests.ai
 domain_suffix: reference-app-copy.autotests.ai
 
-# Shared static nginx (no /api). Local edge / prod host nginx route here.
+# Shared static nginx (no /api). Host nginx (prod) / direct :8701 (local).
 web:
   compose_service: web
   image: reference-app-copy-web:latest
-  # Published on host for prod host-nginx → static (local: only via edge).
+  # Published on host for host-nginx → static (and local direct access).
   publish_port: 8701
   runtime: frontend/_shared/frontend-javascript-app
   react_ui: frontend/_shared/frontend-react-ui
-
-# Local public entry (path-based). Prod host nginx replaces this role.
-edge:
-  compose_service: edge
-  # Local path router (prod: host nginx on :443).
-  publish_port: 8700
 
 backends:
   - id: backend-java-spring

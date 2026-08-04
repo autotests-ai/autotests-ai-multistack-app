@@ -4,8 +4,7 @@ set -euo pipefail
 APP_DIR="${APP_DIR:-/home/reference_app_copy/reference-app-copy}"
 REPO_URL="${REPO_URL:-https://github.com/autotests-ai/reference-app-copy.git}"
 
-# Host publish ports (matrix.yaml / compose). Edge optional locally; prod host nginx splits.
-export SERVER_PORT="${SERVER_PORT:-8700}"
+# Host publish ports (matrix.yaml / compose). Path routing = host nginx (deploy/nginx).
 export WEB_PORT="${WEB_PORT:-8701}"
 export BACKEND_JAVA_PORT="${BACKEND_JAVA_PORT:-8800}"
 export BACKEND_KOTLIN_PORT="${BACKEND_KOTLIN_PORT:-8810}"

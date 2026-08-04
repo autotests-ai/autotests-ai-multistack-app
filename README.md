@@ -13,7 +13,7 @@ reference-app-copy/
   frontend/          # UI by language → stack (one source per module)
   backend/           # server by language → stack (+ scripts/)
   tests/             # automation by language → runner
-  deploy/            # matrix, edge, shared web, host nginx, smoke
+  deploy/            # matrix, shared web, host nginx, smoke
   .github/workflows/ # deploy.yml + test.yml
 ```
 
@@ -81,7 +81,6 @@ SSOT: [`deploy/matrix.yaml`](deploy/matrix.yaml). Language base **+10**, stack w
 
 | Port | Service | Notes |
 |------|---------|-------|
-| **8700** | `edge` | local path router only (`SERVER_PORT`); prod uses host nginx `:443` |
 | **8701** | `web` | shared static pack (`WEB_PORT`) |
 | **8800** | `backend-java-spring` | |
 | **8810** | `backend-kotlin-spring` | |
@@ -100,28 +99,27 @@ SSOT: [`deploy/matrix.yaml`](deploy/matrix.yaml). Language base **+10**, stack w
 | **9813** | `frontend-typescript-vue` | |
 
 Next backend language → **8840+**. Next frontend language → **9820+**.  
-Container-internal: backends `:8080`, `web`/`edge` `:80`.
+Container-internal: backends `:8080`, `web` `:80`.  
+Path routing (`/{backend}/api`, `/{backend}/{frontend}`) — **host nginx** ([`deploy/nginx/`](deploy/nginx/)); local compose exposes published ports only.
 
 ## Quick start
 
 ```bash
 docker compose up -d --build
-# edge publishes SERVER_PORT (default 8700)
-curl -fsS http://localhost:8700/backend-java-spring/api/health
-curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8700/backend-java-spring/frontend-typescript-react/
-curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8700/backend-java-spring/frontend-javascript-vanilla/
-# python backends — same UI mounts, different /{backend}/api
-curl -fsS http://localhost:8700/backend-python-flask/api/health
-curl -fsS http://localhost:8700/backend-python-fastapi/api/health
-curl -fsS http://localhost:8700/backend-python-django/api/health
-curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8700/   # 404
-# direct backend (same ports on prod host)
+# published ports (same numbers as prod host upstreams)
 curl -fsS http://localhost:8800/api/health
+curl -fsS http://localhost:8810/api/health
+curl -fsS http://localhost:8820/api/health
+curl -fsS http://localhost:8821/api/health
+curl -fsS http://localhost:8822/api/health
+curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8701/frontend-typescript-react/
+curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8701/frontend-javascript-vanilla/
+# prod path shape — host nginx only
+# https://reference-app-copy.autotests.ai/backend-java-spring/api/health
 ```
 
 | Service | Role |
 |---------|------|
-| `edge` | local path router (`SERVER_PORT`, default 8700) |
 | `web` | shared static UIs only (no `/api`) |
 | `backend-java-spring` | Spring JSON API (`:8800`) |
 | `backend-kotlin-spring` | Spring Kotlin JSON API (`:8810`) |
@@ -137,8 +135,7 @@ curl -fsS http://localhost:8800/api/health
 | Setting | Value |
 |---------|-------|
 | `APP_DIR` | `/home/reference_app_copy/reference-app-copy` |
-| `SERVER_PORT` | `8700` (local edge; prod host nginx splits API/static) |
-| `WEB_PORT` | `8701` (shared static) |
+| `WEB_PORT` | `8701` (shared static; host nginx upstream) |
 | `BACKEND_JAVA_PORT` | `8800` |
 | `BACKEND_KOTLIN_PORT` | `8810` |
 | `BACKEND_FLASK_PORT` | `8820` |

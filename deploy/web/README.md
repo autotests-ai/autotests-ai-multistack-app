@@ -9,18 +9,16 @@ One image for **all** active product UIs. No `/api` proxy.
 | `/frontend-javascript-vanilla/**` | static module + `UI_RUNTIME` overlay |
 | `/`, other | **404** |
 
-`/api/**` is routed by:
-
-- **local:** `deploy/edge` (Host → backend service)
-- **prod:** host nginx vhost (`deploy/nginx/`)
+`/api/**` and path-prefixed UI mounts are routed by **host nginx** ([`../nginx/`](../nginx/)).  
+Local compose: hit published ports directly (`:8701` static, `:8800+` APIs).
 
 Matrix SSOT: [`../matrix.yaml`](../matrix.yaml) — only `status: active` frontends are packed here.
 
 ```mermaid
 flowchart LR
-  edge[edge or host nginx]
-  web[web shared static]
-  api[backend-*]
-  edge -->|/frontend-*| web
-  edge -->|/api Host| api
+  hostNginx[host_nginx]
+  web[web_shared_static]
+  api[backend]
+  hostNginx -->|"/{backend}/frontend-*"| web
+  hostNginx -->|"/{backend}/api"| api
 ```

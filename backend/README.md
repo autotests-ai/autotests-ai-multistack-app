@@ -19,7 +19,7 @@ backend/
 ```
 
 Product UI SSOT is `frontend/`, served by shared `deploy/web` (static nginx).  
-Edge / host nginx: **`/{backend}/api` → this API**, **`/{backend}/{frontend}` → shared UI**.  
+Host nginx: **`/{backend}/api` → this API**, **`/{backend}/{frontend}` → shared UI**.  
 Matrix: [`deploy/matrix.yaml`](../deploy/matrix.yaml).
 
 ### Publish ports (local = prod host)

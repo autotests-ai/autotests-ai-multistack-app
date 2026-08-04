@@ -39,7 +39,7 @@ def load_matrix(path: Path) -> dict:
     except ImportError:
         pass
 
-    data: dict = {"backends": [], "frontends": [], "web": {}, "edge": {}}
+    data: dict = {"backends": [], "frontends": [], "web": {}}
     section: str | None = None
     current: dict | None = None
 
@@ -52,7 +52,7 @@ def load_matrix(path: Path) -> dict:
         if indent == 0 and line.endswith(":") and not line.startswith("-"):
             section = line[:-1]
             current = None
-            if section in ("web", "edge"):
+            if section == "web":
                 data[section] = {}
             elif section in ("backends", "frontends"):
                 data[section] = []
@@ -66,7 +66,7 @@ def load_matrix(path: Path) -> dict:
                 section = None
             continue
 
-        if section in ("web", "edge") and indent == 2 and ":" in line:
+        if section == "web" and indent == 2 and ":" in line:
             key, _, val = line.partition(":")
             data[section][key.strip()] = _parse_scalar(val)
             continue

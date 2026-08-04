@@ -45,7 +45,7 @@ https://reference-app-copy.autotests.ai/{backend}/{frontend}/
 Active mounts in `web`: `frontend-typescript-react`, `frontend-typescript-vue`, `frontend-javascript-vanilla`.  
 Slots are not deployed until they have a buildable `dist/` / static tree.
 
-Host `/` is empty (404). `/{backend}/api/**` is routed by edge (local) or host nginx (prod), not by the static image.
+Host `/` is empty (404). `/{backend}/api/**` is routed by host nginx ([`deploy/nginx/`](../deploy/nginx/)), not by the static image.
 
 ## Local ports
 
@@ -60,4 +60,4 @@ Canon in [`deploy/matrix.yaml`](../deploy/matrix.yaml): language base **+10**, s
 | 9812 | `frontend-typescript-angular` |
 | 9813 | `frontend-typescript-vue` (`npm run dev`) |
 
-Packaged static for all mounts → shared `web` on **8701** (via edge **8700** / prod nginx).
+Packaged static for all mounts → shared `web` on **8701** (host nginx strips `/{backend}/` in prod).

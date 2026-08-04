@@ -162,24 +162,6 @@ services:
     ports:
       - "${WEB_PORT:-8701}:80"
 
-  edge:
-    image: reference-app-copy-edge:latest
-    build:
-      context: .
-      dockerfile: deploy/edge/Dockerfile
-    restart: unless-stopped
-    depends_on:
-      - web
-      - backend-java-spring
-      - backend-kotlin-spring
-      - backend-python-flask
-      - backend-python-fastapi
-      - backend-python-django
-    ports:
-      - "${SERVER_PORT:-8700}:80"
-    networks:
-      - reference_internal
-
 networks:
   reference_internal:
     driver: bridge

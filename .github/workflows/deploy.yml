@@ -28,8 +28,7 @@ jobs:
             reference-app-copy-backend-python-flask:latest \
             reference-app-copy-backend-python-fastapi:latest \
             reference-app-copy-backend-python-django:latest \
-            reference-app-copy-web:latest \
-            reference-app-copy-edge:latest
+            reference-app-copy-web:latest
           do
             docker inspect "$img" --format '{{.Architecture}}' | grep -q amd64
           done
@@ -43,7 +42,6 @@ jobs:
             reference-app-copy-backend-python-fastapi:latest \
             reference-app-copy-backend-python-django:latest \
             reference-app-copy-web:latest \
-            reference-app-copy-edge:latest \
             | gzip > /tmp/app-images.tar.gz
 
       - name: Upload app images

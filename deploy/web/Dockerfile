@@ -1,6 +1,6 @@
 # Build context: repository root.
 # Multi-stage: active UIs (matrix.yaml) → one shared static nginx image.
-# No /api proxy — edge / host nginx route Host → backend, path → this image.
+# No /api proxy — host nginx routes /{backend}/api → backend, /{backend}/{frontend} → this image.
 ARG REACT_UI=frontend/_shared/frontend-react-ui
 ARG UI_RUNTIME=frontend/_shared/frontend-javascript-app
 

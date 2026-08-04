@@ -26,7 +26,7 @@ Defaults:
 Against local compose:
 
 ```bash
-./gradlew test -DbaseUrl=http://localhost:8700/
+./gradlew test -DbaseUrl=http://localhost:8701/frontend-typescript-react/
 ```
 
 ## Remote (Selenoid WebDriver)
