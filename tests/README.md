@@ -12,9 +12,10 @@ tests/
   java/
     tests-java-gradle-junit5-allure3-selenide/   # active
   javascript/
-    tests-javascript-playwright/
+    tests-javascript-playwright/                 # active
   python/
-    tests-python-selenium/
+    tests-python-selenium/                       # active
+  typescript/ · kotlin/ · go/                    # slots in deploy/matrix.yaml
   _deferred/
 ```
 

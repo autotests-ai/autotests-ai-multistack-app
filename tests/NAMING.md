@@ -10,11 +10,11 @@ tests-{language}-{build}-{framework}-{reporting}-{automation}
 
 | Segment | Examples | Notes |
 |---------|----------|-------|
-| `language` | `java`, `javascript`, `python` | top-level under `tests/` |
-| `build` | `gradle`, `maven`, `npm`, `pip` | omit when obvious (e.g. JS → npm) |
-| `framework` | `junit4`, `junit5`, `junit6`, `testng`, `pytest`, `vitest` | test runner |
+| `language` | `java`, `kotlin`, `javascript`, `typescript`, `python`, `go` | top-level under `tests/` |
+| `build` | `gradle`, `maven`, `npm`, `pip`, `mod` | omit when obvious (e.g. JS → npm) |
+| `framework` | `junit4`, `junit5`, `junit6`, `testng`, `pytest`, `vitest`, `testing` | test runner |
 | `reporting` | `allure2`, `allure3`, `no_allure` | underscore in `no_allure` |
-| `automation` | `selenium`, `selenide`, `playwright`, `none` | browser/UI driver; `none` for api-only |
+| `automation` | `selenium`, `selenide`, `playwright`, `cypress`, `none` | browser/UI driver; `none` for api-only |
 
 ## Java (Gradle) — matrix
 
@@ -30,13 +30,28 @@ tests-{language}-{build}-{framework}-{reporting}-{automation}
 
 Only one module is runnable per app fork; others are teaching slots / generator outputs.
 
-## JavaScript / Python (same idea)
+## JavaScript / TypeScript / Python / Go / Kotlin
+
+Living folders may shorten when dimensions are obvious (`tests-javascript-playwright`).
+Full IDs live in [`deploy/matrix.yaml`](../deploy/matrix.yaml) (`status: active|slot`).
+
+| Folder / id | Status |
+|-------------|--------|
+| `tests-javascript-playwright` | **active** |
+| `tests-javascript-cypress` | slot |
+| `tests-typescript-playwright` | slot |
+| `tests-python-selenium` | **active** |
+| `tests-python-playwright` | slot |
+| `tests-kotlin-gradle-junit5-allure3-selenide` | slot |
+| `tests-go-testing-allure3` | slot (selenoid-tests language) |
 
 ```
 tests-javascript-npm-playwright-no_allure
 tests-javascript-npm-jest-no_allure
+tests-typescript-npm-playwright-allure3
 tests-python-pip-pytest-allure3-selenium
 tests-python-pip-pytest-no_allure-playwright
+tests-go-mod-testing-allure3
 ```
 
 ## Related zones

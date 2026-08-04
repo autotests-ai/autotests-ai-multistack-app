@@ -200,21 +200,93 @@ frontends:
 # Test modules — no compose / publish ports (CI runners, not containers).
 # unit ← selected backend …/src/test|tests · component ← selected frontend …/src/test
 # api / integration / e2e ← pick a module below (layers declare coverage).
+# Naming: tests/NAMING.md · teaching slots mirror backend/frontend (active + slot).
 tests:
+  # --- Java (canon + dimension slots) ---
   - id: tests-java-gradle-junit5-allure3-selenide
     status: active
     language: java
     module: tests/java/tests-java-gradle-junit5-allure3-selenide
     layers: [api, integration, e2e]
 
+  - id: tests-java-gradle-junit5-allure3-selenium
+    status: slot
+    language: java
+    module: tests/java/tests-java-gradle-junit5-allure3-selenium
+    layers: [e2e]
+
+  - id: tests-java-gradle-junit5-allure2-selenide
+    status: slot
+    language: java
+    module: tests/java/tests-java-gradle-junit5-allure2-selenide
+    layers: [api, integration, e2e]
+
+  - id: tests-java-gradle-junit5-no_allure-selenide
+    status: slot
+    language: java
+    module: tests/java/tests-java-gradle-junit5-no_allure-selenide
+    layers: [api, integration, e2e]
+
+  - id: tests-java-gradle-junit4-allure2-selenium
+    status: slot
+    language: java
+    module: tests/java/tests-java-gradle-junit4-allure2-selenium
+    layers: [e2e]
+
+  - id: tests-java-gradle-testng-allure3-selenium
+    status: slot
+    language: java
+    module: tests/java/tests-java-gradle-testng-allure3-selenium
+    layers: [e2e]
+
+  - id: tests-java-maven-junit5-allure3-selenide
+    status: slot
+    language: java
+    module: tests/java/tests-java-maven-junit5-allure3-selenide
+    layers: [api, integration, e2e]
+
+  # --- Kotlin (backend twin language) ---
+  - id: tests-kotlin-gradle-junit5-allure3-selenide
+    status: slot
+    language: kotlin
+    module: tests/kotlin/tests-kotlin-gradle-junit5-allure3-selenide
+    layers: [api, e2e]
+
+  # --- JavaScript / TypeScript ---
   - id: tests-javascript-playwright
     status: active
     language: javascript
     module: tests/javascript/tests-javascript-playwright
     layers: [e2e]
 
+  - id: tests-javascript-cypress
+    status: slot
+    language: javascript
+    module: tests/javascript/tests-javascript-cypress
+    layers: [e2e]
+
+  - id: tests-typescript-playwright
+    status: slot
+    language: typescript
+    module: tests/typescript/tests-typescript-playwright
+    layers: [e2e]
+
+  # --- Python ---
   - id: tests-python-selenium
     status: active
     language: python
     module: tests/python/tests-python-selenium
+    layers: [e2e]
+
+  - id: tests-python-playwright
+    status: slot
+    language: python
+    module: tests/python/tests-python-playwright
+    layers: [e2e]
+
+  # --- Go (selenoid-tests pyramid language) ---
+  - id: tests-go-testing-allure3
+    status: slot
+    language: go
+    module: tests/go/tests-go-testing-allure3
     layers: [e2e]

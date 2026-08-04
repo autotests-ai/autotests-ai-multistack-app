@@ -82,7 +82,8 @@ Not duplicates — different failure modes.
 
 | Module | Role |
 |--------|------|
-| `tests/javascript/tests-javascript-playwright/` | e2e smoke, another language |
-| `tests/python/tests-python-selenium/` | e2e smoke, pytest |
+| `tests/javascript/tests-javascript-playwright/` | e2e smoke, another language (**active**) |
+| `tests/python/tests-python-selenium/` | e2e smoke, pytest (**active**) |
+| `tests/typescript/…`, `kotlin/…`, `go/…`, Cypress, … | slots in [`deploy/matrix.yaml`](../deploy/matrix.yaml) |
 
 Same app under test; not separate pyramid layers — parallel teaching stacks ([NAMING.md](NAMING.md)).
