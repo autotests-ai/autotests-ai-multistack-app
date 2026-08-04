@@ -1,11 +1,4 @@
-# Orchestrator — single entry for PR / push main.
-# Leafs: test.yml, deploy.yml (allure-report / notifications — phase C).
-#
-# PR:          test(ci)
-# push main:   test(ci) → deploy → test(prod)
-# dispatch:    same as push when on main (optional skip_deploy)
-
-name: reference-app-copy CI
+name: CI
 
 on:
   pull_request:
@@ -13,55 +6,110 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      skip_deploy:
-        description: "Run CI tests only (no deploy / prod_api)"
-        type: boolean
-        required: false
-        default: false
-
-run-name: reference-app-copy ci (${{ github.event_name }} @ ${{ github.sha }})
 
 concurrency:
-  group: ci-reference-app-copy-${{ github.ref }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+permissions:
+  contents: read
+
+env:
+  IMAGE_TAG: ${{ github.sha }}
+
 jobs:
-  test_ci:
-    name: test (ci)
-    uses: ./.github/workflows/test.yml
-    secrets: inherit
-    with:
-      scope: ci
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification
+        working-directory: backend/java/backend-java-spring
+
+  test-infra:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - run: ./gradlew testInfra jacocoTestInfraCoverageVerification -Denv=reference_ci -DallureReportMode=none
+        working-directory: tests/java/tests-java-gradle-junit5-allure3-selenide
+
+  component:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "26"
+          cache: npm
+          cache-dependency-path: frontend/typescript/frontend-typescript-react/package-lock.json
+      - run: npm ci
+        working-directory: frontend/typescript/frontend-typescript-react
+      - run: npm test
+        working-directory: frontend/typescript/frontend-typescript-react
+
+  build:
+    needs: [unit, test-infra, component]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - run: docker compose build backend-java-spring frontend-typescript-react
+      - run: docker compose push backend-java-spring frontend-typescript-react
 
   deploy:
-    name: deploy
-    needs: test_ci
-    if: >-
-      github.ref == 'refs/heads/main' &&
-      (github.event_name == 'push' ||
-       (github.event_name == 'workflow_dispatch' &&
-        inputs.skip_deploy == false))
-    uses: ./.github/workflows/deploy.yml
-    secrets: inherit
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: appleboy/ssh-action@v1.2.5
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          host: ${{ vars.DEPLOY_HOST }}
+          username: ${{ vars.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          command_timeout: 15m
+          envs: IMAGE_TAG,GHCR_TOKEN
+          script: |
+            cd /home/reference_app_copy/reference-app-copy
+            git fetch origin
+            git checkout --force "$IMAGE_TAG"
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker compose pull backend-java-spring frontend-typescript-react
+            docker compose up -d --remove-orphans backend-java-spring frontend-typescript-react
+            curl -fsS --retry 30 --retry-delay 2 --retry-all-errors http://127.0.0.1:8800/api/health
 
-  test_prod:
-    name: test (prod)
+  prod-api:
     needs: deploy
-    if: ${{ success() }}
-    uses: ./.github/workflows/test.yml
-    secrets: inherit
-    with:
-      scope: prod
-
-  # Phase C — wire when allure leafs land (tests/_deferred/notifications/):
-  # allure_report:
-  #   needs: test_prod
-  #   if: ${{ always() && needs.deploy.result == 'success' }}
-  #   uses: ./.github/workflows/allure-report.yml
-  #   secrets: inherit
-  # notifications:
-  #   needs: allure_report
-  #   if: ${{ always() }}
-  #   uses: ./.github/workflows/notifications.yml
-  #   secrets: inherit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - run: ./gradlew testApi -Denv=reference_prod -DallureReportMode=none
+        working-directory: tests/java/tests-java-gradle-junit5-allure3-selenide

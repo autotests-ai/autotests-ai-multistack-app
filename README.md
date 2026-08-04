@@ -10,11 +10,11 @@ Production: [reference-app-copy.autotests.ai](https://reference-app-copy.autotes
 
 ```
 reference-app-copy/
-  frontend/          # UI by language → stack (…/.github/actions/build|component)
-  backend/           # server by language → stack (…/.github/actions/build|unit)
-  tests/             # automation (…/.github/actions/<layer>) — see tests/LAYERS.md
-  deploy/            # matrix, host nginx, smoke
-  .github/workflows/ # ci.yml → test.yml + deploy.yml · test_all
+  frontend/          # UI by language → stack
+  backend/           # server by language → stack
+  tests/             # automation — see tests/LAYERS.md
+  deploy/            # matrix, host nginx
+  .github/workflows/ # ci.yml — single workflow
 ```
 
 ### Naming convention
@@ -69,16 +69,16 @@ Path constants: `backend/scripts/paths.sh`
 
 ### Layers (block 2)
 
-Canon: [tests/LAYERS.md](tests/LAYERS.md) · entry: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) · leaf: [`test.yml`](.github/workflows/test.yml)
+Canon: [tests/LAYERS.md](tests/LAYERS.md) · all jobs live in [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 
 | Job | Where |
 |-----|-------|
-| `unit_backend` | `backend/java/backend-java-spring/` (action `unit`) |
-| `unit_backend_python` | python backends — only via `test_all` / `include_python` |
-| `test-infra` | `tests/java/…` (action `test-infra`) |
-| `component_rtl` | `frontend/typescript/frontend-typescript-react/` (action `component`) |
-| `component_vue` | `frontend/typescript/frontend-typescript-vue/src/test/` |
-| `api` … `e2e` / `integration` / `visual` | `tests/java/tests-java-gradle-junit5-allure3-selenide/` |
+| `unit` | `backend/java/backend-java-spring/` — `./gradlew test` + JaCoCo |
+| `test-infra` | `tests/java/…` — `./gradlew testInfra` |
+| `component` | `frontend/typescript/frontend-typescript-react/` — `npm test` |
+| `prod-api` | `tests/java/…` — `./gradlew testApi -Denv=reference_prod` after deploy |
+
+Remaining layers (`api`, `integration`, `e2e`, `visual`, python backends, alt runners) are not in the workflow yet — add a job when the layer is turned on.
 
 ## Ports (local = prod host upstream)
 
@@ -144,45 +144,38 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:9800/
 
 **Production URL:** https://reference-app-copy.autotests.ai/backend-java-spring/frontend-typescript-react/
 
-Ports, compose service ids, and health `expect` strings — **SSOT** [`deploy/matrix.yaml`](deploy/matrix.yaml). Host entrypoint [`deploy/server-deploy.sh`](deploy/server-deploy.sh) reads them via [`deploy/matrix_query.py`](deploy/matrix_query.py). GHA only `cat`s committed [`deploy/stack-matrix`](deploy/stack-matrix) (java-spring + react) into `$GITHUB_OUTPUT` — after editing `matrix.yaml` run locally and commit JSON + stack-matrix:
+One workflow — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
-```bash
-python deploy/matrix_query.py sync-deploy-matrix
-```
+| Event | Jobs |
+|-------|------|
+| pull request | `unit` · `test-infra` · `component` |
+| push to `main` | the same three → `build` → `deploy` → `prod-api` |
+
+`build` runs `docker compose build` + `docker compose push`, so `docker-compose.yml` stays the only place describing how an image is built. Images go to GHCR as `ghcr.io/autotests-ai/reference-app-copy-<service>:<sha>`; the tag comes from `IMAGE_TAG` (defaults to `latest` locally).
+
+`deploy` connects over SSH and runs six lines: checkout the deployed commit, log in to GHCR, `docker compose pull`, `docker compose up -d`, then `curl --retry` on `/api/health`. There is no deploy script on the host.
 
 | Setting | Value |
 |---------|-------|
 | `APP_DIR` | `/home/reference_app_copy/reference-app-copy` |
-| Default stacks | `backend-java-spring` + `frontend-typescript-react` |
+| Deployed stacks | `backend-java-spring` + `frontend-typescript-react` |
 
-**CI/CD entry:**
-
-| Workflow | Role |
-|----------|------|
-| [`ci.yml`](.github/workflows/ci.yml) | Orchestrator: **PR** → `test(ci)`; **push main** → `test(ci)` → `deploy` → `test(prod)` |
-| [`deploy.yml`](.github/workflows/deploy.yml) | Leaf CD (`workflow_call` / manual): `cat deploy/stack-matrix` → build → SSH `docker load` → `SKIP_BUILD=1 deploy/server-deploy.sh` |
-| [`test.yml`](.github/workflows/test.yml) | Leaf tests: `scope=ci` (unit + test-infra + component) · `prod` (`prod_api`) · `all` (both) |
-| [`test_all.yml`](.github/workflows/test_all.yml) | Manual: `test.yml` + python backend unit matrix |
-
-Module actions live next to each stack (`build` / `unit` / `component` / test `<layer>`). Inventory: [tests/LAYERS.md](tests/LAYERS.md) · example build: [`backend/java/backend-java-spring/.github/actions/build`](backend/java/backend-java-spring/.github/actions/build/action.yml). CD uses committed `deploy/deploy-matrix.json` + compose build per stack.
-
-Manual on host: `bash deploy/server-deploy.sh` (builds locally). CD: `SKIP_BUILD=1 bash deploy/server-deploy.sh`. All active stacks: `DEPLOY_MODE=all SKIP_BUILD=1 bash deploy/server-deploy.sh`.
-
-Allure report / notifications: deferred (`tests/_deferred/notifications/`) — wire into `ci.yml` after prod tests (phase C).
+Allure report, TestOps and notifications will be added later as ordinary jobs after `prod-api`.
 
 ### GitHub secrets & variables
 
 | Name | Kind | Value |
 |------|------|-------|
 | `DEPLOY_SSH_KEY` | secret | **project-only** ed25519 for `reference_app_copy@212.92.101.15` (local: `~/.ssh/reference_app_copy_deploy`; not shared with `selenoid` / sibling apps) |
-| `DEPLOY_HOST` | variable | `212.92.101.15` |
+| `DEPLOY_HOST` | variable | `212.92.101.15` — required, no fallback in the workflow |
 | `DEPLOY_USER` | variable | `reference_app_copy` |
+
+GHCR needs no extra secret: `build` and `deploy` both authenticate with the run's `GITHUB_TOKEN`.
 
 Sibling prod (do not touch): [reference-app.autotests.ai](https://reference-app.autotests.ai) · port `8083`.
 
 ### Deferred (block 2+)
 
-- Workflows: [`.github/workflows/_deferred/`](.github/workflows/_deferred/)
 - Legacy: [`tests/_deferred/`](tests/_deferred/)
 
 ## Related

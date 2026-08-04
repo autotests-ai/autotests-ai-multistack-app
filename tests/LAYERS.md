@@ -1,6 +1,6 @@
 # Test layers (canonical map)
 
-Teaching pyramid for reference-app-copy. **One** CI file: [`.github/workflows/test.yml`](../.github/workflows/test.yml).  
+Teaching pyramid for reference-app-copy. **One** CI file: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).  
 Jobs = layers; enable gradually (block 2a → 2f). Module folders: `-` between segments, `_` in compounds (`react_testing_library`, `no_allure`).
 
 ```
@@ -13,50 +13,50 @@ Jobs = layers; enable gradually (block 2a → 2f). Module folders: `-` between s
                     ├─────────────┤
                     │ integration │  mount / wiring on SPA (header, login form)
                     ├─────────────┤
-                    │component_rtl│  React in jsdom (Vitest) — sideways
+                    │component│  React in jsdom (Vitest) — sideways
                     ├─────────────┤
                     │     api     │  REST, no UI
                     ├─────────────┤
                     │  test-infra   │ tests/testinfra (@Layer test-infra, @Tag test-infra)
                     ├─────────────┤
-                    │ unit_backend │ Spring, JaCoCo (product code)
+                    │ unit │ Spring, JaCoCo (product code)
                     └─────────────┘
 ```
 
-`component_rtl` sits **beside** the Java ladder (frontend zone), not inside `tests/java/…`.  
+`component` sits **beside** the Java ladder (frontend zone), not inside `tests/java/…`.  
 DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
 ## Layer table
 
 | Layer (job id) | Zone | Where | Selector | Run | Target URL |
 |----------------|------|-------|----------|-----|------------|
-| `unit_backend` | backend | `backend/java/backend-java-spring/src/test/` | all backend tests | `./gradlew test` (+ JaCoCo) | n/a |
+| `unit` | backend | `backend/java/backend-java-spring/src/test/` | all backend tests | `./gradlew test` (+ JaCoCo) | n/a |
 | `test-infra` | tests | `…/tests/testinfra/` | `tests.testinfra.*` · `@Layer("test-infra")` + `@Tag("test-infra")` | `./gradlew testInfra` | n/a |
-| `component_rtl` | frontend | `frontend/typescript/frontend-typescript-react/src/test/` | Vitest | `npm test` | jsdom |
+| `component` | frontend | `frontend/typescript/frontend-typescript-react/src/test/` | Vitest | `npm test` | jsdom |
 | `api` | tests | `…/tests/api/` | `@Tag("api")` | `./gradlew testApi` | API `:8800` |
 | `integration` | tests | e.g. `LoginFormTests`, `LoginEmbedTests` | `@Tag("layout")` / `@Tag("mount")` | `./gradlew testIntegration` | UI `:9811` |
 | `e2e` | tests | `…/tests/`, `…/tests/e2e/` | `@Tag("smoke")` | `./gradlew testE2e` | UI `:9811` + API `:8800` (CI) / prod (post-deploy) |
 | `visual` | tests | baselines | `@Tag("visual")` | `./gradlew testVisual` | app SPA |
 | `manual` | tests | stubs | `@Tag("manual")` | `./gradlew testManual` | n/a |
-| `prod_api` | tests | same api | `ci.yml` → `test(prod)` after deploy | `testApi` + `reference_prod` | [reference-app-copy.autotests.ai/backend-java-spring](https://reference-app-copy.autotests.ai/backend-java-spring) |
-| `prod_e2e` | tests | same e2e | deferred | `testE2e` + `reference_prod_*` | prod + Selenoid |
+| `prod-api` | tests | same api | `ci.yml` job after `deploy` | `testApi` + `reference_prod` | [reference-app-copy.autotests.ai/backend-java-spring](https://reference-app-copy.autotests.ai/backend-java-spring) |
+| `prod-e2e` | tests | same e2e | deferred | `testE2e` + `reference_prod_*` | prod + Selenoid |
 
 Active Java module: `tests/java/tests-java-gradle-junit5-allure3-selenide/`  
 Gradle profiles SSOT: `build.gradle` → `layerTestProfiles`.  
 Paths SSOT: `backend/scripts/paths.sh`. Module naming: [NAMING.md](NAMING.md).
 
-## Why `unit_backend` and `test-infra`?
+## Why `unit` and `test-infra`?
 
 | Job | Product under test |
 |-----|--------------------|
-| `unit_backend` | **Application** (Spring services, controllers, JWT) |
+| `unit` | **Application** (Spring services, controllers, JWT) |
 | `test-infra` | **Test tooling** (ConfigReader, HarCapture, CSS helpers) — not a second pyramid tip for the app |
 
-Students: one product unit layer (`unit_backend`); `test-infra` = harness checks that drive higher layers.
+Students: one product unit layer (`unit`); `test-infra` = harness checks that drive higher layers.
 
-## Why `component_rtl` and `integration`?
+## Why `component` and `integration`?
 
-| | `component_rtl` | `integration` |
+| | `component` | `integration` |
 |---|-----------------|---------------|
 | Runtime | jsdom | real Chrome |
 | Object | React SPA units | mounted product pages (header, forms) |
@@ -68,33 +68,25 @@ Not duplicates — different failure modes. Chrome layout for the app is `integr
 
 | Phase | Jobs on |
 |-------|---------|
-| 2a | `unit_backend`, `test-infra`, `component_rtl` ← **on in CI** |
+| 2a | `unit`, `test-infra`, `component` ← **on in CI** |
 | 2b | + `api` (+ compose) |
 | 2c | + `integration` |
 | 2d | + `e2e` |
-| 2e | + `prod_api`, `prod_e2e` after successful Deploy |
+| 2e | + `prod-api`, `prod-e2e` after successful Deploy |
 | 3+ | `visual`, `manual`, Playwright / pytest runners |
 
 ## Alt runners (side stacks)
 
-| Module | Role | Composite action | Job (`if: false`) |
-|--------|------|------------------|-------------------|
-| `tests/javascript/tests-javascript-playwright/` | e2e smoke, another language (**active**) | `.github/actions/e2e` | `tests_javascript_playwright` |
-| `tests/python/tests-python-selenium/` | e2e smoke, pytest (**active**) | `.github/actions/e2e` | `tests_python_selenium` |
-| `tests/typescript/…`, `kotlin/…`, `go/…`, Cypress, … | slots in [`deploy/matrix.yaml`](../deploy/matrix.yaml) | — | — |
+| Module | Role |
+|--------|------|
+| `tests/javascript/tests-javascript-playwright/` | e2e smoke, another language (**active**) |
+| `tests/python/tests-python-selenium/` | e2e smoke, pytest (**active**) |
+| `tests/typescript/…`, `kotlin/…`, `go/…`, Cypress, … | slots in [`deploy/matrix.yaml`](../deploy/matrix.yaml) |
 
 Same app under test; not separate pyramid layers — parallel teaching stacks ([NAMING.md](NAMING.md)). Enable with LAYERS block 3+.
 
-## Composite actions (job = checkout + uses)
+## Where the commands live
 
-Канон: layer logic lives next to the module under `.github/actions/<layer>/`. Orchestrator: [`test.yml`](../.github/workflows/test.yml).
+Every layer is a job in [`ci.yml`](../.github/workflows/ci.yml): checkout, language setup, one `./gradlew <task>` or `npm test`. No composite actions, no wrapper scripts — the command a student runs locally is the command CI runs.
 
-| Zone / module | Actions |
-|---------------|---------|
-| `backend/java/backend-java-spring/` | `build`, `unit` |
-| `backend/python/backend-python-{flask,fastapi,django}/` | `build`, `unit` |
-| `frontend/typescript/frontend-typescript-react/` | `build`, `component` |
-| `frontend/typescript/frontend-typescript-vue/` | `build`, `component` |
-| `tests/java/tests-java-gradle-junit5-allure3-selenide/` | `test-infra`, `api`, `integration`, `e2e`, `visual`, `manual`, `prod-api`, `prod-e2e` |
-| `tests/javascript/tests-javascript-playwright/` | `e2e` |
-| `tests/python/tests-python-selenium/` | `e2e` |
+To turn a layer on, add a job with its task from the table above.
