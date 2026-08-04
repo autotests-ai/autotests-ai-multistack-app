@@ -107,6 +107,7 @@ function moduleGh(item: BackendModule | FrontendModule): string | null {
           <thead>
             <tr>
               <th>Module</th>
+              <th class="stack-page__gh-cell">GH</th>
               <th>Status</th>
               <th>Open</th>
             </tr>
@@ -118,44 +119,45 @@ function moduleGh(item: BackendModule | FrontendModule): string | null {
               :class="{ 'stack-page__row--active': item.id === mount.backendId }"
             >
               <td>
-                <div class="stack-page__name">
-                  <a
-                    v-if="rowOpenable('backend', item)"
-                    class="link stack-page__id"
-                    :class="{ 'is-active': item.id === mount.backendId }"
-                    :href="rowHref('backend', item)"
-                    :data-testid="`stack-backend-${item.id}`"
-                  >
-                    {{ item.id }}
-                  </a>
-                  <span
-                    v-else
-                    class="stack-page__id stack-page__id--disabled"
-                    :class="{ 'is-active': item.id === mount.backendId }"
-                    :data-testid="`stack-backend-${item.id}`"
-                  >
-                    {{ item.id }}
-                  </span>
-                  <a
-                    v-if="moduleGh(item)"
-                    class="icon-btn stack-page__gh-icon"
-                    :href="moduleGh(item)!"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    :aria-label="`GitHub ${item.id}`"
-                    :title="item.module"
-                    :data-testid="`stack-gh-backend-${item.id}`"
-                  >
-                    <span class="icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path :d="githubMarkPath" />
-                      </svg>
-                    </span>
-                  </a>
-                </div>
+                <a
+                  v-if="rowOpenable('backend', item)"
+                  class="link stack-page__id"
+                  :class="{ 'is-active': item.id === mount.backendId }"
+                  :href="rowHref('backend', item)"
+                  :data-testid="`stack-backend-${item.id}`"
+                >
+                  {{ item.id }}
+                </a>
+                <span
+                  v-else
+                  class="stack-page__id stack-page__id--disabled"
+                  :class="{ 'is-active': item.id === mount.backendId }"
+                  :data-testid="`stack-backend-${item.id}`"
+                >
+                  {{ item.id }}
+                </span>
                 <div class="text text--sm text--muted stack-page__meta">
                   {{ metaFor('backend', item) }}
                 </div>
+              </td>
+              <td class="stack-page__gh-cell">
+                <a
+                  v-if="moduleGh(item)"
+                  class="icon-btn stack-page__gh-icon"
+                  :href="moduleGh(item)!"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  :aria-label="`GitHub ${item.id}`"
+                  :title="item.module"
+                  :data-testid="`stack-gh-backend-${item.id}`"
+                >
+                  <span class="icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path :d="githubMarkPath" />
+                    </svg>
+                  </span>
+                </a>
+                <span v-else class="text text--sm text--muted">—</span>
               </td>
               <td>
                 <span
@@ -186,6 +188,7 @@ function moduleGh(item: BackendModule | FrontendModule): string | null {
           <thead>
             <tr>
               <th>Module</th>
+              <th class="stack-page__gh-cell">GH</th>
               <th>Status</th>
               <th>Open</th>
             </tr>
@@ -197,44 +200,45 @@ function moduleGh(item: BackendModule | FrontendModule): string | null {
               :class="{ 'stack-page__row--active': item.id === mount.frontendId }"
             >
               <td>
-                <div class="stack-page__name">
-                  <a
-                    v-if="rowOpenable('frontend', item)"
-                    class="link stack-page__id"
-                    :class="{ 'is-active': item.id === mount.frontendId }"
-                    :href="rowHref('frontend', item)"
-                    :data-testid="`stack-frontend-${item.id}`"
-                  >
-                    {{ item.id }}
-                  </a>
-                  <span
-                    v-else
-                    class="stack-page__id stack-page__id--disabled"
-                    :class="{ 'is-active': item.id === mount.frontendId }"
-                    :data-testid="`stack-frontend-${item.id}`"
-                  >
-                    {{ item.id }}
-                  </span>
-                  <a
-                    v-if="moduleGh(item)"
-                    class="icon-btn stack-page__gh-icon"
-                    :href="moduleGh(item)!"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    :aria-label="`GitHub ${item.id}`"
-                    :title="item.module"
-                    :data-testid="`stack-gh-frontend-${item.id}`"
-                  >
-                    <span class="icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path :d="githubMarkPath" />
-                      </svg>
-                    </span>
-                  </a>
-                </div>
+                <a
+                  v-if="rowOpenable('frontend', item)"
+                  class="link stack-page__id"
+                  :class="{ 'is-active': item.id === mount.frontendId }"
+                  :href="rowHref('frontend', item)"
+                  :data-testid="`stack-frontend-${item.id}`"
+                >
+                  {{ item.id }}
+                </a>
+                <span
+                  v-else
+                  class="stack-page__id stack-page__id--disabled"
+                  :class="{ 'is-active': item.id === mount.frontendId }"
+                  :data-testid="`stack-frontend-${item.id}`"
+                >
+                  {{ item.id }}
+                </span>
                 <div class="text text--sm text--muted stack-page__meta">
                   {{ metaFor('frontend', item) }}
                 </div>
+              </td>
+              <td class="stack-page__gh-cell">
+                <a
+                  v-if="moduleGh(item)"
+                  class="icon-btn stack-page__gh-icon"
+                  :href="moduleGh(item)!"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  :aria-label="`GitHub ${item.id}`"
+                  :title="item.module"
+                  :data-testid="`stack-gh-frontend-${item.id}`"
+                >
+                  <span class="icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path :d="githubMarkPath" />
+                    </svg>
+                  </span>
+                </a>
+                <span v-else class="text text--sm text--muted">—</span>
               </td>
               <td>
                 <span

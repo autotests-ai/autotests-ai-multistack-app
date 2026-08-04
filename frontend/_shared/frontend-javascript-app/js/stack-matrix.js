@@ -115,15 +115,16 @@ function rowHtml(item, kind, currentBackend, currentFrontend) {
   const nameCell = openable
     ? `<a class="link stack-page__id${isCurrent ? ' is-active' : ''}" href="${escapeHtml(href)}" data-testid="stack-${kind}-${escapeHtml(id)}">${escapeHtml(id)}</a>`
     : `<span class="stack-page__id stack-page__id--disabled${isCurrent ? ' is-active' : ''}" data-testid="stack-${kind}-${escapeHtml(id)}">${escapeHtml(id)}</span>`;
+  const ghCell =
+    githubIconHtml(item.module, kind, id) ||
+    '<span class="text text--sm text--muted">—</span>';
 
   return `<tr class="${isCurrent ? 'stack-page__row--active' : ''}">
     <td>
-      <div class="stack-page__name">
-        ${nameCell}
-        ${githubIconHtml(item.module, kind, id)}
-      </div>
+      ${nameCell}
       <div class="text text--sm text--muted stack-page__meta">${meta}</div>
     </td>
+    <td class="stack-page__gh-cell">${ghCell}</td>
     <td>${statusBadge(status)}</td>
     <td>${
       openable
@@ -162,7 +163,7 @@ export function mountStackPage(root, data, pathname = window.location.pathname) 
         </div>
         <div class="panel__body stack-page__board-body">
           <table class="stack-page__table">
-            <thead><tr><th>Module</th><th>Status</th><th>Open</th></tr></thead>
+            <thead><tr><th>Module</th><th class="stack-page__gh-cell">GH</th><th>Status</th><th>Open</th></tr></thead>
             <tbody>
               ${summary.backends.map((b) => rowHtml(b, 'backend', backendId, frontendId)).join('')}
             </tbody>
@@ -178,7 +179,7 @@ export function mountStackPage(root, data, pathname = window.location.pathname) 
         </div>
         <div class="panel__body stack-page__board-body">
           <table class="stack-page__table">
-            <thead><tr><th>Module</th><th>Status</th><th>Open</th></tr></thead>
+            <thead><tr><th>Module</th><th class="stack-page__gh-cell">GH</th><th>Status</th><th>Open</th></tr></thead>
             <tbody>
               ${summary.frontends.map((f) => rowHtml(f, 'frontend', backendId, frontendId)).join('')}
             </tbody>

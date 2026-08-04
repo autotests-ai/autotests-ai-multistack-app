@@ -66,6 +66,7 @@ function ModuleRows({
       <thead>
         <tr>
           <th>Module</th>
+          <th className="stack-page__gh-cell">GH</th>
           <th>Status</th>
           <th>Open</th>
         </tr>
@@ -87,26 +88,30 @@ function ModuleRows({
           return (
             <tr key={id} className={isCurrent ? 'stack-page__row--active' : undefined}>
               <td>
-                <div className="stack-page__name">
-                  {openable ? (
-                    <Link
-                      className={`stack-page__id${isCurrent ? ' is-active' : ''}`}
-                      href={href}
-                      data-testid={`stack-${kind}-${id}`}
-                    >
-                      {id}
-                    </Link>
-                  ) : (
-                    <span
-                      className={`stack-page__id stack-page__id--disabled${isCurrent ? ' is-active' : ''}`}
-                      data-testid={`stack-${kind}-${id}`}
-                    >
-                      {id}
-                    </span>
-                  )}
-                  <GithubModuleLink kind={kind} id={id} modulePath={item.module} />
-                </div>
+                {openable ? (
+                  <Link
+                    className={`stack-page__id${isCurrent ? ' is-active' : ''}`}
+                    href={href}
+                    data-testid={`stack-${kind}-${id}`}
+                  >
+                    {id}
+                  </Link>
+                ) : (
+                  <span
+                    className={`stack-page__id stack-page__id--disabled${isCurrent ? ' is-active' : ''}`}
+                    data-testid={`stack-${kind}-${id}`}
+                  >
+                    {id}
+                  </span>
+                )}
                 <div className="text text--sm text--muted stack-page__meta">{meta}</div>
+              </td>
+              <td className="stack-page__gh-cell">
+                {githubModuleHref(item.module) ? (
+                  <GithubModuleLink kind={kind} id={id} modulePath={item.module} />
+                ) : (
+                  <span className="text text--sm text--muted">—</span>
+                )}
               </td>
               <td>
                 <Badge variant={status === 'active' ? 'primary' : 'default'}>{status}</Badge>

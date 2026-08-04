@@ -36,23 +36,16 @@
   filter: brightness(1.08);
 }
 
-.stack-page__name {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-}
-
-.stack-page__name .stack-page__id,
-.stack-page__name .stack-page__id--disabled {
-  min-width: 0;
-  overflow-wrap: anywhere;
+.stack-page__gh-cell {
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
 }
 
 .stack-page__gh-icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin: 0 auto;
   color: var(--color-text-muted);
 }
 
@@ -61,8 +54,8 @@
 }
 
 .stack-page__gh-icon .icon {
-  width: 0.95rem;
-  height: 0.95rem;
+  width: 1rem;
+  height: 1rem;
 }
 
 .stack-page__boards {
@@ -102,19 +95,26 @@
   font-size: var(--font-size-sm, 0.9rem);
 }
 
-/* Same Module / Status / Open track weights in both boards */
+/* Same Module / GH / Status / Open track weights in both boards */
 .stack-page__table th:nth-child(1),
 .stack-page__table td:nth-child(1) {
-  width: 58%;
+  width: 52%;
 }
 
 .stack-page__table th:nth-child(2),
 .stack-page__table td:nth-child(2) {
-  width: 22%;
+  width: 3rem;
+  padding-left: var(--space-2);
+  padding-right: var(--space-2);
 }
 
 .stack-page__table th:nth-child(3),
 .stack-page__table td:nth-child(3) {
+  width: 22%;
+}
+
+.stack-page__table th:nth-child(4),
+.stack-page__table td:nth-child(4) {
   width: 20%;
 }
 
