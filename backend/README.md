@@ -19,7 +19,7 @@ backend/
 ```
 
 Product UI SSOT is `frontend/` — each active module has its own nginx container (see root `docker-compose.yml`).  
-Host nginx: **`/{backend}/api` → this API**, **`/{backend}/{frontend}` → shared UI**.  
+Host nginx: **`/{backend}/api` → this API**, **`/{backend}/{frontend}` → that frontend’s publish port**.  
 Matrix: [`deploy/matrix.yaml`](../deploy/matrix.yaml).
 
 ### Publish ports (local = prod host)

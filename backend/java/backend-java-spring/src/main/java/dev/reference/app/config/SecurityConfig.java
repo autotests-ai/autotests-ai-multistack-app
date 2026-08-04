@@ -28,7 +28,8 @@ public class SecurityConfig {
      * {@link SessionCreationPolicy#STATELESS} — no ambient cookie credential for CSRF to exploit.
      * Enabling CSRF would break JSON API clients that do not echo an XSRF token.
      *
-     * <p>This module is API-only. UI is served by {@code deploy/web} (nginx).
+     * <p>This module is API-only. UI is served by per-frontend nginx containers
+     * (host nginx path-routes {@code /{backend}/{frontend}/}).
      */
     @Bean
     @SuppressWarnings("java:S4502")

@@ -15,7 +15,7 @@ dev.reference.app/
   config/ controller/ dto/ entity/ exception/ repository/ service/
 ```
 
-**API-only.** Controllers expose `/api/**`. UI is not in this module — `deploy/web` (nginx)
-serves `frontend/` and proxies `/api` here. Soft routes `/login` / `/register` live in nginx.
+**API-only.** Controllers expose `/api/**`. UI lives in `frontend/*` containers
+(host nginx: `/{backend}/{frontend}/` → frontend port, `/{backend}/api/` → this service).
 
 Kotlin twin: [`../kotlin/backend-kotlin-spring/`](../kotlin/backend-kotlin-spring/).

@@ -13,7 +13,7 @@ reference-app-copy/
   frontend/          # UI by language → stack (Dockerfile + .github/actions)
   backend/           # server by language → stack (…/.github/actions/build|unit)
   tests/             # automation (…/.github/actions/test-infra|prod-api)
-  deploy/            # matrix, host nginx, smoke (shared web image retired)
+  deploy/            # matrix, host nginx, smoke
   .github/workflows/ # deploy.yml / deploy_all.yml · test.yml / test_all.yml
 ```
 
