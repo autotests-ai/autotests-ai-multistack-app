@@ -9,7 +9,7 @@ USER="${POSTGRES_USER:-reference}"
 
 for db in reference_app_java_spring reference_app_python_flask \
           reference_app_python_fastapi reference_app_python_django \
-          reference_app_kotlin_spring; do
+          reference_app_kotlin_spring reference_app_go_gin; do
   exists="$(psql -h "$HOST" -U "$USER" -d postgres -tAc \
     "SELECT 1 FROM pg_database WHERE datname='${db}'")"
   if [[ "$exists" != "1" ]]; then

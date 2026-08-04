@@ -12,6 +12,8 @@ backend/
     backend-python-flask/      # stub (/api/health) for multi-backend routing
     backend-python-fastapi/    # slot
     backend-python-django/     # slot
+  go/
+    backend-go-gin/            # slot (Gin)
   scripts/                     # CI helpers (Sonar, env profiles, paths.sh)
 ```
 

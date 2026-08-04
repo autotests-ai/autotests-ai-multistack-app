@@ -90,6 +90,20 @@ backends:
     local_host: backend-kotlin-spring.localhost
     public_host: backend-kotlin-spring.reference-app-copy.autotests.ai
 
+  - id: backend-go-gin
+    status: slot
+    language: go
+    module: backend/go/backend-go-gin
+    compose_service: backend-go-gin
+    compose_profile: go-gin
+    image: reference-app-copy-backend-go-gin:latest
+    internal_port: 8080
+    publish_port: 8815
+    db_name: reference_app_go_gin
+    health_service: backend-go-gin
+    local_host: backend-go-gin.localhost
+    public_host: backend-go-gin.reference-app-copy.autotests.ai
+
 frontends:
   - id: frontend-typescript-react
     status: active
