@@ -197,6 +197,13 @@ frontends:
     image: reference-app-copy-frontend-typescript-vue:latest
     publish_port: 9813
 
+  - id: frontend-typescript-jquery
+    status: slot
+    kind: static
+    module: frontend/typescript/frontend-typescript-jquery
+    mount: frontend-typescript-jquery
+    publish_port: 9814
+
 # Test modules — no compose / publish ports (CI runners, not containers).
 # unit ← selected backend …/src/test|tests · component ← selected frontend …/src/test
 # api / integration / e2e ← pick a module below (layers declare coverage).

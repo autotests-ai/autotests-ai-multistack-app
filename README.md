@@ -28,7 +28,7 @@ Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/N
 | Zone | Current modules | Future slots |
 |------|-----------------|--------------|
 | **frontend/javascript/** | `frontend-javascript-vanilla` (active), `react` / `angular` / `vue` / `jquery` (slots) | — |
-| **frontend/typescript/** | `frontend-typescript-react` (+ RTL), `frontend-typescript-vue` (+ VTU), `angular` / `vanilla` (slots) | — |
+| **frontend/typescript/** | `frontend-typescript-react` (+ RTL), `frontend-typescript-vue` (+ VTU), `angular` / `vanilla` / `jquery` (slots) | — |
 | **frontend/_shared/** | `frontend-javascript-app`, `frontend-javascript-embed` | — |
 | **frontend/_catalog/** | `frontend-javascript-preview` | — |
 | **backend/java/** | `backend-java-spring` (active) | — |
@@ -104,6 +104,7 @@ SSOT: [`deploy/matrix.yaml`](deploy/matrix.yaml). Language base **+10**, stack w
 | **9811** | `frontend-typescript-react` | compose publish |
 | **9812** | `frontend-typescript-angular` | slot |
 | **9813** | `frontend-typescript-vue` | compose publish |
+| **9814** | `frontend-typescript-jquery` | slot |
 
 Next backend language → **8850+**. Next frontend language → **9820+**.  
 Container-internal: backends `:8080`, frontends `:80`.  

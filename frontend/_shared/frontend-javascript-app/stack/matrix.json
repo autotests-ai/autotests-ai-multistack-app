@@ -109,6 +109,12 @@
       "status": "active",
       "kind": "vite",
       "module": "frontend/typescript/frontend-typescript-vue"
+    },
+    {
+      "id": "frontend-typescript-jquery",
+      "status": "slot",
+      "kind": "static",
+      "module": "frontend/typescript/frontend-typescript-jquery"
     }
   ],
   "tests": [
