@@ -1,14 +1,14 @@
-# Expand test.yml (python unit matrix + default layers).
+# Expand test.yml (python unit matrix + default scope).
 
 name: reference-app-copy Tests all
 
 on:
   workflow_dispatch:
     inputs:
-      layers:
-        description: "ci | prod-only | all-enabled"
+      scope:
+        description: "ci | prod | all"
         required: false
-        default: all-enabled
+        default: all
 
 run-name: reference-app-copy tests all (${{ github.ref_name }} @ ${{ github.sha }})
 
@@ -17,5 +17,5 @@ jobs:
     uses: ./.github/workflows/test.yml
     secrets: inherit
     with:
-      layers: ${{ inputs.layers || 'all-enabled' }}
+      scope: ${{ inputs.scope || 'all' }}
       include_python: true

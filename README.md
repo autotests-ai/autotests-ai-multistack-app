@@ -159,10 +159,10 @@ python deploy/matrix_query.py sync-deploy-matrix
 
 | Workflow | Role |
 |----------|------|
-| [`ci.yml`](.github/workflows/ci.yml) | Orchestrator: **PR** → `test(ci)`; **push main** → `test(ci)` → `deploy` → `test(prod-only)` |
+| [`ci.yml`](.github/workflows/ci.yml) | Orchestrator: **PR** → `test(ci)`; **push main** → `test(ci)` → `deploy` → `test(prod)` |
 | [`deploy.yml`](.github/workflows/deploy.yml) | Leaf CD (`workflow_call` / manual): build from `deploy-matrix.json` → SSH `docker load` → `SKIP_BUILD=1 deploy/server-deploy.sh` |
 | [`deploy_all.yml`](.github/workflows/deploy_all.yml) | Manual: `deploy_mode=all` → every **active** backend/frontend from `matrix.yaml` |
-| [`test.yml`](.github/workflows/test.yml) | Leaf tests: `layers=ci` (unit + test-infra) · `prod-only` (`prod_api`) · `all-enabled` (both) |
+| [`test.yml`](.github/workflows/test.yml) | Leaf tests: `scope=ci` (unit + test-infra + component) · `prod` (`prod_api`) · `all` (both) |
 | [`test_all.yml`](.github/workflows/test_all.yml) | Manual: `test.yml` + python backend unit matrix |
 
 Module actions live next to each stack (`build` / `unit` / `component` / test `<layer>`). Inventory: [tests/LAYERS.md](tests/LAYERS.md) · example build: [`backend/java/backend-java-spring/.github/actions/build`](backend/java/backend-java-spring/.github/actions/build/action.yml). CD uses committed `deploy/deploy-matrix.json` + compose build per stack.

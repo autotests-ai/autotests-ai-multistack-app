@@ -38,7 +38,7 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 | `e2e` | tests | `…/tests/`, `…/tests/e2e/` | `@Tag("smoke")` | `./gradlew testE2e` | UI `:9811` + API `:8800` (CI) / prod (post-deploy) |
 | `visual` | tests | baselines | `@Tag("visual")` | `./gradlew testVisual` | app SPA |
 | `manual` | tests | stubs | `@Tag("manual")` | `./gradlew testManual` | n/a |
-| `prod_api` | tests | same api | `ci.yml` → `test(prod-only)` after deploy | `testApi` + `reference_prod` | [reference-app-copy.autotests.ai/backend-java-spring](https://reference-app-copy.autotests.ai/backend-java-spring) |
+| `prod_api` | tests | same api | `ci.yml` → `test(prod)` after deploy | `testApi` + `reference_prod` | [reference-app-copy.autotests.ai/backend-java-spring](https://reference-app-copy.autotests.ai/backend-java-spring) |
 | `prod_e2e` | tests | same e2e | deferred | `testE2e` + `reference_prod_*` | prod + Selenoid |
 
 Active Java module: `tests/java/tests-java-gradle-junit5-allure3-selenide/`  

@@ -2,7 +2,7 @@
 # Leafs: test.yml, deploy.yml (allure-report / notifications — phase C).
 #
 # PR:          test(ci)
-# push main:   test(ci) → deploy → test(prod-only)
+# push main:   test(ci) → deploy → test(prod)
 # dispatch:    same as push when on main (optional skip_deploy)
 
 name: reference-app-copy CI
@@ -32,7 +32,7 @@ jobs:
     uses: ./.github/workflows/test.yml
     secrets: inherit
     with:
-      layers: ci
+      scope: ci
 
   deploy:
     name: deploy
@@ -52,7 +52,7 @@ jobs:
     uses: ./.github/workflows/test.yml
     secrets: inherit
     with:
-      layers: prod-only
+      scope: prod
 
   # Phase C — wire when allure leafs land (tests/_deferred/notifications/):
   # allure_report:

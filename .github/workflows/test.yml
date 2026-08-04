@@ -1,20 +1,20 @@
-# Leaf tests — called by ci.yml (layers=ci | prod-only) or workflow_dispatch / test_all.yml.
+# Leaf tests — called by ci.yml (scope=ci | prod) or workflow_dispatch / test_all.yml.
 # Flip job-level `if: false` when wiring a deferred layer (see tests/LAYERS.md).
 #
-# layers: ci | prod-only | all-enabled
-#   ci          → unit_backend + test-infra + component_rtl
-#   prod-only   → prod_api (+ prod_e2e when enabled)
-#   all-enabled → ci + prod (manual / test_all)
+# scope: ci | prod | all
+#   ci   → unit_backend + test-infra + component_rtl
+#   prod → prod_api (+ prod_e2e when enabled)
+#   all  → ci + prod (manual / test_all)
 
 name: reference-app-copy Tests
 
 on:
   workflow_dispatch:
     inputs:
-      layers:
-        description: "ci | prod-only | all-enabled"
+      scope:
+        description: "ci | prod | all"
         required: false
-        default: all-enabled
+        default: all
       include_python:
         description: "Run python backend unit matrix"
         type: boolean
@@ -22,28 +22,28 @@ on:
         default: false
   workflow_call:
     inputs:
-      layers:
+      scope:
         type: string
         required: false
-        default: all-enabled
+        default: all
       include_python:
         type: boolean
         required: false
         default: false
 
-run-name: reference-app-copy tests (${{ inputs.layers || 'all-enabled' }} @ ${{ github.sha }})
+run-name: reference-app-copy tests (${{ inputs.scope || 'all' }} @ ${{ github.sha }})
 
 concurrency:
-  group: test-reference-app-copy-${{ github.ref }}-${{ inputs.layers || 'all-enabled' }}
+  group: test-reference-app-copy-${{ github.ref }}-${{ inputs.scope || 'all' }}
   cancel-in-progress: true
 
 jobs:
   unit_backend:
     name: unit_backend
     if: >-
-      inputs.layers == 'ci' ||
-      inputs.layers == 'all-enabled' ||
-      inputs.layers == ''
+      inputs.scope == 'ci' ||
+      inputs.scope == 'all' ||
+      inputs.scope == ''
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -54,9 +54,9 @@ jobs:
     name: unit_backend_python (${{ matrix.stack }})
     if: >-
       inputs.include_python &&
-      (inputs.layers == 'ci' ||
-       inputs.layers == 'all-enabled' ||
-       inputs.layers == '')
+      (inputs.scope == 'ci' ||
+       inputs.scope == 'all' ||
+       inputs.scope == '')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -76,9 +76,9 @@ jobs:
   test-infra:
     name: test-infra
     if: >-
-      inputs.layers == 'ci' ||
-      inputs.layers == 'all-enabled' ||
-      inputs.layers == ''
+      inputs.scope == 'ci' ||
+      inputs.scope == 'all' ||
+      inputs.scope == ''
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -88,9 +88,9 @@ jobs:
   component_rtl:
     name: component_rtl
     if: >-
-      inputs.layers == 'ci' ||
-      inputs.layers == 'all-enabled' ||
-      inputs.layers == ''
+      inputs.scope == 'ci' ||
+      inputs.scope == 'all' ||
+      inputs.scope == ''
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -171,9 +171,9 @@ jobs:
   prod_api:
     name: prod_api
     if: >-
-      inputs.layers == 'prod-only' ||
-      inputs.layers == 'all-enabled' ||
-      inputs.layers == ''
+      inputs.scope == 'prod' ||
+      inputs.scope == 'all' ||
+      inputs.scope == ''
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
