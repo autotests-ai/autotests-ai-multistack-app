@@ -13,7 +13,7 @@ Product page (header + DS panels), not a standalone status board.
 |-------|------|
 | `stack/matrix.json` | Public matrix artifact — sync from SSOT `deploy/matrix.yaml` |
 | `js/stack-matrix.js` | Shared parse/href/fetch + vanilla DOM mount |
-| `js/poll-toggle.js` + `css/poll-toggle.css` | Header auto-refresh (default 5s) in `header__slot` |
+| `js/poll-toggle.js` + `css/poll-toggle.css` | Header auto-refresh (default 5s) leading in `header__tools` |
 | `css/stack-page.css` + `css/badge.css` | Boards layout on DS tokens |
 | `stack/index.html` | Vanilla thin shell (product header + `#stack-root`) |
 

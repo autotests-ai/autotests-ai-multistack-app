@@ -357,8 +357,8 @@ function bindStackHeaderPoll(root, options = {}) {
   let observer = null;
 
   const attach = () => {
-    const slot = document.querySelector('[data-testid="header-slot"]');
-    if (!slot) return false;
+    const tools = document.querySelector('[data-testid="header-tools"]');
+    if (!tools) return false;
     disposePoll?.();
     disposePoll = mountHeaderPollToggle({
       intervalMs,

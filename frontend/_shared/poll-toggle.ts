@@ -118,20 +118,35 @@ export function mountPollToggle(
 }
 
 export function mountHeaderPollToggle(
-  options: MountPollToggleOptions & { slotSelector?: string } = {},
+  options: MountPollToggleOptions & { toolsSelector?: string } = {},
 ): () => void {
-  const selector = options.slotSelector || '[data-testid="header-slot"]';
-  const slot = document.querySelector(selector);
-  if (!slot) {
+  const testid = options.testid || 'header-poll-toggle';
+  const selector = options.toolsSelector || '[data-testid="header-tools"]';
+  const tools = document.querySelector(selector);
+  if (!tools) {
     return () => {};
   }
-  slot.replaceChildren();
-  return mountPollToggle(slot, {
+
+  tools.querySelector(`[data-testid="${testid}"]`)?.remove();
+
+  const host = document.createElement('div');
+  const disposeInner = mountPollToggle(host, {
     intervalMs: options.intervalMs,
     defaultOn: options.defaultOn,
     onTick: options.onTick,
-    testid: options.testid || 'header-poll-toggle',
+    testid,
   });
+  const node = host.firstElementChild;
+  if (!node) {
+    disposeInner();
+    return () => {};
+  }
+  tools.prepend(node);
+
+  return () => {
+    disposeInner();
+    node.remove();
+  };
 }
 
 /** Wait for header mount, then bind poll toggle. */
@@ -140,8 +155,8 @@ export function whenHeaderReady(bind: () => () => void): () => void {
   let observer: MutationObserver | null = null;
 
   const tryBind = () => {
-    const slot = document.querySelector('[data-testid="header-slot"]');
-    if (!slot) return false;
+    const tools = document.querySelector('[data-testid="header-tools"]');
+    if (!tools) return false;
     dispose?.();
     dispose = bind();
     return true;

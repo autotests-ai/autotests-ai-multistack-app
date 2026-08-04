@@ -117,27 +117,42 @@ export function mountPollToggle(container, options = {}) {
 }
 
 /**
- * Mount into `[data-testid="header-slot"]` (page-owned header chrome).
+ * Mount into `[data-testid="header-tools"]` (leading icon, same gap as siblings).
  * @param {{
  *   intervalMs?: number,
  *   defaultOn?: boolean,
  *   onTick?: () => void,
  *   testid?: string,
- *   slotSelector?: string,
+ *   toolsSelector?: string,
  * }} [options]
  * @returns {() => void} dispose
  */
 export function mountHeaderPollToggle(options = {}) {
-  const selector = options.slotSelector || '[data-testid="header-slot"]';
-  const slot = document.querySelector(selector);
-  if (!slot) {
+  const testid = options.testid || 'header-poll-toggle';
+  const selector = options.toolsSelector || '[data-testid="header-tools"]';
+  const tools = document.querySelector(selector);
+  if (!tools) {
     return () => {};
   }
-  slot.replaceChildren();
-  return mountPollToggle(slot, {
+
+  tools.querySelector(`[data-testid="${testid}"]`)?.remove();
+
+  const host = document.createElement('div');
+  const disposeInner = mountPollToggle(host, {
     intervalMs: options.intervalMs,
     defaultOn: options.defaultOn,
     onTick: options.onTick,
-    testid: options.testid || 'header-poll-toggle',
+    testid,
   });
+  const node = host.firstElementChild;
+  if (!node) {
+    disposeInner();
+    return () => {};
+  }
+  tools.prepend(node);
+
+  return () => {
+    disposeInner();
+    node.remove();
+  };
 }
