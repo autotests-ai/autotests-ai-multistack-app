@@ -75,12 +75,14 @@ function rowHref(kind: 'backend' | 'frontend', item: BackendModule | FrontendMod
 <template>
   <main class="page-shell page-shell--below-header stack-page" data-testid="stack-page">
     <div class="stack-page__header">
-      <div>
-        <h1 class="stack-page__title">Reference · stack</h1>
-        <p class="text text--muted stack-page__lead">
-          Матрица backend × frontend. Клик по active —
-          <code>/{backend}/{frontend}/stack/</code>. Бейдж текущей пары — home приложения.
-        </p>
+      <div class="stack-page__heading">
+        <h1 class="stack-page__title">Stack</h1>
+        <div v-if="summary" class="stack-page__summary" data-testid="stack-summary">
+          <span class="badge badge--primary">be {{ summary.activeBe }}</span>
+          <span class="badge">slot {{ summary.slotBe }}</span>
+          <span class="badge badge--primary">fe {{ summary.activeFe }}</span>
+          <span class="badge">slot {{ summary.slotFe }}</span>
+        </div>
       </div>
       <a
         class="badge badge--primary stack-page__current"
@@ -95,13 +97,6 @@ function rowHref(kind: 'backend' | 'frontend', item: BackendModule | FrontendMod
     <div v-if="state.status === 'error'" class="stack-page__error" data-testid="stack-error">
       Не удалось загрузить matrix.json — sync: python frontend/scripts/sync-stack-matrix.py.
       {{ state.message }}
-    </div>
-
-    <div v-if="summary" class="stack-page__summary" data-testid="stack-summary">
-      <span class="badge badge--primary">backend active {{ summary.activeBe }}</span>
-      <span class="badge">backend slot {{ summary.slotBe }}</span>
-      <span class="badge badge--primary">frontend active {{ summary.activeFe }}</span>
-      <span class="badge">frontend slot {{ summary.slotFe }}</span>
     </div>
 
     <p v-if="state.status === 'loading'" class="text text--muted" data-testid="stack-loading">

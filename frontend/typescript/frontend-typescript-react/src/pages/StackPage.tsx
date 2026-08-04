@@ -129,12 +129,16 @@ export function StackPage() {
       data-testid="stack-page"
     >
       <div className="stack-page__header">
-        <div>
-          <h1 className="stack-page__title">Reference · stack</h1>
-          <p className="text text--muted stack-page__lead">
-            Матрица backend × frontend. Клик по active — <code>{'/{backend}/{frontend}/stack/'}</code>.
-            Бейдж текущей пары — home приложения.
-          </p>
+        <div className="stack-page__heading">
+          <h1 className="stack-page__title">Stack</h1>
+          {summary && (
+            <div className="stack-page__summary" data-testid="stack-summary">
+              <Badge variant="primary">be {summary.activeBe}</Badge>
+              <Badge>slot {summary.slotBe}</Badge>
+              <Badge variant="primary">fe {summary.activeFe}</Badge>
+              <Badge>slot {summary.slotFe}</Badge>
+            </div>
+          )}
         </div>
         <a
           className="badge badge--primary stack-page__current"
@@ -150,15 +154,6 @@ export function StackPage() {
         <div className="stack-page__error" data-testid="stack-error">
           Не удалось загрузить matrix.json — sync: python frontend/scripts/sync-stack-matrix.py.{' '}
           {state.message}
-        </div>
-      )}
-
-      {summary && (
-        <div className="stack-page__summary" data-testid="stack-summary">
-          <Badge variant="primary">backend active {summary.activeBe}</Badge>
-          <Badge>backend slot {summary.slotBe}</Badge>
-          <Badge variant="primary">frontend active {summary.activeFe}</Badge>
-          <Badge>frontend slot {summary.slotFe}</Badge>
         </div>
       )}
 

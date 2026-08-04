@@ -127,20 +127,16 @@ export function mountStackPage(root, data, pathname = window.location.pathname) 
 
   root.innerHTML = `
     <div class="stack-page__header">
-      <div>
-        <h1 class="stack-page__title">Reference · stack</h1>
-        <p class="text text--muted stack-page__lead">
-          Матрица backend × frontend. Клик по active — <code>/{backend}/{frontend}/stack/</code>.
-          Бейдж текущей пары — home приложения.
-        </p>
+      <div class="stack-page__heading">
+        <h1 class="stack-page__title">Stack</h1>
+        <div class="stack-page__summary" data-testid="stack-summary">
+          <span class="badge badge--primary">be ${summary.activeBe}</span>
+          <span class="badge">slot ${summary.slotBe}</span>
+          <span class="badge badge--primary">fe ${summary.activeFe}</span>
+          <span class="badge">slot ${summary.slotFe}</span>
+        </div>
       </div>
       <a class="badge badge--primary stack-page__current" href="${escapeHtml(homeHref)}" title="open app home" data-testid="stack-current-pair">${escapeHtml(label)}</a>
-    </div>
-    <div class="stack-page__summary" data-testid="stack-summary">
-      <span class="badge badge--primary">backend active ${summary.activeBe}</span>
-      <span class="badge">backend slot ${summary.slotBe}</span>
-      <span class="badge badge--primary">frontend active ${summary.activeFe}</span>
-      <span class="badge">frontend slot ${summary.slotFe}</span>
     </div>
     <div class="stack-page__boards">
       <section class="panel panel--content stack-page__board">
