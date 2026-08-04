@@ -27,8 +27,8 @@ Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/N
 
 | Zone | Current modules | Future slots |
 |------|-----------------|--------------|
-| **frontend/javascript/** | `frontend-javascript-react` / `angular` (slots), `frontend-javascript-vanilla` (active) | vanilla `src/test/` |
-| **frontend/typescript/** | `frontend-typescript-react` (+ RTL), `angular` / `vanilla` (slots) | vanilla `src/test/` |
+| **frontend/javascript/** | `frontend-javascript-react` / `angular` / `vue` (slots), `frontend-javascript-vanilla` (active) | vanilla `src/test/` |
+| **frontend/typescript/** | `frontend-typescript-react` (+ RTL), `angular` / `vue` / `vanilla` (slots) | vanilla `src/test/` |
 | **frontend/_shared/** | `frontend-javascript-app`, `frontend-javascript-embed` | — |
 | **frontend/_catalog/** | `frontend-javascript-preview` | — |
 | **backend/java/** | `backend-java-spring` | `backend-kotlin-spring`, … |

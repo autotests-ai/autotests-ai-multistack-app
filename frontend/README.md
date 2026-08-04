@@ -1,7 +1,7 @@
 # Frontend
 
 UI by **language** → product module (component tests co-located in `src/test/`).
-Stack is in the module name (`-react`, `-angular`, `-vanilla`).
+Stack is in the module name (`-react`, `-angular`, `-vue`, `-vanilla`).
 
 ```
 frontend/
@@ -15,10 +15,12 @@ frontend/
   javascript/
     frontend-javascript-react/     # product + src/test/ (slot)
     frontend-javascript-angular/   # product + src/test/ (slot)
+    frontend-javascript-vue/       # product + src/test/ (slot)
     frontend-javascript-vanilla/   # default app pages (was static)
   typescript/
     frontend-typescript-react/     # product + src/test/ (component_rtl)
     frontend-typescript-angular/   # product + src/test/ (slot)
+    frontend-typescript-vue/       # product + src/test/ (slot)
     frontend-typescript-vanilla/   # product slot
 ```
 
@@ -26,8 +28,8 @@ frontend/
 
 | Kind | In URL matrix? | Examples |
 |------|----------------|----------|
-| Product UI | yes | `frontend-*-react`, `frontend-*-angular`, `frontend-*-vanilla` |
-| Component tests (jsdom) | no | `frontend-*-{react,angular}/src/test/` |
+| Product UI | yes | `frontend-*-react`, `frontend-*-angular`, `frontend-*-vue`, `frontend-*-vanilla` |
+| Component tests (jsdom) | no | `frontend-*-{react,angular,vue}/src/test/` |
 | Shared / catalog | no | `_shared/app`, `_shared/embed`, `_catalog/preview` |
 
 ## Prod routing
