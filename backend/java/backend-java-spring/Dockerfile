@@ -1,4 +1,4 @@
-# API-only Spring Boot image. UI is served by deploy/web (nginx), not this jar.
+# API-only Spring Boot image. UI is served by per-frontend nginx containers, not this jar.
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /app
 COPY gradlew settings.gradle build.gradle ./

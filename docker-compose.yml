@@ -148,11 +148,24 @@ services:
     ports:
       - "${BACKEND_DJANGO_PORT:-8822}:8080"
 
-  web:
-    image: reference-app-copy-web:latest
+  frontend-javascript-vanilla:
+    image: reference-app-copy-frontend-javascript-vanilla:latest
     build:
       context: .
-      dockerfile: deploy/web/Dockerfile
+      dockerfile: frontend/javascript/frontend-javascript-vanilla/Dockerfile
+      args:
+        UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
+    restart: unless-stopped
+    networks:
+      - reference_internal
+    ports:
+      - "${FRONTEND_JS_VANILLA_PORT:-9800}:80"
+
+  frontend-typescript-react:
+    image: reference-app-copy-frontend-typescript-react:latest
+    build:
+      context: .
+      dockerfile: frontend/typescript/frontend-typescript-react/Dockerfile
       args:
         UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
         REACT_UI: ${REACT_UI:-frontend/_shared/frontend-react-ui}
@@ -160,7 +173,20 @@ services:
     networks:
       - reference_internal
     ports:
-      - "${WEB_PORT:-8701}:80"
+      - "${FRONTEND_TS_REACT_PORT:-9811}:80"
+
+  frontend-typescript-vue:
+    image: reference-app-copy-frontend-typescript-vue:latest
+    build:
+      context: .
+      dockerfile: frontend/typescript/frontend-typescript-vue/Dockerfile
+      args:
+        UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
+    restart: unless-stopped
+    networks:
+      - reference_internal
+    ports:
+      - "${FRONTEND_TS_VUE_PORT:-9813}:80"
 
 networks:
   reference_internal:

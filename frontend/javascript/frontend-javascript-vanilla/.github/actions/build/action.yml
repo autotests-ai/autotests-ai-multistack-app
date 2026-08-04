@@ -1,13 +1,13 @@
-name: Build web image
-description: docker compose build + amd64 check for shared web
+name: Build frontend-javascript-vanilla image
+description: docker compose build + amd64 check for frontend-javascript-vanilla
 
 inputs:
   service:
     required: false
-    default: web
+    default: frontend-javascript-vanilla
   image:
     required: false
-    default: reference-app-copy-web:latest
+    default: reference-app-copy-frontend-javascript-vanilla:latest
 
 runs:
   using: composite

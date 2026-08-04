@@ -5,12 +5,14 @@ APP_DIR="${APP_DIR:-/home/reference_app_copy/reference-app-copy}"
 REPO_URL="${REPO_URL:-https://github.com/autotests-ai/reference-app-copy.git}"
 
 # Host publish ports (matrix.yaml / compose). Path routing = host nginx (deploy/nginx).
-export WEB_PORT="${WEB_PORT:-8701}"
 export BACKEND_JAVA_PORT="${BACKEND_JAVA_PORT:-8800}"
 export BACKEND_KOTLIN_PORT="${BACKEND_KOTLIN_PORT:-8810}"
 export BACKEND_FLASK_PORT="${BACKEND_FLASK_PORT:-8820}"
 export BACKEND_FASTAPI_PORT="${BACKEND_FASTAPI_PORT:-8821}"
 export BACKEND_DJANGO_PORT="${BACKEND_DJANGO_PORT:-8822}"
+export FRONTEND_JS_VANILLA_PORT="${FRONTEND_JS_VANILLA_PORT:-9800}"
+export FRONTEND_TS_REACT_PORT="${FRONTEND_TS_REACT_PORT:-9811}"
+export FRONTEND_TS_VUE_PORT="${FRONTEND_TS_VUE_PORT:-9813}"
 
 SKIP_BUILD="${SKIP_BUILD:-0}"
 MAX_ATTEMPTS="${HEALTH_POLL_ATTEMPTS:-30}"
@@ -55,6 +57,29 @@ for entry in "${health_ports[@]}"; do
     fi
     if [[ "$i" -eq "$MAX_ATTEMPTS" ]]; then
       echo "FAIL: health not ok after ${MAX_ATTEMPTS} attempts: $url (expect $expect)" >&2
+      exit 1
+    fi
+    sleep "$SLEEP_SECS"
+  done
+done
+
+# Health: published frontend ports (HTTP 200 at /).
+frontend_ports=(
+  "${FRONTEND_JS_VANILLA_PORT}"
+  "${FRONTEND_TS_REACT_PORT}"
+  "${FRONTEND_TS_VUE_PORT}"
+)
+
+for port in "${frontend_ports[@]}"; do
+  url="http://127.0.0.1:${port}/"
+  for i in $(seq 1 "$MAX_ATTEMPTS"); do
+    code="$(curl --noproxy '*' -s -o /dev/null -w '%{http_code}' "$url" 2>/dev/null || true)"
+    if [[ "$code" == "200" ]]; then
+      echo "Health OK: $url (HTTP $code, attempt $i)"
+      break
+    fi
+    if [[ "$i" -eq "$MAX_ATTEMPTS" ]]; then
+      echo "FAIL: frontend not ok after ${MAX_ATTEMPTS} attempts: $url (got $code)" >&2
       exit 1
     fi
     sleep "$SLEEP_SECS"

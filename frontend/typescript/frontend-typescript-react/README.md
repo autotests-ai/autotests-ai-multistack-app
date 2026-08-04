@@ -33,13 +33,13 @@ Prod URL: `https://reference-app-copy.autotests.ai/{backend}/frontend-typescript
 
 The design-system header is SSOT and is **not** reimplemented in React. `<AppHeader>`
 publishes `window.headerConfig` and injects `js/header.js` from the mount
-(`UI_RUNTIME` overlay in the web image).
+(`UI_RUNTIME` overlay in this module's nginx image).
 
 ## Scripts
 
 ```bash
 npm run dev        # Vite dev server (base /frontend-typescript-react/)
-npm run build      # → dist/ (packed by deploy/web multi-stage)
+npm run build      # → dist/ (packed by this module's Dockerfile)
 npm run typecheck  # tsc --noEmit
 npm test           # Vitest + RTL (src/test/)
 ```

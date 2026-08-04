@@ -1,4 +1,4 @@
-# Universal deploy — defaults: backend-java-spring + web.
+# Universal deploy — defaults: backend-java-spring + frontend-typescript-react.
 # Expand via workflow_dispatch inputs or deploy_all.yml.
 # Does not run autotests (see test.yml).
 
@@ -13,11 +13,10 @@ on:
         description: "Comma-separated compose backend ids"
         required: false
         default: backend-java-spring
-      build_web:
-        description: "Build shared web image"
-        type: boolean
+      frontends:
+        description: "Comma-separated compose frontend ids"
         required: false
-        default: true
+        default: frontend-typescript-react
       deploy_mode:
         description: "default = selected services; all = full server-deploy.sh"
         required: false
@@ -28,10 +27,10 @@ on:
         type: string
         required: false
         default: backend-java-spring
-      build_web:
-        type: boolean
+      frontends:
+        type: string
         required: false
-        default: true
+        default: frontend-typescript-react
       deploy_mode:
         type: string
         required: false
@@ -45,8 +44,7 @@ concurrency:
 
 env:
   BACKENDS: ${{ inputs.backends || 'backend-java-spring' }}
-  # push has no inputs → default web on; dispatch/call use inputs.build_web
-  BUILD_WEB: ${{ (github.event_name == 'push' || inputs.build_web) && 'true' || 'false' }}
+  FRONTENDS: ${{ inputs.frontends || 'frontend-typescript-react' }}
   DEPLOY_MODE: ${{ inputs.deploy_mode || 'default' }}
 
 jobs:
@@ -80,9 +78,17 @@ jobs:
         if: contains(format(',{0},', env.BACKENDS), ',backend-python-django,')
         uses: ./backend/python/backend-python-django/.github/actions/build
 
-      - name: Build web
-        if: env.BUILD_WEB == 'true'
-        uses: ./deploy/web/.github/actions/build
+      - name: Build frontend-typescript-react
+        if: contains(format(',{0},', env.FRONTENDS), ',frontend-typescript-react,')
+        uses: ./frontend/typescript/frontend-typescript-react/.github/actions/build
+
+      - name: Build frontend-typescript-vue
+        if: contains(format(',{0},', env.FRONTENDS), ',frontend-typescript-vue,')
+        uses: ./frontend/typescript/frontend-typescript-vue/.github/actions/build
+
+      - name: Build frontend-javascript-vanilla
+        if: contains(format(',{0},', env.FRONTENDS), ',frontend-javascript-vanilla,')
+        uses: ./frontend/javascript/frontend-javascript-vanilla/.github/actions/build
 
       - name: Save image artifacts
         run: |
@@ -159,7 +165,7 @@ jobs:
           username: ${{ env.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           command_timeout: 15m
-          envs: BACKENDS
+          envs: BACKENDS,FRONTENDS
           script: |
             set -euo pipefail
             APP_DIR="${APP_DIR:-/home/reference_app_copy/reference-app-copy}"
@@ -173,7 +179,11 @@ jobs:
               b="$(echo "$b" | xargs)"
               [[ -n "$b" ]] && services+=("$b")
             done
-            services+=(web)
+            IFS=',' read -r -a frontends <<< "${FRONTENDS:-frontend-typescript-react}"
+            for f in "${frontends[@]}"; do
+              f="$(echo "$f" | xargs)"
+              [[ -n "$f" ]] && services+=("$f")
+            done
 
             docker compose up -d --force-recreate --no-build "${services[@]}"
 
@@ -206,7 +216,31 @@ jobs:
               done
             done
 
+            for f in "${frontends[@]}"; do
+              f="$(echo "$f" | xargs)"
+              [[ -z "$f" ]] && continue
+              case "$f" in
+                frontend-javascript-vanilla) port=9800 ;;
+                frontend-typescript-react) port=9811 ;;
+                frontend-typescript-vue) port=9813 ;;
+                *) echo "skip health for unknown frontend: $f"; continue ;;
+              esac
+              url="http://127.0.0.1:${port}/"
+              for i in $(seq 1 "$MAX_ATTEMPTS"); do
+                code="$(curl --noproxy '*' -s -o /dev/null -w '%{http_code}' "$url" 2>/dev/null || true)"
+                if [[ "$code" == "200" ]]; then
+                  echo "Health OK: $url (HTTP $code, attempt $i)"
+                  break
+                fi
+                if [[ "$i" -eq "$MAX_ATTEMPTS" ]]; then
+                  echo "FAIL: frontend not ok after ${MAX_ATTEMPTS} attempts: $url (got $code)" >&2
+                  exit 1
+                fi
+                sleep "$SLEEP_SECS"
+              done
+            done
+
             if [[ -f deploy/nginx/sync-nginx.sh ]]; then
               bash deploy/nginx/sync-nginx.sh
             fi
-            echo "Deploy OK ($(git rev-parse --short HEAD)) mode=default backends=${BACKENDS}"
+            echo "Deploy OK ($(git rev-parse --short HEAD)) mode=default backends=${BACKENDS} frontends=${FRONTENDS}"

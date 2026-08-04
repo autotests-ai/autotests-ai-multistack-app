@@ -52,7 +52,7 @@ ATTACH_OFF = {
 STANDS = {
     "reference_ci": {
         # Local compose publishes ports directly (no path-router container).
-        "baseUrl": "http://localhost:8701/frontend-typescript-react/",
+        "baseUrl": "http://localhost:9811/",
         "apiBaseUrl": "http://localhost:8800/api/",
         "remoteUrl": "",
         "videoFolder": "",

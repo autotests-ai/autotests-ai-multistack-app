@@ -1,24 +1,11 @@
-# web (shared static nginx)
+# deploy/web (retired)
 
-One image for **all** active product UIs. No `/api` proxy.
+Shared `web` image removed. Each active frontend is its own compose/nginx container:
 
-| Path | Source |
-|------|--------|
-| `/frontend-typescript-react/**` | Vite `dist/` + `UI_RUNTIME` overlay |
-| `/frontend-typescript-vue/**` | Vite `dist/` + `UI_RUNTIME` overlay |
-| `/frontend-javascript-vanilla/**` | static module + `UI_RUNTIME` overlay |
-| `/`, other | **404** |
+| Service | Module Dockerfile | Publish port |
+|---------|-------------------|--------------|
+| `frontend-javascript-vanilla` | [`frontend/javascript/frontend-javascript-vanilla/Dockerfile`](../../frontend/javascript/frontend-javascript-vanilla/Dockerfile) | 9800 |
+| `frontend-typescript-react` | [`frontend/typescript/frontend-typescript-react/Dockerfile`](../../frontend/typescript/frontend-typescript-react/Dockerfile) | 9811 |
+| `frontend-typescript-vue` | [`frontend/typescript/frontend-typescript-vue/Dockerfile`](../../frontend/typescript/frontend-typescript-vue/Dockerfile) | 9813 |
 
-`/api/**` and path-prefixed UI mounts are routed by **host nginx** ([`../nginx/`](../nginx/)).  
-Local compose: hit published ports directly (`:8701` static, `:8800+` APIs).
-
-Matrix SSOT: [`../matrix.yaml`](../matrix.yaml) — only `status: active` frontends are packed here.
-
-```mermaid
-flowchart LR
-  hostNginx[host_nginx]
-  web[web_shared_static]
-  api[backend]
-  hostNginx -->|"/{backend}/frontend-*"| web
-  hostNginx -->|"/{backend}/api"| api
-```
+Host nginx (`../nginx/`) proxies `/{backend}/{frontend}/` to the matching publish port. SSOT: [`../matrix.yaml`](../matrix.yaml).

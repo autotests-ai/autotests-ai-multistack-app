@@ -39,7 +39,7 @@ def load_matrix(path: Path) -> dict:
     except ImportError:
         pass
 
-    data: dict = {"backends": [], "frontends": [], "web": {}}
+    data: dict = {"backends": [], "frontends": []}
     section: str | None = None
     current: dict | None = None
 
@@ -52,23 +52,16 @@ def load_matrix(path: Path) -> dict:
         if indent == 0 and line.endswith(":") and not line.startswith("-"):
             section = line[:-1]
             current = None
-            if section == "web":
-                data[section] = {}
-            elif section in ("backends", "frontends"):
+            if section in ("backends", "frontends"):
                 data[section] = []
             continue
 
         if indent == 0 and ":" in line and not line.startswith("-"):
             key, _, val = line.partition(":")
             key = key.strip()
-            if key in ("domain_suffix", "public_host"):
+            if key in ("domain_suffix", "public_host", "ui_runtime", "react_ui"):
                 data[key] = _parse_scalar(val)
                 section = None
-            continue
-
-        if section == "web" and indent == 2 and ":" in line:
-            key, _, val = line.partition(":")
-            data[section][key.strip()] = _parse_scalar(val)
             continue
 
         if section in ("backends", "frontends"):
@@ -113,16 +106,22 @@ def render_backend_upstreams(backends: list[dict]) -> str:
     return "\n\n".join(blocks) + ("\n" if blocks else "")
 
 
-def render_web_upstream(web_port: int) -> str:
-    return "\n".join(
-        [
-            "upstream web_static {",
-            f"    server 127.0.0.1:{web_port};",
-            "    keepalive 8;",
-            "}",
-            "",
-        ]
-    )
+def render_frontend_upstreams(frontends: list[dict]) -> str:
+    blocks: list[str] = []
+    for frontend in frontends:
+        fid_us = frontend["id"].replace("-", "_")
+        port = frontend["publish_port"]
+        blocks.append(
+            "\n".join(
+                [
+                    f"upstream {fid_us} {{",
+                    f"    server 127.0.0.1:{port};",
+                    "    keepalive 8;",
+                    "}",
+                ]
+            )
+        )
+    return "\n\n".join(blocks) + ("\n" if blocks else "")
 
 
 def render_api_locations(backends: list[dict]) -> str:
@@ -143,6 +142,40 @@ def render_api_locations(backends: list[dict]) -> str:
                     "        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;",
                     "        proxy_set_header X-Forwarded-Proto $scheme;",
                     f"        proxy_pass http://{bid_us}_api/api/;",
+                    "    }",
+                    "",
+                ]
+            )
+        )
+    return "\n".join(chunks)
+
+
+def render_frontend_locations(frontends: list[dict]) -> str:
+    """Strip /{backend}/{frontend} → / for per-frontend containers at docroot."""
+    chunks: list[str] = []
+    for frontend in frontends:
+        fid = frontend["id"]
+        fid_us = fid.replace("-", "_")
+        chunks.append(
+            "\n".join(
+                [
+                    f"    location ~ ^/backend-[^/]+/{fid}/?$ {{",
+                    "        proxy_http_version 1.1;",
+                    "        proxy_set_header Host $host;",
+                    "        proxy_set_header X-Real-IP $remote_addr;",
+                    "        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;",
+                    "        proxy_set_header X-Forwarded-Proto $scheme;",
+                    "        rewrite ^ / break;",
+                    f"        proxy_pass http://{fid_us};",
+                    "    }",
+                    f"    location ~ ^/backend-[^/]+/{fid}/(.+)$ {{",
+                    "        proxy_http_version 1.1;",
+                    "        proxy_set_header Host $host;",
+                    "        proxy_set_header X-Real-IP $remote_addr;",
+                    "        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;",
+                    "        proxy_set_header X-Forwarded-Proto $scheme;",
+                    f"        rewrite ^/backend-[^/]+/{fid}/(.+)$ /$1 break;",
+                    f"        proxy_pass http://{fid_us};",
                     "    }",
                     "",
                 ]
@@ -175,6 +208,11 @@ def main() -> int:
         help="Comma-separated backend statuses to render",
     )
     parser.add_argument(
+        "--frontend-statuses",
+        default="active",
+        help="Comma-separated frontend statuses to render",
+    )
+    parser.add_argument(
         "--dump-json",
         action="store_true",
         help="Print parsed matrix as JSON and exit",
@@ -189,29 +227,33 @@ def main() -> int:
 
     template = args.template.read_text(encoding="utf-8")
     want = {s.strip() for s in args.statuses.split(",") if s.strip()}
+    want_fe = {s.strip() for s in args.frontend_statuses.split(",") if s.strip()}
     backends = [b for b in matrix.get("backends", []) if b.get("status") in want]
+    frontends = [f for f in matrix.get("frontends", []) if f.get("status") in want_fe]
     if not backends:
         print("No backends matched statuses", want, file=sys.stderr)
         return 1
+    if not frontends:
+        print("No frontends matched statuses", want_fe, file=sys.stderr)
+        return 1
 
     host = public_host(matrix)
-    web_port = int(matrix["web"]["publish_port"])
     conf = (
         template.replace("__PUBLIC_HOST__", host)
         .replace("__BACKEND_UPSTREAMS__", render_backend_upstreams(backends))
-        .replace("__WEB_UPSTREAM__", render_web_upstream(web_port))
+        .replace("__FRONTEND_UPSTREAMS__", render_frontend_upstreams(frontends))
         .replace("__BACKEND_API_LOCATIONS__", render_api_locations(backends))
+        .replace("__FRONTEND_LOCATIONS__", render_frontend_locations(frontends))
     )
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
-    # Drop legacy per-backend subdomain confs
     for old in args.out_dir.glob("*.conf"):
         old.unlink()
 
     out = args.out_dir / f"{host}.conf"
     out.write_text(conf, encoding="utf-8")
     print(f"wrote {out}")
-    print("OK: 1 vhost")
+    print(f"OK: 1 vhost ({len(backends)} backends, {len(frontends)} frontends)")
     return 0
 
 

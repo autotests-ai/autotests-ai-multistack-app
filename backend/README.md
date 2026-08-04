@@ -18,7 +18,7 @@ backend/
   scripts/                     # CI helpers (Sonar, env profiles, paths.sh)
 ```
 
-Product UI SSOT is `frontend/`, served by shared `deploy/web` (static nginx).  
+Product UI SSOT is `frontend/` — each active module has its own nginx container (see root `docker-compose.yml`).  
 Host nginx: **`/{backend}/api` → this API**, **`/{backend}/{frontend}` → shared UI**.  
 Matrix: [`deploy/matrix.yaml`](../deploy/matrix.yaml).
 

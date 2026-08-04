@@ -10,10 +10,10 @@ Production: [reference-app-copy.autotests.ai](https://reference-app-copy.autotes
 
 ```
 reference-app-copy/
-  frontend/          # UI by language → stack (…/.github/actions for CI)
+  frontend/          # UI by language → stack (Dockerfile + .github/actions)
   backend/           # server by language → stack (…/.github/actions/build|unit)
   tests/             # automation (…/.github/actions/test-infra|prod-api)
-  deploy/            # matrix, shared web (+ web/.github/actions/build), host nginx, smoke
+  deploy/            # matrix, host nginx, smoke (shared web image retired)
   .github/workflows/ # deploy.yml / deploy_all.yml · test.yml / test_all.yml
 ```
 
@@ -39,7 +39,7 @@ Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/N
 | **tests/javascript/** | `tests-javascript-playwright` | Cypress, … |
 | **tests/python/** | `tests-python-selenium` | playwright, … |
 
-### Routing (shared UI × multi-backend)
+### Routing (per-frontend containers × multi-backend)
 
 ```
 https://reference-app-copy.autotests.ai/{backend}/{frontend}/
@@ -47,7 +47,7 @@ https://reference-app-copy.autotests.ai/{backend}/api/
 ```
 
 - **first path segment** → which API answers `/{backend}/api/**`
-- **second path segment** → which product UI (packed once into shared `web` image)
+- **second path segment** → which frontend container answers (host nginx → publish port)
 - Frontends resolve `APP_BASE` / `API_BASE` from the URL — same `dist/` works under every backend prefix
 
 Examples:
@@ -81,7 +81,6 @@ SSOT: [`deploy/matrix.yaml`](deploy/matrix.yaml). Language base **+10**, stack w
 
 | Port | Service | Notes |
 |------|---------|-------|
-| **8701** | `web` | shared static pack (`WEB_PORT`) |
 | **8800** | `backend-java-spring` | |
 | **8810** | `backend-kotlin-spring` | |
 | **8820** | `backend-python-flask` | |
@@ -89,17 +88,17 @@ SSOT: [`deploy/matrix.yaml`](deploy/matrix.yaml). Language base **+10**, stack w
 | **8822** | `backend-python-django` | |
 | **8830** | `backend-go-gin` | slot |
 | **8831** | `backend-go-stdlib` | slot |
-| **9800** | `frontend-javascript-vanilla` | local serve / vite |
+| **9800** | `frontend-javascript-vanilla` | compose publish |
 | **9801** | `frontend-javascript-react` | slot |
 | **9802** | `frontend-javascript-angular` | slot |
 | **9803** | `frontend-javascript-vue` | slot |
 | **9810** | `frontend-typescript-vanilla` | slot |
-| **9811** | `frontend-typescript-react` | |
+| **9811** | `frontend-typescript-react` | compose publish |
 | **9812** | `frontend-typescript-angular` | slot |
-| **9813** | `frontend-typescript-vue` | |
+| **9813** | `frontend-typescript-vue` | compose publish |
 
 Next backend language → **8840+**. Next frontend language → **9820+**.  
-Container-internal: backends `:8080`, `web` `:80`.  
+Container-internal: backends `:8080`, frontends `:80`.  
 Path routing (`/{backend}/api`, `/{backend}/{frontend}`) — **host nginx** ([`deploy/nginx/`](deploy/nginx/)); local compose exposes published ports only.
 
 ## Quick start
@@ -112,15 +111,17 @@ curl -fsS http://localhost:8810/api/health
 curl -fsS http://localhost:8820/api/health
 curl -fsS http://localhost:8821/api/health
 curl -fsS http://localhost:8822/api/health
-curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8701/frontend-typescript-react/
-curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8701/frontend-javascript-vanilla/
+curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:9811/
+curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:9800/
 # prod path shape — host nginx only
 # https://reference-app-copy.autotests.ai/backend-java-spring/api/health
 ```
 
 | Service | Role |
 |---------|------|
-| `web` | shared static UIs only (no `/api`) |
+| `frontend-typescript-react` | React SPA (`:9811`) |
+| `frontend-typescript-vue` | Vue SPA (`:9813`) |
+| `frontend-javascript-vanilla` | vanilla static (`:9800`) |
 | `backend-java-spring` | Spring JSON API (`:8800`) |
 | `backend-kotlin-spring` | Spring Kotlin JSON API (`:8810`) |
 | `backend-python-flask` | Flask JSON API (`:8820`) |
@@ -135,19 +136,21 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8701/frontend-javasc
 | Setting | Value |
 |---------|-------|
 | `APP_DIR` | `/home/reference_app_copy/reference-app-copy` |
-| `WEB_PORT` | `8701` (shared static; host nginx upstream) |
 | `BACKEND_JAVA_PORT` | `8800` |
 | `BACKEND_KOTLIN_PORT` | `8810` |
 | `BACKEND_FLASK_PORT` | `8820` |
 | `BACKEND_FASTAPI_PORT` | `8821` |
 | `BACKEND_DJANGO_PORT` | `8822` |
+| `FRONTEND_TS_REACT_PORT` | `9811` |
+| `FRONTEND_TS_VUE_PORT` | `9813` |
+| `FRONTEND_JS_VANILLA_PORT` | `9800` |
 
 **CD (does not run autotests):**
 
 | Workflow | Role |
 |----------|------|
-| [`deploy.yml`](.github/workflows/deploy.yml) | Default CD on `push` main: build `backend-java-spring` + `web` via module composite actions → SSH load → compose up selected services |
-| [`deploy_all.yml`](.github/workflows/deploy_all.yml) | Manual: all active backends + web, then full [`deploy/server-deploy.sh`](deploy/server-deploy.sh) |
+| [`deploy.yml`](.github/workflows/deploy.yml) | Default CD on `push` main: `backend-java-spring` + `frontend-typescript-react` → SSH load → compose up selected services |
+| [`deploy_all.yml`](.github/workflows/deploy_all.yml) | Manual: all active backends + frontends, then full [`deploy/server-deploy.sh`](deploy/server-deploy.sh) |
 
 Stack build steps live next to modules, e.g. [`backend/java/backend-java-spring/.github/actions/build`](backend/java/backend-java-spring/.github/actions/build/action.yml).
 

@@ -32,32 +32,31 @@ frontend/
 | Component tests (jsdom) | no | `frontend-*-{react,angular,vue}/src/test/` |
 | Shared / catalog | no | `_shared/app`, `_shared/embed`, `_catalog/preview` |
 
-## Prod routing (shared static × N backends)
+## Prod routing (per-frontend containers × N backends)
 
 ```
 https://reference-app-copy.autotests.ai/{backend}/{frontend}/
 ```
 
 - **One source tree** per frontend module — never duplicated per backend
-- **One `web` image** packs all `status: active` mounts ([`deploy/matrix.yaml`](../deploy/matrix.yaml))
+- **One container/image per active frontend** ([`deploy/matrix.yaml`](../deploy/matrix.yaml))
 - UI resolves `API_BASE = /{backend}/api` from the pathname — same `dist/` under every backend prefix
 
-Active mounts in `web`: `frontend-typescript-react`, `frontend-typescript-vue`, `frontend-javascript-vanilla`.  
-Slots are not deployed until they have a buildable `dist/` / static tree.
+Active compose services: `frontend-typescript-react` (:9811), `frontend-typescript-vue` (:9813), `frontend-javascript-vanilla` (:9800).  
+Slots are not deployed until `status: active` + Dockerfile.
 
-Host `/` is empty (404). `/{backend}/api/**` is routed by host nginx ([`deploy/nginx/`](../deploy/nginx/)), not by the static image.
+Host `/` is empty (404). Host nginx ([`deploy/nginx/`](../deploy/nginx/)) strips `/{backend}/{frontend}` → `/` on that frontend container.
 
 ## Local ports
 
-Canon in [`deploy/matrix.yaml`](../deploy/matrix.yaml): language base **+10**, stack **+1** from **9800**.
+Canon in [`deploy/matrix.yaml`](../deploy/matrix.yaml): language base **+10**, stack **+1** from **9800**.  
+Same numbers = compose publish ports (host nginx upstreams).
 
 | Port | Module |
 |------|--------|
 | 9800 | `frontend-javascript-vanilla` |
 | 9801–9803 | javascript react / angular / vue |
 | 9810 | `frontend-typescript-vanilla` |
-| 9811 | `frontend-typescript-react` (`npm run dev`) |
+| 9811 | `frontend-typescript-react` |
 | 9812 | `frontend-typescript-angular` |
-| 9813 | `frontend-typescript-vue` (`npm run dev`) |
-
-Packaged static for all mounts → shared `web` on **8701** (host nginx strips `/{backend}/` in prod).
+| 9813 | `frontend-typescript-vue` |

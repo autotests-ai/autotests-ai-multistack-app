@@ -1,28 +1,22 @@
 # SSOT: backend path × frontend path matrix for reference-app-copy.
 # URL: https://{public_host}/{backend}/{frontend}/
 #      https://{public_host}/{backend}/api/
-# First path segment → API upstream; second → shared static mount (one web image).
+# First path segment → API upstream; second → per-frontend container upstream.
 #
 # Port canon (local publish = prod host upstream; same numbers):
-#   infra:  web (shared static) 8701
 #   backend: language base +10 · stack +1 within language
 #     8800 java · 8810 kotlin · 8820 python · 8830 go · next lang 8840…
-#   frontend (local vite / static serve): language base +10 · stack +1
+#   frontend (compose publish = host nginx upstream): language base +10 · stack +1
 #     9800 javascript · 9810 typescript · next lang 9820…
-# Container-internal listen stays 8080 (backends) / 80 (web).
+# Container-internal listen stays 8080 (backends) / 80 (frontends).
 # Path routing SSOT: deploy/nginx (host). Local: hit published ports directly.
 
 public_host: reference-app-copy.autotests.ai
 domain_suffix: reference-app-copy.autotests.ai
 
-# Shared static nginx (no /api). Host nginx (prod) / direct :8701 (local).
-web:
-  compose_service: web
-  image: reference-app-copy-web:latest
-  # Published on host for host-nginx → static (and local direct access).
-  publish_port: 8701
-  runtime: frontend/_shared/frontend-javascript-app
-  react_ui: frontend/_shared/frontend-react-ui
+# Shared build overlays (copied into each frontend image).
+ui_runtime: frontend/_shared/frontend-javascript-app
+react_ui: frontend/_shared/frontend-react-ui
 
 backends:
   - id: backend-java-spring
@@ -115,53 +109,59 @@ frontends:
     kind: static
     module: frontend/javascript/frontend-javascript-vanilla
     mount: frontend-javascript-vanilla
-    local_port: 9800
+    compose_service: frontend-javascript-vanilla
+    image: reference-app-copy-frontend-javascript-vanilla:latest
+    publish_port: 9800
 
   - id: frontend-javascript-react
     status: slot
     kind: vite
     module: frontend/javascript/frontend-javascript-react
     mount: frontend-javascript-react
-    local_port: 9801
+    publish_port: 9801
 
   - id: frontend-javascript-angular
     status: slot
     kind: vite
     module: frontend/javascript/frontend-javascript-angular
     mount: frontend-javascript-angular
-    local_port: 9802
+    publish_port: 9802
 
   - id: frontend-javascript-vue
     status: slot
     kind: vite
     module: frontend/javascript/frontend-javascript-vue
     mount: frontend-javascript-vue
-    local_port: 9803
+    publish_port: 9803
 
   - id: frontend-typescript-vanilla
     status: slot
     kind: static
     module: frontend/typescript/frontend-typescript-vanilla
     mount: frontend-typescript-vanilla
-    local_port: 9810
+    publish_port: 9810
 
   - id: frontend-typescript-react
     status: active
     kind: vite
     module: frontend/typescript/frontend-typescript-react
     mount: frontend-typescript-react
-    local_port: 9811
+    compose_service: frontend-typescript-react
+    image: reference-app-copy-frontend-typescript-react:latest
+    publish_port: 9811
 
   - id: frontend-typescript-angular
     status: slot
     kind: vite
     module: frontend/typescript/frontend-typescript-angular
     mount: frontend-typescript-angular
-    local_port: 9812
+    publish_port: 9812
 
   - id: frontend-typescript-vue
     status: active
     kind: vite
     module: frontend/typescript/frontend-typescript-vue
     mount: frontend-typescript-vue
-    local_port: 9813
+    compose_service: frontend-typescript-vue
+    image: reference-app-copy-frontend-typescript-vue:latest
+    publish_port: 9813

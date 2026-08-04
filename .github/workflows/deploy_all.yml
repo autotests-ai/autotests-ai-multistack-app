@@ -1,4 +1,4 @@
-# Expand deploy.yml to every active backend + web.
+# Expand deploy.yml to every active backend + frontend.
 
 name: reference-app-copy Deploy all
 
@@ -14,5 +14,6 @@ jobs:
     with:
       backends: >-
         backend-java-spring,backend-kotlin-spring,backend-python-flask,backend-python-fastapi,backend-python-django
-      build_web: true
+      frontends: >-
+        frontend-javascript-vanilla,frontend-typescript-react,frontend-typescript-vue
       deploy_mode: all
