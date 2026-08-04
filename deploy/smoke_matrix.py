@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import ssl
 import sys
 import urllib.error
@@ -13,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "deploy" / "nginx"))
-from render_vhosts import load_matrix  # noqa: E402
+from render_vhosts import load_matrix, public_host  # noqa: E402
 
 
 def http_code(url: str, ctx: ssl.SSLContext) -> int:
@@ -30,10 +29,13 @@ def http_body(url: str, ctx: ssl.SSLContext) -> str:
         return resp.read().decode()
 
 
-def smoke_one(base: str, ui_path: str, service: str, ctx: ssl.SSLContext) -> None:
-    base = base.rstrip("/")
-    print(f"=== TLS + GET {base}/ (expect 404) ===")
-    code = http_code(f"{base}/", ctx)
+def smoke_one(origin: str, backend_id: str, ui_mount: str, service: str, ctx: ssl.SSLContext) -> None:
+    origin = origin.rstrip("/")
+    base = f"{origin}/{backend_id}"
+    ui_path = f"/{ui_mount}/"
+
+    print(f"=== TLS + GET {origin}/ (expect 404) ===")
+    code = http_code(f"{origin}/", ctx)
     print(f"HTTP {code}")
     if code != 404:
         raise SystemExit(f"FAIL: expected 404 at host root, got {code}")
@@ -59,19 +61,21 @@ def main() -> int:
     parser.add_argument(
         "base_url",
         nargs="?",
-        help="Optional single base URL (skips matrix loop)",
+        help="Optional single origin URL (skips matrix loop), e.g. https://reference-app-copy.autotests.ai",
     )
     parser.add_argument("--matrix", type=Path, default=ROOT / "deploy" / "matrix.yaml")
-    parser.add_argument("--ui-path", default="/frontend-typescript-react/")
+    parser.add_argument("--backend", default="backend-java-spring")
+    parser.add_argument("--ui-mount", default="frontend-typescript-react")
     parser.add_argument("--service", default="reference-app-copy")
     args = parser.parse_args()
     ctx = ssl.create_default_context()
 
     if args.base_url:
-        smoke_one(args.base_url, args.ui_path, args.service, ctx)
+        smoke_one(args.base_url, args.backend, args.ui_mount, args.service, ctx)
         return 0
 
     matrix = load_matrix(args.matrix)
+    origin = f"https://{public_host(matrix)}"
     backends = [b for b in matrix["backends"] if b.get("status") in ("active", "stub")]
     frontends = [f for f in matrix["frontends"] if f.get("status") == "active"]
     if not backends or not frontends:
@@ -79,13 +83,16 @@ def main() -> int:
         return 1
 
     for backend in backends:
-        base = f"https://{backend['public_host']}"
         for frontend in frontends:
-            ui = f"/{frontend['mount']}/"
-            smoke_one(base, ui, backend["health_service"], ctx)
+            smoke_one(
+                origin,
+                backend["id"],
+                frontend["mount"],
+                backend["health_service"],
+                ctx,
+            )
     return 0
 
 
 if __name__ == "__main__":
-    # Allow `from render_vhosts` when file is render-vhosts.py
     raise SystemExit(main())

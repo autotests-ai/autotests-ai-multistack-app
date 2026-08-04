@@ -4,7 +4,8 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { resolve } from 'node:path';
 
 const reactUiSrc = resolve(__dirname, '../../_shared/frontend-react-ui/src/index.ts');
-const mountBase = '/frontend-typescript-react/';
+// Relative base: one dist works under /{backend}/frontend-typescript-react/
+const mountBase = './';
 
 export default defineConfig({
   root: resolve(__dirname),
@@ -45,7 +46,7 @@ export default defineConfig({
           'icons/pwa-maskable-512.png',
         ],
         navigateFallback: 'index.html',
-        navigateFallbackDenylist: [/^\/api\//],
+        navigateFallbackDenylist: [/\/api\//],
         cleanupOutdatedCaches: true,
       },
       devOptions: {

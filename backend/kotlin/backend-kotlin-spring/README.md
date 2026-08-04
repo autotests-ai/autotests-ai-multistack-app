@@ -6,5 +6,5 @@ Postgres DB: `reference_app_kotlin_spring`.
 **Status:** slot (not wired in compose until implemented).
 
 ```
-https://backend-kotlin-spring.reference-app-copy.autotests.ai/{frontend}/
+https://reference-app-copy.autotests.ai/backend-kotlin-spring/{frontend}/
 ```

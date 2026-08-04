@@ -10,7 +10,7 @@ Vite + React 19 + React Router (`basename=/frontend-typescript-react/`). Built o
 RTL / Vitest live in [`src/test/`](src/test/) (`component_rtl`) — same module as the product,
 like backend unit tests under `src/test/`.
 
-Prod URL: `https://{backend}.reference-app-copy.autotests.ai/frontend-typescript-react/`  
+Prod URL: `https://reference-app-copy.autotests.ai/{backend}/frontend-typescript-react/`  
 (Host `/` is empty.)
 
 ## Routes

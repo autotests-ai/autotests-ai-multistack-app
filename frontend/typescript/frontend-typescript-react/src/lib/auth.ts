@@ -1,3 +1,5 @@
+import { apiUrl } from './appBase';
+
 export const AUTH_TOKEN_KEY = 'authToken';
 export const MIN_LOGIN_LENGTH = 3;
 export const MIN_PASSWORD_LENGTH = 6;
@@ -111,7 +113,7 @@ export function resolveAuthErrorMessage(
 async function apiRequest<T>(path: string, options?: RequestInit): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(path, {
+    response = await fetch(apiUrl(path), {
       ...options,
       headers: {
         'Content-Type': 'application/json',
@@ -131,14 +133,14 @@ async function apiRequest<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export function login(username: string, password: string): Promise<AuthResponse> {
-  return apiRequest<AuthResponse>('/api/auth/login', {
+  return apiRequest<AuthResponse>('/auth/login', {
     method: 'POST',
     body: JSON.stringify({ username, password }),
   });
 }
 
 export function register(username: string, password: string): Promise<AuthResponse> {
-  return apiRequest<AuthResponse>('/api/auth/register', {
+  return apiRequest<AuthResponse>('/auth/register', {
     method: 'POST',
     body: JSON.stringify({ username, password }),
   });
@@ -149,7 +151,7 @@ export function fetchProfile(): Promise<UserProfile> {
   if (!token) {
     throw new Error('Missing auth token');
   }
-  return apiRequest<UserProfile>('/api/auth/me', {
+  return apiRequest<UserProfile>('/auth/me', {
     method: 'GET',
     headers: { Authorization: 'Bearer ' + token },
   });
@@ -158,7 +160,7 @@ export function fetchProfile(): Promise<UserProfile> {
 export async function logout(): Promise<void> {
   const token = readLocalStorage(AUTH_TOKEN_KEY);
   if (token) {
-    await fetch('/api/auth/logout', {
+    await fetch(apiUrl('/auth/logout'), {
       method: 'POST',
       headers: { Authorization: 'Bearer ' + token },
     }).catch(() => {});

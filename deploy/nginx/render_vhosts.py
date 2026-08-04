@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Render host nginx vhosts from deploy/matrix.yaml (active + stub backends)."""
+"""Render single host nginx vhost from deploy/matrix.yaml (active + stub backends)."""
 
 from __future__ import annotations
 
@@ -56,17 +56,14 @@ def load_matrix(path: Path) -> dict:
                 data[section] = {}
             elif section in ("backends", "frontends"):
                 data[section] = []
-            elif section == "domain_suffix":
-                section = "domain_suffix"
             continue
 
-        if section == "domain_suffix" and indent == 0 and ":" in line:
-            # domain_suffix: value on same line handled below when section set wrong
-            pass
-
-        if indent == 0 and line.startswith("domain_suffix:"):
-            data["domain_suffix"] = _parse_scalar(line.split(":", 1)[1])
-            section = None
+        if indent == 0 and ":" in line and not line.startswith("-"):
+            key, _, val = line.partition(":")
+            key = key.strip()
+            if key in ("domain_suffix", "public_host"):
+                data[key] = _parse_scalar(val)
+                section = None
             continue
 
         if section in ("web", "edge") and indent == 2 and ":" in line:
@@ -89,6 +86,69 @@ def load_matrix(path: Path) -> dict:
                 continue
 
     return data
+
+
+def public_host(matrix: dict) -> str:
+    host = matrix.get("public_host") or matrix.get("domain_suffix")
+    if not host:
+        raise SystemExit("matrix.yaml missing public_host / domain_suffix")
+    return str(host)
+
+
+def render_backend_upstreams(backends: list[dict]) -> str:
+    blocks: list[str] = []
+    for backend in backends:
+        bid_us = backend["id"].replace("-", "_")
+        port = backend["publish_port"]
+        blocks.append(
+            "\n".join(
+                [
+                    f"upstream {bid_us}_api {{",
+                    f"    server 127.0.0.1:{port};",
+                    "    keepalive 8;",
+                    "}",
+                ]
+            )
+        )
+    return "\n\n".join(blocks) + ("\n" if blocks else "")
+
+
+def render_web_upstream(web_port: int) -> str:
+    return "\n".join(
+        [
+            "upstream web_static {",
+            f"    server 127.0.0.1:{web_port};",
+            "    keepalive 8;",
+            "}",
+            "",
+        ]
+    )
+
+
+def render_api_locations(backends: list[dict]) -> str:
+    chunks: list[str] = []
+    for backend in backends:
+        bid = backend["id"]
+        bid_us = bid.replace("-", "_")
+        chunks.append(
+            "\n".join(
+                [
+                    f"    location = /{bid}/api {{",
+                    f"        return 301 /{bid}/api/;",
+                    "    }",
+                    f"    location /{bid}/api/ {{",
+                    "        proxy_http_version 1.1;",
+                    "        proxy_set_header Host $host;",
+                    "        proxy_set_header X-Real-IP $remote_addr;",
+                    "        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;",
+                    "        proxy_set_header X-Forwarded-Proto $scheme;",
+                    f"        proxy_pass http://{bid_us}_api/api/;",
+                    "    }",
+                    "",
+                ]
+            )
+        )
+    return "\n".join(chunks)
 
 
 def main() -> int:
@@ -129,29 +189,29 @@ def main() -> int:
 
     template = args.template.read_text(encoding="utf-8")
     want = {s.strip() for s in args.statuses.split(",") if s.strip()}
-    web_port = int(matrix["web"]["publish_port"])
-    args.out_dir.mkdir(parents=True, exist_ok=True)
-
-    written = 0
-    for backend in matrix.get("backends", []):
-        if backend.get("status") not in want:
-            continue
-        bid_us = backend["id"].replace("-", "_")
-        conf = (
-            template.replace("__BACKEND_ID__", bid_us)
-            .replace("__PUBLIC_HOST__", backend["public_host"])
-            .replace("__API_PORT__", str(backend["publish_port"]))
-            .replace("__WEB_PORT__", str(web_port))
-        )
-        out = args.out_dir / f"{backend['public_host']}.conf"
-        out.write_text(conf, encoding="utf-8")
-        print(f"wrote {out}")
-        written += 1
-
-    if not written:
+    backends = [b for b in matrix.get("backends", []) if b.get("status") in want]
+    if not backends:
         print("No backends matched statuses", want, file=sys.stderr)
         return 1
-    print(f"OK: {written} vhost(s)")
+
+    host = public_host(matrix)
+    web_port = int(matrix["web"]["publish_port"])
+    conf = (
+        template.replace("__PUBLIC_HOST__", host)
+        .replace("__BACKEND_UPSTREAMS__", render_backend_upstreams(backends))
+        .replace("__WEB_UPSTREAM__", render_web_upstream(web_port))
+        .replace("__BACKEND_API_LOCATIONS__", render_api_locations(backends))
+    )
+
+    args.out_dir.mkdir(parents=True, exist_ok=True)
+    # Drop legacy per-backend subdomain confs
+    for old in args.out_dir.glob("*.conf"):
+        old.unlink()
+
+    out = args.out_dir / f"{host}.conf"
+    out.write_text(conf, encoding="utf-8")
+    print(f"wrote {out}")
+    print("OK: 1 vhost")
     return 0
 
 

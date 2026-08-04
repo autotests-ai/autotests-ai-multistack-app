@@ -7,7 +7,7 @@ const reactUiSrc = resolve(__dirname, '../../_shared/frontend-react-ui/src/index
 const sharedRoot = resolve(__dirname, '../../_shared');
 
 export default defineConfig({
-  base: '/frontend-typescript-react/',
+  base: './',
   plugins: [react()],
   resolve: {
     alias: {

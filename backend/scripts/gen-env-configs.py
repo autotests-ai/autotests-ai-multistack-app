@@ -51,8 +51,8 @@ ATTACH_OFF = {
 
 STANDS = {
     "reference_ci": {
-        "baseUrl": "http://localhost:8080/",
-        "apiBaseUrl": "http://localhost:8080/",
+        "baseUrl": "http://localhost:8080/backend-java-spring/frontend-typescript-react/",
+        "apiBaseUrl": "http://localhost:8080/backend-java-spring/api/",
         "remoteUrl": "",
         "videoFolder": "",
         "logToConsole": "true",
@@ -60,8 +60,8 @@ STANDS = {
         "rootLogLevel": "info",
     },
     "reference_prod": {
-        "baseUrl": "https://reference-app.autotests.ai/",
-        "apiBaseUrl": "https://reference-app.autotests.ai/",
+        "baseUrl": "https://reference-app-copy.autotests.ai/backend-java-spring/frontend-typescript-react/",
+        "apiBaseUrl": "https://reference-app-copy.autotests.ai/backend-java-spring/api/",
         "remoteUrl": "https://user1:1234@selenoid.qa.guru/wd/hub",
         "videoFolder": "https://selenoid.qa.guru/video/",
         "browserSize": "1740x1080",
@@ -74,7 +74,7 @@ STANDS = {
 COMPONENT_BASE = {
     "baseUrl": "http://localhost:3000/",
     "componentCatalogUrl": "http://localhost:3000/",
-    "apiBaseUrl": "http://localhost:8080/",
+    "apiBaseUrl": "http://localhost:8080/backend-java-spring/api/",
 }
 
 

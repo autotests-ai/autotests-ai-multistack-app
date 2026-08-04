@@ -1,3 +1,5 @@
+import { apiUrl } from './appBase';
+
 export interface HealthResponse {
   status: string;
   service: string;
@@ -15,7 +17,7 @@ export interface ItemsResponse {
 }
 
 export async function fetchHealth(): Promise<HealthResponse> {
-  const response = await fetch('/api/health');
+  const response = await fetch(apiUrl('/health'));
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}`);
   }
@@ -23,7 +25,7 @@ export async function fetchHealth(): Promise<HealthResponse> {
 }
 
 export async function fetchItems(): Promise<ItemsResponse> {
-  const response = await fetch('/api/items');
+  const response = await fetch(apiUrl('/items'));
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}`);
   }

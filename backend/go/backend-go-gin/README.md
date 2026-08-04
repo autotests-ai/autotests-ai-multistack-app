@@ -6,7 +6,7 @@ Postgres DB: `reference_app_go_gin`.
 **Status:** slot (not wired in compose until implemented).
 
 ```
-https://backend-go-gin.reference-app-copy.autotests.ai/{frontend}/
+https://reference-app-copy.autotests.ai/backend-go-gin/{frontend}/
 ```
 
 Why Gin (not Echo/Chi/Fiber): most common course/tutorial stack for REST + middleware; still thin over `net/http`.  

@@ -6,7 +6,7 @@ import { resolve } from 'node:path';
 const sharedRoot = resolve(__dirname, '../../_shared');
 
 export default defineConfig({
-  base: '/frontend-typescript-vue/',
+  base: './',
   plugins: [vue()],
   server: {
     fs: {

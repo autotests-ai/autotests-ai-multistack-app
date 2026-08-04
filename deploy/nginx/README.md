@@ -1,6 +1,9 @@
 # Host nginx (prod)
 
-Per-backend vhosts: `/api` → published backend port, `/frontend-*` → shared `web` port.
+One public host (`reference-app-copy.autotests.ai`):
+
+- `/{backend}/api/**` → published backend port
+- `/{backend}/frontend-*/**` → shared `web` port (strip backend prefix)
 
 ```bash
 python deploy/nginx/render_vhosts.py

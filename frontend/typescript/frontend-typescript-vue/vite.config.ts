@@ -3,7 +3,8 @@ import vue from '@vitejs/plugin-vue';
 import { VitePWA } from 'vite-plugin-pwa';
 import { resolve } from 'node:path';
 
-const mountBase = '/frontend-typescript-vue/';
+// Relative base: one dist works under /{backend}/frontend-typescript-vue/
+const mountBase = './';
 
 export default defineConfig({
   root: resolve(__dirname),
@@ -44,7 +45,7 @@ export default defineConfig({
           'icons/pwa-maskable-512.png',
         ],
         navigateFallback: 'index.html',
-        navigateFallbackDenylist: [/^\/api\//],
+        navigateFallbackDenylist: [/\/api\//],
         cleanupOutdatedCaches: true,
       },
       devOptions: {

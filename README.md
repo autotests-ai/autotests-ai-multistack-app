@@ -4,7 +4,7 @@ Clean teaching fork of [reference-app](https://github.com/autotests-ai/reference
 
 GitHub: **[github.com/autotests-ai/reference-app-copy](https://github.com/autotests-ai/reference-app-copy)** · monorepo: `projects/reference-home/reference-app-copy/`
 
-Production: [backend-java-spring.reference-app-copy.autotests.ai](https://backend-java-spring.reference-app-copy.autotests.ai)
+Production: [reference-app-copy.autotests.ai](https://reference-app-copy.autotests.ai)
 
 ## Layout (3 product folders)
 
@@ -42,21 +42,22 @@ Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/N
 ### Routing (shared UI × multi-backend)
 
 ```
-https://{backend}.reference-app-copy.autotests.ai/{frontend}/
+https://reference-app-copy.autotests.ai/{backend}/{frontend}/
+https://reference-app-copy.autotests.ai/{backend}/api/
 ```
 
-- **subdomain** → which API answers `/api/**` (one container per backend)
-- **path** → which product UI (packed once into shared `web` image)
-- Frontends call **relative** `/api/*` — same `dist/` works on every backend host
+- **first path segment** → which API answers `/{backend}/api/**`
+- **second path segment** → which product UI (packed once into shared `web` image)
+- Frontends resolve `APP_BASE` / `API_BASE` from the URL — same `dist/` works under every backend prefix
 
 Examples:
 
-- [backend-java-spring…/frontend-typescript-react/](https://backend-java-spring.reference-app-copy.autotests.ai/frontend-typescript-react/)
-- [backend-java-spring…/frontend-typescript-vue/](https://backend-java-spring.reference-app-copy.autotests.ai/frontend-typescript-vue/)
-- `backend-python-flask.…/frontend-typescript-react/`
-- `backend-python-flask.…/frontend-javascript-vanilla/`
+- […/backend-java-spring/frontend-typescript-react/](https://reference-app-copy.autotests.ai/backend-java-spring/frontend-typescript-react/)
+- […/backend-java-spring/frontend-typescript-vue/](https://reference-app-copy.autotests.ai/backend-java-spring/frontend-typescript-vue/)
+- `…/backend-python-flask/frontend-typescript-react/`
+- `…/backend-python-flask/frontend-javascript-vanilla/`
 
-Host `/` is empty (404). Module id = DNS label (Let's Encrypt rejects `_`).
+Host `/` is empty (404). One public host — no backend subdomains.
 
 Path constants: `backend/scripts/paths.sh`
 
@@ -77,17 +78,17 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · CI: [`.github/workflows/test.yml`](
 ```bash
 docker compose up -d --build
 # edge publishes SERVER_PORT (default 8080; if busy: SERVER_PORT=18080 docker compose up -d)
-curl -fsS http://localhost:8080/api/health
-curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/frontend-typescript-react/
-curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/frontend-javascript-vanilla/
-# flask stub via Host (same UI mounts, different /api)
-curl -fsS -H 'Host: backend-python-flask.localhost' http://localhost:8080/api/health
+curl -fsS http://localhost:8080/backend-java-spring/api/health
+curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/backend-java-spring/frontend-typescript-react/
+curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/backend-java-spring/frontend-javascript-vanilla/
+# flask stub — same UI mounts, different /{backend}/api
+curl -fsS http://localhost:8080/backend-python-flask/api/health
 curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/   # 404
 ```
 
 | Service | Role |
 |---------|------|
-| `edge` | local Host router (`SERVER_PORT`, default 8080) |
+| `edge` | local path router (`SERVER_PORT`, default 8080) |
 | `web` | shared static UIs only (no `/api`) |
 | `backend-java-spring` | Spring JSON API |
 | `backend-python-flask` | health stub for routing demos |
@@ -95,7 +96,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/   # 404
 
 ## Deploy
 
-**Production URL:** https://backend-java-spring.reference-app-copy.autotests.ai/frontend-typescript-react/
+**Production URL:** https://reference-app-copy.autotests.ai/backend-java-spring/frontend-typescript-react/
 
 | Setting | Value |
 |---------|-------|

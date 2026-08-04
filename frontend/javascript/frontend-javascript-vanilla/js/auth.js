@@ -68,7 +68,7 @@
   async function apiRequest(path, options) {
     let response;
     try {
-      response = await fetch(path, {
+      response = await fetch(window.apiUrl(path), {
         headers: {
           "Content-Type": "application/json",
           ...(options?.headers || {}),
@@ -88,14 +88,14 @@
   }
 
   async function login(username, password) {
-    return apiRequest("/api/auth/login", {
+    return apiRequest("/auth/login", {
       method: "POST",
       body: JSON.stringify({ username, password }),
     });
   }
 
   async function register(username, password) {
-    return apiRequest("/api/auth/register", {
+    return apiRequest("/auth/register", {
       method: "POST",
       body: JSON.stringify({ username, password }),
     });
@@ -106,7 +106,7 @@
     if (!token) {
       throw new Error("Missing auth token");
     }
-    return apiRequest("/api/auth/me", {
+    return apiRequest("/auth/me", {
       method: "GET",
       headers: { Authorization: "Bearer " + token },
     });
@@ -115,7 +115,7 @@
   async function logout() {
     const token = readLocalStorage(AUTH_TOKEN_KEY);
     if (token) {
-      await fetch("/api/auth/logout", {
+      await fetch(window.apiUrl("/auth/logout"), {
         method: "POST",
         headers: { Authorization: "Bearer " + token },
       }).catch(() => {});

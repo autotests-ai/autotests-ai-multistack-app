@@ -1,7 +1,9 @@
-# SSOT: backend host × frontend path matrix for reference-app-copy.
-# URL: https://{backend}.{domain_suffix}/{frontend}/
-# subdomain → API upstream; path → shared static mount (one web image).
+# SSOT: backend path × frontend path matrix for reference-app-copy.
+# URL: https://{public_host}/{backend}/{frontend}/
+#      https://{public_host}/{backend}/api/
+# First path segment → API upstream; second → shared static mount (one web image).
 
+public_host: reference-app-copy.autotests.ai
 domain_suffix: reference-app-copy.autotests.ai
 
 # Shared static nginx (no /api). Local edge / prod host nginx route here.
@@ -13,7 +15,7 @@ web:
   runtime: frontend/_shared/frontend-javascript-app
   react_ui: frontend/_shared/frontend-react-ui
 
-# Local public entry (Host-based). Prod host nginx replaces this role.
+# Local public entry (path-based). Prod host nginx replaces this role.
 edge:
   compose_service: edge
   # Local default; prod uses SERVER_PORT (8800) for edge-less host split — see deploy/nginx.
@@ -31,8 +33,6 @@ backends:
     publish_port: 8810
     db_name: reference_app_java_spring
     health_service: reference-app-copy
-    local_host: backend-java-spring.localhost
-    public_host: backend-java-spring.reference-app-copy.autotests.ai
 
   - id: backend-python-flask
     status: stub
@@ -45,8 +45,6 @@ backends:
     publish_port: 8811
     db_name: reference_app_python_flask
     health_service: backend-python-flask
-    local_host: backend-python-flask.localhost
-    public_host: backend-python-flask.reference-app-copy.autotests.ai
 
   - id: backend-python-fastapi
     status: slot
@@ -59,8 +57,6 @@ backends:
     publish_port: 8812
     db_name: reference_app_python_fastapi
     health_service: backend-python-fastapi
-    local_host: backend-python-fastapi.localhost
-    public_host: backend-python-fastapi.reference-app-copy.autotests.ai
 
   - id: backend-python-django
     status: slot
@@ -73,8 +69,6 @@ backends:
     publish_port: 8813
     db_name: reference_app_python_django
     health_service: backend-python-django
-    local_host: backend-python-django.localhost
-    public_host: backend-python-django.reference-app-copy.autotests.ai
 
   - id: backend-kotlin-spring
     status: slot
@@ -87,8 +81,6 @@ backends:
     publish_port: 8814
     db_name: reference_app_kotlin_spring
     health_service: backend-kotlin-spring
-    local_host: backend-kotlin-spring.localhost
-    public_host: backend-kotlin-spring.reference-app-copy.autotests.ai
 
   - id: backend-go-gin
     status: slot
@@ -101,8 +93,6 @@ backends:
     publish_port: 8815
     db_name: reference_app_go_gin
     health_service: backend-go-gin
-    local_host: backend-go-gin.localhost
-    public_host: backend-go-gin.reference-app-copy.autotests.ai
 
   - id: backend-go-stdlib
     status: slot
@@ -115,8 +105,6 @@ backends:
     publish_port: 8816
     db_name: reference_app_go_stdlib
     health_service: backend-go-stdlib
-    local_host: backend-go-stdlib.localhost
-    public_host: backend-go-stdlib.reference-app-copy.autotests.ai
 
 frontends:
   - id: frontend-typescript-react

@@ -51,7 +51,7 @@ function renderItems(items) {
 
 async function loadHealth() {
   try {
-    const response = await fetch('/api/health');
+    const response = await fetch(window.apiUrl('/health'));
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
@@ -65,7 +65,7 @@ async function loadHealth() {
 
 async function loadItems() {
   try {
-    const response = await fetch('/api/items');
+    const response = await fetch(window.apiUrl('/items'));
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }

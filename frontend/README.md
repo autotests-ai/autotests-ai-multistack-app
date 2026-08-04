@@ -35,14 +35,14 @@ frontend/
 ## Prod routing (shared static × N backends)
 
 ```
-https://{backend}.reference-app-copy.autotests.ai/{frontend}/
+https://reference-app-copy.autotests.ai/{backend}/{frontend}/
 ```
 
 - **One source tree** per frontend module — never duplicated per backend
 - **One `web` image** packs all `status: active` mounts ([`deploy/matrix.yaml`](../deploy/matrix.yaml))
-- UI uses relative `/api/*` → whichever backend hostname you opened
+- UI resolves `API_BASE = /{backend}/api` from the pathname — same `dist/` under every backend prefix
 
 Active mounts in `web`: `frontend-typescript-react`, `frontend-typescript-vue`, `frontend-javascript-vanilla`.  
 Slots are not deployed until they have a buildable `dist/` / static tree.
 
-Host `/` is empty (404). `/api/**` is routed by edge (local) or host nginx (prod), not by the static image.
+Host `/` is empty (404). `/{backend}/api/**` is routed by edge (local) or host nginx (prod), not by the static image.
