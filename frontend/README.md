@@ -40,7 +40,7 @@ frontend/
 https://{backend}.reference-app-copy.autotests.ai/{frontend}/
 ```
 
-Active: `https://backend_java_spring.reference-app-copy.autotests.ai/frontend_typescript_react/`  
+Active: `https://backend-java-spring.reference-app-copy.autotests.ai/frontend_typescript_react/`  
 Host `/` is empty (404). `/api/**` stays on the backend host root.
 
 - subdomain → backend stack  

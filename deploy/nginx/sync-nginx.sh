@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Apply backend_java_spring.reference-app-copy.autotests.ai nginx vhost (requires passwordless sudo for this script path).
+# Apply backend-java-spring.reference-app-copy.autotests.ai nginx vhost (requires passwordless sudo for this script path).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONF_SRC="${NGINX_CONF_SRC:-${SCRIPT_DIR}/backend_java_spring.reference-app-copy.autotests.ai.conf}"
-SITE_NAME="${NGINX_SITE_NAME:-backend_java_spring.reference-app-copy}"
+CONF_SRC="${NGINX_CONF_SRC:-${SCRIPT_DIR}/backend-java-spring.reference-app-copy.autotests.ai.conf}"
+SITE_NAME="${NGINX_SITE_NAME:-backend-java-spring.reference-app-copy}"
 SITE_PATH="/etc/nginx/sites-available/${SITE_NAME}"
 TMP="/tmp/nginx-${SITE_NAME}.generated"
 SSL_SNIPPET="/tmp/nginx-${SITE_NAME}.ssl-snippet"
-SSL_DOMAIN="${SSL_DOMAIN:-backend_java_spring.reference-app-copy.autotests.ai}"
+SSL_DOMAIN="${SSL_DOMAIN:-backend-java-spring.reference-app-copy.autotests.ai}"
 
 if [[ ! -f "$CONF_SRC" ]]; then
   echo "Missing $CONF_SRC" >&2

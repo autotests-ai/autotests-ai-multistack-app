@@ -40,7 +40,7 @@ Jobs = layers; enable gradually (block 2a → 2f). Naming: `_` between segments,
 | `e2e` | tests | `…/tests/`, `…/tests/e2e/` | `@Tag("smoke")` | `./gradlew testE2e` | app `:8080` (CI) / prod (post-deploy) |
 | `visual` | tests | baselines | `@Tag("visual")` | `./gradlew testVisual` | app / catalog |
 | `manual` | tests | stubs | `@Tag("manual")` | `./gradlew testManual` | n/a |
-| `prod_api` | tests | same api | after successful Deploy (`workflow_run`) | `testApi` + `reference_prod` | [backend_java_spring.reference-app-copy.autotests.ai](https://backend_java_spring.reference-app-copy.autotests.ai) |
+| `prod_api` | tests | same api | after successful Deploy (`workflow_run`) | `testApi` + `reference_prod` | [backend-java-spring.reference-app-copy.autotests.ai](https://backend-java-spring.reference-app-copy.autotests.ai) |
 | `prod_e2e` | tests | same e2e | deferred | `testE2e` + `reference_prod_*` | prod + Selenoid |
 
 Active Java module: `tests/java/tests_java_gradle_junit5_allure3_selenide/`  

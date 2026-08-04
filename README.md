@@ -4,7 +4,7 @@ Clean teaching fork of [reference-app](https://github.com/autotests-ai/reference
 
 GitHub: **[github.com/autotests-ai/reference-app-copy](https://github.com/autotests-ai/reference-app-copy)** · monorepo: `projects/reference-home/reference-app-copy/`
 
-Production: [backend_java_spring.reference-app-copy.autotests.ai](https://backend_java_spring.reference-app-copy.autotests.ai)
+Production: [backend-java-spring.reference-app-copy.autotests.ai](https://backend-java-spring.reference-app-copy.autotests.ai)
 
 ## Layout (3 product folders)
 
@@ -40,7 +40,7 @@ Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/N
 | **tests/python/** | `tests_python_selenium` | playwright, … |
 
 **Prod routing:** `https://{backend}.reference-app-copy.autotests.ai/{frontend}/`  
-Current: [backend_java_spring…/frontend_typescript_react/](https://backend_java_spring.reference-app-copy.autotests.ai/frontend_typescript_react/) (underscores in DNS host = module id; host `/` empty).
+Current: [backend_java_spring…/frontend_typescript_react/](https://backend-java-spring.reference-app-copy.autotests.ai/frontend_typescript_react/) (DNS host uses hyphens — Let's Encrypt rejects `_` in hostnames; module id stays `backend_java_spring`. Host `/` empty).
 
 Path SSOT: `backend/scripts/paths.sh`
 
@@ -71,13 +71,13 @@ Switch UI stack via compose `UI_MODULE` / `UI_RUNTIME` / `UI_MOUNT` (SPA: point 
 
 ## Deploy
 
-**Production URL:** https://backend_java_spring.reference-app-copy.autotests.ai/frontend_typescript_react/
+**Production URL:** https://backend-java-spring.reference-app-copy.autotests.ai/frontend_typescript_react/
 
 | Setting | Value |
 |---------|-------|
 | `APP_DIR` | `/home/reference_app_copy/reference-app-copy` |
 | `SERVER_PORT` | `8800` |
-| `PUBLIC_URL` | `https://backend_java_spring.reference-app-copy.autotests.ai` |
+| `PUBLIC_URL` | `https://backend-java-spring.reference-app-copy.autotests.ai` |
 
 **CD:** [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) — `build` (image on GHA) → `deploy` (SSH `docker load` + `SKIP_BUILD=1` [`deploy/server-deploy.sh`](deploy/server-deploy.sh)).
 
