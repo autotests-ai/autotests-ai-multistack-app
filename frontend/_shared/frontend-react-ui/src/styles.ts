@@ -9,6 +9,7 @@ import './styles/panel.css';
 import './styles/code-highlight.css';
 import './styles/link.css';
 import './styles/lang-toggle.css';
+import './styles/poll-toggle.css';
 import './styles/badge.css';
 import './styles/plaque-divider.css';
 import './styles/status-tile.css';

@@ -6,6 +6,7 @@ WORKDIR /build
 COPY frontend/typescript/frontend-typescript-vue/ frontend/typescript/frontend-typescript-vue/
 COPY frontend/_shared/frontend-javascript-app/css/ frontend/_shared/frontend-javascript-app/css/
 COPY frontend/_shared/stack-matrix.ts frontend/_shared/stack-matrix.ts
+COPY frontend/_shared/poll-toggle.ts frontend/_shared/poll-toggle.ts
 WORKDIR /build/frontend/typescript/frontend-typescript-vue
 RUN npm ci && npm run build
 

@@ -2,6 +2,8 @@ export { Badge } from './Badge';
 export type { BadgeProps, BadgeVariant } from './Badge';
 export { LangToggle, LangIcon } from './LangToggle';
 export type { LangToggleProps, LangCode } from './LangToggle';
+export { PollToggle, PollIcon, formatPollLabel, POLL_DEFAULT_MS } from './PollToggle';
+export type { PollToggleProps } from './PollToggle';
 export { Link } from './Link';
 export type { LinkProps, LinkVariant } from './Link';
 export { AppHeader } from './AppHeader';
