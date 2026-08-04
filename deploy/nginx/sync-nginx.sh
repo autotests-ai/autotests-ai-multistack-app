@@ -52,11 +52,11 @@ fi
 cp "$TMP" "$SITE_PATH"
 ln -sf "$SITE_PATH" "/etc/nginx/sites-enabled/${SITE_NAME}"
 
-# Drop legacy hostnames (apex + hyphenated DNS label)
+# Drop legacy hostnames (apex + underscore DNS attempt — LE cannot mint certs for `_`)
 rm -f /etc/nginx/sites-enabled/reference-app-copy
 rm -f /etc/nginx/sites-available/reference-app-copy
-rm -f /etc/nginx/sites-enabled/backend-java-spring.reference-app-copy
-rm -f /etc/nginx/sites-available/backend-java-spring.reference-app-copy
+rm -f /etc/nginx/sites-enabled/backend_java_spring.reference-app-copy
+rm -f /etc/nginx/sites-available/backend_java_spring.reference-app-copy
 
 nginx -t
 systemctl reload nginx
