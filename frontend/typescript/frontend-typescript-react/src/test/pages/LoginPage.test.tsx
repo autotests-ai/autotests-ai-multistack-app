@@ -1,13 +1,24 @@
-import { beforeEach, describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { LoginPage } from '../../pages/LoginPage';
+
+function jsonResponse(body: unknown, ok = true, status = 200): Response {
+  return {
+    ok,
+    status,
+    json: async () => body,
+  } as Response;
+}
 
 function renderLogin() {
   return render(
     <MemoryRouter initialEntries={['/login']}>
-      <LoginPage />
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/" element={<div data-testid="home-landed">home</div>} />
+      </Routes>
     </MemoryRouter>,
   );
 }
@@ -15,6 +26,10 @@ function renderLogin() {
 describe('LoginPage', () => {
   beforeEach(() => {
     localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it('mounts the login form with canonical title and controls', () => {
@@ -50,5 +65,45 @@ describe('LoginPage', () => {
     expect(screen.getByTestId('error-message')).toHaveTextContent(
       'Password is required (minimum 6 characters)',
     );
+  });
+
+  it('stores session and navigates home on successful login', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve(
+          jsonResponse({ token: 'tok-1', username: 'user1', redirectUrl: '/' }),
+        ),
+      ),
+    );
+
+    renderLogin();
+    await user.type(screen.getByTestId('login-input'), 'user1');
+    await user.type(screen.getByTestId('password-input'), 'password1');
+    await user.click(screen.getByTestId('submit-button'));
+
+    expect(await screen.findByTestId('home-landed')).toBeInTheDocument();
+    expect(localStorage.getItem('authToken')).toBe('tok-1');
+  });
+
+  it('shows API error message for wrong credentials', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve(jsonResponse({ message: 'Wrong login or password' }, false, 401)),
+      ),
+    );
+
+    renderLogin();
+    await user.type(screen.getByTestId('login-input'), 'user1');
+    await user.type(screen.getByTestId('password-input'), 'wrongpassword');
+    await user.click(screen.getByTestId('submit-button'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('error-message')).toHaveTextContent('Wrong login or password'),
+    );
+    expect(localStorage.getItem('authToken')).toBeNull();
   });
 });

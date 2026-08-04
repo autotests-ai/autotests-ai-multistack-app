@@ -1,13 +1,24 @@
-import { beforeEach, describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { RegisterPage } from '../../pages/RegisterPage';
+
+function jsonResponse(body: unknown, ok = true, status = 200): Response {
+  return {
+    ok,
+    status,
+    json: async () => body,
+  } as Response;
+}
 
 function renderRegister() {
   return render(
     <MemoryRouter initialEntries={['/register']}>
-      <RegisterPage />
+      <Routes>
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/" element={<div data-testid="home-landed">home</div>} />
+      </Routes>
     </MemoryRouter>,
   );
 }
@@ -15,6 +26,10 @@ function renderRegister() {
 describe('RegisterPage', () => {
   beforeEach(() => {
     localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it('mounts the register form with canonical title and controls', () => {
@@ -39,5 +54,51 @@ describe('RegisterPage', () => {
     await user.click(screen.getByTestId('submit-button'));
 
     expect(screen.getByTestId('error-message')).toHaveTextContent('Passwords do not match');
+  });
+
+  it('stores session and navigates home on successful register', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve(
+          jsonResponse(
+            { token: 'tok-reg', username: 'newuser', redirectUrl: '/' },
+            true,
+            201,
+          ),
+        ),
+      ),
+    );
+
+    renderRegister();
+    await user.type(screen.getByTestId('login-input'), 'newuser');
+    await user.type(screen.getByTestId('password-input'), 'password123');
+    await user.type(screen.getByTestId('confirm-password-input'), 'password123');
+    await user.click(screen.getByTestId('submit-button'));
+
+    expect(await screen.findByTestId('home-landed')).toBeInTheDocument();
+    expect(localStorage.getItem('authToken')).toBe('tok-reg');
+  });
+
+  it('shows API error when username is already taken', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve(jsonResponse({ message: 'Username already taken' }, false, 409)),
+      ),
+    );
+
+    renderRegister();
+    await user.type(screen.getByTestId('login-input'), 'user1');
+    await user.type(screen.getByTestId('password-input'), 'password123');
+    await user.type(screen.getByTestId('confirm-password-input'), 'password123');
+    await user.click(screen.getByTestId('submit-button'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('error-message')).toHaveTextContent('Username already taken'),
+    );
+    expect(localStorage.getItem('authToken')).toBeNull();
   });
 });

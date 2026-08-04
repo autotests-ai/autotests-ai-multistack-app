@@ -1,42 +1,59 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { HomePage } from '../../pages/HomePage';
 
-function jsonResponse(body: unknown): Response {
+function jsonResponse(body: unknown, ok = true, status = 200): Response {
   return {
-    ok: true,
-    status: 200,
+    ok,
+    status,
     json: async () => body,
   } as Response;
 }
 
-function renderHome() {
+function renderHome(initialPath = '/') {
   return render(
-    <MemoryRouter>
-      <HomePage />
+    <MemoryRouter initialEntries={[initialPath]}>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<div data-testid="login-landed">login</div>} />
+      </Routes>
     </MemoryRouter>,
+  );
+}
+
+function stubDefaultApis(overrides?: (url: string) => Response | Promise<Response> | null) {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn((input: RequestInfo | URL) => {
+      const url = String(input);
+      const override = overrides?.(url);
+      if (override) return Promise.resolve(override);
+
+      if (url.includes('/api/health')) {
+        return Promise.resolve(jsonResponse({ status: 'UP', service: 'reference-app' }));
+      }
+      if (url.includes('/api/items')) {
+        return Promise.resolve(
+          jsonResponse({ items: [{ id: 1, name: 'Alpha', description: 'First item' }] }),
+        );
+      }
+      if (url.includes('/api/auth/me')) {
+        return Promise.resolve(jsonResponse({ username: 'user1' }));
+      }
+      if (url.includes('/api/auth/logout')) {
+        return Promise.resolve({ ok: true, status: 204, json: async () => ({}) } as Response);
+      }
+      return Promise.reject(new Error(`unexpected request: ${url}`));
+    }),
   );
 }
 
 describe('HomePage', () => {
   beforeEach(() => {
     localStorage.clear();
-    vi.stubGlobal(
-      'fetch',
-      vi.fn((input: RequestInfo | URL) => {
-        const url = String(input);
-        if (url.includes('/api/health')) {
-          return Promise.resolve(jsonResponse({ status: 'UP', service: 'reference-app' }));
-        }
-        if (url.includes('/api/items')) {
-          return Promise.resolve(
-            jsonResponse({ items: [{ id: 1, name: 'Alpha', description: 'First item' }] }),
-          );
-        }
-        return Promise.reject(new Error('unexpected request'));
-      }),
-    );
+    stubDefaultApis();
   });
 
   afterEach(() => {
@@ -62,5 +79,72 @@ describe('HomePage', () => {
 
     await waitFor(() => expect(screen.getByTestId('item-row')).toBeInTheDocument());
     expect(screen.getByTestId('welcome-panel')).not.toBeVisible();
+  });
+
+  it('shows welcome and logout when profile loads for a session token', async () => {
+    localStorage.setItem('authToken', 'valid-token');
+    renderHome();
+
+    expect(await screen.findByTestId('welcome-message')).toHaveTextContent('Welcome, user1!');
+    expect(screen.getByTestId('welcome-panel')).toBeVisible();
+    expect(screen.getByTestId('logout-button')).toBeInTheDocument();
+  });
+
+  it('clears invalid session and keeps welcome hidden', async () => {
+    localStorage.setItem('authToken', 'bad-token');
+    stubDefaultApis((url) => {
+      if (url.includes('/api/auth/me')) {
+        return jsonResponse({ message: 'Unauthorized' }, false, 401);
+      }
+      return null;
+    });
+
+    renderHome();
+
+    await waitFor(() => expect(screen.getByTestId('item-row')).toBeInTheDocument());
+    expect(screen.getByTestId('welcome-panel')).not.toBeVisible();
+    expect(localStorage.getItem('authToken')).toBeNull();
+  });
+
+  it('logs out and navigates to login', async () => {
+    const user = userEvent.setup();
+    localStorage.setItem('authToken', 'valid-token');
+    renderHome();
+
+    await screen.findByTestId('logout-button');
+    await user.click(screen.getByTestId('logout-button'));
+
+    expect(await screen.findByTestId('login-landed')).toBeInTheDocument();
+    expect(localStorage.getItem('authToken')).toBeNull();
+  });
+
+  it('shows items error state when items API fails', async () => {
+    stubDefaultApis((url) => {
+      if (url.includes('/api/items')) {
+        return jsonResponse({ message: 'boom' }, false, 500);
+      }
+      return null;
+    });
+
+    renderHome();
+
+    await waitFor(() =>
+      expect(screen.getByTestId('items-list')).toHaveTextContent('✗ items: HTTP 500'),
+    );
+  });
+
+  it('shows empty items state when API returns no rows', async () => {
+    stubDefaultApis((url) => {
+      if (url.includes('/api/items')) {
+        return jsonResponse({ items: [] });
+      }
+      return null;
+    });
+
+    renderHome();
+
+    await waitFor(() =>
+      expect(screen.getByTestId('items-list')).toHaveTextContent('No items found.'),
+    );
   });
 });

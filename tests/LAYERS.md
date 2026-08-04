@@ -68,7 +68,7 @@ Not duplicates — different failure modes. Chrome layout for the app is `integr
 
 | Phase | Jobs on |
 |-------|---------|
-| 2a | `unit_backend`, `test-infra`, `component_rtl` |
+| 2a | `unit_backend`, `test-infra`, `component_rtl` ← **on in CI** |
 | 2b | + `api` (+ compose) |
 | 2c | + `integration` |
 | 2d | + `e2e` |

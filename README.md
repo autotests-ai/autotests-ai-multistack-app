@@ -76,7 +76,7 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · entry: [`.github/workflows/ci.yml`]
 | `unit_backend` | `backend/java/backend-java-spring/` (action `unit`) |
 | `unit_backend_python` | python backends — only via `test_all` / `include_python` |
 | `test-infra` | `tests/java/…` (action `test-infra`) |
-| `component_rtl` | `frontend/typescript/frontend-typescript-react/` (action `component`, off) |
+| `component_rtl` | `frontend/typescript/frontend-typescript-react/` (action `component`) |
 | `component_vue` | `frontend/typescript/frontend-typescript-vue/src/test/` |
 | `api` … `e2e` / `integration` / `visual` | `tests/java/tests-java-gradle-junit5-allure3-selenide/` |
 

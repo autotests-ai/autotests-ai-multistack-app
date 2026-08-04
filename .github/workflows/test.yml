@@ -2,7 +2,7 @@
 # Flip job-level `if: false` when wiring a deferred layer (see tests/LAYERS.md).
 #
 # layers: ci | prod-only | all-enabled
-#   ci          → unit_backend + test-infra (+ component_rtl when enabled)
+#   ci          → unit_backend + test-infra + component_rtl
 #   prod-only   → prod_api (+ prod_e2e when enabled)
 #   all-enabled → ci + prod (manual / test_all)
 
@@ -87,7 +87,10 @@ jobs:
 
   component_rtl:
     name: component_rtl
-    if: false
+    if: >-
+      inputs.layers == 'ci' ||
+      inputs.layers == 'all-enabled' ||
+      inputs.layers == ''
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

@@ -62,6 +62,13 @@ public class RegisterPage {
         return new HomePage();
     }
 
+    @Step("Submit register form expecting validation or API error")
+    public RegisterPage submitExpectingError() {
+        submitButton.click();
+        errorMessage.shouldBe(visible, Duration.ofSeconds(10));
+        return this;
+    }
+
     @Step("Verify register form is mounted")
     public RegisterPage shouldShowRegisterForm() {
         formTitle.shouldBe(visible);

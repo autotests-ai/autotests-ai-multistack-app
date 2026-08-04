@@ -1,8 +1,10 @@
 package pages;
 
+import static com.codeborne.selenide.Condition.hidden;
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.$;
+import static com.codeborne.selenide.Selenide.Wait;
 import static com.codeborne.selenide.Selenide.executeJavaScript;
 import static com.codeborne.selenide.Selenide.open;
 import static io.restassured.RestAssured.given;
@@ -22,6 +24,7 @@ public class HomePage {
     private final SelenideElement welcomeMessage = $("[data-testid='welcome-message']");
     private final SelenideElement logoutButton = $("[data-testid='logout-button']");
     private final SelenideElement welcomePanel = $("[data-testid='welcome-panel']");
+    private final SelenideElement header = $("[data-testid='header']");
 
     @Step("Open home page")
     public HomePage openPage() {
@@ -51,10 +54,40 @@ public class HomePage {
         return this;
     }
 
+    @Step("Open home page with invalid local storage token")
+    public HomePage openPageWithInvalidToken() {
+        open("/login");
+        executeJavaScript(
+                "localStorage.setItem(arguments[0], arguments[1]);",
+                "authToken",
+                "invalid-token"
+        );
+        open("/");
+        return this;
+    }
+
     @Step("Verify home layout is mounted")
     public HomePage shouldShowLayout() {
         layout.shouldBe(visible, Duration.ofSeconds(10));
         itemsList.shouldBe(visible);
+        return this;
+    }
+
+    @Step("Verify embedded header is mounted")
+    public HomePage shouldShowEmbeddedHeader() {
+        header.shouldBe(visible, Duration.ofSeconds(10));
+        return this;
+    }
+
+    @Step("Verify welcome panel stays hidden")
+    public HomePage shouldHideWelcomePanel() {
+        welcomePanel.shouldBe(hidden, Duration.ofSeconds(10));
+        return this;
+    }
+
+    @Step("Verify auth token was cleared from localStorage")
+    public HomePage shouldClearAuthToken() {
+        Wait().until(driver -> executeJavaScript("return localStorage.getItem('authToken');") == null);
         return this;
     }
 
