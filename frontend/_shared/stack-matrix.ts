@@ -128,11 +128,32 @@ export function unitTestsPath(backend: BackendModule | null): string | null {
   return `${backend.module}/src/test`;
 }
 
-/** Component / RTL tests live inside the selected frontend (vite apps). */
-export function componentTestsPath(frontend: FrontendModule | null): string | null {
-  if (!frontend?.module) return null;
-  if (frontend.kind === 'static') return null;
-  return `${frontend.module}/src/test`;
+/** Canonical RTL teaching path (Vitest + React Testing Library). */
+export const COMPONENT_RTL_PATH =
+  'frontend/typescript/frontend-typescript-react/src/test';
+
+/**
+ * Component / RTL tests — selected React FE `src/test`, else canonical
+ * frontend-typescript-react RTL (static FE has no local component suite).
+ */
+export function componentTestsPath(frontend: FrontendModule | null): string {
+  if (frontend?.module && frontend.kind !== 'static' && String(frontend.id || '').includes('react')) {
+    return `${frontend.module}/src/test`;
+  }
+  if (frontend?.module && frontend.kind !== 'static') {
+    return `${frontend.module}/src/test`;
+  }
+  return COMPONENT_RTL_PATH;
+}
+
+/** Meta under component row — short path + library caption for RTL. */
+export function componentTestsMeta(path: string | null | undefined): string {
+  if (!path) return 'pick a frontend';
+  const short = String(path).replace(/^frontend\/(?:javascript|typescript)\//, '');
+  if (path.includes('react') || path === COMPONENT_RTL_PATH) {
+    return `← ${short} · react-testing-library`;
+  }
+  return `← ${short}`;
 }
 
 export function resolveTestsId(

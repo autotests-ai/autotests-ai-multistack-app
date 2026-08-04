@@ -80,11 +80,32 @@ export function unitTestsPath(backend) {
   return `${backend.module}/src/test`;
 }
 
-/** Component / RTL tests live inside the selected frontend (vite apps). */
+/** Canonical RTL teaching path (Vitest + React Testing Library). */
+export const COMPONENT_RTL_PATH =
+  'frontend/typescript/frontend-typescript-react/src/test';
+
+/**
+ * Component / RTL tests — selected React FE `src/test`, else canonical
+ * frontend-typescript-react RTL (static FE has no local component suite).
+ */
 export function componentTestsPath(frontend) {
-  if (!frontend?.module) return null;
-  if (frontend.kind === 'static') return null;
-  return `${frontend.module}/src/test`;
+  if (frontend?.module && frontend.kind !== 'static' && String(frontend.id || '').includes('react')) {
+    return `${frontend.module}/src/test`;
+  }
+  if (frontend?.module && frontend.kind !== 'static') {
+    return `${frontend.module}/src/test`;
+  }
+  return COMPONENT_RTL_PATH;
+}
+
+/** Meta under component row — short path + library caption for RTL. */
+export function componentTestsMeta(path) {
+  if (!path) return 'pick a frontend';
+  const short = String(path).replace(/^frontend\/(?:javascript|typescript)\//, '');
+  if (path.includes('react') || path === COMPONENT_RTL_PATH) {
+    return `← ${short} · react-testing-library`;
+  }
+  return `← ${short}`;
 }
 
 export function resolveTestsId(data, requested) {
@@ -256,11 +277,7 @@ export function mountStackPage(root, data, pathname = window.location.pathname, 
   const unitMeta = backendId
     ? `← ${backendId}${unitPath ? ` · ${unitPath}` : ''}`
     : 'pick a backend';
-  const componentMeta = frontendId
-    ? componentPath
-      ? `← ${frontendId} · ${componentPath}`
-      : `← ${frontendId} · no src/test`
-    : 'pick a frontend';
+  const componentMeta = componentTestsMeta(componentPath);
 
   root.innerHTML = `
     <div class="stack-page__header">

@@ -8,6 +8,7 @@ import {
 } from '../../../../_shared/poll-toggle';
 import {
   comboHref,
+  componentTestsMeta,
   componentTestsPath,
   fetchStackMatrix,
   findById,
@@ -93,13 +94,7 @@ const unitMeta = computed(() =>
     : 'pick a backend',
 );
 
-const componentMeta = computed(() =>
-  mount.frontendId
-    ? componentPath.value
-      ? `← ${mount.frontendId} · ${componentPath.value}`
-      : `← ${mount.frontendId} · no src/test`
-    : 'pick a frontend',
-);
+const componentMeta = computed(() => componentTestsMeta(componentPath.value));
 
 const label = computed(() => {
   const parts: string[] = [];

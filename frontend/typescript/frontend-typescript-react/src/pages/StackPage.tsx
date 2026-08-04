@@ -7,6 +7,7 @@ import {
 } from '../../../../_shared/poll-toggle';
 import {
   comboHref,
+  componentTestsMeta,
   componentTestsPath,
   fetchStackMatrix,
   findById,
@@ -168,11 +169,7 @@ function TestsBoard({
   const unitMeta = currentBackend
     ? `← ${currentBackend}${unitPath ? ` · ${unitPath}` : ''}`
     : 'pick a backend';
-  const componentMeta = currentFrontend
-    ? componentPath
-      ? `← ${currentFrontend} · ${componentPath}`
-      : `← ${currentFrontend} · no src/test`
-    : 'pick a frontend';
+  const componentMeta = componentTestsMeta(componentPath);
 
   const derived = [
     {
