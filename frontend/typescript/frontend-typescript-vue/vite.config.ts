@@ -9,6 +9,8 @@ const mountBase = './';
 export default defineConfig({
   root: resolve(__dirname),
   base: mountBase,
+  server: { port: 9813, strictPort: true },
+  preview: { port: 9813, strictPort: true },
   plugins: [
     vue(),
     VitePWA({

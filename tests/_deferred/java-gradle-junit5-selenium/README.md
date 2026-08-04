@@ -26,7 +26,7 @@ Defaults:
 Against local compose:
 
 ```bash
-./gradlew test -DbaseUrl=http://localhost:8800/
+./gradlew test -DbaseUrl=http://localhost:8700/
 ```
 
 ## Remote (Selenoid WebDriver)

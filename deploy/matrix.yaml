@@ -2,6 +2,14 @@
 # URL: https://{public_host}/{backend}/{frontend}/
 #      https://{public_host}/{backend}/api/
 # First path segment → API upstream; second → shared static mount (one web image).
+#
+# Port canon (local publish = prod host upstream; same numbers):
+#   infra:  edge 8700 · web (shared static) 8701
+#   backend: language base +10 · stack +1 within language
+#     8800 java · 8810 kotlin · 8820 python · 8830 go · next lang 8840…
+#   frontend (local vite / static serve): language base +10 · stack +1
+#     9800 javascript · 9810 typescript · next lang 9820…
+# Container-internal listen stays 8080 (backends) / 80 (web, edge).
 
 public_host: reference-app-copy.autotests.ai
 domain_suffix: reference-app-copy.autotests.ai
@@ -11,15 +19,15 @@ web:
   compose_service: web
   image: reference-app-copy-web:latest
   # Published on host for prod host-nginx → static (local: only via edge).
-  publish_port: 8801
+  publish_port: 8701
   runtime: frontend/_shared/frontend-javascript-app
   react_ui: frontend/_shared/frontend-react-ui
 
 # Local public entry (path-based). Prod host nginx replaces this role.
 edge:
   compose_service: edge
-  # Local + prod edge port (host nginx may replace edge — see deploy/nginx).
-  publish_port: 8800
+  # Local path router (prod: host nginx on :443).
+  publish_port: 8700
 
 backends:
   - id: backend-java-spring
@@ -30,9 +38,21 @@ backends:
     compose_profile: null
     image: reference-app-copy-backend-java-spring:latest
     internal_port: 8080
-    publish_port: 8810
+    publish_port: 8800
     db_name: reference_app_java_spring
     health_service: reference-app-copy
+
+  - id: backend-kotlin-spring
+    status: active
+    language: kotlin
+    module: backend/kotlin/backend-kotlin-spring
+    compose_service: backend-kotlin-spring
+    compose_profile: null
+    image: reference-app-copy-backend-kotlin-spring:latest
+    internal_port: 8080
+    publish_port: 8810
+    db_name: reference_app_kotlin_spring
+    health_service: backend-kotlin-spring
 
   - id: backend-python-flask
     status: stub
@@ -42,7 +62,7 @@ backends:
     compose_profile: null
     image: reference-app-copy-backend-python-flask:latest
     internal_port: 8080
-    publish_port: 8811
+    publish_port: 8820
     db_name: reference_app_python_flask
     health_service: backend-python-flask
 
@@ -54,7 +74,7 @@ backends:
     compose_profile: python-fastapi
     image: reference-app-copy-backend-python-fastapi:latest
     internal_port: 8080
-    publish_port: 8812
+    publish_port: 8821
     db_name: reference_app_python_fastapi
     health_service: backend-python-fastapi
 
@@ -66,21 +86,9 @@ backends:
     compose_profile: python-django
     image: reference-app-copy-backend-python-django:latest
     internal_port: 8080
-    publish_port: 8813
+    publish_port: 8822
     db_name: reference_app_python_django
     health_service: backend-python-django
-
-  - id: backend-kotlin-spring
-    status: active
-    language: kotlin
-    module: backend/kotlin/backend-kotlin-spring
-    compose_service: backend-kotlin-spring
-    compose_profile: null
-    image: reference-app-copy-backend-kotlin-spring:latest
-    internal_port: 8080
-    publish_port: 8814
-    db_name: reference_app_kotlin_spring
-    health_service: backend-kotlin-spring
 
   - id: backend-go-gin
     status: slot
@@ -90,7 +98,7 @@ backends:
     compose_profile: go-gin
     image: reference-app-copy-backend-go-gin:latest
     internal_port: 8080
-    publish_port: 8815
+    publish_port: 8830
     db_name: reference_app_go_gin
     health_service: backend-go-gin
 
@@ -102,55 +110,63 @@ backends:
     compose_profile: go-stdlib
     image: reference-app-copy-backend-go-stdlib:latest
     internal_port: 8080
-    publish_port: 8816
+    publish_port: 8831
     db_name: reference_app_go_stdlib
     health_service: backend-go-stdlib
 
 frontends:
-  - id: frontend-typescript-react
-    status: active
-    kind: vite
-    module: frontend/typescript/frontend-typescript-react
-    mount: frontend-typescript-react
-
   - id: frontend-javascript-vanilla
     status: active
     kind: static
     module: frontend/javascript/frontend-javascript-vanilla
     mount: frontend-javascript-vanilla
+    local_port: 9800
 
   - id: frontend-javascript-react
     status: slot
     kind: vite
     module: frontend/javascript/frontend-javascript-react
     mount: frontend-javascript-react
+    local_port: 9801
 
   - id: frontend-javascript-angular
     status: slot
     kind: vite
     module: frontend/javascript/frontend-javascript-angular
     mount: frontend-javascript-angular
+    local_port: 9802
 
   - id: frontend-javascript-vue
     status: slot
     kind: vite
     module: frontend/javascript/frontend-javascript-vue
     mount: frontend-javascript-vue
-
-  - id: frontend-typescript-angular
-    status: slot
-    kind: vite
-    module: frontend/typescript/frontend-typescript-angular
-    mount: frontend-typescript-angular
-
-  - id: frontend-typescript-vue
-    status: active
-    kind: vite
-    module: frontend/typescript/frontend-typescript-vue
-    mount: frontend-typescript-vue
+    local_port: 9803
 
   - id: frontend-typescript-vanilla
     status: slot
     kind: static
     module: frontend/typescript/frontend-typescript-vanilla
     mount: frontend-typescript-vanilla
+    local_port: 9810
+
+  - id: frontend-typescript-react
+    status: active
+    kind: vite
+    module: frontend/typescript/frontend-typescript-react
+    mount: frontend-typescript-react
+    local_port: 9811
+
+  - id: frontend-typescript-angular
+    status: slot
+    kind: vite
+    module: frontend/typescript/frontend-typescript-angular
+    mount: frontend-typescript-angular
+    local_port: 9812
+
+  - id: frontend-typescript-vue
+    status: active
+    kind: vite
+    module: frontend/typescript/frontend-typescript-vue
+    mount: frontend-typescript-vue
+    local_port: 9813

@@ -54,17 +54,7 @@ services:
     networks:
       - reference_internal
     ports:
-      - "${BACKEND_JAVA_PORT:-8810}:8080"
-
-  backend-python-flask:
-    image: reference-app-copy-backend-python-flask:latest
-    build:
-      context: ./backend/python/backend-python-flask
-    restart: unless-stopped
-    networks:
-      - reference_internal
-    ports:
-      - "${BACKEND_FLASK_PORT:-8811}:8080"
+      - "${BACKEND_JAVA_PORT:-8800}:8080"
 
   backend-kotlin-spring:
     image: reference-app-copy-backend-kotlin-spring:latest
@@ -87,7 +77,17 @@ services:
     networks:
       - reference_internal
     ports:
-      - "${BACKEND_KOTLIN_PORT:-8814}:8080"
+      - "${BACKEND_KOTLIN_PORT:-8810}:8080"
+
+  backend-python-flask:
+    image: reference-app-copy-backend-python-flask:latest
+    build:
+      context: ./backend/python/backend-python-flask
+    restart: unless-stopped
+    networks:
+      - reference_internal
+    ports:
+      - "${BACKEND_FLASK_PORT:-8820}:8080"
 
   web:
     image: reference-app-copy-web:latest
@@ -101,7 +101,7 @@ services:
     networks:
       - reference_internal
     ports:
-      - "${WEB_PORT:-8801}:80"
+      - "${WEB_PORT:-8701}:80"
 
   edge:
     image: reference-app-copy-edge:latest
@@ -115,7 +115,7 @@ services:
       - backend-python-flask
       - backend-kotlin-spring
     ports:
-      - "${SERVER_PORT:-8800}:80"
+      - "${SERVER_PORT:-8700}:80"
     networks:
       - reference_internal
 

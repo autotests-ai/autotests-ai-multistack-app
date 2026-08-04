@@ -10,6 +10,8 @@ const mountBase = './';
 export default defineConfig({
   root: resolve(__dirname),
   base: mountBase,
+  server: { port: 9811, strictPort: true },
+  preview: { port: 9811, strictPort: true },
   plugins: [
     react(),
     VitePWA({

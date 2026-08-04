@@ -46,3 +46,18 @@ Active mounts in `web`: `frontend-typescript-react`, `frontend-typescript-vue`, 
 Slots are not deployed until they have a buildable `dist/` / static tree.
 
 Host `/` is empty (404). `/{backend}/api/**` is routed by edge (local) or host nginx (prod), not by the static image.
+
+## Local ports
+
+Canon in [`deploy/matrix.yaml`](../deploy/matrix.yaml): language base **+10**, stack **+1** from **9800**.
+
+| Port | Module |
+|------|--------|
+| 9800 | `frontend-javascript-vanilla` |
+| 9801–9803 | javascript react / angular / vue |
+| 9810 | `frontend-typescript-vanilla` |
+| 9811 | `frontend-typescript-react` (`npm run dev`) |
+| 9812 | `frontend-typescript-angular` |
+| 9813 | `frontend-typescript-vue` (`npm run dev`) |
+
+Packaged static for all mounts → shared `web` on **8701** (via edge **8700** / prod nginx).

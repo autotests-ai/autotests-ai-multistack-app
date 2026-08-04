@@ -5,10 +5,11 @@ APP_DIR="${APP_DIR:-/home/reference_app_copy/reference-app-copy}"
 REPO_URL="${REPO_URL:-https://github.com/autotests-ai/reference-app-copy.git}"
 
 # Host publish ports (matrix.yaml / compose). Edge optional locally; prod host nginx splits.
-export SERVER_PORT="${SERVER_PORT:-8800}"
-export WEB_PORT="${WEB_PORT:-8801}"
-export BACKEND_JAVA_PORT="${BACKEND_JAVA_PORT:-8810}"
-export BACKEND_FLASK_PORT="${BACKEND_FLASK_PORT:-8811}"
+export SERVER_PORT="${SERVER_PORT:-8700}"
+export WEB_PORT="${WEB_PORT:-8701}"
+export BACKEND_JAVA_PORT="${BACKEND_JAVA_PORT:-8800}"
+export BACKEND_KOTLIN_PORT="${BACKEND_KOTLIN_PORT:-8810}"
+export BACKEND_FLASK_PORT="${BACKEND_FLASK_PORT:-8820}"
 
 SKIP_BUILD="${SKIP_BUILD:-0}"
 MAX_ATTEMPTS="${HEALTH_POLL_ATTEMPTS:-30}"
@@ -34,6 +35,7 @@ fi
 # Health: published backend ports (host nginx upstreams).
 health_ports=(
   "${BACKEND_JAVA_PORT}:reference-app-copy"
+  "${BACKEND_KOTLIN_PORT}:backend-kotlin-spring"
   "${BACKEND_FLASK_PORT}:backend-python-flask"
 )
 

@@ -73,25 +73,55 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · CI: [`.github/workflows/test.yml`](
 | `component_vue` | `frontend/typescript/frontend-typescript-vue/src/test/` |
 | `api` … `e2e` / `component_browser` / `visual` | `tests/java/tests-java-gradle-junit5-allure3-selenide/` |
 
+## Ports (local = prod host upstream)
+
+SSOT: [`deploy/matrix.yaml`](deploy/matrix.yaml). Language base **+10**, stack within language **+1**.
+
+| Port | Service | Notes |
+|------|---------|-------|
+| **8700** | `edge` | local path router only (`SERVER_PORT`); prod uses host nginx `:443` |
+| **8701** | `web` | shared static pack (`WEB_PORT`) |
+| **8800** | `backend-java-spring` | |
+| **8810** | `backend-kotlin-spring` | |
+| **8820** | `backend-python-flask` | |
+| **8821** | `backend-python-fastapi` | slot |
+| **8822** | `backend-python-django` | slot |
+| **8830** | `backend-go-gin` | slot |
+| **8831** | `backend-go-stdlib` | slot |
+| **9800** | `frontend-javascript-vanilla` | local serve / vite |
+| **9801** | `frontend-javascript-react` | slot |
+| **9802** | `frontend-javascript-angular` | slot |
+| **9803** | `frontend-javascript-vue` | slot |
+| **9810** | `frontend-typescript-vanilla` | slot |
+| **9811** | `frontend-typescript-react` | |
+| **9812** | `frontend-typescript-angular` | slot |
+| **9813** | `frontend-typescript-vue` | |
+
+Next backend language → **8840+**. Next frontend language → **9820+**.  
+Container-internal: backends `:8080`, `web`/`edge` `:80`.
+
 ## Quick start
 
 ```bash
 docker compose up -d --build
-# edge publishes SERVER_PORT (default 8800)
-curl -fsS http://localhost:8800/backend-java-spring/api/health
-curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8800/backend-java-spring/frontend-typescript-react/
-curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8800/backend-java-spring/frontend-javascript-vanilla/
+# edge publishes SERVER_PORT (default 8700)
+curl -fsS http://localhost:8700/backend-java-spring/api/health
+curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8700/backend-java-spring/frontend-typescript-react/
+curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8700/backend-java-spring/frontend-javascript-vanilla/
 # flask stub — same UI mounts, different /{backend}/api
-curl -fsS http://localhost:8800/backend-python-flask/api/health
-curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8800/   # 404
+curl -fsS http://localhost:8700/backend-python-flask/api/health
+curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8700/   # 404
+# direct backend (same ports on prod host)
+curl -fsS http://localhost:8800/api/health
 ```
 
 | Service | Role |
 |---------|------|
-| `edge` | local path router (`SERVER_PORT`, default 8800) |
+| `edge` | local path router (`SERVER_PORT`, default 8700) |
 | `web` | shared static UIs only (no `/api`) |
-| `backend-java-spring` | Spring JSON API |
-| `backend-python-flask` | health stub for routing demos |
+| `backend-java-spring` | Spring JSON API (`:8800`) |
+| `backend-kotlin-spring` | Spring Kotlin JSON API (`:8810`) |
+| `backend-python-flask` | health stub for routing demos (`:8820`) |
 | `postgres` | one instance, DB per backend (`reference_app_java_spring`, `reference_app_python_flask`, …) |
 
 ## Deploy
@@ -101,10 +131,11 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8800/   # 404
 | Setting | Value |
 |---------|-------|
 | `APP_DIR` | `/home/reference_app_copy/reference-app-copy` |
-| `WEB_PORT` | `8801` (shared static) |
-| `BACKEND_JAVA_PORT` | `8810` |
-| `BACKEND_FLASK_PORT` | `8811` |
-| `SERVER_PORT` | `8800` (local-style edge; prod host nginx splits API/static) |
+| `SERVER_PORT` | `8700` (local edge; prod host nginx splits API/static) |
+| `WEB_PORT` | `8701` (shared static) |
+| `BACKEND_JAVA_PORT` | `8800` |
+| `BACKEND_KOTLIN_PORT` | `8810` |
+| `BACKEND_FLASK_PORT` | `8820` |
 
 **CD:** [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) — `build` (images on GHA) → `deploy` (SSH `docker load` + `SKIP_BUILD=1` [`deploy/server-deploy.sh`](deploy/server-deploy.sh)).
 

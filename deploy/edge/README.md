@@ -11,10 +11,10 @@ Path-based router for local compose (one host):
 
 ```bash
 docker compose up -d --build
-curl -fsS http://127.0.0.1:8800/backend-java-spring/api/health
-curl -fsS http://127.0.0.1:8800/backend-python-flask/api/health
-curl -fsS http://127.0.0.1:8800/backend-kotlin-spring/api/health
-curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8800/backend-java-spring/frontend-typescript-react/
+curl -fsS http://127.0.0.1:8700/backend-java-spring/api/health
+curl -fsS http://127.0.0.1:8700/backend-python-flask/api/health
+curl -fsS http://127.0.0.1:8700/backend-kotlin-spring/api/health
+curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8700/backend-java-spring/frontend-typescript-react/
 ```
 
 Prod uses host nginx from [`../nginx/`](../nginx/) (same path split); edge is for local parity.
