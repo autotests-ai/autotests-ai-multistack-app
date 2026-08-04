@@ -77,18 +77,18 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · CI: [`.github/workflows/test.yml`](
 
 ```bash
 docker compose up -d --build
-# edge publishes SERVER_PORT (default 8080; if busy: SERVER_PORT=18080 docker compose up -d)
-curl -fsS http://localhost:8080/backend-java-spring/api/health
-curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/backend-java-spring/frontend-typescript-react/
-curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/backend-java-spring/frontend-javascript-vanilla/
+# edge publishes SERVER_PORT (default 8800)
+curl -fsS http://localhost:8800/backend-java-spring/api/health
+curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8800/backend-java-spring/frontend-typescript-react/
+curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8800/backend-java-spring/frontend-javascript-vanilla/
 # flask stub — same UI mounts, different /{backend}/api
-curl -fsS http://localhost:8080/backend-python-flask/api/health
-curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/   # 404
+curl -fsS http://localhost:8800/backend-python-flask/api/health
+curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8800/   # 404
 ```
 
 | Service | Role |
 |---------|------|
-| `edge` | local path router (`SERVER_PORT`, default 8080) |
+| `edge` | local path router (`SERVER_PORT`, default 8800) |
 | `web` | shared static UIs only (no `/api`) |
 | `backend-java-spring` | Spring JSON API |
 | `backend-python-flask` | health stub for routing demos |

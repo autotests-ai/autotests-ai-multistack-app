@@ -51,8 +51,8 @@ ATTACH_OFF = {
 
 STANDS = {
     "reference_ci": {
-        "baseUrl": "http://localhost:8080/backend-java-spring/frontend-typescript-react/",
-        "apiBaseUrl": "http://localhost:8080/backend-java-spring/api/",
+        "baseUrl": "http://localhost:8800/backend-java-spring/frontend-typescript-react/",
+        "apiBaseUrl": "http://localhost:8800/backend-java-spring/api/",
         "remoteUrl": "",
         "videoFolder": "",
         "logToConsole": "true",
@@ -74,7 +74,7 @@ STANDS = {
 COMPONENT_BASE = {
     "baseUrl": "http://localhost:3000/",
     "componentCatalogUrl": "http://localhost:3000/",
-    "apiBaseUrl": "http://localhost:8080/backend-java-spring/api/",
+    "apiBaseUrl": "http://localhost:8800/backend-java-spring/api/",
 }
 
 

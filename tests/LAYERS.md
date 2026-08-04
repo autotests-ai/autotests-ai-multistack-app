@@ -9,7 +9,7 @@ Jobs = layers; enable gradually (block 2a → 2f). Module folders: `-` between s
                     ├─────────────┤
                     │   visual    │  PNG baselines, Chrome
                     ├─────────────┤
-                    │     e2e     │  user flows, app :8080 / prod
+                    │     e2e     │  user flows, app :8800 / prod
                     ├─────────────┤
                     │ integration │  mount / wiring on app page
                     ├─────────────┤
@@ -34,10 +34,10 @@ Jobs = layers; enable gradually (block 2a → 2f). Module folders: `-` between s
 | `unit_backend` | backend | `backend/java/backend-java-spring/src/test/` | all backend tests | `./gradlew test` (+ JaCoCo) | n/a |
 | `test-infra` | tests | `…/tests/testinfra/` | `tests.testinfra.*` · `@Layer("test-infra")` + `@Tag("test-infra")` | `./gradlew testInfra` | n/a |
 | `component_rtl` | frontend | `frontend/typescript/frontend-typescript-react/src/test/` | Vitest | `npm test` | jsdom |
-| `api` | tests | `…/tests/api/` | `@Tag("api")` | `./gradlew testApi` | app `:8080` |
-| `integration` | tests | e.g. `LoginFormTests`, `LoginEmbedTests` | `@Tag("layout")` / `@Tag("mount")` | `./gradlew testIntegration` | app `:8080` |
+| `api` | tests | `…/tests/api/` | `@Tag("api")` | `./gradlew testApi` | app `:8800` |
+| `integration` | tests | e.g. `LoginFormTests`, `LoginEmbedTests` | `@Tag("layout")` / `@Tag("mount")` | `./gradlew testIntegration` | app `:8800` |
 | `component_browser` | tests | `…/tests/component/` | `@Tag("component")` | `./gradlew testComponent` | catalog `:3000` |
-| `e2e` | tests | `…/tests/`, `…/tests/e2e/` | `@Tag("smoke")` | `./gradlew testE2e` | app `:8080` (CI) / prod (post-deploy) |
+| `e2e` | tests | `…/tests/`, `…/tests/e2e/` | `@Tag("smoke")` | `./gradlew testE2e` | app `:8800` (CI) / prod (post-deploy) |
 | `visual` | tests | baselines | `@Tag("visual")` | `./gradlew testVisual` | app / catalog |
 | `manual` | tests | stubs | `@Tag("manual")` | `./gradlew testManual` | n/a |
 | `prod_api` | tests | same api | after successful Deploy (`workflow_run`) | `testApi` + `reference_prod` | [reference-app-copy.autotests.ai/backend-java-spring](https://reference-app-copy.autotests.ai/backend-java-spring) |

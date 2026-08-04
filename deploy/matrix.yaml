@@ -18,8 +18,8 @@ web:
 # Local public entry (path-based). Prod host nginx replaces this role.
 edge:
   compose_service: edge
-  # Local default; prod uses SERVER_PORT (8800) for edge-less host split — see deploy/nginx.
-  publish_port: 8080
+  # Local + prod edge port (host nginx may replace edge — see deploy/nginx).
+  publish_port: 8800
 
 backends:
   - id: backend-java-spring

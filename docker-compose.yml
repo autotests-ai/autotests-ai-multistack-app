@@ -115,7 +115,7 @@ services:
       - backend-python-flask
       - backend-kotlin-spring
     ports:
-      - "${SERVER_PORT:-8080}:80"
+      - "${SERVER_PORT:-8800}:80"
     networks:
       - reference_internal
 

@@ -140,7 +140,7 @@ jobs:
       - name: Start postgres + backend
         run: |
           docker compose up -d --build --wait
-          curl -fsS "http://127.0.0.1:8080/backend-java-spring/api/health" | grep -q '"status":"ok"'
+          curl -fsS "http://127.0.0.1:8800/backend-java-spring/api/health" | grep -q '"status":"ok"'
 
   api:
     name: api
