@@ -144,7 +144,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:9800/
 
 **Production URL:** https://reference-app-copy.autotests.ai/backend-java-spring/frontend-typescript-react/
 
-Ports, compose service ids, and health `expect` strings — **SSOT** [`deploy/matrix.yaml`](deploy/matrix.yaml). Host entrypoint [`deploy/server-deploy.sh`](deploy/server-deploy.sh) reads them via [`deploy/matrix_query.py`](deploy/matrix_query.py). GHA reads the committed artifact [`deploy/deploy-matrix.json`](deploy/deploy-matrix.json) (no Python in workflows) — after editing `matrix.yaml` run locally:
+Ports, compose service ids, and health `expect` strings — **SSOT** [`deploy/matrix.yaml`](deploy/matrix.yaml). Host entrypoint [`deploy/server-deploy.sh`](deploy/server-deploy.sh) reads them via [`deploy/matrix_query.py`](deploy/matrix_query.py). GHA reads pre-baked `selections.{default,all}` from committed [`deploy/deploy-matrix.json`](deploy/deploy-matrix.json) (no Python / no CSV resolve in workflows) — after editing `matrix.yaml` run locally and commit the JSON:
 
 ```bash
 python deploy/matrix_query.py sync-deploy-matrix
@@ -160,8 +160,8 @@ python deploy/matrix_query.py sync-deploy-matrix
 | Workflow | Role |
 |----------|------|
 | [`ci.yml`](.github/workflows/ci.yml) | Orchestrator: **PR** → `test(ci)`; **push main** → `test(ci)` → `deploy` → `test(prod)` |
-| [`deploy.yml`](.github/workflows/deploy.yml) | Leaf CD (`workflow_call` / manual): build from `deploy-matrix.json` → SSH `docker load` → `SKIP_BUILD=1 deploy/server-deploy.sh` |
-| [`deploy_all.yml`](.github/workflows/deploy_all.yml) | Manual: `deploy_mode=all` → every **active** backend/frontend from `matrix.yaml` |
+| [`deploy.yml`](.github/workflows/deploy.yml) | Leaf CD (`workflow_call` / manual): `deploy_mode` → `selections.*` in `deploy-matrix.json` → build → SSH `docker load` → `SKIP_BUILD=1 deploy/server-deploy.sh` |
+| [`deploy_all.yml`](.github/workflows/deploy_all.yml) | Manual: `deploy_mode=all` → `selections.all` (every **active** backend/frontend) |
 | [`test.yml`](.github/workflows/test.yml) | Leaf tests: `scope=ci` (unit + test-infra + component) · `prod` (`prod_api`) · `all` (both) |
 | [`test_all.yml`](.github/workflows/test_all.yml) | Manual: `test.yml` + python backend unit matrix |
 

@@ -1,5 +1,5 @@
 # Leaf deploy — called by ci.yml (main) or deploy_all.yml / workflow_dispatch.
-# Deploy matrix artifact: deploy/deploy-matrix.json
+# Deploy matrix artifact: deploy/deploy-matrix.json → selections.{default,all}
 # (sync locally: python deploy/matrix_query.py sync-deploy-matrix).
 # Host logic SSOT: deploy/server-deploy.sh + deploy/matrix.yaml.
 # Does not run autotests (see test.yml / ci.yml).
@@ -9,28 +9,12 @@ name: reference-app-copy Deploy
 on:
   workflow_dispatch:
     inputs:
-      backends:
-        description: "Comma-separated compose backend ids"
-        required: false
-        default: backend-java-spring
-      frontends:
-        description: "Comma-separated compose frontend ids"
-        required: false
-        default: frontend-typescript-react
       deploy_mode:
-        description: "default = selected services; all = every active id from matrix.yaml"
+        description: "default | all — picks selections.* from deploy-matrix.json"
         required: false
         default: default
   workflow_call:
     inputs:
-      backends:
-        type: string
-        required: false
-        default: backend-java-spring
-      frontends:
-        type: string
-        required: false
-        default: frontend-typescript-react
       deploy_mode:
         type: string
         required: false
@@ -43,8 +27,6 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  BACKENDS: ${{ inputs.backends || 'backend-java-spring' }}
-  FRONTENDS: ${{ inputs.frontends || 'frontend-typescript-react' }}
   DEPLOY_MODE: ${{ inputs.deploy_mode || 'default' }}
 
 jobs:
@@ -70,39 +52,22 @@ jobs:
             exit 1
           fi
           MODE="${DEPLOY_MODE}"
-          if [[ "${MODE}" == "all" ]]; then
-            BACKENDS="$(jq -r '.all.backends | join(",")' "$ARTIFACT")"
-            FRONTENDS="$(jq -r '.all.frontends | join(",")' "$ARTIFACT")"
+          case "$MODE" in
+            default|all) ;;
+            *)
+              echo "::error::deploy_mode must be default|all (got: ${MODE})"
+              exit 1
+              ;;
+          esac
+          sel="$(jq -c --arg m "$MODE" '.selections[$m]' "$ARTIFACT")"
+          if [[ "$sel" == "null" || -z "$sel" ]]; then
+            echo "::error::Missing selections.${MODE} in $ARTIFACT — re-run sync-deploy-matrix"
+            exit 1
           fi
-          MATRIX_JSON="$(
-            jq -c --arg b "$BACKENDS" --arg f "$FRONTENDS" '
-              def csv_ids($s):
-                ($s // "") | split(",") | map(gsub("^\\s+|\\s+$";"")) | map(select(length > 0));
-              (csv_ids($b)) as $bids
-              | (csv_ids($f)) as $fids
-              | ([.targets[] | select(.kind == "backend") | .id]) as $known_b
-              | ([.targets[] | select(.kind == "frontend") | .id]) as $known_f
-              | ($bids - $known_b) as $miss_b
-              | ($fids - $known_f) as $miss_f
-              | if ($miss_b | length) > 0 then
-                  error("unknown backend id(s): \($miss_b | join(", "))")
-                elif ($miss_f | length) > 0 then
-                  error("unknown frontend id(s): \($miss_f | join(", "))")
-                elif (($bids | length) == 0) or (($fids | length) == 0) then
-                  error("empty backends/frontends selection")
-                else
-                  [
-                    .targets[]
-                    | select(
-                        (.kind == "backend" and (.id as $id | $bids | index($id) != null))
-                        or (.kind == "frontend" and (.id as $id | $fids | index($id) != null))
-                      )
-                    | {id, module, compose_service, image}
-                  ]
-                end
-            ' "$ARTIFACT"
-          )"
-          IMAGES="$(jq -r '[.[].image] | join(",")' <<<"${MATRIX_JSON}")"
+          BACKENDS="$(jq -r '.backends' <<<"$sel")"
+          FRONTENDS="$(jq -r '.frontends' <<<"$sel")"
+          IMAGES="$(jq -r '.images' <<<"$sel")"
+          MATRIX_JSON="$(jq -c '.matrix' <<<"$sel")"
           test -n "$IMAGES" || {
             echo "::error::Resolved empty image list"
             exit 1

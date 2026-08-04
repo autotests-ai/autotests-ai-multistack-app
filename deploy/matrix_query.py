@@ -111,6 +111,19 @@ def _build_row(row: dict) -> dict:
     }
 
 
+def _selection(backends: list[dict], frontends: list[dict]) -> dict:
+    """Ready-to-use GHA block: csv ids + images + strategy matrix rows."""
+    rows = [_build_row(row) for row in backends + frontends]
+    if not rows:
+        raise SystemExit("FAIL: empty selection matrix")
+    return {
+        "backends": ",".join(row["id"] for row in backends),
+        "frontends": ",".join(row["id"] for row in frontends),
+        "images": ",".join(row["image"] for row in rows),
+        "matrix": rows,
+    }
+
+
 def cmd_build_matrix(matrix: dict, args: argparse.Namespace) -> int:
     """JSON array for compose build targets (local / debug)."""
     backends = resolve_backends(matrix, args.backends, args.mode)
@@ -123,13 +136,15 @@ def cmd_build_matrix(matrix: dict, args: argparse.Namespace) -> int:
 
 
 def cmd_sync_deploy_matrix(matrix: dict, args: argparse.Namespace) -> int:
-    """Write deploy/deploy-matrix.json for GHA (no Python in workflows)."""
-    backends = resolve_backends(matrix, None, "all")
-    frontends = resolve_frontends(matrix, None, "all")
+    """Write deploy/deploy-matrix.json for GHA (selections.default|all; no Python in workflows)."""
+    backends_all = resolve_backends(matrix, None, "all")
+    frontends_all = resolve_frontends(matrix, None, "all")
+    backends_default = resolve_backends(matrix, DEFAULT_BACKENDS, "default")
+    frontends_default = resolve_frontends(matrix, DEFAULT_FRONTENDS, "default")
     targets = []
-    for row in backends:
+    for row in backends_all:
         targets.append({"kind": "backend", **_build_row(row)})
-    for row in frontends:
+    for row in frontends_all:
         targets.append({"kind": "frontend", **_build_row(row)})
     if not targets:
         raise SystemExit("FAIL: empty deploy-matrix targets")
@@ -140,17 +155,24 @@ def cmd_sync_deploy_matrix(matrix: dict, args: argparse.Namespace) -> int:
             "frontends": _csv_ids(DEFAULT_FRONTENDS),
         },
         "all": {
-            "backends": [row["id"] for row in backends],
-            "frontends": [row["id"] for row in frontends],
+            "backends": [row["id"] for row in backends_all],
+            "frontends": [row["id"] for row in frontends_all],
         },
         "targets": targets,
+        "selections": {
+            "default": _selection(backends_default, frontends_default),
+            "all": _selection(backends_all, frontends_all),
+        },
     }
     out = args.out
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    sel_def = payload["selections"]["default"]
+    sel_all = payload["selections"]["all"]
     print(
         f"wrote {out.relative_to(ROOT)} "
-        f"({len(payload['all']['backends'])} be · {len(payload['all']['frontends'])} fe)"
+        f"(default {len(sel_def['matrix'])} · all {len(sel_all['matrix'])} targets; "
+        f"{len(payload['all']['backends'])} be · {len(payload['all']['frontends'])} fe)"
     )
     return 0
 
