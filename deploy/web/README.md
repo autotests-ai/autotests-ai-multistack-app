@@ -5,9 +5,16 @@ Public entrypoint for local compose and (behind host nginx) production.
 | Path | Target |
 |------|--------|
 | `/api/**` | `backend:8080` |
-| `/frontend-typescript-react/**` | static UI (`UI_MODULE` + `UI_RUNTIME`) under `UI_MOUNT` |
+| `/frontend-typescript-react/**` | Vite SPA (`dist/`) + lean DS runtime under `UI_MOUNT` |
 | `/`, other | **404** (empty host root) |
 
-Soft-route / SPA fallback lives here — not in Spring.
+Multi-stage [`Dockerfile`](Dockerfile): Node builds `UI_MODULE` → `dist/`, then nginx packs `dist/` + `UI_RUNTIME` into `UI_MOUNT`. Soft-route / SPA fallback lives here — not in Spring.
 
-Compose build-args: `UI_MODULE`, `UI_RUNTIME`, `UI_MOUNT` (default `frontend-typescript-react`).
+Compose build-args:
+
+| Arg | Default |
+|-----|---------|
+| `UI_MODULE` | `frontend/typescript/react/frontend-typescript-react` |
+| `UI_RUNTIME` | `frontend/_shared/frontend-javascript-app` |
+| `UI_MOUNT` | `frontend-typescript-react` |
+| `REACT_UI` | `frontend/_shared/frontend-react-ui` (build stage alias) |

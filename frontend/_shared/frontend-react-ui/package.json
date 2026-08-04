@@ -1,0 +1,10 @@
+{
+  "name": "@zero-design-system/react",
+  "version": "0.1.0-pilot",
+  "private": true,
+  "type": "module",
+  "description": "Vendored react-ui sources for standalone reference-app-copy builds (sync via frontend/scripts/sync-react-ui.sh)",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

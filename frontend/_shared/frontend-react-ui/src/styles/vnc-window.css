@@ -1,0 +1,143 @@
+/* VNC window — original Selenoid VNC chrome composed with the base panel. */
+.vnc-window-frame {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+/* Fills nearest positioned ancestor (app content shell / catalog demo host). */
+.vnc-window-frame--fullscreen {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.panel--vnc {
+  --panel-bg: #000;
+  --panel-border: rgba(255, 255, 255, 0.1);
+  --panel-bar-bg: #3d444c;
+  /* Remote desktop aspect — override via --vnc-aspect (e.g. 1280 / 1024). */
+  --vnc-aspect: 16 / 9;
+  flex: 0 1 100%;
+  width: 100%;
+  height: auto;
+  background: #000;
+}
+
+.panel--vnc > .panel__bar {
+  flex: 0 0 var(--panel-bar-height-chrome);
+  width: 100%;
+  height: var(--panel-bar-height-chrome);
+  min-height: var(--panel-bar-height-chrome);
+  gap: 0;
+  padding: 0;
+  border-bottom: 0;
+}
+
+.vnc-window__controls,
+.vnc-window__actions {
+  display: flex;
+  align-items: center;
+  height: var(--panel-bar-height-chrome);
+}
+
+.vnc-window__actions {
+  margin-left: auto;
+}
+
+/* 15px circles keep roughly the same gap/diameter ratio as 8px panel dots
+   with their 5px gap: 24px center step → 9px visible gap. */
+.vnc-window--connected .window-control {
+  margin-inline-end: -6px;
+}
+
+.vnc-window--connected .vnc-window__actions {
+  padding-inline-end: 6px;
+}
+
+.vnc-window__screen {
+  flex: 0 0 auto;
+  width: 100%;
+  aspect-ratio: var(--vnc-aspect);
+  min-height: 0;
+  background: #000;
+}
+
+.vnc-window__screen-mount {
+  width: 100%;
+  height: 100%;
+}
+
+.vnc-window--connecting,
+.vnc-window--disconnecting,
+.vnc-window--disconnected {
+  flex-basis: 60px;
+  width: 60px;
+  height: 30px;
+}
+
+.vnc-window--connecting .vnc-window__session-control,
+.vnc-window--disconnecting .vnc-window__session-control,
+.vnc-window--disconnected .vnc-window__session-control,
+.vnc-window--connecting .vnc-window__actions,
+.vnc-window--disconnecting .vnc-window__actions,
+.vnc-window--disconnected .vnc-window__actions,
+.vnc-window--connecting .vnc-window__screen,
+.vnc-window--disconnecting .vnc-window__screen,
+.vnc-window--disconnected .vnc-window__screen {
+  display: none;
+}
+
+.vnc-window--connected .connection-status {
+  display: none;
+}
+
+.vnc-window--fullscreen {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.vnc-window--fullscreen .vnc-window__screen {
+  flex: 1 1 auto;
+  aspect-ratio: auto;
+  height: auto;
+  min-height: 0;
+}
+
+.vnc-window__external-status {
+  position: relative;
+  margin-left: 55px;
+  color: var(--window-control-info);
+  font-size: var(--font-size-sm);
+  line-height: 20px;
+  text-transform: uppercase;
+}
+
+.vnc-window__external-status::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  right: calc(100% + 10px);
+  width: 35px;
+  border-bottom: 1px solid currentColor;
+}
+
+.vnc-window--disconnecting + .vnc-window__external-status {
+  color: var(--connection-status-disconnecting);
+}
+
+.vnc-window--disconnected + .vnc-window__external-status {
+  color: var(--window-control-danger);
+}
+
+.vnc-window--connected + .vnc-window__external-status,
+.vnc-window--fullscreen + .vnc-window__external-status {
+  display: none;
+}

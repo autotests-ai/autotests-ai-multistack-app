@@ -18,7 +18,10 @@ frontend/scripts
 frontend/_catalog
 frontend/_shared/frontend-javascript-embed
 frontend/javascript/react
-frontend/typescript
+frontend/javascript/vanilla
+frontend/typescript/vanilla
+frontend/typescript/react/frontend-typescript-react_testing_library
+frontend/typescript/react/frontend-typescript-react/dist
 backend/scripts
 deploy/nginx
 deploy/*.sh

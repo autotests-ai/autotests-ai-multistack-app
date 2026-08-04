@@ -10,6 +10,7 @@ BACKEND_JAVA_SPRING="$REPO_ROOT/backend/java/backend-java-spring"
 # Shared / catalog (not product URL matrix)
 FRONTEND_JS_EMBED="$REPO_ROOT/frontend/_shared/frontend-javascript-embed"
 FRONTEND_JS_APP="$REPO_ROOT/frontend/_shared/frontend-javascript-app"
+FRONTEND_REACT_UI="$REPO_ROOT/frontend/_shared/frontend-react-ui"
 FRONTEND_JS_PREVIEW="$REPO_ROOT/frontend/_catalog/frontend-javascript-preview"
 
 # Product frontends — javascript

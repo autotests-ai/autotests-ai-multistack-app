@@ -67,7 +67,8 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/   # 404 — em
 - `backend` — Spring JSON API only (`/api/**`)
 - `web` — nginx serves UI at `/frontend-typescript-react/` and proxies `/api` → backend; host `/` is empty (404)
 
-Switch UI stack via compose `UI_MODULE` / `UI_RUNTIME` / `UI_MOUNT` (SPA: point at `dist/`).
+Default web image builds the TS React SPA. Alternate stacks: override compose
+`UI_MODULE` / `UI_RUNTIME` / `UI_MOUNT` (vanilla still under `frontend/javascript/vanilla/`).
 
 ## Deploy
 

@@ -42,9 +42,10 @@ services:
       context: .
       dockerfile: deploy/web/Dockerfile
       args:
-        UI_MODULE: ${UI_MODULE:-frontend/javascript/vanilla/frontend-javascript-vanilla}
+        UI_MODULE: ${UI_MODULE:-frontend/typescript/react/frontend-typescript-react}
         UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
         UI_MOUNT: ${UI_MOUNT:-frontend-typescript-react}
+        REACT_UI: ${REACT_UI:-frontend/_shared/frontend-react-ui}
     restart: unless-stopped
     depends_on:
       - backend

@@ -1,5 +1,6 @@
 (function (w) {
-  var match = w.location.pathname.match(/^(\/frontend_[a-z0-9_]+)/);
+  // Hyphen between segments (SSOT); keep underscore form for legacy mounts.
+  var match = w.location.pathname.match(/^(\/frontend[-_][a-z0-9_-]+)/);
   w.APP_BASE = match ? match[1] : "";
   w.appPath = function (path) {
     var p = path == null || path === "" ? "/" : String(path);

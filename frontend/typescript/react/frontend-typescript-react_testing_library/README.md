@@ -8,8 +8,10 @@ Vitest + React Testing Library for [`../frontend-typescript-react/`](../frontend
 | Allure | `layer=component`, `scope=react`, `framework=react_testing_library` |
 
 ```bash
-# when package.json is present:
 npm test
 ```
+
+Imports product sources from the sibling module (pages/lib/pwa). Naming: `-` between
+segments, `_` only in the compound `react_testing_library` (see [`tests/NAMING.md`](../../../../tests/NAMING.md)).
 
 Not the browser `@Tag(component)` slice (that hits `frontend/_catalog/frontend-javascript-preview` via Selenide).

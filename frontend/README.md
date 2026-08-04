@@ -7,6 +7,7 @@ frontend/
   scripts/                         # wire-ui, catalog sync (not product pages)
   _shared/
     frontend-javascript-app/       # lean DS runtime for product UI (committed)
+    frontend-react-ui/             # vendored @zero-design-system/react (sync-react-ui.sh)
     frontend-javascript-embed/     # full DS symlinks (wire-ui) — catalog only
   _catalog/
     frontend-javascript-preview/   # DS component catalog for browser @Tag(component)
@@ -46,4 +47,4 @@ Host `/` is empty (404). `/api/**` stays on the backend host root.
 - subdomain → backend stack  
 - path → product frontend module (`UI_MOUNT`)
 
-Deploy: `deploy/web` (nginx) packs `UI_MODULE` / `UI_RUNTIME` into `UI_MOUNT`. Backend stays API-only.
+Deploy: `deploy/web` multi-stage — Vite-build `UI_MODULE` (`frontend-typescript-react`) + overlay `UI_RUNTIME` into `UI_MOUNT`. Backend stays API-only.
