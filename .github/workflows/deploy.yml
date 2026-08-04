@@ -44,47 +44,7 @@ jobs:
 
       - name: Resolve target stacks
         id: stacks
-        run: |
-          set -euo pipefail
-          ARTIFACT=deploy/deploy-matrix.json
-          if [[ ! -f "$ARTIFACT" ]]; then
-            echo "::error::Missing $ARTIFACT — run locally: python deploy/matrix_query.py sync-deploy-matrix"
-            exit 1
-          fi
-          MODE="${DEPLOY_MODE}"
-          case "$MODE" in
-            default|all) ;;
-            *)
-              echo "::error::deploy_mode must be default|all (got: ${MODE})"
-              exit 1
-              ;;
-          esac
-          sel="$(jq -c --arg m "$MODE" '.selections[$m]' "$ARTIFACT")"
-          if [[ "$sel" == "null" || -z "$sel" ]]; then
-            echo "::error::Missing selections.${MODE} in $ARTIFACT — re-run sync-deploy-matrix"
-            exit 1
-          fi
-          BACKENDS="$(jq -r '.backends' <<<"$sel")"
-          FRONTENDS="$(jq -r '.frontends' <<<"$sel")"
-          IMAGES="$(jq -r '.images' <<<"$sel")"
-          MATRIX_JSON="$(jq -c '.matrix' <<<"$sel")"
-          test -n "$IMAGES" || {
-            echo "::error::Resolved empty image list"
-            exit 1
-          }
-          {
-            echo "BACKENDS=${BACKENDS}"
-            echo "FRONTENDS=${FRONTENDS}"
-          } >> "$GITHUB_ENV"
-          {
-            echo "backends=${BACKENDS}"
-            echo "frontends=${FRONTENDS}"
-            echo "images=${IMAGES}"
-            echo "matrix<<EOF"
-            echo "${MATRIX_JSON}"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
-          echo "Deploy targets: backends=${BACKENDS} frontends=${FRONTENDS}"
+        run: python deploy/matrix_query.py gha-resolve --mode "$DEPLOY_MODE"
 
   build:
     needs: resolve

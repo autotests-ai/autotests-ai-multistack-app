@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -135,8 +136,49 @@ def cmd_build_matrix(matrix: dict, args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_gha_resolve(_matrix: dict, args: argparse.Namespace) -> int:
+    """Read selections.* from deploy-matrix.json → GITHUB_OUTPUT / GITHUB_ENV (stdlib only)."""
+    artifact: Path = args.artifact
+    mode: str = args.mode
+    if mode not in ("default", "all"):
+        raise SystemExit(f"FAIL: deploy_mode must be default|all (got: {mode})")
+    if not artifact.is_file():
+        raise SystemExit(
+            f"FAIL: Missing {artifact} — run locally: python deploy/matrix_query.py sync-deploy-matrix"
+        )
+    payload = json.loads(artifact.read_text(encoding="utf-8"))
+    sel = (payload.get("selections") or {}).get(mode)
+    if not isinstance(sel, dict):
+        raise SystemExit(f"FAIL: Missing selections.{mode} in {artifact} — re-run sync-deploy-matrix")
+    backends = sel.get("backends") or ""
+    frontends = sel.get("frontends") or ""
+    images = sel.get("images") or ""
+    matrix_rows = sel.get("matrix") or []
+    if not images or not matrix_rows:
+        raise SystemExit("FAIL: Resolved empty image list / matrix")
+    matrix_json = json.dumps(matrix_rows, separators=(",", ":"))
+
+    env_path = os.environ.get("GITHUB_ENV")
+    out_path = os.environ.get("GITHUB_OUTPUT")
+    if env_path:
+        with open(env_path, "a", encoding="utf-8") as fh:
+            fh.write(f"BACKENDS={backends}\nFRONTENDS={frontends}\n")
+    if out_path:
+        with open(out_path, "a", encoding="utf-8") as fh:
+            fh.write(f"backends={backends}\n")
+            fh.write(f"frontends={frontends}\n")
+            fh.write(f"images={images}\n")
+            fh.write("matrix<<EOF\n")
+            fh.write(f"{matrix_json}\n")
+            fh.write("EOF\n")
+    else:
+        print(matrix_json)
+    print(f"Deploy targets: backends={backends} frontends={frontends}")
+    return 0
+
+
 def cmd_sync_deploy_matrix(matrix: dict, args: argparse.Namespace) -> int:
-    """Write deploy/deploy-matrix.json for GHA (selections.default|all; no Python in workflows)."""
+    """Write deploy/deploy-matrix.json for GHA (selections.default|all)."""
     backends_all = resolve_backends(matrix, None, "all")
     frontends_all = resolve_frontends(matrix, None, "all")
     backends_default = resolve_backends(matrix, DEFAULT_BACKENDS, "default")
@@ -214,7 +256,17 @@ def main() -> int:
     p_sync.add_argument("--out", type=Path, default=DEPLOY_MATRIX_JSON)
     p_sync.set_defaults(func=cmd_sync_deploy_matrix)
 
+    p_gha = sub.add_parser(
+        "gha-resolve",
+        help="Emit GITHUB_OUTPUT/GITHUB_ENV from selections.* in deploy-matrix.json",
+    )
+    p_gha.add_argument("--mode", choices=("default", "all"), default="default")
+    p_gha.add_argument("--artifact", type=Path, default=DEPLOY_MATRIX_JSON)
+    p_gha.set_defaults(func=cmd_gha_resolve, needs_matrix=False)
+
     args = parser.parse_args()
+    if getattr(args, "needs_matrix", True) is False:
+        return args.func({}, args)
     matrix = load_matrix(args.matrix)
     return args.func(matrix, args)
 

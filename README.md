@@ -144,7 +144,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:9800/
 
 **Production URL:** https://reference-app-copy.autotests.ai/backend-java-spring/frontend-typescript-react/
 
-Ports, compose service ids, and health `expect` strings — **SSOT** [`deploy/matrix.yaml`](deploy/matrix.yaml). Host entrypoint [`deploy/server-deploy.sh`](deploy/server-deploy.sh) reads them via [`deploy/matrix_query.py`](deploy/matrix_query.py). GHA reads pre-baked `selections.{default,all}` from committed [`deploy/deploy-matrix.json`](deploy/deploy-matrix.json) (no Python / no CSV resolve in workflows) — after editing `matrix.yaml` run locally and commit the JSON:
+Ports, compose service ids, and health `expect` strings — **SSOT** [`deploy/matrix.yaml`](deploy/matrix.yaml). Host entrypoint [`deploy/server-deploy.sh`](deploy/server-deploy.sh) reads them via [`deploy/matrix_query.py`](deploy/matrix_query.py). GHA picks `selections.{default,all}` from committed [`deploy/deploy-matrix.json`](deploy/deploy-matrix.json) via `python deploy/matrix_query.py gha-resolve` (stdlib JSON only) — after editing `matrix.yaml` run locally and commit the JSON:
 
 ```bash
 python deploy/matrix_query.py sync-deploy-matrix
