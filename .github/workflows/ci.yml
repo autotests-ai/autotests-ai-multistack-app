@@ -104,6 +104,10 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # Packages land private, so the host pulls them with this job's GITHUB_TOKEN.
+    permissions:
+      contents: read
+      packages: read
     steps:
       - uses: appleboy/ssh-action@v1.2.5
         env:
@@ -115,6 +119,7 @@ jobs:
           command_timeout: 15m
           envs: IMAGE_TAG,GHCR_TOKEN
           script: |
+            set -euo pipefail
             cd /home/reference_app_copy/reference-app-copy
             git fetch origin
             git checkout --force "$IMAGE_TAG"

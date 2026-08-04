@@ -149,12 +149,12 @@ One workflow — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
 | Event | Jobs |
 |-------|------|
-| pull request | `unit` · `test-infra` · `component` |
-| push to `main` | the same three → `build` → `deploy` → `prod-api` |
+| pull request | `unit-tests` · `component-tests` · `test-infra-tests` |
+| push to `main` | the same three → `build` → `deploy` → `api-tests` |
 
 `build` runs `docker compose build` + `docker compose push`, so `docker-compose.yml` stays the only place describing how an image is built. Images go to GHCR as `ghcr.io/autotests-ai/reference-app-copy-<service>:<sha>`; the tag comes from `IMAGE_TAG` (defaults to `latest` locally).
 
-`deploy` connects over SSH and runs six lines: checkout the deployed commit, log in to GHCR, `docker compose pull`, `docker compose up -d`, then `curl --retry` on `/api/health`. There is no deploy script on the host.
+`deploy` connects over SSH and runs six lines: checkout the deployed commit, log in to GHCR, `docker compose pull`, `docker compose up -d`, then `curl --retry` on `/api/health`. There is no deploy script on the host. The script opens with `set -euo pipefail` — otherwise a failed `pull` would leave the previous containers running and the health check would still answer `200`.
 
 | Setting | Value |
 |---------|-------|
@@ -171,7 +171,7 @@ Allure report, TestOps and notifications will be added later as ordinary jobs af
 | `DEPLOY_HOST` | variable | `212.92.101.15` — required, no fallback in the workflow |
 | `DEPLOY_USER` | variable | `reference_app_copy` |
 
-GHCR needs no extra secret: `build` and `deploy` both authenticate with the run's `GITHUB_TOKEN`.
+GHCR needs no extra secret: `build` and `deploy` both authenticate with the run's `GITHUB_TOKEN` — `build` under `packages: write`, `deploy` under `packages: read`, because a freshly published package is private.
 
 Sibling prod (do not touch): [reference-app.autotests.ai](https://reference-app.autotests.ai) · port `8083`.
 
