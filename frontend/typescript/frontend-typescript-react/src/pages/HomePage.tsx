@@ -84,7 +84,7 @@ export function HomePage() {
         bodyClassName="reference-app__welcome-body"
       >
         <p id="welcome-message" className="text" data-testid="welcome-message">
-          {welcome ?? 'Welcome!'}
+          {welcome}
         </p>
         <Button
           id="logout-button"
@@ -107,7 +107,7 @@ export function HomePage() {
         </p>
       </Panel>
 
-      <div className="reference-app__items grid" data-testid="items-list" aria-live="polite">
+      <div className="grid" data-testid="items-list" aria-live="polite">
         {items.status === 'loading' && (
           <Panel title="Items">
             <p className="text text--muted">→ Loading items…</p>
