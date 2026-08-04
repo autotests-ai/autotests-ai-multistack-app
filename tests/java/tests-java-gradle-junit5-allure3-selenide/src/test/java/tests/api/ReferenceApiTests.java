@@ -29,7 +29,7 @@ class ReferenceApiTests extends ApiTestBase {
                 .then()
                 .statusCode(200)
                 .body("status", equalTo("ok"))
-                .body("service", equalTo("reference-app"));
+                .body("service", equalTo("reference-app-copy"));
     }
 
     @Test
