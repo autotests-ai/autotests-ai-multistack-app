@@ -1,0 +1,8 @@
+# frontend-javascript-angular
+
+Product UI — same reference-app screens in **JavaScript + Angular**.
+
+Slot: SPA source + build wiring TBD. Prefer the TypeScript Angular module for real work;
+this folder keeps the language × stack matrix symmetric. Component tests → [`src/test/`](src/test/).
+
+Prod URL (planned): `https://{backend}.reference-app-copy.autotests.ai/frontend-javascript-angular`

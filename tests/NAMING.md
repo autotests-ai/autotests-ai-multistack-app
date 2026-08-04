@@ -46,6 +46,7 @@ tests-python-pip-pytest-no_allure-playwright
 | Backend unit | `backend/java/backend-java-spring/src/test/` | JaCoCo gate |
 | RTL (TS React) | `frontend/typescript/frontend-typescript-react/src/test/` | Vitest + RTL |
 | RTL (JS React) | `frontend/javascript/frontend-javascript-react/src/test/` | Vitest + RTL (slot) |
-| Product UI | `frontend/<lang>/{react,vanilla}/frontend-*` | served under `/{frontend}/` |
+| Angular (slot) | `frontend/<lang>/frontend-*-angular/` (+ `src/test/`) | component tests TBD |
+| Product UI | `frontend/<lang>/frontend-*` | served under `/{frontend}/` |
 
 Paths SSOT: `backend/scripts/paths.sh` · layout: [frontend/README.md](../frontend/README.md)
