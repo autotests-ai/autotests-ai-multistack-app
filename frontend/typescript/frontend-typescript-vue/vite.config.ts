@@ -1,10 +1,59 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { VitePWA } from 'vite-plugin-pwa';
 import { resolve } from 'node:path';
 
 // Relative base: one dist works under /{backend}/frontend-typescript-vue/
 const mountBase = './';
+
+/** Move Vite-injected ./assets/* tags into the boot document.write (absolute mount). */
+function pinMountAssets(): Plugin {
+  return {
+    name: 'pin-mount-assets',
+    enforce: 'post',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html) {
+        const writes: string[] = [];
+        let next = html.replace(
+          /<script type="module" crossorigin src="\.\/(assets\/[^"]+)"><\/script>\s*/g,
+          (_m, path: string) => {
+            writes.push(
+              `document.write('<script type="module" crossorigin src="'+mount+'${path}"><\\/script>');`,
+            );
+            return '';
+          },
+        );
+        next = next.replace(
+          /<link rel="stylesheet" crossorigin href="\.\/(assets\/[^"]+)">\s*/g,
+          (_m, path: string) => {
+            writes.push(
+              `document.write('<link rel="stylesheet" crossorigin href="'+mount+'${path}">');`,
+            );
+            return '';
+          },
+        );
+        next = next.replace(
+          /<link rel="manifest" href="\.\/(manifest\.webmanifest)">\s*/g,
+          (_m, path: string) => {
+            writes.push(`document.write('<link rel="manifest" href="'+mount+'${path}">');`);
+            return '';
+          },
+        );
+        if (!writes.length) {
+          return next;
+        }
+        if (!next.includes('// __PIN_ASSETS__')) {
+          throw new Error('pin-mount-assets: boot marker // __PIN_ASSETS__ missing in index.html');
+        }
+        return next.replace(
+          /\/\/ __PIN_ASSETS__[^\n]*/,
+          writes.join('\n      '),
+        );
+      },
+    },
+  };
+}
 
 export default defineConfig({
   root: resolve(__dirname),
@@ -47,13 +96,16 @@ export default defineConfig({
           'icons/pwa-maskable-512.png',
         ],
         navigateFallback: 'index.html',
-        navigateFallbackDenylist: [/\/api\//],
+        // Never SPA-fallback real assets (else /stack/assets/*.css → text/html MIME errors).
+        navigateFallbackDenylist: [/\/api\//, /\.(?:css|js|mjs|map|png|svg|ico|webmanifest|json|woff2?)$/i],
         cleanupOutdatedCaches: true,
       },
       devOptions: {
         enabled: false,
       },
     }),
+    // After VitePWA so manifest link is rewritten too.
+    pinMountAssets(),
   ],
   build: {
     outDir: 'dist',
