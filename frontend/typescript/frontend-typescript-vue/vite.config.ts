@@ -47,7 +47,7 @@ export default defineConfig({
           'icons/pwa-maskable-512.png',
         ],
         navigateFallback: 'index.html',
-        navigateFallbackDenylist: [/\/api\//],
+        navigateFallbackDenylist: [/\/api\//, /\/stack(?:\/|$)/],
         cleanupOutdatedCaches: true,
       },
       devOptions: {

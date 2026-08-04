@@ -1,0 +1,81 @@
+{
+  "backends": [
+    {
+      "id": "backend-java-spring",
+      "status": "active",
+      "language": "java"
+    },
+    {
+      "id": "backend-kotlin-spring",
+      "status": "active",
+      "language": "kotlin"
+    },
+    {
+      "id": "backend-python-flask",
+      "status": "active",
+      "language": "python"
+    },
+    {
+      "id": "backend-python-fastapi",
+      "status": "active",
+      "language": "python"
+    },
+    {
+      "id": "backend-python-django",
+      "status": "active",
+      "language": "python"
+    },
+    {
+      "id": "backend-go-gin",
+      "status": "slot",
+      "language": "go"
+    },
+    {
+      "id": "backend-go-stdlib",
+      "status": "slot",
+      "language": "go"
+    }
+  ],
+  "frontends": [
+    {
+      "id": "frontend-javascript-vanilla",
+      "status": "active",
+      "kind": "static"
+    },
+    {
+      "id": "frontend-javascript-react",
+      "status": "slot",
+      "kind": "vite"
+    },
+    {
+      "id": "frontend-javascript-angular",
+      "status": "slot",
+      "kind": "vite"
+    },
+    {
+      "id": "frontend-javascript-vue",
+      "status": "slot",
+      "kind": "vite"
+    },
+    {
+      "id": "frontend-typescript-vanilla",
+      "status": "slot",
+      "kind": "static"
+    },
+    {
+      "id": "frontend-typescript-react",
+      "status": "active",
+      "kind": "vite"
+    },
+    {
+      "id": "frontend-typescript-angular",
+      "status": "slot",
+      "kind": "vite"
+    },
+    {
+      "id": "frontend-typescript-vue",
+      "status": "active",
+      "kind": "vite"
+    }
+  ]
+}

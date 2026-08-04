@@ -26,6 +26,7 @@ export const headerConfig: HeaderConfig = {
     { href: appPath('/'), label: 'Home', active: true, testid: 'header-nav-home' },
     { href: appPath('/login'), label: 'Login', testid: 'header-nav-login' },
     { href: appPath('/register'), label: 'Register', testid: 'header-nav-register' },
+    { href: appPath('/stack/'), label: 'Stack', testid: 'header-nav-stack' },
   ],
   lang: { default: 'en' },
   theme: { default: 'dark' },

@@ -47,6 +47,8 @@ Slots are not deployed until `status: active` + Dockerfile.
 
 Host `/` is empty (404). Host nginx ([`deploy/nginx/`](../deploy/nginx/)) strips `/{backend}/{frontend}` → `/` on that frontend container.
 
+`/{backend}/{frontend}/stack/` — backend × frontend matrix switcher from `_shared/frontend-javascript-app/stack/` (header nav **Stack**; sync `python frontend/scripts/sync-stack-matrix.py`).
+
 ## Local ports
 
 Canon in [`deploy/matrix.yaml`](../deploy/matrix.yaml): language base **+10**, stack **+1** from **9800**.  

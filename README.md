@@ -57,6 +57,7 @@ Examples:
 - `…/backend-python-flask/frontend-typescript-react/`
 - `…/backend-python-fastapi/frontend-typescript-react/`
 - `…/backend-python-django/frontend-javascript-vanilla/`
+- `…/{backend}/{frontend}/stack/` — matrix switcher (shared UI overlay; header nav **Stack**)
 
 Host `/` is empty (404). One public host — no backend subdomains.
 
