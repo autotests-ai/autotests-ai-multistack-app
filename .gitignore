@@ -10,6 +10,9 @@ backend/java/backend-java-spring/src/main/resources/static/
 backend/java/backend-java-spring/build/
 backend/java/backend-java-spring/.gradle/
 backend/java/backend-java-spring/bin/
+backend/kotlin/backend-kotlin-spring/build/
+backend/kotlin/backend-kotlin-spring/.gradle/
+backend/kotlin/backend-kotlin-spring/bin/
 tests/java/tests-java-gradle-junit5-allure3-selenide/build/
 tests/java/tests-java-gradle-junit5-allure3-selenide/.gradle/
 tests/java/tests-java-gradle-junit5-allure3-selenide/bin/

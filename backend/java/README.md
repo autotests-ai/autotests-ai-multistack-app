@@ -18,4 +18,4 @@ dev.reference.app/
 **API-only.** Controllers expose `/api/**`. UI is not in this module — `deploy/web` (nginx)
 serves `frontend/` and proxies `/api` here. Soft routes `/login` / `/register` live in nginx.
 
-Future: `backend-kotlin-spring/`, etc.
+Kotlin twin: [`../kotlin/backend-kotlin-spring/`](../kotlin/backend-kotlin-spring/).

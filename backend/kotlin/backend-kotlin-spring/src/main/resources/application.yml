@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: reference-app-kotlin
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:reference_app_kotlin_spring}
+    username: ${DB_USER:reference}
+    password: ${DB_PASSWORD:reference}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+
+server:
+  port: ${SERVER_PORT:8080}
+
+auth:
+  jwt:
+    secret: ${JWT_SECRET:reference-app-dev-secret-change-in-production-min-32-chars}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}

@@ -66,6 +66,29 @@ services:
     ports:
       - "${BACKEND_FLASK_PORT:-8811}:8080"
 
+  backend-kotlin-spring:
+    image: reference-app-copy-backend-kotlin-spring:latest
+    build:
+      context: ./backend/kotlin/backend-kotlin-spring
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: reference_app_kotlin_spring
+      DB_USER: reference
+      DB_PASSWORD: reference
+      SERVER_PORT: 8080
+      JWT_SECRET: ${JWT_SECRET:-reference-app-dev-secret-change-in-production-min-32-chars}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      postgres-ensure-dbs:
+        condition: service_completed_successfully
+    networks:
+      - reference_internal
+    ports:
+      - "${BACKEND_KOTLIN_PORT:-8814}:8080"
+
   web:
     image: reference-app-copy-web:latest
     build:
@@ -90,6 +113,7 @@ services:
       - web
       - backend-java-spring
       - backend-python-flask
+      - backend-kotlin-spring
     ports:
       - "${SERVER_PORT:-8080}:80"
     networks:

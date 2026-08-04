@@ -71,11 +71,11 @@ backends:
     health_service: backend-python-django
 
   - id: backend-kotlin-spring
-    status: slot
+    status: active
     language: kotlin
     module: backend/kotlin/backend-kotlin-spring
     compose_service: backend-kotlin-spring
-    compose_profile: kotlin
+    compose_profile: null
     image: reference-app-copy-backend-kotlin-spring:latest
     internal_port: 8080
     publish_port: 8814

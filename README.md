@@ -32,7 +32,7 @@ Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/N
 | **frontend/_shared/** | `frontend-javascript-app`, `frontend-javascript-embed` | — |
 | **frontend/_catalog/** | `frontend-javascript-preview` | — |
 | **backend/java/** | `backend-java-spring` (active) | — |
-| **backend/kotlin/** | — | `backend-kotlin-spring` |
+| **backend/kotlin/** | `backend-kotlin-spring` (active) | — |
 | **backend/python/** | `backend-python-flask` (stub health) | `backend-python-fastapi`, `backend-python-django` |
 | **backend/go/** | — | `backend-go-gin`, `backend-go-stdlib` |
 | **tests/java/** | `tests-java-gradle-junit5-allure3-selenide` | junit4, testng, allure2, selenium, … — [tests/NAMING.md](tests/NAMING.md) |

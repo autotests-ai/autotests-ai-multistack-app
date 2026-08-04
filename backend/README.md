@@ -7,7 +7,7 @@ backend/
   java/
     backend-java-spring/       # Spring Boot 21 + Postgres + Flyway — JSON API (active)
   kotlin/
-    backend-kotlin-spring/     # slot
+    backend-kotlin-spring/     # Spring Boot Kotlin + Postgres + Flyway — JSON API (active)
   python/
     backend-python-flask/      # stub (/api/health) for multi-backend routing
     backend-python-fastapi/    # slot
