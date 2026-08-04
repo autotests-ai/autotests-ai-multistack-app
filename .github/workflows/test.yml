@@ -41,7 +41,6 @@ env:
   TESTS_JAVA: tests/java/tests-java-gradle-junit5-allure3-selenide
   BACKEND_JAVA: backend/java/backend-java-spring
   FRONTEND_TS_REACT: frontend/typescript/react/frontend-typescript-react
-  FRONTEND_RTL: frontend/typescript/react/frontend-typescript-react_testing_library
   FRONTEND_PREVIEW: frontend/_catalog/frontend-javascript-preview
 
 jobs:
@@ -98,13 +97,13 @@ jobs:
     timeout-minutes: 15
     defaults:
       run:
-        working-directory: ${{ env.FRONTEND_RTL }}
+        working-directory: ${{ env.FRONTEND_TS_REACT }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
         with:
           node-version: "26"
-      - name: Vitest + React Testing Library
+      - name: Vitest + React Testing Library (src/test)
         run: |
           npm ci
           npm test

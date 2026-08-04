@@ -1,6 +1,6 @@
 # Frontend
 
-UI by **language** → **UI stack** → product module + co-located component tests.
+UI by **language** → **UI stack** → product module (component tests co-located in `src/test/`).
 
 ```
 frontend/
@@ -13,18 +13,16 @@ frontend/
     frontend-javascript-preview/   # DS component catalog for browser @Tag(component)
   javascript/
     react/
-      frontend-javascript-react/
-      frontend-javascript-react_testing_library/
+      frontend-javascript-react/   # product + src/test/ (slot)
     vanilla/
       frontend-javascript-vanilla/   # default app pages (was static)
-      # later: frontend-javascript-vanilla_… (component)
+      # later: src/test/ for vanilla component checks
   typescript/
     react/
-      frontend-typescript-react/
-      frontend-typescript-react_testing_library/
+      frontend-typescript-react/   # product + src/test/ (component_rtl)
     vanilla/
       frontend-typescript-vanilla/
-      # later: frontend-typescript-vanilla_… (component)
+      # later: src/test/ for vanilla component checks
 ```
 
 ## Product vs shared
@@ -32,7 +30,7 @@ frontend/
 | Kind | In URL matrix? | Examples |
 |------|----------------|----------|
 | Product UI | yes | `frontend-*-react`, `frontend-*-vanilla` |
-| Component tests (jsdom) | no | `frontend-*-react_testing_library` |
+| Component tests (jsdom) | no | `frontend-*-react/src/test/` (Vitest + RTL) |
 | Shared / catalog | no | `_shared/app`, `_shared/embed`, `_catalog/preview` |
 
 ## Prod routing

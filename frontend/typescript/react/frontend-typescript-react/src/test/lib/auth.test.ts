@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { validateCredentials } from '../../../frontend-typescript-react/src/lib/auth';
-import { LOGIN_MESSAGES } from '../../../frontend-typescript-react/src/lib/messages';
+import { validateCredentials } from '../../lib/auth';
+import { LOGIN_MESSAGES } from '../../lib/messages';
 
 describe('validateCredentials', () => {
   it('requires both when empty', () => {

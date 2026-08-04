@@ -7,8 +7,8 @@ Vite + React 19 + React Router (`basename=/frontend-typescript-react/`). Built o
 [`frontend/_shared/frontend-react-ui`](../../../_shared/frontend-react-ui/)
 (refresh: `bash frontend/scripts/sync-react-ui.sh`).
 
-RTL / Vitest live in [`../frontend-typescript-react_testing_library/`](../frontend-typescript-react_testing_library/)
-(`component_rtl`), not in this folder.
+RTL / Vitest live in [`src/test/`](src/test/) (`component_rtl`) — same module as the product,
+like backend unit tests under `src/test/`.
 
 Prod URL: `https://{backend}.reference-app-copy.autotests.ai/frontend-typescript-react/`  
 (Host `/` is empty.)
@@ -41,7 +41,7 @@ publishes `window.headerConfig` and injects `js/header.js` from the mount
 npm run dev        # Vite dev server (base /frontend-typescript-react/)
 npm run build      # → dist/ (packed by deploy/web multi-stage)
 npm run typecheck  # tsc --noEmit
-# npm test → run from ../frontend-typescript-react_testing_library/
+npm test           # Vitest + RTL (src/test/)
 ```
 
 ## Build notes

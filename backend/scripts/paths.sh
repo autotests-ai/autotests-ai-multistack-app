@@ -16,11 +16,11 @@ FRONTEND_JS_PREVIEW="$REPO_ROOT/frontend/_catalog/frontend-javascript-preview"
 # Product frontends — javascript
 FRONTEND_JS_VANILLA="$REPO_ROOT/frontend/javascript/vanilla/frontend-javascript-vanilla"
 FRONTEND_JS_REACT="$REPO_ROOT/frontend/javascript/react/frontend-javascript-react"
-FRONTEND_JS_RTL="$REPO_ROOT/frontend/javascript/react/frontend-javascript-react_testing_library"
+# RTL (jsdom) lives in product module: $FRONTEND_JS_REACT/src/test/
 
 # Product frontends — typescript
 FRONTEND_TS_REACT="$REPO_ROOT/frontend/typescript/react/frontend-typescript-react"
-FRONTEND_TS_RTL="$REPO_ROOT/frontend/typescript/react/frontend-typescript-react_testing_library"
+# RTL (jsdom) lives in product module: $FRONTEND_TS_REACT/src/test/ (component_rtl)
 FRONTEND_TS_VANILLA="$REPO_ROOT/frontend/typescript/vanilla/frontend-typescript-vanilla"
 
 # Active Java automation module (Gradle · JUnit 5 · Allure 3 · Selenide)

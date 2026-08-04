@@ -20,17 +20,17 @@ reference-app-copy/
 ### Naming convention
 
 `{zone}-{language}-{stack}` — hyphens between segments.  
-Underscore **only** in compound tool names, e.g. `frontend-typescript-react_testing_library`, `tests-java-gradle-junit5-no_allure-selenide`.
+Underscore **only** in compound tool names, e.g. `tests-java-gradle-junit5-no_allure-selenide`.
 
-Frontend layout: language → UI stack (`react` / `vanilla`) → product + co-located component tests.  
+Frontend layout: language → UI stack (`react` / `vanilla`) → product module; component tests in `src/test/`.  
 Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/NAMING.md).
 
 | Zone | Current modules | Future slots |
 |------|-----------------|--------------|
-| **frontend/javascript/react/** | `frontend-javascript-react`, `frontend-javascript-react_testing_library` (slots) | — |
-| **frontend/javascript/vanilla/** | `frontend-javascript-vanilla` (active) | vanilla component tests |
-| **frontend/typescript/react/** | `frontend-typescript-react`, `frontend-typescript-react_testing_library` | — |
-| **frontend/typescript/vanilla/** | `frontend-typescript-vanilla` (slot) | vanilla component tests |
+| **frontend/javascript/react/** | `frontend-javascript-react` (+ `src/test/` slot) | — |
+| **frontend/javascript/vanilla/** | `frontend-javascript-vanilla` (active) | vanilla `src/test/` |
+| **frontend/typescript/react/** | `frontend-typescript-react` (+ `src/test/` RTL) | — |
+| **frontend/typescript/vanilla/** | `frontend-typescript-vanilla` (slot) | vanilla `src/test/` |
 | **frontend/_shared/** | `frontend-javascript-app`, `frontend-javascript-embed` | — |
 | **frontend/_catalog/** | `frontend-javascript-preview` | — |
 | **backend/java/** | `backend-java-spring` | `backend-kotlin-spring`, … |
@@ -52,7 +52,7 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · CI: [`.github/workflows/test.yml`](
 |-----|-------|
 | `unit_backend` | `backend/java/backend-java-spring/src/test/` |
 | `test-infra` | `…/tests/testinfra/` (`@Layer("test-infra")` + `@Tag("test-infra")`) |
-| `component_rtl` | `frontend/typescript/react/frontend-typescript-react_testing_library/` |
+| `component_rtl` | `frontend/typescript/react/frontend-typescript-react/src/test/` |
 | `api` … `e2e` / `component_browser` / `visual` | `tests/java/tests-java-gradle-junit5-allure3-selenide/` |
 
 ## Quick start

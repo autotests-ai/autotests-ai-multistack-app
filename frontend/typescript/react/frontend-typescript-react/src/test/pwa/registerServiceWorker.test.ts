@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { registerServiceWorker } from '../../../frontend-typescript-react/src/pwa/registerServiceWorker';
+import { registerServiceWorker } from '../../pwa/registerServiceWorker';
 
 describe('registerServiceWorker', () => {
   afterEach(() => {

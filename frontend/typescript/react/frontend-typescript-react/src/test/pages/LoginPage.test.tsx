@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { LoginPage } from '../../../frontend-typescript-react/src/pages/LoginPage';
+import { LoginPage } from '../../pages/LoginPage';
 
 function renderLogin() {
   return render(
