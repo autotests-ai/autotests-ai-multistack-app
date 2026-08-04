@@ -67,7 +67,7 @@ describe('HomePage', () => {
 
     await waitFor(() =>
       expect(screen.getByTestId('health-status')).toHaveTextContent(
-        '→ UP | service: reference-app',
+        '→ UP | service: reference-app | frontend: frontend-typescript-react',
       ),
     );
 

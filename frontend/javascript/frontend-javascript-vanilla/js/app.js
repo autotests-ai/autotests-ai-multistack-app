@@ -56,7 +56,7 @@ async function loadHealth() {
       throw new Error(`HTTP ${response.status}`);
     }
     const payload = await response.json();
-    healthStatus.textContent = `→ ${payload.status} | service: ${payload.service}`;
+    healthStatus.textContent = `→ ${payload.status} | service: ${payload.service} | frontend: ${window.UI_MOUNT}`;
   } catch (error) {
     healthStatus.textContent = `✗ health: ${error.message}`;
     healthStatus.classList.add('reference-app__error');

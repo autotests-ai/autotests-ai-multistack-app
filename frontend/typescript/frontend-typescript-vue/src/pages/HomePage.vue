@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import Button from '../components/Button.vue';
 import Panel from '../components/Panel.vue';
 import { fetchHealth, fetchItems, type Item } from '../lib/api';
+import { UI_MOUNT } from '../lib/appBase';
 import { clearSession, fetchProfile, getToken, logout } from '../lib/auth';
 
 type HealthState = { text: string; error: boolean };
@@ -26,7 +27,10 @@ onMounted(() => {
   fetchHealth()
     .then((payload) => {
       if (active) {
-        health.value = { text: `→ ${payload.status} | service: ${payload.service}`, error: false };
+        health.value = {
+          text: `→ ${payload.status} | service: ${payload.service} | frontend: ${UI_MOUNT}`,
+          error: false,
+        };
       }
     })
     .catch((error: Error) => {

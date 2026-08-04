@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Panel } from '@zero-design-system/react';
 import { fetchHealth, fetchItems, type Item } from '../lib/api';
+import { UI_MOUNT } from '../lib/appBase';
 import { clearSession, fetchProfile, getToken, logout } from '../lib/auth';
 
 type HealthState = { text: string; error: boolean };
@@ -23,7 +24,10 @@ export function HomePage() {
     fetchHealth()
       .then((payload) => {
         if (active) {
-          setHealth({ text: `→ ${payload.status} | service: ${payload.service}`, error: false });
+          setHealth({
+            text: `→ ${payload.status} | service: ${payload.service} | frontend: ${UI_MOUNT}`,
+            error: false,
+          });
         }
       })
       .catch((error: Error) => {
