@@ -1,27 +1,46 @@
+# Root context is for frontend images that need frontend/_shared.
+# Backend services use their own context + .dockerignore under backend/*/.
+
+# VCS / CI
 .git
 .github
+
+# Secrets / docs / OS
+.env
+.env.*
+*.md
+**/.DS_Store
+**/.idea
+**/*.iml
+
+# Build, deps, caches, test artifacts
 **/.gradle
 **/build
 **/bin
 **/node_modules
+**/dist
 **/.venv
+**/__pycache__
+**/*.py[cod]
 **/allure-results
 **/allure-report
 **/test-results
-**/.DS_Store
-*.md
-.env
-.env.*
+**/playwright-report
+**/.pytest_cache
+
+# Not copied into frontend images
+backend
 tests
+deploy
 preview
+
+# Frontend: tooling, local wire embed, stacks without Dockerfiles here
 frontend/scripts
-frontend/_catalog
 frontend/_shared/frontend-javascript-embed
-frontend/javascript/react
-frontend/javascript/vanilla
-frontend/typescript/vanilla
-frontend/typescript/react/frontend-typescript-react_testing_library
-frontend/typescript/react/frontend-typescript-react/dist
-backend/scripts
-deploy/nginx
-deploy/*.sh
+frontend/javascript/frontend-javascript-angular
+frontend/javascript/frontend-javascript-jquery
+frontend/javascript/frontend-javascript-react
+frontend/javascript/frontend-javascript-vue
+frontend/typescript/frontend-typescript-angular
+frontend/typescript/frontend-typescript-jquery
+frontend/typescript/frontend-typescript-vanilla
