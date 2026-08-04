@@ -14,22 +14,30 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
       - name: Build images (linux/amd64)
         run: |
-          docker compose build backend web
-          docker inspect reference-app-copy-backend:latest --format '{{.Architecture}}' | grep -q amd64
-          docker inspect reference-app-copy-web:latest --format '{{.Architecture}}' | grep -q amd64
+          docker compose build
+          for img in \
+            reference-app-copy-backend-java-spring:latest \
+            reference-app-copy-backend-python-flask:latest \
+            reference-app-copy-web:latest \
+            reference-app-copy-edge:latest
+          do
+            docker inspect "$img" --format '{{.Architecture}}' | grep -q amd64
+          done
 
       - name: Save image artifacts
         run: |
           docker save \
-            reference-app-copy-backend:latest \
+            reference-app-copy-backend-java-spring:latest \
+            reference-app-copy-backend-python-flask:latest \
             reference-app-copy-web:latest \
+            reference-app-copy-edge:latest \
             | gzip > /tmp/app-images.tar.gz
 
       - name: Upload app images

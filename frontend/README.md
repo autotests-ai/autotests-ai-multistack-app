@@ -16,7 +16,7 @@ frontend/
     frontend-javascript-react/     # product + src/test/ (slot)
     frontend-javascript-angular/   # product + src/test/ (slot)
     frontend-javascript-vue/       # product + src/test/ (slot)
-    frontend-javascript-vanilla/   # default app pages (was static)
+    frontend-javascript-vanilla/   # active static app
   typescript/
     frontend-typescript-react/     # product + src/test/ (component_rtl)
     frontend-typescript-angular/   # product + src/test/ (slot)
@@ -32,16 +32,17 @@ frontend/
 | Component tests (jsdom) | no | `frontend-*-{react,angular,vue}/src/test/` |
 | Shared / catalog | no | `_shared/app`, `_shared/embed`, `_catalog/preview` |
 
-## Prod routing
+## Prod routing (shared static × N backends)
 
 ```
 https://{backend}.reference-app-copy.autotests.ai/{frontend}/
 ```
 
-Active: `https://backend-java-spring.reference-app-copy.autotests.ai/frontend-typescript-react/`  
-Host `/` is empty (404). `/api/**` stays on the backend host root.
+- **One source tree** per frontend module — never duplicated per backend
+- **One `web` image** packs all `status: active` mounts ([`deploy/matrix.yaml`](../deploy/matrix.yaml))
+- UI uses relative `/api/*` → whichever backend hostname you opened
 
-- subdomain → backend stack  
-- path → product frontend module (`UI_MOUNT`)
+Active mounts in `web`: `frontend-typescript-react`, `frontend-javascript-vanilla`.  
+Slots are not deployed until they have a buildable `dist/` / static tree.
 
-Deploy: `deploy/web` multi-stage — Vite-build `UI_MODULE` (`frontend-typescript-react`) + overlay `UI_RUNTIME` into `UI_MOUNT`. Backend stays API-only.
+Host `/` is empty (404). `/api/**` is routed by edge (local) or host nginx (prod), not by the static image.

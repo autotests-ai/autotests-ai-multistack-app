@@ -3,13 +3,16 @@ set -euo pipefail
 
 APP_DIR="${APP_DIR:-/home/reference_app_copy/reference-app-copy}"
 REPO_URL="${REPO_URL:-https://github.com/autotests-ai/reference-app-copy.git}"
+
+# Host publish ports (matrix.yaml / compose). Edge optional locally; prod host nginx splits.
 export SERVER_PORT="${SERVER_PORT:-8800}"
-PUBLIC_URL="${PUBLIC_URL:-https://backend-java-spring.reference-app-copy.autotests.ai}"
+export WEB_PORT="${WEB_PORT:-8801}"
+export BACKEND_JAVA_PORT="${BACKEND_JAVA_PORT:-8810}"
+export BACKEND_FLASK_PORT="${BACKEND_FLASK_PORT:-8811}"
+
 SKIP_BUILD="${SKIP_BUILD:-0}"
-HEALTH_URL="http://127.0.0.1:${SERVER_PORT}/api/health"
 MAX_ATTEMPTS="${HEALTH_POLL_ATTEMPTS:-30}"
 SLEEP_SECS="${HEALTH_POLL_SLEEP:-2}"
-NGINX_CONF="deploy/nginx/backend-java-spring.reference-app-copy.autotests.ai.conf"
 
 if [[ ! -d "$APP_DIR/.git" ]]; then
   sudo mkdir -p "$APP_DIR"
@@ -24,29 +27,39 @@ git reset --hard origin/main
 if [[ "$SKIP_BUILD" == "1" ]]; then
   docker compose up -d --force-recreate --no-build --remove-orphans
 else
-  docker compose build backend web
+  docker compose build
   docker compose up -d --force-recreate --remove-orphans
 fi
 
-for i in $(seq 1 "$MAX_ATTEMPTS"); do
-  if curl --noproxy '*' -fsS "$HEALTH_URL" | grep -q '"status":"ok"'; then
-    echo "Health OK: $HEALTH_URL (attempt $i)"
-    break
-  fi
-  if [[ "$i" -eq "$MAX_ATTEMPTS" ]]; then
-    echo "FAIL: health not ok after ${MAX_ATTEMPTS} attempts: $HEALTH_URL" >&2
-    exit 1
-  fi
-  sleep "$SLEEP_SECS"
+# Health: published backend ports (host nginx upstreams).
+health_ports=(
+  "${BACKEND_JAVA_PORT}:reference-app-copy"
+  "${BACKEND_FLASK_PORT}:backend-python-flask"
+)
+
+for entry in "${health_ports[@]}"; do
+  port="${entry%%:*}"
+  expect="${entry##*:}"
+  url="http://127.0.0.1:${port}/api/health"
+  for i in $(seq 1 "$MAX_ATTEMPTS"); do
+    if body="$(curl --noproxy '*' -fsS "$url" 2>/dev/null)" \
+      && echo "$body" | grep -q '"status":"ok"' \
+      && echo "$body" | grep -q "$expect"; then
+      echo "Health OK: $url ($expect, attempt $i)"
+      break
+    fi
+    if [[ "$i" -eq "$MAX_ATTEMPTS" ]]; then
+      echo "FAIL: health not ok after ${MAX_ATTEMPTS} attempts: $url (expect $expect)" >&2
+      exit 1
+    fi
+    sleep "$SLEEP_SECS"
+  done
 done
 
-if [[ -f "$NGINX_CONF" ]]; then
-  sudo NGINX_CONF_SRC="./${NGINX_CONF}" \
-    NGINX_SITE_NAME=backend-java-spring.reference-app-copy \
-    SSL_DOMAIN=backend-java-spring.reference-app-copy.autotests.ai \
-    bash deploy/nginx/sync-nginx.sh
+if [[ -f deploy/nginx/sync-nginx.sh ]]; then
+  bash deploy/nginx/sync-nginx.sh
 fi
 
-bash deploy/smoke-remote.sh "$PUBLIC_URL"
+bash deploy/smoke-remote.sh
 
-echo "Deploy OK: ${PUBLIC_URL} ($(git rev-parse --short HEAD))"
+echo "Deploy OK ($(git rev-parse --short HEAD))"

@@ -10,11 +10,11 @@ Production: [backend-java-spring.reference-app-copy.autotests.ai](https://backen
 
 ```
 reference-app-copy/
-  frontend/          # UI by language → stack
+  frontend/          # UI by language → stack (one source per module)
   backend/           # server by language → stack (+ scripts/)
   tests/             # automation by language → runner
-  deploy/            # prod nginx, smoke, health
-  .github/workflows/ # deploy.yml only (runnable)
+  deploy/            # matrix, edge, shared web, host nginx, smoke
+  .github/workflows/ # deploy.yml + test.yml
 ```
 
 ### Naming convention
@@ -23,24 +23,40 @@ reference-app-copy/
 Underscore **only** in compound tool names, e.g. `tests-java-gradle-junit5-no_allure-selenide`.
 
 Frontend layout: language → product module (stack in the name); component tests in `src/test/`.  
-Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/NAMING.md).
+Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/NAMING.md) · **routing SSOT:** [deploy/matrix.yaml](deploy/matrix.yaml).
 
 | Zone | Current modules | Future slots |
 |------|-----------------|--------------|
-| **frontend/javascript/** | `frontend-javascript-react` / `angular` / `vue` (slots), `frontend-javascript-vanilla` (active) | vanilla `src/test/` |
-| **frontend/typescript/** | `frontend-typescript-react` (+ RTL), `angular` / `vue` / `vanilla` (slots) | vanilla `src/test/` |
+| **frontend/javascript/** | `frontend-javascript-vanilla` (active), `react` / `angular` / `vue` (slots) | — |
+| **frontend/typescript/** | `frontend-typescript-react` (+ RTL), `angular` / `vue` / `vanilla` (slots) | — |
 | **frontend/_shared/** | `frontend-javascript-app`, `frontend-javascript-embed` | — |
 | **frontend/_catalog/** | `frontend-javascript-preview` | — |
-| **backend/java/** | `backend-java-spring` | `backend-kotlin-spring`, … |
-| **backend/python/** | — | `backend-python-fastapi`, `backend-python-flask` |
+| **backend/java/** | `backend-java-spring` (active) | — |
+| **backend/kotlin/** | — | `backend-kotlin-spring` |
+| **backend/python/** | `backend-python-flask` (stub health) | `backend-python-fastapi`, `backend-python-django` |
 | **tests/java/** | `tests-java-gradle-junit5-allure3-selenide` | junit4, testng, allure2, selenium, … — [tests/NAMING.md](tests/NAMING.md) |
 | **tests/javascript/** | `tests-javascript-playwright` | Cypress, … |
 | **tests/python/** | `tests-python-selenium` | playwright, … |
 
-**Prod routing:** `https://{backend}.reference-app-copy.autotests.ai/{frontend}/`  
-Current: [backend-java-spring…/frontend-typescript-react/](https://backend-java-spring.reference-app-copy.autotests.ai/frontend-typescript-react/) (module id = DNS label; Let's Encrypt rejects `_` in hostnames. Host `/` empty).
+### Routing (shared UI × multi-backend)
 
-Path SSOT: `backend/scripts/paths.sh`
+```
+https://{backend}.reference-app-copy.autotests.ai/{frontend}/
+```
+
+- **subdomain** → which API answers `/api/**` (one container per backend)
+- **path** → which product UI (packed once into shared `web` image)
+- Frontends call **relative** `/api/*` — same `dist/` works on every backend host
+
+Examples:
+
+- [backend-java-spring…/frontend-typescript-react/](https://backend-java-spring.reference-app-copy.autotests.ai/frontend-typescript-react/)
+- `backend-python-flask.…/frontend-typescript-react/`
+- `backend-python-flask.…/frontend-javascript-vanilla/`
+
+Host `/` is empty (404). Module id = DNS label (Let's Encrypt rejects `_`).
+
+Path constants: `backend/scripts/paths.sh`
 
 ### Layers (block 2)
 
@@ -57,16 +73,22 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · CI: [`.github/workflows/test.yml`](
 
 ```bash
 docker compose up -d --build
+# edge publishes SERVER_PORT (default 8080; if busy: SERVER_PORT=18080 docker compose up -d)
 curl -fsS http://localhost:8080/api/health
 curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/frontend-typescript-react/
-curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/   # 404 — empty root
+curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/frontend-javascript-vanilla/
+# flask stub via Host (same UI mounts, different /api)
+curl -fsS -H 'Host: backend-python-flask.localhost' http://localhost:8080/api/health
+curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/   # 404
 ```
 
-- `backend` — Spring JSON API only (`/api/**`)
-- `web` — nginx serves UI at `/frontend-typescript-react/` and proxies `/api` → backend; host `/` is empty (404)
-
-Default web image builds the TS React SPA. Alternate stacks: override compose
-`UI_MODULE` / `UI_RUNTIME` / `UI_MOUNT` (vanilla: `frontend/javascript/frontend-javascript-vanilla`).
+| Service | Role |
+|---------|------|
+| `edge` | local Host router (`SERVER_PORT`, default 8080) |
+| `web` | shared static UIs only (no `/api`) |
+| `backend-java-spring` | Spring JSON API |
+| `backend-python-flask` | health stub for routing demos |
+| `postgres` | one instance, DB per backend (`reference_app_java`, …) |
 
 ## Deploy
 
@@ -75,10 +97,12 @@ Default web image builds the TS React SPA. Alternate stacks: override compose
 | Setting | Value |
 |---------|-------|
 | `APP_DIR` | `/home/reference_app_copy/reference-app-copy` |
-| `SERVER_PORT` | `8800` |
-| `PUBLIC_URL` | `https://backend-java-spring.reference-app-copy.autotests.ai` |
+| `WEB_PORT` | `8801` (shared static) |
+| `BACKEND_JAVA_PORT` | `8810` |
+| `BACKEND_FLASK_PORT` | `8811` |
+| `SERVER_PORT` | `8800` (local-style edge; prod host nginx splits API/static) |
 
-**CD:** [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) — `build` (image on GHA) → `deploy` (SSH `docker load` + `SKIP_BUILD=1` [`deploy/server-deploy.sh`](deploy/server-deploy.sh)).
+**CD:** [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) — `build` (images on GHA) → `deploy` (SSH `docker load` + `SKIP_BUILD=1` [`deploy/server-deploy.sh`](deploy/server-deploy.sh)).
 
 **Tests:** [`.github/workflows/test.yml`](.github/workflows/test.yml) — unit on PR/push; `prod_api` after successful Deploy (`workflow_run`).
 

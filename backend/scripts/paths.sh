@@ -6,6 +6,13 @@
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 BACKEND_JAVA_SPRING="$REPO_ROOT/backend/java/backend-java-spring"
+BACKEND_KOTLIN_SPRING="$REPO_ROOT/backend/kotlin/backend-kotlin-spring"
+BACKEND_PYTHON_FLASK="$REPO_ROOT/backend/python/backend-python-flask"
+BACKEND_PYTHON_FASTAPI="$REPO_ROOT/backend/python/backend-python-fastapi"
+BACKEND_PYTHON_DJANGO="$REPO_ROOT/backend/python/backend-python-django"
+
+# Deploy routing SSOT (Host × path)
+DEPLOY_MATRIX="$REPO_ROOT/deploy/matrix.yaml"
 
 # Shared / catalog (not product URL matrix)
 FRONTEND_JS_EMBED="$REPO_ROOT/frontend/_shared/frontend-javascript-embed"

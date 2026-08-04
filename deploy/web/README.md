@@ -1,20 +1,25 @@
-# web (nginx)
+# web (shared static nginx)
 
-Public entrypoint for local compose and (behind host nginx) production.
+One image for **all** active product UIs. No `/api` proxy.
 
-| Path | Target |
+| Path | Source |
 |------|--------|
-| `/api/**` | `backend:8080` |
-| `/frontend-typescript-react/**` | Vite SPA (`dist/`) + lean DS runtime under `UI_MOUNT` |
-| `/`, other | **404** (empty host root) |
+| `/frontend-typescript-react/**` | Vite `dist/` + `UI_RUNTIME` overlay |
+| `/frontend-javascript-vanilla/**` | static module + `UI_RUNTIME` overlay |
+| `/`, other | **404** |
 
-Multi-stage [`Dockerfile`](Dockerfile): Node builds `UI_MODULE` → `dist/`, then nginx packs `dist/` + `UI_RUNTIME` into `UI_MOUNT`. Soft-route / SPA fallback lives here — not in Spring.
+`/api/**` is routed by:
 
-Compose build-args:
+- **local:** `deploy/edge` (Host → backend service)
+- **prod:** host nginx vhost (`deploy/nginx/`)
 
-| Arg | Default |
-|-----|---------|
-| `UI_MODULE` | `frontend/typescript/frontend-typescript-react` |
-| `UI_RUNTIME` | `frontend/_shared/frontend-javascript-app` |
-| `UI_MOUNT` | `frontend-typescript-react` |
-| `REACT_UI` | `frontend/_shared/frontend-react-ui` (build stage alias) |
+Matrix SSOT: [`../matrix.yaml`](../matrix.yaml) — only `status: active` frontends are packed here.
+
+```mermaid
+flowchart LR
+  edge[edge or host nginx]
+  web[web shared static]
+  api[backend-*]
+  edge -->|/frontend-*| web
+  edge -->|/api Host| api
+```

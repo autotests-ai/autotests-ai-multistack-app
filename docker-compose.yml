@@ -3,28 +3,45 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: reference_app
+      POSTGRES_DB: postgres
       POSTGRES_USER: reference
       POSTGRES_PASSWORD: reference
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./deploy/postgres/init-databases.sh:/docker-entrypoint-initdb.d/01-init-databases.sh:ro
     networks:
       - reference_internal
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U reference -d reference_app"]
+      test: ["CMD-SHELL", "pg_isready -U reference -d postgres"]
       interval: 5s
       timeout: 5s
       retries: 10
 
-  backend:
-    image: reference-app-copy-backend:latest
+  postgres-ensure-dbs:
+    image: postgres:16-alpine
+    restart: "no"
+    environment:
+      POSTGRES_USER: reference
+      POSTGRES_PASSWORD: reference
+      PGHOST: postgres
+    volumes:
+      - ./deploy/postgres/ensure-databases.sh:/ensure-databases.sh:ro
+    entrypoint: ["bash", "/ensure-databases.sh"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - reference_internal
+
+  backend-java-spring:
+    image: reference-app-copy-backend-java-spring:latest
     build:
       context: ./backend/java/backend-java-spring
     restart: unless-stopped
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: reference_app
+      DB_NAME: reference_app_java
       DB_USER: reference
       DB_PASSWORD: reference
       SERVER_PORT: 8080
@@ -32,9 +49,22 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      postgres-ensure-dbs:
+        condition: service_completed_successfully
     networks:
       - reference_internal
-    # API only — not published; browsers hit `web`.
+    ports:
+      - "${BACKEND_JAVA_PORT:-8810}:8080"
+
+  backend-python-flask:
+    image: reference-app-copy-backend-python-flask:latest
+    build:
+      context: ./backend/python/backend-python-flask
+    restart: unless-stopped
+    networks:
+      - reference_internal
+    ports:
+      - "${BACKEND_FLASK_PORT:-8811}:8080"
 
   web:
     image: reference-app-copy-web:latest
@@ -42,13 +72,24 @@ services:
       context: .
       dockerfile: deploy/web/Dockerfile
       args:
-        UI_MODULE: ${UI_MODULE:-frontend/typescript/frontend-typescript-react}
         UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
-        UI_MOUNT: ${UI_MOUNT:-frontend-typescript-react}
         REACT_UI: ${REACT_UI:-frontend/_shared/frontend-react-ui}
     restart: unless-stopped
+    networks:
+      - reference_internal
+    ports:
+      - "${WEB_PORT:-8801}:80"
+
+  edge:
+    image: reference-app-copy-edge:latest
+    build:
+      context: .
+      dockerfile: deploy/edge/Dockerfile
+    restart: unless-stopped
     depends_on:
-      - backend
+      - web
+      - backend-java-spring
+      - backend-python-flask
     ports:
       - "${SERVER_PORT:-8080}:80"
     networks:

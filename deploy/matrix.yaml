@@ -1,0 +1,140 @@
+# SSOT: backend host × frontend path matrix for reference-app-copy.
+# URL: https://{backend}.{domain_suffix}/{frontend}/
+# subdomain → API upstream; path → shared static mount (one web image).
+
+domain_suffix: reference-app-copy.autotests.ai
+
+# Shared static nginx (no /api). Local edge / prod host nginx route here.
+web:
+  compose_service: web
+  image: reference-app-copy-web:latest
+  # Published on host for prod host-nginx → static (local: only via edge).
+  publish_port: 8801
+  runtime: frontend/_shared/frontend-javascript-app
+  react_ui: frontend/_shared/frontend-react-ui
+
+# Local public entry (Host-based). Prod host nginx replaces this role.
+edge:
+  compose_service: edge
+  # Local default; prod uses SERVER_PORT (8800) for edge-less host split — see deploy/nginx.
+  publish_port: 8080
+
+backends:
+  - id: backend-java-spring
+    status: active
+    language: java
+    module: backend/java/backend-java-spring
+    compose_service: backend-java-spring
+    compose_profile: null
+    image: reference-app-copy-backend-java-spring:latest
+    internal_port: 8080
+    publish_port: 8810
+    db_name: reference_app_java
+    health_service: reference-app-copy
+    local_host: backend-java-spring.localhost
+    public_host: backend-java-spring.reference-app-copy.autotests.ai
+
+  - id: backend-python-flask
+    status: stub
+    language: python
+    module: backend/python/backend-python-flask
+    compose_service: backend-python-flask
+    compose_profile: null
+    image: reference-app-copy-backend-python-flask:latest
+    internal_port: 8080
+    publish_port: 8811
+    db_name: reference_app_flask
+    health_service: backend-python-flask
+    local_host: backend-python-flask.localhost
+    public_host: backend-python-flask.reference-app-copy.autotests.ai
+
+  - id: backend-python-fastapi
+    status: slot
+    language: python
+    module: backend/python/backend-python-fastapi
+    compose_service: backend-python-fastapi
+    compose_profile: python-fastapi
+    image: reference-app-copy-backend-python-fastapi:latest
+    internal_port: 8080
+    publish_port: 8812
+    db_name: reference_app_fastapi
+    health_service: backend-python-fastapi
+    local_host: backend-python-fastapi.localhost
+    public_host: backend-python-fastapi.reference-app-copy.autotests.ai
+
+  - id: backend-python-django
+    status: slot
+    language: python
+    module: backend/python/backend-python-django
+    compose_service: backend-python-django
+    compose_profile: python-django
+    image: reference-app-copy-backend-python-django:latest
+    internal_port: 8080
+    publish_port: 8813
+    db_name: reference_app_django
+    health_service: backend-python-django
+    local_host: backend-python-django.localhost
+    public_host: backend-python-django.reference-app-copy.autotests.ai
+
+  - id: backend-kotlin-spring
+    status: slot
+    language: kotlin
+    module: backend/kotlin/backend-kotlin-spring
+    compose_service: backend-kotlin-spring
+    compose_profile: kotlin
+    image: reference-app-copy-backend-kotlin-spring:latest
+    internal_port: 8080
+    publish_port: 8814
+    db_name: reference_app_kotlin
+    health_service: backend-kotlin-spring
+    local_host: backend-kotlin-spring.localhost
+    public_host: backend-kotlin-spring.reference-app-copy.autotests.ai
+
+frontends:
+  - id: frontend-typescript-react
+    status: active
+    kind: vite
+    module: frontend/typescript/frontend-typescript-react
+    mount: frontend-typescript-react
+
+  - id: frontend-javascript-vanilla
+    status: active
+    kind: static
+    module: frontend/javascript/frontend-javascript-vanilla
+    mount: frontend-javascript-vanilla
+
+  - id: frontend-javascript-react
+    status: slot
+    kind: vite
+    module: frontend/javascript/frontend-javascript-react
+    mount: frontend-javascript-react
+
+  - id: frontend-javascript-angular
+    status: slot
+    kind: vite
+    module: frontend/javascript/frontend-javascript-angular
+    mount: frontend-javascript-angular
+
+  - id: frontend-javascript-vue
+    status: slot
+    kind: vite
+    module: frontend/javascript/frontend-javascript-vue
+    mount: frontend-javascript-vue
+
+  - id: frontend-typescript-angular
+    status: slot
+    kind: vite
+    module: frontend/typescript/frontend-typescript-angular
+    mount: frontend-typescript-angular
+
+  - id: frontend-typescript-vue
+    status: slot
+    kind: vite
+    module: frontend/typescript/frontend-typescript-vue
+    mount: frontend-typescript-vue
+
+  - id: frontend-typescript-vanilla
+    status: slot
+    kind: static
+    module: frontend/typescript/frontend-typescript-vanilla
+    mount: frontend-typescript-vanilla
