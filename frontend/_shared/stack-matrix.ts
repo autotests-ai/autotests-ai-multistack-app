@@ -146,14 +146,19 @@ export function componentTestsPath(frontend: FrontendModule | null): string {
   return COMPONENT_RTL_PATH;
 }
 
-/** Meta under component row — short path + library caption for RTL. */
+/** Short label for Module column (`frontend-typescript-react/src/test`). */
+export function shortModuleLabel(path: string | null | undefined): string {
+  if (!path) return '';
+  return String(path).replace(/^frontend\/(?:javascript|typescript)\//, '');
+}
+
+/** Meta under component row — library caption (path is the Module label). */
 export function componentTestsMeta(path: string | null | undefined): string {
   if (!path) return 'pick a frontend';
-  const short = String(path).replace(/^frontend\/(?:javascript|typescript)\//, '');
   if (path.includes('react') || path === COMPONENT_RTL_PATH) {
-    return `← ${short} · react-testing-library`;
+    return 'react-testing-library';
   }
-  return `← ${short}`;
+  return shortModuleLabel(path);
 }
 
 export function resolveTestsId(

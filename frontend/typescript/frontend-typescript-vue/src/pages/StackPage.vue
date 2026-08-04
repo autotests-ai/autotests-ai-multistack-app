@@ -11,6 +11,7 @@ import {
   componentTestsMeta,
   componentTestsPath,
   fetchStackMatrix,
+  shortModuleLabel,
   findById,
   GITHUB_MARK_PATH,
   githubModuleHref,
@@ -95,6 +96,9 @@ const unitMeta = computed(() =>
 );
 
 const componentMeta = computed(() => componentTestsMeta(componentPath.value));
+const componentLabel = computed(
+  () => shortModuleLabel(componentPath.value) || 'component',
+);
 
 const label = computed(() => {
   const parts: string[] = [];
@@ -397,12 +401,24 @@ function moduleGh(modulePath?: string | null): string | null {
 
             <tr :class="{ 'stack-page__row--active': Boolean(mount.frontendId) }">
               <td>
+                <a
+                  v-if="moduleGh(componentPath)"
+                  class="link stack-page__id"
+                  :class="{ 'is-active': Boolean(mount.frontendId) }"
+                  :href="moduleGh(componentPath)!"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="stack-tests-component"
+                >
+                  {{ componentLabel }}
+                </a>
                 <span
+                  v-else
                   class="stack-page__id stack-page__id--disabled"
                   :class="{ 'is-active': Boolean(mount.frontendId) }"
                   data-testid="stack-tests-component"
                 >
-                  component
+                  {{ componentLabel }}
                 </span>
                 <div class="text text--sm text--muted stack-page__meta">{{ componentMeta }}</div>
               </td>

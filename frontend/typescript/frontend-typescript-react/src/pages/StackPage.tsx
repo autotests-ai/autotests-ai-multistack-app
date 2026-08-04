@@ -17,6 +17,7 @@ import {
   parseMount,
   parseTestsId,
   resolveTestsId,
+  shortModuleLabel,
   stackHref,
   summarizeMatrix,
   unitTestsPath,
@@ -176,6 +177,7 @@ function TestsBoard({
       layer: 'unit',
       bound: currentBackend,
       path: unitPath,
+      label: 'unit',
       meta: unitMeta,
       present: Boolean(unitPath),
     },
@@ -183,6 +185,7 @@ function TestsBoard({
       layer: 'component',
       bound: currentFrontend,
       path: componentPath,
+      label: shortModuleLabel(componentPath) || 'component',
       meta: componentMeta,
       present: Boolean(componentPath),
     },
@@ -203,15 +206,28 @@ function TestsBoard({
         {derived.map((row) => {
           const status = row.present ? 'derived' : 'slot';
           const isActive = Boolean(row.bound);
+          const ghHref = githubModuleHref(row.path);
           return (
             <tr key={row.layer} className={isActive ? 'stack-page__row--active' : undefined}>
               <td>
-                <span
-                  className={`stack-page__id stack-page__id--disabled${isActive ? ' is-active' : ''}`}
-                  data-testid={`stack-tests-${row.layer}`}
-                >
-                  {row.layer}
-                </span>
+                {ghHref ? (
+                  <a
+                    className={`link stack-page__id${isActive ? ' is-active' : ''}`}
+                    href={ghHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid={`stack-tests-${row.layer}`}
+                  >
+                    {row.label}
+                  </a>
+                ) : (
+                  <span
+                    className={`stack-page__id stack-page__id--disabled${isActive ? ' is-active' : ''}`}
+                    data-testid={`stack-tests-${row.layer}`}
+                  >
+                    {row.label}
+                  </span>
+                )}
                 <div className="text text--sm text--muted stack-page__meta">{row.meta}</div>
               </td>
               <td className="stack-page__layers-cell">
@@ -220,7 +236,7 @@ function TestsBoard({
                 </span>
               </td>
               <td className="stack-page__gh-cell">
-                {githubModuleHref(row.path) ? (
+                {ghHref ? (
                   <GithubModuleLink kind="tests" id={row.layer} modulePath={row.path} />
                 ) : (
                   <span className="text text--sm text--muted">—</span>

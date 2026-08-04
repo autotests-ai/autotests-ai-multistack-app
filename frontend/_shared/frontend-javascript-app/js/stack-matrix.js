@@ -98,14 +98,19 @@ export function componentTestsPath(frontend) {
   return COMPONENT_RTL_PATH;
 }
 
-/** Meta under component row — short path + library caption for RTL. */
+/** Short label for Module column (`frontend-typescript-react/src/test`). */
+export function shortModuleLabel(path) {
+  if (!path) return '';
+  return String(path).replace(/^frontend\/(?:javascript|typescript)\//, '');
+}
+
+/** Meta under component row — library caption (path is the Module label). */
 export function componentTestsMeta(path) {
   if (!path) return 'pick a frontend';
-  const short = String(path).replace(/^frontend\/(?:javascript|typescript)\//, '');
   if (path.includes('react') || path === COMPONENT_RTL_PATH) {
-    return `← ${short} · react-testing-library`;
+    return 'react-testing-library';
   }
-  return `← ${short}`;
+  return shortModuleLabel(path);
 }
 
 export function resolveTestsId(data, requested) {
@@ -203,10 +208,14 @@ function layersCell(layers) {
   return `<td class="stack-page__layers-cell"><span class="stack-page__layers" data-testid="stack-tests-layers">${escapeHtml(list.join(' · '))}</span></td>`;
 }
 
-function derivedLayerRow(layer, boundId, modulePath, meta, present) {
+function derivedLayerRow(layer, boundId, modulePath, meta, present, label = null) {
   const status = present ? 'derived' : 'slot';
   const isActive = Boolean(boundId);
-  const name = `<span class="stack-page__id${isActive ? ' is-active' : ''} stack-page__id--disabled" data-testid="stack-tests-${escapeHtml(layer)}">${escapeHtml(layer)}</span>`;
+  const display = label || layer;
+  const ghHref = githubModuleHref(modulePath);
+  const name = ghHref
+    ? `<a class="link stack-page__id${isActive ? ' is-active' : ''}" href="${escapeHtml(ghHref)}" target="_blank" rel="noopener noreferrer" data-testid="stack-tests-${escapeHtml(layer)}">${escapeHtml(display)}</a>`
+    : `<span class="stack-page__id${isActive ? ' is-active' : ''} stack-page__id--disabled" data-testid="stack-tests-${escapeHtml(layer)}">${escapeHtml(display)}</span>`;
   const ghCell =
     githubIconHtml(modulePath, 'tests', layer) ||
     '<span class="text text--sm text--muted">—</span>';
@@ -329,7 +338,14 @@ export function mountStackPage(root, data, pathname = window.location.pathname, 
           <thead><tr><th>Module</th><th>Layers</th><th class="stack-page__gh-cell">GH</th><th>Status</th><th>Select</th></tr></thead>
           <tbody>
             ${derivedLayerRow('unit', backendId, unitPath, unitMeta, Boolean(unitPath))}
-            ${derivedLayerRow('component', frontendId, componentPath, componentMeta, Boolean(componentPath))}
+            ${derivedLayerRow(
+              'component',
+              frontendId,
+              componentPath,
+              componentMeta,
+              Boolean(componentPath),
+              shortModuleLabel(componentPath),
+            )}
             ${summary.tests.map((t) => testsModuleRow(t, backendId, frontendId, currentTests)).join('')}
           </tbody>
         </table>
