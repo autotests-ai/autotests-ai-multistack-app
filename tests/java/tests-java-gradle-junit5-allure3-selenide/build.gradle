@@ -6,7 +6,7 @@
  *
  *        (\_/)
  *        ( •_•)
- *        / >./gradlew test -Denv=local_e2e
+ *        / >./gradlew test -Denv=reference_ci -DincludeTags=smoke
  *
  *              .-------.
  *             /  ✓ ✓ ✓  \
@@ -31,7 +31,7 @@ buildscript {
         junitVersion        = '5.11.4'
         slf4jVersion        = '2.0.17'
         testParallelForks   = 1
-        defaultEnv          = 'reference_ci_e2e'
+        defaultEnv          = 'reference_ci'
     }
 }
 
@@ -39,24 +39,6 @@ plugins {
     id 'java-library'
     id 'jacoco'
     id 'io.qameta.allure' version "${allurePluginVersion}"
-    id 'org.sonarqube' version '6.2.0.5505'
-}
-
-sonar {
-    properties {
-        property 'sonar.projectKey', System.getenv('SONAR_PROJECT_KEY') ?: 'reference-app-tests'
-        property 'sonar.projectName', System.getenv('SONAR_PROJECT_KEY') ?: 'reference-app-tests'
-        property 'sonar.host.url', System.getenv('SONAR_HOST_URL') ?: 'https://sonar.qa.guru'
-        // Test sources as main — Selenide/helpers living under src/test/java.
-        property 'sonar.sources', 'src/test/java'
-        property 'sonar.tests', ''
-        property 'sonar.java.binaries', 'build/classes/java/test'
-        property 'sonar.coverage.jacoco.xmlReportPaths',
-                "${layout.buildDirectory.get()}/reports/jacoco/jacocoTestInfraReport/jacocoTestInfraReport.xml"
-        // Coverage axis = pyramid test-infra helpers (100% local); UI/page/test classes excluded.
-        property 'sonar.coverage.exclusions',
-                '**/*Test.java,**/*Tests.java,**/pages/**,**/api/**,**/annotations/**,**/allure/**,**/extensions/**,**/tests/**,**/helpers/BrowserSessionHelper.java,**/helpers/HarCapture.java,**/helpers/HarViewerHtml.java,**/helpers/LocalChromePin.java,**/helpers/ScreenshotBaseline.java,**/helpers/ViewportHelper.java,**/config/TestConfig.java'
-    }
 }
 
 def allureReportMode = System.getProperty('allureReportMode', 'allure3')
@@ -106,7 +88,14 @@ tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
 
-def healthCheckEnvRef = [env: System.getProperty('env', defaultEnv)]
+def testEnv = System.getProperty('env', defaultEnv)
+
+// Config surface = keys of default.properties; any of them is overridable with -D<key>=<value>.
+// Owner reads system:properties first, so forward the overrides into the test JVM.
+def configKeys = new Properties().with { props ->
+    file('src/test/resources/config/default.properties').withInputStream { props.load(it) }
+    props.stringPropertyNames()
+}
 
 def resolveConfiguredBaseUrl = { String env ->
     def props = new Properties()
@@ -125,19 +114,19 @@ def resolveConfiguredBaseUrl = { String env ->
     throw new GradleException("Set baseUrl or basePath in config/${env}.properties")
 }
 
-def shouldSkipHealthCheck = { String env ->
+// Layers that never touch the app through a browser — nothing to health-check.
+def browserlessTags = ['test-infra', 'api'] as Set
+
+def shouldSkipHealthCheck = {
     if (System.getProperty('skipHealthCheck', 'false') == 'true') {
         return true
     }
-    if (env.endsWith('_testinfra') || env.endsWith('_api')) {
-        return true
-    }
     def includeTags = System.getProperty('includeTags', '').split(',').collect { it.trim() }.findAll { it }
-    return includeTags == ['api']
+    return !includeTags.isEmpty() && includeTags.every { browserlessTags.contains(it) }
 }
 
 def runAppHealthCheck = { String env ->
-    if (shouldSkipHealthCheck(env)) {
+    if (shouldSkipHealthCheck()) {
         return
     }
     def baseUrl = resolveConfiguredBaseUrl(env)
@@ -168,16 +157,16 @@ def runAppHealthCheck = { String env ->
 
 tasks.register('healthCheck') {
     group = 'verification'
-    description = 'GET baseUrl/ — auto-skip for *_testinfra, *_api, -DincludeTags=api'
+    description = 'GET baseUrl/ — auto-skip for -DincludeTags=test-infra|api and -DskipHealthCheck=true'
     doLast {
-        runAppHealthCheck(healthCheckEnvRef.env)
+        runAppHealthCheck(testEnv)
     }
 }
 
 test {
     dependsOn healthCheck
+    description = 'Run tests: -Denv=<stand> -DincludeTags=<tags> -DexcludeTags=<tags>'
     useJUnitPlatform {
-        excludeTags 'ladder-ethalon', 'api'
         def includeTagsProp = System.getProperty('includeTags')
         if (includeTagsProp) {
             includeTags(*(includeTagsProp.split(',')*.trim()))
@@ -187,9 +176,15 @@ test {
             excludeTags(*(excludeTagsProp.split(',')*.trim()))
         }
     }
-    systemProperty 'env', System.getProperty('env', defaultEnv)
+    systemProperty 'env', testEnv
     systemProperty 'allureReportMode', allureReportMode
     systemProperty 'allureAgentMode', allureAgentMode
+    configKeys.each { key ->
+        def override = System.getProperty(key)
+        if (override != null) {
+            systemProperty key, override
+        }
+    }
     maxParallelForks = testParallelForks
 }
 
@@ -332,112 +327,16 @@ if (allureReportMode == 'none') {
     }
 }
 
-def knownPyramidLayers = ['testinfra', 'integration', 'api', 'e2e', 'visual', 'manual'] as Set
-def layerEnvName = { String layer ->
-    def env = System.getProperty('env')
-    if (!env) {
-        return "reference_ci_${layer}"
-    }
-    def idx = env.lastIndexOf('_')
-    if (idx > 0) {
-        def suffix = env.substring(idx + 1)
-        if (knownPyramidLayers.contains(suffix)) {
-            return suffix == layer ? env : "${env.substring(0, idx)}_${layer}"
-        }
-    }
-    return "${env}_${layer}"
-}
-
-// Pyramid CI profiles — ADR 005; `./gradlew test` = full suite, not these
-def layerTestProfiles = [
-        [name: 'testInfra',       layer: 'testinfra',
-         description: 'Pyramid test-infra — tests.testinfra.* (@Layer test-infra, @Tag test-infra)',
-         testPatterns: ['tests.testinfra.*']],
-        [name: 'testIntegration', layer: 'integration',
-         description: 'Pyramid integration — @Tag(layout,mount)',
-         includeTags: 'layout,mount'],
-        [name: 'testApi',         layer: 'api',
-         description: 'Pyramid api — @Tag(api); hub on hubUrl',
-         includeTags: 'api'],
-        [name: 'testE2e',         layer: 'e2e',
-         description: 'Pyramid e2e smoke — @Tag(smoke), exclude visual + ladder ethalon',
-         includeTags: 'smoke', excludeTags: 'visual,ladder-ethalon'],
-        [name: 'testVisual',      layer: 'visual',
-         description: 'Pyramid visual — @Tag(visual)',
-         includeTags: 'visual'],
-        [name: 'testManual',      layer: 'manual',
-         description: 'Pyramid manual — @Tag(manual) exploratory stubs',
-         includeTags: 'manual', excludeTags: 'ladder-ethalon'],
-        [name: 'testLadderEthalon', layer: 'e2e',
-         description: 'Style ladder ethalon — @Tag(ladder-ethalon); not CI / not bootstrap',
-         includeTags: 'ladder-ethalon'],
-]
-
-gradle.taskGraph.whenReady { graph ->
-    layerTestProfiles.find { profile ->
-        graph.hasTask(tasks.named(profile.name).get())
-    }?.with { profile ->
-        healthCheckEnvRef.env = layerEnvName(profile.layer)
-    }
-}
-
-layerTestProfiles.each { profile ->
-    def envName = layerEnvName(profile.layer)
-    tasks.register(profile.name, Test) {
-        group = 'verification'
-        description = "${profile.description} (env=${envName}; override: -Denv=<stand> or -Denv=<stand>_${profile.layer})"
-        testClassesDirs = sourceSets.test.output.classesDirs
-        classpath = sourceSets.test.runtimeClasspath
-        useJUnitPlatform {
-            if (profile.includeTags) {
-                includeTags(*(profile.includeTags.split(',')*.trim()))
-            }
-            if (profile.excludeTags) {
-                excludeTags(*(profile.excludeTags.split(',')*.trim()))
-            }
-        }
-        if (profile.testPatterns) {
-            filter {
-                profile.testPatterns.each { pattern -> includeTestsMatching pattern }
-            }
-        }
-        systemProperty 'env', envName
-        systemProperty 'allureReportMode', allureReportMode
-        systemProperty 'allureAgentMode', allureAgentMode
-        systemProperty 'updateBaselines', System.getProperty('updateBaselines', 'false')
-        maxParallelForks = testParallelForks
-        if (!shouldSkipHealthCheck(envName)) {
-            dependsOn healthCheck
-        }
-        if (allureReportMode == 'none') {
-            systemProperties.remove('allure.results.directory')
-            doLast {
-                delete layout.buildDirectory.dir('allure-results')
-            }
-        }
-    }
-}
-
 if (allureQualityGateHook && allureReportMode != 'none') {
     tasks.named('test', Test).configure {
         finalizedBy 'allureQualityGate'
     }
-    layerTestProfiles.each { profile ->
-        tasks.named(profile.name, Test).configure {
-            finalizedBy 'allureQualityGate'
-        }
-    }
 }
 
-if (allureAgentMode == 'inspect' && allureReportMode != 'none') {
-    layerTestProfiles.each { profile ->
-        tasks.named(profile.name, Test).configure {
-            finalizedBy 'allureAgentInspect'
-        }
-    }
-}
-
-def pyramidTestInfraClassDirectories = {
+// Coverage axis = test-harness helpers driven by the test-infra tag; product/page/UI classes are out.
+// Meaningful only together with `test -DincludeTags=test-infra` — a broader run leaves the same
+// classes covered, a narrower one cannot reach 100%.
+def testInfraCoverageSlice = {
     sourceSets.test.output.classesDirs.collect { classDir ->
         fileTree(dir: classDir, include: [
                 'config/ConfigReader.class',
@@ -447,23 +346,23 @@ def pyramidTestInfraClassDirectories = {
     }
 }
 
-tasks.register('jacocoTestInfraReport', JacocoReport) {
+tasks.named('jacocoTestReport', JacocoReport).configure {
     group = 'verification'
-    description = 'JaCoCo report for pyramid test-infra profile (config + helpers)'
-    dependsOn tasks.named('testInfra')
+    description = 'JaCoCo report for test-harness config + CSS helpers'
+    dependsOn tasks.named('test')
     reports {
         xml.required = true
         html.required = true
     }
-    classDirectories.setFrom(files(pyramidTestInfraClassDirectories()))
+    classDirectories.setFrom(files(testInfraCoverageSlice()))
     sourceDirectories.setFrom(files(sourceSets.test.java.srcDirs))
-    executionData.setFrom(file("${layout.buildDirectory.get()}/jacoco/testInfra.exec"))
+    executionData.setFrom(layout.buildDirectory.file('jacoco/test.exec'))
 }
 
-tasks.register('jacocoTestInfraCoverageVerification', JacocoCoverageVerification) {
+tasks.named('jacocoTestCoverageVerification', JacocoCoverageVerification).configure {
     group = 'verification'
-    description = 'Fail when pyramid test-infra helpers/config drop below 100% line coverage'
-    dependsOn tasks.named('jacocoTestInfraReport')
+    description = 'Fail when test-harness helpers/config drop below 100% line coverage'
+    dependsOn tasks.named('jacocoTestReport')
     violationRules {
         rule {
             limit {
@@ -472,13 +371,6 @@ tasks.register('jacocoTestInfraCoverageVerification', JacocoCoverageVerification
             }
         }
     }
-    classDirectories.setFrom(tasks.named('jacocoTestInfraReport', JacocoReport).get().classDirectories)
-    executionData.setFrom(tasks.named('jacocoTestInfraReport', JacocoReport).get().executionData)
-}
-
-tasks.named('testInfra', Test).configure {
-    jacoco {
-        destinationFile = layout.buildDirectory.file('jacoco/testInfra.exec').get().asFile
-    }
-    finalizedBy 'jacocoTestInfraReport', 'jacocoTestInfraCoverageVerification'
+    classDirectories.setFrom(files(testInfraCoverageSlice()))
+    executionData.setFrom(layout.buildDirectory.file('jacoco/test.exec'))
 }

@@ -107,7 +107,7 @@ class ConfigReaderTest {
     @Test
     @DisplayName("resolveApiBaseUrl uses loaded config")
     void resolveApiBaseUrlUsesLoadedConfig() {
-        assertEquals("http://localhost:8800/api/", ConfigReader.resolveApiBaseUrl());
+        assertEquals("http://localhost:8800/", ConfigReader.resolveApiBaseUrl());
     }
 
     @Test

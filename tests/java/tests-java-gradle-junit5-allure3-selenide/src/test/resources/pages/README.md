@@ -1,6 +1,6 @@
 # Page objects
 
-**reference-app-copy** — home page at app root. Resolved via `baseUrl` in `config/reference_ci_*.properties`.
+**reference-app-copy** — home page at app root. Resolved via `baseUrl` in `config/${env}.properties`.
 
 | Page | Class | Open |
 |------|-------|------|
@@ -9,6 +9,6 @@
 
 Post-auth state (welcome message, logout) lives on `HomePage` at `/`.
 
-## Profiles
+## Stands
 
-`reference_ci_e2e.properties` / `reference_ci_integration.properties`: `baseUrl=http://localhost:9811/`
+`reference_ci.properties`: `baseUrl=http://localhost:9811/` · `reference_prod.properties`: the deployed host.

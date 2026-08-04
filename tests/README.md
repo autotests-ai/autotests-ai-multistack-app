@@ -21,9 +21,16 @@ tests/
 
 | Kind | Job id | Where |
 |------|--------|-------|
-| Product unit | `unit` | `backend/java/backend-java-spring/src/test/` |
-| Test-infra | `test-infra` | `…/tests/testinfra/` · `@Layer("test-infra")` + `@Tag("test-infra")` |
-| RTL | `component` | `frontend/typescript/frontend-typescript-react/src/test/` |
-| Browser/api/e2e | `api` … `e2e` | `tests/java/tests-java-gradle-junit5-allure3-selenide/` |
+| Product unit | `unit-tests` | `backend/java/backend-java-spring/src/test/` |
+| Test-infra | `test-infra-tests` | `…/tests/testinfra/` · `@Layer("test-infra")` + `@Tag("test-infra")` |
+| RTL | `component-tests` | `frontend/typescript/frontend-typescript-react/src/test/` |
+| Browser/api/e2e | `api-tests` + dispatch | `tests/java/tests-java-gradle-junit5-allure3-selenide/` |
 
-CI: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) — add a job per phase.
+CI: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
+
+The Java module has one Gradle task — `test`. The layer is a tag filter, the stand is `-Denv`:
+
+```bash
+./gradlew test -Denv=reference_ci -DincludeTags=test-infra
+./gradlew test -Denv=reference_prod -DincludeTags=smoke -DexcludeTags=visual
+```
