@@ -14,6 +14,6 @@ Pattern: `tests-java-{build}-{framework}-{reporting}-{automation}` — see [../N
 
 ```bash
 cd tests/java/tests-java-gradle-junit5-allure3-selenide
-./gradlew testUnit -DpyramidStand=reference_ci
+./gradlew testUnit -Denv=reference_ci_unit
 ./gradlew testE2e -Denv=reference_ci_e2e
 ```
