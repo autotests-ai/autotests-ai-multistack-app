@@ -14,12 +14,10 @@ frontend/
     frontend-javascript-preview/   # DS component catalog for browser @Tag(component)
   javascript/
     frontend-javascript-react/     # product + src/test/ (slot)
-    vanilla/
-      frontend-javascript-vanilla/   # default app pages (was static)
+    frontend-javascript-vanilla/   # default app pages (was static)
   typescript/
     frontend-typescript-react/     # product + src/test/ (component_rtl)
-    vanilla/
-      frontend-typescript-vanilla/
+    frontend-typescript-vanilla/   # product slot
 ```
 
 ## Product vs shared

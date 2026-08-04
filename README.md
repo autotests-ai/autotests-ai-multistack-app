@@ -27,10 +27,8 @@ Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/N
 
 | Zone | Current modules | Future slots |
 |------|-----------------|--------------|
-| **frontend/javascript/** | `frontend-javascript-react` (+ `src/test/` slot) | — |
-| **frontend/javascript/vanilla/** | `frontend-javascript-vanilla` (active) | vanilla `src/test/` |
-| **frontend/typescript/** | `frontend-typescript-react` (+ `src/test/` RTL) | — |
-| **frontend/typescript/vanilla/** | `frontend-typescript-vanilla` (slot) | vanilla `src/test/` |
+| **frontend/javascript/** | `frontend-javascript-react` (+ `src/test/` slot), `frontend-javascript-vanilla` (active) | vanilla `src/test/` |
+| **frontend/typescript/** | `frontend-typescript-react` (+ `src/test/` RTL), `frontend-typescript-vanilla` (slot) | vanilla `src/test/` |
 | **frontend/_shared/** | `frontend-javascript-app`, `frontend-javascript-embed` | — |
 | **frontend/_catalog/** | `frontend-javascript-preview` | — |
 | **backend/java/** | `backend-java-spring` | `backend-kotlin-spring`, … |
@@ -68,7 +66,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:8080/   # 404 — em
 - `web` — nginx serves UI at `/frontend-typescript-react/` and proxies `/api` → backend; host `/` is empty (404)
 
 Default web image builds the TS React SPA. Alternate stacks: override compose
-`UI_MODULE` / `UI_RUNTIME` / `UI_MOUNT` (vanilla still under `frontend/javascript/vanilla/`).
+`UI_MODULE` / `UI_RUNTIME` / `UI_MOUNT` (vanilla: `frontend/javascript/frontend-javascript-vanilla`).
 
 ## Deploy
 
