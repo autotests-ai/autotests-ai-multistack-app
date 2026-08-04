@@ -47,7 +47,7 @@ Slots are not deployed until `status: active` + Dockerfile.
 
 Host `/` is empty (404). Host nginx ([`deploy/nginx/`](../deploy/nginx/)) strips `/{backend}/{frontend}` → `/` on that frontend container.
 
-`/{backend}/{frontend}/stack/` — backend × frontend matrix switcher from `_shared/frontend-javascript-app/stack/` (header nav **Stack**; sync `python frontend/scripts/sync-stack-matrix.py`).
+`/{backend}/{frontend}/stack/` — product Stack page (header + DS panels). Data SSOT: `deploy/matrix.yaml` → `frontend/_shared/frontend-javascript-app/stack/matrix.json` (`python frontend/scripts/sync-stack-matrix.py`). UI: vanilla shell in shared runtime; React/Vue `StackPage` routes. Header nav **Stack**.
 
 ## Local ports
 

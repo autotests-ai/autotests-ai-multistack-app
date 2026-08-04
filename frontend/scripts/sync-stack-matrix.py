@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Sync deploy/matrix.yaml → frontend/_shared/.../stack/matrix.json (public switcher)."""
+"""Sync deploy/matrix.yaml → frontend/_shared/.../stack/matrix.json (public Stack SSOT)."""
 from __future__ import annotations
 
 import importlib.util

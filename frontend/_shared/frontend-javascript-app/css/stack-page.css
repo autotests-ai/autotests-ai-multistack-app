@@ -1,0 +1,150 @@
+/* Product /stack/ boards — DS tokens + panel chrome (not services-status cream). */
+
+.stack-page {
+  max-width: 1100px;
+}
+
+.stack-page .text {
+  margin: 0;
+  font-size: var(--font-size-base, 1rem);
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+.stack-page .text--muted {
+  color: var(--color-text-muted);
+}
+
+.stack-page .text--sm {
+  font-size: var(--font-size-sm);
+}
+
+.stack-page__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.stack-page__title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.stack-page__lead {
+  margin: var(--space-2) 0 0;
+}
+
+.stack-page__current {
+  text-decoration: none;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono, ui-monospace, Menlo, monospace);
+}
+
+.stack-page__current:hover {
+  filter: brightness(1.08);
+}
+
+.stack-page__summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.stack-page__boards {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .stack-page__boards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stack-page__board {
+  min-width: 0;
+}
+
+.stack-page__board-body {
+  padding: 0;
+  overflow: auto;
+}
+
+.stack-page__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.stack-page__table th,
+.stack-page__table td {
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+  font-size: var(--font-size-sm, 0.9rem);
+}
+
+.stack-page__table th {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  background: var(--color-surface-soft);
+}
+
+.stack-page__table tr:last-child td {
+  border-bottom: 0;
+}
+
+.stack-page__row--active td {
+  background: color-mix(in srgb, var(--color-info) 12%, transparent);
+}
+
+.stack-page__id {
+  font-family: var(--font-mono, ui-monospace, Menlo, monospace);
+  font-size: 0.84rem;
+}
+
+.stack-page__id--disabled {
+  color: var(--color-text-muted);
+  cursor: default;
+}
+
+.stack-page__id.is-active,
+.stack-page__open.is-active {
+  color: var(--color-info);
+  font-weight: 650;
+}
+
+.stack-page__meta {
+  margin-top: var(--space-1);
+}
+
+.stack-page__open {
+  font-family: var(--font-mono, ui-monospace, Menlo, monospace);
+  font-size: 0.78rem;
+}
+
+.stack-page__foot {
+  margin: var(--space-4) 0 0;
+  font-family: var(--font-mono, ui-monospace, Menlo, monospace);
+}
+
+.stack-page__error {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm, 8px);
+  background: color-mix(in srgb, var(--color-danger) 14%, transparent);
+  color: var(--color-danger);
+  border: 1px solid color-mix(in srgb, var(--color-danger) 35%, transparent);
+}

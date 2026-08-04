@@ -7,13 +7,19 @@ Overlay copied into each frontend nginx image at build
 
 ## `/stack/` — backend × frontend switcher
 
-Static page at `stack/` (served as `/{backend}/{frontend}/stack/` after host nginx strip).
+Product page (header + DS panels), not a standalone status board.
 
-- UI: `stack/index.html` + `stack/stack.js`
-- Data: `stack/matrix.json` — sync from SSOT:
+| Piece | Role |
+|-------|------|
+| `stack/matrix.json` | Public matrix artifact — sync from SSOT `deploy/matrix.yaml` |
+| `js/stack-matrix.js` | Shared parse/href/fetch + vanilla DOM mount |
+| `css/stack-page.css` + `css/badge.css` | Boards layout on DS tokens |
+| `stack/index.html` | Vanilla thin shell (product header + `#stack-root`) |
 
 ```bash
 python frontend/scripts/sync-stack-matrix.py
 ```
+
+**SPA (React / Vue):** same `matrix.json` + `StackPage` route; Docker images drop `stack/index.html` so `/stack/` is owned by the SPA (nginx serves `index.html` for the route).
 
 Active modules link to `/{backend}/{frontend}/stack/`; current path modules are highlighted. Current-pair badge opens app home. Slots are listed but not clickable.

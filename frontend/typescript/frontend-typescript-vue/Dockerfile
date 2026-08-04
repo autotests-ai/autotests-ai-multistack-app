@@ -5,6 +5,7 @@ FROM node:26-alpine AS build
 WORKDIR /build
 COPY frontend/typescript/frontend-typescript-vue/ frontend/typescript/frontend-typescript-vue/
 COPY frontend/_shared/frontend-javascript-app/css/ frontend/_shared/frontend-javascript-app/css/
+COPY frontend/_shared/stack-matrix.ts frontend/_shared/stack-matrix.ts
 WORKDIR /build/frontend/typescript/frontend-typescript-vue
 RUN npm ci && npm run build
 
@@ -17,5 +18,6 @@ RUN rm -rf /usr/share/nginx/html/* \
   && cp -a /tmp/ui-runtime/. /usr/share/nginx/html/ \
   && cp -a /tmp/ui-dist/. /usr/share/nginx/html/ \
   && rm -f /usr/share/nginx/html/README.md \
+  && rm -f /usr/share/nginx/html/stack/index.html \
   && rm -rf /tmp/ui-runtime /tmp/ui-dist
 EXPOSE 80

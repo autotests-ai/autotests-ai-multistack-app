@@ -10,6 +10,8 @@ import '../../../_shared/frontend-javascript-app/css/header.css';
 import '../../../_shared/frontend-javascript-app/css/button.css';
 import '../../../_shared/frontend-javascript-app/css/panel.css';
 import '../../../_shared/frontend-javascript-app/css/plaque-field.css';
+import '../../../_shared/frontend-javascript-app/css/badge.css';
+import '../../../_shared/frontend-javascript-app/css/stack-page.css';
 import '../css/grid.css';
 import '../css/text.css';
 import '../css/page.css';
