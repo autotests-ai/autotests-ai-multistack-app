@@ -1,6 +1,6 @@
 # reference-app-copy
 
-Clean teaching fork of [reference-app](https://github.com/autotests-ai/reference-app) — **3-folder layout**, deploy-only CI (block 1).
+Clean teaching fork of [reference-app](https://github.com/autotests-ai/reference-app) — **3-folder layout**, orchestrated CI/CD (block 1).
 
 GitHub: **[github.com/autotests-ai/reference-app-copy](https://github.com/autotests-ai/reference-app-copy)** · monorepo: `projects/reference-home/reference-app-copy/`
 
@@ -14,7 +14,7 @@ reference-app-copy/
   backend/           # server by language → stack (…/.github/actions/build|unit)
   tests/             # automation (…/.github/actions/test-infra|prod-api)
   deploy/            # matrix, host nginx, smoke
-  .github/workflows/ # deploy.yml / deploy_all.yml · test.yml / test_all.yml
+  .github/workflows/ # ci.yml → test.yml + deploy.yml · deploy_all / test_all
 ```
 
 ### Naming convention
@@ -70,7 +70,7 @@ Path constants: `backend/scripts/paths.sh`
 
 ### Layers (block 2)
 
-Canon: [tests/LAYERS.md](tests/LAYERS.md) · CI: [`.github/workflows/test.yml`](.github/workflows/test.yml)
+Canon: [tests/LAYERS.md](tests/LAYERS.md) · entry: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) · leaf: [`test.yml`](.github/workflows/test.yml)
 
 | Job | Where |
 |-----|-------|
@@ -152,23 +152,21 @@ Ports, compose service ids, and health `expect` strings — **SSOT** [`deploy/ma
 | `APP_DIR` | `/home/reference_app_copy/reference-app-copy` |
 | Default stacks | `backend-java-spring` + `frontend-typescript-react` |
 
-**CD (does not run autotests):**
+**CI/CD entry:**
 
 | Workflow | Role |
 |----------|------|
-| [`deploy.yml`](.github/workflows/deploy.yml) | Default CD on `push` main: build selected images → SSH `docker load` → `SKIP_BUILD=1 deploy/server-deploy.sh` (health + nginx + smoke for those stacks) |
+| [`ci.yml`](.github/workflows/ci.yml) | Orchestrator: **PR** → `test(ci)`; **push main** → `test(ci)` → `deploy` → `test(prod-only)` |
+| [`deploy.yml`](.github/workflows/deploy.yml) | Leaf CD (`workflow_call` / manual): matrix build from `matrix.yaml` → SSH `docker load` → `SKIP_BUILD=1 deploy/server-deploy.sh` |
 | [`deploy_all.yml`](.github/workflows/deploy_all.yml) | Manual: `deploy_mode=all` → every **active** backend/frontend from `matrix.yaml` |
+| [`test.yml`](.github/workflows/test.yml) | Leaf tests: `layers=ci` (unit + test-infra) · `prod-only` (`prod_api`) · `all-enabled` (both) |
+| [`test_all.yml`](.github/workflows/test_all.yml) | Manual: `test.yml` + python backend unit matrix |
 
-Stack build steps live next to modules, e.g. [`backend/java/backend-java-spring/.github/actions/build`](backend/java/backend-java-spring/.github/actions/build/action.yml).
-
-**Tests (separate from deploy):**
-
-| Workflow | Role |
-|----------|------|
-| [`test.yml`](.github/workflows/test.yml) | Default: java-spring `unit`, `test-infra`; `prod_api` after successful Deploy (`workflow_run`) |
-| [`test_all.yml`](.github/workflows/test_all.yml) | Manual: same + python backend unit matrix |
+Module build actions (local/docs): e.g. [`backend/java/backend-java-spring/.github/actions/build`](backend/java/backend-java-spring/.github/actions/build/action.yml). CD uses `deploy/matrix_query.py build-matrix` + compose build per stack.
 
 Manual on host: `bash deploy/server-deploy.sh` (builds locally). CD: `SKIP_BUILD=1 bash deploy/server-deploy.sh`. All active stacks: `DEPLOY_MODE=all SKIP_BUILD=1 bash deploy/server-deploy.sh`.
+
+Allure report / notifications: deferred (`tests/_deferred/notifications/`) — wire into `ci.yml` after prod tests (phase C).
 
 ### GitHub secrets & variables
 

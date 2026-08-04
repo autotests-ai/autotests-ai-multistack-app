@@ -1,0 +1,67 @@
+# Orchestrator — single entry for PR / push main.
+# Leafs: test.yml, deploy.yml (allure-report / notifications — phase C).
+#
+# PR:          test(ci)
+# push main:   test(ci) → deploy → test(prod-only)
+# dispatch:    same as push when on main (optional skip_deploy)
+
+name: reference-app-copy CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      skip_deploy:
+        description: "Run CI tests only (no deploy / prod_api)"
+        type: boolean
+        required: false
+        default: false
+
+run-name: reference-app-copy ci (${{ github.event_name }} @ ${{ github.sha }})
+
+concurrency:
+  group: ci-reference-app-copy-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test_ci:
+    name: test (ci)
+    uses: ./.github/workflows/test.yml
+    secrets: inherit
+    with:
+      layers: ci
+
+  deploy:
+    name: deploy
+    needs: test_ci
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' ||
+       (github.event_name == 'workflow_dispatch' &&
+        inputs.skip_deploy == false))
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit
+
+  test_prod:
+    name: test (prod)
+    needs: deploy
+    if: ${{ success() }}
+    uses: ./.github/workflows/test.yml
+    secrets: inherit
+    with:
+      layers: prod-only
+
+  # Phase C — wire when allure leafs land (tests/_deferred/notifications/):
+  # allure_report:
+  #   needs: test_prod
+  #   if: ${{ always() && needs.deploy.result == 'success' }}
+  #   uses: ./.github/workflows/allure-report.yml
+  #   secrets: inherit
+  # notifications:
+  #   needs: allure_report
+  #   if: ${{ always() }}
+  #   uses: ./.github/workflows/notifications.yml
+  #   secrets: inherit

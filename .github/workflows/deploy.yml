@@ -1,13 +1,10 @@
-# Universal deploy — defaults: backend-java-spring + frontend-typescript-react.
-# Expand via workflow_dispatch inputs or deploy_all.yml (deploy_mode=all → matrix active).
+# Leaf deploy — called by ci.yml (main) or deploy_all.yml / workflow_dispatch.
 # Host logic SSOT: deploy/server-deploy.sh + deploy/matrix.yaml.
-# Does not run autotests (see test.yml).
+# Does not run autotests (see test.yml / ci.yml).
 
 name: reference-app-copy Deploy
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
     inputs:
       backends:
@@ -49,12 +46,14 @@ env:
   DEPLOY_MODE: ${{ inputs.deploy_mode || 'default' }}
 
 jobs:
-  build:
+  resolve:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 5
     outputs:
       backends: ${{ steps.stacks.outputs.backends }}
       frontends: ${{ steps.stacks.outputs.frontends }}
+      images: ${{ steps.stacks.outputs.images }}
+      matrix: ${{ steps.stacks.outputs.matrix }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -63,10 +62,16 @@ jobs:
         id: stacks
         run: |
           set -euo pipefail
-          if [[ "${DEPLOY_MODE}" == "all" ]]; then
+          MODE="${DEPLOY_MODE}"
+          if [[ "${MODE}" == "all" ]]; then
             BACKENDS="$(python deploy/matrix_query.py ids backends --mode all --csv)"
             FRONTENDS="$(python deploy/matrix_query.py ids frontends --mode all --csv)"
           fi
+          MATRIX_JSON="$(python deploy/matrix_query.py build-matrix \
+            --mode default \
+            --backends "${BACKENDS}" \
+            --frontends "${FRONTENDS}")"
+          IMAGES="$(python -c 'import json,sys; print(",".join(r["image"] for r in json.loads(sys.argv[1])))' "${MATRIX_JSON}")"
           {
             echo "BACKENDS=${BACKENDS}"
             echo "FRONTENDS=${FRONTENDS}"
@@ -74,52 +79,70 @@ jobs:
           {
             echo "backends=${BACKENDS}"
             echo "frontends=${FRONTENDS}"
+            echo "images=${IMAGES}"
+            echo "matrix<<EOF"
+            echo "${MATRIX_JSON}"
+            echo "EOF"
           } >> "$GITHUB_OUTPUT"
           echo "Deploy targets: backends=${BACKENDS} frontends=${FRONTENDS}"
 
-      - name: Init image list
-        run: truncate -s 0 .ci-images.txt
+  build:
+    needs: resolve
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.resolve.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
 
-      - name: Build backend-java-spring
-        if: contains(format(',{0},', env.BACKENDS), ',backend-java-spring,')
-        uses: ./backend/java/backend-java-spring/.github/actions/build
-
-      - name: Build backend-kotlin-spring
-        if: contains(format(',{0},', env.BACKENDS), ',backend-kotlin-spring,')
-        uses: ./backend/kotlin/backend-kotlin-spring/.github/actions/build
-
-      - name: Build backend-python-flask
-        if: contains(format(',{0},', env.BACKENDS), ',backend-python-flask,')
-        uses: ./backend/python/backend-python-flask/.github/actions/build
-
-      - name: Build backend-python-fastapi
-        if: contains(format(',{0},', env.BACKENDS), ',backend-python-fastapi,')
-        uses: ./backend/python/backend-python-fastapi/.github/actions/build
-
-      - name: Build backend-python-django
-        if: contains(format(',{0},', env.BACKENDS), ',backend-python-django,')
-        uses: ./backend/python/backend-python-django/.github/actions/build
-
-      - name: Build frontend-typescript-react
-        if: contains(format(',{0},', env.FRONTENDS), ',frontend-typescript-react,')
-        uses: ./frontend/typescript/frontend-typescript-react/.github/actions/build
-
-      - name: Build frontend-typescript-vue
-        if: contains(format(',{0},', env.FRONTENDS), ',frontend-typescript-vue,')
-        uses: ./frontend/typescript/frontend-typescript-vue/.github/actions/build
-
-      - name: Build frontend-javascript-vanilla
-        if: contains(format(',{0},', env.FRONTENDS), ',frontend-javascript-vanilla,')
-        uses: ./frontend/javascript/frontend-javascript-vanilla/.github/actions/build
-
-      - name: Save image artifacts
+      - name: Compose build + arch check
         run: |
           set -euo pipefail
-          test -s .ci-images.txt || {
-            echo "::error::No images selected to build"
+          docker compose build "${{ matrix.compose_service }}"
+          docker inspect "${{ matrix.image }}" --format '{{.Architecture}}' | grep -q amd64
+
+      - name: Save image artifact
+        run: |
+          set -euo pipefail
+          docker save "${{ matrix.image }}" | gzip > "/tmp/${{ matrix.id }}.tar.gz"
+
+      - name: Upload image
+        uses: actions/upload-artifact@v7
+        with:
+          name: image-${{ matrix.id }}
+          path: /tmp/${{ matrix.id }}.tar.gz
+          retention-days: 1
+
+  pack:
+    needs: [resolve, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Download image artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: image-*
+          merge-multiple: true
+          path: /tmp/images
+
+      - name: Merge into app-images.tar.gz
+        env:
+          IMAGES: ${{ needs.resolve.outputs.images }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          files=(/tmp/images/*.tar.gz)
+          test "${#files[@]}" -gt 0 || {
+            echo "::error::No image artifacts downloaded"
             exit 1
           }
-          mapfile -t imgs < .ci-images.txt
+          for f in "${files[@]}"; do
+            gunzip -c "$f" | docker load
+          done
+          IFS=',' read -r -a imgs <<< "${IMAGES}"
           docker save "${imgs[@]}" | gzip > /tmp/app-images.tar.gz
           echo "Saved: ${imgs[*]}"
 
@@ -131,14 +154,14 @@ jobs:
           retention-days: 1
 
   deploy:
-    needs: build
+    needs: [resolve, pack]
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
       DEPLOY_HOST: ${{ vars.DEPLOY_HOST || '212.92.101.15' }}
       DEPLOY_USER: ${{ vars.DEPLOY_USER || 'reference_app_copy' }}
-      BACKENDS: ${{ needs.build.outputs.backends }}
-      FRONTENDS: ${{ needs.build.outputs.frontends }}
+      BACKENDS: ${{ needs.resolve.outputs.backends }}
+      FRONTENDS: ${{ needs.resolve.outputs.frontends }}
     steps:
       - name: Require deploy secrets
         run: |

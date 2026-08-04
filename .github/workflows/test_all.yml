@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       layers:
-        description: "all-enabled | prod-only"
+        description: "ci | prod-only | all-enabled"
         required: false
         default: all-enabled
 

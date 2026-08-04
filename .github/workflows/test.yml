@@ -1,23 +1,18 @@
-# reference-app-copy Tests — defaults: java-spring unit, test-infra, prod_api.
-# Expand via test_all.yml (include_python) or workflow_dispatch inputs.
+# Leaf tests — called by ci.yml (layers=ci | prod-only) or workflow_dispatch / test_all.yml.
 # Flip job-level `if: false` when wiring a deferred layer (see tests/LAYERS.md).
 #
-# Deploy does not run tests. prod_api runs after successful Deploy (workflow_run).
+# layers: ci | prod-only | all-enabled
+#   ci          → unit_backend + test-infra (+ component when enabled)
+#   prod-only   → prod_api (+ prod_e2e when enabled)
+#   all-enabled → ci + prod (manual / test_all)
 
 name: reference-app-copy Tests
 
 on:
-  pull_request:
-    branches: [main]
-  push:
-    branches: [main]
-  workflow_run:
-    workflows: ["reference-app-copy Deploy"]
-    types: [completed]
   workflow_dispatch:
     inputs:
       layers:
-        description: "all-enabled | prod-only"
+        description: "ci | prod-only | all-enabled"
         required: false
         default: all-enabled
       include_python:
@@ -36,11 +31,11 @@ on:
         required: false
         default: false
 
-run-name: reference-app-copy tests (${{ github.event_name }} @ ${{ github.sha }})
+run-name: reference-app-copy tests (${{ inputs.layers || 'all-enabled' }} @ ${{ github.sha }})
 
 concurrency:
-  group: test-reference-app-copy-${{ github.ref }}-${{ github.event_name }}
-  cancel-in-progress: ${{ github.event_name != 'workflow_run' }}
+  group: test-reference-app-copy-${{ github.ref }}-${{ inputs.layers || 'all-enabled' }}
+  cancel-in-progress: true
 
 env:
   TESTS_JAVA: tests/java/tests-java-gradle-junit5-allure3-selenide
@@ -51,10 +46,9 @@ jobs:
   unit_backend:
     name: unit_backend
     if: >-
-      github.event_name == 'pull_request' ||
-      github.event_name == 'push' ||
-      github.event_name == 'workflow_dispatch' ||
-      github.event_name == 'workflow_call'
+      inputs.layers == 'ci' ||
+      inputs.layers == 'all-enabled' ||
+      inputs.layers == ''
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -65,10 +59,9 @@ jobs:
     name: unit_backend_python (${{ matrix.stack }})
     if: >-
       inputs.include_python &&
-      (github.event_name == 'pull_request' ||
-       github.event_name == 'push' ||
-       github.event_name == 'workflow_dispatch' ||
-       github.event_name == 'workflow_call')
+      (inputs.layers == 'ci' ||
+       inputs.layers == 'all-enabled' ||
+       inputs.layers == '')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -99,10 +92,9 @@ jobs:
   test-infra:
     name: test-infra
     if: >-
-      github.event_name == 'pull_request' ||
-      github.event_name == 'push' ||
-      github.event_name == 'workflow_dispatch' ||
-      github.event_name == 'workflow_call'
+      inputs.layers == 'ci' ||
+      inputs.layers == 'all-enabled' ||
+      inputs.layers == ''
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -275,19 +267,13 @@ jobs:
   prod_api:
     name: prod_api
     if: >-
-      (github.event_name == 'workflow_run' &&
-       github.event.workflow_run.conclusion == 'success') ||
-      ((github.event_name == 'workflow_dispatch' ||
-        github.event_name == 'workflow_call') &&
-       (inputs.layers == 'prod-only' ||
-        inputs.layers == 'all-enabled' ||
-        inputs.layers == ''))
+      inputs.layers == 'prod-only' ||
+      inputs.layers == 'all-enabled' ||
+      inputs.layers == ''
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
-        with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
       - uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/prod-api
 
   prod_e2e:

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -93,6 +94,31 @@ def cmd_health(matrix: dict, args: argparse.Namespace) -> int:
     return 0
 
 
+def _build_row(row: dict) -> dict:
+    module = row.get("module")
+    if not module:
+        raise SystemExit(f"FAIL: {row.get('id')} missing module")
+    compose_service = row.get("compose_service") or row["id"]
+    image = row.get("image") or f"reference-app-copy-{row['id']}:latest"
+    return {
+        "id": row["id"],
+        "module": module,
+        "compose_service": compose_service,
+        "image": image,
+    }
+
+
+def cmd_build_matrix(matrix: dict, args: argparse.Namespace) -> int:
+    """JSON array for GHA strategy.matrix.include (compose build targets)."""
+    backends = resolve_backends(matrix, args.backends, args.mode)
+    frontends = resolve_frontends(matrix, args.frontends, args.mode)
+    rows = [_build_row(row) for row in backends + frontends]
+    if not rows:
+        raise SystemExit("FAIL: empty build matrix")
+    print(json.dumps(rows))
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--matrix", type=Path, default=DEFAULT_MATRIX)
@@ -116,6 +142,12 @@ def main() -> int:
     p_health.add_argument("--backends", default="backend-java-spring")
     p_health.add_argument("--frontends", default="frontend-typescript-react")
     p_health.set_defaults(func=cmd_health)
+
+    p_build = sub.add_parser("build-matrix", help="JSON matrix for CD image builds")
+    p_build.add_argument("--mode", choices=("default", "all"), default="default")
+    p_build.add_argument("--backends", default="backend-java-spring")
+    p_build.add_argument("--frontends", default="frontend-typescript-react")
+    p_build.set_defaults(func=cmd_build_matrix)
 
     args = parser.parse_args()
     matrix = load_matrix(args.matrix)
