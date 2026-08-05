@@ -54,7 +54,7 @@ env:
   PUBLIC_HOST: reference-app-copy.autotests.ai
   JAVA_VERSION: "21"
   NODE_VERSION: "26"
-  PYTHON_VERSION: "3.13"
+  PYTHON_VERSION: "3.12"
 
 jobs:
   unit-tests:
