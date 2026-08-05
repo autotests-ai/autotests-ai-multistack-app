@@ -50,6 +50,9 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: gradle
+          # Scope the key to this module, otherwise every Java job shares one entry: the first
+          # job to save wins and the rest re-download their deps on every run.
+          cache-dependency-path: backend/java/backend-java-spring/*.gradle*
       - run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification
         working-directory: backend/java/backend-java-spring
 
@@ -78,6 +81,7 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: gradle
+          cache-dependency-path: tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*
       # Coverage gate reads build/jacoco/test.exec, so it is only meaningful with this filter.
       - run: ./gradlew test jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags=test-infra -DallureReportMode=none
         working-directory: tests/java/tests-java-gradle-junit5-allure3-selenide
@@ -172,6 +176,7 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: gradle
+          cache-dependency-path: tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*
       - run: ./gradlew test -Denv=reference_prod -DincludeTags=api -DallureReportMode=none
         working-directory: tests/java/tests-java-gradle-junit5-allure3-selenide
 
@@ -186,6 +191,7 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: gradle
+          cache-dependency-path: tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*
       - env:
           RUN_ENV: ${{ inputs.env }}
           INCLUDE_TAGS: ${{ inputs.includeTags }}
