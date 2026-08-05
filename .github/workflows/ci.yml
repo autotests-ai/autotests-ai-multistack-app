@@ -4,7 +4,7 @@ name: CI
 # which tests run. Every job below is the same command a student types locally.
 #
 # Active stack defaults live in `env:` once — paths, compose services, prod URL and GHCR
-# package names are derived from them. Swap TESTS_JAVA to …-selenium (or BACKEND / FRONTEND)
+# package names are derived from them. Swap TESTS to …-selenium (or BACKEND / FRONTEND)
 # when the teaching default changes; job ids stay language/layer names, not tool names.
 
 on:
@@ -28,7 +28,7 @@ on:
         type: string
         default: ""
       runners:
-        description: "Extra language runners against prod (module ids = env.TESTS_*)"
+        description: "Extra language runners against prod (side stacks under tests/<lang>/)"
         type: choice
         options: [none, javascript, python, both]
         default: none
@@ -48,10 +48,9 @@ env:
   BACKEND_PORT: "8800"
   FRONTEND: frontend-typescript-react
   FRONTEND_DIR: frontend/typescript/frontend-typescript-react
-  # Java teaching module — selenide today; flip to …-selenium / allure2 / … when that slot goes active
-  TESTS_JAVA: tests-java-gradle-junit5-allure3-selenide
-  TESTS_JAVASCRIPT: tests-javascript-playwright
-  TESTS_PYTHON: tests-python-selenium
+  # Teaching tests module — selenide today; flip to …-selenium / allure2 / … when that slot goes active
+  TESTS: tests-java-gradle-junit5-allure3-selenide
+  TESTS_DIR: tests/java/tests-java-gradle-junit5-allure3-selenide
   PUBLIC_HOST: reference-app-copy.autotests.ai
   JAVA_VERSION: "21"
   NODE_VERSION: "26"
@@ -116,7 +115,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
       # Coverage gate reads build/jacoco/test.exec, so it is only meaningful with this filter.
       - run: ./gradlew test jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags=test-infra -DallureReportMode=none
-        working-directory: tests/java/${{ env.TESTS_JAVA }}
+        working-directory: ${{ env.TESTS_DIR }}
 
   build:
     needs: [unit-tests, component-tests, test-infra-tests]
@@ -212,7 +211,7 @@ jobs:
         with:
           cache-read-only: true
       - run: ./gradlew test -Denv=reference_prod -DincludeTags=api -DallureReportMode=none
-        working-directory: tests/java/${{ env.TESTS_JAVA }}
+        working-directory: ${{ env.TESTS_DIR }}
 
   java-tests:
     if: github.event_name == 'workflow_dispatch' && inputs.includeTags != ''
@@ -233,7 +232,7 @@ jobs:
           INCLUDE_TAGS: ${{ inputs.includeTags }}
           EXCLUDE_TAGS: ${{ inputs.excludeTags }}
         run: ./gradlew test "-Denv=$RUN_ENV" "-DincludeTags=$INCLUDE_TAGS" "-DexcludeTags=$EXCLUDE_TAGS" -DallureReportMode=none
-        working-directory: tests/java/${{ env.TESTS_JAVA }}
+        working-directory: ${{ env.TESTS_DIR }}
 
   javascript-tests:
     if: github.event_name == 'workflow_dispatch' && (inputs.runners == 'javascript' || inputs.runners == 'both')
@@ -247,14 +246,13 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-          cache-dependency-path: tests/javascript/${{ env.TESTS_JAVASCRIPT }}/package-lock.json
+          cache-dependency-path: tests/javascript/tests-javascript-playwright/package-lock.json
       - run: npm ci
-        working-directory: tests/javascript/${{ env.TESTS_JAVASCRIPT }}
-      # Toolchain follows the active TESTS_JAVASCRIPT module (playwright today).
+        working-directory: tests/javascript/tests-javascript-playwright
       - run: npx playwright install --with-deps chromium
-        working-directory: tests/javascript/${{ env.TESTS_JAVASCRIPT }}
+        working-directory: tests/javascript/tests-javascript-playwright
       - run: npm test
-        working-directory: tests/javascript/${{ env.TESTS_JAVASCRIPT }}
+        working-directory: tests/javascript/tests-javascript-playwright
 
   python-tests:
     if: github.event_name == 'workflow_dispatch' && (inputs.runners == 'python' || inputs.runners == 'both')
@@ -268,8 +266,8 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
-          cache-dependency-path: tests/python/${{ env.TESTS_PYTHON }}/requirements.txt
+          cache-dependency-path: tests/python/tests-python-selenium/requirements.txt
       - run: python -m pip install -r requirements.txt
-        working-directory: tests/python/${{ env.TESTS_PYTHON }}
+        working-directory: tests/python/tests-python-selenium
       - run: python -m pytest
-        working-directory: tests/python/${{ env.TESTS_PYTHON }}
+        working-directory: tests/python/tests-python-selenium
