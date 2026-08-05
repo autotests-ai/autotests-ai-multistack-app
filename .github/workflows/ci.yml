@@ -276,12 +276,13 @@ jobs:
 
   # Quality axis (SonarQube) — parallel to pyramid; does not gate build/deploy.
   # Default stack = java (BACKEND_LANG / TESTS_LANG). Soft-skip when SONAR_TOKEN
-  # unset unless vars.SONAR_REQUIRED=true. projectKeys: ${APP_SLUG}-*.
+  # unset unless vars.SONAR_REQUIRED=true.
+  # projectKeys = ${APP_SLUG}-${BACKEND|TESTS} (module folder names, not generic -backend/-tests).
   sonar-backend:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      SONAR_PROJECT_KEY: ${{ vars.SONAR_BACKEND_PROJECT_KEY || format('{0}-backend', env.APP_SLUG) }}
+      SONAR_PROJECT_KEY: ${{ vars.SONAR_BACKEND_PROJECT_KEY || format('{0}-{1}', env.APP_SLUG, env.BACKEND) }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -313,7 +314,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      SONAR_PROJECT_KEY: ${{ vars.SONAR_TESTS_PROJECT_KEY || format('{0}-tests', env.APP_SLUG) }}
+      SONAR_PROJECT_KEY: ${{ vars.SONAR_TESTS_PROJECT_KEY || format('{0}-{1}', env.APP_SLUG, env.TESTS) }}
     steps:
       - uses: actions/checkout@v7
         with:

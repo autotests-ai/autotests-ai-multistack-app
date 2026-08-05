@@ -52,8 +52,8 @@ java {
 
 sonar {
     properties {
-        property 'sonar.projectKey', System.getenv('SONAR_PROJECT_KEY') ?: 'reference-app-copy-tests'
-        property 'sonar.projectName', System.getenv('SONAR_PROJECT_KEY') ?: 'reference-app-copy-tests'
+        property 'sonar.projectKey', System.getenv('SONAR_PROJECT_KEY') ?: 'reference-app-copy-tests-java-gradle-junit5-allure3-selenide'
+        property 'sonar.projectName', System.getenv('SONAR_PROJECT_KEY') ?: 'reference-app-copy-tests-java-gradle-junit5-allure3-selenide'
         property 'sonar.host.url', System.getenv('SONAR_HOST_URL') ?: 'https://sonar.qa.guru'
         // Test sources as main — Selenide/helpers live under src/test/java.
         property 'sonar.sources', 'src/test/java'

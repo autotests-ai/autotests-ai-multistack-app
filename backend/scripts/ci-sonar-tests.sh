@@ -9,7 +9,7 @@ source "$(cd "$(dirname "$0")" && pwd)/paths.sh"
 cd "$TESTS_JAVA_GRADLE_JUNIT5_ALLURE3_SELENIDE"
 
 export SONAR_HOST_URL="${SONAR_HOST_URL:-https://sonar.qa.guru}"
-export SONAR_PROJECT_KEY="${SONAR_PROJECT_KEY:-reference-app-copy-tests}"
+export SONAR_PROJECT_KEY="${SONAR_PROJECT_KEY:-reference-app-copy-tests-java-gradle-junit5-allure3-selenide}"
 export SONAR_REQUIRED="${SONAR_REQUIRED:-false}"
 
 echo "==> test-infra + jacoco (${SONAR_PROJECT_KEY})"

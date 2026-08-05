@@ -20,8 +20,8 @@ plugins {
 
 sonar {
     properties {
-        property 'sonar.projectKey', System.getenv('SONAR_PROJECT_KEY') ?: 'reference-app-copy-backend'
-        property 'sonar.projectName', System.getenv('SONAR_PROJECT_KEY') ?: 'reference-app-copy-backend'
+        property 'sonar.projectKey', System.getenv('SONAR_PROJECT_KEY') ?: 'reference-app-copy-backend-java-spring'
+        property 'sonar.projectName', System.getenv('SONAR_PROJECT_KEY') ?: 'reference-app-copy-backend-java-spring'
         property 'sonar.host.url', System.getenv('SONAR_HOST_URL') ?: 'https://sonar.qa.guru'
         property 'sonar.coverage.jacoco.xmlReportPaths',
                 "${layout.buildDirectory.get()}/reports/jacoco/test/jacocoTestReport.xml"

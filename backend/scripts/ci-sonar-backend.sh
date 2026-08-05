@@ -9,7 +9,7 @@ source "$(cd "$(dirname "$0")" && pwd)/paths.sh"
 cd "$BACKEND_JAVA_SPRING"
 
 export SONAR_HOST_URL="${SONAR_HOST_URL:-https://sonar.qa.guru}"
-export SONAR_PROJECT_KEY="${SONAR_PROJECT_KEY:-reference-app-copy-backend}"
+export SONAR_PROJECT_KEY="${SONAR_PROJECT_KEY:-reference-app-copy-backend-java-spring}"
 export SONAR_REQUIRED="${SONAR_REQUIRED:-false}"
 
 echo "==> unit + jacoco (${SONAR_PROJECT_KEY})"
