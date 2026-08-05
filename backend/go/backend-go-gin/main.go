@@ -1,0 +1,78 @@
+// Command backend-go-gin serves the reference JSON API with the Gin framework.
+package main
+
+import (
+	"context"
+	_ "embed"
+	"errors"
+	"log"
+	"net"
+	"net/http"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"dev.reference/backend-go-gin/internal/api"
+	"dev.reference/backend-go-gin/internal/config"
+	"dev.reference/backend-go-gin/internal/security"
+	"dev.reference/backend-go-gin/internal/store"
+)
+
+// The schema travels inside the binary so the runtime image needs nothing but the binary.
+//
+//go:embed schema.sql
+var schemaSQL string
+
+const (
+	databaseReadyTimeout = 60 * time.Second
+	readHeaderTimeout    = 10 * time.Second
+	shutdownTimeout      = 10 * time.Second
+)
+
+func main() {
+	cfg := config.Load()
+
+	pg, err := store.Open(cfg.DatabaseURL)
+	if err != nil {
+		log.Fatalf("%s: %v", cfg.ServiceName, err)
+	}
+	defer func() { _ = pg.Close() }()
+
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	if err := pg.WaitReady(ctx, databaseReadyTimeout); err != nil {
+		log.Fatalf("%s: %v", cfg.ServiceName, err)
+	}
+	if err := pg.ApplySchema(ctx, schemaSQL); err != nil {
+		log.Fatalf("%s: %v", cfg.ServiceName, err)
+	}
+	if err := store.Seed(ctx, pg, security.HashPassword); err != nil {
+		log.Fatalf("%s: seed: %v", cfg.ServiceName, err)
+	}
+
+	handler := api.NewHandler(
+		pg,
+		security.NewTokenService(cfg.JWTSecret, cfg.JWTExpiration),
+		cfg.ServiceName,
+	)
+	server := &http.Server{
+		Addr:              net.JoinHostPort("0.0.0.0", cfg.ServerPort),
+		Handler:           api.NewRouter(handler),
+		ReadHeaderTimeout: readHeaderTimeout,
+	}
+
+	go func() {
+		<-ctx.Done()
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+		defer cancel()
+		if err := server.Shutdown(shutdownCtx); err != nil {
+			log.Printf("%s: shutdown: %v", cfg.ServiceName, err)
+		}
+	}()
+
+	log.Printf("%s listening on %s", cfg.ServiceName, server.Addr)
+	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Fatalf("%s: %v", cfg.ServiceName, err)
+	}
+}

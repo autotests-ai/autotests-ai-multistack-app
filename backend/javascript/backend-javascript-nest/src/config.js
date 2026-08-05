@@ -1,0 +1,38 @@
+'use strict';
+
+const SERVICE_NAME = 'backend-javascript-nest';
+const DEFAULT_DB_NAME = 'reference_app_javascript_nest';
+
+function env(name, fallback) {
+  const value = process.env[name];
+  return value === undefined || value === '' ? fallback : value;
+}
+
+function databaseUrl() {
+  const url = env('DATABASE_URL');
+  if (url) {
+    return url;
+  }
+  const host = env('DB_HOST', 'localhost');
+  const port = env('DB_PORT', '5432');
+  const name = env('DB_NAME', DEFAULT_DB_NAME);
+  const user = env('DB_USER', 'reference');
+  const password = env('DB_PASSWORD', 'reference');
+  return `postgresql://${user}:${password}@${host}:${port}/${name}`;
+}
+
+function config() {
+  return {
+    serviceName: SERVICE_NAME,
+    databaseUrl: databaseUrl(),
+    serverPort: Number(env('SERVER_PORT', '8080')),
+    jwtSecret: env(
+      'JWT_SECRET',
+      'reference-app-dev-secret-change-in-production-min-32-chars'
+    ),
+    jwtExpirationMs: Number(env('JWT_EXPIRATION_MS', '86400000')),
+    postAuthRedirect: '/',
+  };
+}
+
+module.exports = { SERVICE_NAME, DEFAULT_DB_NAME, config, databaseUrl };

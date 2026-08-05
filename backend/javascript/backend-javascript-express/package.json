@@ -1,0 +1,33 @@
+{
+  "name": "backend-javascript-express",
+  "version": "1.0.0",
+  "description": "JavaScript Express JSON API mirroring the backend-java-spring contract",
+  "private": true,
+  "license": "MIT",
+  "type": "commonjs",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "jest --runInBand"
+  },
+  "dependencies": {
+    "bcryptjs": "3.0.3",
+    "cors": "2.8.6",
+    "express": "5.2.1",
+    "jsonwebtoken": "9.0.3",
+    "pg": "8.22.0"
+  },
+  "devDependencies": {
+    "jest": "30.4.2",
+    "supertest": "7.2.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "src/**/*.js"
+    ]
+  }
+}
