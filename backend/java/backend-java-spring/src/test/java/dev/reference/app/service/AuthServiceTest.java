@@ -14,12 +14,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -63,7 +65,7 @@ class AuthServiceTest {
         assertEquals("/", response.redirectUrl());
 
         var userCaptor = ArgumentCaptor.forClass(UserEntity.class);
-        verify(userRepository).save(userCaptor.capture());
+        verify(userRepository).saveAndFlush(userCaptor.capture());
         assertEquals("newuser", userCaptor.getValue().getUsername());
         assertEquals(HASH, userCaptor.getValue().getPasswordHash());
     }
@@ -76,6 +78,23 @@ class AuthServiceTest {
         AuthException ex = assertThrows(
                 AuthException.class,
                 () -> authService.register(new RegisterRequest(USERNAME, "password123"))
+        );
+
+        assertEquals(409, ex.getStatus());
+        assertEquals("Username already taken", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("register maps a lost unique-constraint race to 409")
+    void registerLosesUniqueConstraintRace() {
+        when(userRepository.existsByUsername(USERNAME)).thenReturn(false);
+        when(passwordEncoder.encode(PASSWORD)).thenReturn(HASH);
+        when(userRepository.saveAndFlush(any(UserEntity.class)))
+                .thenThrow(new DataIntegrityViolationException("duplicate key value violates unique constraint"));
+
+        AuthException ex = assertThrows(
+                AuthException.class,
+                () -> authService.register(new RegisterRequest(USERNAME, PASSWORD))
         );
 
         assertEquals(409, ex.getStatus());

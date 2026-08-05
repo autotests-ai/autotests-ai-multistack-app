@@ -12,10 +12,12 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentCaptor
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.security.crypto.password.PasswordEncoder
 import java.util.Optional
 
@@ -53,7 +55,7 @@ class AuthServiceTest {
         assertEquals("/", response.redirectUrl)
 
         val userCaptor = ArgumentCaptor.forClass(UserEntity::class.java)
-        verify(userRepository).save(userCaptor.capture())
+        verify(userRepository).saveAndFlush(userCaptor.capture())
         assertEquals("newuser", userCaptor.value.username)
         assertEquals(HASH, userCaptor.value.passwordHash)
     }
@@ -65,6 +67,22 @@ class AuthServiceTest {
 
         val ex = assertThrows(AuthException::class.java) {
             authService.register(RegisterRequest(USERNAME, "password123"))
+        }
+
+        assertEquals(409, ex.status)
+        assertEquals("Username already taken", ex.message)
+    }
+
+    @Test
+    @DisplayName("register maps a lost unique-constraint race to 409")
+    fun registerLosesUniqueConstraintRace() {
+        `when`(userRepository.existsByUsername(USERNAME)).thenReturn(false)
+        `when`(passwordEncoder.encode(PASSWORD)).thenReturn(HASH)
+        `when`(userRepository.saveAndFlush(any(UserEntity::class.java)))
+            .thenThrow(DataIntegrityViolationException("duplicate key value violates unique constraint"))
+
+        val ex = assertThrows(AuthException::class.java) {
+            authService.register(RegisterRequest(USERNAME, PASSWORD))
         }
 
         assertEquals(409, ex.status)

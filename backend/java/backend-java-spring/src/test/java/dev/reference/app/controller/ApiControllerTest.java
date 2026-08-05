@@ -39,12 +39,12 @@ class ApiControllerTest {
     @Test
     @DisplayName("GET /api/health returns ok")
     void healthReturnsOk() throws Exception {
-        when(itemService.health()).thenReturn(new HealthResponse("ok", "reference-app-copy"));
+        when(itemService.health()).thenReturn(new HealthResponse("ok", "backend-java-spring"));
 
         mockMvc.perform(get("/api/health"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ok"))
-                .andExpect(jsonPath("$.service").value("reference-app-copy"));
+                .andExpect(jsonPath("$.service").value("backend-java-spring"));
     }
 
     @Test

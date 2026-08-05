@@ -134,4 +134,14 @@ class AuthControllerTest {
                         .content("{\"username\":\"shortuser\",\"password\":\"abc\"}"))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    @DisplayName("POST /api/auth/register rejects an unreadable body with 400")
+    void registerRejectsUnreadableBody() throws Exception {
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("not json"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Request body is not valid JSON"));
+    }
 }

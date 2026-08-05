@@ -7,6 +7,7 @@ import dev.reference.app.dto.UserProfileResponse;
 import dev.reference.app.entity.UserEntity;
 import dev.reference.app.exception.AuthException;
 import dev.reference.app.repository.UserRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,7 +41,13 @@ public class AuthService {
                 request.username(),
                 passwordEncoder.encode(request.password())
         );
-        userRepository.save(user);
+        try {
+            // Flush inside the try so a concurrent insert that won the race surfaces here as 409
+            // rather than escaping as a commit-time 500.
+            userRepository.saveAndFlush(user);
+        } catch (DataIntegrityViolationException ex) {
+            throw new AuthException(409, "Username already taken");
+        }
         return buildAuthResponse(user.getUsername());
     }
 

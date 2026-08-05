@@ -136,4 +136,27 @@ class AuthControllerTest {
         )
             .andExpect(status().isBadRequest)
     }
+
+    @Test
+    @DisplayName("POST /api/auth/register rejects an unreadable body with 400")
+    fun registerRejectsUnreadableBody() {
+        mockMvc.perform(
+            post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("not json"),
+        )
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.message").value("Request body is not valid JSON"))
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/register rejects a missing field with 400")
+    fun registerRejectsMissingField() {
+        mockMvc.perform(
+            post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{}"""),
+        )
+            .andExpect(status().isBadRequest)
+    }
 }

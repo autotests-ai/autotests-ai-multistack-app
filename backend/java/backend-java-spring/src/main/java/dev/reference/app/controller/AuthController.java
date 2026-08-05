@@ -9,6 +9,7 @@ import dev.reference.app.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -69,5 +70,11 @@ class AuthExceptionHandler {
                 .map(error -> error.getField() + " " + error.getDefaultMessage())
                 .collect(Collectors.joining("; "));
         return ResponseEntity.badRequest().body(Map.of("message", message));
+    }
+
+    // Same /error trap as above: a body Jackson cannot read must not surface as 401.
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    ResponseEntity<Map<String, String>> handleUnreadableBody() {
+        return ResponseEntity.badRequest().body(Map.of("message", "Request body is not valid JSON"));
     }
 }
