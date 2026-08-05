@@ -51,7 +51,11 @@ jobs:
           java-version: "21"
       # Owns the Gradle User Home cache: entries are keyed per job, so the four Java jobs no
       # longer share one. setup-java's `cache: gradle` must stay off — both cache ~/.gradle.
+      # Without a key the action refuses to cache the configuration-cache entry, since that
+      # entry can hold credentials read at configuration time.
       - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
       - run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification
         working-directory: backend/java/backend-java-spring
 
