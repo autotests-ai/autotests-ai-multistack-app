@@ -55,13 +55,18 @@ env:
   NODE_VERSION: "26"
   PYTHON_VERSION: "3.12"
   GO_VERSION: "1.25"
+  # ── Allure / Telegram (publish-allure reads these; set once) ─────────────
+  ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}
+  ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
+  ALLURE_PROJECT_ID: ${{ vars.ALLURE_PROJECT_ID }}
+  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
+  TELEGRAM_CHAT_ID: "-1004381150566"
+  TELEGRAM_TOPIC_ID: ${{ secrets.TELEGRAM_REFERENCE_APP_TOPIC_ID || vars.TELEGRAM_REFERENCE_APP_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || vars.TELEGRAM_TOPIC_ID || '3' }}
 
 jobs:
   unit-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
-      ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -109,11 +114,6 @@ jobs:
           report-dir: build/reports/allure-report
           allure-config: ""
           enable-notifications: "false"
-          allure-endpoint: ${{ env.ALLURE_ENDPOINT }}
-          allure-token: ${{ secrets.ALLURE_TOKEN }}
-          allure-project-id: ${{ vars.ALLURE_PROJECT_ID }}
-          test-outcome: ${{ steps.run-tests.outcome }}
-          build-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           launch-name: "unit — ${{ github.repository }} #${{ github.run_number }}"
       - if: always() && (env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin')
         continue-on-error: true
@@ -164,8 +164,6 @@ jobs:
   component-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
@@ -191,18 +189,11 @@ jobs:
           report-dir: allure-report
           allure-config: ""
           enable-notifications: "false"
-          allure-endpoint: ${{ env.ALLURE_ENDPOINT }}
-          allure-token: ${{ secrets.ALLURE_TOKEN }}
-          allure-project-id: ${{ vars.ALLURE_PROJECT_ID }}
-          test-outcome: ${{ steps.run-tests.outcome }}
-          build-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           launch-name: "component — ${{ github.repository }} #${{ github.run_number }}"
 
   test-infra-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -230,15 +221,7 @@ jobs:
         with:
           tests-dir: ${{ env.TESTS_DIR }}
           artifact-suffix: test-infra-tests
-          allure-endpoint: ${{ env.ALLURE_ENDPOINT }}
-          allure-token: ${{ secrets.ALLURE_TOKEN }}
-          allure-project-id: ${{ vars.ALLURE_PROJECT_ID }}
-          telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
-          telegram-topic-id: ${{ secrets.TELEGRAM_REFERENCE_APP_TOPIC_ID || vars.TELEGRAM_REFERENCE_APP_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || vars.TELEGRAM_TOPIC_ID || '3' }}
-          notification-live: ${{ github.event_name != 'pull_request' }}
           notification-project: "reference-app-copy test-infra #${{ github.run_number }}"
-          test-outcome: ${{ steps.run-tests.outcome }}
-          build-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           launch-name: "test-infra — ${{ github.repository }} #${{ github.run_number }}"
       - if: always() && env.TESTS_LANG == 'java'
         continue-on-error: true
@@ -442,8 +425,6 @@ jobs:
     needs: deploy
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
-      ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -467,15 +448,7 @@ jobs:
         with:
           tests-dir: ${{ env.TESTS_DIR }}
           artifact-suffix: api-tests
-          allure-endpoint: ${{ env.ALLURE_ENDPOINT }}
-          allure-token: ${{ secrets.ALLURE_TOKEN }}
-          allure-project-id: ${{ vars.ALLURE_PROJECT_ID }}
-          telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
-          telegram-topic-id: ${{ secrets.TELEGRAM_REFERENCE_APP_TOPIC_ID || vars.TELEGRAM_REFERENCE_APP_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || vars.TELEGRAM_TOPIC_ID || '3' }}
-          notification-live: ${{ github.event_name != 'pull_request' }}
           notification-project: "reference-app-copy api #${{ github.run_number }}"
-          test-outcome: ${{ steps.run-tests.outcome }}
-          build-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           launch-name: "api — ${{ github.repository }} #${{ github.run_number }}"
 
       # ── javascript / typescript (full suite) ──────────────────────────────
@@ -521,8 +494,6 @@ jobs:
       (inputs.layers == 'integration' || inputs.layers == 'all')
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -548,15 +519,7 @@ jobs:
         with:
           tests-dir: ${{ env.TESTS_DIR }}
           artifact-suffix: integration-tests
-          allure-endpoint: ${{ env.ALLURE_ENDPOINT }}
-          allure-token: ${{ secrets.ALLURE_TOKEN }}
-          allure-project-id: ${{ vars.ALLURE_PROJECT_ID }}
-          telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
-          telegram-topic-id: ${{ secrets.TELEGRAM_REFERENCE_APP_TOPIC_ID || vars.TELEGRAM_REFERENCE_APP_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || vars.TELEGRAM_TOPIC_ID || '3' }}
-          notification-live: ${{ github.event_name != 'pull_request' }}
           notification-project: "reference-app-copy integration #${{ github.run_number }}"
-          test-outcome: ${{ steps.run-tests.outcome }}
-          build-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           launch-name: "integration — ${{ github.repository }} #${{ github.run_number }}"
 
   e2e-tests:
@@ -565,8 +528,6 @@ jobs:
       (inputs.layers == 'e2e' || inputs.layers == 'all')
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -591,15 +552,7 @@ jobs:
         with:
           tests-dir: ${{ env.TESTS_DIR }}
           artifact-suffix: e2e-tests
-          allure-endpoint: ${{ env.ALLURE_ENDPOINT }}
-          allure-token: ${{ secrets.ALLURE_TOKEN }}
-          allure-project-id: ${{ vars.ALLURE_PROJECT_ID }}
-          telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
-          telegram-topic-id: ${{ secrets.TELEGRAM_REFERENCE_APP_TOPIC_ID || vars.TELEGRAM_REFERENCE_APP_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || vars.TELEGRAM_TOPIC_ID || '3' }}
-          notification-live: ${{ github.event_name != 'pull_request' }}
           notification-project: "reference-app-copy e2e #${{ github.run_number }}"
-          test-outcome: ${{ steps.run-tests.outcome }}
-          build-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           launch-name: "e2e — ${{ github.repository }} #${{ github.run_number }}"
 
       # ── javascript / typescript (full suite; no tag pyramid yet) ──────────
@@ -643,8 +596,6 @@ jobs:
       (inputs.layers == 'visual' || inputs.layers == 'all')
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -669,15 +620,7 @@ jobs:
         with:
           tests-dir: ${{ env.TESTS_DIR }}
           artifact-suffix: visual-tests
-          allure-endpoint: ${{ env.ALLURE_ENDPOINT }}
-          allure-token: ${{ secrets.ALLURE_TOKEN }}
-          allure-project-id: ${{ vars.ALLURE_PROJECT_ID }}
-          telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
-          telegram-topic-id: ${{ secrets.TELEGRAM_REFERENCE_APP_TOPIC_ID || vars.TELEGRAM_REFERENCE_APP_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || vars.TELEGRAM_TOPIC_ID || '3' }}
-          notification-live: ${{ github.event_name != 'pull_request' }}
           notification-project: "reference-app-copy visual #${{ github.run_number }}"
-          test-outcome: ${{ steps.run-tests.outcome }}
-          build-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           launch-name: "visual — ${{ github.repository }} #${{ github.run_number }}"
 
   manual-tests:
@@ -686,8 +629,6 @@ jobs:
       (inputs.layers == 'manual' || inputs.layers == 'all')
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -712,13 +653,5 @@ jobs:
         with:
           tests-dir: ${{ env.TESTS_DIR }}
           artifact-suffix: manual-tests
-          allure-endpoint: ${{ env.ALLURE_ENDPOINT }}
-          allure-token: ${{ secrets.ALLURE_TOKEN }}
-          allure-project-id: ${{ vars.ALLURE_PROJECT_ID }}
-          telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
-          telegram-topic-id: ${{ secrets.TELEGRAM_REFERENCE_APP_TOPIC_ID || vars.TELEGRAM_REFERENCE_APP_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || vars.TELEGRAM_TOPIC_ID || '3' }}
-          notification-live: ${{ github.event_name != 'pull_request' }}
           notification-project: "reference-app-copy manual #${{ github.run_number }}"
-          test-outcome: ${{ steps.run-tests.outcome }}
-          build-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           launch-name: "manual — ${{ github.repository }} #${{ github.run_number }}"
