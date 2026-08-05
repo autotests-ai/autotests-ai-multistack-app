@@ -19,7 +19,7 @@ Module folders: `-` between segments, `_` in compounds (`react_testing_library`,
                     ├─────────────┤
                     │  test-infra   │ tests/testinfra (@Layer test-infra, @Tag test-infra)
                     ├─────────────┤
-                    │ unit │ Spring, JaCoCo (product code)
+                    │ unit │ active backend (product code)
                     └─────────────┘
 ```
 
@@ -48,7 +48,7 @@ per-run `-D<key>=<value>`. Available keys: `src/test/resources/config/default.pr
 
 | Layer | Zone | Where | Selector | Run |
 |-------|------|-------|----------|-----|
-| unit | backend | `backend/java/backend-java-spring/src/test/` | all backend tests | `./gradlew test` (+ JaCoCo) |
+| unit | backend | active `BACKEND_DIR` (default `backend/java/backend-java-spring/`) | all backend unit tests | by `BACKEND_LANG`: gradle+JaCoCo · `pytest` · `go test` · `npm test` — see [backend/README.md](../backend/README.md) |
 | test-infra | tests | `…/tests/testinfra/` | `@Layer("test-infra")` + `@Tag("test-infra")` | `-DincludeTags=test-infra` |
 | component | frontend | `frontend/typescript/frontend-typescript-react/src/test/` | Vitest | `npm test` |
 | api | tests | `…/tests/api/` | `@Tag("api")` | `-DincludeTags=api` |
@@ -66,7 +66,7 @@ Paths SSOT: `backend/scripts/paths.sh`. Module naming: [NAMING.md](NAMING.md).
 
 | Job | Product under test |
 |-----|--------------------|
-| `unit-tests` | **Application** (Spring services, controllers, JWT) |
+| `unit-tests` | **Application** (active backend — services, controllers, JWT; toolchain from `BACKEND_LANG`) |
 | `test-infra-tests` | **Test tooling** (ConfigReader, HarCapture, CSS helpers) — not a second pyramid tip for the app |
 
 Students: one product unit layer (`unit-tests`); test-infra = harness checks that drive higher layers.
@@ -93,7 +93,7 @@ Not duplicates — different failure modes. Chrome layout for the app is `integr
 | Push to `main` | the same three → `build` → `deploy` → `api-tests` on `reference_prod` |
 | `workflow_dispatch` | `java-tests` with the `env` / `includeTags` / `excludeTags` you type; `javascript-tests` / `python-tests` behind the `runners` input (`none` \| `javascript` \| `python` \| `both`) |
 
-Active stack and prod URL are workflow `env` defaults in [`ci.yml`](../.github/workflows/ci.yml) (`BACKEND`, `FRONTEND`, `TESTS`) — change once, jobs reuse them. Job ids are layers or languages, not tools (`javascript-tests`, not `playwright-tests`).
+Active stack and prod URL are workflow `env` defaults in [`ci.yml`](../.github/workflows/ci.yml) (`BACKEND`, `BACKEND_LANG`, `FRONTEND`, `TESTS`) — change once, jobs reuse them. Job ids are layers or languages, not tools (`javascript-tests`, not `playwright-tests`).
 
 Nothing runs on a schedule. Browser layers (integration, e2e, visual, manual) have no PR job: a
 GitHub runner has no compose stack, and against prod they belong to a deliberate dispatch run.

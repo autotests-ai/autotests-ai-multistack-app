@@ -73,15 +73,15 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · all jobs live in [`.github/workflow
 
 | Job | Where |
 |-----|-------|
-| `unit-tests` | `BACKEND_DIR` — `./gradlew test` + JaCoCo |
+| `unit-tests` | `BACKEND_DIR` — command by `BACKEND_LANG` (gradle/JaCoCo, pytest, `go test`, or `npm test`) |
 | `test-infra-tests` | `TESTS_DIR` — `-Denv=reference_ci -DincludeTags=test-infra` |
 | `component-tests` | `FRONTEND_DIR` — `npm test` |
 | `api-tests` | `TESTS_DIR` — `-Denv=reference_prod -DincludeTags=api` after deploy |
 
 The first three block a pull request. Browser layers (integration, e2e, visual, manual) and
 extra language runners have no scheduled job — dispatch with `includeTags` / `runners`
-(`javascript` \| `python` \| `both`) when you want them. Stack defaults (`BACKEND` / `FRONTEND` /
-`TESTS`) live once at the top of [`ci.yml`](.github/workflows/ci.yml).
+(`javascript` \| `python` \| `both`) when you want them. Stack defaults (`BACKEND` /
+`BACKEND_LANG` / `FRONTEND` / `TESTS`) live once at the top of [`ci.yml`](.github/workflows/ci.yml).
 
 ## Ports (local = prod host upstream)
 
