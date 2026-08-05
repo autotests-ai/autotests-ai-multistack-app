@@ -94,7 +94,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ${{ env.BACKEND_DIR }}/.gradle/configuration-cache
-          key: gradle-cc-${{ env.BACKEND }}-${{ hashFiles('backend/kotlin/backend-kotlin-spring/*.gradle*', 'backend/kotlin/backend-kotlin-spring/gradle/wrapper/gradle-wrapper.properties', 'backend/kotlin/backend-kotlin-spring/gradle.properties') }}-${{ github.sha }}
+          key: gradle-cc-${{ env.BACKEND }}-${{ hashFiles('backend/kotlin/backend-kotlin-spring/*.gradle*', 'backend/kotlin/backend-kotlin-spring/gradle/wrapper/gradle-wrapper.properties') }}-${{ github.sha }}
           restore-keys: |
             gradle-cc-${{ env.BACKEND }}-
       - if: env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin'
