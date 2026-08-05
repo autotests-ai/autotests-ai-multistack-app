@@ -21,6 +21,7 @@
  */
 
 buildscript {
+    // Shared pins (junit/slf4j/java) — SSOT: generators/ethalon/tests-java/_ethalon/versions.yaml
     ext {
         allurePluginVersion = '4.1.0'
         allureVersion       = '3.13.0'
@@ -39,6 +40,12 @@ plugins {
     id 'java-library'
     id 'jacoco'
     id 'io.qameta.allure' version "${allurePluginVersion}"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 def allureReportMode = System.getProperty('allureReportMode', 'allure3')

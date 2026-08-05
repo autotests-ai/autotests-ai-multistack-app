@@ -10,6 +10,7 @@ buildscript {
         allureVersion = '3.13.0'
         allureBomVersion = '2.35.2'
         seleniumVersion = '4.45.0'
+        // Shared pins — SSOT: generators/ethalon/tests-java/_ethalon/versions.yaml
         junitVersion = '5.11.4'
         slf4jVersion = '2.0.17'
     }
