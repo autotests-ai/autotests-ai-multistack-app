@@ -6,7 +6,7 @@ name: CI
 #
 # Active stack defaults live in `env:` once — paths, compose services, prod URL and GHCR
 # package names are derived from them. Swap TESTS / TESTS_DIR / TESTS_LANG (or BACKEND /
-# FRONTEND) when the teaching default changes; job ids stay language/layer names, not tools.
+# FRONTEND) when the teaching default changes; job ids stay layer names, not languages/tools.
 
 on:
   pull_request:
@@ -24,11 +24,6 @@ on:
         description: "Browser layer jobs (java tag slice; other TESTS_LANG → full suite on e2e-tests only)"
         type: choice
         options: [none, integration, e2e, visual, manual, all]
-        default: none
-      runners:
-        description: "Extra language runners against prod (side stacks under tests/<lang>/)"
-        type: choice
-        options: [none, javascript, python, both]
         default: none
 
 concurrency:
@@ -485,42 +480,3 @@ jobs:
           RUN_ENV: ${{ inputs.env }}
         run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=manual -DallureReportMode=none
         working-directory: ${{ env.TESTS_DIR }}
-
-  javascript-tests:
-    if: github.event_name == 'workflow_dispatch' && (inputs.runners == 'javascript' || inputs.runners == 'both')
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: tests/javascript/tests-javascript-playwright/package-lock.json
-      - run: npm ci
-        working-directory: tests/javascript/tests-javascript-playwright
-      - run: npx playwright install --with-deps chromium
-        working-directory: tests/javascript/tests-javascript-playwright
-      # job.env cannot read workflow env; steps.env can.
-      - run: npm test
-        working-directory: tests/javascript/tests-javascript-playwright
-        env:
-          UI_URL: https://${{ env.PUBLIC_HOST }}/${{ env.BACKEND }}/${{ env.FRONTEND }}/
-
-  python-tests:
-    if: github.event_name == 'workflow_dispatch' && (inputs.runners == 'python' || inputs.runners == 'both')
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v6
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-          cache-dependency-path: tests/python/tests-python-selenium/requirements.txt
-      - run: python -m pip install -r requirements.txt
-        working-directory: tests/python/tests-python-selenium
-      - run: python -m pytest
-        working-directory: tests/python/tests-python-selenium
-        env:
-          BASE_URL: https://${{ env.PUBLIC_HOST }}/${{ env.BACKEND }}/${{ env.FRONTEND }}/
