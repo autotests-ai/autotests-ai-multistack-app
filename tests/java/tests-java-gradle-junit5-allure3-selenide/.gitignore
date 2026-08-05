@@ -15,3 +15,4 @@ allure-results/
 bin/
 node_modules/
 package-lock.json
+notifications/config.runtime.json

@@ -290,6 +290,8 @@ jobs:
     needs: deploy
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -305,8 +307,24 @@ jobs:
         with:
           cache-read-only: true
       - if: env.TESTS_LANG == 'java'
-        run: ./gradlew test -Denv=reference_prod -DincludeTags=api -DallureReportMode=none
+        id: run-tests
+        run: ./gradlew test -Denv=reference_prod -DincludeTags=api
         working-directory: ${{ env.TESTS_DIR }}
+      - if: always() && env.TESTS_LANG == 'java'
+        uses: ./.github/actions/publish-allure
+        with:
+          tests-dir: ${{ env.TESTS_DIR }}
+          artifact-suffix: api-tests
+          allure-endpoint: ${{ env.ALLURE_ENDPOINT }}
+          allure-token: ${{ secrets.ALLURE_TOKEN }}
+          allure-project-id: ${{ vars.ALLURE_PROJECT_ID }}
+          telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
+          telegram-topic-id: ${{ secrets.TELEGRAM_REFERENCE_APP_TOPIC_ID || vars.TELEGRAM_REFERENCE_APP_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || vars.TELEGRAM_TOPIC_ID || '3' }}
+          notification-live: ${{ github.event_name != 'pull_request' }}
+          notification-project: "reference-app-copy api #${{ github.run_number }}"
+          test-outcome: ${{ steps.run-tests.outcome }}
+          build-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          launch-name: "api — ${{ github.repository }} #${{ github.run_number }}"
 
       # ── javascript / typescript (full suite) ──────────────────────────────
       - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
@@ -351,6 +369,8 @@ jobs:
       (inputs.layers == 'integration' || inputs.layers == 'all')
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -366,10 +386,26 @@ jobs:
         with:
           cache-read-only: true
       - if: env.TESTS_LANG == 'java'
+        id: run-tests
         env:
           RUN_ENV: ${{ inputs.env }}
-        run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=mount -DallureReportMode=none
+        run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=mount
         working-directory: ${{ env.TESTS_DIR }}
+      - if: always() && env.TESTS_LANG == 'java'
+        uses: ./.github/actions/publish-allure
+        with:
+          tests-dir: ${{ env.TESTS_DIR }}
+          artifact-suffix: integration-tests
+          allure-endpoint: ${{ env.ALLURE_ENDPOINT }}
+          allure-token: ${{ secrets.ALLURE_TOKEN }}
+          allure-project-id: ${{ vars.ALLURE_PROJECT_ID }}
+          telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
+          telegram-topic-id: ${{ secrets.TELEGRAM_REFERENCE_APP_TOPIC_ID || vars.TELEGRAM_REFERENCE_APP_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || vars.TELEGRAM_TOPIC_ID || '3' }}
+          notification-live: ${{ github.event_name != 'pull_request' }}
+          notification-project: "reference-app-copy integration #${{ github.run_number }}"
+          test-outcome: ${{ steps.run-tests.outcome }}
+          build-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          launch-name: "integration — ${{ github.repository }} #${{ github.run_number }}"
 
   e2e-tests:
     if: >-
@@ -377,6 +413,8 @@ jobs:
       (inputs.layers == 'e2e' || inputs.layers == 'all')
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -391,10 +429,26 @@ jobs:
         with:
           cache-read-only: true
       - if: env.TESTS_LANG == 'java'
+        id: run-tests
         env:
           RUN_ENV: ${{ inputs.env }}
-        run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=smoke -DexcludeTags=visual -DallureReportMode=none
+        run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=smoke -DexcludeTags=visual
         working-directory: ${{ env.TESTS_DIR }}
+      - if: always() && env.TESTS_LANG == 'java'
+        uses: ./.github/actions/publish-allure
+        with:
+          tests-dir: ${{ env.TESTS_DIR }}
+          artifact-suffix: e2e-tests
+          allure-endpoint: ${{ env.ALLURE_ENDPOINT }}
+          allure-token: ${{ secrets.ALLURE_TOKEN }}
+          allure-project-id: ${{ vars.ALLURE_PROJECT_ID }}
+          telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
+          telegram-topic-id: ${{ secrets.TELEGRAM_REFERENCE_APP_TOPIC_ID || vars.TELEGRAM_REFERENCE_APP_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || vars.TELEGRAM_TOPIC_ID || '3' }}
+          notification-live: ${{ github.event_name != 'pull_request' }}
+          notification-project: "reference-app-copy e2e #${{ github.run_number }}"
+          test-outcome: ${{ steps.run-tests.outcome }}
+          build-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          launch-name: "e2e — ${{ github.repository }} #${{ github.run_number }}"
 
       # ── javascript / typescript (full suite; no tag pyramid yet) ──────────
       - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
@@ -437,6 +491,8 @@ jobs:
       (inputs.layers == 'visual' || inputs.layers == 'all')
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -451,10 +507,26 @@ jobs:
         with:
           cache-read-only: true
       - if: env.TESTS_LANG == 'java'
+        id: run-tests
         env:
           RUN_ENV: ${{ inputs.env }}
-        run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=visual -DallureReportMode=none
+        run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=visual
         working-directory: ${{ env.TESTS_DIR }}
+      - if: always() && env.TESTS_LANG == 'java'
+        uses: ./.github/actions/publish-allure
+        with:
+          tests-dir: ${{ env.TESTS_DIR }}
+          artifact-suffix: visual-tests
+          allure-endpoint: ${{ env.ALLURE_ENDPOINT }}
+          allure-token: ${{ secrets.ALLURE_TOKEN }}
+          allure-project-id: ${{ vars.ALLURE_PROJECT_ID }}
+          telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
+          telegram-topic-id: ${{ secrets.TELEGRAM_REFERENCE_APP_TOPIC_ID || vars.TELEGRAM_REFERENCE_APP_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || vars.TELEGRAM_TOPIC_ID || '3' }}
+          notification-live: ${{ github.event_name != 'pull_request' }}
+          notification-project: "reference-app-copy visual #${{ github.run_number }}"
+          test-outcome: ${{ steps.run-tests.outcome }}
+          build-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          launch-name: "visual — ${{ github.repository }} #${{ github.run_number }}"
 
   manual-tests:
     if: >-
@@ -462,6 +534,8 @@ jobs:
       (inputs.layers == 'manual' || inputs.layers == 'all')
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -476,7 +550,23 @@ jobs:
         with:
           cache-read-only: true
       - if: env.TESTS_LANG == 'java'
+        id: run-tests
         env:
           RUN_ENV: ${{ inputs.env }}
-        run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=manual -DallureReportMode=none
+        run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=manual
         working-directory: ${{ env.TESTS_DIR }}
+      - if: always() && env.TESTS_LANG == 'java'
+        uses: ./.github/actions/publish-allure
+        with:
+          tests-dir: ${{ env.TESTS_DIR }}
+          artifact-suffix: manual-tests
+          allure-endpoint: ${{ env.ALLURE_ENDPOINT }}
+          allure-token: ${{ secrets.ALLURE_TOKEN }}
+          allure-project-id: ${{ vars.ALLURE_PROJECT_ID }}
+          telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
+          telegram-topic-id: ${{ secrets.TELEGRAM_REFERENCE_APP_TOPIC_ID || vars.TELEGRAM_REFERENCE_APP_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || vars.TELEGRAM_TOPIC_ID || '3' }}
+          notification-live: ${{ github.event_name != 'pull_request' }}
+          notification-project: "reference-app-copy manual #${{ github.run_number }}"
+          test-outcome: ${{ steps.run-tests.outcome }}
+          build-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          launch-name: "manual — ${{ github.repository }} #${{ github.run_number }}"

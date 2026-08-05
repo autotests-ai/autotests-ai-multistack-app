@@ -1,0 +1,192 @@
+name: Publish Allure
+description: Allure Report 3 artifact + TestOps upload + Telegram notifications (ADR 008)
+
+inputs:
+  tests-dir:
+    description: Path to the tests module (working directory for Gradle / notifications)
+    required: true
+  artifact-suffix:
+    description: Suffix for upload-artifact names (usually the job id)
+    required: true
+  allure-endpoint:
+    description: Allure TestOps endpoint
+    required: false
+    default: https://allure.qa.guru
+  allure-token:
+    description: Allure TestOps API token
+    required: false
+    default: ""
+  allure-project-id:
+    description: Allure TestOps project id (empty → skip TestOps)
+    required: false
+    default: ""
+  telegram-bot-token:
+    description: Telegram bot token for allure-notifications
+    required: false
+    default: ""
+  telegram-chat-id:
+    description: Telegram forum chat id (ADR 008 monitoring chat)
+    required: false
+    default: "-1004381150566"
+  telegram-topic-id:
+    description: Forum topic id (reference-app = 3)
+    required: false
+    default: "3"
+  notification-live:
+    description: "true → --live; false → --dry-run (e.g. pull_request)"
+    required: false
+    default: "true"
+  notification-project:
+    description: Project label in the Telegram collage header
+    required: false
+    default: "Reference App Copy"
+  test-outcome:
+    description: Outcome of the gradle test step (success → close TestOps launch)
+    required: false
+    default: "success"
+  build-url:
+    description: CI build URL for notification links
+    required: false
+    default: ""
+  launch-name:
+    description: Allure TestOps launch name
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node
+      if: hashFiles(format('{0}/build/allure-results/**', inputs.tests-dir)) != ''
+      uses: actions/setup-node@v6
+      with:
+        node-version: "26"
+
+    - name: Install allurectl
+      if: inputs.allure-project-id != ''
+      continue-on-error: true
+      id: setup-allurectl
+      uses: allure-framework/setup-allurectl@v1
+      with:
+        allure-endpoint: ${{ inputs.allure-endpoint }}
+        allure-token: ${{ inputs.allure-token }}
+        allure-project-id: ${{ inputs.allure-project-id }}
+
+    - name: Generate Allure 3 report
+      if: hashFiles(format('{0}/build/allure-results/**', inputs.tests-dir)) != ''
+      id: allure-report
+      continue-on-error: true
+      working-directory: ${{ inputs.tests-dir }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        mkdir -p build/allure-results
+        cat > build/allure-results/executor.json <<EOF
+        {
+          "reportName": "Run #${GITHUB_RUN_NUMBER}",
+          "buildOrder": ${GITHUB_RUN_NUMBER},
+          "buildUrl": "${{ inputs.build-url }}"
+        }
+        EOF
+        ./gradlew allureReport
+
+    - name: Upload results to Allure TestOps
+      if: >-
+        inputs.allure-project-id != '' &&
+        steps.setup-allurectl.outcome == 'success' &&
+        hashFiles(format('{0}/build/allure-results/**', inputs.tests-dir)) != ''
+      continue-on-error: true
+      id: testops-upload
+      working-directory: ${{ inputs.tests-dir }}
+      shell: bash
+      env:
+        ALLURE_PROJECT_ID: ${{ inputs.allure-project-id }}
+        LAUNCH_NAME: ${{ inputs.launch-name }}
+      run: |
+        set +e
+        if [ -n "${LAUNCH_NAME}" ]; then
+          export ALLURE_LAUNCH_NAME="${LAUNCH_NAME}"
+        else
+          export ALLURE_LAUNCH_NAME="${GITHUB_REPOSITORY} #${GITHUB_RUN_NUMBER}"
+        fi
+        allurectl upload build/allure-results 2>&1 | tee allurectl-upload.log
+        UPLOAD_EXIT=${PIPESTATUS[0]}
+        echo "TESTOPS_UPLOAD_EXIT=${UPLOAD_EXIT}" >> "$GITHUB_ENV"
+        if [ "$UPLOAD_EXIT" -eq 0 ]; then
+          LAUNCH_URL=$(grep -Eo 'https://[^ ]+/launch/[0-9]+' allurectl-upload.log | head -1 || true)
+          if [ -z "$LAUNCH_URL" ] && allurectl job-run env >/tmp/allure-env 2>/dev/null; then
+            # shellcheck disable=SC1091
+            source /tmp/allure-env
+            LAUNCH_URL="${ALLURE_LAUNCH_URL:-}"
+          fi
+          if [ -n "$LAUNCH_URL" ]; then
+            echo "TESTOPS_LAUNCH_URL=${LAUNCH_URL}" >> "$GITHUB_ENV"
+          fi
+        fi
+        set -e
+
+    - name: Close TestOps launch
+      if: >-
+        always() &&
+        inputs.allure-project-id != '' &&
+        steps.testops-upload.outcome == 'success' &&
+        inputs.test-outcome == 'success' &&
+        env.TESTOPS_LAUNCH_URL != ''
+      continue-on-error: true
+      shell: bash
+      env:
+        ALLURE_TOKEN: ${{ inputs.allure-token }}
+        ALLURE_ENDPOINT: ${{ inputs.allure-endpoint }}
+        TESTOPS_LAUNCH_URL: ${{ env.TESTOPS_LAUNCH_URL }}
+      run: |
+        set -euo pipefail
+        LAUNCH_ID="${TESTOPS_LAUNCH_URL##*/}"
+        curl -fsS -X POST \
+          "${ALLURE_ENDPOINT%/}/api/rs/launch/${LAUNCH_ID}/close" \
+          -H "Authorization: Bearer ${ALLURE_TOKEN}" \
+          -H "Accept: application/json"
+
+    - name: Send Telegram notification
+      if: >-
+        always() &&
+        steps.allure-report.outcome == 'success' &&
+        hashFiles(format('{0}/build/reports/allure-report/allureReport/awesome/summary.json', inputs.tests-dir)) != ''
+      continue-on-error: true
+      working-directory: ${{ inputs.tests-dir }}
+      shell: bash
+      env:
+        NOTIFICATION_PROJECT: ${{ inputs.notification-project }}
+        ALLURE_REPORT_URL: ""
+        ALLURE_DASHBOARD_URL: ""
+        TESTOPS_LAUNCH_URL: ${{ env.TESTOPS_LAUNCH_URL }}
+        BUILD_URL: ${{ inputs.build-url }}
+        TELEGRAM_BOT_TOKEN: ${{ inputs.telegram-bot-token }}
+        TELEGRAM_CHAT_ID: ${{ inputs.telegram-chat-id }}
+        TELEGRAM_TOPIC_ID: ${{ inputs.telegram-topic-id }}
+        NOTIFICATION_LIVE: ${{ inputs.notification-live }}
+      run: |
+        set -euo pipefail
+        node scripts/render-notifications-config.mjs
+        MODE_FLAG="--dry-run"
+        if [ "${NOTIFICATION_LIVE}" = "true" ]; then
+          MODE_FLAG="--live"
+        fi
+        npx --yes allure-notifications@6.0.12 send \
+          --config notifications/config.runtime.json \
+          "${MODE_FLAG}"
+
+    - name: Upload Allure results artifact
+      if: always() && hashFiles(format('{0}/build/allure-results/**', inputs.tests-dir)) != ''
+      uses: actions/upload-artifact@v7
+      with:
+        name: allure-results-${{ inputs.artifact-suffix }}
+        path: ${{ inputs.tests-dir }}/build/allure-results/
+        if-no-files-found: ignore
+
+    - name: Upload Allure report artifact
+      if: always() && hashFiles(format('{0}/build/reports/allure-report/allureReport/**', inputs.tests-dir)) != ''
+      uses: actions/upload-artifact@v7
+      with:
+        name: allure-report-${{ inputs.artifact-suffix }}
+        path: ${{ inputs.tests-dir }}/build/reports/allure-report/allureReport/
+        if-no-files-found: ignore
