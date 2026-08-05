@@ -158,6 +158,8 @@ jobs:
   test-infra-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -169,10 +171,32 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
       - if: env.TESTS_LANG == 'java'
         uses: gradle/actions/setup-gradle@v6
-      # Coverage gate reads build/jacoco/test.exec, so it is only meaningful with this filter.
+      # Node for Allure analytics finalizedBy on test (when allureReportMode ≠ none).
       - if: env.TESTS_LANG == 'java'
-        run: ./gradlew test jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags=test-infra -DallureReportMode=none
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      # Coverage gate reads build/jacoco/test.exec, so it is only meaningful with this filter.
+      # Allure results stay on (default allure3) so publish-allure / allure-action can run on PR.
+      - if: env.TESTS_LANG == 'java'
+        id: run-tests
+        run: ./gradlew test jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags=test-infra
         working-directory: ${{ env.TESTS_DIR }}
+      - if: always() && env.TESTS_LANG == 'java'
+        uses: ./.github/actions/publish-allure
+        with:
+          tests-dir: ${{ env.TESTS_DIR }}
+          artifact-suffix: test-infra-tests
+          allure-endpoint: ${{ env.ALLURE_ENDPOINT }}
+          allure-token: ${{ secrets.ALLURE_TOKEN }}
+          allure-project-id: ${{ vars.ALLURE_PROJECT_ID }}
+          telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
+          telegram-topic-id: ${{ secrets.TELEGRAM_REFERENCE_APP_TOPIC_ID || vars.TELEGRAM_REFERENCE_APP_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || vars.TELEGRAM_TOPIC_ID || '3' }}
+          notification-live: ${{ github.event_name != 'pull_request' }}
+          notification-project: "reference-app-copy test-infra #${{ github.run_number }}"
+          test-outcome: ${{ steps.run-tests.outcome }}
+          build-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          launch-name: "test-infra — ${{ github.repository }} #${{ github.run_number }}"
 
       # ── javascript / typescript (full suite; no tag pyramid yet) ──────────
       - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
