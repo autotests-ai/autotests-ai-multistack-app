@@ -79,10 +79,11 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · all jobs live in [`.github/workflow
 | `api-tests` | `TESTS_DIR` — by `TESTS_LANG` after deploy (java: `-DincludeTags=api`; else full suite) |
 | `integration-tests` | dispatch `layers=integration\|all` — java: `-DincludeTags=mount` |
 | `e2e-tests` | dispatch `layers=e2e\|all` — java: `-DincludeTags=smoke -DexcludeTags=visual`; else full suite |
+| `visual-tests` | dispatch `layers=visual\|all` — java: `-DincludeTags=visual` |
 | `manual-tests` | dispatch `layers=manual\|all` — java: `-DincludeTags=manual` |
 
 The first three block a pull request. Browser layers and extra language runners have no
-scheduled job — dispatch with `layers` (`integration` \| `e2e` \| `manual` \| `all`) /
+scheduled job — dispatch with `layers` (`integration` \| `e2e` \| `visual` \| `manual` \| `all`) /
 `runners` (`javascript` \| `python` \| `both`) when you want them. Stack defaults (`BACKEND` /
 `BACKEND_LANG` / `FRONTEND` / `TESTS` / `TESTS_LANG`) live once at the top of
 [`ci.yml`](.github/workflows/ci.yml).

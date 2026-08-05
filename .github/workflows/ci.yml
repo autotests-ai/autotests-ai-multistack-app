@@ -23,7 +23,7 @@ on:
       layers:
         description: "Browser layer jobs (java tag slice; other TESTS_LANG → full suite on e2e-tests only)"
         type: choice
-        options: [none, integration, e2e, manual, all]
+        options: [none, integration, e2e, visual, manual, all]
         default: none
       runners:
         description: "Extra language runners against prod (side stacks under tests/<lang>/)"
@@ -435,6 +435,31 @@ jobs:
         working-directory: ${{ env.TESTS_DIR }}
         env:
           BASE_URL: https://${{ env.PUBLIC_HOST }}/${{ env.BACKEND }}/${{ env.FRONTEND }}/
+
+  visual-tests:
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      (inputs.layers == 'visual' || inputs.layers == 'all')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      # ── java (-DincludeTags=visual) ───────────────────────────────────────
+      - if: env.TESTS_LANG == 'java'
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+      - if: env.TESTS_LANG == 'java'
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
+      - if: env.TESTS_LANG == 'java'
+        env:
+          RUN_ENV: ${{ inputs.env }}
+        run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=visual -DallureReportMode=none
+        working-directory: ${{ env.TESTS_DIR }}
 
   manual-tests:
     if: >-

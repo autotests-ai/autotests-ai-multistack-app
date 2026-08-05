@@ -58,7 +58,7 @@ suite (`npm test` / `pytest` with `UI_URL` / `BASE_URL`) — no Gradle tag slice
 | api | tests | `…/tests/api/` | `@Tag("api")` | by `TESTS_LANG`: java → `-DincludeTags=api`; else full suite |
 | integration | tests | e.g. `LoginFormTests`, `LoginEmbedTests` | `@Tag("mount")` | by `TESTS_LANG`: java → `-DincludeTags=mount` via `integration-tests`; else N/A (use `e2e-tests`) |
 | e2e | tests | `…/tests/`, `…/tests/e2e/` | `@Tag("smoke")` | by `TESTS_LANG`: java → `-DincludeTags=smoke -DexcludeTags=visual` via `e2e-tests`; else full suite |
-| visual | tests | baselines | `@Tag("visual")` | local / ad-hoc: java → `-DincludeTags=visual` (no CI job yet) |
+| visual | tests | baselines | `@Tag("visual")` | by `TESTS_LANG`: java → `-DincludeTags=visual` via `visual-tests`; else N/A |
 | manual | tests | stubs | `@Tag("manual")` | by `TESTS_LANG`: java → `-DincludeTags=manual` via `manual-tests`; else N/A |
 
 Bare `./gradlew test` (java) runs **everything**, api included — there are no hidden excludes.
@@ -95,7 +95,7 @@ Not duplicates — different failure modes. Chrome layout for the app is `integr
 |---------|------|
 | Pull request (blocks merge) | `unit-tests`, `component-tests`, `test-infra-tests` |
 | Push to `main` | the same three → `build` → `deploy` → `api-tests` on `reference_prod` |
-| `workflow_dispatch` | `integration-tests` / `e2e-tests` / `manual-tests` behind `layers` (`none` \| `integration` \| `e2e` \| `manual` \| `all`) + `env`; `javascript-tests` / `python-tests` behind `runners` (`none` \| `javascript` \| `python` \| `both`) |
+| `workflow_dispatch` | `integration-tests` / `e2e-tests` / `visual-tests` / `manual-tests` behind `layers` (`none` \| `integration` \| `e2e` \| `visual` \| `manual` \| `all`) + `env`; `javascript-tests` / `python-tests` behind `runners` (`none` \| `javascript` \| `python` \| `both`) |
 
 Active stack and prod URL are workflow `env` defaults in [`ci.yml`](../.github/workflows/ci.yml)
 (`BACKEND`, `BACKEND_LANG`, `FRONTEND`, `TESTS`, `TESTS_LANG`) — change once, jobs reuse them.
@@ -122,5 +122,5 @@ Every job in [`ci.yml`](../.github/workflows/ci.yml) is checkout, language setup
 or `BACKEND_LANG`), one `./gradlew test …` / `npm test` / `pytest`. No composite actions, no
 wrapper scripts — the command a student runs locally is the command CI runs.
 
-Dispatch `layers=integration|e2e|manual|all` for the named browser jobs. To add another
-(e.g. `visual-tests`), copy `manual-tests` and change the java `-D` flags.
+Dispatch `layers=integration|e2e|visual|manual|all` for the named browser jobs. To add
+another, copy `manual-tests` and change the java `-D` flags.
