@@ -32,6 +32,8 @@ concurrency:
 
 permissions:
   contents: read
+  pull-requests: write
+  checks: write
 
 env:
   IMAGE_TAG: ${{ github.sha }}

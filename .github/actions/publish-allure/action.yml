@@ -52,6 +52,10 @@ inputs:
     description: Allure TestOps launch name
     required: false
     default: ""
+  github-token:
+    description: Token for allure-action PR comments / checks
+    required: false
+    default: ${{ github.token }}
 
 runs:
   using: composite
@@ -100,6 +104,14 @@ runs:
       working-directory: ${{ inputs.tests-dir }}
       shell: bash
       run: npx allure generate build/allure-results -o build/reports/allure-report/allureReport --config allurerc.mjs
+
+    - name: Allure GitHub Action
+      if: always() && steps.allure-report.outcome == 'success'
+      continue-on-error: true
+      uses: allure-framework/allure-action@v0
+      with:
+        report-directory: ${{ inputs.tests-dir }}/build/reports/allure-report/allureReport
+        github-token: ${{ inputs.github-token }}
 
     - name: Upload Allure results artifact
       if: always()
