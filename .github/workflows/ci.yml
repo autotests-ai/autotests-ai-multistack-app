@@ -52,18 +52,10 @@ jobs:
       # Owns the Gradle User Home cache: entries are keyed per job, so the four Java jobs no
       # longer share one. setup-java's `cache: gradle` must stay off — both cache ~/.gradle.
       - uses: gradle/actions/setup-gradle@v6
-      # setup-gradle caches Gradle User Home, but the configuration cache lives in the project
-      # directory, so it needs its own entry. Keyed by the files the entry depends on plus the
-      # sha, because GitHub cache entries are immutable and each run writes a fresh one.
-      - uses: actions/cache@v6
-        with:
-          path: backend/java/backend-java-spring/.gradle/configuration-cache
-          key: gradle-cc-backend-${{ hashFiles('backend/java/backend-java-spring/*.gradle*', 'backend/java/backend-java-spring/gradle/wrapper/gradle-wrapper.properties') }}-${{ github.sha }}
-          restore-keys: gradle-cc-backend-${{ hashFiles('backend/java/backend-java-spring/*.gradle*', 'backend/java/backend-java-spring/gradle/wrapper/gradle-wrapper.properties') }}-
+      # The configuration cache in gradle.properties is a local-dev win only: a runner cannot
+      # reuse an entry from an earlier run — see the note in that file.
       - run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification
         working-directory: backend/java/backend-java-spring
-        env:
-          GRADLE_ACTIONS_SKIP_BUILD_RESULT_CAPTURE: "true"
 
   python-unit-tests:
     runs-on: ubuntu-latest
