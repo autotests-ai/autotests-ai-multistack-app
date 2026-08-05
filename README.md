@@ -33,9 +33,9 @@ Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/N
 | **backend/java/** | `backend-java-spring` (active) | — |
 | **backend/kotlin/** | `backend-kotlin-spring` (active) | — |
 | **backend/python/** | `backend-python-flask`, `backend-python-fastapi`, `backend-python-django` (active) | — |
-| **backend/go/** | — | `backend-go-gin`, `backend-go-stdlib` |
-| **backend/javascript/** | — | `backend-javascript-express`, `backend-javascript-nest` |
-| **backend/typescript/** | — | `backend-typescript-express`, `backend-typescript-nest` |
+| **backend/go/** | `backend-go-gin`, `backend-go-stdlib` (active) | — |
+| **backend/javascript/** | `backend-javascript-express`, `backend-javascript-nest` (active) | — |
+| **backend/typescript/** | `backend-typescript-express`, `backend-typescript-nest` (active) | — |
 | **tests/java/** | `tests-java-gradle-junit5-allure3-selenide` | junit4, testng, allure2, selenium, maven, … — [tests/NAMING.md](tests/NAMING.md) · matrix slots |
 | **tests/javascript/** | `tests-javascript-playwright` | Cypress, … |
 | **tests/typescript/** | — | `tests-typescript-playwright` (slot) |
@@ -92,12 +92,12 @@ SSOT: [`deploy/matrix.yaml`](deploy/matrix.yaml). Language base **+10**, stack w
 | **8820** | `backend-python-flask` | |
 | **8821** | `backend-python-fastapi` | |
 | **8822** | `backend-python-django` | |
-| **8830** | `backend-go-gin` | slot |
-| **8831** | `backend-go-stdlib` | slot |
-| **8840** | `backend-javascript-express` | slot |
-| **8841** | `backend-javascript-nest` | slot |
-| **8850** | `backend-typescript-express` | slot |
-| **8851** | `backend-typescript-nest` | slot |
+| **8830** | `backend-go-gin` | |
+| **8831** | `backend-go-stdlib` | |
+| **8840** | `backend-javascript-express` | |
+| **8841** | `backend-javascript-nest` | |
+| **8850** | `backend-typescript-express` | |
+| **8851** | `backend-typescript-nest` | |
 | **9800** | `frontend-javascript-vanilla` | compose publish |
 | **9801** | `frontend-javascript-react` | slot |
 | **9802** | `frontend-javascript-angular` | slot |

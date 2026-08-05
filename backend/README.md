@@ -13,14 +13,14 @@ backend/
     backend-python-fastapi/    # FastAPI + Postgres — JSON API (active)
     backend-python-django/     # Django + Postgres — JSON API (active)
   go/
-    backend-go-gin/            # slot (Gin — product REST)
-    backend-go-stdlib/         # slot (net/http — Selenoid-style)
+    backend-go-gin/            # Gin + Postgres — JSON API (active)
+    backend-go-stdlib/         # net/http — Selenoid-style, no framework (active)
   javascript/
-    backend-javascript-express/  # slot :8840
-    backend-javascript-nest/     # slot :8841
+    backend-javascript-express/  # Express + Postgres — JSON API (active)
+    backend-javascript-nest/     # NestJS in JS + Postgres — JSON API (active)
   typescript/
-    backend-typescript-express/  # slot :8850
-    backend-typescript-nest/     # slot :8851
+    backend-typescript-express/  # Express + TS + Postgres — JSON API (active)
+    backend-typescript-nest/     # NestJS + TS + Postgres — JSON API (active)
   scripts/                     # CI helpers (Sonar, env profiles, paths.sh)
 ```
 
@@ -43,8 +43,17 @@ Language base **+10**, stack **+1** from **8800** — see root [README](../READM
 
 Container listen stays `:8080`. Backend does not host HTML/JS.
 
+All 11 modules are active and answer the **same JSON contract** — documented in
+[`backend-java-spring/README.md`](java/backend-java-spring/README.md), which is the reference
+implementation. `service` in `GET /api/health` equals the module id and must match
+`health_service` in [`deploy/matrix.yaml`](../deploy/matrix.yaml).
+
 **Unit tests** live inside each backend module:  
 `backend/java/backend-java-spring/src/test/java/` — JaCoCo gate, `./gradlew test`.  
-`backend/python/backend-python-*/tests/` — `python -m pytest`.
+`backend/kotlin/backend-kotlin-spring/src/test/kotlin/` — JaCoCo gate, `./gradlew test`.  
+`backend/python/backend-python-*/tests/` — `python -m pytest`.  
+`backend/go/backend-go-*/` — `go test ./...`.  
+`backend/{javascript,typescript}/backend-*/` — `npm test`.
 
 Integration / e2e / api slices → `tests/java/tests-java-gradle-junit5-allure3-selenide/`.
+The api layer targets one backend at a time: `-DapiBaseUrl=http://localhost:8830/ -DapiHealthService=backend-go-gin`.
