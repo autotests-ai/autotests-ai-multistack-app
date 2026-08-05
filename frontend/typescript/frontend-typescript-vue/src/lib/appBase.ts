@@ -45,6 +45,17 @@ const resolved = resolveFromPathname(
 export const APP_BASE = resolved.appBase;
 /** API origin path for this backend — no trailing slash. */
 export const API_BASE = resolved.apiBase;
+/** Matrix backend id (`backend-…`), or null outside `/{backend}/{frontend}/`. */
+export const BACKEND_ID = resolved.backendId;
+
+/**
+ * localStorage key for the auth token.
+ * Scoped by backend so sessions do not leak across backends on the same origin;
+ * shared across frontends for the same backend.
+ */
+export function authTokenStorageKey(backendId: string | null = BACKEND_ID): string {
+  return backendId ? `authToken:${backendId}` : 'authToken';
+}
 
 /**
  * Prefix a same-origin path with the product mount.

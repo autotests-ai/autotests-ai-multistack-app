@@ -1,5 +1,9 @@
 (function () {
-  const AUTH_TOKEN_KEY = "authToken";
+  // Scoped by backend so sessions do not leak across backends on the same origin;
+  // shared across frontends for the same backend. See app-base.js → BACKEND_ID.
+  const AUTH_TOKEN_KEY = window.BACKEND_ID
+    ? "authToken:" + window.BACKEND_ID
+    : "authToken";
   const MIN_LOGIN_LENGTH = 3;
   const MIN_PASSWORD_LENGTH = 6;
 

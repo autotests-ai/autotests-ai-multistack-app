@@ -18,6 +18,11 @@ import java.time.Duration;
 
 public class HomePage {
 
+    /** Mirrors frontend authTokenStorageKey (backend-scoped on matrix paths). */
+    private static final String AUTH_TOKEN_KEY_JS =
+            "var m=location.pathname.match(/^\\/(backend-[^/]+)\\//);"
+                    + "return m ? 'authToken:' + m[1] : 'authToken';";
+
     private final SelenideElement layout = $("[data-testid='reference-layout']");
     private final SelenideElement healthStatus = $("[data-testid='health-status']");
     private final SelenideElement itemsList = $("[data-testid='items-list']");
@@ -25,6 +30,10 @@ public class HomePage {
     private final SelenideElement logoutButton = $("[data-testid='logout-button']");
     private final SelenideElement welcomePanel = $("[data-testid='welcome-panel']");
     private final SelenideElement header = $("[data-testid='header']");
+
+    private String authTokenKey() {
+        return executeJavaScript(AUTH_TOKEN_KEY_JS);
+    }
 
     @Step("Open home page")
     public HomePage openPage() {
@@ -47,7 +56,7 @@ public class HomePage {
         open("/login");
         executeJavaScript(
                 "localStorage.setItem(arguments[0], arguments[1]);",
-                "authToken",
+                authTokenKey(),
                 token
         );
         open("/");
@@ -59,7 +68,7 @@ public class HomePage {
         open("/login");
         executeJavaScript(
                 "localStorage.setItem(arguments[0], arguments[1]);",
-                "authToken",
+                authTokenKey(),
                 "invalid-token"
         );
         open("/");
@@ -87,7 +96,10 @@ public class HomePage {
 
     @Step("Verify auth token was cleared from localStorage")
     public HomePage shouldClearAuthToken() {
-        Wait().until(driver -> executeJavaScript("return localStorage.getItem('authToken');") == null);
+        Wait().until(driver -> {
+            String key = executeJavaScript(AUTH_TOKEN_KEY_JS);
+            return executeJavaScript("return localStorage.getItem(arguments[0]);", key) == null;
+        });
         return this;
     }
 

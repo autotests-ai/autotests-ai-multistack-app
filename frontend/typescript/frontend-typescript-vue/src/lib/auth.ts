@@ -1,6 +1,7 @@
-import { apiUrl } from './appBase';
+import { apiUrl, authTokenStorageKey } from './appBase';
 
-export const AUTH_TOKEN_KEY = 'authToken';
+/** Backend-scoped localStorage key — see `authTokenStorageKey`. */
+export const AUTH_TOKEN_KEY = authTokenStorageKey();
 export const MIN_LOGIN_LENGTH = 3;
 export const MIN_PASSWORD_LENGTH = 6;
 
