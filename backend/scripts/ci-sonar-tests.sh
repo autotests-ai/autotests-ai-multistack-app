@@ -1,19 +1,23 @@
 #!/usr/bin/env bash
-# Backend unit + JaCoCo + SonarQube upload + quality gate poll (report-task / analysisId).
+# Tests (Selenide) test-infra + JaCoCo + SonarQube upload + quality gate poll.
 # Soft-skip when SONAR_TOKEN unset or host unreachable (unless SONAR_REQUIRED=true).
 # Env: SONAR_TOKEN, SONAR_HOST_URL, SONAR_PROJECT_KEY, SONAR_REQUIRED
 set -euo pipefail
 
 # shellcheck source=paths.sh
 source "$(cd "$(dirname "$0")" && pwd)/paths.sh"
-cd "$BACKEND_JAVA_SPRING"
+cd "$TESTS_JAVA_GRADLE_JUNIT5_ALLURE3_SELENIDE"
 
 export SONAR_HOST_URL="${SONAR_HOST_URL:-https://sonar.qa.guru}"
-export SONAR_PROJECT_KEY="${SONAR_PROJECT_KEY:-reference-app-copy-backend}"
+export SONAR_PROJECT_KEY="${SONAR_PROJECT_KEY:-reference-app-copy-tests}"
 export SONAR_REQUIRED="${SONAR_REQUIRED:-false}"
 
-echo "==> unit + jacoco (${SONAR_PROJECT_KEY})"
-./gradlew test jacocoTestReport --no-daemon
+echo "==> test-infra + jacoco (${SONAR_PROJECT_KEY})"
+# Coverage gate slice = test-infra helpers; same filter CI uses in test-infra-tests.
+./gradlew test jacocoTestReport \
+  -Denv=reference_ci \
+  -DincludeTags=test-infra \
+  --no-daemon
 
 if [[ -z "${SONAR_TOKEN:-}" ]]; then
   msg="SONAR_TOKEN unset — skip sonar upload"
@@ -43,5 +47,5 @@ echo "==> sonar scan → ${SONAR_HOST_URL} (${SONAR_PROJECT_KEY})"
   -Dsonar.projectName="${SONAR_PROJECT_KEY}"
 
 echo "==> quality gate poll"
-REPORT_TASK="$BACKEND_JAVA_SPRING/build/sonar/report-task.txt"
+REPORT_TASK="$TESTS_JAVA_GRADLE_JUNIT5_ALLURE3_SELENIDE/build/sonar/report-task.txt"
 bash "$REPO_ROOT/scripts/ci-sonar-gate.sh" "$REPORT_TASK" "$SONAR_PROJECT_KEY"

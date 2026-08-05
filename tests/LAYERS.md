@@ -1,6 +1,7 @@
 # Test layers (canonical map)
 
-Teaching pyramid for reference-app-copy. **One** CI file: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).  
+Teaching pyramid for reference-app-copy. **One** CI file: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
+(pyramid + Allure 3 / TestOps / Notifications + JaCoCo + Sonar quality axis).  
 Module folders: `-` between segments, `_` in compounds (`react_testing_library`, `no_allure`).
 
 ```
