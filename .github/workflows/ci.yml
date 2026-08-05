@@ -99,6 +99,38 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - run: docker compose build backend-java-spring frontend-typescript-react
       - run: docker compose push backend-java-spring frontend-typescript-react
+      # Keep the newest N SHA versions per package; never delete a version that carries `latest`.
+      # Needs repo Admin on each package (Manage Actions access). No PAT — GITHUB_TOKEN only.
+      - name: Retain last 10 GHCR versions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          KEEP: "10"
+        run: |
+          set -euo pipefail
+          org="${{ github.repository_owner }}"
+          for pkg in \
+            reference-app-copy-backend-java-spring \
+            reference-app-copy-frontend-typescript-react
+          do
+            echo "Cleaning ghcr.io/${org}/${pkg} (keep ${KEEP}; protect latest)"
+            to_delete="$(
+              gh api --paginate \
+                "/orgs/${org}/packages/container/${pkg}/versions" \
+                --jq '.[] | select((.metadata.container.tags // [] | index("latest")) | not) | "\(.created_at)\t\(.id)"' \
+                | sort -r \
+                | tail -n "+$((KEEP + 1))" \
+                | cut -f2
+            )"
+            if [ -z "${to_delete}" ]; then
+              echo "Nothing to delete for ${pkg}"
+              continue
+            fi
+            while IFS= read -r id; do
+              [ -n "${id}" ] || continue
+              echo "DELETE ${pkg} version ${id}"
+              gh api --method DELETE "/orgs/${org}/packages/container/${pkg}/versions/${id}"
+            done <<< "${to_delete}"
+          done
 
   deploy:
     needs: build
@@ -127,6 +159,7 @@ jobs:
             docker compose pull backend-java-spring frontend-typescript-react
             docker compose up -d --remove-orphans backend-java-spring frontend-typescript-react
             curl -fsS --retry 30 --retry-delay 2 --retry-all-errors http://127.0.0.1:8800/api/health
+            docker logout ghcr.io
 
   api-tests:
     needs: deploy
