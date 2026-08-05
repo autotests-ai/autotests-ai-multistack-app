@@ -62,6 +62,8 @@ jobs:
           restore-keys: gradle-cc-backend-${{ hashFiles('backend/java/backend-java-spring/*.gradle*', 'backend/java/backend-java-spring/gradle/wrapper/gradle-wrapper.properties') }}-
       - run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification
         working-directory: backend/java/backend-java-spring
+        env:
+          GRADLE_ACTIONS_SKIP_BUILD_RESULT_CAPTURE: "true"
 
   python-unit-tests:
     runs-on: ubuntu-latest
