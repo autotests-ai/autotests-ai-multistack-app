@@ -1,0 +1,7 @@
+[run]
+branch = false
+
+[report]
+precision = 0
+show_missing = true
+skip_covered = true

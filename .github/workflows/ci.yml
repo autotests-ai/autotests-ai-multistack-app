@@ -56,6 +56,29 @@ jobs:
       - run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification
         working-directory: backend/java/backend-java-spring
 
+  python-unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        module:
+          - backend-python-flask
+          - backend-python-fastapi
+          - backend-python-django
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: backend/python/${{ matrix.module }}/requirements.txt
+      - run: python -m pip install -r requirements.txt
+        working-directory: backend/python/${{ matrix.module }}
+      # pytest.ini wires --cov-fail-under=100 (same bar as the Java JaCoCo gate above).
+      - run: python -m pytest
+        working-directory: backend/python/${{ matrix.module }}
+
   component-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -87,7 +110,7 @@ jobs:
         working-directory: tests/java/tests-java-gradle-junit5-allure3-selenide
 
   build:
-    needs: [unit-tests, component-tests, test-infra-tests]
+    needs: [unit-tests, python-unit-tests, component-tests, test-infra-tests]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 25

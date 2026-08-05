@@ -5,3 +5,4 @@ bcrypt==4.3.0
 gunicorn==23.0.0
 pytest==8.4.1
 pytest-django==4.11.1
+pytest-cov==6.2.1

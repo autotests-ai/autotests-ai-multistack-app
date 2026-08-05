@@ -44,6 +44,11 @@ test-results/
 node_modules/
 .venv/
 playwright-report/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.pytest_cache/
 
 # OS
 .DS_Store

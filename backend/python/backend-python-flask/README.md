@@ -10,6 +10,7 @@ https://reference-app-copy.autotests.ai/backend-python-flask/{frontend}/
 https://reference-app-copy.autotests.ai/backend-python-flask/api/
 ```
 
-Unit tests: `tests/`. Run: `python -m pytest`
+Unit tests: `tests/`.
+Run: `python -m pytest` (coverage gate: 100% line, same bar as Java/Kotlin JaCoCo).
 
 Shared UI (one `web` image): `/frontend-typescript-react/`, `/frontend-javascript-vanilla/`, …

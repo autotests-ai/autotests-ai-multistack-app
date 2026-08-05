@@ -34,35 +34,49 @@ _RUNNING_PYTEST = (
     or os.environ.get("PYTEST_RUNNING") == "1"
 )
 
-if database_url := os.environ.get("DATABASE_URL"):
-    if database_url.startswith("sqlite"):
-        name = database_url.removeprefix("sqlite:///")
-        DATABASES = {
+
+def build_databases(
+    environ: dict | None = None,
+    *,
+    running_pytest: bool | None = None,
+) -> dict:
+    """Resolve DATABASES from the environment.
+
+    Extracted so unit tests can exercise the sqlite / postgres / pytest
+    branches without reloading Django settings mid-suite.
+    """
+    env = environ if environ is not None else os.environ
+    under_pytest = _RUNNING_PYTEST if running_pytest is None else running_pytest
+    if database_url := env.get("DATABASE_URL"):
+        if database_url.startswith("sqlite"):
+            name = database_url.removeprefix("sqlite:///")
+            return {
+                "default": {
+                    "ENGINE": "django.db.backends.sqlite3",
+                    "NAME": name if name else ":memory:",
+                }
+            }
+        raise RuntimeError(f"Unsupported DATABASE_URL: {database_url}")
+    if under_pytest:
+        return {
             "default": {
                 "ENGINE": "django.db.backends.sqlite3",
-                "NAME": name if name else ":memory:",
+                "NAME": ":memory:",
             }
         }
-    else:
-        raise RuntimeError(f"Unsupported DATABASE_URL: {database_url}")
-elif _RUNNING_PYTEST:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": ":memory:",
-        }
-    }
-else:
-    DATABASES = {
+    return {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "HOST": os.environ.get("DB_HOST", "localhost"),
-            "PORT": os.environ.get("DB_PORT", "5432"),
-            "NAME": os.environ.get("DB_NAME", "reference_app_python_django"),
-            "USER": os.environ.get("DB_USER", "reference"),
-            "PASSWORD": os.environ.get("DB_PASSWORD", "reference"),
+            "HOST": env.get("DB_HOST", "localhost"),
+            "PORT": env.get("DB_PORT", "5432"),
+            "NAME": env.get("DB_NAME", "reference_app_python_django"),
+            "USER": env.get("DB_USER", "reference"),
+            "PASSWORD": env.get("DB_PASSWORD", "reference"),
         }
     }
+
+
+DATABASES = build_databases()
 
 AUTH_PASSWORD_VALIDATORS: list = []
 
