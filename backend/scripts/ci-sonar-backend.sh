@@ -36,9 +36,9 @@ if ! curl -sf --max-time 15 "${SONAR_HOST_URL%/}/api/system/status" >/dev/null; 
 fi
 
 echo "==> sonar scan → ${SONAR_HOST_URL} (${SONAR_PROJECT_KEY})"
+# Token via env only (SONAR_TOKEN) — never argv (canon: docs/sonar/GITHUB-ACTIONS.md).
 ./gradlew sonar --no-daemon \
   -Dsonar.host.url="${SONAR_HOST_URL}" \
-  -Dsonar.token="${SONAR_TOKEN}" \
   -Dsonar.projectKey="${SONAR_PROJECT_KEY}" \
   -Dsonar.projectName="${SONAR_PROJECT_KEY}"
 
