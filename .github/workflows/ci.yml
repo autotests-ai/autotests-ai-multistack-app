@@ -239,8 +239,6 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && (inputs.runners == 'javascript' || inputs.runners == 'both')
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      UI_URL: https://${{ env.PUBLIC_HOST }}/${{ env.BACKEND }}/${{ env.FRONTEND }}/
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
@@ -252,15 +250,16 @@ jobs:
         working-directory: tests/javascript/tests-javascript-playwright
       - run: npx playwright install --with-deps chromium
         working-directory: tests/javascript/tests-javascript-playwright
+      # job.env cannot read workflow env; steps.env can.
       - run: npm test
         working-directory: tests/javascript/tests-javascript-playwright
+        env:
+          UI_URL: https://${{ env.PUBLIC_HOST }}/${{ env.BACKEND }}/${{ env.FRONTEND }}/
 
   python-tests:
     if: github.event_name == 'workflow_dispatch' && (inputs.runners == 'python' || inputs.runners == 'both')
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      BASE_URL: https://${{ env.PUBLIC_HOST }}/${{ env.BACKEND }}/${{ env.FRONTEND }}/
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
@@ -272,3 +271,5 @@ jobs:
         working-directory: tests/python/tests-python-selenium
       - run: python -m pytest
         working-directory: tests/python/tests-python-selenium
+        env:
+          BASE_URL: https://${{ env.PUBLIC_HOST }}/${{ env.BACKEND }}/${{ env.FRONTEND }}/
