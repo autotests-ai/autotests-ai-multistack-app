@@ -1,9 +1,9 @@
 name: Publish Allure
-description: TestOps upload + Allure Report 3 artifacts + Telegram notifications (ADR 008)
+description: TestOps upload + Allure Report 3 (JS) artifacts + Telegram notifications (ADR 008)
 
 inputs:
   tests-dir:
-    description: Path to the tests module (cwd for Gradle / notifications)
+    description: Path to the tests module (cwd for Allure CLI / notifications)
     required: true
   artifact-suffix:
     description: Suffix for upload-artifact names (usually the job id)
@@ -78,14 +78,28 @@ runs:
         ALLURE_LAUNCH_NAME: ${{ inputs.launch-name }}
       run: allurectl upload build/allure-results
 
-    # ── Stage 2: Allure Report 3 + artifacts ───────────────────────────────
-    - name: Generate Allure 3 report
+    # ── Stage 2: Allure Report 3 (JS CLI) + artifacts ──────────────────────
+    - name: Setup Node
       if: always()
-      id: allure-report
+      uses: actions/setup-node@v6
+      with:
+        node-version: "26"
+
+    - name: Install Allure 3 deps
+      if: always()
       continue-on-error: true
+      id: allure-deps
       working-directory: ${{ inputs.tests-dir }}
       shell: bash
-      run: ./gradlew allureReport
+      run: npm install --no-save
+
+    - name: Generate Allure 3 report
+      if: always() && steps.allure-deps.outcome == 'success'
+      continue-on-error: true
+      id: allure-report
+      working-directory: ${{ inputs.tests-dir }}
+      shell: bash
+      run: npx allure generate build/allure-results -o build/reports/allure-report/allureReport --config allurerc.mjs
 
     - name: Upload Allure results artifact
       if: always()
@@ -106,19 +120,6 @@ runs:
         if-no-files-found: ignore
 
     # ── Stage 3: Notifications (ADR 008) ───────────────────────────────────
-    - name: Setup Node
-      if: always() && steps.allure-report.outcome == 'success'
-      uses: actions/setup-node@v6
-      with:
-        node-version: "26"
-
-    - name: Install Allure publish deps
-      if: always() && steps.allure-report.outcome == 'success'
-      continue-on-error: true
-      working-directory: ${{ inputs.tests-dir }}
-      shell: bash
-      run: npm install --no-save
-
     - name: Publish Allure (theme + Telegram plugin)
       if: always() && steps.allure-report.outcome == 'success'
       continue-on-error: true
