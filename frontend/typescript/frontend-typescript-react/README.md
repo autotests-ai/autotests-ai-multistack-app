@@ -24,6 +24,12 @@ Prod URL: `https://reference-app-copy.autotests.ai/{backend}/frontend-typescript
 
 (Router basename strips the mount; header/`appPath` use absolute mount-prefixed paths.)
 
+`appBase.ts` reads the mount off the pathname in the same order as the boot script in
+`index.html`: `/{backend}/{frontend}` → bare `/{frontend}` → document root. The root case is
+what the container publish-port (`:9811`, stand `reference_ci`) and `npm run dev` serve, so
+the basename there is empty — a mount-shaped one matches nothing and the router renders
+an empty page.
+
 ## Contracts preserved for Selenide
 
 - Every `data-testid` used by `tests/.../pages/*.java`.

@@ -37,7 +37,7 @@ publishes `window.headerConfig` and injects `js/header.js` from the mount
 ## Scripts
 
 ```bash
-npm run dev        # Vite dev server (base /frontend-typescript-vue/)
+npm run dev        # Vite on :9813 (relative base; mount via pathname / base tag)
 npm run build      # → dist/ (packed by this module's Dockerfile)
 npm run typecheck  # vue-tsc --noEmit
 npm test           # Vitest + Testing Library (src/test/)
