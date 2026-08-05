@@ -277,7 +277,7 @@ jobs:
   # Quality axis (SonarQube) — parallel to pyramid; does not gate build/deploy.
   # Default stack = java (BACKEND_LANG / TESTS_LANG). Soft-skip when SONAR_TOKEN
   # unset unless vars.SONAR_REQUIRED=true.
-  # projectKeys = ${APP_SLUG}-${BACKEND|TESTS} (module folder names, not generic -backend/-tests).
+  # projectKeys = ${APP_SLUG}-${BACKEND|FRONTEND|TESTS} (module folder names).
   sonar-backend:
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -338,6 +338,37 @@ jobs:
         run: |
           {
             echo "## sonar-tests"
+            echo ""
+            echo "- projectKey: \`${SONAR_PROJECT_KEY}\`"
+            echo "- host: \`${SONAR_HOST_URL}\`"
+            echo "- dashboard: ${SONAR_HOST_URL%/}/dashboard?id=${SONAR_PROJECT_KEY}"
+            echo "- commit: \`${GITHUB_SHA:0:7}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  sonar-frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      SONAR_PROJECT_KEY: ${{ vars.SONAR_FRONTEND_PROJECT_KEY || format('{0}-{1}', env.APP_SLUG, env.FRONTEND) }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.FRONTEND_DIR }}/package-lock.json
+      - name: Sonar scan + gate (frontend)
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_REQUIRED: ${{ vars.SONAR_REQUIRED || 'false' }}
+          FRONTEND_DIR: ${{ env.FRONTEND_DIR }}
+        run: bash frontend/scripts/ci-sonar-frontend.sh
+      - if: always()
+        run: |
+          {
+            echo "## sonar-frontend"
             echo ""
             echo "- projectKey: \`${SONAR_PROJECT_KEY}\`"
             echo "- host: \`${SONAR_HOST_URL}\`"

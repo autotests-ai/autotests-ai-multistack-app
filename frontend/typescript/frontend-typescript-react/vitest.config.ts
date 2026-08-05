@@ -27,5 +27,12 @@ export default defineConfig({
     include: ['src/test/**/*.test.{ts,tsx}'],
     css: true,
     reporters: ['default', ['allure-vitest/reporter', { resultsDir: 'allure-results' }]],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      reportsDirectory: './coverage',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/test/**', 'src/**/*.d.ts'],
+    },
   },
 });
