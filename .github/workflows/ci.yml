@@ -51,9 +51,19 @@ jobs:
           java-version: "21"
       # Owns the Gradle User Home cache: entries are keyed per job, so the four Java jobs no
       # longer share one. setup-java's `cache: gradle` must stay off — both cache ~/.gradle.
+      # cache-encryption-key exports GRADLE_ENCRYPTION_KEY so Gradle encrypts the project
+      # configuration-cache with a stable key (without it each runner invents its own).
       - uses: gradle/actions/setup-gradle@v6
-      # The configuration cache in gradle.properties is a local-dev win only: a runner cannot
-      # reuse an entry from an earlier run — see the note in that file.
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+      # Enhanced caching only persists Gradle User Home; the configuration-cache lives under
+      # the project and needs its own entry. Both pieces are required — either alone is a miss.
+      - uses: actions/cache@v6
+        with:
+          path: backend/java/backend-java-spring/.gradle/configuration-cache
+          key: gradle-cc-backend-${{ hashFiles('backend/java/backend-java-spring/*.gradle*', 'backend/java/backend-java-spring/gradle/wrapper/gradle-wrapper.properties', 'backend/java/backend-java-spring/gradle.properties') }}-${{ github.sha }}
+          restore-keys: |
+            gradle-cc-backend-${{ hashFiles('backend/java/backend-java-spring/*.gradle*', 'backend/java/backend-java-spring/gradle/wrapper/gradle-wrapper.properties', 'backend/java/backend-java-spring/gradle.properties') }}-
       - run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification
         working-directory: backend/java/backend-java-spring
 
