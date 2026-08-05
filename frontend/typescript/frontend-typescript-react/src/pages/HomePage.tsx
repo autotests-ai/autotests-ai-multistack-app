@@ -1,6 +1,6 @@
+import { Button, Panel } from '@zero-design-system/react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Panel } from '@zero-design-system/react';
 import { fetchHealth, fetchItems, type Item } from '../lib/api';
 import { UI_MOUNT } from '../lib/appBase';
 import { clearSession, fetchProfile, getToken, logout } from '../lib/auth';
@@ -56,7 +56,9 @@ export function HomePage() {
           }
         })
         .catch(() => {
-          clearSession();
+          if (active) {
+            clearSession();
+          }
         });
     }
 
@@ -103,7 +105,9 @@ export function HomePage() {
       <Panel title="Health" testId="health-panel">
         <p
           className={
-            health.error ? 'text text--sm text--muted reference-app__error' : 'text text--sm text--muted'
+            health.error
+              ? 'text text--sm text--muted reference-app__error'
+              : 'text text--sm text--muted'
           }
           data-testid="health-status"
         >

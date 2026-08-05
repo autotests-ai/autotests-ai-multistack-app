@@ -59,7 +59,9 @@ onMounted(() => {
         }
       })
       .catch(() => {
-        clearSession();
+        if (active) {
+          clearSession();
+        }
       });
   }
 });

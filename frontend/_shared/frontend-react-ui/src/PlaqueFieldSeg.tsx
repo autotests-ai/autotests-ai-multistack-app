@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { cn } from './cn';
-import './styles';
 
 export interface PlaqueFieldSegOption {
   /** Wire value (mapped to `data-value`); active state compares against this. */

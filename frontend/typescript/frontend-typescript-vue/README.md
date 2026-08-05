@@ -37,11 +37,15 @@ publishes `window.headerConfig` and injects `js/header.js` from the mount
 ## Scripts
 
 ```bash
-npm run dev        # Vite on :9813 (relative base; mount via pathname / base tag)
+npm run dev        # Vite on :9813 — conflicts with compose publish of the same port
 npm run build      # → dist/ (packed by this module's Dockerfile)
 npm run typecheck  # vue-tsc --noEmit
 npm test           # Vitest + Testing Library (src/test/)
 ```
+
+**`npm run dev` alone is not a full product stand:** Vite does not serve
+`js/header.js` / header templates. Use Docker/compose (or monorepo
+`python scripts/stands/ensure.py reference-app-copy`) for the `UI_RUNTIME` overlay.
 
 `npm test` runs Vitest under `--no-experimental-webstorage` for the same reason as the React
 module: on Node 26 the runtime's own empty `localStorage` global wins over the jsdom one.
@@ -58,6 +62,6 @@ module: on Node 26 the runtime's own empty `localStorage` global wins over the j
 |--------|------|
 | `manifest.webmanifest` | `scope`/`start_url` under mount |
 | `sw.js` | Precache app shell; `/api/*` denylisted |
-| `public/icons/pwa-*.png` | Install icons |
+| `public/icons/pwa-*.png` | Install + apple-touch (`icons/pwa-192.png`) |
 
 SW registered in `src/pwa/registerServiceWorker.ts` under the Vite base path.

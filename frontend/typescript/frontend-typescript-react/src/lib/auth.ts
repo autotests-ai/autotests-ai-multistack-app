@@ -55,10 +55,7 @@ function removeFromLocalStorage(name: string): void {
   }
 }
 
-export function formatMessage(
-  template: string,
-  values: Record<string, string | number>,
-): string {
+export function formatMessage(template: string, values: Record<string, string | number>): string {
   return template.replace(/\{(\w+)\}/g, (_, key: string) =>
     values[key] !== undefined ? String(values[key]) : '',
   );

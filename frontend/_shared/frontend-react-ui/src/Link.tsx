@@ -1,6 +1,5 @@
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
 import { cn } from './cn';
-import './styles';
 
 export type LinkVariant = 'default' | 'nav';
 

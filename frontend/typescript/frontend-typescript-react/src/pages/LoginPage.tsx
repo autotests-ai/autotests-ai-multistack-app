@@ -1,7 +1,6 @@
-import { useEffect, useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import { Button, Panel, PlaqueField } from '@zero-design-system/react';
-import { LOGIN_MESSAGES } from '../lib/messages';
+import { type FormEvent, useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   getToken,
   login,
@@ -9,6 +8,7 @@ import {
   saveSession,
   validateCredentials,
 } from '../lib/auth';
+import { LOGIN_MESSAGES } from '../lib/messages';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -57,7 +57,12 @@ export function LoginPage() {
         testId="login-panel"
         className="auth-panel"
       >
-        <form id="login-form" className="auth-form" data-testid="login-form" onSubmit={handleSubmit}>
+        <form
+          id="login-form"
+          className="auth-form"
+          data-testid="login-form"
+          onSubmit={handleSubmit}
+        >
           <div className="plaque-field-list">
             <PlaqueField
               label="Login"
@@ -81,7 +86,12 @@ export function LoginPage() {
             />
           </div>
 
-          <p id="error-message" className="auth-error" aria-live="polite" data-testid="error-message">
+          <p
+            id="error-message"
+            className="auth-error"
+            aria-live="polite"
+            data-testid="error-message"
+          >
             {error}
           </p>
 

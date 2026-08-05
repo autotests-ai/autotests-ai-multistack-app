@@ -1,6 +1,5 @@
 import type { ComponentPropsWithoutRef, ElementType, ReactNode } from 'react';
 import { cn } from './cn';
-import './styles';
 
 export type WindowControlTone = 'danger' | 'info' | 'success' | 'neutral';
 

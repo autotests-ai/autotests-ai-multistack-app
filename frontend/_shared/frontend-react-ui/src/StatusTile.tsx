@@ -1,6 +1,5 @@
 import type { HTMLAttributes } from 'react';
 import { cn } from './cn';
-import './styles';
 
 /** Consumer shorthand → primitive modifier (`status-tile--*`). */
 export type StatusTileStatus = 'ok' | 'stale' | 'error' | 'disconnected';

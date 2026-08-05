@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import Button from '../components/Button.vue';
 import Panel from '../components/Panel.vue';
 import PlaqueField from '../components/PlaqueField.vue';
 import { REGISTER_MESSAGES } from '../lib/messages';
 import {
+  getToken,
   register,
   resolveAuthErrorMessage,
   saveSession,
@@ -18,6 +19,12 @@ const password = ref('');
 const confirmPassword = ref('');
 const error = ref('');
 const submitting = ref(false);
+
+onMounted(() => {
+  if (getToken()) {
+    void router.replace('/');
+  }
+});
 
 async function handleSubmit(event: Event): Promise<void> {
   event.preventDefault();

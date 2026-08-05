@@ -1,13 +1,14 @@
-import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import { Button, Panel, PlaqueField } from '@zero-design-system/react';
-import { REGISTER_MESSAGES } from '../lib/messages';
+import { type FormEvent, useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
+  getToken,
   register,
   resolveAuthErrorMessage,
   saveSession,
   validateCredentials,
 } from '../lib/auth';
+import { REGISTER_MESSAGES } from '../lib/messages';
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -16,6 +17,12 @@ export function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (getToken()) {
+      navigate('/', { replace: true });
+    }
+  }, [navigate]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -100,7 +107,12 @@ export function RegisterPage() {
             />
           </div>
 
-          <p id="error-message" className="auth-error" aria-live="polite" data-testid="error-message">
+          <p
+            id="error-message"
+            className="auth-error"
+            aria-live="polite"
+            data-testid="error-message"
+          >
             {error}
           </p>
 

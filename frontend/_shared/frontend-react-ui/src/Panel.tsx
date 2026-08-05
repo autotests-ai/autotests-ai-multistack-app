@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { useLayoutEffect, useRef } from 'react';
 import { cn } from './cn';
-import './styles';
 
 export type PanelVariant = 'content' | 'terminal';
 export type PanelTone = 'dark' | 'light';

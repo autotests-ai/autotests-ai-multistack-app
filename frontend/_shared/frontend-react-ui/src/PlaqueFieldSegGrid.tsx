@@ -2,7 +2,6 @@ import { Children, isValidElement } from 'react';
 import type { ReactNode } from 'react';
 import { cn } from './cn';
 import { usePlaqueFieldMagnet } from './usePlaqueFieldMagnet';
-import './styles';
 
 export interface PlaqueFieldSegGridProps {
   /** Grid cells — typically `PlaqueFieldSeg` fields. */

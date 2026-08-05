@@ -1,7 +1,6 @@
 import type { InputHTMLAttributes } from 'react';
 import { cn } from './cn';
 import { Input } from './Input';
-import './styles';
 
 export type PlaqueFieldLabelVariant = 'param' | 'caption';
 

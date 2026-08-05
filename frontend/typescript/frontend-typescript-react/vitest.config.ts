@@ -1,7 +1,8 @@
 /// <reference types="vitest/config" />
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+
 import { resolve } from 'node:path';
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
 
 const reactUiSrc = resolve(__dirname, '../../_shared/frontend-react-ui/src/index.ts');
 const sharedRoot = resolve(__dirname, '../../_shared');
@@ -25,9 +26,6 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts', 'allure-vitest/setup'],
     include: ['src/test/**/*.test.{ts,tsx}'],
     css: true,
-    reporters: [
-      'default',
-      ['allure-vitest/reporter', { resultsDir: 'allure-results' }],
-    ],
+    reporters: ['default', ['allure-vitest/reporter', { resultsDir: 'allure-results' }]],
   },
 });

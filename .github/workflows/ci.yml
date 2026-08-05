@@ -102,6 +102,10 @@ jobs:
           cache-dependency-path: frontend/typescript/frontend-typescript-react/package-lock.json
       - run: npm ci
         working-directory: frontend/typescript/frontend-typescript-react
+      - run: npm run lint
+        working-directory: frontend/typescript/frontend-typescript-react
+      - run: npm run typecheck
+        working-directory: frontend/typescript/frontend-typescript-react
       - run: npm test
         working-directory: frontend/typescript/frontend-typescript-react
 

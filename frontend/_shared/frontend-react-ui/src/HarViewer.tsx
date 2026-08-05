@@ -1,6 +1,5 @@
 import { Fragment, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react';
 import { cn } from './cn';
-import './styles';
 
 export const HAR_TIMING_KEYS = [
   'blocked',

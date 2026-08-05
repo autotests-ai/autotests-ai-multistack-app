@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react';
 import { cn } from './cn';
-import './styles';
 
 export type LangCode = 'en' | 'ru';
 

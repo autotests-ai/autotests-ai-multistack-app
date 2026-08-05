@@ -12,7 +12,6 @@ import {
   IconUpload,
   IconVncCopy,
 } from './vnc-icons';
-import './styles';
 
 export type VncWindowState = ConnectionState;
 

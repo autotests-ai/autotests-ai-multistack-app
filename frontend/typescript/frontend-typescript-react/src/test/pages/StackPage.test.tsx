@@ -1,6 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StackPage } from '../../pages/StackPage';
 
 const MATRIX = {
@@ -78,13 +78,11 @@ describe('StackPage', () => {
   });
 
   it('backend/frontend open links stay path-only (no ?tests=)', async () => {
-    const locationSpy = vi
-      .spyOn(window, 'location', 'get')
-      .mockReturnValue({
-        ...window.location,
-        pathname: '/backend-java-spring/frontend-typescript-react/stack/',
-        search: '?tests=tests-java-gradle-junit5-allure3-selenide',
-      } as Location);
+    const locationSpy = vi.spyOn(window, 'location', 'get').mockReturnValue({
+      ...window.location,
+      pathname: '/backend-java-spring/frontend-typescript-react/stack/',
+      search: '?tests=tests-java-gradle-junit5-allure3-selenide',
+    } as Location);
 
     try {
       renderStack();
@@ -107,9 +105,7 @@ describe('StackPage', () => {
       );
       expect(backendLink.getAttribute('href')).not.toContain('?');
 
-      const testsLink = screen.getByTestId(
-        'stack-tests-tests-java-gradle-junit5-allure3-selenide',
-      );
+      const testsLink = screen.getByTestId('stack-tests-tests-java-gradle-junit5-allure3-selenide');
       expect(testsLink.getAttribute('href')).toContain(
         '?tests=tests-java-gradle-junit5-allure3-selenide',
       );

@@ -1,6 +1,5 @@
 import type { HTMLAttributes } from 'react';
 import { cn } from './cn';
-import './styles';
 
 export type SelenoidMetricsVariant = 'header' | 'tile';
 

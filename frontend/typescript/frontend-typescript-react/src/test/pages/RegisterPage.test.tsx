@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RegisterPage } from '../../pages/RegisterPage';
 
 function jsonResponse(body: unknown, ok = true, status = 200): Response {
@@ -44,6 +44,13 @@ describe('RegisterPage', () => {
     expect(screen.getByTestId('login-link')).toBeInTheDocument();
   });
 
+  it('redirects home when a session token is already present', async () => {
+    localStorage.setItem('authToken', 'existing');
+    renderRegister();
+
+    expect(await screen.findByTestId('home-landed')).toBeInTheDocument();
+  });
+
   it('shows the exact mismatch error when passwords differ', async () => {
     const user = userEvent.setup();
     renderRegister();
@@ -62,11 +69,7 @@ describe('RegisterPage', () => {
       'fetch',
       vi.fn(() =>
         Promise.resolve(
-          jsonResponse(
-            { token: 'tok-reg', username: 'newuser', redirectUrl: '/' },
-            true,
-            201,
-          ),
+          jsonResponse({ token: 'tok-reg', username: 'newuser', redirectUrl: '/' }, true, 201),
         ),
       ),
     );
@@ -85,9 +88,7 @@ describe('RegisterPage', () => {
     const user = userEvent.setup();
     vi.stubGlobal(
       'fetch',
-      vi.fn(() =>
-        Promise.resolve(jsonResponse({ message: 'Username already taken' }, false, 409)),
-      ),
+      vi.fn(() => Promise.resolve(jsonResponse({ message: 'Username already taken' }, false, 409))),
     );
 
     renderRegister();

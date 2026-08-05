@@ -1,6 +1,7 @@
 # frontend-typescript-react
 
-Product UI — TypeScript + React (same screens as `frontend-javascript-react` / vanilla).
+Product UI — TypeScript + React (same screens as vanilla / Vue).  
+`frontend-javascript-react/` is an empty **slot** (not a twin product yet).
 
 Vite + React 19 + React Router. Vite `base` is `./` (one dist under
 `/{backend}/frontend-typescript-react/`); router `basename` and API paths come from
@@ -26,9 +27,8 @@ Prod URL: `https://reference-app-copy.autotests.ai/{backend}/frontend-typescript
 
 `appBase.ts` reads the mount off the pathname in the same order as the boot script in
 `index.html`: `/{backend}/{frontend}` → bare `/{frontend}` → document root. The root case is
-what the container publish-port (`:9811`, stand `reference_ci`) and `npm run dev` serve, so
-the basename there is empty — a mount-shaped one matches nothing and the router renders
-an empty page.
+what the container publish-port (`:9811`) and a bare Vite root serve, so the basename there
+is empty — a mount-shaped one matches nothing and the router renders an empty page.
 
 ## Contracts preserved for Selenide
 
@@ -42,25 +42,42 @@ The design-system header is SSOT and is **not** reimplemented in React. `<AppHea
 publishes `window.headerConfig` and injects `js/header.js` from the mount
 (`UI_RUNTIME` overlay in this module's nginx image).
 
+**`npm run dev` alone is not a full product stand:** Vite does not serve
+`js/header.js` / header templates. Use Docker/compose (or the monorepo
+`python scripts/stands/ensure.py reference-app-copy`) so the image overlay provides
+the runtime. Without it the SPA mounts but the header script 404s.
+
 ## Scripts
 
 ```bash
-npm run dev        # Vite on :9811 (relative base; mount via pathname / base tag)
+npm run dev        # Vite on :9811 — conflicts with compose publish of the same port
 npm run build      # → dist/ (packed by this module's Dockerfile)
 npm run typecheck  # tsc --noEmit
+npm run lint       # Biome check (src + configs)
 npm test           # Vitest + RTL (src/test/)
 ```
+
+If compose already holds `:9811`, either stop that service or run Vite with
+`vite --port <free>` — do not kill a live stand from an active chat.
 
 `npm test` runs Vitest under `--no-experimental-webstorage`: Node 26 owns a `localStorage`
 global that stays undefined without `--localstorage-file`, and Vitest keeps globals the
 runtime already defined instead of installing the jsdom ones. Without the flag every test
 touching `localStorage` fails on `Cannot read properties of undefined`.
 
+## Toolchain pin
+
+Vite **6.3.x** / `@vitejs/plugin-react` **4.6.x** / Vitest **3.2.x** / jsdom **26.x** —
+aligned with monorepo `packages/react-ui` and `docs/rag/config/react-toolchain.md`
+(Node 26 + TypeScript 7.0.2). Major bumps (Vite 8 / Vitest 4) stay a coordinated
+monorepo change, not a solo product bump.
+
 ## Build notes
 
 - `outDir` is module-local `dist/` with `emptyOutDir: true`.
 - Asset filenames are stable (unhashed).
-- Peer CSS: lean DS from `_shared/frontend-javascript-app/css` + product CSS in `css/`.
+- Peer CSS: lean DS from `_shared/frontend-javascript-app/css` + product CSS in `css/`
+  via `src/styles.ts` (single CSS entry — react-ui components do not side-import styles).
 
 ## PWA baseline
 
@@ -68,6 +85,6 @@ touching `localStorage` fails on `Cannot read properties of undefined`.
 |--------|------|
 | `manifest.webmanifest` | `scope`/`start_url` under mount |
 | `sw.js` | Precache app shell; `/api/*` denylisted |
-| `public/icons/pwa-*.png` | Install + apple-touch icons |
+| `public/icons/pwa-*.png` | Install + apple-touch (`icons/pwa-192.png`) |
 
 SW registered in `src/pwa/registerServiceWorker.ts` under the product mount path.

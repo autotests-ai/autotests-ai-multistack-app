@@ -1,6 +1,5 @@
 import type { HTMLAttributes, ReactNode } from 'react';
 import { cn } from './cn';
-import './styles';
 
 export type BadgeVariant = 'default' | 'primary';
 

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { cn } from './cn';
-import './styles';
 
 export const POLL_DEFAULT_MS = 5000;
 

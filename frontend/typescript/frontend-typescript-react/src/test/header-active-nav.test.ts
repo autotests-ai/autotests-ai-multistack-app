@@ -3,9 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // Canonical design-system header from lean runtime (committed; works in
 // standalone checkout without monorepo design-system symlink).
 const { HEADER_JS, TEMPLATE_HTML } = vi.hoisted(() => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { readFileSync: read } = require('node:fs') as typeof import('node:fs');
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { resolve: res } = require('node:path') as typeof import('node:path');
   const runtime = res(__dirname, '../../../../_shared/frontend-javascript-app');
   return {
@@ -46,9 +44,7 @@ const REFERENCE_HEADER_CONFIG = {
 };
 
 function navLinks(): HTMLAnchorElement[] {
-  return Array.from(
-    document.querySelectorAll<HTMLAnchorElement>('[data-testid="header-nav"] a'),
-  );
+  return Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-testid="header-nav"] a'));
 }
 
 function menuNavLinks(): HTMLAnchorElement[] {
@@ -184,23 +180,15 @@ describe('canonical header.js — mobile burger menu', () => {
       'header-menu-nav-register',
       'header-menu-nav-stack',
     ]);
-    expect(
-      document.querySelector('[data-testid="header-menu-search-input"]'),
-    ).not.toBeNull();
-    expect(
-      document.querySelector('[data-testid="header-menu-github"]'),
-    ).not.toBeNull();
-    expect(
-      document.querySelector('[data-testid="header-menu-github-pages"]'),
-    ).not.toBeNull();
+    expect(document.querySelector('[data-testid="header-menu-search-input"]')).not.toBeNull();
+    expect(document.querySelector('[data-testid="header-menu-github"]')).not.toBeNull();
+    expect(document.querySelector('[data-testid="header-menu-github-pages"]')).not.toBeNull();
   });
 
   it('toggles menu visibility via burger button', async () => {
     await mountAt(`${MOUNT}/`);
 
-    const burger = document.querySelector<HTMLButtonElement>(
-      '[data-testid="header-burger"]',
-    );
+    const burger = document.querySelector<HTMLButtonElement>('[data-testid="header-burger"]');
     const menu = document.querySelector<HTMLElement>('[data-testid="header-menu"]');
     expect(burger).not.toBeNull();
     expect(menu).not.toBeNull();
@@ -224,9 +212,7 @@ describe('canonical header.js — mobile burger menu', () => {
   it('closes menu when a menu nav link is clicked', async () => {
     await mountAt(`${MOUNT}/`);
 
-    const burger = document.querySelector<HTMLButtonElement>(
-      '[data-testid="header-burger"]',
-    );
+    const burger = document.querySelector<HTMLButtonElement>('[data-testid="header-burger"]');
     const menu = document.querySelector<HTMLElement>('[data-testid="header-menu"]');
     burger?.click();
     expect(menu?.hidden).toBe(false);

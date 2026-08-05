@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { cn } from './cn';
 import { ThemeIconMoon, ThemeIconSun } from './theme-icons';
-import './styles';
 
 export interface ThemeToggleProps {
   className?: string;

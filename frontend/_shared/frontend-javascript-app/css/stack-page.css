@@ -25,14 +25,18 @@
   margin-bottom: var(--space-4);
 }
 
-.stack-page__current {
+/* Override .badge { white-space: nowrap } so long pair labels wrap on mobile. */
+.badge.stack-page__current {
+  display: inline-block;
   text-decoration: none;
   max-width: 100%;
   overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
   font-family: var(--font-mono, ui-monospace, Menlo, monospace);
 }
 
-.stack-page__current:hover {
+.badge.stack-page__current:hover {
   filter: brightness(1.08);
 }
 
@@ -68,6 +72,25 @@
 @media (max-width: 900px) {
   .stack-page__boards {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stack-page__header {
+    min-width: 0;
+    padding-inline: var(--space-2, 0.5rem);
+  }
+
+  .badge.stack-page__current {
+    white-space: normal;
+  }
+
+  .stack-page__board-body {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .stack-page__table {
+    min-width: 28rem;
+    table-layout: auto;
   }
 }
 

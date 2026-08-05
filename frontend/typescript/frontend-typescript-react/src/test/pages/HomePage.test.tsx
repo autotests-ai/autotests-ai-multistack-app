@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HomePage } from '../../pages/HomePage';
 
 function jsonResponse(body: unknown, ok = true, status = 200): Response {
@@ -104,6 +104,29 @@ describe('HomePage', () => {
     await waitFor(() => expect(screen.getByTestId('item-row')).toBeInTheDocument());
     expect(screen.getByTestId('welcome-panel')).not.toBeVisible();
     expect(localStorage.getItem('authToken')).toBeNull();
+  });
+
+  it('does not clear session after unmount when profile fetch fails', async () => {
+    localStorage.setItem('authToken', 'stale-token');
+    let rejectProfile!: (reason?: unknown) => void;
+    const profilePromise = new Promise<Response>((_resolve, reject) => {
+      rejectProfile = reject;
+    });
+
+    stubDefaultApis((url) => {
+      if (url.includes('/api/auth/me')) {
+        return profilePromise;
+      }
+      return null;
+    });
+
+    const { unmount } = renderHome();
+    await waitFor(() => expect(screen.getByTestId('item-row')).toBeInTheDocument());
+    unmount();
+    rejectProfile(new Error('aborted'));
+    await Promise.resolve();
+
+    expect(localStorage.getItem('authToken')).toBe('stale-token');
   });
 
   it('logs out and navigates to login', async () => {

@@ -1,7 +1,6 @@
 import type { HTMLAttributes } from 'react';
 import { cn } from './cn';
 import { IconDocumentRemove, IconDotsHorizontal } from './vnc-icons';
-import './styles';
 
 export type ConnectionState =
   | 'connecting'

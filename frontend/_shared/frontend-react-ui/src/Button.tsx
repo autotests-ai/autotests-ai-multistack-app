@@ -1,6 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { cn } from './cn';
-import './styles';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 

@@ -37,9 +37,7 @@ function resolveFromPathname(pathname: string) {
   };
 }
 
-const resolved = resolveFromPathname(
-  typeof window !== 'undefined' ? window.location.pathname : '',
-);
+const resolved = resolveFromPathname(typeof window !== 'undefined' ? window.location.pathname : '');
 
 /** Router basename — trailing slash omitted. */
 export const APP_BASE = resolved.appBase;

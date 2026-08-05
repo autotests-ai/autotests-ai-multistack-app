@@ -1,7 +1,7 @@
-import { defineConfig, type Plugin } from 'vite';
-import react from '@vitejs/plugin-react';
-import { VitePWA } from 'vite-plugin-pwa';
 import { resolve } from 'node:path';
+import react from '@vitejs/plugin-react';
+import { defineConfig, type Plugin } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
 
 const reactUiSrc = resolve(__dirname, '../../_shared/frontend-react-ui/src/index.ts');
 // Relative base: one dist works under /{backend}/frontend-typescript-react/
@@ -47,10 +47,7 @@ function pinMountAssets(): Plugin {
         if (!next.includes('// __PIN_ASSETS__')) {
           throw new Error('pin-mount-assets: boot marker // __PIN_ASSETS__ missing in index.html');
         }
-        return next.replace(
-          /\/\/ __PIN_ASSETS__[^\n]*/,
-          writes.join('\n      '),
-        );
+        return next.replace(/\/\/ __PIN_ASSETS__[^\n]*/, writes.join('\n      '));
       },
     },
   };
@@ -98,7 +95,10 @@ export default defineConfig({
         ],
         navigateFallback: 'index.html',
         // Never SPA-fallback real assets (else /stack/assets/*.css → text/html MIME errors).
-        navigateFallbackDenylist: [/\/api\//, /\.(?:css|js|mjs|map|png|svg|ico|webmanifest|json|woff2?)$/i],
+        navigateFallbackDenylist: [
+          /\/api\//,
+          /\.(?:css|js|mjs|map|png|svg|ico|webmanifest|json|woff2?)$/i,
+        ],
         cleanupOutdatedCaches: true,
       },
       devOptions: {

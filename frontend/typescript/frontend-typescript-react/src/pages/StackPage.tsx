@@ -1,14 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
 import { Badge, Link, Panel } from '@zero-design-system/react';
-import { appPath } from '../lib/appBase';
+import { useEffect, useMemo, useState } from 'react';
+import { mountHeaderPollToggle, whenHeaderReady } from '../../../../_shared/poll-toggle';
 import {
-  mountHeaderPollToggle,
-  whenHeaderReady,
-} from '../../../../_shared/poll-toggle';
-import {
+  type BackendModule,
   comboHref,
   componentTestsMeta,
   componentTestsPath,
+  type FrontendModule,
   fetchStackMatrix,
   findById,
   GITHUB_MARK_PATH,
@@ -17,16 +15,15 @@ import {
   parseMount,
   parseTestsId,
   resolveTestsId,
+  type StackMatrix,
   shortModuleLabel,
   stackHref,
   summarizeMatrix,
+  type TestsModule,
   unitTestsMeta,
   unitTestsPath,
-  type BackendModule,
-  type FrontendModule,
-  type StackMatrix,
-  type TestsModule,
 } from '../../../../_shared/stack-matrix';
+import { appPath } from '../lib/appBase';
 
 type LoadState =
   | { status: 'loading' }
@@ -55,7 +52,7 @@ function GithubModuleLink({
       data-testid={`stack-gh-${kind}-${id}`}
     >
       <span className="icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="currentColor">
+        <svg viewBox="0 0 24 24" fill="currentColor" focusable="false">
           <path d={GITHUB_MARK_PATH} />
         </svg>
       </span>
@@ -131,10 +128,7 @@ function ModuleRows({
               </td>
               <td>
                 {openable ? (
-                  <Link
-                    className={`stack-page__open${isCurrent ? ' is-active' : ''}`}
-                    href={href}
-                  >
+                  <Link className={`stack-page__open${isCurrent ? ' is-active' : ''}`} href={href}>
                     open →
                   </Link>
                 ) : (
@@ -254,8 +248,7 @@ function TestsBoard({
           const layers = (item.layers || []).join(' · ');
           const meta = `${item.language || 'tests'} · ${status}`;
           const isCurrent = id === currentTests;
-          const selectable =
-            isOpenable(status) && Boolean(currentBackend && currentFrontend);
+          const selectable = isOpenable(status) && Boolean(currentBackend && currentFrontend);
           const href = stackHref(currentBackend, currentFrontend, id);
           return (
             <tr key={id} className={isCurrent ? 'stack-page__row--active' : undefined}>
@@ -299,10 +292,7 @@ function TestsBoard({
               </td>
               <td>
                 {selectable ? (
-                  <Link
-                    className={`stack-page__open${isCurrent ? ' is-active' : ''}`}
-                    href={href}
-                  >
+                  <Link className={`stack-page__open${isCurrent ? ' is-active' : ''}`} href={href}>
                     select →
                   </Link>
                 ) : (
@@ -365,10 +355,7 @@ export function StackPage() {
   const homeHref = comboHref(mount.backendId, mount.frontendId, '/');
 
   return (
-    <main
-      className="page-shell page-shell--below-header stack-page"
-      data-testid="stack-page"
-    >
+    <main className="page-shell page-shell--below-header stack-page" data-testid="stack-page">
       <div className="stack-page__header">
         <a
           className="badge badge--primary stack-page__current"
@@ -396,7 +383,11 @@ export function StackPage() {
       {summary && (
         <>
           <div className="stack-page__boards">
-            <Panel title="Backend" bodyClassName="stack-page__board-body" className="stack-page__board">
+            <Panel
+              title="Backend"
+              bodyClassName="stack-page__board-body"
+              className="stack-page__board"
+            >
               <ModuleRows
                 kind="backend"
                 items={summary.backends}
@@ -404,7 +395,11 @@ export function StackPage() {
                 currentFrontend={mount.frontendId}
               />
             </Panel>
-            <Panel title="Frontend" bodyClassName="stack-page__board-body" className="stack-page__board">
+            <Panel
+              title="Frontend"
+              bodyClassName="stack-page__board-body"
+              className="stack-page__board"
+            >
               <ModuleRows
                 kind="frontend"
                 items={summary.frontends}

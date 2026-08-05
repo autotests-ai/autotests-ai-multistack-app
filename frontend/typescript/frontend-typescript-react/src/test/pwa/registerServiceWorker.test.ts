@@ -20,10 +20,7 @@ describe('registerServiceWorker', () => {
     registerServiceWorker();
 
     expect(register).toHaveBeenCalledWith('/sw.js');
-    expect(swAddEventListener).toHaveBeenCalledWith(
-      'controllerchange',
-      expect.any(Function),
-    );
+    expect(swAddEventListener).toHaveBeenCalledWith('controllerchange', expect.any(Function));
     await Promise.resolve();
     expect(update).toHaveBeenCalled();
   });

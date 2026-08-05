@@ -1,6 +1,5 @@
 import type { ChangeEvent, ReactNode } from 'react';
 import { cn } from './cn';
-import './styles';
 
 export interface PlaqueSelectOption {
   /** Wire value (`<option value>`). */

@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { cn } from './cn';
-import './styles';
 
 export interface PlaqueTagstripOption {
   /** Wire value (mapped to `data-value`); membership compares against this. */

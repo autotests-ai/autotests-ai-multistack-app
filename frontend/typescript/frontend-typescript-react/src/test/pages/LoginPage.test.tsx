@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LoginPage } from '../../pages/LoginPage';
 
 function jsonResponse(body: unknown, ok = true, status = 200): Response {
@@ -45,6 +45,13 @@ describe('LoginPage', () => {
     expect(screen.getByTestId('register-link')).toBeInTheDocument();
   });
 
+  it('redirects home when a session token is already present', async () => {
+    localStorage.setItem('authToken', 'existing');
+    renderLogin();
+
+    expect(await screen.findByTestId('home-landed')).toBeInTheDocument();
+  });
+
   it('shows the exact login-required error when username is empty', async () => {
     const user = userEvent.setup();
     renderLogin();
@@ -74,9 +81,7 @@ describe('LoginPage', () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(() =>
-        Promise.resolve(
-          jsonResponse({ token: 'tok-1', username: 'user1', redirectUrl: '/' }),
-        ),
+        Promise.resolve(jsonResponse({ token: 'tok-1', username: 'user1', redirectUrl: '/' })),
       ),
     );
 
