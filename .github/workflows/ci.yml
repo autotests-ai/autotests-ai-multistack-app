@@ -20,14 +20,11 @@ on:
         type: choice
         options: [reference_prod, reference_ci]
         default: reference_prod
-      includeTags:
-        description: "-DincludeTags when TESTS_LANG=java, e.g. visual | manual | smoke | mount (empty = no extra layer-tests run)"
-        type: string
-        default: ""
-      excludeTags:
-        description: "-DexcludeTags when TESTS_LANG=java, e.g. visual"
-        type: string
-        default: ""
+      layers:
+        description: "Browser layer jobs (java tag slice; other TESTS_LANG → full suite on e2e-tests only)"
+        type: choice
+        options: [none, integration, e2e, manual, all]
+        default: none
       runners:
         description: "Extra language runners against prod (side stacks under tests/<lang>/)"
         type: choice
@@ -54,7 +51,7 @@ env:
   # Teaching tests module — selenide today; flip TESTS/TESTS_DIR/TESTS_LANG together
   TESTS: tests-java-gradle-junit5-allure3-selenide
   TESTS_DIR: tests/java/tests-java-gradle-junit5-allure3-selenide
-  # java|javascript|typescript|python — test-infra / api / layer-tests follow this
+  # java|javascript|typescript|python — test-infra / api / browser layer jobs follow this
   TESTS_LANG: java
   PUBLIC_HOST: reference-app-copy.autotests.ai
   JAVA_VERSION: "21"
@@ -351,15 +348,18 @@ jobs:
         env:
           BASE_URL: https://${{ env.PUBLIC_HOST }}/${{ env.BACKEND }}/${{ env.FRONTEND }}/
 
-  # Dispatch path for integration / e2e / visual / manual (and any other tag slice).
-  layer-tests:
-    if: github.event_name == 'workflow_dispatch' && inputs.includeTags != ''
+  # Dispatch: browser layers against prod (or reference_ci if a compose stack exists).
+  # Fixed tag slices — same commands a student runs locally (see tests/LAYERS.md).
+  integration-tests:
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      (inputs.layers == 'integration' || inputs.layers == 'all')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
 
-      # ── java (tag slice via -DincludeTags / -DexcludeTags) ────────────────
+      # ── java (-DincludeTags=mount) ────────────────────────────────────────
       - if: env.TESTS_LANG == 'java'
         uses: actions/setup-java@v5
         with:
@@ -373,12 +373,35 @@ jobs:
       - if: env.TESTS_LANG == 'java'
         env:
           RUN_ENV: ${{ inputs.env }}
-          INCLUDE_TAGS: ${{ inputs.includeTags }}
-          EXCLUDE_TAGS: ${{ inputs.excludeTags }}
-        run: ./gradlew test "-Denv=$RUN_ENV" "-DincludeTags=$INCLUDE_TAGS" "-DexcludeTags=$EXCLUDE_TAGS" -DallureReportMode=none
+        run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=mount -DallureReportMode=none
         working-directory: ${{ env.TESTS_DIR }}
 
-      # ── javascript / typescript (full suite; tag inputs ignored) ──────────
+  e2e-tests:
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      (inputs.layers == 'e2e' || inputs.layers == 'all')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      # ── java (-DincludeTags=smoke -DexcludeTags=visual) ───────────────────
+      - if: env.TESTS_LANG == 'java'
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+      - if: env.TESTS_LANG == 'java'
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
+      - if: env.TESTS_LANG == 'java'
+        env:
+          RUN_ENV: ${{ inputs.env }}
+        run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=smoke -DexcludeTags=visual -DallureReportMode=none
+        working-directory: ${{ env.TESTS_DIR }}
+
+      # ── javascript / typescript (full suite; no tag pyramid yet) ──────────
       - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
         uses: actions/setup-node@v6
         with:
@@ -397,7 +420,7 @@ jobs:
         env:
           UI_URL: https://${{ env.PUBLIC_HOST }}/${{ env.BACKEND }}/${{ env.FRONTEND }}/
 
-      # ── python (full suite; tag inputs ignored) ───────────────────────────
+      # ── python (full suite; no tag pyramid yet) ───────────────────────────
       - if: env.TESTS_LANG == 'python'
         uses: actions/setup-python@v6
         with:
@@ -412,6 +435,31 @@ jobs:
         working-directory: ${{ env.TESTS_DIR }}
         env:
           BASE_URL: https://${{ env.PUBLIC_HOST }}/${{ env.BACKEND }}/${{ env.FRONTEND }}/
+
+  manual-tests:
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      (inputs.layers == 'manual' || inputs.layers == 'all')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      # ── java (-DincludeTags=manual) ───────────────────────────────────────
+      - if: env.TESTS_LANG == 'java'
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+      - if: env.TESTS_LANG == 'java'
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
+      - if: env.TESTS_LANG == 'java'
+        env:
+          RUN_ENV: ${{ inputs.env }}
+        run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=manual -DallureReportMode=none
+        working-directory: ${{ env.TESTS_DIR }}
 
   javascript-tests:
     if: github.event_name == 'workflow_dispatch' && (inputs.runners == 'javascript' || inputs.runners == 'both')
