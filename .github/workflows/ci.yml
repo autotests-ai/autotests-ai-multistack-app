@@ -50,13 +50,13 @@ env:
   TESTS_DIR: tests/java/tests-java-gradle-junit5-allure3-selenide
   # java|javascript|typescript|python — test-infra / api / browser layer jobs follow this
   TESTS_LANG: java
-  PUBLIC_HOST: reference-app-copy.autotests.ai
+  APP_SLUG: reference-app-copy
   JAVA_VERSION: "21"
   NODE_VERSION: "26"
   PYTHON_VERSION: "3.12"
   GO_VERSION: "1.25"
   # ── Derived (edit stack defaults above, not these) ───────────────────────
-  APP_SLUG: reference-app-copy
+  PUBLIC_HOST: ${{ env.APP_SLUG }}.autotests.ai
   APP_URL: https://${{ env.PUBLIC_HOST }}/${{ env.BACKEND }}/${{ env.FRONTEND }}/
   # Playwright → UI_URL; pytest → BASE_URL (same stand URL)
   UI_URL: ${{ env.APP_URL }}
@@ -204,6 +204,8 @@ jobs:
   test-infra-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      LAYER: test-infra
     steps:
       - uses: actions/checkout@v7
 
@@ -230,9 +232,9 @@ jobs:
         uses: ./.github/actions/publish-allure
         with:
           tests-dir: ${{ env.TESTS_DIR }}
-          artifact-suffix: test-infra-tests
-          notification-project: "${{ env.APP_SLUG }} test-infra #${{ github.run_number }}"
-          launch-name: "test-infra — ${{ env.RUN_LABEL }}"
+          artifact-suffix: ${{ env.LAYER }}-tests
+          notification-project: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
+          launch-name: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
       - if: always() && env.TESTS_LANG == 'java'
         continue-on-error: true
         uses: actions/upload-artifact@v7
@@ -425,6 +427,8 @@ jobs:
     needs: deploy
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      LAYER: api
     steps:
       - uses: actions/checkout@v7
 
@@ -447,9 +451,9 @@ jobs:
         uses: ./.github/actions/publish-allure
         with:
           tests-dir: ${{ env.TESTS_DIR }}
-          artifact-suffix: api-tests
-          notification-project: "${{ env.APP_SLUG }} api #${{ github.run_number }}"
-          launch-name: "api — ${{ env.RUN_LABEL }}"
+          artifact-suffix: ${{ env.LAYER }}-tests
+          notification-project: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
+          launch-name: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
 
       # ── javascript / typescript (full suite) ──────────────────────────────
       - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
@@ -490,6 +494,8 @@ jobs:
       (inputs.layers == 'integration' || inputs.layers == 'all')
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      LAYER: integration
     steps:
       - uses: actions/checkout@v7
 
@@ -514,9 +520,9 @@ jobs:
         uses: ./.github/actions/publish-allure
         with:
           tests-dir: ${{ env.TESTS_DIR }}
-          artifact-suffix: integration-tests
-          notification-project: "${{ env.APP_SLUG }} integration #${{ github.run_number }}"
-          launch-name: "integration — ${{ env.RUN_LABEL }}"
+          artifact-suffix: ${{ env.LAYER }}-tests
+          notification-project: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
+          launch-name: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
 
   e2e-tests:
     if: >-
@@ -524,6 +530,8 @@ jobs:
       (inputs.layers == 'e2e' || inputs.layers == 'all')
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      LAYER: e2e
     steps:
       - uses: actions/checkout@v7
 
@@ -547,9 +555,9 @@ jobs:
         uses: ./.github/actions/publish-allure
         with:
           tests-dir: ${{ env.TESTS_DIR }}
-          artifact-suffix: e2e-tests
-          notification-project: "${{ env.APP_SLUG }} e2e #${{ github.run_number }}"
-          launch-name: "e2e — ${{ env.RUN_LABEL }}"
+          artifact-suffix: ${{ env.LAYER }}-tests
+          notification-project: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
+          launch-name: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
 
       # ── javascript / typescript (full suite; no tag pyramid yet) ──────────
       - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
@@ -588,6 +596,8 @@ jobs:
       (inputs.layers == 'visual' || inputs.layers == 'all')
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      LAYER: visual
     steps:
       - uses: actions/checkout@v7
 
@@ -611,9 +621,9 @@ jobs:
         uses: ./.github/actions/publish-allure
         with:
           tests-dir: ${{ env.TESTS_DIR }}
-          artifact-suffix: visual-tests
-          notification-project: "${{ env.APP_SLUG }} visual #${{ github.run_number }}"
-          launch-name: "visual — ${{ env.RUN_LABEL }}"
+          artifact-suffix: ${{ env.LAYER }}-tests
+          notification-project: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
+          launch-name: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
 
   manual-tests:
     if: >-
@@ -621,6 +631,8 @@ jobs:
       (inputs.layers == 'manual' || inputs.layers == 'all')
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      LAYER: manual
     steps:
       - uses: actions/checkout@v7
 
@@ -644,6 +656,6 @@ jobs:
         uses: ./.github/actions/publish-allure
         with:
           tests-dir: ${{ env.TESTS_DIR }}
-          artifact-suffix: manual-tests
-          notification-project: "${{ env.APP_SLUG }} manual #${{ github.run_number }}"
-          launch-name: "manual — ${{ env.RUN_LABEL }}"
+          artifact-suffix: ${{ env.LAYER }}-tests
+          notification-project: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
+          launch-name: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
