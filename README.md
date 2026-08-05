@@ -73,13 +73,15 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · all jobs live in [`.github/workflow
 
 | Job | Where |
 |-----|-------|
-| `unit-tests` | `backend/java/backend-java-spring/` — `./gradlew test` + JaCoCo |
-| `test-infra-tests` | `tests/java/…` — `./gradlew test -Denv=reference_ci -DincludeTags=test-infra` |
-| `component-tests` | `frontend/typescript/frontend-typescript-react/` — `npm test` |
-| `api-tests` | `tests/java/…` — `./gradlew test -Denv=reference_prod -DincludeTags=api` after deploy |
+| `unit-tests` | `BACKEND_DIR` — `./gradlew test` + JaCoCo |
+| `test-infra-tests` | `tests/java/<TESTS_JAVA>` — `-Denv=reference_ci -DincludeTags=test-infra` |
+| `component-tests` | `FRONTEND_DIR` — `npm test` |
+| `api-tests` | `tests/java/<TESTS_JAVA>` — `-Denv=reference_prod -DincludeTags=api` after deploy |
 
-The first three block a pull request. Browser layers (integration, e2e, visual, manual), Playwright and
-pytest have no scheduled job — dispatch the workflow with `includeTags` / `runners` when you want them.
+The first three block a pull request. Browser layers (integration, e2e, visual, manual) and
+extra language runners have no scheduled job — dispatch with `includeTags` / `runners`
+(`javascript` \| `python` \| `both`) when you want them. Stack defaults (`BACKEND` / `FRONTEND` /
+`TESTS_*`) live once at the top of [`ci.yml`](.github/workflows/ci.yml).
 
 ## Ports (local = prod host upstream)
 
@@ -159,7 +161,7 @@ One workflow — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 | Setting | Value |
 |---------|-------|
 | `APP_DIR` | `/home/reference_app_copy/reference-app-copy` |
-| Deployed stacks | `backend-java-spring` + `frontend-typescript-react` |
+| Deployed stacks | `env.BACKEND` + `env.FRONTEND` in `ci.yml` (defaults: java-spring + typescript-react) |
 
 Allure report, TestOps and notifications will be added later as ordinary jobs after `prod-api`.
 

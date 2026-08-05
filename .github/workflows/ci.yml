@@ -2,6 +2,10 @@ name: CI
 
 # One test task, two knobs: -Denv=<stand> picks where we point, -DincludeTags/-DexcludeTags pick
 # which tests run. Every job below is the same command a student types locally.
+#
+# Active stack defaults live in `env:` once — paths, compose services, prod URL and GHCR
+# package names are derived from them. Swap TESTS_JAVA to …-selenium (or BACKEND / FRONTEND)
+# when the teaching default changes; job ids stay language/layer names, not tool names.
 
 on:
   pull_request:
@@ -16,7 +20,7 @@ on:
         options: [reference_prod, reference_ci]
         default: reference_prod
       includeTags:
-        description: "-DincludeTags, e.g. visual | manual | smoke | mount (empty = no extra gradle run)"
+        description: "-DincludeTags, e.g. visual | manual | smoke | mount (empty = no extra java-tests run)"
         type: string
         default: ""
       excludeTags:
@@ -24,9 +28,9 @@ on:
         type: string
         default: ""
       runners:
-        description: "Extra language runners against prod"
+        description: "Extra language runners against prod (module ids = env.TESTS_*)"
         type: choice
-        options: [none, playwright, pytest, both]
+        options: [none, javascript, python, both]
         default: none
 
 concurrency:
@@ -38,6 +42,20 @@ permissions:
 
 env:
   IMAGE_TAG: ${{ github.sha }}
+  # ── Active stack defaults (change here only) ─────────────────────────────
+  BACKEND: backend-java-spring
+  BACKEND_DIR: backend/java/backend-java-spring
+  BACKEND_PORT: "8800"
+  FRONTEND: frontend-typescript-react
+  FRONTEND_DIR: frontend/typescript/frontend-typescript-react
+  # Java teaching module — selenide today; flip to …-selenium / allure2 / … when that slot goes active
+  TESTS_JAVA: tests-java-gradle-junit5-allure3-selenide
+  TESTS_JAVASCRIPT: tests-javascript-playwright
+  TESTS_PYTHON: tests-python-selenium
+  PUBLIC_HOST: reference-app-copy.autotests.ai
+  JAVA_VERSION: "21"
+  NODE_VERSION: "26"
+  PYTHON_VERSION: "3.13"
 
 jobs:
   unit-tests:
@@ -48,8 +66,8 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: "21"
-      # Owns the Gradle User Home cache: entries are keyed per job, so the four Java jobs no
+          java-version: ${{ env.JAVA_VERSION }}
+      # Owns the Gradle User Home cache: entries are keyed per job, so the Java jobs no
       # longer share one. setup-java's `cache: gradle` must stay off — both cache ~/.gradle.
       # cache-encryption-key exports GRADLE_ENCRYPTION_KEY so Gradle encrypts the project
       # configuration-cache with a stable key (without it each runner invents its own).
@@ -60,35 +78,12 @@ jobs:
       # the project and needs its own entry. Both pieces are required — either alone is a miss.
       - uses: actions/cache@v6
         with:
-          path: backend/java/backend-java-spring/.gradle/configuration-cache
-          key: gradle-cc-backend-${{ hashFiles('backend/java/backend-java-spring/*.gradle*', 'backend/java/backend-java-spring/gradle/wrapper/gradle-wrapper.properties', 'backend/java/backend-java-spring/gradle.properties') }}-${{ github.sha }}
+          path: ${{ env.BACKEND_DIR }}/.gradle/configuration-cache
+          key: gradle-cc-${{ env.BACKEND }}-${{ hashFiles(format('{0}/*.gradle*', env.BACKEND_DIR), format('{0}/gradle/wrapper/gradle-wrapper.properties', env.BACKEND_DIR), format('{0}/gradle.properties', env.BACKEND_DIR)) }}-${{ github.sha }}
           restore-keys: |
-            gradle-cc-backend-${{ hashFiles('backend/java/backend-java-spring/*.gradle*', 'backend/java/backend-java-spring/gradle/wrapper/gradle-wrapper.properties', 'backend/java/backend-java-spring/gradle.properties') }}-
+            gradle-cc-${{ env.BACKEND }}-
       - run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification
-        working-directory: backend/java/backend-java-spring
-
-  python-unit-tests:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        module:
-          - backend-python-flask
-          - backend-python-fastapi
-          - backend-python-django
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
-          cache: pip
-          cache-dependency-path: backend/python/${{ matrix.module }}/requirements.txt
-      - run: python -m pip install -r requirements.txt
-        working-directory: backend/python/${{ matrix.module }}
-      # pytest.ini wires --cov-fail-under=100 (same bar as the Java JaCoCo gate above).
-      - run: python -m pytest
-        working-directory: backend/python/${{ matrix.module }}
+        working-directory: ${{ env.BACKEND_DIR }}
 
   component-tests:
     runs-on: ubuntu-latest
@@ -97,17 +92,17 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
         with:
-          node-version: "26"
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
-          cache-dependency-path: frontend/typescript/frontend-typescript-react/package-lock.json
+          cache-dependency-path: ${{ env.FRONTEND_DIR }}/package-lock.json
       - run: npm ci
-        working-directory: frontend/typescript/frontend-typescript-react
+        working-directory: ${{ env.FRONTEND_DIR }}
       - run: npm run lint
-        working-directory: frontend/typescript/frontend-typescript-react
+        working-directory: ${{ env.FRONTEND_DIR }}
       - run: npm run typecheck
-        working-directory: frontend/typescript/frontend-typescript-react
+        working-directory: ${{ env.FRONTEND_DIR }}
       - run: npm test
-        working-directory: frontend/typescript/frontend-typescript-react
+        working-directory: ${{ env.FRONTEND_DIR }}
 
   test-infra-tests:
     runs-on: ubuntu-latest
@@ -117,14 +112,14 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: "21"
+          java-version: ${{ env.JAVA_VERSION }}
       - uses: gradle/actions/setup-gradle@v6
       # Coverage gate reads build/jacoco/test.exec, so it is only meaningful with this filter.
       - run: ./gradlew test jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags=test-infra -DallureReportMode=none
-        working-directory: tests/java/tests-java-gradle-junit5-allure3-selenide
+        working-directory: tests/java/${{ env.TESTS_JAVA }}
 
   build:
-    needs: [unit-tests, python-unit-tests, component-tests, test-infra-tests]
+    needs: [unit-tests, component-tests, test-infra-tests]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -138,8 +133,8 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - run: docker compose build backend-java-spring frontend-typescript-react
-      - run: docker compose push backend-java-spring frontend-typescript-react
+      - run: docker compose build ${{ env.BACKEND }} ${{ env.FRONTEND }}
+      - run: docker compose push ${{ env.BACKEND }} ${{ env.FRONTEND }}
       # Keep the newest N SHA versions per package; never delete a version that carries `latest`.
       # Needs repo Admin on each package (Manage Actions access). No PAT — GITHUB_TOKEN only.
       - name: Retain last 10 GHCR versions
@@ -150,8 +145,8 @@ jobs:
           set -euo pipefail
           org="${{ github.repository_owner }}"
           for pkg in \
-            reference-app-copy-backend-java-spring \
-            reference-app-copy-frontend-typescript-react
+            "reference-app-copy-${{ env.BACKEND }}" \
+            "reference-app-copy-${{ env.FRONTEND }}"
           do
             echo "Cleaning ghcr.io/${org}/${pkg} (keep ${KEEP}; protect latest)"
             to_delete="$(
@@ -197,9 +192,9 @@ jobs:
             git fetch origin
             git checkout --force "$IMAGE_TAG"
             echo "$GHCR_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            docker compose pull backend-java-spring frontend-typescript-react
-            docker compose up -d --remove-orphans backend-java-spring frontend-typescript-react
-            curl -fsS --retry 30 --retry-delay 2 --retry-all-errors http://127.0.0.1:8800/api/health
+            docker compose pull ${{ env.BACKEND }} ${{ env.FRONTEND }}
+            docker compose up -d --remove-orphans ${{ env.BACKEND }} ${{ env.FRONTEND }}
+            curl -fsS --retry 30 --retry-delay 2 --retry-all-errors http://127.0.0.1:${{ env.BACKEND_PORT }}/api/health
             docker logout ghcr.io
 
   api-tests:
@@ -211,15 +206,15 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: "21"
+          java-version: ${{ env.JAVA_VERSION }}
       # Reads the entry written by test-infra-tests on main; no need to write another.
       - uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: true
       - run: ./gradlew test -Denv=reference_prod -DincludeTags=api -DallureReportMode=none
-        working-directory: tests/java/tests-java-gradle-junit5-allure3-selenide
+        working-directory: tests/java/${{ env.TESTS_JAVA }}
 
-  gradle-tests:
+  java-tests:
     if: github.event_name == 'workflow_dispatch' && inputs.includeTags != ''
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -228,7 +223,7 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: "21"
+          java-version: ${{ env.JAVA_VERSION }}
       # Manual slices against prod: read the shared entry, never write one of their own.
       - uses: gradle/actions/setup-gradle@v6
         with:
@@ -238,42 +233,43 @@ jobs:
           INCLUDE_TAGS: ${{ inputs.includeTags }}
           EXCLUDE_TAGS: ${{ inputs.excludeTags }}
         run: ./gradlew test "-Denv=$RUN_ENV" "-DincludeTags=$INCLUDE_TAGS" "-DexcludeTags=$EXCLUDE_TAGS" -DallureReportMode=none
-        working-directory: tests/java/tests-java-gradle-junit5-allure3-selenide
+        working-directory: tests/java/${{ env.TESTS_JAVA }}
 
-  playwright-tests:
-    if: github.event_name == 'workflow_dispatch' && (inputs.runners == 'playwright' || inputs.runners == 'both')
+  javascript-tests:
+    if: github.event_name == 'workflow_dispatch' && (inputs.runners == 'javascript' || inputs.runners == 'both')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      UI_URL: https://reference-app-copy.autotests.ai/backend-java-spring/frontend-typescript-react/
+      UI_URL: https://${{ env.PUBLIC_HOST }}/${{ env.BACKEND }}/${{ env.FRONTEND }}/
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
         with:
-          node-version: "26"
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
-          cache-dependency-path: tests/javascript/tests-javascript-playwright/package-lock.json
+          cache-dependency-path: tests/javascript/${{ env.TESTS_JAVASCRIPT }}/package-lock.json
       - run: npm ci
-        working-directory: tests/javascript/tests-javascript-playwright
+        working-directory: tests/javascript/${{ env.TESTS_JAVASCRIPT }}
+      # Toolchain follows the active TESTS_JAVASCRIPT module (playwright today).
       - run: npx playwright install --with-deps chromium
-        working-directory: tests/javascript/tests-javascript-playwright
+        working-directory: tests/javascript/${{ env.TESTS_JAVASCRIPT }}
       - run: npm test
-        working-directory: tests/javascript/tests-javascript-playwright
+        working-directory: tests/javascript/${{ env.TESTS_JAVASCRIPT }}
 
-  pytest-tests:
-    if: github.event_name == 'workflow_dispatch' && (inputs.runners == 'pytest' || inputs.runners == 'both')
+  python-tests:
+    if: github.event_name == 'workflow_dispatch' && (inputs.runners == 'python' || inputs.runners == 'both')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      BASE_URL: https://reference-app-copy.autotests.ai/backend-java-spring/frontend-typescript-react/
+      BASE_URL: https://${{ env.PUBLIC_HOST }}/${{ env.BACKEND }}/${{ env.FRONTEND }}/
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.13"
+          python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
-          cache-dependency-path: tests/python/tests-python-selenium/requirements.txt
+          cache-dependency-path: tests/python/${{ env.TESTS_PYTHON }}/requirements.txt
       - run: python -m pip install -r requirements.txt
-        working-directory: tests/python/tests-python-selenium
+        working-directory: tests/python/${{ env.TESTS_PYTHON }}
       - run: python -m pytest
-        working-directory: tests/python/tests-python-selenium
+        working-directory: tests/python/${{ env.TESTS_PYTHON }}

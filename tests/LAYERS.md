@@ -91,7 +91,9 @@ Not duplicates — different failure modes. Chrome layout for the app is `integr
 |---------|------|
 | Pull request (blocks merge) | `unit-tests`, `component-tests`, `test-infra-tests` |
 | Push to `main` | the same three → `build` → `deploy` → `api-tests` on `reference_prod` |
-| `workflow_dispatch` | `gradle-tests` with the `env` / `includeTags` / `excludeTags` you type; `playwright-tests` and `pytest-tests` behind the `runners` input |
+| `workflow_dispatch` | `java-tests` with the `env` / `includeTags` / `excludeTags` you type; `javascript-tests` / `python-tests` behind the `runners` input (`none` \| `javascript` \| `python` \| `both`) |
+
+Active modules and prod URL are workflow `env` defaults in [`ci.yml`](../.github/workflows/ci.yml) (`BACKEND`, `FRONTEND`, `TESTS_JAVA`, `TESTS_JAVASCRIPT`, `TESTS_PYTHON`) — change once, jobs reuse them. Job ids are layers or languages, not tools (`javascript-tests`, not `playwright-tests`).
 
 Nothing runs on a schedule. Browser layers (integration, e2e, visual, manual) have no PR job: a
 GitHub runner has no compose stack, and against prod they belong to a deliberate dispatch run.
