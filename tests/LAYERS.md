@@ -28,7 +28,8 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
 ## Two knobs, no layer tasks
 
-A layer is a **tag filter**, a stand is **`-Denv`**. There is one Gradle task — `test`:
+When `TESTS_LANG=java`, a layer is a **tag filter**, a stand is **`-Denv`**. There is one Gradle
+task — `test`:
 
 ```bash
 ./gradlew test -Denv=reference_ci   -DincludeTags=test-infra
@@ -44,22 +45,25 @@ A layer is a **tag filter**, a stand is **`-Denv`**. There is one Gradle task �
 Anything else — `headless`, `enableHar`, `enableVideo`, `updateBaselines`, `allureReportMode` — is a
 per-run `-D<key>=<value>`. Available keys: `src/test/resources/config/default.properties`.
 
+For `TESTS_LANG` ∈ `javascript` \| `typescript` \| `python`, CI runs the **full** active-module
+suite (`npm test` / `pytest` with `UI_URL` / `BASE_URL`) — no Gradle tag slice yet.
+
 ## Layer table
 
 | Layer | Zone | Where | Selector | Run |
 |-------|------|-------|----------|-----|
 | unit | backend | active `BACKEND_DIR` (default `backend/java/backend-java-spring/`) | all backend unit tests | by `BACKEND_LANG`: gradle+JaCoCo · `pytest` · `go test` · `npm test` — see [backend/README.md](../backend/README.md) |
-| test-infra | tests | `…/tests/testinfra/` | `@Layer("test-infra")` + `@Tag("test-infra")` | `-DincludeTags=test-infra` |
+| test-infra | tests | `…/tests/testinfra/` | `@Layer("test-infra")` + `@Tag("test-infra")` | by `TESTS_LANG`: java → `-DincludeTags=test-infra`; else full suite |
 | component | frontend | `frontend/typescript/frontend-typescript-react/src/test/` | Vitest | `npm test` |
-| api | tests | `…/tests/api/` | `@Tag("api")` | `-DincludeTags=api` |
-| integration | tests | e.g. `LoginFormTests`, `LoginEmbedTests` | `@Tag("mount")` | `-DincludeTags=mount` |
-| e2e | tests | `…/tests/`, `…/tests/e2e/` | `@Tag("smoke")` | `-DincludeTags=smoke -DexcludeTags=visual` |
-| visual | tests | baselines | `@Tag("visual")` | `-DincludeTags=visual` |
-| manual | tests | stubs | `@Tag("manual")` | `-DincludeTags=manual` |
+| api | tests | `…/tests/api/` | `@Tag("api")` | by `TESTS_LANG`: java → `-DincludeTags=api`; else full suite |
+| integration | tests | e.g. `LoginFormTests`, `LoginEmbedTests` | `@Tag("mount")` | by `TESTS_LANG`: java → `-DincludeTags=mount` via `layer-tests`; else full suite |
+| e2e | tests | `…/tests/`, `…/tests/e2e/` | `@Tag("smoke")` | by `TESTS_LANG`: java → `-DincludeTags=smoke -DexcludeTags=visual` via `layer-tests`; else full suite |
+| visual | tests | baselines | `@Tag("visual")` | by `TESTS_LANG`: java → `-DincludeTags=visual` via `layer-tests`; else full suite |
+| manual | tests | stubs | `@Tag("manual")` | by `TESTS_LANG`: java → `-DincludeTags=manual` via `layer-tests`; else full suite |
 
-Bare `./gradlew test` runs **everything**, api included — there are no hidden excludes.
+Bare `./gradlew test` (java) runs **everything**, api included — there are no hidden excludes.
 
-Active Java module: `tests/java/tests-java-gradle-junit5-allure3-selenide/`  
+Active teaching module defaults: `tests/java/tests-java-gradle-junit5-allure3-selenide/` (`TESTS_LANG=java`).  
 Paths SSOT: `backend/scripts/paths.sh`. Module naming: [NAMING.md](NAMING.md).
 
 ## Why `unit` and `test-infra`?
@@ -67,13 +71,13 @@ Paths SSOT: `backend/scripts/paths.sh`. Module naming: [NAMING.md](NAMING.md).
 | Job | Product under test |
 |-----|--------------------|
 | `unit-tests` | **Application** (active backend — services, controllers, JWT; toolchain from `BACKEND_LANG`) |
-| `test-infra-tests` | **Test tooling** (ConfigReader, HarCapture, CSS helpers) — not a second pyramid tip for the app |
+| `test-infra-tests` | **Test tooling** (ConfigReader, HarCapture, CSS helpers when `TESTS_LANG=java`) — not a second pyramid tip for the app |
 
 Students: one product unit layer (`unit-tests`); test-infra = harness checks that drive higher layers.
 
-The 100% line-coverage gate (`jacocoTestCoverageVerification`) measures only `ConfigReader`,
-`LayoutCss` and `TokensCss`, and reads `build/jacoco/test.exec` — so it is meaningful together with
-`-DincludeTags=test-infra` and nothing narrower.
+The 100% line-coverage gate (`jacocoTestCoverageVerification`) is java-only: it measures
+`ConfigReader`, `LayoutCss` and `TokensCss`, and reads `build/jacoco/test.exec` — so it is
+meaningful together with `-DincludeTags=test-infra` and nothing narrower.
 
 ## Why `component` and `integration`?
 
@@ -91,9 +95,12 @@ Not duplicates — different failure modes. Chrome layout for the app is `integr
 |---------|------|
 | Pull request (blocks merge) | `unit-tests`, `component-tests`, `test-infra-tests` |
 | Push to `main` | the same three → `build` → `deploy` → `api-tests` on `reference_prod` |
-| `workflow_dispatch` | `java-tests` with the `env` / `includeTags` / `excludeTags` you type; `javascript-tests` / `python-tests` behind the `runners` input (`none` \| `javascript` \| `python` \| `both`) |
+| `workflow_dispatch` | `layer-tests` with the `env` / `includeTags` / `excludeTags` you type (java tag slice; other `TESTS_LANG` → full suite); `javascript-tests` / `python-tests` behind the `runners` input (`none` \| `javascript` \| `python` \| `both`) |
 
-Active stack and prod URL are workflow `env` defaults in [`ci.yml`](../.github/workflows/ci.yml) (`BACKEND`, `BACKEND_LANG`, `FRONTEND`, `TESTS`) — change once, jobs reuse them. Job ids are layers or languages, not tools (`javascript-tests`, not `playwright-tests`).
+Active stack and prod URL are workflow `env` defaults in [`ci.yml`](../.github/workflows/ci.yml)
+(`BACKEND`, `BACKEND_LANG`, `FRONTEND`, `TESTS`, `TESTS_LANG`) — change once, jobs reuse them.
+Job ids are layers or languages, not tools (`layer-tests`, not `java-tests`; `javascript-tests`,
+not `playwright-tests`).
 
 Nothing runs on a schedule. Browser layers (integration, e2e, visual, manual) have no PR job: a
 GitHub runner has no compose stack, and against prod they belong to a deliberate dispatch run.
@@ -111,9 +118,9 @@ They read env vars, not `-Denv`: Playwright takes `UI_URL`, pytest takes `BASE_U
 
 ## Where the commands live
 
-Every job in [`ci.yml`](../.github/workflows/ci.yml) is checkout, language setup, one `./gradlew test …`
-or `npm test`. No composite actions, no wrapper scripts — the command a student runs locally is the
-command CI runs.
+Every job in [`ci.yml`](../.github/workflows/ci.yml) is checkout, language setup (from `TESTS_LANG`
+or `BACKEND_LANG`), one `./gradlew test …` / `npm test` / `pytest`. No composite actions, no
+wrapper scripts — the command a student runs locally is the command CI runs.
 
-To run a layer that has no job, dispatch the workflow with its filter from the table above; to give it
-a permanent job, copy `api-tests` and change the two `-D` flags.
+To run a layer that has no permanent job, dispatch with `includeTags` (`layer-tests`); to give it
+a permanent job, copy `api-tests` and change the java `-D` flags (or keep the full-suite branch).
