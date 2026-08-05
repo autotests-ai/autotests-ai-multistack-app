@@ -60,6 +60,8 @@ jobs:
   unit-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -95,8 +97,24 @@ jobs:
           restore-keys: |
             gradle-cc-${{ env.BACKEND }}-
       - if: env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin'
+        id: run-tests
         run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification
         working-directory: ${{ env.BACKEND_DIR }}
+      - if: always() && (env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin')
+        uses: ./.github/actions/publish-allure
+        with:
+          tests-dir: ${{ env.BACKEND_DIR }}
+          artifact-suffix: unit-tests
+          results-dir: build/allure-results
+          report-dir: build/reports/allure-report
+          allure-config: ""
+          enable-notifications: "false"
+          allure-endpoint: ${{ env.ALLURE_ENDPOINT }}
+          allure-token: ${{ secrets.ALLURE_TOKEN }}
+          allure-project-id: ${{ vars.ALLURE_PROJECT_ID }}
+          test-outcome: ${{ steps.run-tests.outcome }}
+          build-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          launch-name: "unit — ${{ github.repository }} #${{ github.run_number }}"
 
       # ── python ───────────────────────────────────────────────────────────
       - if: env.BACKEND_LANG == 'python'
@@ -139,6 +157,8 @@ jobs:
   component-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
@@ -152,8 +172,24 @@ jobs:
         working-directory: ${{ env.FRONTEND_DIR }}
       - run: npm run typecheck
         working-directory: ${{ env.FRONTEND_DIR }}
-      - run: npm test
+      - id: run-tests
+        run: npm test
         working-directory: ${{ env.FRONTEND_DIR }}
+      - if: always()
+        uses: ./.github/actions/publish-allure
+        with:
+          tests-dir: ${{ env.FRONTEND_DIR }}
+          artifact-suffix: component-tests
+          results-dir: allure-results
+          report-dir: allure-report
+          allure-config: ""
+          enable-notifications: "false"
+          allure-endpoint: ${{ env.ALLURE_ENDPOINT }}
+          allure-token: ${{ secrets.ALLURE_TOKEN }}
+          allure-project-id: ${{ vars.ALLURE_PROJECT_ID }}
+          test-outcome: ${{ steps.run-tests.outcome }}
+          build-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          launch-name: "component — ${{ github.repository }} #${{ github.run_number }}"
 
   test-infra-tests:
     runs-on: ubuntu-latest

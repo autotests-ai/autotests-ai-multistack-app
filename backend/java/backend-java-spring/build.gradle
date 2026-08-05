@@ -6,6 +6,7 @@ buildscript {
         slf4jVersion                      = '2.0.17'
         sonarPluginVersion                = '6.2.0.5505'
         jjwtVersion                       = '0.12.6'
+        allureBomVersion                  = '2.35.2'
     }
 }
 
@@ -60,11 +61,15 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation platform("io.qameta.allure:allure-bom:${allureBomVersion}")
+    testImplementation 'io.qameta.allure:allure-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+    systemProperty 'allure.results.directory',
+            layout.buildDirectory.dir('allure-results').get().asFile.absolutePath
     finalizedBy jacocoTestReport
 }
 

@@ -1,13 +1,29 @@
 name: Publish Allure
-description: TestOps upload + Allure Report 3 (JS) artifacts + Telegram notifications (ADR 008)
+description: TestOps upload + Allure Report 3 (JS) + allure-action + optional Telegram (ADR 008)
 
 inputs:
   tests-dir:
-    description: Path to the tests module (cwd for Allure CLI / notifications)
+    description: Working directory (module root with results / optional allurerc + publish scripts)
     required: true
   artifact-suffix:
     description: Suffix for upload-artifact names (usually the job id)
     required: true
+  results-dir:
+    description: Allure results path relative to tests-dir
+    required: false
+    default: build/allure-results
+  report-dir:
+    description: Allure HTML report path relative to tests-dir
+    required: false
+    default: build/reports/allure-report/allureReport
+  allure-config:
+    description: Optional Allure 3 config file relative to tests-dir (empty → no --config)
+    required: false
+    default: allurerc.mjs
+  enable-notifications:
+    description: "true → npm install + allure-publish.mjs (needs tests-module publish setup)"
+    required: false
+    default: "true"
   allure-endpoint:
     description: Allure TestOps endpoint
     required: false
@@ -80,37 +96,39 @@ runs:
       shell: bash
       env:
         ALLURE_LAUNCH_NAME: ${{ inputs.launch-name }}
-      run: allurectl upload build/allure-results
+      run: allurectl upload ${{ inputs.results-dir }}
 
-    # ── Stage 2: Allure Report 3 (JS CLI) + artifacts ──────────────────────
+    # ── Stage 2: Allure Report 3 (JS CLI) + allure-action + artifacts ─────
     - name: Setup Node
       if: always()
       uses: actions/setup-node@v6
       with:
         node-version: "26"
 
-    - name: Install Allure 3 deps
-      if: always()
-      continue-on-error: true
-      id: allure-deps
-      working-directory: ${{ inputs.tests-dir }}
-      shell: bash
-      run: npm install --no-save
-
     - name: Generate Allure 3 report
-      if: always() && steps.allure-deps.outcome == 'success'
+      if: always() && inputs.allure-config == ''
       continue-on-error: true
       id: allure-report
       working-directory: ${{ inputs.tests-dir }}
       shell: bash
-      run: npx allure generate build/allure-results -o build/reports/allure-report/allureReport --config allurerc.mjs
+      run: npx --yes allure@3.13.0 generate ${{ inputs.results-dir }} -o ${{ inputs.report-dir }}
+
+    - name: Generate Allure 3 report (with config)
+      if: always() && inputs.allure-config != ''
+      continue-on-error: true
+      id: allure-report-config
+      working-directory: ${{ inputs.tests-dir }}
+      shell: bash
+      run: npx --yes allure@3.13.0 generate ${{ inputs.results-dir }} -o ${{ inputs.report-dir }} --config ${{ inputs.allure-config }}
 
     - name: Allure GitHub Action
-      if: always() && steps.allure-report.outcome == 'success'
+      if: >-
+        always() &&
+        (steps.allure-report.outcome == 'success' || steps.allure-report-config.outcome == 'success')
       continue-on-error: true
       uses: allure-framework/allure-action@v0
       with:
-        report-directory: ${{ inputs.tests-dir }}/build/reports/allure-report/allureReport
+        report-directory: ${{ inputs.tests-dir }}/${{ inputs.report-dir }}
         github-token: ${{ inputs.github-token }}
 
     - name: Upload Allure results artifact
@@ -119,21 +137,36 @@ runs:
       uses: actions/upload-artifact@v7
       with:
         name: allure-results-${{ inputs.artifact-suffix }}
-        path: ${{ inputs.tests-dir }}/build/allure-results/
+        path: ${{ inputs.tests-dir }}/${{ inputs.results-dir }}/
         if-no-files-found: ignore
 
     - name: Upload Allure report artifact
-      if: always() && steps.allure-report.outcome == 'success'
+      if: >-
+        always() &&
+        (steps.allure-report.outcome == 'success' || steps.allure-report-config.outcome == 'success')
       continue-on-error: true
       uses: actions/upload-artifact@v7
       with:
         name: allure-report-${{ inputs.artifact-suffix }}
-        path: ${{ inputs.tests-dir }}/build/reports/allure-report/allureReport/
+        path: ${{ inputs.tests-dir }}/${{ inputs.report-dir }}/
         if-no-files-found: ignore
 
     # ── Stage 3: Notifications (ADR 008) ───────────────────────────────────
+    - name: Install Allure publish deps
+      if: >-
+        always() &&
+        inputs.enable-notifications == 'true' &&
+        (steps.allure-report.outcome == 'success' || steps.allure-report-config.outcome == 'success')
+      continue-on-error: true
+      working-directory: ${{ inputs.tests-dir }}
+      shell: bash
+      run: npm install --no-save
+
     - name: Publish Allure (theme + Telegram plugin)
-      if: always() && steps.allure-report.outcome == 'success'
+      if: >-
+        always() &&
+        inputs.enable-notifications == 'true' &&
+        (steps.allure-report.outcome == 'success' || steps.allure-report-config.outcome == 'success')
       continue-on-error: true
       working-directory: ${{ inputs.tests-dir }}
       shell: bash
