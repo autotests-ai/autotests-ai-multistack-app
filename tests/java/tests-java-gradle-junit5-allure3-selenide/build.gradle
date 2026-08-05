@@ -70,7 +70,6 @@ sonar {
 def allureReportMode = System.getProperty('allureReportMode', 'allure3')
 def allureAgentMode = System.getProperty('allureAgentMode', 'none')
 def allureQualityGateHook = System.getProperty('allureQualityGate', 'false') == 'true'
-def analyticsLive = System.getProperty('analyticsLive', 'false') == 'true'
 
 repositories {
     mavenCentral()
@@ -251,28 +250,6 @@ tasks.register('allureAgentQuery', Exec) {
             '--from', outputDir, 'summary'
 }
 
-def analyticsIndexFile = layout.buildDirectory.file('analytics-index.json').get().asFile
-
-tasks.register('allureAnalyticsIndex', Exec) {
-    group = 'verification'
-    description = 'Normalize build/allure-results → build/analytics-index.json (dashboard charts)'
-    onlyIf {
-        System.getProperty('allureReportMode', 'allure3') != 'none' && hasAllureResults()
-    }
-    def resultsDir = allureResultsDir.path
-    def historyFile = layout.projectDirectory.file('history.jsonl').asFile.path
-    def agentDir = agentOutputDir.path
-    def outputFile = analyticsIndexFile.path
-    def configFile = layout.projectDirectory.file('allurerc.mjs').asFile.path
-    def script = layout.projectDirectory.file('scripts/build-analytics-index.mjs').asFile.path
-    commandLine 'node', script,
-            '--results', resultsDir,
-            '--history', historyFile,
-            '--agent-output', agentDir,
-            '--config', configFile,
-            '--output', outputFile
-}
-
 tasks.register('allureQualityGate', Exec) {
     group = 'verification'
     description = 'Allure 3 quality gate on build/allure-results (rules in allurerc.mjs)'
@@ -287,60 +264,10 @@ tasks.register('allureQualityGate', Exec) {
 
 if (allureAgentMode == 'inspect' && allureReportMode != 'none') {
     tasks.named('allureAgentInspect', Exec).configure {
-        finalizedBy 'allureAgentQuery', 'allureAnalyticsIndex'
+        finalizedBy 'allureAgentQuery'
     }
     tasks.named('test', Test).configure {
         finalizedBy 'allureAgentInspect'
-    }
-}
-
-tasks.named('allureReport').configure {
-    finalizedBy 'allureAnalyticsIndex'
-}
-
-if (allureReportMode != 'none' && allureAgentMode != 'inspect') {
-    tasks.named('test', Test).configure {
-        finalizedBy 'allureAnalyticsIndex'
-    }
-}
-
-if (allureReportMode != 'none' && analyticsLive) {
-    tasks.named('test', Test).configure {
-        doFirst {
-            def watchScript = layout.projectDirectory.file('scripts/watch-analytics-index.mjs').asFile.path
-            def resultsDir = allureResultsDir.path
-            def historyFile = layout.projectDirectory.file('history.jsonl').asFile.path
-            def agentDir = agentOutputDir.path
-            def outputFile = analyticsIndexFile.path
-            def configFile = layout.projectDirectory.file('allurerc.mjs').asFile.path
-            ext.analyticsWatchProc = new ProcessBuilder(
-                    'node', watchScript,
-                    '--results', resultsDir,
-                    '--history', historyFile,
-                    '--agent-output', agentDir,
-                    '--config', configFile,
-                    '--output', outputFile,
-                    '--interval', '1000'
-            ).directory(layout.projectDirectory.asFile)
-                    .redirectErrorStream(true)
-                    .start()
-        }
-        doLast {
-            if (ext.has('analyticsWatchProc') && ext.analyticsWatchProc != null) {
-                def proc = ext.analyticsWatchProc
-                proc.destroy()
-                try {
-                    if (!proc.waitFor(2, java.util.concurrent.TimeUnit.SECONDS)) {
-                        proc.destroyForcibly()
-                        proc.waitFor()
-                    }
-                } catch (InterruptedException ignored) {
-                    Thread.currentThread().interrupt()
-                    proc.destroyForcibly()
-                }
-                ext.analyticsWatchProc = null
-            }
-        }
     }
 }
 
