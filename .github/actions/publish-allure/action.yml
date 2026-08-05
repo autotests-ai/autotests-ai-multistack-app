@@ -112,6 +112,13 @@ runs:
       with:
         node-version: "26"
 
+    - name: Install Allure publish deps
+      if: always() && steps.allure-report.outcome == 'success'
+      continue-on-error: true
+      working-directory: ${{ inputs.tests-dir }}
+      shell: bash
+      run: npm install --no-save
+
     - name: Publish Allure (theme + Telegram plugin)
       if: always() && steps.allure-report.outcome == 'success'
       continue-on-error: true
@@ -126,6 +133,4 @@ runs:
         TELEGRAM_BOT_TOKEN: ${{ inputs.telegram-bot-token }}
         TELEGRAM_CHAT_ID: ${{ inputs.telegram-chat-id }}
         TELEGRAM_TOPIC_ID: ${{ inputs.telegram-topic-id }}
-      run: |
-        npm install --no-save
-        node scripts/allure-publish.mjs
+      run: node scripts/allure-publish.mjs
