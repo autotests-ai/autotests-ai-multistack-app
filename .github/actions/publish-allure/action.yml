@@ -1,9 +1,9 @@
 name: Publish Allure
-description: Allure Report 3 artifact + TestOps upload + Telegram notifications (ADR 008)
+description: TestOps upload + Allure Report 3 artifacts + Telegram notifications (ADR 008)
 
 inputs:
   tests-dir:
-    description: Path to the tests module (working directory for Gradle / notifications)
+    description: Path to the tests module (cwd for Gradle / notifications)
     required: true
   artifact-suffix:
     description: Suffix for upload-artifact names (usually the job id)
@@ -21,7 +21,7 @@ inputs:
     required: false
     default: ""
   telegram-bot-token:
-    description: Telegram bot token for allure-notifications
+    description: Telegram bot token (ADR 008)
     required: false
     default: ""
   telegram-chat-id:
@@ -29,11 +29,11 @@ inputs:
     required: false
     default: "-1004381150566"
   telegram-topic-id:
-    description: Forum topic id (reference-app = 3)
+    description: Forum topic id (reference-app shared = 3)
     required: false
     default: "3"
   notification-live:
-    description: "true → NOTIFICATION_MODE=live; false → dry-run (e.g. pull_request)"
+    description: "true → NOTIFICATION_MODE=live; false → dry-run"
     required: false
     default: "true"
   notification-project:
@@ -45,7 +45,7 @@ inputs:
     required: false
     default: "success"
   build-url:
-    description: CI build URL for notification links
+    description: CI build URL for executor.json and notification links
     required: false
     default: ""
   launch-name:
@@ -56,12 +56,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Setup Node
-      if: hashFiles(format('{0}/build/allure-results/**', inputs.tests-dir)) != ''
-      uses: actions/setup-node@v6
-      with:
-        node-version: "26"
-
+    # ── Stage 1: TestOps ───────────────────────────────────────────────────
     - name: Install allurectl
       if: inputs.allure-project-id != ''
       continue-on-error: true
@@ -72,29 +67,10 @@ runs:
         allure-token: ${{ inputs.allure-token }}
         allure-project-id: ${{ inputs.allure-project-id }}
 
-    - name: Generate Allure 3 report
-      if: hashFiles(format('{0}/build/allure-results/**', inputs.tests-dir)) != ''
-      id: allure-report
-      continue-on-error: true
-      working-directory: ${{ inputs.tests-dir }}
-      shell: bash
-      run: |
-        set -euo pipefail
-        mkdir -p build/allure-results
-        cat > build/allure-results/executor.json <<EOF
-        {
-          "reportName": "Run #${GITHUB_RUN_NUMBER}",
-          "buildOrder": ${GITHUB_RUN_NUMBER},
-          "buildUrl": "${{ inputs.build-url }}"
-        }
-        EOF
-        ./gradlew allureReport
-
     - name: Upload results to Allure TestOps
       if: >-
         inputs.allure-project-id != '' &&
-        steps.setup-allurectl.outcome == 'success' &&
-        hashFiles(format('{0}/build/allure-results/**', inputs.tests-dir)) != ''
+        steps.setup-allurectl.outcome == 'success'
       continue-on-error: true
       id: testops-upload
       working-directory: ${{ inputs.tests-dir }}
@@ -104,6 +80,10 @@ runs:
         LAUNCH_NAME: ${{ inputs.launch-name }}
       run: |
         set +e
+        if [ ! -d build/allure-results ] || [ -z "$(ls -A build/allure-results 2>/dev/null)" ]; then
+          echo "No allure-results — skip TestOps upload"
+          exit 0
+        fi
         if [ -n "${LAUNCH_NAME}" ]; then
           export ALLURE_LAUNCH_NAME="${LAUNCH_NAME}"
         else
@@ -146,11 +126,60 @@ runs:
           -H "Authorization: Bearer ${ALLURE_TOKEN}" \
           -H "Accept: application/json"
 
+    # ── Stage 2: Allure Report 3 + artifacts ───────────────────────────────
+    - name: Generate Allure 3 report
+      if: always()
+      id: allure-report
+      continue-on-error: true
+      working-directory: ${{ inputs.tests-dir }}
+      shell: bash
+      env:
+        BUILD_URL: ${{ inputs.build-url }}
+      run: |
+        set -euo pipefail
+        echo "generated=false" >> "$GITHUB_OUTPUT"
+        if [ ! -d build/allure-results ] || [ -z "$(ls -A build/allure-results 2>/dev/null)" ]; then
+          echo "No allure-results — skip report"
+          exit 0
+        fi
+        mkdir -p build/allure-results
+        cat > build/allure-results/executor.json <<EOF
+        {
+          "reportName": "Run #${GITHUB_RUN_NUMBER}",
+          "buildOrder": ${GITHUB_RUN_NUMBER},
+          "buildUrl": "${BUILD_URL}"
+        }
+        EOF
+        ./gradlew allureReport
+        echo "generated=true" >> "$GITHUB_OUTPUT"
+
+    - name: Upload Allure results artifact
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: allure-results-${{ inputs.artifact-suffix }}
+        path: ${{ inputs.tests-dir }}/build/allure-results/
+        if-no-files-found: ignore
+
+    - name: Upload Allure report artifact
+      if: always() && steps.allure-report.outputs.generated == 'true'
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: allure-report-${{ inputs.artifact-suffix }}
+        path: ${{ inputs.tests-dir }}/build/reports/allure-report/allureReport/
+        if-no-files-found: ignore
+
+    # ── Stage 3: Notifications (ADR 008) ───────────────────────────────────
+    - name: Setup Node
+      if: always() && steps.allure-report.outputs.generated == 'true'
+      uses: actions/setup-node@v6
+      with:
+        node-version: "26"
+
     - name: Publish Allure (theme + Telegram plugin)
-      if: >-
-        always() &&
-        steps.allure-report.outcome == 'success' &&
-        hashFiles(format('{0}/build/reports/allure-report/allureReport/awesome/summary.json', inputs.tests-dir)) != ''
+      if: always() && steps.allure-report.outputs.generated == 'true'
       continue-on-error: true
       working-directory: ${{ inputs.tests-dir }}
       shell: bash
@@ -166,21 +195,10 @@ runs:
         TELEGRAM_TOPIC_ID: ${{ inputs.telegram-topic-id }}
       run: |
         set -euo pipefail
+        AWESOME="build/reports/allure-report/allureReport/awesome"
+        if [ ! -f "$AWESOME/summary.json" ]; then
+          echo "No Allure summary — skip notifications"
+          exit 0
+        fi
         npm install --no-save
         node scripts/allure-publish.mjs
-
-    - name: Upload Allure results artifact
-      if: always() && hashFiles(format('{0}/build/allure-results/**', inputs.tests-dir)) != ''
-      uses: actions/upload-artifact@v7
-      with:
-        name: allure-results-${{ inputs.artifact-suffix }}
-        path: ${{ inputs.tests-dir }}/build/allure-results/
-        if-no-files-found: ignore
-
-    - name: Upload Allure report artifact
-      if: always() && hashFiles(format('{0}/build/reports/allure-report/allureReport/**', inputs.tests-dir)) != ''
-      uses: actions/upload-artifact@v7
-      with:
-        name: allure-report-${{ inputs.artifact-suffix }}
-        path: ${{ inputs.tests-dir }}/build/reports/allure-report/allureReport/
-        if-no-files-found: ignore
