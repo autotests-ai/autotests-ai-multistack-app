@@ -75,10 +75,11 @@ jobs:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
       # Enhanced caching only persists Gradle User Home; the configuration-cache lives under
       # the project and needs its own entry. Both pieces are required — either alone is a miss.
+      # hashFiles needs literal globs — keep in sync when swapping BACKEND_DIR above.
       - uses: actions/cache@v6
         with:
           path: ${{ env.BACKEND_DIR }}/.gradle/configuration-cache
-          key: gradle-cc-${{ env.BACKEND }}-${{ hashFiles(format('{0}/*.gradle*', env.BACKEND_DIR), format('{0}/gradle/wrapper/gradle-wrapper.properties', env.BACKEND_DIR), format('{0}/gradle.properties', env.BACKEND_DIR)) }}-${{ github.sha }}
+          key: gradle-cc-${{ env.BACKEND }}-${{ hashFiles('backend/java/backend-java-spring/*.gradle*', 'backend/java/backend-java-spring/gradle/wrapper/gradle-wrapper.properties', 'backend/java/backend-java-spring/gradle.properties') }}-${{ github.sha }}
           restore-keys: |
             gradle-cc-${{ env.BACKEND }}-
       - run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification
