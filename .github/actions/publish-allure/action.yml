@@ -33,7 +33,7 @@ inputs:
     required: false
     default: "3"
   notification-live:
-    description: "true → --live; false → --dry-run (e.g. pull_request)"
+    description: "true → NOTIFICATION_MODE=live; false → dry-run (e.g. pull_request)"
     required: false
     default: "true"
   notification-project:
@@ -146,7 +146,7 @@ runs:
           -H "Authorization: Bearer ${ALLURE_TOKEN}" \
           -H "Accept: application/json"
 
-    - name: Send Telegram notification
+    - name: Publish Allure (theme + Telegram plugin)
       if: >-
         always() &&
         steps.allure-report.outcome == 'success' &&
@@ -155,6 +155,7 @@ runs:
       working-directory: ${{ inputs.tests-dir }}
       shell: bash
       env:
+        NOTIFICATION_MODE: ${{ inputs.notification-live == 'true' && 'live' || 'dry-run' }}
         NOTIFICATION_PROJECT: ${{ inputs.notification-project }}
         ALLURE_REPORT_URL: ""
         ALLURE_DASHBOARD_URL: ""
@@ -163,17 +164,10 @@ runs:
         TELEGRAM_BOT_TOKEN: ${{ inputs.telegram-bot-token }}
         TELEGRAM_CHAT_ID: ${{ inputs.telegram-chat-id }}
         TELEGRAM_TOPIC_ID: ${{ inputs.telegram-topic-id }}
-        NOTIFICATION_LIVE: ${{ inputs.notification-live }}
       run: |
         set -euo pipefail
-        node scripts/render-notifications-config.mjs
-        MODE_FLAG="--dry-run"
-        if [ "${NOTIFICATION_LIVE}" = "true" ]; then
-          MODE_FLAG="--live"
-        fi
-        npx --yes allure-notifications@6.0.12 send \
-          --config notifications/config.runtime.json \
-          "${MODE_FLAG}"
+        npm install --no-save
+        node scripts/allure-publish.mjs
 
     - name: Upload Allure results artifact
       if: always() && hashFiles(format('{0}/build/allure-results/**', inputs.tests-dir)) != ''
