@@ -5,6 +5,8 @@ const { UserBuilder } = require('../src/helpers/builders');
 const LOGIN_REQUIRED = 'Login is required (minimum 3 characters)';
 const PASSWORD_REQUIRED = 'Password is required (minimum 6 characters)';
 const WRONG_CREDENTIALS = 'Wrong login or password';
+// "service" in GET /api/health — the backend module id behind UI_URL.
+const API_HEALTH_SERVICE = process.env.API_HEALTH_SERVICE || 'backend-java-spring';
 
 test('Пользователь может войти с валидными credentials', async ({ webApp }) => {
   const user = new UserBuilder().withSeededUser().build();
@@ -56,7 +58,7 @@ test('Пользователь может выйти после логина', a
 test('Home загружает health и items', async ({ webApp }) => {
   await webApp.home.open();
   await expect(webApp.home.layout).toBeVisible({ timeout: 10_000 });
-  await expect(webApp.home.healthStatus).toContainText('service: reference-app');
+  await expect(webApp.home.healthStatus).toContainText(`service: ${API_HEALTH_SERVICE}`);
   await expect(webApp.home.itemsList).toContainText('Alpha');
 });
 

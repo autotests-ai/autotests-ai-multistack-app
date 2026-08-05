@@ -54,6 +54,10 @@ public interface TestConfig extends Config {
     @DefaultValue("")
     String apiBaseUrl();
 
+    @Key("apiHealthService")
+    @DefaultValue("backend-java-spring")
+    String apiHealthService();
+
     @Key("hubUrl")
     @DefaultValue("http://127.0.0.1:4444/")
     String hubUrl();

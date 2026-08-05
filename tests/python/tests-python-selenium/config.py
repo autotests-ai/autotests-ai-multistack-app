@@ -28,6 +28,7 @@ def _attach_full() -> bool:
 class TestConfig:
     base_url: str
     api_base_url: str
+    api_health_service: str
     browser: str
     browser_version: str
     browser_size: str
@@ -56,6 +57,8 @@ def load_config() -> TestConfig:
     return TestConfig(
         base_url=base,
         api_base_url=api,
+        # "service" in GET /api/health — the backend module id behind BASE_URL.
+        api_health_service=os.environ.get("API_HEALTH_SERVICE", "backend-java-spring"),
         browser=os.environ.get("BROWSER", "chrome"),
         browser_version=os.environ.get("BROWSER_VERSION", "148.0"),
         browser_size=os.environ.get("BROWSER_SIZE", "1740x1080"),
