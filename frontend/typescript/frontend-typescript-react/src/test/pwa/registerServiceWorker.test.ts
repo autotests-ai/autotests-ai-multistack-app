@@ -19,7 +19,7 @@ describe('registerServiceWorker', () => {
 
     registerServiceWorker();
 
-    expect(register).toHaveBeenCalledWith('/frontend-typescript-react/sw.js');
+    expect(register).toHaveBeenCalledWith('/sw.js');
     expect(swAddEventListener).toHaveBeenCalledWith(
       'controllerchange',
       expect.any(Function),

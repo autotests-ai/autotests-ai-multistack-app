@@ -1,14 +1,16 @@
 /** Path matrix: /{backend}/{frontend}/ — runtime from location (shared dist × N backends). */
 const PATH_RE = /^\/(backend-[^/]+)\/(frontend-[^/]+)/;
+/** Product mount without a backend prefix — same precedence as the boot script in index.html. */
+const MOUNT_RE = /^\/(frontend-[^/]+)/;
 
-/** Product mount id (= matrix frontend.mount). Used when URL has no backend prefix (jsdom / vite). */
+/** Product mount id (= matrix frontend.mount). Reported by the Health panel. */
 export const UI_MOUNT = 'frontend-typescript-vue';
 
 function resolveFromPathname(pathname: string) {
-  const match = pathname.match(PATH_RE);
-  if (match) {
-    const backendId = match[1];
-    const frontendMount = match[2];
+  const matrix = pathname.match(PATH_RE);
+  if (matrix) {
+    const backendId = matrix[1];
+    const frontendMount = matrix[2];
     return {
       backendId,
       frontendMount,
@@ -16,10 +18,21 @@ function resolveFromPathname(pathname: string) {
       apiBase: `/${backendId}/api`,
     };
   }
+  const bare = pathname.match(MOUNT_RE);
+  if (bare) {
+    return {
+      backendId: null as string | null,
+      frontendMount: bare[1],
+      appBase: `/${bare[1]}`,
+      apiBase: '/api',
+    };
+  }
+  // Container publish-port, vite dev and jsdom all serve the SPA at the document root:
+  // a mount-shaped basename would leave the router with nothing to match.
   return {
     backendId: null as string | null,
     frontendMount: UI_MOUNT,
-    appBase: `/${UI_MOUNT}`,
+    appBase: '',
     apiBase: '/api',
   };
 }
