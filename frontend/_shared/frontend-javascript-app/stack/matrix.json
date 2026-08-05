@@ -32,37 +32,37 @@
     },
     {
       "id": "backend-go-gin",
-      "status": "slot",
+      "status": "active",
       "language": "go",
       "module": "backend/go/backend-go-gin"
     },
     {
       "id": "backend-go-stdlib",
-      "status": "slot",
+      "status": "active",
       "language": "go",
       "module": "backend/go/backend-go-stdlib"
     },
     {
       "id": "backend-javascript-express",
-      "status": "slot",
+      "status": "active",
       "language": "javascript",
       "module": "backend/javascript/backend-javascript-express"
     },
     {
       "id": "backend-javascript-nest",
-      "status": "slot",
+      "status": "active",
       "language": "javascript",
       "module": "backend/javascript/backend-javascript-nest"
     },
     {
       "id": "backend-typescript-express",
-      "status": "slot",
+      "status": "active",
       "language": "typescript",
       "module": "backend/typescript/backend-typescript-express"
     },
     {
       "id": "backend-typescript-nest",
-      "status": "slot",
+      "status": "active",
       "language": "typescript",
       "module": "backend/typescript/backend-typescript-nest"
     }

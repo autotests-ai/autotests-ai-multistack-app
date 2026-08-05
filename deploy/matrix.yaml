@@ -31,7 +31,7 @@ backends:
     internal_port: 8080
     publish_port: 8800
     db_name: reference_app_java_spring
-    health_service: reference-app-copy
+    health_service: backend-java-spring
 
   - id: backend-kotlin-spring
     status: active
@@ -82,11 +82,11 @@ backends:
     health_service: backend-python-django
 
   - id: backend-go-gin
-    status: slot
+    status: active
     language: go
     module: backend/go/backend-go-gin
     compose_service: backend-go-gin
-    compose_profile: go-gin
+    compose_profile: null
     image: reference-app-copy-backend-go-gin:latest
     internal_port: 8080
     publish_port: 8830
@@ -94,11 +94,11 @@ backends:
     health_service: backend-go-gin
 
   - id: backend-go-stdlib
-    status: slot
+    status: active
     language: go
     module: backend/go/backend-go-stdlib
     compose_service: backend-go-stdlib
-    compose_profile: go-stdlib
+    compose_profile: null
     image: reference-app-copy-backend-go-stdlib:latest
     internal_port: 8080
     publish_port: 8831
@@ -106,11 +106,11 @@ backends:
     health_service: backend-go-stdlib
 
   - id: backend-javascript-express
-    status: slot
+    status: active
     language: javascript
     module: backend/javascript/backend-javascript-express
     compose_service: backend-javascript-express
-    compose_profile: javascript-express
+    compose_profile: null
     image: reference-app-copy-backend-javascript-express:latest
     internal_port: 8080
     publish_port: 8840
@@ -118,11 +118,11 @@ backends:
     health_service: backend-javascript-express
 
   - id: backend-javascript-nest
-    status: slot
+    status: active
     language: javascript
     module: backend/javascript/backend-javascript-nest
     compose_service: backend-javascript-nest
-    compose_profile: javascript-nest
+    compose_profile: null
     image: reference-app-copy-backend-javascript-nest:latest
     internal_port: 8080
     publish_port: 8841
@@ -130,11 +130,11 @@ backends:
     health_service: backend-javascript-nest
 
   - id: backend-typescript-express
-    status: slot
+    status: active
     language: typescript
     module: backend/typescript/backend-typescript-express
     compose_service: backend-typescript-express
-    compose_profile: typescript-express
+    compose_profile: null
     image: reference-app-copy-backend-typescript-express:latest
     internal_port: 8080
     publish_port: 8850
@@ -142,11 +142,11 @@ backends:
     health_service: backend-typescript-express
 
   - id: backend-typescript-nest
-    status: slot
+    status: active
     language: typescript
     module: backend/typescript/backend-typescript-nest
     compose_service: backend-typescript-nest
-    compose_profile: typescript-nest
+    compose_profile: null
     image: reference-app-copy-backend-typescript-nest:latest
     internal_port: 8080
     publish_port: 8851

@@ -18,4 +18,12 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres <<-EOSQL
     WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'reference_app_go_gin')\gexec
   SELECT 'CREATE DATABASE reference_app_go_stdlib'
     WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'reference_app_go_stdlib')\gexec
+  SELECT 'CREATE DATABASE reference_app_javascript_express'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'reference_app_javascript_express')\gexec
+  SELECT 'CREATE DATABASE reference_app_javascript_nest'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'reference_app_javascript_nest')\gexec
+  SELECT 'CREATE DATABASE reference_app_typescript_express'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'reference_app_typescript_express')\gexec
+  SELECT 'CREATE DATABASE reference_app_typescript_nest'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'reference_app_typescript_nest')\gexec
 EOSQL
