@@ -865,35 +865,6 @@ jobs:
             curl -fsS --retry 30 --retry-delay 2 --retry-all-errors http://127.0.0.1:${{ env.BACKEND_PORT }}/api/health
             docker logout ghcr.io
 
-  deploy-frontend:
-    needs: [build-frontend, deploy-backend]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    # Shared deploy host: serialize git checkout with deploy-backend (same checkout dir).
-    permissions:
-      contents: read
-      packages: read
-    steps:
-      - uses: appleboy/ssh-action@v1.2.5
-        env:
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          host: ${{ vars.DEPLOY_HOST }}
-          username: ${{ vars.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          command_timeout: 15m
-          envs: IMAGE_TAG,GHCR_TOKEN
-          script: |
-            set -euo pipefail
-            cd /home/reference_app_copy/reference-app-copy
-            git fetch origin
-            git checkout --force "$IMAGE_TAG"
-            echo "$GHCR_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            docker compose pull ${{ env.FRONTEND }}
-            docker compose up -d --remove-orphans ${{ env.FRONTEND }}
-            docker logout ghcr.io
-
   api-tests:
     needs: deploy-backend
     if: >-
@@ -1060,6 +1031,35 @@ jobs:
       - if: env.TESTS_LANG == 'python'
         run: python -m pytest
         working-directory: ${{ env.TESTS_DIR }}
+
+  deploy-frontend:
+    needs: [build-frontend, deploy-backend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Shared deploy host: serialize git checkout with deploy-backend (same checkout dir).
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: appleboy/ssh-action@v1.2.5
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          host: ${{ vars.DEPLOY_HOST }}
+          username: ${{ vars.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          command_timeout: 15m
+          envs: IMAGE_TAG,GHCR_TOKEN
+          script: |
+            set -euo pipefail
+            cd /home/reference_app_copy/reference-app-copy
+            git fetch origin
+            git checkout --force "$IMAGE_TAG"
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker compose pull ${{ env.FRONTEND }}
+            docker compose up -d --remove-orphans ${{ env.FRONTEND }}
+            docker logout ghcr.io
 
   # Dispatch: browser layers against prod (or reference_ci if a compose stack exists).
   # Fixed tag slices — same commands a student runs locally (see tests/LAYERS.md).
