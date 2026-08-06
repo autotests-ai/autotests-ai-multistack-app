@@ -422,16 +422,23 @@ jobs:
             echo "No notifications/config.json — skip Telegram"
             exit 0
           fi
-          CFG=notifications/config.json
-          if [ -n "${NOTIFICATION_PROJECT:-}" ] || [ -n "${BUILD_URL:-}" ]; then
-            CFG="$(mktemp)"
-            jq \
-              --arg p "${NOTIFICATION_PROJECT:-}" \
-              --arg b "${BUILD_URL:-}" \
-              'if ($p | length) > 0 then .base.project = $p else . end
-               | if ($b | length) > 0 then .base.links.build = $b else . end' \
-              notifications/config.json > "$CFG"
+          ALLURE_FOLDER="${PWD}/build/reports/allure-report/allureReport/awesome"
+          ALLURE_RESULTS="${PWD}/build/allure-results"
+          if [ ! -f "${ALLURE_FOLDER}/summary.json" ]; then
+            echo "No ${ALLURE_FOLDER}/summary.json — skip Telegram"
+            exit 0
           fi
+          CFG=notifications/config.ci.json
+          jq \
+            --arg p "${NOTIFICATION_PROJECT:-}" \
+            --arg b "${BUILD_URL:-}" \
+            --arg af "${ALLURE_FOLDER}" \
+            --arg ar "${ALLURE_RESULTS}" \
+            'if ($p | length) > 0 then .base.project = $p else . end
+             | if ($b | length) > 0 then .base.links.build = $b else . end
+             | .base.allureFolder = $af
+             | .base.allureResultsFolder = $ar' \
+            notifications/config.json > "$CFG"
           MODE_FLAG="--dry-run"
           if [ "${NOTIFICATION_MODE}" = "live" ]; then
             MODE_FLAG="--live"
@@ -951,16 +958,23 @@ jobs:
             echo "No notifications/config.json — skip Telegram"
             exit 0
           fi
-          CFG=notifications/config.json
-          if [ -n "${NOTIFICATION_PROJECT:-}" ] || [ -n "${BUILD_URL:-}" ]; then
-            CFG="$(mktemp)"
-            jq \
-              --arg p "${NOTIFICATION_PROJECT:-}" \
-              --arg b "${BUILD_URL:-}" \
-              'if ($p | length) > 0 then .base.project = $p else . end
-               | if ($b | length) > 0 then .base.links.build = $b else . end' \
-              notifications/config.json > "$CFG"
+          ALLURE_FOLDER="${PWD}/build/reports/allure-report/allureReport/awesome"
+          ALLURE_RESULTS="${PWD}/build/allure-results"
+          if [ ! -f "${ALLURE_FOLDER}/summary.json" ]; then
+            echo "No ${ALLURE_FOLDER}/summary.json — skip Telegram"
+            exit 0
           fi
+          CFG=notifications/config.ci.json
+          jq \
+            --arg p "${NOTIFICATION_PROJECT:-}" \
+            --arg b "${BUILD_URL:-}" \
+            --arg af "${ALLURE_FOLDER}" \
+            --arg ar "${ALLURE_RESULTS}" \
+            'if ($p | length) > 0 then .base.project = $p else . end
+             | if ($b | length) > 0 then .base.links.build = $b else . end
+             | .base.allureFolder = $af
+             | .base.allureResultsFolder = $ar' \
+            notifications/config.json > "$CFG"
           MODE_FLAG="--dry-run"
           if [ "${NOTIFICATION_MODE}" = "live" ]; then
             MODE_FLAG="--live"
@@ -1110,16 +1124,23 @@ jobs:
             echo "No notifications/config.json — skip Telegram"
             exit 0
           fi
-          CFG=notifications/config.json
-          if [ -n "${NOTIFICATION_PROJECT:-}" ] || [ -n "${BUILD_URL:-}" ]; then
-            CFG="$(mktemp)"
-            jq \
-              --arg p "${NOTIFICATION_PROJECT:-}" \
-              --arg b "${BUILD_URL:-}" \
-              'if ($p | length) > 0 then .base.project = $p else . end
-               | if ($b | length) > 0 then .base.links.build = $b else . end' \
-              notifications/config.json > "$CFG"
+          ALLURE_FOLDER="${PWD}/build/reports/allure-report/allureReport/awesome"
+          ALLURE_RESULTS="${PWD}/build/allure-results"
+          if [ ! -f "${ALLURE_FOLDER}/summary.json" ]; then
+            echo "No ${ALLURE_FOLDER}/summary.json — skip Telegram"
+            exit 0
           fi
+          CFG=notifications/config.ci.json
+          jq \
+            --arg p "${NOTIFICATION_PROJECT:-}" \
+            --arg b "${BUILD_URL:-}" \
+            --arg af "${ALLURE_FOLDER}" \
+            --arg ar "${ALLURE_RESULTS}" \
+            'if ($p | length) > 0 then .base.project = $p else . end
+             | if ($b | length) > 0 then .base.links.build = $b else . end
+             | .base.allureFolder = $af
+             | .base.allureResultsFolder = $ar' \
+            notifications/config.json > "$CFG"
           MODE_FLAG="--dry-run"
           if [ "${NOTIFICATION_MODE}" = "live" ]; then
             MODE_FLAG="--live"
@@ -1249,16 +1270,23 @@ jobs:
             echo "No notifications/config.json — skip Telegram"
             exit 0
           fi
-          CFG=notifications/config.json
-          if [ -n "${NOTIFICATION_PROJECT:-}" ] || [ -n "${BUILD_URL:-}" ]; then
-            CFG="$(mktemp)"
-            jq \
-              --arg p "${NOTIFICATION_PROJECT:-}" \
-              --arg b "${BUILD_URL:-}" \
-              'if ($p | length) > 0 then .base.project = $p else . end
-               | if ($b | length) > 0 then .base.links.build = $b else . end' \
-              notifications/config.json > "$CFG"
+          ALLURE_FOLDER="${PWD}/build/reports/allure-report/allureReport/awesome"
+          ALLURE_RESULTS="${PWD}/build/allure-results"
+          if [ ! -f "${ALLURE_FOLDER}/summary.json" ]; then
+            echo "No ${ALLURE_FOLDER}/summary.json — skip Telegram"
+            exit 0
           fi
+          CFG=notifications/config.ci.json
+          jq \
+            --arg p "${NOTIFICATION_PROJECT:-}" \
+            --arg b "${BUILD_URL:-}" \
+            --arg af "${ALLURE_FOLDER}" \
+            --arg ar "${ALLURE_RESULTS}" \
+            'if ($p | length) > 0 then .base.project = $p else . end
+             | if ($b | length) > 0 then .base.links.build = $b else . end
+             | .base.allureFolder = $af
+             | .base.allureResultsFolder = $ar' \
+            notifications/config.json > "$CFG"
           MODE_FLAG="--dry-run"
           if [ "${NOTIFICATION_MODE}" = "live" ]; then
             MODE_FLAG="--live"
@@ -1404,16 +1432,23 @@ jobs:
             echo "No notifications/config.json — skip Telegram"
             exit 0
           fi
-          CFG=notifications/config.json
-          if [ -n "${NOTIFICATION_PROJECT:-}" ] || [ -n "${BUILD_URL:-}" ]; then
-            CFG="$(mktemp)"
-            jq \
-              --arg p "${NOTIFICATION_PROJECT:-}" \
-              --arg b "${BUILD_URL:-}" \
-              'if ($p | length) > 0 then .base.project = $p else . end
-               | if ($b | length) > 0 then .base.links.build = $b else . end' \
-              notifications/config.json > "$CFG"
+          ALLURE_FOLDER="${PWD}/build/reports/allure-report/allureReport/awesome"
+          ALLURE_RESULTS="${PWD}/build/allure-results"
+          if [ ! -f "${ALLURE_FOLDER}/summary.json" ]; then
+            echo "No ${ALLURE_FOLDER}/summary.json — skip Telegram"
+            exit 0
           fi
+          CFG=notifications/config.ci.json
+          jq \
+            --arg p "${NOTIFICATION_PROJECT:-}" \
+            --arg b "${BUILD_URL:-}" \
+            --arg af "${ALLURE_FOLDER}" \
+            --arg ar "${ALLURE_RESULTS}" \
+            'if ($p | length) > 0 then .base.project = $p else . end
+             | if ($b | length) > 0 then .base.links.build = $b else . end
+             | .base.allureFolder = $af
+             | .base.allureResultsFolder = $ar' \
+            notifications/config.json > "$CFG"
           MODE_FLAG="--dry-run"
           if [ "${NOTIFICATION_MODE}" = "live" ]; then
             MODE_FLAG="--live"
@@ -1537,16 +1572,23 @@ jobs:
             echo "No notifications/config.json — skip Telegram"
             exit 0
           fi
-          CFG=notifications/config.json
-          if [ -n "${NOTIFICATION_PROJECT:-}" ] || [ -n "${BUILD_URL:-}" ]; then
-            CFG="$(mktemp)"
-            jq \
-              --arg p "${NOTIFICATION_PROJECT:-}" \
-              --arg b "${BUILD_URL:-}" \
-              'if ($p | length) > 0 then .base.project = $p else . end
-               | if ($b | length) > 0 then .base.links.build = $b else . end' \
-              notifications/config.json > "$CFG"
+          ALLURE_FOLDER="${PWD}/build/reports/allure-report/allureReport/awesome"
+          ALLURE_RESULTS="${PWD}/build/allure-results"
+          if [ ! -f "${ALLURE_FOLDER}/summary.json" ]; then
+            echo "No ${ALLURE_FOLDER}/summary.json — skip Telegram"
+            exit 0
           fi
+          CFG=notifications/config.ci.json
+          jq \
+            --arg p "${NOTIFICATION_PROJECT:-}" \
+            --arg b "${BUILD_URL:-}" \
+            --arg af "${ALLURE_FOLDER}" \
+            --arg ar "${ALLURE_RESULTS}" \
+            'if ($p | length) > 0 then .base.project = $p else . end
+             | if ($b | length) > 0 then .base.links.build = $b else . end
+             | .base.allureFolder = $af
+             | .base.allureResultsFolder = $ar' \
+            notifications/config.json > "$CFG"
           MODE_FLAG="--dry-run"
           if [ "${NOTIFICATION_MODE}" = "live" ]; then
             MODE_FLAG="--live"
