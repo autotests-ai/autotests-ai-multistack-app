@@ -52,7 +52,7 @@ runs:
       id: setup-allurectl
       uses: allure-framework/setup-allurectl@v1
       with:
-        allure-endpoint: ${{ env.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}
+        allure-endpoint: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
         allure-token: ${{ env.ALLURE_TOKEN }}
         allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
 
@@ -61,11 +61,32 @@ runs:
         env.ALLURE_PROJECT_ID != '' &&
         steps.setup-allurectl.outcome == 'success'
       continue-on-error: true
+      id: testops-upload
       working-directory: ${{ inputs.tests-dir }}
       shell: bash
       env:
+        ALLURE_ENDPOINT: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
+        ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
+        ALLURE_PROJECT_ID: ${{ env.ALLURE_PROJECT_ID }}
         ALLURE_LAUNCH_NAME: ${{ inputs.launch-name }}
-      run: allurectl upload ${{ inputs.results-dir }}
+      run: |
+        set -euo pipefail
+        RESULTS="${{ inputs.results-dir }}"
+        if [ ! -d "$RESULTS" ] || [ -z "$(ls -A "$RESULTS" 2>/dev/null || true)" ]; then
+          echo "No allure-results at ${RESULTS} — skip TestOps upload"
+          exit 0
+        fi
+        # Cert on this instance is issued for allure.autotests.cloud (not allure.qa.guru).
+        ARGS=(
+          upload "$RESULTS"
+          --endpoint "${ALLURE_ENDPOINT}"
+          --token "${ALLURE_TOKEN}"
+          --project-id "${ALLURE_PROJECT_ID}"
+        )
+        if [ -n "${ALLURE_LAUNCH_NAME:-}" ]; then
+          ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
+        fi
+        allurectl "${ARGS[@]}"
 
     # ── Stage 2: Allure Report 3 (JS CLI) + allure-action + artifacts ─────
     - name: Setup Node

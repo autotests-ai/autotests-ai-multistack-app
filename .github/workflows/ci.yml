@@ -66,7 +66,7 @@ env:
   RUN_LABEL: "${{ github.repository }} #${{ github.run_number }}"
   SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL || 'https://sonar.qa.guru' }}
   # ── Allure / Telegram (publish-allure reads these; set once) ─────────────
-  ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}
+  ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
   ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
   ALLURE_PROJECT_ID: ${{ vars.ALLURE_PROJECT_ID }}
   TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
