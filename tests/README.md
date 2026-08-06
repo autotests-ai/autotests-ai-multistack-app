@@ -24,7 +24,7 @@ tests/
 | Product unit | `unit-tests` | `backend/java/backend-java-spring/src/test/` |
 | Harness | `tests-harness` | `…/tests/testinfra/` · `@Layer("harness")` + `@Tag("harness")` — not a pyramid layer |
 | RTL | `component-tests` | `frontend/typescript/frontend-typescript-react/src/test/` |
-| Browser/api/e2e | `api-tests` + dispatch | `tests/java/tests-java-gradle-junit5-allure3-selenide/` |
+| integration / e2e | `integration-tests` · `e2e-smoke` · dispatch `e2e-tests` | `tests/java/tests-java-gradle-junit5-allure3-selenide/` |
 
 CI: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
 

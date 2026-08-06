@@ -232,7 +232,7 @@ frontends:
 
 # Test modules — no compose / publish ports (CI runners, not containers).
 # unit ← selected backend …/src/test|tests · component ← selected frontend …/src/test
-# api / integration / e2e ← pick a module below (layers declare coverage).
+# integration (no UI) / e2e ← pick a module below (layers declare coverage).
 # Naming: tests/NAMING.md · teaching slots mirror backend/frontend (active + slot).
 tests:
   # --- Java (canon + dimension slots) ---
@@ -240,7 +240,7 @@ tests:
     status: active
     language: java
     module: tests/java/tests-java-gradle-junit5-allure3-selenide
-    layers: [api, integration, e2e]
+    layers: [integration, e2e]
 
   - id: tests-java-gradle-junit5-allure3-selenium
     status: slot
@@ -252,13 +252,13 @@ tests:
     status: slot
     language: java
     module: tests/java/tests-java-gradle-junit5-allure2-selenide
-    layers: [api, integration, e2e]
+    layers: [integration, e2e]
 
   - id: tests-java-gradle-junit5-no_allure-selenide
     status: slot
     language: java
     module: tests/java/tests-java-gradle-junit5-no_allure-selenide
-    layers: [api, integration, e2e]
+    layers: [integration, e2e]
 
   - id: tests-java-gradle-junit4-allure2-selenium
     status: slot
@@ -276,14 +276,14 @@ tests:
     status: slot
     language: java
     module: tests/java/tests-java-maven-junit5-allure3-selenide
-    layers: [api, integration, e2e]
+    layers: [integration, e2e]
 
   # --- Kotlin (backend twin language) ---
   - id: tests-kotlin-gradle-junit5-allure3-selenide
     status: slot
     language: kotlin
     module: tests/kotlin/tests-kotlin-gradle-junit5-allure3-selenide
-    layers: [api, e2e]
+    layers: [integration, e2e]
 
   # --- JavaScript / TypeScript ---
   - id: tests-javascript-playwright

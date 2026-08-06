@@ -1,6 +1,8 @@
 # Test layers (canonical map)
 
-Teaching pyramid for reference-app-copy. **One** CI file: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
+Teaching pyramid for reference-app-copy — **classical** names (ISTQB-style):
+unit → integration (no UI) → e2e → manual.
+**One** CI file: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
 (pyramid + Allure 3 / TestOps / Notifications + JaCoCo + Sonar quality axis).  
 Module folders: `-` between segments, `_` in compounds (`react_testing_library`, `no_allure`).
 
@@ -8,13 +10,11 @@ Module folders: `-` between segments, `_` in compounds (`react_testing_library`,
                     ┌─────────────┐
                     │   manual    │  exploratory stubs
                     ├─────────────┤
-                    │     e2e     │  @Tag e2e (+ optional @Tag visual baselines)
+                    │     e2e     │  UI through browser (@Tag e2e; optional visual / smoke)
                     ├─────────────┤
-                    │ integration │  mount / wiring on SPA (header, login form)
+                    │ integration │  wired system, no UI (HTTP API ↔ backend/DB)
                     ├─────────────┤
-                    │component│  React in jsdom (Vitest) — sideways
-                    ├─────────────┤
-                    │     api     │  REST, no UI
+                    │component│  React in jsdom (Vitest) — sideways FE, not classical tip
                     ├─────────────┤
                     │ unit │ active backend (product code)
                     └─────────────┘
@@ -22,6 +22,8 @@ Module folders: `-` between segments, `_` in compounds (`react_testing_library`,
 
 `component` sits **beside** the Java ladder (frontend zone), not inside `tests/java/…`.  
 DS catalog Selenide checks live in `design-system-home` — not duplicated here.
+
+**Not classical:** calling Chrome “mount” checks `integration`. Those are thin **e2e** (`@Tag("smoke")`).
 
 ## Harness (not a pyramid layer)
 
@@ -31,18 +33,18 @@ Self-check of the **tests module helpers** before / alongside product layers —
 - `./gradlew test -DincludeTags=harness` (+ JaCoCo 100% gate on harness classes)
 - **Not** application code (that's `unit-tests` on `BACKEND_DIR`)
 
-## Visual baselines (inside e2e, not a layer)
+## Smoke and visual (inside e2e, not layers)
 
-PNG screenshot checks live under `tests/e2e/` with `@Tag("visual")`. They run **in the e2e job**, not as a separate pyramid step:
-
-| Mode | Command / CI |
-|------|----------------|
-| Flow only (default `layers=e2e`) | `-DincludeTags=e2e -DexcludeTags=visual` |
-| Flow + visual (`layers=all`) | `-DincludeTags=e2e,visual` |
-| Custom tag slice (dispatch) | `include_tags=e2e,visual` → `-DincludeTags=…`; optional `exclude_tags=…` |
-| Refresh baselines (`update_baselines=true`) | job `e2e-update-baselines`: `-DincludeTags=visual -DupdateBaselines=true` |
+| Slice | Tag | CI |
+|-------|-----|-----|
+| Thin UI after FE deploy | `@Tag("smoke")` (+ `@Tag("e2e")`) | job `e2e-smoke` on push to `main` |
+| Flow (default `layers=e2e`) | `@Tag("e2e")` exclude visual | job `e2e-tests` |
+| Flow + visual (`layers=all`) | `e2e,visual` | job `e2e-tests` |
+| Refresh baselines | `@Tag("visual")` + `-DupdateBaselines=true` | job `e2e-update-baselines` |
 
 Local refresh: `./gradlew test -Denv=reference_ci -DincludeTags=visual -DupdateBaselines=true`
+
+Mocked-backend smoke (FE lane without live API) — follow-up; current smoke hits deployed UI.
 
 ## Two knobs, no layer tasks
 
@@ -51,7 +53,8 @@ task — `test`:
 
 ```bash
 ./gradlew test -Denv=reference_ci   -DincludeTags=harness
-./gradlew test -Denv=reference_prod -DincludeTags=api
+./gradlew test -Denv=reference_prod -DincludeTags=integration
+./gradlew test -Denv=reference_prod -DincludeTags=smoke
 ./gradlew test -Denv=reference_prod -DincludeTags=e2e -DexcludeTags=visual
 ./gradlew test -Denv=reference_prod -DincludeTags=e2e,visual
 ```
@@ -73,12 +76,11 @@ suite (`npm test` / `pytest` with `UI_URL` / `BASE_URL`) — no Gradle tag slice
 |-------|------|-------|----------|-----|
 | unit | backend | active `BACKEND_DIR` (default `backend/java/backend-java-spring/`) | all backend unit tests | by `BACKEND_LANG`: gradle+JaCoCo · `pytest` · `go test` · `npm test` — see [backend/README.md](../backend/README.md) |
 | component | frontend | `frontend/typescript/frontend-typescript-react/src/test/` | Vitest | `npm test` |
-| api | tests | `…/tests/api/` | `@Tag("api")` | by `TESTS_LANG`: java → `-DincludeTags=api`; else full suite |
-| integration | tests | e.g. `LoginFormTests`, `LoginEmbedTests` | `@Tag("mount")` | by `TESTS_LANG`: java → `-DincludeTags=mount` via `integration-tests`; else N/A (use `e2e-tests`) |
-| e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `@Tag("visual")`) | by `TESTS_LANG`: java → `e2e-tests` job; else full suite |
-| manual | tests | stubs | `@Tag("manual")` | by `TESTS_LANG`: java → `-DincludeTags=manual` via `manual-tests`; else N/A |
+| integration | tests | `…/tests/integration/` | `@Tag("integration")` | java → `-DincludeTags=integration` via `integration-tests` (after `deploy-backend`); else full suite |
+| e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `smoke` / `visual`) | `e2e-smoke` (push, `smoke`); `e2e-tests` (dispatch) |
+| manual | tests | stubs | `@Tag("manual")` | java → `-DincludeTags=manual` via `manual-tests`; else N/A |
 
-Bare `./gradlew test` (java) runs **everything**, api included — there are no hidden excludes.
+Bare `./gradlew test` (java) runs **everything**, integration included — there are no hidden excludes.
 
 Active teaching module defaults: `tests/java/tests-java-gradle-junit5-allure3-selenide/` (`TESTS_LANG=java`).  
 Paths SSOT: `backend/scripts/paths.sh`. Module naming: [NAMING.md](NAMING.md).
@@ -96,33 +98,34 @@ The 100% line-coverage gate (`jacocoTestCoverageVerification`) is java-only: it 
 `ConfigReader`, `LayoutCss` and `TokensCss`, and reads `build/jacoco/test.exec` — so it is
 meaningful together with `-DincludeTags=harness` and nothing narrower.
 
-## Why `component` and `integration`?
+## Why `component` vs `e2e` (not vs integration)?
 
-| | `component` | `integration` |
-|---|-----------------|---------------|
+| | `component` | `e2e` (incl. smoke) |
+|---|-----------------|---------------------|
 | Runtime | jsdom | real Chrome |
-| Object | React SPA units | mounted product pages (header, forms) |
-| Lesson | logic / props / a11y | real CSS / layout / embed |
+| Object | React SPA units | product pages in a browser |
+| Lesson | logic / props / a11y | real CSS / layout / flows |
 
-Not duplicates — different failure modes. Chrome layout for the app is `integration`, not a DS catalog job.
+Integration is **HTTP / wired backend**, no browser. Chrome checks belong under e2e.
 
 ## When each layer runs
 
 | Trigger | Jobs |
 |---------|------|
 | Pull request (blocks merge) | `unit-tests`, `component-tests`, `tests-harness` |
-| Push to `main` | the same three → `build` → `deploy-backend` → `api-tests` on `reference_prod` |
-| `workflow_dispatch` | `integration-tests` / `e2e-tests` / `manual-tests` behind `layers`; tag overrides `include_tags` / `exclude_tags` on e2e; `e2e-update-baselines` behind `update_baselines=true`; `env` |
+| Push to `main` | same three → two CD lanes: `build-backend` → `deploy-backend` → `integration-tests`; `build-frontend` → `deploy-frontend` → `e2e-smoke` |
+| `workflow_dispatch` | `integration-tests` / `e2e-tests` / `manual-tests` behind `layers`; tag overrides on e2e; `e2e-update-baselines` behind `update_baselines=true`; `env` |
 
 Active stack and prod URL are workflow `env` defaults in [`ci.yml`](../.github/workflows/ci.yml)
 (`BACKEND`, `BACKEND_LANG`, `FRONTEND`, `TESTS`, `TESTS_LANG`) — change once, jobs reuse them.
 Job ids are layers or languages, not tools (`e2e-tests`, not `selenide-tests`; `javascript-tests`,
 not `playwright-tests`).
 
-Nothing runs on a schedule. Browser layers have no PR job: a GitHub runner has no compose stack,
-and against prod they belong to a deliberate dispatch run.
+Deploy jobs share concurrency group `deploy-reference-app-copy` (one checkout dir on the host).
+Frontend deploy does **not** wait on backend success.
 
-**Later:** a separate cron **monitoring** workflow may introduce `@Tag("smoke")` as a prod subset of e2e — not used in this CI file yet.
+Nothing runs on a schedule. Full e2e has no PR job: a GitHub runner has no compose stack,
+and against prod it belongs to a deliberate dispatch run (smoke is the automatic UI gate).
 
 ## Alt runners (side stacks)
 
@@ -141,5 +144,5 @@ Every job in [`ci.yml`](../.github/workflows/ci.yml) is checkout, language setup
 or `BACKEND_LANG`), one `./gradlew test …` / `npm test` / `pytest`. No composite actions, no
 wrapper scripts — the command a student runs locally is the command CI runs.
 
-Dispatch `layers=integration|e2e|manual|all` for the named browser jobs. To add
-another, copy `manual-tests` and change the java `-D` flags.
+Dispatch `layers=integration|e2e|manual|all`. To add another, copy `manual-tests` and change
+the java `-D` flags.

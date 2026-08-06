@@ -76,8 +76,8 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · all jobs live in [`.github/workflow
 | `unit-tests` | `BACKEND_DIR` — command by `BACKEND_LANG` (gradle/JaCoCo, pytest, `go test`, or `npm test`) |
 | `tests-harness` | `TESTS_DIR` — by `TESTS_LANG` (java: `-DincludeTags=harness` + JaCoCo; else full suite) |
 | `component-tests` | `FRONTEND_DIR` — `npm test` |
-| `api-tests` | `TESTS_DIR` — by `TESTS_LANG` after deploy (java: `-DincludeTags=api`; else full suite) |
-| `integration-tests` | dispatch `layers=integration\|all` — java: `-DincludeTags=mount` |
+| `integration-tests` | `TESTS_DIR` — after `deploy-backend` (java: `-DincludeTags=integration`; else full suite); also dispatch `layers=integration\|all` |
+| `e2e-smoke` | after `deploy-frontend` on push — java: `-DincludeTags=smoke` (thin UI e2e) |
 | `e2e-tests` | dispatch `layers=e2e\|all` — java: `-DincludeTags=e2e` (default excludes visual); `all` → `e2e,visual`; override via `include_tags` / `exclude_tags` |
 | `e2e-update-baselines` | dispatch `update_baselines=true` — java: `-DincludeTags=visual -DupdateBaselines=true` |
 | `manual-tests` | dispatch `layers=manual\|all` — java: `-DincludeTags=manual` |
@@ -157,7 +157,7 @@ One workflow — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 | Event | Jobs |
 |-------|------|
 | pull request | `unit-tests` · `component-tests` · `tests-harness` |
-| push to `main` | the same three → `build` → `deploy` → `api-tests` |
+| push to `main` | the same three → backend lane `build-backend` → `deploy-backend` → `integration-tests`; frontend lane `build-frontend` → `deploy-frontend` → `e2e-smoke` |
 
 `build` runs `docker compose build` + `docker compose push`, so `docker-compose.yml` stays the only place describing how an image is built. Images go to GHCR as `ghcr.io/autotests-ai/reference-app-copy-<service>:<sha>`; the tag comes from `IMAGE_TAG` (defaults to `latest` locally).
 

@@ -1,4 +1,4 @@
-package tests.api;
+package tests.integration;
 
 import annotations.Layer;
 import api.ApiTestBase;
@@ -15,7 +15,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
-@Layer("api")
+@Layer("integration")
 @Epic("Authentication")
 @Feature("Authentication")
 @Severity(SeverityLevel.CRITICAL)
@@ -23,7 +23,7 @@ import static org.hamcrest.Matchers.notNullValue;
 class AuthApiTests extends ApiTestBase {
 
     @Test
-    @Tag("api")
+    @Tag("integration")
     @DisplayName("POST /api/auth/login returns token for seeded user")
     void loginWithValidCredentials() {
         given()
@@ -39,7 +39,7 @@ class AuthApiTests extends ApiTestBase {
     }
 
     @Test
-    @Tag("api")
+    @Tag("integration")
     @DisplayName("POST /api/auth/login rejects invalid password")
     void loginWithInvalidPassword() {
         given()
@@ -53,7 +53,7 @@ class AuthApiTests extends ApiTestBase {
     }
 
     @Test
-    @Tag("api")
+    @Tag("integration")
     @DisplayName("POST /api/auth/register creates user and returns token")
     void registerNewUser() {
         String username = "user_" + java.util.UUID.randomUUID().toString().substring(0, 8);
@@ -71,7 +71,7 @@ class AuthApiTests extends ApiTestBase {
     }
 
     @Test
-    @Tag("api")
+    @Tag("integration")
     @DisplayName("POST /api/auth/register rejects duplicate username")
     void registerDuplicateUsername() {
         given()
@@ -85,7 +85,7 @@ class AuthApiTests extends ApiTestBase {
     }
 
     @Test
-    @Tag("api")
+    @Tag("integration")
     @DisplayName("GET /api/auth/me returns profile for bearer token")
     void profileWithBearerToken() {
         String token = given()
@@ -108,7 +108,7 @@ class AuthApiTests extends ApiTestBase {
     }
 
     @Test
-    @Tag("api")
+    @Tag("integration")
     @DisplayName("GET /api/auth/me without token returns 401")
     void profileWithoutToken() {
         given()
@@ -119,7 +119,7 @@ class AuthApiTests extends ApiTestBase {
     }
 
     @Test
-    @Tag("api")
+    @Tag("integration")
     @DisplayName("POST /api/auth/logout returns 204")
     void logoutReturnsNoContent() {
         given()
@@ -130,7 +130,7 @@ class AuthApiTests extends ApiTestBase {
     }
 
     @Test
-    @Tag("api")
+    @Tag("integration")
     @DisplayName("POST /api/auth/login rejects empty credentials with 400")
     void loginRejectsEmptyCredentials() {
         given()
@@ -143,7 +143,7 @@ class AuthApiTests extends ApiTestBase {
     }
 
     @Test
-    @Tag("api")
+    @Tag("integration")
     @DisplayName("POST /api/auth/register rejects short password with 400")
     void registerRejectsShortPassword() {
         given()

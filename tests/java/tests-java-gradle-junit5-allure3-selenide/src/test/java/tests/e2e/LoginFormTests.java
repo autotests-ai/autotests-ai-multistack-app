@@ -1,4 +1,4 @@
-package tests.integration;
+package tests.e2e;
 
 import tests.TestBase;
 import annotations.Layer;
@@ -12,7 +12,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-@Layer("integration")
+@Layer("e2e")
 @Epic("Authentication")
 @Feature("Login form")
 @Severity(SeverityLevel.NORMAL)
@@ -22,7 +22,8 @@ class LoginFormTests extends TestBase {
     @Test
     @AllureId("46592")
     @Issue("REF-2")
-    @Tag("mount")
+    @Tag("e2e")
+    @Tag("smoke")
     @DisplayName("Login form fields and submit are visible")
     void loginFormIsMounted() {
         loginPage.openPage()

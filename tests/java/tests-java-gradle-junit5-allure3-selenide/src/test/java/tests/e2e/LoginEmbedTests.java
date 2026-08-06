@@ -1,4 +1,4 @@
-package tests.integration;
+package tests.e2e;
 
 import tests.TestBase;
 import annotations.Layer;
@@ -10,7 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-@Layer("integration")
+@Layer("e2e")
 @Epic("Authentication")
 @Feature("Login embed")
 @Severity(SeverityLevel.NORMAL)
@@ -18,7 +18,8 @@ import org.junit.jupiter.api.Test;
 class LoginEmbedTests extends TestBase {
 
     @Test
-    @Tag("mount")
+    @Tag("e2e")
+    @Tag("smoke")
     @DisplayName("Embedded header is visible on login page")
     void embeddedHeaderIsVisibleOnLoginPage() {
         loginPage.openPage()

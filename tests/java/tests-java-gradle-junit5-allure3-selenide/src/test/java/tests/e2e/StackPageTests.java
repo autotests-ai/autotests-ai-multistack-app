@@ -1,4 +1,4 @@
-package tests.integration;
+package tests.e2e;
 
 import tests.TestBase;
 import annotations.Layer;
@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import pages.StackPage;
 
-@Layer("integration")
+@Layer("e2e")
 @Epic("Stack")
 @Feature("Stack page")
 @Severity(SeverityLevel.NORMAL)
@@ -21,7 +21,8 @@ class StackPageTests extends TestBase {
     private final StackPage stackPage = new StackPage();
 
     @Test
-    @Tag("mount")
+    @Tag("e2e")
+    @Tag("smoke")
     @DisplayName("Stack page and header are visible")
     void stackPageIsMounted() {
         stackPage.openPage()

@@ -1,4 +1,4 @@
-package tests.integration;
+package tests.e2e;
 
 import tests.TestBase;
 import annotations.Layer;
@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import pages.RegisterPage;
 
-@Layer("integration")
+@Layer("e2e")
 @Epic("Authentication")
 @Feature("Register form")
 @Severity(SeverityLevel.NORMAL)
@@ -21,7 +21,8 @@ class RegisterFormTests extends TestBase {
     private final RegisterPage registerPage = new RegisterPage();
 
     @Test
-    @Tag("mount")
+    @Tag("e2e")
+    @Tag("smoke")
     @DisplayName("Register form fields and submit are visible")
     void registerFormIsMounted() {
         registerPage.openPage()
