@@ -105,7 +105,7 @@ suite (`npm test` / `pytest` with `UI_URL` / `BASE_URL`) — no Gradle tag slice
 |-------|------|-------|----------|-----|
 | unit | backend | active `BACKEND_DIR` (default `backend/java/backend-java-spring/`) | all backend unit tests | by `BACKEND_LANG`: gradle+JaCoCo · `pytest` · `go test` · `npm test` — see [backend/README.md](../backend/README.md) |
 | component | frontend | `frontend/typescript/frontend-typescript-react/src/test/` | Vitest | `npm test` |
-| integration | tests | _(sources TBD — CD gate before `api-tests`)_ | `@Tag("integration")` | java → `-DincludeTags=integration` via `integration-tests` (after harness-backend) |
+| integration | tests | `…/tests/integration/` (`BackendWiringIntegrationTests`, `AuthRoundTripIntegrationTests`, `SeedDataIntegrationTests`) | `@Tag("integration")` | java → `-DincludeTags=integration` via `integration-tests` (after harness-backend) |
 | api | tests | `…/tests/api/` (`AuthApiTests`, `ReferenceApiTests`) | `@Tag("api")` | java → `-DincludeTags=api` via `api-tests` (after `integration-tests`) |
 | e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `smoke` / `visual`) | `e2e-smoke` (push, `smoke`); `e2e-tests` (after lanes + `sonar-tests` join) |
 | manual | tests | `…/tests/manual/` **in code** | `@Tag("manual")` + `@Manual` | java → `-DincludeTags=manual` via `manual-tests` (after `e2e-tests`, dispatch) |
