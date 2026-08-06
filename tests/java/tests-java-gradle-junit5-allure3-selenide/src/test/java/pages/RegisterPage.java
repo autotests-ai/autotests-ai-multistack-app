@@ -58,7 +58,8 @@ public class RegisterPage {
     @Step("Submit register form")
     public HomePage submit() {
         submitButton.click();
-        webdriver().shouldHave(url(ConfigReader.resolveBaseUrl()));
+        // React Router navigates to / without a trailing slash on the directory base URL.
+        webdriver().shouldHave(url(ConfigReader.resolveWebBaseUrl()));
         return new HomePage();
     }
 

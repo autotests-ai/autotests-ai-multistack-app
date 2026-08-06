@@ -1,6 +1,6 @@
 package pages;
 
-import static com.codeborne.selenide.Condition.hidden;
+import static com.codeborne.selenide.Condition.attribute;
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.$;
@@ -90,7 +90,8 @@ public class HomePage {
 
     @Step("Verify welcome panel stays hidden")
     public HomePage shouldHideWelcomePanel() {
-        welcomePanel.shouldBe(hidden, Duration.ofSeconds(10));
+        // Panel uses the HTML hidden attribute (welcome === null); remote Chrome may still report isDisplayed().
+        welcomePanel.shouldHave(attribute("hidden"), Duration.ofSeconds(10));
         return this;
     }
 
