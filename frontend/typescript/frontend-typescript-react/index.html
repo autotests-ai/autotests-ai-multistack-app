@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#2c2a26" />
   <script>
-    // Relative Vite base (./) breaks under nested SPA routes (/stack/): the HTML
+    // Relative Vite base (./) breaks under nested SPA routes: the HTML
     // preload scanner fetches ./assets/* against the route before a dynamic
     // <base> exists. document.write pins mount + critical assets during parse.
     (() => {

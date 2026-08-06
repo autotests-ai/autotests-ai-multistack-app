@@ -326,6 +326,31 @@ services:
     ports:
       - "${FRONTEND_TS_VUE_PORT:-9813}:80"
 
+  api-mock:
+    image: wiremock/wiremock:3.9.1
+    profiles: ["mock"]
+    restart: unless-stopped
+    volumes:
+      - ./deploy/mock/mappings:/home/wiremock/mappings:ro
+    networks:
+      - reference_internal
+
+  stand-gateway:
+    image: nginx:1.27-alpine
+    profiles: ["mock"]
+    restart: unless-stopped
+    volumes:
+      - ./deploy/mock/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      frontend-typescript-react:
+        condition: service_started
+      api-mock:
+        condition: service_started
+    networks:
+      - reference_internal
+    ports:
+      - "${MOCK_GATEWAY_PORT:-9911}:80"
+
 networks:
   reference_internal:
     driver: bridge
