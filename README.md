@@ -77,17 +77,19 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · all jobs live in [`.github/workflow
 | `tests-harness-backend` | `TESTS_DIR` — java: `-DincludeTags=harness-backend` + JaCoCo (`ConfigReader`); PR without deploy; on `main` after `deploy-backend`, before `integration-tests` |
 | `tests-harness-frontend` | `TESTS_DIR` — java: `-DincludeTags=harness-frontend` + JaCoCo (CSS/HAR helpers); PR without deploy; on `main` after `deploy-frontend`, before `e2e-smoke` |
 | `component-tests` | `FRONTEND_DIR` — `npm test` |
-| `integration-tests` | `TESTS_DIR` — after `deploy-backend` (java: `-DincludeTags=integration`; else full suite); also dispatch `layers=integration\|all` |
-| `e2e-smoke` | after `deploy-frontend` on push — java: `-DincludeTags=smoke` (thin UI e2e) |
-| `e2e-tests` | dispatch `layers=e2e\|all` — java: `-DincludeTags=e2e` (default excludes visual); `all` → `e2e,visual`; override via `include_tags` / `exclude_tags` |
+| `integration-tests` | `TESTS_DIR` — after harness-backend (java: `-DincludeTags=integration`); dispatch `layers=integration\|api\|all` |
+| `api-tests` | `TESTS_DIR` — after `integration-tests` (java: `-DincludeTags=api`); dispatch `layers=api\|all` |
+| `e2e-smoke` | after harness-frontend on push — java: `-DincludeTags=smoke` (FE lane; mock-backend target) |
+| `sonar-tests` | after `api-tests` + `e2e-smoke` (lanes meet); umbrella harness + tests-module Sonar gate |
+| `e2e-tests` | after `sonar-tests` — java: `-DincludeTags=e2e` (default excludes visual); dispatch `layers=e2e\|all` |
 | `e2e-update-baselines` | dispatch `update_baselines=true` — java: `-DincludeTags=visual -DupdateBaselines=true` |
-| `manual-tests` | dispatch `layers=manual\|all` — java: `-DincludeTags=manual` (exploratory stubs **in code**, `tests/manual/`) |
+| `manual-tests` | after `e2e-tests`; dispatch `layers=manual\|all` — java: `-DincludeTags=manual` |
 
 `unit-tests`, `component-tests`, and both harness jobs block a pull request. Browser layers
 and extra language runners have no scheduled job — dispatch with `layers`
-(`integration` \| `e2e` \| `manual` \| `all`) / `runners` (`javascript` \| `python` \| `both`)
-when you want them. Stack defaults (`BACKEND` / `BACKEND_LANG` / `FRONTEND` / `TESTS` /
-`TESTS_LANG`) live once at the top of [`ci.yml`](.github/workflows/ci.yml).
+(`integration` \| `api` \| `e2e` \| `manual` \| `all`) when you want them. Stack defaults
+(`BACKEND` / `BACKEND_LANG` / `FRONTEND` / `TESTS` / `TESTS_LANG`) live once at the top of
+[`ci.yml`](.github/workflows/ci.yml).
 
 ## Ports (local = prod host upstream)
 
@@ -158,7 +160,7 @@ One workflow — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 | Event | Jobs |
 |-------|------|
 | pull request | `unit-tests` · `component-tests` · `tests-harness-backend` · `tests-harness-frontend` |
-| push to `main` | same four → backend lane `sonar-backend` → `build-backend` → `deploy-backend` → `tests-harness-backend` → `integration-tests`; frontend lane `sonar-frontend` → `build-frontend` → `deploy-frontend` → `tests-harness-frontend` → `e2e-smoke`; both harness → `sonar-tests` → join at `e2e-tests` |
+| push to `main` | same four → BE: `sonar-backend` → `build-backend` → `deploy-backend` → `tests-harness-backend` → `integration-tests` → `api-tests`; FE: `sonar-frontend` → `build-frontend` → `deploy-frontend` → `tests-harness-frontend` → `e2e-smoke`; meet at `sonar-tests` → `e2e-tests` → `manual-tests` |
 
 `build` runs `docker compose build` + `docker compose push`, so `docker-compose.yml` stays the only place describing how an image is built. Images go to GHCR as `ghcr.io/autotests-ai/reference-app-copy-<service>:<sha>`; the tag comes from `IMAGE_TAG` (defaults to `latest` locally).
 

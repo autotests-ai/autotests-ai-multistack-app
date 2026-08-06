@@ -25,7 +25,7 @@ tests/
 | Harness (BE) | `tests-harness-backend` | `…/tests/testinfra/` · `@Tag("harness-backend")` — `ConfigReader` |
 | Harness (FE) | `tests-harness-frontend` | `…/tests/testinfra/` · `@Tag("harness-frontend")` — CSS/HAR helpers |
 | RTL | `component-tests` | `frontend/typescript/frontend-typescript-react/src/test/` |
-| integration / e2e / manual | `integration-tests` · `e2e-smoke` · dispatch `e2e-tests` / `manual-tests` | `tests/java/…` — manual stubs **in code** (`tests/manual/`) |
+| integration / api / e2e / manual | `integration-tests` · `api-tests` · `e2e-smoke` · `e2e-tests` / `manual-tests` | `tests/java/…` — manual stubs **in code** (`tests/manual/`) |
 
 CI: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
 
