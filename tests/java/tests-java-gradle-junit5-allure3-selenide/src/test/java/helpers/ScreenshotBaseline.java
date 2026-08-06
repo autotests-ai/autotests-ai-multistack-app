@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static com.codeborne.selenide.Condition.visible;
+import static com.codeborne.selenide.Selenide.executeAsyncJavaScript;
 import static io.qameta.allure.Allure.step;
 
 public final class ScreenshotBaseline {
@@ -29,6 +30,7 @@ public final class ScreenshotBaseline {
     public static void captureAndCompare(
             SelenideElement element, String area, int viewport, String attachmentName) {
         element.shouldBe(visible);
+        waitForStableLayout();
 
         var screenshotFile = element.screenshot();
         byte[] actual;
@@ -90,6 +92,14 @@ public final class ScreenshotBaseline {
             return;
         }
         attachPng(attachmentName + "-baseline-new", actual);
+    }
+
+    private static void waitForStableLayout() {
+        executeAsyncJavaScript(
+                "const done = arguments[arguments.length - 1];"
+                        + "Promise.all([document.fonts.ready, new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))])"
+                        + ".then(() => done(null)).catch(err => done(err));"
+        );
     }
 
     private static void attachPng(String name, byte[] png) {

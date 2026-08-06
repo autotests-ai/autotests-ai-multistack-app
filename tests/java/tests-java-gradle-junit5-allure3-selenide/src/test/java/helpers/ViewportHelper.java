@@ -4,9 +4,12 @@ import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.WebDriverRunner;
 import io.qameta.allure.Step;
 import org.openqa.selenium.Dimension;
-import org.openqa.selenium.chromium.ChromiumDriver;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chromium.HasCdp;
+import org.openqa.selenium.remote.Augmenter;
 
 import java.util.Map;
+import java.util.Optional;
 
 import static com.codeborne.selenide.Selenide.open;
 
@@ -22,11 +25,10 @@ public final class ViewportHelper {
         }
 
         var driver = WebDriverRunner.getWebDriver();
-        if (driver instanceof ChromiumDriver chromium) {
-            chromium.executeCdpCommand("Emulation.clearDeviceMetricsOverride", Map.of());
-        }
-
-        driver.manage().window().setSize(parseBrowserSize(Configuration.browserSize));
+        resolveCdp(driver).ifPresentOrElse(
+                cdp -> cdp.executeCdpCommand("Emulation.clearDeviceMetricsOverride", Map.of()),
+                () -> driver.manage().window().setSize(parseBrowserSize(Configuration.browserSize))
+        );
     }
 
     public static void setViewport(int width, int height) {
@@ -35,18 +37,37 @@ public final class ViewportHelper {
         }
 
         var driver = WebDriverRunner.getWebDriver();
-        if (!(driver instanceof ChromiumDriver chromium)) {
-            throw new IllegalStateException(
-                    "CDP viewport override requires Chrome/Chromium (browser=chrome). Got: "
-                            + driver.getClass().getName());
-        }
+        resolveCdp(driver).ifPresent(
+                cdp -> cdp.executeCdpCommand("Emulation.clearDeviceMetricsOverride", Map.of())
+        );
 
-        chromium.executeCdpCommand("Emulation.setDeviceMetricsOverride", Map.of(
+        var metrics = Map.<String, Object>of(
                 "width", width,
                 "height", height,
                 "deviceScaleFactor", 1,
                 "mobile", false
-        ));
+        );
+
+        resolveCdp(driver).ifPresentOrElse(
+                cdp -> cdp.executeCdpCommand("Emulation.setDeviceMetricsOverride", metrics),
+                () -> driver.manage().window().setSize(new Dimension(width, height))
+        );
+    }
+
+    /** Local Chrome is ChromiumDriver; Selenoid remote Chrome needs Augmenter for CDP. */
+    private static Optional<HasCdp> resolveCdp(WebDriver driver) {
+        if (driver instanceof HasCdp hasCdp) {
+            return Optional.of(hasCdp);
+        }
+        try {
+            var augmented = new Augmenter().augment(driver);
+            if (augmented instanceof HasCdp hasCdp) {
+                return Optional.of(hasCdp);
+            }
+        } catch (RuntimeException ignored) {
+            // Selenoid without CDP — fall back to window resize below.
+        }
+        return Optional.empty();
     }
 
     private static Dimension parseBrowserSize(String browserSize) {
