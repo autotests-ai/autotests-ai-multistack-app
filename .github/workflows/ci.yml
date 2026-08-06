@@ -1673,7 +1673,9 @@ jobs:
       - if: env.TESTS_LANG == 'java'
         id: run-tests
         env:
-          RUN_ENV: ${{ inputs.env }}
+          # push has no inputs, and -Denv= (empty) is not the same as omitting it:
+          # System.getProperty('env', default) returns "" and the config lookup fails.
+          RUN_ENV: ${{ inputs.env || 'reference_prod' }}
           INCLUDE_TAGS: ${{ inputs.include_tags }}
           EXCLUDE_TAGS: ${{ inputs.exclude_tags }}
           LAYERS: ${{ inputs.layers }}
@@ -1854,7 +1856,7 @@ jobs:
       - if: env.TESTS_LANG == 'java'
         id: run-tests
         env:
-          RUN_ENV: ${{ inputs.env }}
+          RUN_ENV: ${{ inputs.env || 'reference_prod' }}
         run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=visual -DupdateBaselines=true
         working-directory: ${{ env.TESTS_DIR }}
       - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
@@ -1999,7 +2001,7 @@ jobs:
       - if: env.TESTS_LANG == 'java'
         id: run-tests
         env:
-          RUN_ENV: ${{ inputs.env }}
+          RUN_ENV: ${{ inputs.env || 'reference_prod' }}
         run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=manual
         working-directory: ${{ env.TESTS_DIR }}
       - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
