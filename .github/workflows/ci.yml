@@ -113,35 +113,34 @@ jobs:
     outputs:
       backend: ${{ steps.set.outputs.backend }}
       frontend: ${{ steps.set.outputs.frontend }}
+      tests: ${{ steps.set.outputs.tests }}
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - id: set
+        env:
+          BEFORE: ${{ github.event.before }}
         run: |
           set -euo pipefail
+          emit() { printf '%s=%s\n' "$1" "$2" >> "$GITHUB_OUTPUT"; }
           if [ "${{ github.event_name }}" != "push" ] || [ "${{ github.ref }}" != "refs/heads/main" ]; then
-            echo "backend=false" >> "$GITHUB_OUTPUT"
-            echo "frontend=false" >> "$GITHUB_OUTPUT"
+            emit backend false; emit frontend false; emit tests false
             exit 0
           fi
-          BEFORE="${{ github.event.before }}"
-          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
-            echo "backend=true" >> "$GITHUB_OUTPUT"
-            echo "frontend=true" >> "$GITHUB_OUTPUT"
+          # Force-push and first-push leave `before` unusable (nulled, or a commit this clone
+          # never fetched); diffing against it aborts the job, so fall back to "everything".
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] \
+             || ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+            emit backend true; emit frontend true; emit tests true
             exit 0
           fi
           CHANGED="$(git diff --name-only "$BEFORE" "$GITHUB_SHA")"
-          if echo "$CHANGED" | grep -qE '^(backend/|deploy/|docker-compose|\.github/workflows/ci\.yml)'; then
-            echo "backend=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "backend=false" >> "$GITHUB_OUTPUT"
-          fi
-          if echo "$CHANGED" | grep -qE '^(frontend/|deploy/|docker-compose|\.github/workflows/ci\.yml)'; then
-            echo "frontend=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "frontend=false" >> "$GITHUB_OUTPUT"
-          fi
+          match() { printf '%s\n' "$CHANGED" | grep -qE "$1"; }
+          SHARED='deploy/|docker-compose|\.github/workflows/ci\.yml'
+          match "^(backend/|${SHARED})"  && emit backend true  || emit backend false
+          match "^(frontend/|${SHARED})" && emit frontend true || emit frontend false
+          match "^(tests/|${SHARED})"    && emit tests true    || emit tests false
 
   unit-tests:
     runs-on: ubuntu-latest
@@ -1281,12 +1280,18 @@ jobs:
 
   # Curl live UI + API health after deploy lanes (handles partial/skipped deploy).
   stand-ready:
-    needs: [deploy-backend, deploy-frontend]
+    needs: [changes, deploy-backend, deploy-frontend]
+    # A lane that did not deploy is fine — the stand keeps whatever is already live. A push that
+    # deployed nothing and touched no test source has nothing to verify, so the prod layers stay
+    # off: a README commit must not spend an e2e run against prod.
     if: >-
-      always() && !cancelled() && (
+      !cancelled() && (
         (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
          (needs.deploy-backend.result == 'success' || needs.deploy-backend.result == 'skipped') &&
-         (needs.deploy-frontend.result == 'success' || needs.deploy-frontend.result == 'skipped')) ||
+         (needs.deploy-frontend.result == 'success' || needs.deploy-frontend.result == 'skipped') &&
+         (needs.deploy-backend.result == 'success' ||
+          needs.deploy-frontend.result == 'success' ||
+          needs.changes.outputs.tests == 'true')) ||
         (github.event_name == 'workflow_dispatch' &&
          (contains(format(',{0},', inputs.layers), ',integration,') ||
           contains(format(',{0},', inputs.layers), ',api,') ||
@@ -1643,7 +1648,7 @@ jobs:
   e2e-tests:
     needs: [integration-tests, api-tests]
     if: >-
-      always() && !cancelled() && (
+      !cancelled() && (
         (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
          needs.integration-tests.result == 'success' &&
          needs.api-tests.result == 'success') ||
@@ -1976,7 +1981,7 @@ jobs:
   manual-tests:
     needs: [e2e-tests, stand-ready]
     if: >-
-      always() && !cancelled() &&
+      !cancelled() &&
       github.event_name == 'workflow_dispatch' &&
       contains(format(',{0},', inputs.layers), ',manual,') &&
       needs.stand-ready.result == 'success' &&
