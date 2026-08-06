@@ -12,12 +12,11 @@ name: CI
 # Pyramid layers (classical): unit · integration (no UI) · e2e · manual
 # Sideways FE: component (jsdom). Visual (@Tag visual) inside e2e; baselines → e2e-update-baselines.
 # CD on main (two lanes; deploy host serialized via concurrency group).
-# Sonar is a hard gate: token/host/scan/QG must pass before build/deploy.
-#   unit-tests → sonar-backend ──────────────────────────────┐
-#   tests-harness-backend (-DincludeTags=harness-backend) ───┼→ build-backend → deploy → integration ─┐
-#   component-tests → sonar-frontend ────────────────────────┐                                    │
-#   tests-harness-frontend (-DincludeTags=harness-frontend) ─┼→ build-frontend → deploy → e2e-smoke ─┼→ e2e-tests
-#   tests-harness-backend + tests-harness-frontend → sonar-tests (tests module; gates e2e join) ────┘
+# Sonar is a hard gate before build/deploy. Harness jobs are parallel pre-flight — they do not gate build.
+#   unit-tests → sonar-backend → build-backend → deploy → integration ─┐
+#   tests-harness-backend (-DincludeTags=harness-backend) ────────────────┼→ sonar-tests ─┐
+#   component-tests → sonar-frontend → build-frontend → deploy → e2e-smoke ─┼─────────────┼→ e2e-tests
+#   tests-harness-frontend (-DincludeTags=harness-frontend) ──────────────┘             │
 #     → e2e-update-baselines (dispatch + update_baselines; else skip)
 #     → manual-tests (dispatch layers=manual|all; else skip)
 
@@ -835,7 +834,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   build-backend:
-    needs: [sonar-backend, tests-harness-backend]
+    needs: [sonar-backend]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -882,7 +881,7 @@ jobs:
           done <<< "${to_delete}"
 
   build-frontend:
-    needs: [sonar-frontend, tests-harness-frontend]
+    needs: [sonar-frontend]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20

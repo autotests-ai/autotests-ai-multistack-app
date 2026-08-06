@@ -42,11 +42,11 @@ with real Selenide/API calls and retagging — do not keep a parallel wiki check
 
 Self-check of the **tests module helpers** before / alongside product layers — umbrella `@Tag("harness")`, split by lane:
 
-| Slice | Tags | CI job | Helpers |
-|-------|------|--------|---------|
-| backend | `harness` + `harness-backend` | `tests-harness-backend` | `ConfigReader` |
-| frontend | `harness` + `harness-frontend` | `tests-harness-frontend` | `LayoutCss`, `TokensCss`, `HarCapture`, `HarViewerHtml` |
-| umbrella | `harness` | local / `sonar-tests` | all of the above |
+| Slice | Tags | CI job | Gates |
+|-------|------|--------|-------|
+| backend | `harness` + `harness-backend` | `tests-harness-backend` | PR; `sonar-tests` → e2e join |
+| frontend | `harness` + `harness-frontend` | `tests-harness-frontend` | PR; `sonar-tests` → e2e join (not `build-frontend`) |
+| umbrella | `harness` | local / `sonar-tests` | all helpers for tests-module Sonar |
 
 ```bash
 ./gradlew test -Denv=reference_ci -DincludeTags=harness-backend   # + JaCoCo on ConfigReader
