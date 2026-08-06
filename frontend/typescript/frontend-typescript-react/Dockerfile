@@ -8,8 +8,6 @@ WORKDIR /build
 COPY frontend/typescript/frontend-typescript-react/ frontend/typescript/frontend-typescript-react/
 COPY ${REACT_UI}/ ${REACT_UI}/
 COPY frontend/_shared/frontend-javascript-app/css/ frontend/_shared/frontend-javascript-app/css/
-COPY frontend/_shared/stack-matrix.ts frontend/_shared/stack-matrix.ts
-COPY frontend/_shared/poll-toggle.ts frontend/_shared/poll-toggle.ts
 WORKDIR /build/frontend/typescript/frontend-typescript-react
 RUN npm ci && npm run build
 
@@ -22,6 +20,5 @@ RUN rm -rf /usr/share/nginx/html/* \
   && cp -a /tmp/ui-runtime/. /usr/share/nginx/html/ \
   && cp -a /tmp/ui-dist/. /usr/share/nginx/html/ \
   && rm -f /usr/share/nginx/html/README.md \
-  && rm -f /usr/share/nginx/html/stack/index.html \
   && rm -rf /tmp/ui-runtime /tmp/ui-dist
 EXPOSE 80

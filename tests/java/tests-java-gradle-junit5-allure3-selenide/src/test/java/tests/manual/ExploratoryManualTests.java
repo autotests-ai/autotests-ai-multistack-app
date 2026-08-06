@@ -33,14 +33,4 @@ class ExploratoryManualTests extends AllureMeta {
         step("Confirm welcome panel shows Welcome, user1!");
         step("Logout and land on /login with empty session");
     }
-
-    @Test
-    @Manual
-    @Tag("manual")
-    @DisplayName("Stack switcher opens another backend/frontend combo")
-    void stackSwitcherChecklist() {
-        step("Open /stack/ and wait for matrix boards");
-        step("Pick another active backend × frontend pair");
-        step("Confirm URL and current-pair badge match the selected combo");
-    }
 }

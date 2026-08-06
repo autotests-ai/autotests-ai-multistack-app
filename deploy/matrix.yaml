@@ -1,6 +1,5 @@
 # SSOT: backend path × frontend path matrix for reference-app-copy.
-# Reference data for docs, the Stack page (frontend/scripts/sync-stack-matrix.py)
-# and deploy/services-status-server.py. CI does not read this file.
+# Reference data for docs and deploy/services-status-server.py. CI does not read this file.
 # URL: https://{public_host}/{backend}/{frontend}/
 #      https://{public_host}/{backend}/api/
 # First path segment → API upstream; second → per-frontend container upstream.

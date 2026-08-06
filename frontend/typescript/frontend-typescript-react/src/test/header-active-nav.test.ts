@@ -32,12 +32,6 @@ const REFERENCE_HEADER_CONFIG = {
       active: false,
       testid: 'header-nav-register',
     },
-    {
-      href: `${MOUNT}/stack/`,
-      label: 'Stack',
-      active: false,
-      testid: 'header-nav-stack',
-    },
   ],
   lang: { default: 'en' as const },
   theme: { default: 'dark' as const },
@@ -79,8 +73,8 @@ async function mountAt(path: string): Promise<void> {
   vi.resetModules();
   await import(/* @vite-ignore */ HEADER_JS);
   await vi.waitFor(() => {
-    expect(navLinks().length).toBe(4);
-    expect(menuNavLinks().length).toBe(4);
+    expect(navLinks().length).toBe(3);
+    expect(menuNavLinks().length).toBe(3);
   });
 }
 
@@ -178,7 +172,6 @@ describe('canonical header.js — mobile burger menu', () => {
       'header-menu-nav-home',
       'header-menu-nav-login',
       'header-menu-nav-register',
-      'header-menu-nav-stack',
     ]);
     expect(document.querySelector('[data-testid="header-menu-search-input"]')).not.toBeNull();
     expect(document.querySelector('[data-testid="header-menu-github"]')).not.toBeNull();
