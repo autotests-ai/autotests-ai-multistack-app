@@ -11,7 +11,9 @@ name: CI
 # Allure: TestOps upload + `allure generate` + Telegram per job (native inline, no scripts).
 # Pyramid layers (6): unit · component · api · integration · e2e · manual
 # Visual (@Tag visual) runs inside e2e-tests; baselines refresh → e2e-update-baselines.
-# CD on main: build → deploy-backend → api-tests (+ deploy-frontend in parallel)
+# CD on main (two lanes):
+#   unit-tests (+ tests-harness) → build-backend → deploy-backend → api-tests
+#   component-tests → build-frontend → deploy-frontend (after deploy-backend — shared deploy host)
 
 on:
   pull_request:
@@ -741,11 +743,11 @@ jobs:
             echo "- commit: \`${GITHUB_SHA:0:7}\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
-  build:
-    needs: [unit-tests, component-tests, tests-harness]
+  build-backend:
+    needs: [unit-tests, tests-harness]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 20
     permissions:
       contents: read
       packages: write
@@ -756,43 +758,85 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - run: docker compose build ${{ env.BACKEND }} ${{ env.FRONTEND }}
-      - run: docker compose push ${{ env.BACKEND }} ${{ env.FRONTEND }}
-      # Keep the newest N SHA versions per package; never delete a version that carries `latest`.
-      # Needs repo Admin on each package (Manage Actions access). No PAT — GITHUB_TOKEN only.
-      - name: Retain last 10 GHCR versions
+      - run: docker compose build ${{ env.BACKEND }}
+      - run: docker compose push ${{ env.BACKEND }}
+      # Keep the newest N GHCR versions; never delete a version that carries `latest`.
+      # Needs repo Admin on the package (Manage Actions access). No PAT — GITHUB_TOKEN only.
+      - name: Retain last 10 GHCR versions (backend)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           KEEP: "10"
+          GHCR_PACKAGE: ${{ env.GHCR_BACKEND_PACKAGE }}
         run: |
           set -euo pipefail
           org="${{ github.repository_owner }}"
-          for pkg in \
-            "${{ env.GHCR_BACKEND_PACKAGE }}" \
-            "${{ env.GHCR_FRONTEND_PACKAGE }}"
-          do
-            echo "Cleaning ghcr.io/${org}/${pkg} (keep ${KEEP}; protect latest)"
-            to_delete="$(
-              gh api --paginate \
-                "/orgs/${org}/packages/container/${pkg}/versions" \
-                --jq '.[] | select((.metadata.container.tags // [] | index("latest")) | not) | "\(.created_at)\t\(.id)"' \
-                | sort -r \
-                | tail -n "+$((KEEP + 1))" \
-                | cut -f2
-            )"
-            if [ -z "${to_delete}" ]; then
-              echo "Nothing to delete for ${pkg}"
-              continue
-            fi
-            while IFS= read -r id; do
-              [ -n "${id}" ] || continue
-              echo "DELETE ${pkg} version ${id}"
-              gh api --method DELETE "/orgs/${org}/packages/container/${pkg}/versions/${id}"
-            done <<< "${to_delete}"
-          done
+          pkg="${GHCR_PACKAGE}"
+          echo "Cleaning ghcr.io/${org}/${pkg} (keep ${KEEP}; protect latest)"
+          to_delete="$(
+            gh api --paginate \
+              "/orgs/${org}/packages/container/${pkg}/versions" \
+              --jq '.[] | select((.metadata.container.tags // [] | index("latest")) | not) | "\(.created_at)\t\(.id)"' \
+              | sort -r \
+              | tail -n "+$((KEEP + 1))" \
+              | cut -f2
+          )"
+          if [ -z "${to_delete}" ]; then
+            echo "Nothing to delete for ${pkg}"
+            exit 0
+          fi
+          while IFS= read -r id; do
+            [ -n "${id}" ] || continue
+            echo "DELETE ${pkg} version ${id}"
+            gh api --method DELETE "/orgs/${org}/packages/container/${pkg}/versions/${id}"
+          done <<< "${to_delete}"
+
+  build-frontend:
+    needs: [component-tests]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - run: docker compose build ${{ env.FRONTEND }}
+      - run: docker compose push ${{ env.FRONTEND }}
+      - name: Retain last 10 GHCR versions (frontend)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          KEEP: "10"
+          GHCR_PACKAGE: ${{ env.GHCR_FRONTEND_PACKAGE }}
+        run: |
+          set -euo pipefail
+          org="${{ github.repository_owner }}"
+          pkg="${GHCR_PACKAGE}"
+          echo "Cleaning ghcr.io/${org}/${pkg} (keep ${KEEP}; protect latest)"
+          to_delete="$(
+            gh api --paginate \
+              "/orgs/${org}/packages/container/${pkg}/versions" \
+              --jq '.[] | select((.metadata.container.tags // [] | index("latest")) | not) | "\(.created_at)\t\(.id)"' \
+              | sort -r \
+              | tail -n "+$((KEEP + 1))" \
+              | cut -f2
+          )"
+          if [ -z "${to_delete}" ]; then
+            echo "Nothing to delete for ${pkg}"
+            exit 0
+          fi
+          while IFS= read -r id; do
+            [ -n "${id}" ] || continue
+            echo "DELETE ${pkg} version ${id}"
+            gh api --method DELETE "/orgs/${org}/packages/container/${pkg}/versions/${id}"
+          done <<< "${to_delete}"
 
   deploy-backend:
-    needs: build
+    needs: build-backend
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -822,10 +866,11 @@ jobs:
             docker logout ghcr.io
 
   deploy-frontend:
-    needs: deploy-backend
+    needs: [build-frontend, deploy-backend]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Shared deploy host: serialize git checkout with deploy-backend (same checkout dir).
     permissions:
       contents: read
       packages: read
