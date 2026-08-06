@@ -65,7 +65,7 @@ env:
   GHCR_FRONTEND_PACKAGE: reference-app-copy-frontend-typescript-react
   RUN_LABEL: "${{ github.repository }} #${{ github.run_number }}"
   SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL || 'https://sonar.qa.guru' }}
-  # ── Allure / Telegram (publish-allure reads these; set once) ─────────────
+  # ── Allure / Telegram (allure-ci reads these; set once) ─────────────────
   ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
   ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
   ALLURE_PROJECT_ID: ${{ vars.ALLURE_PROJECT_ID }}
@@ -116,7 +116,7 @@ jobs:
         run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification
         working-directory: ${{ env.BACKEND_DIR }}
       - if: always() && (env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin')
-        uses: ./.github/actions/publish-allure
+        uses: ./.github/actions/allure-ci
         with:
           tests-dir: ${{ env.BACKEND_DIR }}
           artifact-suffix: unit-tests
@@ -191,7 +191,7 @@ jobs:
         run: npm test
         working-directory: ${{ env.FRONTEND_DIR }}
       - if: always()
-        uses: ./.github/actions/publish-allure
+        uses: ./.github/actions/allure-ci
         with:
           tests-dir: ${{ env.FRONTEND_DIR }}
           artifact-suffix: component-tests
@@ -223,13 +223,13 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       # Coverage gate reads build/jacoco/test.exec, so it is only meaningful with this filter.
-      # Allure results stay on (default allure3) so publish-allure / allure-action can run on PR.
+      # Allure results stay on (default allure3) so allure-ci / allure-action can run on PR.
       - if: env.TESTS_LANG == 'java'
         id: run-tests
         run: ./gradlew test jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags=test-infra
         working-directory: ${{ env.TESTS_DIR }}
       - if: always() && env.TESTS_LANG == 'java'
-        uses: ./.github/actions/publish-allure
+        uses: ./.github/actions/allure-ci
         with:
           tests-dir: ${{ env.TESTS_DIR }}
           artifact-suffix: ${{ env.LAYER }}-tests
@@ -480,7 +480,7 @@ jobs:
         run: ./gradlew test -Denv=reference_prod -DincludeTags=api
         working-directory: ${{ env.TESTS_DIR }}
       - if: always() && env.TESTS_LANG == 'java'
-        uses: ./.github/actions/publish-allure
+        uses: ./.github/actions/allure-ci
         with:
           tests-dir: ${{ env.TESTS_DIR }}
           artifact-suffix: ${{ env.LAYER }}-tests
@@ -549,7 +549,7 @@ jobs:
         run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=mount
         working-directory: ${{ env.TESTS_DIR }}
       - if: always() && env.TESTS_LANG == 'java'
-        uses: ./.github/actions/publish-allure
+        uses: ./.github/actions/allure-ci
         with:
           tests-dir: ${{ env.TESTS_DIR }}
           artifact-suffix: ${{ env.LAYER }}-tests
@@ -584,7 +584,7 @@ jobs:
         run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=smoke -DexcludeTags=visual
         working-directory: ${{ env.TESTS_DIR }}
       - if: always() && env.TESTS_LANG == 'java'
-        uses: ./.github/actions/publish-allure
+        uses: ./.github/actions/allure-ci
         with:
           tests-dir: ${{ env.TESTS_DIR }}
           artifact-suffix: ${{ env.LAYER }}-tests
@@ -650,7 +650,7 @@ jobs:
         run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=visual
         working-directory: ${{ env.TESTS_DIR }}
       - if: always() && env.TESTS_LANG == 'java'
-        uses: ./.github/actions/publish-allure
+        uses: ./.github/actions/allure-ci
         with:
           tests-dir: ${{ env.TESTS_DIR }}
           artifact-suffix: ${{ env.LAYER }}-tests
@@ -685,7 +685,7 @@ jobs:
         run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=manual
         working-directory: ${{ env.TESTS_DIR }}
       - if: always() && env.TESTS_LANG == 'java'
-        uses: ./.github/actions/publish-allure
+        uses: ./.github/actions/allure-ci
         with:
           tests-dir: ${{ env.TESTS_DIR }}
           artifact-suffix: ${{ env.LAYER }}-tests

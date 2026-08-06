@@ -1,4 +1,4 @@
-name: Publish Allure
+name: Allure CI
 description: TestOps upload + Allure Report 3 (JS) + allure-action + optional Telegram (ADR 008)
 
 # Credentials / endpoint come from workflow env (set once in ci.yml):
@@ -152,7 +152,7 @@ runs:
       shell: bash
       run: npm install --no-save
 
-    - name: Publish Allure (theme + Telegram plugin)
+    - name: Telegram notify (allure-publish.mjs)
       if: >-
         always() &&
         inputs.enable-notifications == 'true' &&
