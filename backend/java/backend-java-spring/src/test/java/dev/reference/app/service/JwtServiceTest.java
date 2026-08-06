@@ -2,6 +2,12 @@ package dev.reference.app.service;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import dev.reference.app.allure.Layer;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Owner;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,6 +20,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Layer("unit")
+@Epic("Authentication")
+@Feature("JWT")
+@Owner("reference-app")
+@Severity(SeverityLevel.CRITICAL)
 @DisplayName("JwtService")
 class JwtServiceTest {
 

@@ -1,5 +1,11 @@
 package dev.reference.app.config;
 
+import dev.reference.app.allure.Layer;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Owner;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -10,6 +16,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.cors.CorsConfiguration;
 
+@Layer("unit")
+@Epic("Security")
+@Feature("CORS")
+@Owner("reference-app")
+@Severity(SeverityLevel.NORMAL)
 @DisplayName("CorsConfig")
 class CorsConfigTest {
 

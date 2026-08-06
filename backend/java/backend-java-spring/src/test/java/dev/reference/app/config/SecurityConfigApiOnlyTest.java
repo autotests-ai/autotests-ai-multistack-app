@@ -6,6 +6,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import dev.reference.app.controller.ApiController;
 import dev.reference.app.service.ItemService;
 import dev.reference.app.service.JwtService;
+import dev.reference.app.allure.Layer;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Owner;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +20,11 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+@Layer("unit")
+@Epic("Security")
+@Feature("API-only security")
+@Owner("reference-app")
+@Severity(SeverityLevel.CRITICAL)
 @WebMvcTest(controllers = ApiController.class)
 @Import({SecurityConfig.class, CorsConfig.class})
 @DisplayName("SecurityConfig API-only")

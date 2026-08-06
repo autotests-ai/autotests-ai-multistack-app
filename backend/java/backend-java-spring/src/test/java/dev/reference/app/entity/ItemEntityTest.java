@@ -1,5 +1,11 @@
 package dev.reference.app.entity;
 
+import dev.reference.app.allure.Layer;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Owner;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -7,6 +13,11 @@ import org.springframework.test.util.ReflectionTestUtils;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+@Layer("unit")
+@Epic("Domain")
+@Feature("ItemEntity")
+@Owner("reference-app")
+@Severity(SeverityLevel.TRIVIAL)
 @DisplayName("ItemEntity")
 class ItemEntityTest {
 

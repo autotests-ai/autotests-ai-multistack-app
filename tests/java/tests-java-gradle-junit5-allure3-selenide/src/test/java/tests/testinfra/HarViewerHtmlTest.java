@@ -1,6 +1,11 @@
 package tests.testinfra;
 
 import annotations.Layer;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Owner;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
 import helpers.HarViewerHtml;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -10,6 +15,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Layer("test-infra")
+@Epic("Test infrastructure")
+@Feature("HAR viewer")
+@Owner("reference-app")
+@Severity(SeverityLevel.NORMAL)
 @Tag("test-infra")
 class HarViewerHtmlTest {
 

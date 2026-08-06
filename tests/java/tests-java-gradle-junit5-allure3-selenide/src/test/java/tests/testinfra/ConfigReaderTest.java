@@ -1,6 +1,11 @@
 package tests.testinfra;
 
 import annotations.Layer;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Owner;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
 import config.ConfigReader;
 import config.TestConfig;
 import org.aeonbits.owner.ConfigFactory;
@@ -20,6 +25,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Layer("test-infra")
+@Epic("Test infrastructure")
+@Feature("ConfigReader")
+@Owner("reference-app")
+@Severity(SeverityLevel.NORMAL)
 @Tag("test-infra")
 @DisplayName("ConfigReader")
 @Execution(ExecutionMode.SAME_THREAD)

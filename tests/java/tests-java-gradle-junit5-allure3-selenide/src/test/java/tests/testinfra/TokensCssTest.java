@@ -1,6 +1,11 @@
 package tests.testinfra;
 
 import annotations.Layer;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Owner;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
 import helpers.TokensCss;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -19,6 +24,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Layer("test-infra")
+@Epic("Test infrastructure")
+@Feature("Tokens CSS")
+@Owner("reference-app")
+@Severity(SeverityLevel.NORMAL)
 @Tag("test-infra")
 @DisplayName("TokensCss")
 class TokensCssTest {

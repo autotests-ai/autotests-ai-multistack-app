@@ -8,6 +8,8 @@ import helpers.ScreenshotBaseline;
 import helpers.ViewportHelper;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.parallel.Execution;
@@ -21,6 +23,7 @@ import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.$;
 
 @Layer("e2e")
+@Severity(SeverityLevel.MINOR)
 @Tag("visual")
 @Epic("Authentication")
 @Feature("Login form")

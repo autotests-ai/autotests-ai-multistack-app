@@ -14,6 +14,7 @@ import helpers.BrowserSessionHelper;
 import helpers.HarCapture;
 import helpers.LocalChromePin;
 import io.qameta.allure.Issue;
+import io.qameta.allure.Owner;
 import pages.HomePage;
 import pages.LoginPage;
 import org.junit.jupiter.api.AfterAll;
@@ -29,6 +30,7 @@ import java.util.HashMap;
 import static com.codeborne.selenide.Selenide.closeWebDriver;
 
 
+@Owner("reference-app")
 @Scope("browser")
 @Framework("selenide")
 @Issue("REF-3")

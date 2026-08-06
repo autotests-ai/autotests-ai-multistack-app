@@ -7,6 +7,12 @@ import dev.reference.app.dto.UserProfileResponse;
 import dev.reference.app.entity.UserEntity;
 import dev.reference.app.exception.AuthException;
 import dev.reference.app.repository.UserRepository;
+import dev.reference.app.allure.Layer;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Owner;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,6 +31,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@Layer("unit")
+@Epic("Authentication")
+@Feature("AuthService")
+@Owner("reference-app")
+@Severity(SeverityLevel.CRITICAL)
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AuthService")
 class AuthServiceTest {

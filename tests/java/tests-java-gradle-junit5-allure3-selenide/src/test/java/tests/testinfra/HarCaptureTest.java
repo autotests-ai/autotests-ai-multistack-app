@@ -1,6 +1,11 @@
 package tests.testinfra;
 
 import annotations.Layer;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Owner;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
 import helpers.HarCapture;
 import java.util.List;
 import java.util.logging.Level;
@@ -12,6 +17,10 @@ import org.openqa.selenium.logging.LogEntry;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Layer("test-infra")
+@Epic("Test infrastructure")
+@Feature("HAR capture")
+@Owner("reference-app")
+@Severity(SeverityLevel.NORMAL)
 @Tag("test-infra")
 class HarCaptureTest {
 

@@ -7,6 +7,12 @@ import dev.reference.app.dto.ItemDto;
 import dev.reference.app.dto.ItemsResponse;
 import dev.reference.app.service.ItemService;
 import dev.reference.app.service.JwtService;
+import dev.reference.app.allure.Layer;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Owner;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +28,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Layer("unit")
+@Epic("Home")
+@Feature("ApiController")
+@Owner("reference-app")
+@Severity(SeverityLevel.NORMAL)
 @WebMvcTest(controllers = ApiController.class)
 @Import({SecurityConfig.class, CorsConfig.class})
 @DisplayName("ApiController")
