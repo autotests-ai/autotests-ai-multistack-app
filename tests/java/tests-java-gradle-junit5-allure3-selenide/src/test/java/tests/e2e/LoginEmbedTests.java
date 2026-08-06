@@ -20,7 +20,6 @@ class LoginEmbedTests extends TestBase {
     @Test
     @Tag("e2e")
     @Tag("smoke")
-    @Tag("e2e-mock")
     @DisplayName("Embedded header is visible on login page")
     void embeddedHeaderIsVisibleOnLoginPage() {
         loginPage.openPage()

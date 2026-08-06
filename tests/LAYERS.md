@@ -63,33 +63,14 @@ Self-check of the **tests module helpers** before / alongside product layers —
 | Slice | Tag | CI |
 |-------|-----|-----|
 | Thin UI after FE deploy | `@Tag("smoke")` (+ `@Tag("e2e")`) | job `e2e-smoke` on push to `main` (FE lane → join at `e2e-tests`) |
-| UI against mocked API (local / PR) | `@Tag("e2e-mock")` (+ `@Tag("e2e")`, optional `@Tag("smoke")`) | job `e2e-mock` (planned — see CI formulation below) |
 | Flow (default `layers=e2e`) | `@Tag("e2e")` exclude visual | job `e2e-tests` (after `api-tests` + `e2e-smoke` + `sonar-tests`) |
 | Flow + visual (`layers=all`) | `e2e,visual` | job `e2e-tests` |
 | Refresh baselines | `@Tag("visual")` + `-DupdateBaselines=true` | job `e2e-update-baselines` |
 
 Local refresh: `./gradlew test -Denv=reference_ci -DincludeTags=visual -DupdateBaselines=true`
 
-**e2e-mock** runs browser smoke against a **local** stand — no prod deploy, no Selenoid.
-The SPA is served at document root and resolves API to `/api`; the frontend container nginx
-has no `/api` route, so a **stand-gateway** (compose profile `mock`, port **9911**) proxies
-`/` → frontend and `/api/` → WireMock stubs in `deploy/mock/mappings/`.
-
-First `@Tag("e2e-mock")` cases — four mount smoke tests (Home / Login / Register; no `/stack/` page):
-`HomeLayoutTests`, `LoginFormTests`, `LoginEmbedTests`, `RegisterFormTests`.
-
-```bash
-docker compose --profile mock up -d          # stand-gateway :9911 + api-mock + frontend
-./gradlew test -Denv=reference_mock -DincludeTags=e2e-mock
-```
-
-Stand registry id: `mock-gateway` (`python scripts/stands/ensure.py mock-gateway` from monorepo root).
-
-**CI formulation (next window):** job `e2e-mock` — checkout, `docker compose --profile mock up -d --build`,
-then `./gradlew test -Denv=reference_mock -DincludeTags=e2e-mock` in `tests/java/…`. No deploy job,
-no prod URL, no Selenoid hub — safe on pull requests.
-
-`e2e-smoke` on `main` still hits the deployed UI (`-Denv=reference_prod`) until CI switches the FE lane.
+`e2e-smoke` is the FE-lane gate before `sonar-tests`. **Target:** mocked backend (UI without live API).
+**Today:** smoke still hits the deployed UI (`-Denv=reference_prod`).
 
 ## Two knobs, no layer tasks
 
@@ -100,7 +81,6 @@ task — `test`:
 ./gradlew test -Denv=reference_ci   -DincludeTags=harness-backend
 ./gradlew test -Denv=reference_ci   -DincludeTags=harness-frontend
 ./gradlew test -Denv=reference_ci   -DincludeTags=harness
-./gradlew test -Denv=reference_mock -DincludeTags=e2e-mock
 ./gradlew test -Denv=reference_prod -DincludeTags=integration
 ./gradlew test -Denv=reference_prod -DincludeTags=api
 ./gradlew test -Denv=reference_prod -DincludeTags=smoke
@@ -111,7 +91,6 @@ task — `test`:
 | Stand (`-Denv`) | Where it points |
 |-----------------|-----------------|
 | `reference_ci` | the compose stack on this machine — UI `:9811`, API `:8800` (`docker compose up -d` first) |
-| `reference_mock` | mock profile — UI + stub API same origin `:9911` (`docker compose --profile mock up -d` first) |
 | `reference_prod` | [reference-app-copy.autotests.ai/backend-java-spring](https://reference-app-copy.autotests.ai/backend-java-spring), browsers from the Selenoid hub |
 
 Anything else — `headless`, `enableHar`, `enableVideo`, `updateBaselines`, `allureReportMode` — is a
@@ -128,7 +107,7 @@ suite (`npm test` / `pytest` with `UI_URL` / `BASE_URL`) — no Gradle tag slice
 | component | frontend | `frontend/typescript/frontend-typescript-react/src/test/` | Vitest | `npm test` |
 | integration | tests | `…/tests/integration/` (`BackendWiringIntegrationTests`, `AuthRoundTripIntegrationTests`, `SeedDataIntegrationTests`) | `@Tag("integration")` | java → `-DincludeTags=integration` via `integration-tests` (after harness-backend) |
 | api | tests | `…/tests/api/` (`AuthApiTests`, `ReferenceApiTests`) | `@Tag("api")` | java → `-DincludeTags=api` via `api-tests` (after `integration-tests`) |
-| e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `smoke` / `visual` / `e2e-mock`) | `e2e-smoke` (push, `smoke`); `e2e-mock` (local / planned PR); `e2e-tests` (after lanes + `sonar-tests` join) |
+| e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `smoke` / `visual`) | `e2e-smoke` (push, `smoke`); `e2e-tests` (after lanes + `sonar-tests` join) |
 | manual | tests | `…/tests/manual/` **in code** | `@Tag("manual")` + `@Manual` | java → `-DincludeTags=manual` via `manual-tests` (after `e2e-tests`, dispatch) |
 
 Bare `./gradlew test` (java) runs **everything**, integration included — there are no hidden excludes.
@@ -206,8 +185,7 @@ the java `-D` flags.
 tests-harness-backend → integration-tests → api-tests ─────────────┐
 tests-harness-backend ──┐                                          │
 tests-harness-frontend ───┼→ sonar-tests (tests-module Sonar)       ├→ e2e-tests → manual-tests
-tests-harness-frontend → e2e-smoke (deployed UI) ─────────────────┘
-tests-harness-frontend → e2e-mock (mock gateway, planned PR) ─────┘
+tests-harness-frontend → e2e-smoke (mock backend) ─────────────────┘
 ```
 
 `sonar-tests` scans **testinfra helpers** (`-DincludeTags=harness`), not api/smoke results.

@@ -24,7 +24,6 @@ class LoginFormTests extends TestBase {
     @Issue("REF-2")
     @Tag("e2e")
     @Tag("smoke")
-    @Tag("e2e-mock")
     @DisplayName("Login form fields and submit are visible")
     void loginFormIsMounted() {
         loginPage.openPage()

@@ -23,7 +23,6 @@ class RegisterFormTests extends TestBase {
     @Test
     @Tag("e2e")
     @Tag("smoke")
-    @Tag("e2e-mock")
     @DisplayName("Register form fields and submit are visible")
     void registerFormIsMounted() {
         registerPage.openPage()

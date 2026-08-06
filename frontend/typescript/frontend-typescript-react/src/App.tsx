@@ -5,6 +5,7 @@ import { headerConfig } from './lib/headerConfig';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { RegisterPage } from './pages/RegisterPage';
 
 export function App() {
   return (
