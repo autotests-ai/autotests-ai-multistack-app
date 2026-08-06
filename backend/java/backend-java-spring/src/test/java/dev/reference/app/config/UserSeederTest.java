@@ -5,7 +5,6 @@ import dev.reference.app.repository.UserRepository;
 import dev.reference.app.allure.Layer;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
-import io.qameta.allure.Owner;
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +27,6 @@ import static org.mockito.Mockito.when;
 @Layer("unit")
 @Epic("Authentication")
 @Feature("User seeder")
-@Owner("reference-app")
 @Severity(SeverityLevel.NORMAL)
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UserSeeder")

@@ -4,7 +4,6 @@ import annotations.Layer;
 import annotations.Manual;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
-import io.qameta.allure.Owner;
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
 import org.junit.jupiter.api.DisplayName;
@@ -16,7 +15,6 @@ import static io.qameta.allure.Allure.step;
 @Layer("manual")
 @Epic("Exploratory")
 @Feature("Manual checklist")
-@Owner("reference-app")
 @Severity(SeverityLevel.NORMAL)
 @DisplayName("Exploratory manual")
 class ExploratoryManualTests {

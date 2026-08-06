@@ -4,7 +4,6 @@ import dev.reference.app.service.JwtService;
 import dev.reference.app.allure.Layer;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
-import io.qameta.allure.Owner;
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
 import jakarta.servlet.FilterChain;
@@ -28,7 +27,6 @@ import static org.mockito.Mockito.when;
 @Layer("unit")
 @Epic("Authentication")
 @Feature("JWT filter")
-@Owner("reference-app")
 @Severity(SeverityLevel.CRITICAL)
 @ExtendWith(MockitoExtension.class)
 @DisplayName("JwtAuthFilter")

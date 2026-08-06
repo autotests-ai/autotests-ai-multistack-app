@@ -12,7 +12,6 @@ import dev.reference.app.service.JwtService;
 import dev.reference.app.allure.Layer;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
-import io.qameta.allure.Owner;
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
 import org.junit.jupiter.api.DisplayName;
@@ -39,7 +38,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Layer("unit")
 @Epic("Authentication")
 @Feature("AuthController")
-@Owner("reference-app")
 @Severity(SeverityLevel.CRITICAL)
 @WebMvcTest(controllers = AuthController.class)
 @Import({AuthExceptionHandler.class, SecurityConfig.class, CorsConfig.class})
