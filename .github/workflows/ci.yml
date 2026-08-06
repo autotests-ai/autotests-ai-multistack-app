@@ -12,8 +12,11 @@ name: CI
 # Pyramid layers (classical): unit · integration (no UI) · e2e · manual
 # Sideways FE: component (jsdom). Visual (@Tag visual) inside e2e; baselines → e2e-update-baselines.
 # CD on main (two lanes; deploy host serialized via concurrency group):
-#   unit-tests (+ tests-harness) → build-backend → deploy-backend → integration-tests
-#   component-tests → build-frontend → deploy-frontend → e2e-smoke (@Tag smoke)
+#   unit-tests → sonar-backend ─┐
+#   tests-harness → sonar-tests ─┼→ build-backend → deploy-backend → integration-tests ─┐
+#   component-tests → sonar-frontend → build-frontend → deploy-frontend → e2e-smoke ───┼→ e2e-tests
+#     → e2e-update-baselines (dispatch + update_baselines; else skip)
+#     → manual-tests (dispatch layers=manual|all; else skip)
 
 on:
   pull_request:
@@ -485,7 +488,9 @@ jobs:
   # Quality axis (SonarQube) — parallel to pyramid; does not gate build/deploy.
   # Soft-skip when SONAR_TOKEN unset / host down unless vars.SONAR_REQUIRED=true.
   # Gate poll: scripts/sonar-gate-wait.py only (no external .sh wrappers).
+  # Backend lane: after unit (parallel with build — soft gate unless SONAR_REQUIRED=true).
   sonar-backend:
+    needs: [unit-tests]
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -572,7 +577,9 @@ jobs:
             echo "- commit: \`${GITHUB_SHA:0:7}\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
+  # Tests module scan (harness + JaCoCo) — same backend-side lane as tests-harness, not after e2e.
   sonar-tests:
+    needs: [tests-harness]
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -664,7 +671,9 @@ jobs:
             echo "- commit: \`${GITHUB_SHA:0:7}\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
+  # Frontend lane: after component tests (parallel with build).
   sonar-frontend:
+    needs: [component-tests]
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -1202,10 +1211,19 @@ jobs:
             --out collage.png
 
 
+  # Join both CD lanes (push), or dispatch e2e/all against prod when lanes were skipped.
   e2e-tests:
+    needs: [integration-tests, e2e-smoke]
     if: >-
-      github.event_name == 'workflow_dispatch' &&
-      (inputs.layers == 'e2e' || inputs.layers == 'all')
+      always() && !cancelled() && (
+        (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+         needs.integration-tests.result == 'success' &&
+         needs.e2e-smoke.result == 'success') ||
+        (github.event_name == 'workflow_dispatch' &&
+         (inputs.layers == 'e2e' || inputs.layers == 'all') &&
+         (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped') &&
+         (needs.e2e-smoke.result == 'success' || needs.e2e-smoke.result == 'skipped'))
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -1379,8 +1397,12 @@ jobs:
         run: python -m pytest
         working-directory: ${{ env.TESTS_DIR }}
 
+  # Optional after e2e; skipped on push and when update_baselines=false.
   e2e-update-baselines:
+    needs: [e2e-tests]
     if: >-
+      always() && !cancelled() &&
+      needs.e2e-tests.result == 'success' &&
       github.event_name == 'workflow_dispatch' &&
       inputs.update_baselines == true
     runs-on: ubuntu-latest
@@ -1518,10 +1540,19 @@ jobs:
           path: ${{ env.TESTS_DIR }}/src/test/resources/screenshots/
           if-no-files-found: ignore
 
+  # After baselines (or skip); auto-skip on push / layers≠manual|all.
   manual-tests:
+    needs: [e2e-tests, e2e-update-baselines]
     if: >-
+      always() && !cancelled() &&
       github.event_name == 'workflow_dispatch' &&
-      (inputs.layers == 'manual' || inputs.layers == 'all')
+      (inputs.layers == 'manual' || inputs.layers == 'all') &&
+      (needs.e2e-update-baselines.result == 'success' || needs.e2e-update-baselines.result == 'skipped') &&
+      (
+        (inputs.layers == 'all' && needs.e2e-tests.result == 'success') ||
+        (inputs.layers == 'manual' &&
+         (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped'))
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
