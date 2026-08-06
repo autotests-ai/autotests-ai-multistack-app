@@ -70,9 +70,9 @@ public interface TestConfig extends Config {
     @DefaultValue("")
     String remoteUrl();
 
-    @Key("smokeUrl")
+    @Key("hubProbeUrl")
     @DefaultValue("https://example.com/")
-    String smokeUrl();
+    String hubProbeUrl();
 
     @Key("playwrightWsEndpoint")
     @DefaultValue("ws://127.0.0.1:4444/playwright/playwright-chromium/1.61.1")

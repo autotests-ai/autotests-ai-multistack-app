@@ -74,16 +74,16 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · all jobs live in [`.github/workflow
 | Job | Where |
 |-----|-------|
 | `unit-tests` | `BACKEND_DIR` — command by `BACKEND_LANG` (gradle/JaCoCo, pytest, `go test`, or `npm test`) |
-| `test-infra-tests` | `TESTS_DIR` — by `TESTS_LANG` (java: `-DincludeTags=test-infra` + JaCoCo; else full suite) |
+| `tests-harness` | `TESTS_DIR` — by `TESTS_LANG` (java: `-DincludeTags=harness` + JaCoCo; else full suite) |
 | `component-tests` | `FRONTEND_DIR` — `npm test` |
 | `api-tests` | `TESTS_DIR` — by `TESTS_LANG` after deploy (java: `-DincludeTags=api`; else full suite) |
 | `integration-tests` | dispatch `layers=integration\|all` — java: `-DincludeTags=mount` |
-| `e2e-tests` | dispatch `layers=e2e\|all` — java: `-DincludeTags=smoke -DexcludeTags=visual`; else full suite |
-| `visual-tests` | dispatch `layers=visual\|all` — java: `-DincludeTags=visual` |
+| `e2e-tests` | dispatch `layers=e2e\|all` — java: `-DincludeTags=e2e` (default excludes visual); `all` → `e2e,visual`; override via `include_tags` / `exclude_tags` |
+| `e2e-update-baselines` | dispatch `update_baselines=true` — java: `-DincludeTags=visual -DupdateBaselines=true` |
 | `manual-tests` | dispatch `layers=manual\|all` — java: `-DincludeTags=manual` |
 
 The first three block a pull request. Browser layers and extra language runners have no
-scheduled job — dispatch with `layers` (`integration` \| `e2e` \| `visual` \| `manual` \| `all`) /
+scheduled job — dispatch with `layers` (`integration` \| `e2e` \| `manual` \| `all`) /
 `runners` (`javascript` \| `python` \| `both`) when you want them. Stack defaults (`BACKEND` /
 `BACKEND_LANG` / `FRONTEND` / `TESTS` / `TESTS_LANG`) live once at the top of
 [`ci.yml`](.github/workflows/ci.yml).
@@ -156,7 +156,7 @@ One workflow — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
 | Event | Jobs |
 |-------|------|
-| pull request | `unit-tests` · `component-tests` · `test-infra-tests` |
+| pull request | `unit-tests` · `component-tests` · `tests-harness` |
 | push to `main` | the same three → `build` → `deploy` → `api-tests` |
 
 `build` runs `docker compose build` + `docker compose push`, so `docker-compose.yml` stays the only place describing how an image is built. Images go to GHCR as `ghcr.io/autotests-ai/reference-app-copy-<service>:<sha>`; the tag comes from `IMAGE_TAG` (defaults to `latest` locally).

@@ -24,7 +24,7 @@ class LoginTests extends TestBase {
     private static final String WRONG_CREDENTIALS_MESSAGE = "Wrong login or password";
 
     @Test
-    @Tag("smoke")
+    @Tag("e2e")
     @Tag("positive")
     @DisplayName("User is logged in with valid credentials")
     void shouldLoginWithValidCredentials() {
@@ -34,7 +34,7 @@ class LoginTests extends TestBase {
     }
 
     @Test
-    @Tag("smoke")
+    @Tag("e2e")
     @Tag("negative")
     @DisplayName("Empty username shows validation error")
     void shouldShowValidationErrorWhenUsernameIsEmpty() {
@@ -45,7 +45,7 @@ class LoginTests extends TestBase {
     }
 
     @Test
-    @Tag("smoke")
+    @Tag("e2e")
     @Tag("negative")
     @DisplayName("Empty password shows validation error")
     void shouldShowValidationErrorWhenPasswordIsEmpty() {
@@ -56,7 +56,7 @@ class LoginTests extends TestBase {
     }
 
     @Test
-    @Tag("smoke")
+    @Tag("e2e")
     @Tag("negative")
     @DisplayName("Wrong password shows readable error")
     void shouldShowErrorWhenPasswordIsWrong() {

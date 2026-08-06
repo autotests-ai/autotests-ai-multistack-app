@@ -14,11 +14,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Layer("test-infra")
-@Epic("Test infrastructure")
+@Layer("harness")
+@Epic("Test harness")
 @Feature("HAR viewer")
 @Severity(SeverityLevel.NORMAL)
-@Tag("test-infra")
+@Tag("harness")
 class HarViewerHtmlTest extends AllureMeta {
 
     @Test

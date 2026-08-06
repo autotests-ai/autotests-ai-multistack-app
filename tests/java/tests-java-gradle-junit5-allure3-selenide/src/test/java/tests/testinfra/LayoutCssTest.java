@@ -17,11 +17,11 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Layer("test-infra")
-@Epic("Test infrastructure")
+@Layer("harness")
+@Epic("Test harness")
 @Feature("Layout CSS")
 @Severity(SeverityLevel.NORMAL)
-@Tag("test-infra")
+@Tag("harness")
 @DisplayName("LayoutCss")
 class LayoutCssTest extends AllureMeta {
 

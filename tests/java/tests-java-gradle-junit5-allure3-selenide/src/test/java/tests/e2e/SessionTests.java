@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 class SessionTests extends TestBase {
 
     @Test
-    @Tag("smoke")
+    @Tag("e2e")
     @Tag("negative")
     @DisplayName("Invalid token clears session and hides welcome")
     void invalidTokenClearsSession() {

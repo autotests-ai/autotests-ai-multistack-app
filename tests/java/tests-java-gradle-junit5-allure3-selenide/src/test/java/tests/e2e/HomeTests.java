@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 class HomeTests extends TestBase {
 
     @Test
-    @Tag("smoke")
+    @Tag("e2e")
     @DisplayName("Page load fetches health and items from API")
     void pageLoadFetchesItems() {
         homePage.openPage()

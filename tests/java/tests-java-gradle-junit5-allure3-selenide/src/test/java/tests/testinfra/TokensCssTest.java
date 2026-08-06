@@ -23,11 +23,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Layer("test-infra")
-@Epic("Test infrastructure")
+@Layer("harness")
+@Epic("Test harness")
 @Feature("Tokens CSS")
 @Severity(SeverityLevel.NORMAL)
-@Tag("test-infra")
+@Tag("harness")
 @DisplayName("TokensCss")
 class TokensCssTest extends AllureMeta {
 

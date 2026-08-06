@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 class LogoutTests extends TestBase {
 
     @Test
-    @Tag("smoke")
+    @Tag("e2e")
     @Tag("positive")
     @DisplayName("User can logout after form login")
     void shouldLogoutAfterFormLogin() {
@@ -31,7 +31,7 @@ class LogoutTests extends TestBase {
     }
 
     @Test
-    @Tag("smoke")
+    @Tag("e2e")
     @Tag("positive")
     @DisplayName("User can logout after localStorage authentication")
     void shouldLogoutAfterLocalStorageAuthentication() {

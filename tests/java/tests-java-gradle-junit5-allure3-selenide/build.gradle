@@ -6,7 +6,7 @@
  *
  *        (\_/)
  *        ( •_•)
- *        / >./gradlew test -Denv=reference_ci -DincludeTags=smoke
+ *        / >./gradlew test -Denv=reference_ci -DincludeTags=e2e
  *
  *              .-------.
  *             /  ✓ ✓ ✓  \
@@ -61,7 +61,7 @@ sonar {
         property 'sonar.java.binaries', 'build/classes/java/test'
         property 'sonar.coverage.jacoco.xmlReportPaths',
                 "${layout.buildDirectory.get()}/reports/jacoco/test/jacocoTestReport.xml"
-        // Coverage axis = test-infra helpers (100% local); UI/page/test classes excluded.
+        // Coverage axis = harness helpers (100% local); UI/page/test classes excluded.
         property 'sonar.coverage.exclusions',
                 '**/*Test.java,**/*Tests.java,**/pages/**,**/api/**,**/annotations/**,**/allure/**,**/extensions/**,**/tests/**,**/helpers/BrowserSessionHelper.java,**/helpers/HarCapture.java,**/helpers/HarViewerHtml.java,**/helpers/LocalChromePin.java,**/helpers/ScreenshotBaseline.java,**/helpers/ViewportHelper.java,**/config/TestConfig.java'
     }
@@ -140,7 +140,7 @@ def resolveConfiguredBaseUrl = { String env ->
 }
 
 // Layers that never touch the app through a browser — nothing to health-check.
-def browserlessTags = ['test-infra', 'api'] as Set
+def browserlessTags = ['harness', 'api'] as Set
 
 def shouldSkipHealthCheck = {
     if (System.getProperty('skipHealthCheck', 'false') == 'true') {
@@ -182,7 +182,7 @@ def runAppHealthCheck = { String env ->
 
 tasks.register('healthCheck') {
     group = 'verification'
-    description = 'GET baseUrl/ — auto-skip for -DincludeTags=test-infra|api and -DskipHealthCheck=true'
+    description = 'GET baseUrl/ — auto-skip for -DincludeTags=harness|api and -DskipHealthCheck=true'
     doLast {
         runAppHealthCheck(testEnv)
     }
@@ -243,7 +243,7 @@ def hasAgentOutput = {
 
 tasks.register('allureAgentQuery', Exec) {
     group = 'verification'
-    description = 'allure agent query summary from build/agent-output (smoke after inspect)'
+    description = 'allure agent query summary from build/agent-output (quick check after inspect)'
     onlyIf { hasAgentOutput() }
     def outputDir = agentOutputDir.path
     commandLine 'npx', '--yes', "allure@${allureVersion}", 'agent', 'query',
@@ -286,8 +286,8 @@ if (allureQualityGateHook && allureReportMode != 'none') {
     }
 }
 
-// Coverage axis = test-harness helpers driven by the test-infra tag; product/page/UI classes are out.
-// Meaningful only together with `test -DincludeTags=test-infra` — a broader run leaves the same
+// Coverage axis = harness helpers driven by the harness tag; product/page/UI classes are out.
+// Meaningful only together with `test -DincludeTags=harness` — a broader run leaves the same
 // classes covered, a narrower one cannot reach 100%.
 def testInfraCoverageSlice = {
     sourceSets.test.output.classesDirs.collect { classDir ->

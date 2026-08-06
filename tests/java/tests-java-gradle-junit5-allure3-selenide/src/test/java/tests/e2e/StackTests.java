@@ -21,7 +21,7 @@ class StackTests extends TestBase {
     private final StackPage stackPage = new StackPage();
 
     @Test
-    @Tag("smoke")
+    @Tag("e2e")
     @DisplayName("Stack page loads matrix boards")
     void stackPageLoadsMatrix() {
         stackPage.openPage()

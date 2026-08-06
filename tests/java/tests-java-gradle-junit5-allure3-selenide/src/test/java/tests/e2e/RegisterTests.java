@@ -26,7 +26,7 @@ class RegisterTests extends TestBase {
     private final RegisterPage registerPage = new RegisterPage();
 
     @Test
-    @Tag("smoke")
+    @Tag("e2e")
     @Tag("positive")
     @DisplayName("New user can register and land on home")
     void shouldRegisterNewUser() {
@@ -38,7 +38,7 @@ class RegisterTests extends TestBase {
     }
 
     @Test
-    @Tag("smoke")
+    @Tag("e2e")
     @Tag("negative")
     @DisplayName("Password mismatch shows validation error")
     void shouldShowErrorWhenPasswordsDoNotMatch() {
@@ -51,7 +51,7 @@ class RegisterTests extends TestBase {
     }
 
     @Test
-    @Tag("smoke")
+    @Tag("e2e")
     @Tag("negative")
     @DisplayName("Short password shows validation error")
     void shouldShowErrorWhenPasswordIsTooShort() {
@@ -64,7 +64,7 @@ class RegisterTests extends TestBase {
     }
 
     @Test
-    @Tag("smoke")
+    @Tag("e2e")
     @Tag("negative")
     @DisplayName("Duplicate username shows readable error")
     void shouldShowErrorWhenUsernameIsTaken() {
