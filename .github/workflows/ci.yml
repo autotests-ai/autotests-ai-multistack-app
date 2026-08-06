@@ -7,6 +7,11 @@ name: CI
 # Active stack defaults live in `env:` once — APP_URL / UI_URL / BASE_URL, GHCR package
 # names and RUN_LABEL are derived from them. Swap TESTS / TESTS_DIR / TESTS_LANG (or
 # BACKEND / FRONTEND) when the teaching default changes; job ids stay layer names.
+#
+# Allure: TestOps upload + `allure generate` + Telegram per job (native inline, no scripts).
+# Pyramid layers (6): unit · component · api · integration · e2e · manual
+# Visual (@Tag visual) runs inside e2e-tests; baselines refresh → e2e-update-baselines.
+# CD on main: build → deploy-backend → api-tests (+ deploy-frontend in parallel)
 
 on:
   pull_request:
@@ -21,10 +26,22 @@ on:
         options: [reference_prod, reference_ci]
         default: reference_prod
       layers:
-        description: "Browser layer jobs (java tag slice; other TESTS_LANG → full suite on e2e-tests only)"
+        description: "Browser/api layer jobs (java tag slice; other TESTS_LANG → full suite on e2e-tests only)"
         type: choice
-        options: [none, integration, e2e, visual, manual, all]
+        options: [none, api, integration, e2e, manual, all]
         default: none
+      include_tags:
+        description: "e2e-tests (java): override -DincludeTags (e.g. e2e,visual). Empty = job default from layers."
+        type: string
+        default: ""
+      exclude_tags:
+        description: "e2e-tests (java): override -DexcludeTags (e.g. visual). Empty = job default from layers."
+        type: string
+        default: ""
+      update_baselines:
+        description: "Run e2e-update-baselines: -DincludeTags=visual -DupdateBaselines=true (refresh PNG baselines)"
+        type: boolean
+        default: false
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -48,7 +65,7 @@ env:
   # Teaching tests module — selenide today; flip TESTS/TESTS_DIR/TESTS_LANG together
   TESTS: tests-java-gradle-junit5-allure3-selenide
   TESTS_DIR: tests/java/tests-java-gradle-junit5-allure3-selenide
-  # java|javascript|typescript|python — test-infra / api / browser layer jobs follow this
+  # java|javascript|typescript|python — harness / api / browser layer jobs follow this
   TESTS_LANG: java
   APP_SLUG: reference-app-copy
   JAVA_VERSION: "21"
@@ -77,6 +94,8 @@ jobs:
   unit-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      LAYER: unit
     steps:
       - uses: actions/checkout@v7
 
@@ -94,9 +113,6 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-      # Enhanced caching only persists Gradle User Home; the configuration-cache lives under
-      # the project and needs its own entry. Both pieces are required — either alone is a miss.
-      # hashFiles needs literal globs — keep in sync when swapping BACKEND_DIR / BACKEND_LANG.
       - if: env.BACKEND_LANG == 'java'
         uses: actions/cache@v6
         with:
@@ -131,7 +147,7 @@ jobs:
           ALLURE_ENDPOINT: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
           ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
           ALLURE_PROJECT_ID: ${{ env.ALLURE_PROJECT_ID }}
-          ALLURE_LAUNCH_NAME: "unit — ${{ env.RUN_LABEL }}"
+          ALLURE_LAUNCH_NAME: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
         run: |
           set -euo pipefail
           RESULTS="build/allure-results"
@@ -149,6 +165,7 @@ jobs:
             ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
           fi
           allurectl "${ARGS[@]}"
+
 
       - if: always() && (env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin')
         uses: actions/setup-node@v6
@@ -171,6 +188,7 @@ jobs:
           name: allure-report-unit-tests
           path: ${{ env.BACKEND_DIR }}/build/reports/allure-report/
           if-no-files-found: ignore
+
 
       # ── python ───────────────────────────────────────────────────────────
       - if: env.BACKEND_LANG == 'python'
@@ -213,6 +231,8 @@ jobs:
   component-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      LAYER: component
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
@@ -245,7 +265,7 @@ jobs:
           ALLURE_ENDPOINT: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
           ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
           ALLURE_PROJECT_ID: ${{ env.ALLURE_PROJECT_ID }}
-          ALLURE_LAUNCH_NAME: "component — ${{ env.RUN_LABEL }}"
+          ALLURE_LAUNCH_NAME: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
         run: |
           set -euo pipefail
           RESULTS="allure-results"
@@ -263,6 +283,7 @@ jobs:
             ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
           fi
           allurectl "${ARGS[@]}"
+
 
       - if: always()
         uses: actions/setup-node@v6
@@ -286,11 +307,12 @@ jobs:
           path: ${{ env.FRONTEND_DIR }}/allure-report/
           if-no-files-found: ignore
 
-  test-infra-tests:
+
+  tests-harness:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      LAYER: test-infra
+      LAYER: harness
     steps:
       - uses: actions/checkout@v7
 
@@ -302,6 +324,15 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
       - if: env.TESTS_LANG == 'java'
         uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+      - if: env.TESTS_LANG == 'java'
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.TESTS_DIR }}/.gradle/configuration-cache
+          key: gradle-cc-${{ env.TESTS }}-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
+          restore-keys: |
+            gradle-cc-${{ env.TESTS }}-
       # Node for Allure analytics finalizedBy on test (when allureReportMode ≠ none).
       - if: env.TESTS_LANG == 'java'
         uses: actions/setup-node@v6
@@ -311,7 +342,7 @@ jobs:
       # Allure results stay on (default allure3) for TestOps / report / Telegram steps below.
       - if: env.TESTS_LANG == 'java'
         id: run-tests
-        run: ./gradlew test jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags=test-infra
+        run: ./gradlew test jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags=harness
         working-directory: ${{ env.TESTS_DIR }}
       - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
         continue-on-error: true
@@ -347,6 +378,7 @@ jobs:
             ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
           fi
           allurectl "${ARGS[@]}"
+
 
       - if: always() && env.TESTS_LANG == 'java'
         uses: actions/setup-node@v6
@@ -409,6 +441,7 @@ jobs:
             ${MODE_FLAG} \
             --out collage.png
 
+
       # ── javascript / typescript (full suite; no tag pyramid yet) ──────────
       - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
         uses: actions/setup-node@v6
@@ -461,6 +494,12 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
         with:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+      - uses: actions/cache@v6
+        with:
+          path: ${{ env.BACKEND_DIR }}/.gradle/configuration-cache
+          key: gradle-cc-${{ env.BACKEND }}-${{ hashFiles('backend/java/backend-java-spring/*.gradle*', 'backend/java/backend-java-spring/gradle/wrapper/gradle-wrapper.properties', 'backend/java/backend-java-spring/gradle.properties') }}-${{ github.sha }}
+          restore-keys: |
+            gradle-cc-${{ env.BACKEND }}-
       - name: Unit + JaCoCo + Sonar + gate (backend)
         working-directory: ${{ env.BACKEND_DIR }}
         run: |
@@ -542,17 +581,23 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
         with:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+      - uses: actions/cache@v6
+        with:
+          path: ${{ env.TESTS_DIR }}/.gradle/configuration-cache
+          key: gradle-cc-${{ env.TESTS }}-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
+          restore-keys: |
+            gradle-cc-${{ env.TESTS }}-
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - name: test-infra + JaCoCo + Sonar + gate (tests)
+      - name: Harness + JaCoCo + Sonar + gate (tests)
         working-directory: ${{ env.TESTS_DIR }}
         run: |
           set -euo pipefail
-          echo "==> test-infra + jacoco (${SONAR_PROJECT_KEY})"
+          echo "==> harness + jacoco (${SONAR_PROJECT_KEY})"
           ./gradlew test jacocoTestReport \
             -Denv=reference_ci \
-            -DincludeTags=test-infra \
+            -DincludeTags=harness \
             --no-daemon
 
           if [[ -z "${SONAR_TOKEN:-}" ]]; then
@@ -690,7 +735,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   build:
-    needs: [unit-tests, component-tests, test-infra-tests]
+    needs: [unit-tests, component-tests, tests-harness]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -739,11 +784,12 @@ jobs:
             done <<< "${to_delete}"
           done
 
-  deploy:
+  deploy-backend:
     needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    # Packages land private, so the host pulls them with this job's GITHUB_TOKEN.
+    # Backend (+ postgres) first — api-tests only need API :8800, not frontend.
     permissions:
       contents: read
       packages: read
@@ -763,13 +809,48 @@ jobs:
             git fetch origin
             git checkout --force "$IMAGE_TAG"
             echo "$GHCR_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            docker compose pull ${{ env.BACKEND }} ${{ env.FRONTEND }}
-            docker compose up -d --remove-orphans ${{ env.BACKEND }} ${{ env.FRONTEND }}
+            docker compose pull postgres postgres-ensure-dbs ${{ env.BACKEND }}
+            docker compose up -d --remove-orphans postgres postgres-ensure-dbs ${{ env.BACKEND }}
             curl -fsS --retry 30 --retry-delay 2 --retry-all-errors http://127.0.0.1:${{ env.BACKEND_PORT }}/api/health
             docker logout ghcr.io
 
+  deploy-frontend:
+    needs: deploy-backend
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: appleboy/ssh-action@v1.2.5
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          host: ${{ vars.DEPLOY_HOST }}
+          username: ${{ vars.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          command_timeout: 15m
+          envs: IMAGE_TAG,GHCR_TOKEN
+          script: |
+            set -euo pipefail
+            cd /home/reference_app_copy/reference-app-copy
+            git fetch origin
+            git checkout --force "$IMAGE_TAG"
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker compose pull ${{ env.FRONTEND }}
+            docker compose up -d --remove-orphans ${{ env.FRONTEND }}
+            docker logout ghcr.io
+
   api-tests:
-    needs: deploy
+    needs: deploy-backend
+    if: >-
+      always() && !cancelled() && (
+        (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+         needs.deploy-backend.result == 'success') ||
+        (github.event_name == 'workflow_dispatch' &&
+         (inputs.layers == 'api' || inputs.layers == 'all'))
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -783,7 +864,7 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
-      # Reads the entry written by test-infra-tests on main; no need to write another.
+      # Reads the Gradle cache entry written by tests-harness on main; no need to write another.
       - if: env.TESTS_LANG == 'java'
         uses: gradle/actions/setup-gradle@v6
         with:
@@ -826,6 +907,7 @@ jobs:
             ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
           fi
           allurectl "${ARGS[@]}"
+
 
       - if: always() && env.TESTS_LANG == 'java'
         uses: actions/setup-node@v6
@@ -887,6 +969,7 @@ jobs:
             --config "$CFG" \
             ${MODE_FLAG} \
             --out collage.png
+
 
       # ── javascript / typescript (full suite) ──────────────────────────────
       - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
@@ -984,6 +1067,7 @@ jobs:
           fi
           allurectl "${ARGS[@]}"
 
+
       - if: always() && env.TESTS_LANG == 'java'
         uses: actions/setup-node@v6
         with:
@@ -1045,6 +1129,7 @@ jobs:
             ${MODE_FLAG} \
             --out collage.png
 
+
   e2e-tests:
     if: >-
       github.event_name == 'workflow_dispatch' &&
@@ -1056,7 +1141,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # ── java (-DincludeTags=smoke -DexcludeTags=visual) ───────────────────
+      # ── java: -DincludeTags / -DexcludeTags (override via dispatch inputs) ─
       - if: env.TESTS_LANG == 'java'
         uses: actions/setup-java@v5
         with:
@@ -1070,7 +1155,21 @@ jobs:
         id: run-tests
         env:
           RUN_ENV: ${{ inputs.env }}
-        run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=smoke -DexcludeTags=visual
+          INCLUDE_TAGS: ${{ inputs.include_tags }}
+          EXCLUDE_TAGS: ${{ inputs.exclude_tags }}
+          LAYERS: ${{ inputs.layers }}
+        run: |
+          set -euo pipefail
+          ARGS=(-Denv="$RUN_ENV")
+          if [ -n "${INCLUDE_TAGS}" ]; then
+            ARGS+=(-DincludeTags="${INCLUDE_TAGS}")
+            [ -n "${EXCLUDE_TAGS}" ] && ARGS+=(-DexcludeTags="${EXCLUDE_TAGS}")
+          elif [ "${LAYERS}" = "all" ]; then
+            ARGS+=(-DincludeTags=e2e,visual)
+          else
+            ARGS+=(-DincludeTags=e2e -DexcludeTags=visual)
+          fi
+          ./gradlew test "${ARGS[@]}"
         working-directory: ${{ env.TESTS_DIR }}
       - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
         continue-on-error: true
@@ -1107,6 +1206,7 @@ jobs:
           fi
           allurectl "${ARGS[@]}"
 
+
       - if: always() && env.TESTS_LANG == 'java'
         uses: actions/setup-node@v6
         with:
@@ -1167,6 +1267,7 @@ jobs:
             --config "$CFG" \
             ${MODE_FLAG} \
             --out collage.png
+
 
       # ── javascript / typescript (full suite; no tag pyramid yet) ──────────
       - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
@@ -1199,18 +1300,17 @@ jobs:
         run: python -m pytest
         working-directory: ${{ env.TESTS_DIR }}
 
-  visual-tests:
+  e2e-update-baselines:
     if: >-
       github.event_name == 'workflow_dispatch' &&
-      (inputs.layers == 'visual' || inputs.layers == 'all')
+      inputs.update_baselines == true
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      LAYER: visual
+      LAYER: e2e
     steps:
       - uses: actions/checkout@v7
 
-      # ── java (-DincludeTags=visual) ───────────────────────────────────────
       - if: env.TESTS_LANG == 'java'
         uses: actions/setup-java@v5
         with:
@@ -1224,7 +1324,7 @@ jobs:
         id: run-tests
         env:
           RUN_ENV: ${{ inputs.env }}
-        run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=visual
+        run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=visual -DupdateBaselines=true
         working-directory: ${{ env.TESTS_DIR }}
       - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
         continue-on-error: true
@@ -1242,7 +1342,7 @@ jobs:
           ALLURE_ENDPOINT: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
           ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
           ALLURE_PROJECT_ID: ${{ env.ALLURE_PROJECT_ID }}
-          ALLURE_LAUNCH_NAME: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
+          ALLURE_LAUNCH_NAME: "e2e baselines — ${{ env.RUN_LABEL }}"
         run: |
           set -euo pipefail
           RESULTS="build/allure-results"
@@ -1260,6 +1360,7 @@ jobs:
             ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
           fi
           allurectl "${ARGS[@]}"
+
 
       - if: always() && env.TESTS_LANG == 'java'
         uses: actions/setup-node@v6
@@ -1321,6 +1422,15 @@ jobs:
             --config "$CFG" \
             ${MODE_FLAG} \
             --out collage.png
+
+
+      - if: always() && env.TESTS_LANG == 'java'
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-baseline-pngs
+          path: ${{ env.TESTS_DIR }}/src/test/resources/screenshots/
+          if-no-files-found: ignore
 
   manual-tests:
     if: >-
@@ -1384,6 +1494,7 @@ jobs:
           fi
           allurectl "${ARGS[@]}"
 
+
       - if: always() && env.TESTS_LANG == 'java'
         uses: actions/setup-node@v6
         with:
@@ -1444,3 +1555,5 @@ jobs:
             --config "$CFG" \
             ${MODE_FLAG} \
             --out collage.png
+
+
