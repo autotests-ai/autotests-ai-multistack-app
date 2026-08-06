@@ -12,13 +12,14 @@ name: CI
 # Pyramid layers (classical): unit · integration (no UI) · e2e · manual
 # Sideways FE: component (jsdom). Visual (@Tag visual) inside e2e; baselines → e2e-update-baselines.
 # CD on main (two lanes; deploy host serialized via concurrency group).
-# Sonar is a hard gate before build/deploy. Harness jobs are parallel pre-flight — they do not gate build.
+# Sonar is a hard gate before build/deploy. Harness jobs do not gate build.
 #   unit-tests → sonar-backend → build-backend → deploy → integration ─┐
 #   tests-harness-backend (-DincludeTags=harness-backend) ────────────────┼→ sonar-tests ─┐
-#   component-tests → sonar-frontend → build-frontend → deploy → e2e-smoke ─┼─────────────┼→ e2e-tests
-#   tests-harness-frontend (-DincludeTags=harness-frontend) ──────────────┘             │
+#   component-tests → sonar-frontend → build-frontend → deploy-frontend ────┼─────────────┼→ e2e-tests
+#     → tests-harness-frontend → e2e-smoke ─────────────────────────────────┘             │
 #     → e2e-update-baselines (dispatch + update_baselines; else skip)
 #     → manual-tests (dispatch layers=manual|all; else skip)
+# PR: tests-harness-frontend runs without deploy (deploy-frontend skipped).
 
 on:
   pull_request:
@@ -458,6 +459,14 @@ jobs:
 
 
   tests-harness-frontend:
+    needs: deploy-frontend
+    if: >-
+      always() && !cancelled() && (
+        (github.event_name == 'pull_request' &&
+         needs.deploy-frontend.result == 'skipped') ||
+        (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+         needs.deploy-frontend.result == 'success')
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -1158,13 +1167,13 @@ jobs:
             docker compose up -d --remove-orphans ${{ env.FRONTEND }}
             docker logout ghcr.io
 
-  # Thin e2e after frontend deploy (UI smoke; mock BE — follow-up). See tests/LAYERS.md.
+  # Thin e2e after frontend deploy + harness-frontend (UI helpers). See tests/LAYERS.md.
   e2e-smoke:
-    needs: deploy-frontend
+    needs: tests-harness-frontend
     if: >-
       always() && !cancelled() &&
       github.event_name == 'push' && github.ref == 'refs/heads/main' &&
-      needs.deploy-frontend.result == 'success'
+      needs.tests-harness-frontend.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:

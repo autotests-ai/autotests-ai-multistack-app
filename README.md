@@ -75,7 +75,7 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · all jobs live in [`.github/workflow
 |-----|-------|
 | `unit-tests` | `BACKEND_DIR` — command by `BACKEND_LANG` (gradle/JaCoCo, pytest, `go test`, or `npm test`) |
 | `tests-harness-backend` | `TESTS_DIR` — java: `-DincludeTags=harness-backend` + JaCoCo (`ConfigReader`); parallel pre-flight, gates e2e via `sonar-tests` |
-| `tests-harness-frontend` | `TESTS_DIR` — java: `-DincludeTags=harness-frontend` + JaCoCo (CSS/HAR helpers); parallel pre-flight, does **not** gate `build-frontend` |
+| `tests-harness-frontend` | `TESTS_DIR` — java: `-DincludeTags=harness-frontend` + JaCoCo (CSS/HAR helpers); PR without deploy; on `main` after `deploy-frontend`, before `e2e-smoke` |
 | `component-tests` | `FRONTEND_DIR` — `npm test` |
 | `integration-tests` | `TESTS_DIR` — after `deploy-backend` (java: `-DincludeTags=integration`; else full suite); also dispatch `layers=integration\|all` |
 | `e2e-smoke` | after `deploy-frontend` on push — java: `-DincludeTags=smoke` (thin UI e2e) |
@@ -158,7 +158,7 @@ One workflow — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 | Event | Jobs |
 |-------|------|
 | pull request | `unit-tests` · `component-tests` · `tests-harness-backend` · `tests-harness-frontend` |
-| push to `main` | same four in parallel → backend lane `sonar-backend` → `build-backend` → `deploy-backend` → `integration-tests`; frontend lane `sonar-frontend` → `build-frontend` → `deploy-frontend` → `e2e-smoke`; both harness → `sonar-tests` → join at `e2e-tests` |
+| push to `main` | same four → backend lane `sonar-backend` → `build-backend` → `deploy-backend` → `integration-tests`; frontend lane `sonar-frontend` → `build-frontend` → `deploy-frontend` → `tests-harness-frontend` → `e2e-smoke`; both harness → `sonar-tests` → join at `e2e-tests` |
 
 `build` runs `docker compose build` + `docker compose push`, so `docker-compose.yml` stays the only place describing how an image is built. Images go to GHCR as `ghcr.io/autotests-ai/reference-app-copy-<service>:<sha>`; the tag comes from `IMAGE_TAG` (defaults to `latest` locally).
 
