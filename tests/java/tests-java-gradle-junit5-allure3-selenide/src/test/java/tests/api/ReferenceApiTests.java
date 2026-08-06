@@ -1,4 +1,4 @@
-package tests.integration;
+package tests.api;
 
 import annotations.Layer;
 import api.ApiTestBase;
@@ -15,7 +15,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.notNullValue;
 
-@Layer("integration")
+@Layer("api")
 @Epic("Home")
 @Feature("Health and items")
 @Severity(SeverityLevel.NORMAL)
@@ -23,7 +23,7 @@ import static org.hamcrest.Matchers.notNullValue;
 class ReferenceApiTests extends ApiTestBase {
 
     @Test
-    @Tag("integration")
+    @Tag("api")
     @DisplayName("GET /api/health returns ok")
     void healthEndpointReturnsOk() {
         given()
@@ -36,7 +36,7 @@ class ReferenceApiTests extends ApiTestBase {
     }
 
     @Test
-    @Tag("integration")
+    @Tag("api")
     @DisplayName("GET /api/items returns seeded PostgreSQL items")
     void itemsEndpointReturnsSeed() {
         given()
