@@ -11,7 +11,8 @@ name: CI
 # Allure: TestOps upload + `allure generate` + Telegram per job (native inline, no scripts).
 # Pyramid layers (classical): unit · integration (no UI) · e2e · manual
 # Sideways FE: component (jsdom). Visual (@Tag visual) inside e2e; baselines → e2e-update-baselines.
-# CD on main (two lanes; deploy host serialized via concurrency group):
+# CD on main (two lanes; deploy host serialized via concurrency group).
+# Sonar is a hard gate: token/host/scan/QG must pass before build/deploy.
 #   unit-tests → sonar-backend ─┐
 #   tests-harness → sonar-tests ─┼→ build-backend → deploy-backend → integration-tests ─┐
 #   component-tests → sonar-frontend → build-frontend → deploy-frontend → e2e-smoke ───┼→ e2e-tests
@@ -485,10 +486,8 @@ jobs:
         run: python -m pytest
         working-directory: ${{ env.TESTS_DIR }}
 
-  # Quality axis (SonarQube) — parallel to pyramid; does not gate build/deploy.
-  # Soft-skip when SONAR_TOKEN unset / host down unless vars.SONAR_REQUIRED=true.
+  # Quality axis (SonarQube) — hard gate before build/deploy. No soft-skip.
   # Gate poll: scripts/sonar-gate-wait.py only (no external .sh wrappers).
-  # Backend lane: after unit (parallel with build — soft gate unless SONAR_REQUIRED=true).
   sonar-backend:
     needs: [unit-tests]
     runs-on: ubuntu-latest
@@ -496,7 +495,6 @@ jobs:
     env:
       SONAR_PROJECT_KEY: ${{ vars.SONAR_BACKEND_PROJECT_KEY || 'reference-app-copy-backend-java-spring' }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      SONAR_REQUIRED: ${{ vars.SONAR_REQUIRED || 'false' }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -522,22 +520,12 @@ jobs:
           ./gradlew test jacocoTestReport --no-daemon
 
           if [[ -z "${SONAR_TOKEN:-}" ]]; then
-            msg="SONAR_TOKEN unset — skip sonar upload"
-            if [[ "${SONAR_REQUIRED}" == "true" ]]; then
-              echo "ERROR: $msg (SONAR_REQUIRED=true)" >&2
-              exit 1
-            fi
-            echo "WARNING: $msg"
-            exit 0
+            echo "ERROR: SONAR_TOKEN unset" >&2
+            exit 1
           fi
           if ! curl -sf --max-time 15 "${SONAR_HOST_URL%/}/api/system/status" >/dev/null; then
-            msg="Sonar host unreachable: ${SONAR_HOST_URL}"
-            if [[ "${SONAR_REQUIRED}" == "true" ]]; then
-              echo "ERROR: $msg" >&2
-              exit 1
-            fi
-            echo "WARNING: $msg — skip upload"
-            exit 0
+            echo "ERROR: Sonar host unreachable: ${SONAR_HOST_URL}" >&2
+            exit 1
           fi
 
           echo "==> sonar scan → ${SONAR_HOST_URL} (${SONAR_PROJECT_KEY})"
@@ -551,21 +539,12 @@ jobs:
           REPORT_TASK="build/sonar/report-task.txt"
           if [[ ! -f "$REPORT_TASK" ]]; then
             echo "ERROR: report-task not found: $REPORT_TASK" >&2
-            [[ "${SONAR_REQUIRED}" == "true" ]] && exit 1
-            echo "WARNING: skip gate (SONAR_REQUIRED=false)" >&2
-            exit 0
+            exit 1
           fi
-          set +e
           python "${GITHUB_WORKSPACE}/scripts/sonar-gate-wait.py" \
             --report-task "$REPORT_TASK" \
             --project-key "$SONAR_PROJECT_KEY" \
             --url "$SONAR_HOST_URL"
-          rc=$?
-          set -e
-          if [[ $rc -eq 0 ]]; then exit 0; fi
-          if [[ "${SONAR_REQUIRED}" == "true" ]]; then exit "$rc"; fi
-          echo "WARNING: quality gate poll failed — soft-fail (SONAR_REQUIRED=false)" >&2
-          exit 0
       - if: always()
         run: |
           {
@@ -585,7 +564,6 @@ jobs:
     env:
       SONAR_PROJECT_KEY: ${{ vars.SONAR_TESTS_PROJECT_KEY || 'reference-app-copy-tests-java-gradle-junit5-allure3-selenide' }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      SONAR_REQUIRED: ${{ vars.SONAR_REQUIRED || 'false' }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -617,22 +595,12 @@ jobs:
             --no-daemon
 
           if [[ -z "${SONAR_TOKEN:-}" ]]; then
-            msg="SONAR_TOKEN unset — skip sonar upload"
-            if [[ "${SONAR_REQUIRED}" == "true" ]]; then
-              echo "ERROR: $msg (SONAR_REQUIRED=true)" >&2
-              exit 1
-            fi
-            echo "WARNING: $msg"
-            exit 0
+            echo "ERROR: SONAR_TOKEN unset" >&2
+            exit 1
           fi
           if ! curl -sf --max-time 15 "${SONAR_HOST_URL%/}/api/system/status" >/dev/null; then
-            msg="Sonar host unreachable: ${SONAR_HOST_URL}"
-            if [[ "${SONAR_REQUIRED}" == "true" ]]; then
-              echo "ERROR: $msg" >&2
-              exit 1
-            fi
-            echo "WARNING: $msg — skip upload"
-            exit 0
+            echo "ERROR: Sonar host unreachable: ${SONAR_HOST_URL}" >&2
+            exit 1
           fi
 
           echo "==> sonar scan → ${SONAR_HOST_URL} (${SONAR_PROJECT_KEY})"
@@ -645,21 +613,12 @@ jobs:
           REPORT_TASK="build/sonar/report-task.txt"
           if [[ ! -f "$REPORT_TASK" ]]; then
             echo "ERROR: report-task not found: $REPORT_TASK" >&2
-            [[ "${SONAR_REQUIRED}" == "true" ]] && exit 1
-            echo "WARNING: skip gate (SONAR_REQUIRED=false)" >&2
-            exit 0
+            exit 1
           fi
-          set +e
           python "${GITHUB_WORKSPACE}/scripts/sonar-gate-wait.py" \
             --report-task "$REPORT_TASK" \
             --project-key "$SONAR_PROJECT_KEY" \
             --url "$SONAR_HOST_URL"
-          rc=$?
-          set -e
-          if [[ $rc -eq 0 ]]; then exit 0; fi
-          if [[ "${SONAR_REQUIRED}" == "true" ]]; then exit "$rc"; fi
-          echo "WARNING: quality gate poll failed — soft-fail (SONAR_REQUIRED=false)" >&2
-          exit 0
       - if: always()
         run: |
           {
@@ -671,7 +630,6 @@ jobs:
             echo "- commit: \`${GITHUB_SHA:0:7}\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
-  # Frontend lane: after component tests (parallel with build).
   sonar-frontend:
     needs: [component-tests]
     runs-on: ubuntu-latest
@@ -679,7 +637,6 @@ jobs:
     env:
       SONAR_PROJECT_KEY: ${{ vars.SONAR_FRONTEND_PROJECT_KEY || 'reference-app-copy-frontend-typescript-react' }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      SONAR_REQUIRED: ${{ vars.SONAR_REQUIRED || 'false' }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -698,22 +655,12 @@ jobs:
           npm test -- --coverage
 
           if [[ -z "${SONAR_TOKEN:-}" ]]; then
-            msg="SONAR_TOKEN unset — skip sonar upload"
-            if [[ "${SONAR_REQUIRED}" == "true" ]]; then
-              echo "ERROR: $msg (SONAR_REQUIRED=true)" >&2
-              exit 1
-            fi
-            echo "WARNING: $msg"
-            exit 0
+            echo "ERROR: SONAR_TOKEN unset" >&2
+            exit 1
           fi
           if ! curl -sf --max-time 15 "${SONAR_HOST_URL%/}/api/system/status" >/dev/null; then
-            msg="Sonar host unreachable: ${SONAR_HOST_URL}"
-            if [[ "${SONAR_REQUIRED}" == "true" ]]; then
-              echo "ERROR: $msg" >&2
-              exit 1
-            fi
-            echo "WARNING: $msg — skip upload"
-            exit 0
+            echo "ERROR: Sonar host unreachable: ${SONAR_HOST_URL}" >&2
+            exit 1
           fi
 
           echo "==> sonar scan → ${SONAR_HOST_URL} (${SONAR_PROJECT_KEY})"
@@ -726,21 +673,12 @@ jobs:
           REPORT_TASK=".scannerwork/report-task.txt"
           if [[ ! -f "$REPORT_TASK" ]]; then
             echo "ERROR: report-task not found: $REPORT_TASK" >&2
-            [[ "${SONAR_REQUIRED}" == "true" ]] && exit 1
-            echo "WARNING: skip gate (SONAR_REQUIRED=false)" >&2
-            exit 0
+            exit 1
           fi
-          set +e
           python "${GITHUB_WORKSPACE}/scripts/sonar-gate-wait.py" \
             --report-task "$REPORT_TASK" \
             --project-key "$SONAR_PROJECT_KEY" \
             --url "$SONAR_HOST_URL"
-          rc=$?
-          set -e
-          if [[ $rc -eq 0 ]]; then exit 0; fi
-          if [[ "${SONAR_REQUIRED}" == "true" ]]; then exit "$rc"; fi
-          echo "WARNING: quality gate poll failed — soft-fail (SONAR_REQUIRED=false)" >&2
-          exit 0
       - if: always()
         run: |
           {
@@ -753,7 +691,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   build-backend:
-    needs: [unit-tests, tests-harness]
+    needs: [sonar-backend, sonar-tests]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -800,7 +738,7 @@ jobs:
           done <<< "${to_delete}"
 
   build-frontend:
-    needs: [component-tests]
+    needs: [sonar-frontend]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
