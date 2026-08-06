@@ -1,5 +1,6 @@
 package tests.testinfra;
 
+import tests.AllureMeta;
 import annotations.Layer;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -20,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Feature("HAR capture")
 @Severity(SeverityLevel.NORMAL)
 @Tag("test-infra")
-class HarCaptureTest {
+class HarCaptureTest extends AllureMeta {
 
     @Test
     void toHarBuildsEntriesFromPerformanceLogs() {

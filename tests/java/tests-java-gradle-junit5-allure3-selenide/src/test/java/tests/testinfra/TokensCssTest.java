@@ -1,5 +1,6 @@
 package tests.testinfra;
 
+import tests.AllureMeta;
 import annotations.Layer;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -28,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Severity(SeverityLevel.NORMAL)
 @Tag("test-infra")
 @DisplayName("TokensCss")
-class TokensCssTest {
+class TokensCssTest extends AllureMeta {
 
     @ParameterizedTest
     @MethodSource("canonicalSizeTokens")

@@ -1,8 +1,9 @@
 package dev.reference.app.service;
 
+import dev.reference.app.allure.UnitTestBase;
+
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import dev.reference.app.allure.Layer;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -19,12 +20,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Layer("unit")
 @Epic("Authentication")
 @Feature("JWT")
 @Severity(SeverityLevel.CRITICAL)
 @DisplayName("JwtService")
-class JwtServiceTest {
+class JwtServiceTest extends UnitTestBase {
 
     private static final String SECRET = "reference-app-dev-secret-change-in-production-min-32-chars";
 

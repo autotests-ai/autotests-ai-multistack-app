@@ -7,7 +7,7 @@ import dev.reference.app.dto.UserProfileResponse;
 import dev.reference.app.entity.UserEntity;
 import dev.reference.app.exception.AuthException;
 import dev.reference.app.repository.UserRepository;
-import dev.reference.app.allure.Layer;
+import dev.reference.app.allure.UnitTestBase;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -30,13 +30,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@Layer("unit")
 @Epic("Authentication")
 @Feature("AuthService")
 @Severity(SeverityLevel.CRITICAL)
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AuthService")
-class AuthServiceTest {
+class AuthServiceTest extends UnitTestBase {
 
     private static final String USERNAME = "user1";
     private static final String PASSWORD = "password1";

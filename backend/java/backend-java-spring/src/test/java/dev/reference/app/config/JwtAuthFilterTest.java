@@ -1,7 +1,7 @@
 package dev.reference.app.config;
 
 import dev.reference.app.service.JwtService;
-import dev.reference.app.allure.Layer;
+import dev.reference.app.allure.UnitTestBase;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -24,13 +24,12 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@Layer("unit")
 @Epic("Authentication")
 @Feature("JWT filter")
 @Severity(SeverityLevel.CRITICAL)
 @ExtendWith(MockitoExtension.class)
 @DisplayName("JwtAuthFilter")
-class JwtAuthFilterTest {
+class JwtAuthFilterTest extends UnitTestBase {
 
     @Mock
     private JwtService jwtService;

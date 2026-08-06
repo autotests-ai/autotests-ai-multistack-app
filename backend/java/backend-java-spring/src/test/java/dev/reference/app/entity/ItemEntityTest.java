@@ -1,6 +1,7 @@
 package dev.reference.app.entity;
 
-import dev.reference.app.allure.Layer;
+import dev.reference.app.allure.UnitTestBase;
+
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -12,12 +13,11 @@ import org.springframework.test.util.ReflectionTestUtils;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-@Layer("unit")
 @Epic("Domain")
 @Feature("ItemEntity")
 @Severity(SeverityLevel.TRIVIAL)
 @DisplayName("ItemEntity")
-class ItemEntityTest {
+class ItemEntityTest extends UnitTestBase {
 
     @Test
     @DisplayName("constructor and getters expose item fields")

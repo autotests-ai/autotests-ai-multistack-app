@@ -9,7 +9,7 @@ import dev.reference.app.dto.UserProfileResponse;
 import dev.reference.app.exception.AuthException;
 import dev.reference.app.service.AuthService;
 import dev.reference.app.service.JwtService;
-import dev.reference.app.allure.Layer;
+import dev.reference.app.allure.UnitTestBase;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -35,14 +35,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Layer("unit")
 @Epic("Authentication")
 @Feature("AuthController")
 @Severity(SeverityLevel.CRITICAL)
 @WebMvcTest(controllers = AuthController.class)
 @Import({AuthExceptionHandler.class, SecurityConfig.class, CorsConfig.class})
 @DisplayName("AuthController")
-class AuthControllerTest {
+class AuthControllerTest extends UnitTestBase {
 
     @Autowired
     private MockMvc mockMvc;

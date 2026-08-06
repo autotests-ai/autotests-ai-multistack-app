@@ -32,7 +32,7 @@ import static com.codeborne.selenide.Selenide.closeWebDriver;
 @Scope("browser")
 @Framework("selenide")
 @Issue("REF-3")
-public class TestBase {
+public class TestBase extends AllureMeta {
 
     protected HomePage homePage = new HomePage();
     protected LoginPage loginPage = new LoginPage();

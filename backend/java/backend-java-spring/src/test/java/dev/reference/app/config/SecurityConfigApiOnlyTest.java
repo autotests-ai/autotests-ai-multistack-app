@@ -6,7 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import dev.reference.app.controller.ApiController;
 import dev.reference.app.service.ItemService;
 import dev.reference.app.service.JwtService;
-import dev.reference.app.allure.Layer;
+import dev.reference.app.allure.UnitTestBase;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -19,14 +19,13 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-@Layer("unit")
 @Epic("Security")
 @Feature("API-only security")
 @Severity(SeverityLevel.CRITICAL)
 @WebMvcTest(controllers = ApiController.class)
 @Import({SecurityConfig.class, CorsConfig.class})
 @DisplayName("SecurityConfig API-only")
-class SecurityConfigApiOnlyTest {
+class SecurityConfigApiOnlyTest extends UnitTestBase {
 
     @Autowired
     private MockMvc mockMvc;

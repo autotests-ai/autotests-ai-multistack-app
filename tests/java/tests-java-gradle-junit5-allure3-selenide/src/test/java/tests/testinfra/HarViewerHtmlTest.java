@@ -1,5 +1,6 @@
 package tests.testinfra;
 
+import tests.AllureMeta;
 import annotations.Layer;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -18,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Feature("HAR viewer")
 @Severity(SeverityLevel.NORMAL)
 @Tag("test-infra")
-class HarViewerHtmlTest {
+class HarViewerHtmlTest extends AllureMeta {
 
     @Test
     void renderBuildsSelenoidLikeTableWithDetailsWithoutEmbeddedHarDataUri() {

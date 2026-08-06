@@ -1,5 +1,6 @@
 package tests.manual;
 
+import tests.AllureMeta;
 import annotations.Layer;
 import annotations.Manual;
 import io.qameta.allure.Epic;
@@ -17,7 +18,7 @@ import static io.qameta.allure.Allure.step;
 @Feature("Manual checklist")
 @Severity(SeverityLevel.NORMAL)
 @DisplayName("Exploratory manual")
-class ExploratoryManualTests {
+class ExploratoryManualTests extends AllureMeta {
 
     @Test
     @Manual

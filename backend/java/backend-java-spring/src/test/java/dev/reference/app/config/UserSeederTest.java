@@ -2,7 +2,7 @@ package dev.reference.app.config;
 
 import dev.reference.app.entity.UserEntity;
 import dev.reference.app.repository.UserRepository;
-import dev.reference.app.allure.Layer;
+import dev.reference.app.allure.UnitTestBase;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -24,13 +24,12 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@Layer("unit")
 @Epic("Authentication")
 @Feature("User seeder")
 @Severity(SeverityLevel.NORMAL)
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UserSeeder")
-class UserSeederTest {
+class UserSeederTest extends UnitTestBase {
 
     @Mock
     private UserRepository userRepository;

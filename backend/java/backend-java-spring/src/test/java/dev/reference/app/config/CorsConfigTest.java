@@ -1,6 +1,7 @@
 package dev.reference.app.config;
 
-import dev.reference.app.allure.Layer;
+import dev.reference.app.allure.UnitTestBase;
+
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -15,12 +16,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.cors.CorsConfiguration;
 
-@Layer("unit")
 @Epic("Security")
 @Feature("CORS")
 @Severity(SeverityLevel.NORMAL)
 @DisplayName("CorsConfig")
-class CorsConfigTest {
+class CorsConfigTest extends UnitTestBase {
 
     @Test
     @DisplayName("allows any origin pattern on /api/**")

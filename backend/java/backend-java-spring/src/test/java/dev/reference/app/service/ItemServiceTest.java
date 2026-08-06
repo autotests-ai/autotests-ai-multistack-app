@@ -4,7 +4,7 @@ import dev.reference.app.dto.HealthResponse;
 import dev.reference.app.dto.ItemsResponse;
 import dev.reference.app.entity.ItemEntity;
 import dev.reference.app.repository.ItemRepository;
-import dev.reference.app.allure.Layer;
+import dev.reference.app.allure.UnitTestBase;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -28,13 +28,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@Layer("unit")
 @Epic("Home")
 @Feature("ItemService")
 @Severity(SeverityLevel.NORMAL)
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ItemService")
-class ItemServiceTest {
+class ItemServiceTest extends UnitTestBase {
 
     @Mock
     private ItemRepository repository;

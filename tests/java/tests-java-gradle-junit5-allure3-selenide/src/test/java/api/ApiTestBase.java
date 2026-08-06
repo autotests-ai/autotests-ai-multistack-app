@@ -1,5 +1,6 @@
 package api;
 
+import tests.AllureMeta;
 import config.ConfigReader;
 import config.TestConfig;
 import io.qameta.allure.Issue;
@@ -8,7 +9,7 @@ import io.restassured.RestAssured;
 import org.junit.jupiter.api.BeforeAll;
 
 @Issue("REF-3")
-public class ApiTestBase {
+public class ApiTestBase extends AllureMeta {
 
     protected static final TestConfig config = ConfigReader.testConfig;
 

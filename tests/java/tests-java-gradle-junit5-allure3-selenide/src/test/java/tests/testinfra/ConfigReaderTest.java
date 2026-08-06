@@ -1,5 +1,6 @@
 package tests.testinfra;
 
+import tests.AllureMeta;
 import annotations.Layer;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -30,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Tag("test-infra")
 @DisplayName("ConfigReader")
 @Execution(ExecutionMode.SAME_THREAD)
-class ConfigReaderTest {
+class ConfigReaderTest extends AllureMeta {
 
     private static TestConfig configWith(Map<String, String> overrides) {
         return ConfigFactory.create(TestConfig.class, overrides);

@@ -7,7 +7,7 @@ import dev.reference.app.dto.ItemDto;
 import dev.reference.app.dto.ItemsResponse;
 import dev.reference.app.service.ItemService;
 import dev.reference.app.service.JwtService;
-import dev.reference.app.allure.Layer;
+import dev.reference.app.allure.UnitTestBase;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -27,14 +27,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Layer("unit")
 @Epic("Home")
 @Feature("ApiController")
 @Severity(SeverityLevel.NORMAL)
 @WebMvcTest(controllers = ApiController.class)
 @Import({SecurityConfig.class, CorsConfig.class})
 @DisplayName("ApiController")
-class ApiControllerTest {
+class ApiControllerTest extends UnitTestBase {
 
     @Autowired
     private MockMvc mockMvc;
