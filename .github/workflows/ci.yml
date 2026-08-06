@@ -12,16 +12,19 @@ name: CI
 # Pyramid layers (classical): unit · integration (no UI) · api · e2e · manual
 # Sideways FE: component (jsdom). Visual (@Tag visual) inside e2e; baselines → e2e-update-baselines.
 # CD on main (two lanes; deploy host serialized via concurrency group).
-# Sonar is a hard gate before build/deploy. Harness jobs do not gate build.
-# sonar-tests = tests-module Sonar (umbrella harness); runs after both harness slices (PR + main).
-# CD lanes join at e2e-tests:
-#   unit-tests → sonar-backend → build-backend → deploy-backend
-#     → tests-harness-backend → integration-tests → api-tests ─┐
-#   component-tests → sonar-frontend → build-frontend → deploy-frontend
-#     → tests-harness-frontend → e2e-mock-tests (stub API) ───┼→ e2e-tests → manual-tests
-#   tests-harness-backend + tests-harness-frontend → sonar-tests ─┘
-#   e2e-update-baselines (dispatch + update_baselines; else skip)
-# PR / dispatch: harness jobs run without deploy (deploy-* skipped).
+# needs = real dependencies only (not graph layout). Sonar gates deploy, not build.
+# Deploy of either lane moves the shared host checkout dir to the new SHA.
+# Roots: unit-tests · component-tests · tests-harness-* · e2e-mock-tests · changes
+#   sonar-backend ← unit-tests · sonar-frontend ← component-tests
+#   sonar-tests ← tests-harness-backend + tests-harness-frontend
+#   build-backend ← unit-tests · build-frontend ← component-tests
+#   deploy-backend ← build-backend + sonar-backend
+#   deploy-frontend ← build-frontend + sonar-frontend + e2e-mock-tests
+#   stand-ready ← deploy-backend + deploy-frontend (curl live UI + /api/health)
+#   integration-tests · api-tests ← stand-ready (parallel)
+#   e2e-tests ← integration-tests + api-tests → manual-tests · e2e-update-baselines
+# push main: changes gates build/deploy by path; tests + sonar always run.
+# PR: no deploy; e2e-mock-tests runs on runner (mock compose profile).
 
 on:
   pull_request:
@@ -30,15 +33,19 @@ on:
     branches: [main]
   workflow_dispatch:
     inputs:
+      deploy:
+        description: "CD lanes to build+deploy (push ignores — uses path diff via changes job)"
+        type: choice
+        options: [none, backend, frontend, both]
+        default: none
       env:
         description: "Stand for -Denv when TESTS_LANG=java (reference_ci needs a compose stack, which a runner has none of)"
         type: choice
         options: [reference_prod, reference_ci]
         default: reference_prod
       layers:
-        description: "Browser/api layer jobs (java tag slice; other TESTS_LANG → full suite on e2e-tests only)"
-        type: choice
-        options: [none, integration, api, e2e, manual, all]
+        description: "Comma-separated layer jobs: harness,integration,api,mock,e2e,visual,manual (none/empty = skip layer jobs)"
+        type: string
         default: none
       include_tags:
         description: "e2e-tests (java): override -DincludeTags (e.g. e2e,visual,mock). Empty = job default from layers."
@@ -101,6 +108,41 @@ env:
   TELEGRAM_TOPIC_ID: ${{ secrets.TELEGRAM_REFERENCE_APP_TOPIC_ID || vars.TELEGRAM_REFERENCE_APP_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || vars.TELEGRAM_TOPIC_ID || '3' }}
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.set.outputs.backend }}
+      frontend: ${{ steps.set.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: set
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" != "push" ] || [ "${{ github.ref }}" != "refs/heads/main" ]; then
+            echo "backend=false" >> "$GITHUB_OUTPUT"
+            echo "frontend=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          BEFORE="${{ github.event.before }}"
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            echo "backend=true" >> "$GITHUB_OUTPUT"
+            echo "frontend=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          CHANGED="$(git diff --name-only "$BEFORE" "$GITHUB_SHA")"
+          if echo "$CHANGED" | grep -qE '^(backend/|deploy/|docker-compose|\.github/workflows/ci\.yml)'; then
+            echo "backend=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "backend=false" >> "$GITHUB_OUTPUT"
+          fi
+          if echo "$CHANGED" | grep -qE '^(frontend/|deploy/|docker-compose|\.github/workflows/ci\.yml)'; then
+            echo "frontend=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "frontend=false" >> "$GITHUB_OUTPUT"
+          fi
+
   unit-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -141,6 +183,16 @@ jobs:
         id: run-tests
         run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification
         working-directory: ${{ env.BACKEND_DIR }}
+      - if: (env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin') && steps.run-tests.outcome == 'success'
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-backend
+          path: ${{ env.BACKEND_DIR }}/build/
+          include: |
+            jacoco/**
+            reports/jacoco/**
+            classes/**
+          if-no-files-found: error
       - if: always() && (env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin') && env.ALLURE_PROJECT_ID != ''
         continue-on-error: true
         id: setup-allurectl
@@ -257,8 +309,14 @@ jobs:
       - run: npm run typecheck
         working-directory: ${{ env.FRONTEND_DIR }}
       - id: run-tests
-        run: npm test
+        run: npm test -- --coverage
         working-directory: ${{ env.FRONTEND_DIR }}
+      - if: steps.run-tests.outcome == 'success'
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-frontend
+          path: ${{ env.FRONTEND_DIR }}/coverage/
+          if-no-files-found: error
       - if: always() && env.ALLURE_PROJECT_ID != ''
         continue-on-error: true
         id: setup-allurectl
@@ -319,17 +377,6 @@ jobs:
 
 
   tests-harness-backend:
-    needs: deploy-backend
-    if: >-
-      always() && !cancelled() && (
-        (github.event_name == 'pull_request' &&
-         needs.deploy-backend.result == 'skipped') ||
-        (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
-         needs.deploy-backend.result == 'success') ||
-        (github.event_name == 'workflow_dispatch' &&
-         (inputs.layers == 'integration' || inputs.layers == 'api' || inputs.layers == 'all') &&
-         needs.deploy-backend.result == 'skipped')
-      )
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -363,8 +410,18 @@ jobs:
       # Allure results stay on (default allure3) for TestOps / report / Telegram steps below.
       - if: env.TESTS_LANG == 'java'
         id: run-tests
-        run: ./gradlew test jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags=harness-backend
+        run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags=harness-backend
         working-directory: ${{ env.TESTS_DIR }}
+      - if: env.TESTS_LANG == 'java' && steps.run-tests.outcome == 'success'
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-harness-backend
+          path: ${{ env.TESTS_DIR }}/build/
+          include: |
+            jacoco/**
+            reports/jacoco/**
+            classes/**
+          if-no-files-found: error
       - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
         continue-on-error: true
         id: setup-allurectl
@@ -472,17 +529,6 @@ jobs:
 
 
   tests-harness-frontend:
-    needs: deploy-frontend
-    if: >-
-      always() && !cancelled() && (
-        (github.event_name == 'pull_request' &&
-         needs.deploy-frontend.result == 'skipped') ||
-        (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
-         needs.deploy-frontend.result == 'success') ||
-        (github.event_name == 'workflow_dispatch' &&
-         (inputs.layers == 'e2e' || inputs.layers == 'all') &&
-         needs.deploy-frontend.result == 'skipped')
-      )
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -516,8 +562,18 @@ jobs:
       # Allure results stay on (default allure3) for TestOps / report / Telegram steps below.
       - if: env.TESTS_LANG == 'java'
         id: run-tests
-        run: ./gradlew test jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags=harness-frontend
+        run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags=harness-frontend
         working-directory: ${{ env.TESTS_DIR }}
+      - if: env.TESTS_LANG == 'java' && steps.run-tests.outcome == 'success'
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-harness-frontend
+          path: ${{ env.TESTS_DIR }}/build/
+          include: |
+            jacoco/**
+            reports/jacoco/**
+            classes/**
+          if-no-files-found: error
       - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
         continue-on-error: true
         id: setup-allurectl
@@ -654,10 +710,11 @@ jobs:
         run: python -m pytest
         working-directory: ${{ env.TESTS_DIR }}
 
-  # Quality axis (SonarQube) — hard gate before build/deploy. No soft-skip.
+  # Quality axis (SonarQube) — hard gate before deploy (not build). Coverage reused via artifacts.
   # Gate poll: scripts/sonar-gate-wait.py only (no external .sh wrappers).
   sonar-backend:
     needs: [unit-tests]
+    if: ${{ !cancelled() && needs.unit-tests.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -680,12 +737,18 @@ jobs:
           key: gradle-cc-${{ env.BACKEND }}-${{ hashFiles('backend/java/backend-java-spring/*.gradle*', 'backend/java/backend-java-spring/gradle/wrapper/gradle-wrapper.properties', 'backend/java/backend-java-spring/gradle.properties') }}-${{ github.sha }}
           restore-keys: |
             gradle-cc-${{ env.BACKEND }}-
-      - name: Unit + JaCoCo + Sonar + gate (backend)
+      - uses: actions/download-artifact@v8
+        with:
+          name: coverage-backend
+          path: ${{ env.BACKEND_DIR }}/build
+      - name: Sonar scan + gate (backend)
         working-directory: ${{ env.BACKEND_DIR }}
         run: |
           set -euo pipefail
-          echo "==> unit + jacoco (${SONAR_PROJECT_KEY})"
-          ./gradlew test jacocoTestReport --no-daemon
+          if [[ ! -f build/reports/jacoco/test/jacocoTestReport.xml ]]; then
+            echo "ERROR: JaCoCo report missing — unit-tests artifact incomplete" >&2
+            exit 1
+          fi
 
           if [[ -z "${SONAR_TOKEN:-}" ]]; then
             echo "ERROR: SONAR_TOKEN unset" >&2
@@ -696,7 +759,7 @@ jobs:
             exit 1
           fi
 
-          echo "==> sonar scan → ${SONAR_HOST_URL} (${SONAR_PROJECT_KEY})"
+          echo "==> sonar scan (coverage artifact) → ${SONAR_HOST_URL} (${SONAR_PROJECT_KEY})"
           # Token via env only (SONAR_TOKEN) — never argv (canon: docs/sonar/GITHUB-ACTIONS.md).
           ./gradlew sonar --no-daemon \
             -Dsonar.host.url="${SONAR_HOST_URL}" \
@@ -724,22 +787,13 @@ jobs:
             echo "- commit: \`${GITHUB_SHA:0:7}\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
-  # Tests-module Sonar after both harness slices (umbrella -DincludeTags=harness); PR + main.
+  # Tests-module Sonar after both harness slices; coverage merged from harness job artifacts.
   sonar-tests:
     needs: [tests-harness-backend, tests-harness-frontend]
     if: >-
-      always() && !cancelled() && (
-        (github.event_name == 'pull_request' &&
-         needs.tests-harness-backend.result == 'success' &&
-         needs.tests-harness-frontend.result == 'success') ||
-        (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
-         needs.tests-harness-backend.result == 'success' &&
-         needs.tests-harness-frontend.result == 'success') ||
-        (github.event_name == 'workflow_dispatch' &&
-         (needs.tests-harness-backend.result == 'success' || needs.tests-harness-backend.result == 'skipped') &&
-         (needs.tests-harness-frontend.result == 'success' || needs.tests-harness-frontend.result == 'skipped') &&
-         (needs.tests-harness-backend.result == 'success' || needs.tests-harness-frontend.result == 'success'))
-      )
+      !cancelled() &&
+      needs.tests-harness-backend.result == 'success' &&
+      needs.tests-harness-frontend.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -765,15 +819,28 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - name: Harness + JaCoCo + Sonar + gate (tests)
+      - uses: actions/download-artifact@v8
+        with:
+          name: coverage-harness-backend
+          path: harness-backend
+      - uses: actions/download-artifact@v8
+        with:
+          name: coverage-harness-frontend
+          path: harness-frontend
+      - name: Sonar scan + gate (tests)
         working-directory: ${{ env.TESTS_DIR }}
         run: |
           set -euo pipefail
-          echo "==> harness + jacoco (${SONAR_PROJECT_KEY})"
-          ./gradlew test jacocoTestReport \
-            -Denv=reference_ci \
-            -DincludeTags=harness \
-            --no-daemon
+          JACOCO_XML_PATHS="${GITHUB_WORKSPACE}/harness-backend/reports/jacoco/test/jacocoTestReport.xml,${GITHUB_WORKSPACE}/harness-frontend/reports/jacoco/test/jacocoTestReport.xml"
+          for xml in "${GITHUB_WORKSPACE}/harness-backend/reports/jacoco/test/jacocoTestReport.xml" \
+                     "${GITHUB_WORKSPACE}/harness-frontend/reports/jacoco/test/jacocoTestReport.xml"; do
+            if [[ ! -f "$xml" ]]; then
+              echo "ERROR: JaCoCo report missing: $xml" >&2
+              exit 1
+            fi
+          done
+
+          ./gradlew compileTestJava --no-daemon
 
           if [[ -z "${SONAR_TOKEN:-}" ]]; then
             echo "ERROR: SONAR_TOKEN unset" >&2
@@ -784,11 +851,12 @@ jobs:
             exit 1
           fi
 
-          echo "==> sonar scan → ${SONAR_HOST_URL} (${SONAR_PROJECT_KEY})"
+          echo "==> sonar scan (harness coverage artifacts) → ${SONAR_HOST_URL} (${SONAR_PROJECT_KEY})"
           ./gradlew sonar --no-daemon \
             -Dsonar.host.url="${SONAR_HOST_URL}" \
             -Dsonar.projectKey="${SONAR_PROJECT_KEY}" \
-            -Dsonar.projectName="${SONAR_PROJECT_KEY}"
+            -Dsonar.projectName="${SONAR_PROJECT_KEY}" \
+            -Dsonar.coverage.jacoco.xmlReportPaths="${JACOCO_XML_PATHS}"
 
           echo "==> quality gate poll"
           REPORT_TASK="build/sonar/report-task.txt"
@@ -813,6 +881,7 @@ jobs:
 
   sonar-frontend:
     needs: [component-tests]
+    if: ${{ !cancelled() && needs.component-tests.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -827,13 +896,19 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: ${{ env.FRONTEND_DIR }}/package-lock.json
-      - name: Component tests + Sonar + gate (frontend)
+      - uses: actions/download-artifact@v8
+        with:
+          name: coverage-frontend
+          path: ${{ env.FRONTEND_DIR }}/coverage
+      - name: Sonar scan + gate (frontend)
         working-directory: ${{ env.FRONTEND_DIR }}
         run: |
           set -euo pipefail
-          echo "==> component tests + coverage (${SONAR_PROJECT_KEY})"
+          if [[ ! -d coverage ]] || [ -z "$(ls -A coverage 2>/dev/null || true)" ]; then
+            echo "ERROR: coverage artifact missing — component-tests incomplete" >&2
+            exit 1
+          fi
           npm ci
-          npm test -- --coverage
 
           if [[ -z "${SONAR_TOKEN:-}" ]]; then
             echo "ERROR: SONAR_TOKEN unset" >&2
@@ -844,7 +919,7 @@ jobs:
             exit 1
           fi
 
-          echo "==> sonar scan → ${SONAR_HOST_URL} (${SONAR_PROJECT_KEY})"
+          echo "==> sonar scan (coverage artifact) → ${SONAR_HOST_URL} (${SONAR_PROJECT_KEY})"
           npx --yes @sonar/scan \
             -Dsonar.host.url="${SONAR_HOST_URL}" \
             -Dsonar.projectKey="${SONAR_PROJECT_KEY}" \
@@ -872,8 +947,15 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   build-backend:
-    needs: [sonar-backend]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [unit-tests, changes]
+    if: >-
+      !cancelled() &&
+      needs.unit-tests.result == 'success' &&
+      github.ref == 'refs/heads/main' && (
+        (github.event_name == 'push' && needs.changes.outputs.backend == 'true') ||
+        (github.event_name == 'workflow_dispatch' &&
+         (inputs.deploy == 'backend' || inputs.deploy == 'both'))
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -919,8 +1001,15 @@ jobs:
           done <<< "${to_delete}"
 
   build-frontend:
-    needs: [sonar-frontend]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [component-tests, changes]
+    if: >-
+      !cancelled() &&
+      needs.component-tests.result == 'success' &&
+      github.ref == 'refs/heads/main' && (
+        (github.event_name == 'push' && needs.changes.outputs.frontend == 'true') ||
+        (github.event_name == 'workflow_dispatch' &&
+         (inputs.deploy == 'frontend' || inputs.deploy == 'both'))
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -964,8 +1053,11 @@ jobs:
           done <<< "${to_delete}"
 
   deploy-backend:
-    needs: build-backend
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build-backend, sonar-backend]
+    if: >-
+      !cancelled() &&
+      needs.build-backend.result == 'success' &&
+      needs.sonar-backend.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # Shared deploy host: serialize git checkout with deploy-frontend (same checkout dir).
@@ -997,16 +1089,40 @@ jobs:
             curl -fsS --retry 30 --retry-delay 2 --retry-all-errors http://127.0.0.1:${{ env.BACKEND_PORT }}/api/health
             docker logout ghcr.io
 
-  integration-tests:
-    needs: tests-harness-backend
+  stand-ready:
+    needs: [deploy-backend, deploy-frontend]
     if: >-
       always() && !cancelled() && (
         (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
-         needs.tests-harness-backend.result == 'success') ||
+         (needs.deploy-backend.result == 'success' || needs.deploy-backend.result == 'skipped') &&
+         (needs.deploy-frontend.result == 'success' || needs.deploy-frontend.result == 'skipped')) ||
         (github.event_name == 'workflow_dispatch' &&
-         (inputs.layers == 'integration' || inputs.layers == 'api' || inputs.layers == 'all') &&
-         (needs.tests-harness-backend.result == 'success' ||
-          needs.tests-harness-backend.result == 'skipped'))
+         (contains(format(',{0},', inputs.layers), ',integration,') ||
+          contains(format(',{0},', inputs.layers), ',api,') ||
+          contains(format(',{0},', inputs.layers), ',e2e,') ||
+          contains(format(',{0},', inputs.layers), ',visual,') ||
+          contains(format(',{0},', inputs.layers), ',manual,')))
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Verify live stand (UI + API health)
+        env:
+          API_HEALTH: https://${{ env.PUBLIC_HOST }}/${{ env.BACKEND }}/api/health
+        run: |
+          set -euo pipefail
+          echo "==> UI ${UI_URL}"
+          curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${UI_URL}"
+          echo "==> API ${API_HEALTH}"
+          curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${API_HEALTH}"
+
+  integration-tests:
+    needs: stand-ready
+    if: >-
+      !cancelled() && needs.stand-ready.result == 'success' && (
+        (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+        (github.event_name == 'workflow_dispatch' &&
+         contains(format(',{0},', inputs.layers), ',integration,'))
       )
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -1167,15 +1283,12 @@ jobs:
         working-directory: ${{ env.TESTS_DIR }}
 
   api-tests:
-    needs: integration-tests
+    needs: stand-ready
     if: >-
-      always() && !cancelled() && (
-        (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
-         needs.integration-tests.result == 'success') ||
+      !cancelled() && needs.stand-ready.result == 'success' && (
+        (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
         (github.event_name == 'workflow_dispatch' &&
-         (inputs.layers == 'api' || inputs.layers == 'all') &&
-         (needs.integration-tests.result == 'success' ||
-          needs.integration-tests.result == 'skipped'))
+         contains(format(',{0},', inputs.layers), ',api,'))
       )
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -1336,8 +1449,12 @@ jobs:
         working-directory: ${{ env.TESTS_DIR }}
 
   deploy-frontend:
-    needs: [build-frontend]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build-frontend, sonar-frontend, e2e-mock-tests]
+    if: >-
+      !cancelled() &&
+      needs.build-frontend.result == 'success' &&
+      needs.sonar-frontend.result == 'success' &&
+      needs.e2e-mock-tests.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     # Independent of backend lane; shared host lock via concurrency (same checkout dir).
@@ -1367,13 +1484,16 @@ jobs:
             docker compose up -d --remove-orphans ${{ env.FRONTEND }}
             docker logout ghcr.io
 
-  # FE-lane thin e2e after harness-frontend — stub API on the runner, no deploy, no Selenoid.
+  # Stub API on the runner (docker compose --profile mock); gates FE deploy, runs on PR too.
   e2e-mock-tests:
-    needs: tests-harness-frontend
     if: >-
-      always() && !cancelled() &&
-      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
-      needs.tests-harness-frontend.result == 'success'
+      !cancelled() && (
+        github.event_name == 'pull_request' ||
+        (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+        (github.event_name == 'workflow_dispatch' &&
+         (contains(format(',{0},', inputs.layers), ',mock,') ||
+          inputs.deploy == 'frontend' || inputs.deploy == 'both'))
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -1515,20 +1635,19 @@ jobs:
             --out collage.png
 
 
-  # Join both CD lanes + tests-module Sonar (push), or dispatch e2e/all when lanes were skipped.
+  # Join integration + api lanes on main, or dispatch e2e/visual layer when stand was skipped.
   e2e-tests:
-    needs: [api-tests, e2e-mock-tests, sonar-tests]
+    needs: [integration-tests, api-tests]
     if: >-
       always() && !cancelled() && (
         (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
-         needs.api-tests.result == 'success' &&
-         needs.e2e-mock-tests.result == 'success' &&
-         needs.sonar-tests.result == 'success') ||
+         needs.integration-tests.result == 'success' &&
+         needs.api-tests.result == 'success') ||
         (github.event_name == 'workflow_dispatch' &&
-         (inputs.layers == 'e2e' || inputs.layers == 'all') &&
-         (needs.api-tests.result == 'success' || needs.api-tests.result == 'skipped') &&
-         (needs.e2e-mock-tests.result == 'success' || needs.e2e-mock-tests.result == 'skipped') &&
-         (needs.sonar-tests.result == 'success' || needs.sonar-tests.result == 'skipped'))
+         (contains(format(',{0},', inputs.layers), ',e2e,') ||
+          contains(format(',{0},', inputs.layers), ',visual,')) &&
+         (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped') &&
+         (needs.api-tests.result == 'success' || needs.api-tests.result == 'skipped'))
       )
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -1557,11 +1676,12 @@ jobs:
         run: |
           set -euo pipefail
           ARGS=(-Denv="$RUN_ENV")
+          LAYERS_WRAPPED=",${LAYERS},"
           if [ -n "${INCLUDE_TAGS}" ]; then
             ARGS+=(-DincludeTags="${INCLUDE_TAGS}")
             [ -n "${EXCLUDE_TAGS}" ] && ARGS+=(-DexcludeTags="${EXCLUDE_TAGS}")
-          elif [ "${LAYERS}" = "all" ]; then
-            ARGS+=(-DincludeTags=e2e,visual)
+          elif [[ "$LAYERS_WRAPPED" == *",visual,"* ]]; then
+            ARGS+=(-DincludeTags=visual)
           else
             ARGS+=(-DincludeTags=e2e -DexcludeTags=visual)
           fi
@@ -1707,7 +1827,7 @@ jobs:
   e2e-update-baselines:
     needs: [e2e-tests]
     if: >-
-      always() && !cancelled() &&
+      !cancelled() &&
       needs.e2e-tests.result == 'success' &&
       github.event_name == 'workflow_dispatch' &&
       inputs.update_baselines == true
@@ -1848,16 +1968,13 @@ jobs:
 
   # Main-chain tip after e2e; auto-skip on push / layers≠manual|all.
   manual-tests:
-    needs: [e2e-tests]
+    needs: [e2e-tests, stand-ready]
     if: >-
       always() && !cancelled() &&
       github.event_name == 'workflow_dispatch' &&
-      (inputs.layers == 'manual' || inputs.layers == 'all') &&
-      (
-        (inputs.layers == 'all' && needs.e2e-tests.result == 'success') ||
-        (inputs.layers == 'manual' &&
-         (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped'))
-      )
+      contains(format(',{0},', inputs.layers), ',manual,') &&
+      needs.stand-ready.result == 'success' &&
+      (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
