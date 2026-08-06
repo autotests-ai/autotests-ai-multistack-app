@@ -25,6 +25,7 @@ One task `test`; the layer is a tag filter, the stand is `-Denv` ([../../LAYERS.
 | e2e smoke | `./gradlew test -Denv=reference_ci -DincludeTags=smoke` | thin UI slice (`@Tag e2e` + `smoke`) |
 | e2e | `./gradlew test -Denv=reference_ci -DincludeTags=e2e -DexcludeTags=visual` | flow; add `,visual` for PNG baselines |
 | e2e baselines | `./gradlew test -Denv=reference_ci -DincludeTags=visual -DupdateBaselines=true` | refresh PNGs under `src/test/resources/screenshots/` |
+| manual | `./gradlew test -Denv=reference_ci -DincludeTags=manual` | **in code** — `@Manual` + Allure steps · `tests/manual/` (not a wiki checklist) |
 
 Swap `-Denv=reference_prod` to run the same filter against the deployed stack via Selenoid.
 Stands live in `src/test/resources/config/`; every other key is a `-D` override on top of

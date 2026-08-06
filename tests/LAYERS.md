@@ -8,7 +8,7 @@ Module folders: `-` between segments, `_` in compounds (`react_testing_library`,
 
 ```
                     ┌─────────────┐
-                    │   manual    │  exploratory stubs
+                    │   manual    │  in code — exploratory stubs (@Manual + steps)
                     ├─────────────┤
                     │     e2e     │  UI through browser (@Tag e2e; optional visual / smoke)
                     ├─────────────┤
@@ -24,6 +24,19 @@ Module folders: `-` between segments, `_` in compounds (`react_testing_library`,
 DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
 **Not classical:** calling Chrome “mount” checks `integration`. Those are thin **e2e** (`@Tag("smoke")`).
+
+## Manual lives in code (canon)
+
+Manual / exploratory cases are **first-class sources in the test module**, not spreadsheets
+or TestOps-only drafts outside git:
+
+- Package: `…/tests/manual/` (e.g. `ExploratoryManualTests`)
+- Markers: `@Layer("manual")` · `@Tag("manual")` · `@Manual` (`ALLURE_MANUAL=true` for TestOps)
+- Body: Allure `step("…")` checklist lines — human executes; CI can still upload the stub launch
+- Run: `./gradlew test -Denv=reference_prod -DincludeTags=manual` · job `manual-tests` (dispatch)
+
+Same repo, same review/PR flow as automated layers. Promote a stub to e2e by replacing steps
+with real Selenide/API calls and retagging — do not keep a parallel wiki checklist.
 
 ## Harness (not a pyramid layer)
 
@@ -78,7 +91,7 @@ suite (`npm test` / `pytest` with `UI_URL` / `BASE_URL`) — no Gradle tag slice
 | component | frontend | `frontend/typescript/frontend-typescript-react/src/test/` | Vitest | `npm test` |
 | integration | tests | `…/tests/integration/` | `@Tag("integration")` | java → `-DincludeTags=integration` via `integration-tests` (after `deploy-backend`); else full suite |
 | e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `smoke` / `visual`) | `e2e-smoke` (push, `smoke`); `e2e-tests` (dispatch) |
-| manual | tests | stubs | `@Tag("manual")` | java → `-DincludeTags=manual` via `manual-tests`; else N/A |
+| manual | tests | `…/tests/manual/` **in code** | `@Tag("manual")` + `@Manual` | java → `-DincludeTags=manual` via `manual-tests` (dispatch); else N/A |
 
 Bare `./gradlew test` (java) runs **everything**, integration included — there are no hidden excludes.
 

@@ -13,6 +13,10 @@ import org.junit.jupiter.api.Test;
 
 import static io.qameta.allure.Allure.step;
 
+/**
+ * Manual cases stored in code (canon — see tests/LAYERS.md).
+ * Checklist steps for humans; {@link annotations.Manual} marks them for TestOps.
+ */
 @Layer("manual")
 @Epic("Exploratory")
 @Feature("Manual checklist")

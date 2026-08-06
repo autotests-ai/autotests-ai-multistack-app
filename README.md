@@ -80,7 +80,7 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · all jobs live in [`.github/workflow
 | `e2e-smoke` | after `deploy-frontend` on push — java: `-DincludeTags=smoke` (thin UI e2e) |
 | `e2e-tests` | dispatch `layers=e2e\|all` — java: `-DincludeTags=e2e` (default excludes visual); `all` → `e2e,visual`; override via `include_tags` / `exclude_tags` |
 | `e2e-update-baselines` | dispatch `update_baselines=true` — java: `-DincludeTags=visual -DupdateBaselines=true` |
-| `manual-tests` | dispatch `layers=manual\|all` — java: `-DincludeTags=manual` |
+| `manual-tests` | dispatch `layers=manual\|all` — java: `-DincludeTags=manual` (exploratory stubs **in code**, `tests/manual/`) |
 
 The first three block a pull request. Browser layers and extra language runners have no
 scheduled job — dispatch with `layers` (`integration` \| `e2e` \| `manual` \| `all`) /
