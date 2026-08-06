@@ -140,7 +140,7 @@ def resolveConfiguredBaseUrl = { String env ->
 }
 
 // Layers that never touch the app through a browser — nothing to health-check.
-def browserlessTags = ['harness', 'api'] as Set
+def browserlessTags = ['harness', 'harness-backend', 'harness-frontend', 'api'] as Set
 
 def shouldSkipHealthCheck = {
     if (System.getProperty('skipHealthCheck', 'false') == 'true') {
@@ -182,7 +182,7 @@ def runAppHealthCheck = { String env ->
 
 tasks.register('healthCheck') {
     group = 'verification'
-    description = 'GET baseUrl/ — auto-skip for -DincludeTags=harness|api and -DskipHealthCheck=true'
+    description = 'GET baseUrl/ — auto-skip for -DincludeTags=harness*|api and -DskipHealthCheck=true'
     doLast {
         runAppHealthCheck(testEnv)
     }
@@ -286,16 +286,30 @@ if (allureQualityGateHook && allureReportMode != 'none') {
     }
 }
 
-// Coverage axis = harness helpers driven by the harness tag; product/page/UI classes are out.
-// Meaningful only together with `test -DincludeTags=harness` — a broader run leaves the same
-// classes covered, a narrower one cannot reach 100%.
+// Coverage axis = harness helpers; product/page/UI classes are out.
+// Slice follows -DincludeTags: harness-backend → ConfigReader; harness-frontend → CSS helpers;
+// harness / unset → all three (local umbrella).
+def harnessCoverageIncludes = {
+    def tags = (System.getProperty('includeTags') ?: '').split(',').collect { it.trim() }.findAll { it } as Set
+    def backendOnly = tags.contains('harness-backend') && !tags.contains('harness-frontend') && !tags.contains('harness')
+    def frontendOnly = tags.contains('harness-frontend') && !tags.contains('harness-backend') && !tags.contains('harness')
+    if (backendOnly) {
+        return ['config/ConfigReader.class']
+    }
+    if (frontendOnly) {
+        return ['helpers/LayoutCss.class', 'helpers/TokensCss.class']
+    }
+    return [
+            'config/ConfigReader.class',
+            'helpers/LayoutCss.class',
+            'helpers/TokensCss.class',
+    ]
+}
+
 def testInfraCoverageSlice = {
+    def includes = harnessCoverageIncludes()
     sourceSets.test.output.classesDirs.collect { classDir ->
-        fileTree(dir: classDir, include: [
-                'config/ConfigReader.class',
-                'helpers/LayoutCss.class',
-                'helpers/TokensCss.class',
-        ])
+        fileTree(dir: classDir, include: includes)
     }
 }
 

@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Feature("Layout CSS")
 @Severity(SeverityLevel.NORMAL)
 @Tag("harness")
+@Tag("harness-frontend")
 @DisplayName("LayoutCss")
 class LayoutCssTest extends AllureMeta {
 

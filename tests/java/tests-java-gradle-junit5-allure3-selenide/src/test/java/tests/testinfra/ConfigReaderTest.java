@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Feature("ConfigReader")
 @Severity(SeverityLevel.NORMAL)
 @Tag("harness")
+@Tag("harness-backend")
 @DisplayName("ConfigReader")
 @Execution(ExecutionMode.SAME_THREAD)
 class ConfigReaderTest extends AllureMeta {

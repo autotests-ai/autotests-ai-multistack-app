@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Feature("HAR viewer")
 @Severity(SeverityLevel.NORMAL)
 @Tag("harness")
+@Tag("harness-frontend")
 class HarViewerHtmlTest extends AllureMeta {
 
     @Test

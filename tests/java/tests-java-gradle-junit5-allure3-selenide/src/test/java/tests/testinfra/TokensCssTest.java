@@ -28,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Feature("Tokens CSS")
 @Severity(SeverityLevel.NORMAL)
 @Tag("harness")
+@Tag("harness-frontend")
 @DisplayName("TokensCss")
 class TokensCssTest extends AllureMeta {
 

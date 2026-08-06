@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Feature("HAR capture")
 @Severity(SeverityLevel.NORMAL)
 @Tag("harness")
+@Tag("harness-frontend")
 class HarCaptureTest extends AllureMeta {
 
     @Test

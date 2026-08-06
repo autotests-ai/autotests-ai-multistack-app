@@ -20,7 +20,9 @@ One task `test`; the layer is a tag filter, the stand is `-Denv` ([../../LAYERS.
 
 | Layer | Command | Notes |
 |-------|---------|--------|
-| harness | `./gradlew test -Denv=reference_ci -DincludeTags=harness` | `src/test/java/tests/testinfra/` · `@Layer("harness")` + `@Tag("harness")` |
+| harness (all) | `./gradlew test -Denv=reference_ci -DincludeTags=harness` | umbrella — all `testinfra/` |
+| harness-backend | `./gradlew test -Denv=reference_ci -DincludeTags=harness-backend` | `ConfigReader` · CI backend lane |
+| harness-frontend | `./gradlew test -Denv=reference_ci -DincludeTags=harness-frontend` | CSS + HAR helpers · CI frontend lane |
 | integration | `./gradlew test -Denv=reference_ci -DincludeTags=integration` | Rest Assured, no UI · `tests/integration/` |
 | e2e smoke | `./gradlew test -Denv=reference_ci -DincludeTags=smoke` | thin UI slice (`@Tag e2e` + `smoke`) |
 | e2e | `./gradlew test -Denv=reference_ci -DincludeTags=e2e -DexcludeTags=visual` | flow; add `,visual` for PNG baselines |

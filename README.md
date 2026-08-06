@@ -74,7 +74,8 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · all jobs live in [`.github/workflow
 | Job | Where |
 |-----|-------|
 | `unit-tests` | `BACKEND_DIR` — command by `BACKEND_LANG` (gradle/JaCoCo, pytest, `go test`, or `npm test`) |
-| `tests-harness` | `TESTS_DIR` — by `TESTS_LANG` (java: `-DincludeTags=harness` + JaCoCo; else full suite) |
+| `tests-harness-backend` | `TESTS_DIR` — java: `-DincludeTags=harness-backend` + JaCoCo (`ConfigReader`); gates backend build |
+| `tests-harness-frontend` | `TESTS_DIR` — java: `-DincludeTags=harness-frontend` + JaCoCo (CSS helpers); else full suite; gates frontend build |
 | `component-tests` | `FRONTEND_DIR` — `npm test` |
 | `integration-tests` | `TESTS_DIR` — after `deploy-backend` (java: `-DincludeTags=integration`; else full suite); also dispatch `layers=integration\|all` |
 | `e2e-smoke` | after `deploy-frontend` on push — java: `-DincludeTags=smoke` (thin UI e2e) |
@@ -82,11 +83,11 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · all jobs live in [`.github/workflow
 | `e2e-update-baselines` | dispatch `update_baselines=true` — java: `-DincludeTags=visual -DupdateBaselines=true` |
 | `manual-tests` | dispatch `layers=manual\|all` — java: `-DincludeTags=manual` (exploratory stubs **in code**, `tests/manual/`) |
 
-The first three block a pull request. Browser layers and extra language runners have no
-scheduled job — dispatch with `layers` (`integration` \| `e2e` \| `manual` \| `all`) /
-`runners` (`javascript` \| `python` \| `both`) when you want them. Stack defaults (`BACKEND` /
-`BACKEND_LANG` / `FRONTEND` / `TESTS` / `TESTS_LANG`) live once at the top of
-[`ci.yml`](.github/workflows/ci.yml).
+`unit-tests`, `component-tests`, and both harness jobs block a pull request. Browser layers
+and extra language runners have no scheduled job — dispatch with `layers`
+(`integration` \| `e2e` \| `manual` \| `all`) / `runners` (`javascript` \| `python` \| `both`)
+when you want them. Stack defaults (`BACKEND` / `BACKEND_LANG` / `FRONTEND` / `TESTS` /
+`TESTS_LANG`) live once at the top of [`ci.yml`](.github/workflows/ci.yml).
 
 ## Ports (local = prod host upstream)
 
@@ -156,8 +157,8 @@ One workflow — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
 | Event | Jobs |
 |-------|------|
-| pull request | `unit-tests` · `component-tests` · `tests-harness` |
-| push to `main` | the same three → backend lane `build-backend` → `deploy-backend` → `integration-tests`; frontend lane `build-frontend` → `deploy-frontend` → `e2e-smoke` |
+| pull request | `unit-tests` · `component-tests` · `tests-harness-backend` · `tests-harness-frontend` |
+| push to `main` | same four → backend lane `sonar-backend` + harness-backend → `build-backend` → `deploy-backend` → `integration-tests`; frontend lane `sonar-frontend` + harness-frontend → `build-frontend` → `deploy-frontend` → `e2e-smoke`; `sonar-tests` after both harness → join at `e2e-tests` |
 
 `build` runs `docker compose build` + `docker compose push`, so `docker-compose.yml` stays the only place describing how an image is built. Images go to GHCR as `ghcr.io/autotests-ai/reference-app-copy-<service>:<sha>`; the tag comes from `IMAGE_TAG` (defaults to `latest` locally).
 

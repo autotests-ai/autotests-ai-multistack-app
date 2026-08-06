@@ -40,11 +40,21 @@ with real Selenide/API calls and retagging — do not keep a parallel wiki check
 
 ## Harness (not a pyramid layer)
 
-Self-check of the **tests module helpers** before / alongside product layers — job `tests-harness`, tag `@Tag("harness")`:
+Self-check of the **tests module helpers** before / alongside product layers — umbrella `@Tag("harness")`, split by lane:
 
-- `tests/testinfra/` — `ConfigReader`, `HarCapture`, CSS helpers
-- `./gradlew test -DincludeTags=harness` (+ JaCoCo 100% gate on harness classes)
-- **Not** application code (that's `unit-tests` on `BACKEND_DIR`)
+| Slice | Tags | CI job | Helpers |
+|-------|------|--------|---------|
+| backend | `harness` + `harness-backend` | `tests-harness-backend` | `ConfigReader` |
+| frontend | `harness` + `harness-frontend` | `tests-harness-frontend` | `LayoutCss`, `TokensCss`, `HarCapture`, `HarViewerHtml` |
+| umbrella | `harness` | local / `sonar-tests` | all of the above |
+
+```bash
+./gradlew test -Denv=reference_ci -DincludeTags=harness-backend   # + JaCoCo on ConfigReader
+./gradlew test -Denv=reference_ci -DincludeTags=harness-frontend  # + JaCoCo on CSS helpers
+./gradlew test -Denv=reference_ci -DincludeTags=harness           # full harness
+```
+
+**Not** application code (that's `unit-tests` on `BACKEND_DIR` / `component-tests` on `FRONTEND_DIR`).
 
 ## Smoke and visual (inside e2e, not layers)
 
@@ -65,6 +75,8 @@ When `TESTS_LANG=java`, a layer is a **tag filter**, a stand is **`-Denv`**. The
 task — `test`:
 
 ```bash
+./gradlew test -Denv=reference_ci   -DincludeTags=harness-backend
+./gradlew test -Denv=reference_ci   -DincludeTags=harness-frontend
 ./gradlew test -Denv=reference_ci   -DincludeTags=harness
 ./gradlew test -Denv=reference_prod -DincludeTags=integration
 ./gradlew test -Denv=reference_prod -DincludeTags=smoke
@@ -103,13 +115,15 @@ Paths SSOT: `backend/scripts/paths.sh`. Module naming: [NAMING.md](NAMING.md).
 | Job | Product under test |
 |-----|--------------------|
 | `unit-tests` | **Application** (active backend — services, controllers, JWT; toolchain from `BACKEND_LANG`) |
-| `tests-harness` | **Test tooling** (ConfigReader, HarCapture, CSS helpers when `TESTS_LANG=java`) — pre-flight, not a pyramid tip |
+| `tests-harness-backend` | **Test tooling (BE lane)** — `ConfigReader` |
+| `tests-harness-frontend` | **Test tooling (FE lane)** — CSS helpers, HAR helpers |
+| `component-tests` | **Application** (active frontend — Vitest) |
 
-Students: one product unit layer (`unit-tests`); harness = helper checks that higher layers depend on.
+Students: product unit layers (`unit-tests` / `component-tests`); harness = helper checks that higher layers depend on.
 
-The 100% line-coverage gate (`jacocoTestCoverageVerification`) is java-only: it measures
-`ConfigReader`, `LayoutCss` and `TokensCss`, and reads `build/jacoco/test.exec` — so it is
-meaningful together with `-DincludeTags=harness` and nothing narrower.
+The 100% line-coverage gate (`jacocoTestCoverageVerification`) is java-only and slices by
+`-DincludeTags` (`harness-backend` → `ConfigReader`; `harness-frontend` → `LayoutCss`/`TokensCss`;
+`harness` → all three). It reads `build/jacoco/test.exec`.
 
 ## Why `component` vs `e2e` (not vs integration)?
 
@@ -125,7 +139,7 @@ Integration is **HTTP / wired backend**, no browser. Chrome checks belong under 
 
 | Trigger | Jobs |
 |---------|------|
-| Pull request (blocks merge) | `unit-tests`, `component-tests`, `tests-harness` |
+| Pull request (blocks merge) | `unit-tests`, `component-tests`, `tests-harness-backend`, `tests-harness-frontend` |
 | Push to `main` | same three → two CD lanes: `build-backend` → `deploy-backend` → `integration-tests`; `build-frontend` → `deploy-frontend` → `e2e-smoke` |
 | `workflow_dispatch` | `integration-tests` / `e2e-tests` / `manual-tests` behind `layers`; tag overrides on e2e; `e2e-update-baselines` behind `update_baselines=true`; `env` |
 
