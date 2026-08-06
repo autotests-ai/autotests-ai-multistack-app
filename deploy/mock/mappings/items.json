@@ -1,0 +1,27 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/api/items"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "items": [
+        {
+          "id": 1,
+          "name": "Alpha",
+          "description": "First item"
+        },
+        {
+          "id": 2,
+          "name": "Beta",
+          "description": "Second item"
+        }
+      ],
+      "source": "mock"
+    }
+  }
+}

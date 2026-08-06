@@ -1,0 +1,17 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/api/auth/login"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "token": "mock-jwt-token",
+      "username": "mock-user",
+      "redirectUrl": "/"
+    }
+  }
+}

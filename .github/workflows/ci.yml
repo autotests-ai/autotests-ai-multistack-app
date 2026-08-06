@@ -18,7 +18,7 @@ name: CI
 #   unit-tests → sonar-backend → build-backend → deploy-backend
 #     → tests-harness-backend → integration-tests → api-tests ─┐
 #   component-tests → sonar-frontend → build-frontend → deploy-frontend
-#     → tests-harness-frontend → e2e-smoke (mock backend) ────┼→ e2e-tests → manual-tests
+#     → tests-harness-frontend → e2e-mock-tests (stub API) ───┼→ e2e-tests → manual-tests
 #   tests-harness-backend + tests-harness-frontend → sonar-tests ─┘
 #   e2e-update-baselines (dispatch + update_baselines; else skip)
 # PR / dispatch: harness jobs run without deploy (deploy-* skipped).
@@ -41,7 +41,7 @@ on:
         options: [none, integration, api, e2e, manual, all]
         default: none
       include_tags:
-        description: "e2e-tests (java): override -DincludeTags (e.g. e2e,visual,smoke). Empty = job default from layers."
+        description: "e2e-tests (java): override -DincludeTags (e.g. e2e,visual,mock). Empty = job default from layers."
         type: string
         default: ""
       exclude_tags:
@@ -1367,8 +1367,8 @@ jobs:
             docker compose up -d --remove-orphans ${{ env.FRONTEND }}
             docker logout ghcr.io
 
-  # FE-lane thin e2e after harness-frontend. Target: mock backend; currently deployed UI.
-  e2e-smoke:
+  # FE-lane thin e2e after harness-frontend — stub API on the runner, no deploy, no Selenoid.
+  e2e-mock-tests:
     needs: tests-harness-frontend
     if: >-
       always() && !cancelled() &&
@@ -1377,11 +1377,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      LAYER: e2e-smoke
+      LAYER: e2e-mock
     steps:
       - uses: actions/checkout@v7
 
-      # ── java (-DincludeTags=smoke) ────────────────────────────────────────
+      # ── java (-Denv=reference_mock -DincludeTags=mock) ────────────────────
       - if: env.TESTS_LANG == 'java'
         uses: actions/setup-java@v5
         with:
@@ -1392,10 +1392,24 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: true
+      # stand-gateway serves the SPA and proxies /api/ to WireMock stubs (deploy/mock/mappings).
+      - if: env.TESTS_LANG == 'java'
+        name: Bring up mock stand
+        run: |
+          set -euo pipefail
+          docker compose --profile mock up -d --build
+          curl -fsS --retry 30 --retry-delay 2 --retry-all-errors \
+            "http://127.0.0.1:${MOCK_GATEWAY_PORT}/api/health"
+        env:
+          MOCK_GATEWAY_PORT: "9911"
       - if: env.TESTS_LANG == 'java'
         id: run-tests
-        run: ./gradlew test -Denv=reference_prod -DincludeTags=smoke
+        run: ./gradlew test -Denv=reference_mock -DincludeTags=mock
         working-directory: ${{ env.TESTS_DIR }}
+      - if: always() && env.TESTS_LANG == 'java'
+        continue-on-error: true
+        name: Tear down mock stand
+        run: docker compose --profile mock down -v --remove-orphans
       - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
         continue-on-error: true
         id: setup-allurectl
@@ -1503,17 +1517,17 @@ jobs:
 
   # Join both CD lanes + tests-module Sonar (push), or dispatch e2e/all when lanes were skipped.
   e2e-tests:
-    needs: [api-tests, e2e-smoke, sonar-tests]
+    needs: [api-tests, e2e-mock-tests, sonar-tests]
     if: >-
       always() && !cancelled() && (
         (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
          needs.api-tests.result == 'success' &&
-         needs.e2e-smoke.result == 'success' &&
+         needs.e2e-mock-tests.result == 'success' &&
          needs.sonar-tests.result == 'success') ||
         (github.event_name == 'workflow_dispatch' &&
          (inputs.layers == 'e2e' || inputs.layers == 'all') &&
          (needs.api-tests.result == 'success' || needs.api-tests.result == 'skipped') &&
-         (needs.e2e-smoke.result == 'success' || needs.e2e-smoke.result == 'skipped') &&
+         (needs.e2e-mock-tests.result == 'success' || needs.e2e-mock-tests.result == 'skipped') &&
          (needs.sonar-tests.result == 'success' || needs.sonar-tests.result == 'skipped'))
       )
     runs-on: ubuntu-latest
