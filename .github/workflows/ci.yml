@@ -44,7 +44,7 @@ on:
         options: [reference_prod, reference_ci]
         default: reference_prod
       layers:
-        description: "Comma-separated layer jobs: harness,integration,api,mock,e2e,visual,manual (none/empty = skip layer jobs)"
+        description: "Comma-separated layer jobs: integration,api,mock,e2e,visual,manual (none/empty = skip; harness always runs as required checks)"
         type: string
         default: none
       include_tags:
@@ -1089,6 +1089,197 @@ jobs:
             curl -fsS --retry 30 --retry-delay 2 --retry-all-errors http://127.0.0.1:${{ env.BACKEND_PORT }}/api/health
             docker logout ghcr.io
 
+  # Stub API on runner (compose --profile mock); gates FE deploy; PR + FE-touch push.
+  e2e-mock-tests:
+    needs: [changes]
+    if: >-
+      !cancelled() && (
+        github.event_name == 'pull_request' ||
+        (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+         needs.changes.outputs.frontend == 'true') ||
+        (github.event_name == 'workflow_dispatch' &&
+         (contains(format(',{0},', inputs.layers), ',mock,') ||
+          inputs.deploy == 'frontend' || inputs.deploy == 'both'))
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      LAYER: e2e-mock
+    steps:
+      - uses: actions/checkout@v7
+
+      # ── java (-Denv=reference_mock -DincludeTags=mock) ────────────────────
+      - if: env.TESTS_LANG == 'java'
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+      # Gradle User Home cache read-only (harness jobs may have warmed entries on main).
+      - if: env.TESTS_LANG == 'java'
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
+      # stand-gateway serves the SPA and proxies /api/ to WireMock stubs (deploy/mock/mappings).
+      - if: env.TESTS_LANG == 'java'
+        name: Bring up mock stand
+        run: |
+          set -euo pipefail
+          docker compose --profile mock up -d --build
+          curl -fsS --retry 30 --retry-delay 2 --retry-all-errors \
+            "http://127.0.0.1:${MOCK_GATEWAY_PORT}/api/health"
+        env:
+          MOCK_GATEWAY_PORT: "9911"
+      - if: env.TESTS_LANG == 'java'
+        id: run-tests
+        run: ./gradlew test -Denv=reference_mock -DincludeTags=mock
+        working-directory: ${{ env.TESTS_DIR }}
+      - if: always() && env.TESTS_LANG == 'java'
+        continue-on-error: true
+        name: Tear down mock stand
+        run: docker compose --profile mock down -v --remove-orphans
+      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
+        continue-on-error: true
+        id: setup-allurectl
+        uses: allure-framework/setup-allurectl@v1
+        with:
+          allure-endpoint: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
+          allure-token: ${{ env.ALLURE_TOKEN }}
+          allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
+
+      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
+        continue-on-error: true
+        working-directory: ${{ env.TESTS_DIR }}
+        env:
+          ALLURE_ENDPOINT: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
+          ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
+          ALLURE_PROJECT_ID: ${{ env.ALLURE_PROJECT_ID }}
+          ALLURE_LAUNCH_NAME: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
+        run: |
+          set -euo pipefail
+          RESULTS="build/allure-results"
+          if [ ! -d "$RESULTS" ] || [ -z "$(ls -A "$RESULTS" 2>/dev/null || true)" ]; then
+            echo "No allure-results at ${RESULTS} — skip TestOps upload"
+            exit 0
+          fi
+          ARGS=(
+            upload "$RESULTS"
+            --endpoint "${ALLURE_ENDPOINT}"
+            --token "${ALLURE_TOKEN}"
+            --project-id "${ALLURE_PROJECT_ID}"
+          )
+          if [ -n "${ALLURE_LAUNCH_NAME:-}" ]; then
+            ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
+          fi
+          allurectl "${ARGS[@]}"
+
+
+      - if: always() && env.TESTS_LANG == 'java'
+        uses: actions/setup-node@v6
+        with:
+          node-version: "26"
+
+      - if: always() && env.TESTS_LANG == 'java'
+        continue-on-error: true
+        id: allure-report
+        working-directory: ${{ env.TESTS_DIR }}
+        run: |
+          set -euo pipefail
+          ARGS=(generate "build/allure-results" -o "build/reports/allure-report/allureReport")
+          CONFIG="allurerc.mjs"
+          if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
+            ARGS+=(--config "$CONFIG")
+          fi
+          npx --yes allure@3.13.0 "${ARGS[@]}"
+
+      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-report-${{ env.LAYER }}-tests
+          path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
+          if-no-files-found: ignore
+
+      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+        continue-on-error: true
+        working-directory: ${{ env.TESTS_DIR }}
+        env:
+          NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
+          BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TELEGRAM_BOT_TOKEN: ${{ env.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ env.TELEGRAM_CHAT_ID || '-1004381150566' }}
+          TELEGRAM_TOPIC_ID: ${{ env.TELEGRAM_TOPIC_ID || '3' }}
+          NOTIFICATION_MODE: ${{ github.event_name != 'pull_request' && 'live' || 'dry-run' }}
+        run: |
+          set -euo pipefail
+          if [ ! -f notifications/config.json ]; then
+            echo "No notifications/config.json — skip Telegram"
+            exit 0
+          fi
+          ALLURE_FOLDER="${PWD}/build/reports/allure-report/allureReport/awesome"
+          ALLURE_RESULTS="${PWD}/build/allure-results"
+          if [ ! -f "${ALLURE_FOLDER}/summary.json" ]; then
+            echo "No ${ALLURE_FOLDER}/summary.json — skip Telegram"
+            exit 0
+          fi
+          CFG=notifications/config.ci.json
+          jq \
+            --arg p "${NOTIFICATION_PROJECT:-}" \
+            --arg b "${BUILD_URL:-}" \
+            --arg af "${ALLURE_FOLDER}" \
+            --arg ar "${ALLURE_RESULTS}" \
+            'if ($p | length) > 0 then .base.project = $p else . end
+             | if ($b | length) > 0 then .base.links.build = $b else . end
+             | .base.allureFolder = $af
+             | .base.allureResultsFolder = $ar' \
+            notifications/config.json > "$CFG"
+          MODE_FLAG="--dry-run"
+          if [ "${NOTIFICATION_MODE}" = "live" ]; then
+            MODE_FLAG="--live"
+          fi
+          npx --yes allure-notifications@6.0.12 send \
+            --config "$CFG" \
+            ${MODE_FLAG} \
+            --out collage.png
+
+
+  # FE deploy after build + sonar + mock gate; shared host lock with deploy-backend.
+  deploy-frontend:
+    needs: [build-frontend, sonar-frontend, e2e-mock-tests]
+    if: >-
+      !cancelled() &&
+      needs.build-frontend.result == 'success' &&
+      needs.sonar-frontend.result == 'success' &&
+      needs.e2e-mock-tests.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Independent of backend lane; shared host lock via concurrency (same checkout dir).
+    concurrency:
+      group: deploy-reference-app-copy
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: appleboy/ssh-action@v1.2.5
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          host: ${{ vars.DEPLOY_HOST }}
+          username: ${{ vars.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          command_timeout: 15m
+          envs: IMAGE_TAG,GHCR_TOKEN
+          script: |
+            set -euo pipefail
+            cd /home/reference_app_copy/reference-app-copy
+            git fetch origin
+            git checkout --force "$IMAGE_TAG"
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker compose pull ${{ env.FRONTEND }}
+            docker compose up -d --remove-orphans ${{ env.FRONTEND }}
+            docker logout ghcr.io
+
+  # Curl live UI + API health after deploy lanes (handles partial/skipped deploy).
   stand-ready:
     needs: [deploy-backend, deploy-frontend]
     if: >-
@@ -1137,7 +1328,7 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
-      # Reads the Gradle cache entry written by harness jobs on main; no need to write another.
+      # Gradle User Home cache read-only (harness jobs may have warmed entries on main).
       - if: env.TESTS_LANG == 'java'
         uses: gradle/actions/setup-gradle@v6
         with:
@@ -1303,7 +1494,7 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
-      # Reads the Gradle cache entry written by harness jobs on main; no need to write another.
+      # Gradle User Home cache read-only (harness jobs may have warmed entries on main).
       - if: env.TESTS_LANG == 'java'
         uses: gradle/actions/setup-gradle@v6
         with:
@@ -1448,194 +1639,7 @@ jobs:
         run: python -m pytest
         working-directory: ${{ env.TESTS_DIR }}
 
-  deploy-frontend:
-    needs: [build-frontend, sonar-frontend, e2e-mock-tests]
-    if: >-
-      !cancelled() &&
-      needs.build-frontend.result == 'success' &&
-      needs.sonar-frontend.result == 'success' &&
-      needs.e2e-mock-tests.result == 'success'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    # Independent of backend lane; shared host lock via concurrency (same checkout dir).
-    concurrency:
-      group: deploy-reference-app-copy
-      cancel-in-progress: false
-    permissions:
-      contents: read
-      packages: read
-    steps:
-      - uses: appleboy/ssh-action@v1.2.5
-        env:
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          host: ${{ vars.DEPLOY_HOST }}
-          username: ${{ vars.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          command_timeout: 15m
-          envs: IMAGE_TAG,GHCR_TOKEN
-          script: |
-            set -euo pipefail
-            cd /home/reference_app_copy/reference-app-copy
-            git fetch origin
-            git checkout --force "$IMAGE_TAG"
-            echo "$GHCR_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            docker compose pull ${{ env.FRONTEND }}
-            docker compose up -d --remove-orphans ${{ env.FRONTEND }}
-            docker logout ghcr.io
-
-  # Stub API on the runner (docker compose --profile mock); gates FE deploy, runs on PR too.
-  e2e-mock-tests:
-    if: >-
-      !cancelled() && (
-        github.event_name == 'pull_request' ||
-        (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-        (github.event_name == 'workflow_dispatch' &&
-         (contains(format(',{0},', inputs.layers), ',mock,') ||
-          inputs.deploy == 'frontend' || inputs.deploy == 'both'))
-      )
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    env:
-      LAYER: e2e-mock
-    steps:
-      - uses: actions/checkout@v7
-
-      # ── java (-Denv=reference_mock -DincludeTags=mock) ────────────────────
-      - if: env.TESTS_LANG == 'java'
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: ${{ env.JAVA_VERSION }}
-      # Reads the Gradle cache entry written by harness jobs on main; no need to write another.
-      - if: env.TESTS_LANG == 'java'
-        uses: gradle/actions/setup-gradle@v6
-        with:
-          cache-read-only: true
-      # stand-gateway serves the SPA and proxies /api/ to WireMock stubs (deploy/mock/mappings).
-      - if: env.TESTS_LANG == 'java'
-        name: Bring up mock stand
-        run: |
-          set -euo pipefail
-          docker compose --profile mock up -d --build
-          curl -fsS --retry 30 --retry-delay 2 --retry-all-errors \
-            "http://127.0.0.1:${MOCK_GATEWAY_PORT}/api/health"
-        env:
-          MOCK_GATEWAY_PORT: "9911"
-      - if: env.TESTS_LANG == 'java'
-        id: run-tests
-        run: ./gradlew test -Denv=reference_mock -DincludeTags=mock
-        working-directory: ${{ env.TESTS_DIR }}
-      - if: always() && env.TESTS_LANG == 'java'
-        continue-on-error: true
-        name: Tear down mock stand
-        run: docker compose --profile mock down -v --remove-orphans
-      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
-        continue-on-error: true
-        id: setup-allurectl
-        uses: allure-framework/setup-allurectl@v1
-        with:
-          allure-endpoint: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
-          allure-token: ${{ env.ALLURE_TOKEN }}
-          allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
-
-      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
-        continue-on-error: true
-        working-directory: ${{ env.TESTS_DIR }}
-        env:
-          ALLURE_ENDPOINT: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
-          ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
-          ALLURE_PROJECT_ID: ${{ env.ALLURE_PROJECT_ID }}
-          ALLURE_LAUNCH_NAME: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
-        run: |
-          set -euo pipefail
-          RESULTS="build/allure-results"
-          if [ ! -d "$RESULTS" ] || [ -z "$(ls -A "$RESULTS" 2>/dev/null || true)" ]; then
-            echo "No allure-results at ${RESULTS} — skip TestOps upload"
-            exit 0
-          fi
-          ARGS=(
-            upload "$RESULTS"
-            --endpoint "${ALLURE_ENDPOINT}"
-            --token "${ALLURE_TOKEN}"
-            --project-id "${ALLURE_PROJECT_ID}"
-          )
-          if [ -n "${ALLURE_LAUNCH_NAME:-}" ]; then
-            ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
-          fi
-          allurectl "${ARGS[@]}"
-
-
-      - if: always() && env.TESTS_LANG == 'java'
-        uses: actions/setup-node@v6
-        with:
-          node-version: "26"
-
-      - if: always() && env.TESTS_LANG == 'java'
-        continue-on-error: true
-        id: allure-report
-        working-directory: ${{ env.TESTS_DIR }}
-        run: |
-          set -euo pipefail
-          ARGS=(generate "build/allure-results" -o "build/reports/allure-report/allureReport")
-          CONFIG="allurerc.mjs"
-          if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
-            ARGS+=(--config "$CONFIG")
-          fi
-          npx --yes allure@3.13.0 "${ARGS[@]}"
-
-      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
-        continue-on-error: true
-        uses: actions/upload-artifact@v7
-        with:
-          name: allure-report-${{ env.LAYER }}-tests
-          path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
-          if-no-files-found: ignore
-
-      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
-        continue-on-error: true
-        working-directory: ${{ env.TESTS_DIR }}
-        env:
-          NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
-          BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          TELEGRAM_BOT_TOKEN: ${{ env.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ env.TELEGRAM_CHAT_ID || '-1004381150566' }}
-          TELEGRAM_TOPIC_ID: ${{ env.TELEGRAM_TOPIC_ID || '3' }}
-          NOTIFICATION_MODE: ${{ github.event_name != 'pull_request' && 'live' || 'dry-run' }}
-        run: |
-          set -euo pipefail
-          if [ ! -f notifications/config.json ]; then
-            echo "No notifications/config.json — skip Telegram"
-            exit 0
-          fi
-          ALLURE_FOLDER="${PWD}/build/reports/allure-report/allureReport/awesome"
-          ALLURE_RESULTS="${PWD}/build/allure-results"
-          if [ ! -f "${ALLURE_FOLDER}/summary.json" ]; then
-            echo "No ${ALLURE_FOLDER}/summary.json — skip Telegram"
-            exit 0
-          fi
-          CFG=notifications/config.ci.json
-          jq \
-            --arg p "${NOTIFICATION_PROJECT:-}" \
-            --arg b "${BUILD_URL:-}" \
-            --arg af "${ALLURE_FOLDER}" \
-            --arg ar "${ALLURE_RESULTS}" \
-            'if ($p | length) > 0 then .base.project = $p else . end
-             | if ($b | length) > 0 then .base.links.build = $b else . end
-             | .base.allureFolder = $af
-             | .base.allureResultsFolder = $ar' \
-            notifications/config.json > "$CFG"
-          MODE_FLAG="--dry-run"
-          if [ "${NOTIFICATION_MODE}" = "live" ]; then
-            MODE_FLAG="--live"
-          fi
-          npx --yes allure-notifications@6.0.12 send \
-            --config "$CFG" \
-            ${MODE_FLAG} \
-            --out collage.png
-
-
-  # Join integration + api lanes on main, or dispatch e2e/visual layer when stand was skipped.
+  # Join integration + api on main; dispatch e2e/visual when upstream layer jobs were skipped.
   e2e-tests:
     needs: [integration-tests, api-tests]
     if: >-
