@@ -20,7 +20,7 @@ One task `test`; the layer is a tag filter, the stand is `-Denv` ([../../LAYERS.
 
 | Layer | Command | Notes |
 |-------|---------|--------|
-| harness (all) | `./gradlew test -Denv=reference_ci -DincludeTags=harness` | umbrella — all `testinfra/` |
+| harness (all) | `./gradlew test -Denv=reference_ci -DincludeTags=harness` | umbrella — all `testinfra/` · CI job `sonar-tests` |
 | harness-backend | `./gradlew test -Denv=reference_ci -DincludeTags=harness-backend` | `ConfigReader` · CI backend lane |
 | harness-frontend | `./gradlew test -Denv=reference_ci -DincludeTags=harness-frontend` | CSS + HAR helpers · CI frontend lane |
 | integration | `./gradlew test -Denv=reference_ci -DincludeTags=integration` | CD gate slice — no dedicated sources yet |

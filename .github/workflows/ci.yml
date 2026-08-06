@@ -13,12 +13,14 @@ name: CI
 # Sideways FE: component (jsdom). Visual (@Tag visual) inside e2e; baselines → e2e-update-baselines.
 # CD on main (two lanes; deploy host serialized via concurrency group).
 # Sonar is a hard gate before build/deploy. Harness jobs do not gate build.
-# Lanes meet at sonar-tests:
+# sonar-tests = tests-module Sonar (umbrella harness); runs after both harness slices (PR + main).
+# CD lanes join at e2e-tests:
 #   unit-tests → sonar-backend → build-backend → deploy-backend
 #     → tests-harness-backend → integration-tests → api-tests ─┐
 #   component-tests → sonar-frontend → build-frontend → deploy-frontend
-#     → tests-harness-frontend → e2e-smoke (mock backend) ─────┼→ sonar-tests → e2e-tests → manual-tests
-#     e2e-update-baselines (dispatch + update_baselines; else skip)
+#     → tests-harness-frontend → e2e-smoke (mock backend) ────┼→ e2e-tests → manual-tests
+#   tests-harness-backend + tests-harness-frontend → sonar-tests ─┘
+#   e2e-update-baselines (dispatch + update_baselines; else skip)
 # PR / dispatch: harness jobs run without deploy (deploy-* skipped).
 
 on:
@@ -476,7 +478,10 @@ jobs:
         (github.event_name == 'pull_request' &&
          needs.deploy-frontend.result == 'skipped') ||
         (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
-         needs.deploy-frontend.result == 'success')
+         needs.deploy-frontend.result == 'success') ||
+        (github.event_name == 'workflow_dispatch' &&
+         (inputs.layers == 'e2e' || inputs.layers == 'all') &&
+         needs.deploy-frontend.result == 'skipped')
       )
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -719,18 +724,21 @@ jobs:
             echo "- commit: \`${GITHUB_SHA:0:7}\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
-  # Tests module scan after both CD lanes meet (umbrella -DincludeTags=harness); gates e2e join.
+  # Tests-module Sonar after both harness slices (umbrella -DincludeTags=harness); PR + main.
   sonar-tests:
-    needs: [api-tests, e2e-smoke]
+    needs: [tests-harness-backend, tests-harness-frontend]
     if: >-
       always() && !cancelled() && (
+        (github.event_name == 'pull_request' &&
+         needs.tests-harness-backend.result == 'success' &&
+         needs.tests-harness-frontend.result == 'success') ||
         (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
-         needs.api-tests.result == 'success' &&
-         needs.e2e-smoke.result == 'success') ||
+         needs.tests-harness-backend.result == 'success' &&
+         needs.tests-harness-frontend.result == 'success') ||
         (github.event_name == 'workflow_dispatch' &&
-         (needs.api-tests.result == 'success' || needs.api-tests.result == 'skipped') &&
-         (needs.e2e-smoke.result == 'success' || needs.e2e-smoke.result == 'skipped') &&
-         (needs.api-tests.result == 'success' || needs.e2e-smoke.result == 'success'))
+         (needs.tests-harness-backend.result == 'success' || needs.tests-harness-backend.result == 'skipped') &&
+         (needs.tests-harness-frontend.result == 'success' || needs.tests-harness-frontend.result == 'skipped') &&
+         (needs.tests-harness-backend.result == 'success' || needs.tests-harness-frontend.result == 'success'))
       )
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -1493,15 +1501,19 @@ jobs:
             --out collage.png
 
 
-  # After lanes meet at sonar-tests (push), or dispatch e2e/all against prod when sonar was skipped.
+  # Join both CD lanes + tests-module Sonar (push), or dispatch e2e/all when lanes were skipped.
   e2e-tests:
-    needs: [sonar-tests]
+    needs: [api-tests, e2e-smoke, sonar-tests]
     if: >-
       always() && !cancelled() && (
         (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+         needs.api-tests.result == 'success' &&
+         needs.e2e-smoke.result == 'success' &&
          needs.sonar-tests.result == 'success') ||
         (github.event_name == 'workflow_dispatch' &&
          (inputs.layers == 'e2e' || inputs.layers == 'all') &&
+         (needs.api-tests.result == 'success' || needs.api-tests.result == 'skipped') &&
+         (needs.e2e-smoke.result == 'success' || needs.e2e-smoke.result == 'skipped') &&
          (needs.sonar-tests.result == 'success' || needs.sonar-tests.result == 'skipped'))
       )
     runs-on: ubuntu-latest

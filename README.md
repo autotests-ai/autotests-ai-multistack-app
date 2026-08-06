@@ -80,8 +80,8 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · all jobs live in [`.github/workflow
 | `integration-tests` | `TESTS_DIR` — after harness-backend (java: `-DincludeTags=integration`); dispatch `layers=integration\|api\|all` |
 | `api-tests` | `TESTS_DIR` — after `integration-tests` (java: `-DincludeTags=api`); dispatch `layers=api\|all` |
 | `e2e-smoke` | after harness-frontend on push — java: `-DincludeTags=smoke` (FE lane; mock-backend target) |
-| `sonar-tests` | after `api-tests` + `e2e-smoke` (lanes meet); umbrella harness + tests-module Sonar gate |
-| `e2e-tests` | after `sonar-tests` — java: `-DincludeTags=e2e` (default excludes visual); dispatch `layers=e2e\|all` |
+| `sonar-tests` | after **both** harness jobs (PR + main); umbrella harness + tests-module Sonar gate |
+| `e2e-tests` | after `api-tests` + `e2e-smoke` + `sonar-tests` — java: `-DincludeTags=e2e`; dispatch `layers=e2e\|all` |
 | `e2e-update-baselines` | dispatch `update_baselines=true` — java: `-DincludeTags=visual -DupdateBaselines=true` |
 | `manual-tests` | after `e2e-tests`; dispatch `layers=manual\|all` — java: `-DincludeTags=manual` |
 
@@ -159,8 +159,8 @@ One workflow — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
 | Event | Jobs |
 |-------|------|
-| pull request | `unit-tests` · `component-tests` · `tests-harness-backend` · `tests-harness-frontend` |
-| push to `main` | same four → BE: `sonar-backend` → `build-backend` → `deploy-backend` → `tests-harness-backend` → `integration-tests` → `api-tests`; FE: `sonar-frontend` → `build-frontend` → `deploy-frontend` → `tests-harness-frontend` → `e2e-smoke`; meet at `sonar-tests` → `e2e-tests` → `manual-tests` |
+| pull request | `unit-tests` · `component-tests` · `tests-harness-backend` · `tests-harness-frontend` · `sonar-tests` |
+| push to `main` | same four → BE lane through `api-tests`; FE lane through `e2e-smoke`; both harness → `sonar-tests`; join at `e2e-tests` → `manual-tests` |
 
 `build` runs `docker compose build` + `docker compose push`, so `docker-compose.yml` stays the only place describing how an image is built. Images go to GHCR as `ghcr.io/autotests-ai/reference-app-copy-<service>:<sha>`; the tag comes from `IMAGE_TAG` (defaults to `latest` locally).
 

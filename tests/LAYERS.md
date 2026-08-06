@@ -48,7 +48,7 @@ Self-check of the **tests module helpers** before / alongside product layers —
 |-------|------|--------|-------|
 | backend | `harness` + `harness-backend` | `tests-harness-backend` | PR / dispatch integration\|api (no deploy); on `main` after `deploy-backend`, before `integration-tests` |
 | frontend | `harness` + `harness-frontend` | `tests-harness-frontend` | PR (no deploy); on `main` after `deploy-frontend`, before `e2e-smoke` |
-| umbrella | `harness` | local / `sonar-tests` | all helpers for tests-module Sonar (after lanes meet) |
+| umbrella | `harness` | `sonar-tests` | after **both** harness jobs (PR + main); umbrella helpers + tests-module Sonar gate |
 
 ```bash
 ./gradlew test -Denv=reference_ci -DincludeTags=harness-backend   # + JaCoCo on ConfigReader
@@ -62,8 +62,8 @@ Self-check of the **tests module helpers** before / alongside product layers —
 
 | Slice | Tag | CI |
 |-------|-----|-----|
-| Thin UI after FE deploy | `@Tag("smoke")` (+ `@Tag("e2e")`) | job `e2e-smoke` on push to `main` (FE lane → `sonar-tests`) |
-| Flow (default `layers=e2e`) | `@Tag("e2e")` exclude visual | job `e2e-tests` (after `sonar-tests`) |
+| Thin UI after FE deploy | `@Tag("smoke")` (+ `@Tag("e2e")`) | job `e2e-smoke` on push to `main` (FE lane → join at `e2e-tests`) |
+| Flow (default `layers=e2e`) | `@Tag("e2e")` exclude visual | job `e2e-tests` (after `api-tests` + `e2e-smoke` + `sonar-tests`) |
 | Flow + visual (`layers=all`) | `e2e,visual` | job `e2e-tests` |
 | Refresh baselines | `@Tag("visual")` + `-DupdateBaselines=true` | job `e2e-update-baselines` |
 
@@ -105,9 +105,9 @@ suite (`npm test` / `pytest` with `UI_URL` / `BASE_URL`) — no Gradle tag slice
 |-------|------|-------|----------|-----|
 | unit | backend | active `BACKEND_DIR` (default `backend/java/backend-java-spring/`) | all backend unit tests | by `BACKEND_LANG`: gradle+JaCoCo · `pytest` · `go test` · `npm test` — see [backend/README.md](../backend/README.md) |
 | component | frontend | `frontend/typescript/frontend-typescript-react/src/test/` | Vitest | `npm test` |
-| integration | tests | _(no dedicated sources yet — CD gate before `api-tests`)_ | `@Tag("integration")` | java → `-DincludeTags=integration` via `integration-tests` (after harness-backend) |
+| integration | tests | _(sources TBD — CD gate before `api-tests`)_ | `@Tag("integration")` | java → `-DincludeTags=integration` via `integration-tests` (after harness-backend) |
 | api | tests | `…/tests/api/` (`AuthApiTests`, `ReferenceApiTests`) | `@Tag("api")` | java → `-DincludeTags=api` via `api-tests` (after `integration-tests`) |
-| e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `smoke` / `visual`) | `e2e-smoke` (push, `smoke`); `e2e-tests` (after `sonar-tests`) |
+| e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `smoke` / `visual`) | `e2e-smoke` (push, `smoke`); `e2e-tests` (after lanes + `sonar-tests` join) |
 | manual | tests | `…/tests/manual/` **in code** | `@Tag("manual")` + `@Manual` | java → `-DincludeTags=manual` via `manual-tests` (after `e2e-tests`, dispatch) |
 
 Bare `./gradlew test` (java) runs **everything**, integration included — there are no hidden excludes.
@@ -144,8 +144,8 @@ Integration is **HTTP / wired backend**, no browser. Chrome checks belong under 
 
 | Trigger | Jobs |
 |---------|------|
-| Pull request (blocks merge) | `unit-tests`, `component-tests`, `tests-harness-backend`, `tests-harness-frontend` |
-| Push to `main` | Sonar/build/deploy per lane → BE: `tests-harness-backend` → `integration-tests` → `api-tests`; FE: `tests-harness-frontend` → `e2e-smoke`; meet at `sonar-tests` → `e2e-tests` → `manual-tests` (skip unless dispatch) |
+| Pull request (blocks merge) | `unit-tests`, `component-tests`, `tests-harness-backend`, `tests-harness-frontend`, `sonar-tests` |
+| Push to `main` | Sonar/build/deploy per lane → BE: `tests-harness-backend` → `integration-tests` → `api-tests`; FE: `tests-harness-frontend` → `e2e-smoke`; both harness → `sonar-tests`; join at `e2e-tests` → `manual-tests` (skip unless dispatch) |
 | `workflow_dispatch` | `integration` / `api` / `e2e` / `manual` / `all` behind `layers`; tag overrides on e2e; `e2e-update-baselines` behind `update_baselines=true`; `env` |
 
 Active stack and prod URL are workflow `env` defaults in [`ci.yml`](../.github/workflows/ci.yml)
@@ -179,10 +179,14 @@ wrapper scripts — the command a student runs locally is the command CI runs.
 Dispatch `layers=integration|api|e2e|manual|all`. To add another, copy `manual-tests` and change
 the java `-D` flags.
 
-## CD graph (lanes meet at `sonar-tests`)
+## CD graph (lanes join at `e2e-tests`)
 
 ```
-tests-harness-backend → integration-tests → api-tests ─┐
-                                                        ├→ sonar-tests → e2e-tests → manual-tests
-tests-harness-frontend → e2e-smoke (mock backend) ─────┘
+tests-harness-backend → integration-tests → api-tests ─────────────┐
+tests-harness-backend ──┐                                          │
+tests-harness-frontend ───┼→ sonar-tests (tests-module Sonar)       ├→ e2e-tests → manual-tests
+tests-harness-frontend → e2e-smoke (mock backend) ─────────────────┘
 ```
+
+`sonar-tests` scans **testinfra helpers** (`-DincludeTags=harness`), not api/smoke results.
+It runs after both harness slices — on **PR** and **main**.
