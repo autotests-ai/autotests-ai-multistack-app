@@ -44,7 +44,7 @@ Self-check of the **tests module helpers** before / alongside product layers —
 
 | Slice | Tags | CI job | Gates |
 |-------|------|--------|-------|
-| backend | `harness` + `harness-backend` | `tests-harness-backend` | PR; `sonar-tests` → e2e join |
+| backend | `harness` + `harness-backend` | `tests-harness-backend` | PR / dispatch integration (no deploy); on `main` after `deploy-backend`, before `integration-tests`; `sonar-tests` |
 | frontend | `harness` + `harness-frontend` | `tests-harness-frontend` | PR (no deploy); on `main` after `deploy-frontend`, before `e2e-smoke`; `sonar-tests` |
 | umbrella | `harness` | local / `sonar-tests` | all helpers for tests-module Sonar |
 
