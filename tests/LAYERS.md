@@ -10,7 +10,7 @@ Module folders: `-` between segments, `_` in compounds (`react_testing_library`,
                     ┌─────────────┐
                     │   manual    │  in code — exploratory stubs (@Manual + steps)
                     ├─────────────┤
-                    │     e2e     │  UI through browser (@Tag e2e; optional visual / smoke)
+                    │     e2e     │  UI through browser (@Tag e2e; optional visual / mock)
                     ├─────────────┤
                     │     api     │  HTTP contract (Rest Assured @Tag api)
                     ├─────────────┤
@@ -25,7 +25,7 @@ Module folders: `-` between segments, `_` in compounds (`react_testing_library`,
 `component` sits **beside** the Java ladder (frontend zone), not inside `tests/java/…`.  
 DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
-**Not classical:** calling Chrome “mount” checks `integration`. Those are thin **e2e** (`@Tag("smoke")`).
+**Not classical:** calling Chrome “mount” checks `integration`. Those are thin **e2e** (`@Tag("mock")`).
 
 ## Manual lives in code (canon)
 
@@ -47,7 +47,7 @@ Self-check of the **tests module helpers** before / alongside product layers —
 | Slice | Tags | CI job | Gates |
 |-------|------|--------|-------|
 | backend | `harness` + `harness-backend` | `tests-harness-backend` | PR / dispatch integration\|api (no deploy); on `main` after `deploy-backend`, before `integration-tests` |
-| frontend | `harness` + `harness-frontend` | `tests-harness-frontend` | PR (no deploy); on `main` after `deploy-frontend`, before `e2e-smoke` |
+| frontend | `harness` + `harness-frontend` | `tests-harness-frontend` | PR (no deploy); on `main` after `deploy-frontend`, before `e2e-mock-tests` |
 | umbrella | `harness` | `sonar-tests` | after **both** harness jobs (PR + main); umbrella helpers + tests-module Sonar gate |
 
 ```bash
@@ -58,19 +58,37 @@ Self-check of the **tests module helpers** before / alongside product layers —
 
 **Not** application code (that's `unit-tests` on `BACKEND_DIR` / `component-tests` on `FRONTEND_DIR`).
 
-## Smoke and visual (inside e2e, not layers)
+## Mock and visual (inside e2e, not layers)
 
 | Slice | Tag | CI |
 |-------|-----|-----|
-| Thin UI after FE deploy | `@Tag("smoke")` (+ `@Tag("e2e")`) | job `e2e-smoke` on push to `main` (FE lane → join at `e2e-tests`) |
-| Flow (default `layers=e2e`) | `@Tag("e2e")` exclude visual | job `e2e-tests` (after `api-tests` + `e2e-smoke` + `sonar-tests`) |
+| UI on a stub API | `@Tag("mock")` (+ `@Tag("e2e")`) | job `e2e-mock-tests` on push to `main` (FE lane → join at `e2e-tests`) |
+| Flow (default `layers=e2e`) | `@Tag("e2e")` exclude visual | job `e2e-tests` (after `api-tests` + `e2e-mock-tests` + `sonar-tests`) |
 | Flow + visual (`layers=all`) | `e2e,visual` | job `e2e-tests` |
 | Refresh baselines | `@Tag("visual")` + `-DupdateBaselines=true` | job `e2e-update-baselines` |
 
 Local refresh: `./gradlew test -Denv=reference_ci -DincludeTags=visual -DupdateBaselines=true`
 
-`e2e-smoke` is the FE-lane gate before `sonar-tests`. **Target:** mocked backend (UI without live API).
-**Today:** smoke still hits the deployed UI (`-Denv=reference_prod`).
+**Mock stand** — browser mount checks that need only valid `/api/*` JSON, not a live backend.
+Stand = `-Denv=reference_mock`; slice = `-DincludeTags=mock`.
+
+The SPA is served at document root and resolves API to `/api`; the frontend container nginx
+has no `/api` route, so a **stand-gateway** (compose profile `mock`, port **9911**) proxies
+`/` → frontend and `/api/` → WireMock stubs in `deploy/mock/mappings/`. Stubs answer the same
+shapes as the real controllers, including `401` on `/api/auth/me` without a bearer token.
+
+`@Tag("mock")` — four mount tests (Home / Login / Register):
+`HomeLayoutTests`, `LoginFormTests`, `LoginEmbedTests`, `RegisterFormTests`.
+
+```bash
+docker compose --profile mock up -d          # stand-gateway :9911 + api-mock + frontend
+./gradlew test -Denv=reference_mock -DincludeTags=mock
+```
+
+Stand registry id: `mock-gateway` (`python scripts/stands/ensure.py mock-gateway` from monorepo root).
+
+The CI job needs no deploy, no prod URL and no Selenoid hub: it brings the profile up on the
+runner, runs the slice, then tears it down.
 
 ## Two knobs, no layer tasks
 
@@ -81,9 +99,9 @@ task — `test`:
 ./gradlew test -Denv=reference_ci   -DincludeTags=harness-backend
 ./gradlew test -Denv=reference_ci   -DincludeTags=harness-frontend
 ./gradlew test -Denv=reference_ci   -DincludeTags=harness
+./gradlew test -Denv=reference_mock -DincludeTags=mock
 ./gradlew test -Denv=reference_prod -DincludeTags=integration
 ./gradlew test -Denv=reference_prod -DincludeTags=api
-./gradlew test -Denv=reference_prod -DincludeTags=smoke
 ./gradlew test -Denv=reference_prod -DincludeTags=e2e -DexcludeTags=visual
 ./gradlew test -Denv=reference_prod -DincludeTags=e2e,visual
 ```
@@ -91,6 +109,7 @@ task — `test`:
 | Stand (`-Denv`) | Where it points |
 |-----------------|-----------------|
 | `reference_ci` | the compose stack on this machine — UI `:9811`, API `:8800` (`docker compose up -d` first) |
+| `reference_mock` | mock profile — UI + stub API same origin `:9911` (`docker compose --profile mock up -d` first) |
 | `reference_prod` | [reference-app-copy.autotests.ai/backend-java-spring](https://reference-app-copy.autotests.ai/backend-java-spring), browsers from the Selenoid hub |
 
 Anything else — `headless`, `enableHar`, `enableVideo`, `updateBaselines`, `allureReportMode` — is a
@@ -107,7 +126,7 @@ suite (`npm test` / `pytest` with `UI_URL` / `BASE_URL`) — no Gradle tag slice
 | component | frontend | `frontend/typescript/frontend-typescript-react/src/test/` | Vitest | `npm test` |
 | integration | tests | `…/tests/integration/` (`BackendWiringIntegrationTests`, `AuthRoundTripIntegrationTests`, `SeedDataIntegrationTests`) | `@Tag("integration")` | java → `-DincludeTags=integration` via `integration-tests` (after harness-backend) |
 | api | tests | `…/tests/api/` (`AuthApiTests`, `ReferenceApiTests`) | `@Tag("api")` | java → `-DincludeTags=api` via `api-tests` (after `integration-tests`) |
-| e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `smoke` / `visual`) | `e2e-smoke` (push, `smoke`); `e2e-tests` (after lanes + `sonar-tests` join) |
+| e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `visual` / `mock`) | `e2e-mock-tests` (push, `mock`); `e2e-tests` (after lanes + `sonar-tests` join) |
 | manual | tests | `…/tests/manual/` **in code** | `@Tag("manual")` + `@Manual` | java → `-DincludeTags=manual` via `manual-tests` (after `e2e-tests`, dispatch) |
 
 Bare `./gradlew test` (java) runs **everything**, integration included — there are no hidden excludes.
@@ -132,7 +151,7 @@ The 100% line-coverage gate (`jacocoTestCoverageVerification`) is java-only and 
 
 ## Why `component` vs `e2e` (not vs integration)?
 
-| | `component` | `e2e` (incl. smoke) |
+| | `component` | `e2e` (incl. mock) |
 |---|-----------------|---------------------|
 | Runtime | jsdom | real Chrome |
 | Object | React SPA units | product pages in a browser |
@@ -145,7 +164,7 @@ Integration is **HTTP / wired backend**, no browser. Chrome checks belong under 
 | Trigger | Jobs |
 |---------|------|
 | Pull request (blocks merge) | `unit-tests`, `component-tests`, `tests-harness-backend`, `tests-harness-frontend`, `sonar-tests` |
-| Push to `main` | Sonar/build/deploy per lane → BE: `tests-harness-backend` → `integration-tests` → `api-tests`; FE: `tests-harness-frontend` → `e2e-smoke`; both harness → `sonar-tests`; join at `e2e-tests` → `manual-tests` (skip unless dispatch) |
+| Push to `main` | Sonar/build/deploy per lane → BE: `tests-harness-backend` → `integration-tests` → `api-tests`; FE: `tests-harness-frontend` → `e2e-mock-tests`; both harness → `sonar-tests`; join at `e2e-tests` → `manual-tests` (skip unless dispatch) |
 | `workflow_dispatch` | `integration` / `api` / `e2e` / `manual` / `all` behind `layers`; tag overrides on e2e; `e2e-update-baselines` behind `update_baselines=true`; `env` |
 
 Active stack and prod URL are workflow `env` defaults in [`ci.yml`](../.github/workflows/ci.yml)
@@ -157,7 +176,7 @@ Deploy jobs share concurrency group `deploy-reference-app-copy` (one checkout di
 Frontend deploy does **not** wait on backend success.
 
 Nothing runs on a schedule. Full e2e has no PR job: a GitHub runner has no compose stack,
-and against prod it belongs to a deliberate dispatch run (smoke is the automatic UI gate).
+and against prod it belongs to a deliberate dispatch run (`e2e-mock-tests` is the automatic UI gate).
 
 ## Alt runners (side stacks)
 
@@ -185,8 +204,8 @@ the java `-D` flags.
 tests-harness-backend → integration-tests → api-tests ─────────────┐
 tests-harness-backend ──┐                                          │
 tests-harness-frontend ───┼→ sonar-tests (tests-module Sonar)       ├→ e2e-tests → manual-tests
-tests-harness-frontend → e2e-smoke (mock backend) ─────────────────┘
+tests-harness-frontend → e2e-mock-tests (stub API on the runner) ──┘
 ```
 
-`sonar-tests` scans **testinfra helpers** (`-DincludeTags=harness`), not api/smoke results.
+`sonar-tests` scans **testinfra helpers** (`-DincludeTags=harness`), not api/e2e results.
 It runs after both harness slices — on **PR** and **main**.

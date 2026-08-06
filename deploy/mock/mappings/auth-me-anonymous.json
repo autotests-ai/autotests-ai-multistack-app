@@ -1,0 +1,10 @@
+{
+  "priority": 10,
+  "request": {
+    "method": "GET",
+    "urlPath": "/api/auth/me"
+  },
+  "response": {
+    "status": 401
+  }
+}
