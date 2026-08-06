@@ -1,10 +1,8 @@
 {
   "private": true,
   "name": "reference-app-copy-tests-allure",
-  "description": "Allure 3 CLI + @allure-notifications/plugin for reference-app-copy tests",
+  "description": "Optional local Allure 3 pin; CI uses npx allure@3.13.0 + allure-notifications@6.0.12 send",
   "dependencies": {
-    "@allure-notifications/plugin": "6.0.12",
-    "@allure-notifications/pyramid": "6.0.12",
     "allure": "3.13.0"
   }
 }

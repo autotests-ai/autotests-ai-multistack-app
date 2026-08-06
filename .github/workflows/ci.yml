@@ -65,7 +65,7 @@ env:
   GHCR_FRONTEND_PACKAGE: reference-app-copy-frontend-typescript-react
   RUN_LABEL: "${{ github.repository }} #${{ github.run_number }}"
   SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL || 'https://sonar.qa.guru' }}
-  # ── Allure / Telegram (allure-ci reads these; set once) ─────────────────
+  # ── Allure / Telegram (inlined in jobs below; set once) ─────────────────
   ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
   ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
   ALLURE_PROJECT_ID: ${{ vars.ALLURE_PROJECT_ID }}
@@ -115,22 +115,61 @@ jobs:
         id: run-tests
         run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification
         working-directory: ${{ env.BACKEND_DIR }}
-      - if: always() && (env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin')
-        uses: ./.github/actions/allure-ci
+      - if: always() && (env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin') && env.ALLURE_PROJECT_ID != ''
+        continue-on-error: true
+        id: setup-allurectl
+        uses: allure-framework/setup-allurectl@v1
         with:
-          tests-dir: ${{ env.BACKEND_DIR }}
-          artifact-suffix: unit-tests
-          results-dir: build/allure-results
-          report-dir: build/reports/allure-report
-          allure-config: ""
-          enable-notifications: "false"
-          launch-name: "unit — ${{ env.RUN_LABEL }}"
+          allure-endpoint: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
+          allure-token: ${{ env.ALLURE_TOKEN }}
+          allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
+
+      - if: always() && (env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin') && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
+        continue-on-error: true
+        working-directory: ${{ env.BACKEND_DIR }}
+        env:
+          ALLURE_ENDPOINT: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
+          ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
+          ALLURE_PROJECT_ID: ${{ env.ALLURE_PROJECT_ID }}
+          ALLURE_LAUNCH_NAME: "unit — ${{ env.RUN_LABEL }}"
+        run: |
+          set -euo pipefail
+          RESULTS="build/allure-results"
+          if [ ! -d "$RESULTS" ] || [ -z "$(ls -A "$RESULTS" 2>/dev/null || true)" ]; then
+            echo "No allure-results at ${RESULTS} — skip TestOps upload"
+            exit 0
+          fi
+          ARGS=(
+            upload "$RESULTS"
+            --endpoint "${ALLURE_ENDPOINT}"
+            --token "${ALLURE_TOKEN}"
+            --project-id "${ALLURE_PROJECT_ID}"
+          )
+          if [ -n "${ALLURE_LAUNCH_NAME:-}" ]; then
+            ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
+          fi
+          allurectl "${ARGS[@]}"
+
       - if: always() && (env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin')
+        uses: actions/setup-node@v6
+        with:
+          node-version: "26"
+
+      - if: always() && (env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin')
+        continue-on-error: true
+        id: allure-report
+        working-directory: ${{ env.BACKEND_DIR }}
+        run: |
+          set -euo pipefail
+          ARGS=(generate "build/allure-results" -o "build/reports/allure-report")
+          npx --yes allure@3.13.0 "${ARGS[@]}"
+
+      - if: always() && (env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin') && steps.allure-report.outcome == 'success'
         continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
-          name: jacoco-unit-tests
-          path: ${{ env.BACKEND_DIR }}/build/reports/jacoco/
+          name: allure-report-unit-tests
+          path: ${{ env.BACKEND_DIR }}/build/reports/allure-report/
           if-no-files-found: ignore
 
       # ── python ───────────────────────────────────────────────────────────
@@ -190,16 +229,62 @@ jobs:
       - id: run-tests
         run: npm test
         working-directory: ${{ env.FRONTEND_DIR }}
-      - if: always()
-        uses: ./.github/actions/allure-ci
+      - if: always() && env.ALLURE_PROJECT_ID != ''
+        continue-on-error: true
+        id: setup-allurectl
+        uses: allure-framework/setup-allurectl@v1
         with:
-          tests-dir: ${{ env.FRONTEND_DIR }}
-          artifact-suffix: component-tests
-          results-dir: allure-results
-          report-dir: allure-report
-          allure-config: ""
-          enable-notifications: "false"
-          launch-name: "component — ${{ env.RUN_LABEL }}"
+          allure-endpoint: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
+          allure-token: ${{ env.ALLURE_TOKEN }}
+          allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
+
+      - if: always() && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
+        continue-on-error: true
+        working-directory: ${{ env.FRONTEND_DIR }}
+        env:
+          ALLURE_ENDPOINT: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
+          ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
+          ALLURE_PROJECT_ID: ${{ env.ALLURE_PROJECT_ID }}
+          ALLURE_LAUNCH_NAME: "component — ${{ env.RUN_LABEL }}"
+        run: |
+          set -euo pipefail
+          RESULTS="allure-results"
+          if [ ! -d "$RESULTS" ] || [ -z "$(ls -A "$RESULTS" 2>/dev/null || true)" ]; then
+            echo "No allure-results at ${RESULTS} — skip TestOps upload"
+            exit 0
+          fi
+          ARGS=(
+            upload "$RESULTS"
+            --endpoint "${ALLURE_ENDPOINT}"
+            --token "${ALLURE_TOKEN}"
+            --project-id "${ALLURE_PROJECT_ID}"
+          )
+          if [ -n "${ALLURE_LAUNCH_NAME:-}" ]; then
+            ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
+          fi
+          allurectl "${ARGS[@]}"
+
+      - if: always()
+        uses: actions/setup-node@v6
+        with:
+          node-version: "26"
+
+      - if: always()
+        continue-on-error: true
+        id: allure-report
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: |
+          set -euo pipefail
+          ARGS=(generate "allure-results" -o "allure-report")
+          npx --yes allure@3.13.0 "${ARGS[@]}"
+
+      - if: always() && steps.allure-report.outcome == 'success'
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-report-component-tests
+          path: ${{ env.FRONTEND_DIR }}/allure-report/
+          if-no-files-found: ignore
 
   test-infra-tests:
     runs-on: ubuntu-latest
@@ -223,25 +308,106 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       # Coverage gate reads build/jacoco/test.exec, so it is only meaningful with this filter.
-      # Allure results stay on (default allure3) so allure-ci / allure-action can run on PR.
+      # Allure results stay on (default allure3) for TestOps / report / Telegram steps below.
       - if: env.TESTS_LANG == 'java'
         id: run-tests
         run: ./gradlew test jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags=test-infra
         working-directory: ${{ env.TESTS_DIR }}
-      - if: always() && env.TESTS_LANG == 'java'
-        uses: ./.github/actions/allure-ci
+      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
+        continue-on-error: true
+        id: setup-allurectl
+        uses: allure-framework/setup-allurectl@v1
         with:
-          tests-dir: ${{ env.TESTS_DIR }}
-          artifact-suffix: ${{ env.LAYER }}-tests
-          notification-project: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
-          launch-name: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
+          allure-endpoint: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
+          allure-token: ${{ env.ALLURE_TOKEN }}
+          allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
+
+      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
+        continue-on-error: true
+        working-directory: ${{ env.TESTS_DIR }}
+        env:
+          ALLURE_ENDPOINT: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
+          ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
+          ALLURE_PROJECT_ID: ${{ env.ALLURE_PROJECT_ID }}
+          ALLURE_LAUNCH_NAME: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
+        run: |
+          set -euo pipefail
+          RESULTS="build/allure-results"
+          if [ ! -d "$RESULTS" ] || [ -z "$(ls -A "$RESULTS" 2>/dev/null || true)" ]; then
+            echo "No allure-results at ${RESULTS} — skip TestOps upload"
+            exit 0
+          fi
+          ARGS=(
+            upload "$RESULTS"
+            --endpoint "${ALLURE_ENDPOINT}"
+            --token "${ALLURE_TOKEN}"
+            --project-id "${ALLURE_PROJECT_ID}"
+          )
+          if [ -n "${ALLURE_LAUNCH_NAME:-}" ]; then
+            ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
+          fi
+          allurectl "${ARGS[@]}"
+
       - if: always() && env.TESTS_LANG == 'java'
+        uses: actions/setup-node@v6
+        with:
+          node-version: "26"
+
+      - if: always() && env.TESTS_LANG == 'java'
+        continue-on-error: true
+        id: allure-report
+        working-directory: ${{ env.TESTS_DIR }}
+        run: |
+          set -euo pipefail
+          ARGS=(generate "build/allure-results" -o "build/reports/allure-report/allureReport")
+          CONFIG="allurerc.mjs"
+          if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
+            ARGS+=(--config "$CONFIG")
+          fi
+          npx --yes allure@3.13.0 "${ARGS[@]}"
+
+      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
         continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
-          name: jacoco-test-infra-tests
-          path: ${{ env.TESTS_DIR }}/build/reports/jacoco/
+          name: allure-report-${{ env.LAYER }}-tests
+          path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
           if-no-files-found: ignore
+
+      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+        continue-on-error: true
+        working-directory: ${{ env.TESTS_DIR }}
+        env:
+          NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
+          BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TELEGRAM_BOT_TOKEN: ${{ env.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ env.TELEGRAM_CHAT_ID || '-1004381150566' }}
+          TELEGRAM_TOPIC_ID: ${{ env.TELEGRAM_TOPIC_ID || '3' }}
+          NOTIFICATION_MODE: ${{ github.event_name != 'pull_request' && 'live' || 'dry-run' }}
+        run: |
+          set -euo pipefail
+          if [ ! -f notifications/config.json ]; then
+            echo "No notifications/config.json — skip Telegram"
+            exit 0
+          fi
+          CFG=notifications/config.json
+          if [ -n "${NOTIFICATION_PROJECT:-}" ] || [ -n "${BUILD_URL:-}" ]; then
+            CFG="$(mktemp)"
+            jq \
+              --arg p "${NOTIFICATION_PROJECT:-}" \
+              --arg b "${BUILD_URL:-}" \
+              'if ($p | length) > 0 then .base.project = $p else . end
+               | if ($b | length) > 0 then .base.links.build = $b else . end' \
+              notifications/config.json > "$CFG"
+          fi
+          MODE_FLAG="--dry-run"
+          if [ "${NOTIFICATION_MODE}" = "live" ]; then
+            MODE_FLAG="--live"
+          fi
+          npx --yes allure-notifications@6.0.12 send \
+            --config "$CFG" \
+            ${MODE_FLAG} \
+            --out collage.png
 
       # ── javascript / typescript (full suite; no tag pyramid yet) ──────────
       - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
@@ -479,13 +645,101 @@ jobs:
         id: run-tests
         run: ./gradlew test -Denv=reference_prod -DincludeTags=api
         working-directory: ${{ env.TESTS_DIR }}
-      - if: always() && env.TESTS_LANG == 'java'
-        uses: ./.github/actions/allure-ci
+      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
+        continue-on-error: true
+        id: setup-allurectl
+        uses: allure-framework/setup-allurectl@v1
         with:
-          tests-dir: ${{ env.TESTS_DIR }}
-          artifact-suffix: ${{ env.LAYER }}-tests
-          notification-project: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
-          launch-name: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
+          allure-endpoint: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
+          allure-token: ${{ env.ALLURE_TOKEN }}
+          allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
+
+      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
+        continue-on-error: true
+        working-directory: ${{ env.TESTS_DIR }}
+        env:
+          ALLURE_ENDPOINT: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
+          ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
+          ALLURE_PROJECT_ID: ${{ env.ALLURE_PROJECT_ID }}
+          ALLURE_LAUNCH_NAME: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
+        run: |
+          set -euo pipefail
+          RESULTS="build/allure-results"
+          if [ ! -d "$RESULTS" ] || [ -z "$(ls -A "$RESULTS" 2>/dev/null || true)" ]; then
+            echo "No allure-results at ${RESULTS} — skip TestOps upload"
+            exit 0
+          fi
+          ARGS=(
+            upload "$RESULTS"
+            --endpoint "${ALLURE_ENDPOINT}"
+            --token "${ALLURE_TOKEN}"
+            --project-id "${ALLURE_PROJECT_ID}"
+          )
+          if [ -n "${ALLURE_LAUNCH_NAME:-}" ]; then
+            ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
+          fi
+          allurectl "${ARGS[@]}"
+
+      - if: always() && env.TESTS_LANG == 'java'
+        uses: actions/setup-node@v6
+        with:
+          node-version: "26"
+
+      - if: always() && env.TESTS_LANG == 'java'
+        continue-on-error: true
+        id: allure-report
+        working-directory: ${{ env.TESTS_DIR }}
+        run: |
+          set -euo pipefail
+          ARGS=(generate "build/allure-results" -o "build/reports/allure-report/allureReport")
+          CONFIG="allurerc.mjs"
+          if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
+            ARGS+=(--config "$CONFIG")
+          fi
+          npx --yes allure@3.13.0 "${ARGS[@]}"
+
+      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-report-${{ env.LAYER }}-tests
+          path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
+          if-no-files-found: ignore
+
+      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+        continue-on-error: true
+        working-directory: ${{ env.TESTS_DIR }}
+        env:
+          NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
+          BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TELEGRAM_BOT_TOKEN: ${{ env.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ env.TELEGRAM_CHAT_ID || '-1004381150566' }}
+          TELEGRAM_TOPIC_ID: ${{ env.TELEGRAM_TOPIC_ID || '3' }}
+          NOTIFICATION_MODE: ${{ github.event_name != 'pull_request' && 'live' || 'dry-run' }}
+        run: |
+          set -euo pipefail
+          if [ ! -f notifications/config.json ]; then
+            echo "No notifications/config.json — skip Telegram"
+            exit 0
+          fi
+          CFG=notifications/config.json
+          if [ -n "${NOTIFICATION_PROJECT:-}" ] || [ -n "${BUILD_URL:-}" ]; then
+            CFG="$(mktemp)"
+            jq \
+              --arg p "${NOTIFICATION_PROJECT:-}" \
+              --arg b "${BUILD_URL:-}" \
+              'if ($p | length) > 0 then .base.project = $p else . end
+               | if ($b | length) > 0 then .base.links.build = $b else . end' \
+              notifications/config.json > "$CFG"
+          fi
+          MODE_FLAG="--dry-run"
+          if [ "${NOTIFICATION_MODE}" = "live" ]; then
+            MODE_FLAG="--live"
+          fi
+          npx --yes allure-notifications@6.0.12 send \
+            --config "$CFG" \
+            ${MODE_FLAG} \
+            --out collage.png
 
       # ── javascript / typescript (full suite) ──────────────────────────────
       - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
@@ -548,13 +802,101 @@ jobs:
           RUN_ENV: ${{ inputs.env }}
         run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=mount
         working-directory: ${{ env.TESTS_DIR }}
-      - if: always() && env.TESTS_LANG == 'java'
-        uses: ./.github/actions/allure-ci
+      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
+        continue-on-error: true
+        id: setup-allurectl
+        uses: allure-framework/setup-allurectl@v1
         with:
-          tests-dir: ${{ env.TESTS_DIR }}
-          artifact-suffix: ${{ env.LAYER }}-tests
-          notification-project: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
-          launch-name: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
+          allure-endpoint: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
+          allure-token: ${{ env.ALLURE_TOKEN }}
+          allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
+
+      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
+        continue-on-error: true
+        working-directory: ${{ env.TESTS_DIR }}
+        env:
+          ALLURE_ENDPOINT: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
+          ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
+          ALLURE_PROJECT_ID: ${{ env.ALLURE_PROJECT_ID }}
+          ALLURE_LAUNCH_NAME: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
+        run: |
+          set -euo pipefail
+          RESULTS="build/allure-results"
+          if [ ! -d "$RESULTS" ] || [ -z "$(ls -A "$RESULTS" 2>/dev/null || true)" ]; then
+            echo "No allure-results at ${RESULTS} — skip TestOps upload"
+            exit 0
+          fi
+          ARGS=(
+            upload "$RESULTS"
+            --endpoint "${ALLURE_ENDPOINT}"
+            --token "${ALLURE_TOKEN}"
+            --project-id "${ALLURE_PROJECT_ID}"
+          )
+          if [ -n "${ALLURE_LAUNCH_NAME:-}" ]; then
+            ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
+          fi
+          allurectl "${ARGS[@]}"
+
+      - if: always() && env.TESTS_LANG == 'java'
+        uses: actions/setup-node@v6
+        with:
+          node-version: "26"
+
+      - if: always() && env.TESTS_LANG == 'java'
+        continue-on-error: true
+        id: allure-report
+        working-directory: ${{ env.TESTS_DIR }}
+        run: |
+          set -euo pipefail
+          ARGS=(generate "build/allure-results" -o "build/reports/allure-report/allureReport")
+          CONFIG="allurerc.mjs"
+          if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
+            ARGS+=(--config "$CONFIG")
+          fi
+          npx --yes allure@3.13.0 "${ARGS[@]}"
+
+      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-report-${{ env.LAYER }}-tests
+          path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
+          if-no-files-found: ignore
+
+      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+        continue-on-error: true
+        working-directory: ${{ env.TESTS_DIR }}
+        env:
+          NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
+          BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TELEGRAM_BOT_TOKEN: ${{ env.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ env.TELEGRAM_CHAT_ID || '-1004381150566' }}
+          TELEGRAM_TOPIC_ID: ${{ env.TELEGRAM_TOPIC_ID || '3' }}
+          NOTIFICATION_MODE: ${{ github.event_name != 'pull_request' && 'live' || 'dry-run' }}
+        run: |
+          set -euo pipefail
+          if [ ! -f notifications/config.json ]; then
+            echo "No notifications/config.json — skip Telegram"
+            exit 0
+          fi
+          CFG=notifications/config.json
+          if [ -n "${NOTIFICATION_PROJECT:-}" ] || [ -n "${BUILD_URL:-}" ]; then
+            CFG="$(mktemp)"
+            jq \
+              --arg p "${NOTIFICATION_PROJECT:-}" \
+              --arg b "${BUILD_URL:-}" \
+              'if ($p | length) > 0 then .base.project = $p else . end
+               | if ($b | length) > 0 then .base.links.build = $b else . end' \
+              notifications/config.json > "$CFG"
+          fi
+          MODE_FLAG="--dry-run"
+          if [ "${NOTIFICATION_MODE}" = "live" ]; then
+            MODE_FLAG="--live"
+          fi
+          npx --yes allure-notifications@6.0.12 send \
+            --config "$CFG" \
+            ${MODE_FLAG} \
+            --out collage.png
 
   e2e-tests:
     if: >-
@@ -583,13 +925,101 @@ jobs:
           RUN_ENV: ${{ inputs.env }}
         run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=smoke -DexcludeTags=visual
         working-directory: ${{ env.TESTS_DIR }}
-      - if: always() && env.TESTS_LANG == 'java'
-        uses: ./.github/actions/allure-ci
+      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
+        continue-on-error: true
+        id: setup-allurectl
+        uses: allure-framework/setup-allurectl@v1
         with:
-          tests-dir: ${{ env.TESTS_DIR }}
-          artifact-suffix: ${{ env.LAYER }}-tests
-          notification-project: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
-          launch-name: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
+          allure-endpoint: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
+          allure-token: ${{ env.ALLURE_TOKEN }}
+          allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
+
+      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
+        continue-on-error: true
+        working-directory: ${{ env.TESTS_DIR }}
+        env:
+          ALLURE_ENDPOINT: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
+          ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
+          ALLURE_PROJECT_ID: ${{ env.ALLURE_PROJECT_ID }}
+          ALLURE_LAUNCH_NAME: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
+        run: |
+          set -euo pipefail
+          RESULTS="build/allure-results"
+          if [ ! -d "$RESULTS" ] || [ -z "$(ls -A "$RESULTS" 2>/dev/null || true)" ]; then
+            echo "No allure-results at ${RESULTS} — skip TestOps upload"
+            exit 0
+          fi
+          ARGS=(
+            upload "$RESULTS"
+            --endpoint "${ALLURE_ENDPOINT}"
+            --token "${ALLURE_TOKEN}"
+            --project-id "${ALLURE_PROJECT_ID}"
+          )
+          if [ -n "${ALLURE_LAUNCH_NAME:-}" ]; then
+            ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
+          fi
+          allurectl "${ARGS[@]}"
+
+      - if: always() && env.TESTS_LANG == 'java'
+        uses: actions/setup-node@v6
+        with:
+          node-version: "26"
+
+      - if: always() && env.TESTS_LANG == 'java'
+        continue-on-error: true
+        id: allure-report
+        working-directory: ${{ env.TESTS_DIR }}
+        run: |
+          set -euo pipefail
+          ARGS=(generate "build/allure-results" -o "build/reports/allure-report/allureReport")
+          CONFIG="allurerc.mjs"
+          if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
+            ARGS+=(--config "$CONFIG")
+          fi
+          npx --yes allure@3.13.0 "${ARGS[@]}"
+
+      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-report-${{ env.LAYER }}-tests
+          path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
+          if-no-files-found: ignore
+
+      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+        continue-on-error: true
+        working-directory: ${{ env.TESTS_DIR }}
+        env:
+          NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
+          BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TELEGRAM_BOT_TOKEN: ${{ env.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ env.TELEGRAM_CHAT_ID || '-1004381150566' }}
+          TELEGRAM_TOPIC_ID: ${{ env.TELEGRAM_TOPIC_ID || '3' }}
+          NOTIFICATION_MODE: ${{ github.event_name != 'pull_request' && 'live' || 'dry-run' }}
+        run: |
+          set -euo pipefail
+          if [ ! -f notifications/config.json ]; then
+            echo "No notifications/config.json — skip Telegram"
+            exit 0
+          fi
+          CFG=notifications/config.json
+          if [ -n "${NOTIFICATION_PROJECT:-}" ] || [ -n "${BUILD_URL:-}" ]; then
+            CFG="$(mktemp)"
+            jq \
+              --arg p "${NOTIFICATION_PROJECT:-}" \
+              --arg b "${BUILD_URL:-}" \
+              'if ($p | length) > 0 then .base.project = $p else . end
+               | if ($b | length) > 0 then .base.links.build = $b else . end' \
+              notifications/config.json > "$CFG"
+          fi
+          MODE_FLAG="--dry-run"
+          if [ "${NOTIFICATION_MODE}" = "live" ]; then
+            MODE_FLAG="--live"
+          fi
+          npx --yes allure-notifications@6.0.12 send \
+            --config "$CFG" \
+            ${MODE_FLAG} \
+            --out collage.png
 
       # ── javascript / typescript (full suite; no tag pyramid yet) ──────────
       - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
@@ -649,13 +1079,101 @@ jobs:
           RUN_ENV: ${{ inputs.env }}
         run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=visual
         working-directory: ${{ env.TESTS_DIR }}
-      - if: always() && env.TESTS_LANG == 'java'
-        uses: ./.github/actions/allure-ci
+      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
+        continue-on-error: true
+        id: setup-allurectl
+        uses: allure-framework/setup-allurectl@v1
         with:
-          tests-dir: ${{ env.TESTS_DIR }}
-          artifact-suffix: ${{ env.LAYER }}-tests
-          notification-project: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
-          launch-name: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
+          allure-endpoint: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
+          allure-token: ${{ env.ALLURE_TOKEN }}
+          allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
+
+      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
+        continue-on-error: true
+        working-directory: ${{ env.TESTS_DIR }}
+        env:
+          ALLURE_ENDPOINT: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
+          ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
+          ALLURE_PROJECT_ID: ${{ env.ALLURE_PROJECT_ID }}
+          ALLURE_LAUNCH_NAME: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
+        run: |
+          set -euo pipefail
+          RESULTS="build/allure-results"
+          if [ ! -d "$RESULTS" ] || [ -z "$(ls -A "$RESULTS" 2>/dev/null || true)" ]; then
+            echo "No allure-results at ${RESULTS} — skip TestOps upload"
+            exit 0
+          fi
+          ARGS=(
+            upload "$RESULTS"
+            --endpoint "${ALLURE_ENDPOINT}"
+            --token "${ALLURE_TOKEN}"
+            --project-id "${ALLURE_PROJECT_ID}"
+          )
+          if [ -n "${ALLURE_LAUNCH_NAME:-}" ]; then
+            ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
+          fi
+          allurectl "${ARGS[@]}"
+
+      - if: always() && env.TESTS_LANG == 'java'
+        uses: actions/setup-node@v6
+        with:
+          node-version: "26"
+
+      - if: always() && env.TESTS_LANG == 'java'
+        continue-on-error: true
+        id: allure-report
+        working-directory: ${{ env.TESTS_DIR }}
+        run: |
+          set -euo pipefail
+          ARGS=(generate "build/allure-results" -o "build/reports/allure-report/allureReport")
+          CONFIG="allurerc.mjs"
+          if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
+            ARGS+=(--config "$CONFIG")
+          fi
+          npx --yes allure@3.13.0 "${ARGS[@]}"
+
+      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-report-${{ env.LAYER }}-tests
+          path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
+          if-no-files-found: ignore
+
+      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+        continue-on-error: true
+        working-directory: ${{ env.TESTS_DIR }}
+        env:
+          NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
+          BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TELEGRAM_BOT_TOKEN: ${{ env.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ env.TELEGRAM_CHAT_ID || '-1004381150566' }}
+          TELEGRAM_TOPIC_ID: ${{ env.TELEGRAM_TOPIC_ID || '3' }}
+          NOTIFICATION_MODE: ${{ github.event_name != 'pull_request' && 'live' || 'dry-run' }}
+        run: |
+          set -euo pipefail
+          if [ ! -f notifications/config.json ]; then
+            echo "No notifications/config.json — skip Telegram"
+            exit 0
+          fi
+          CFG=notifications/config.json
+          if [ -n "${NOTIFICATION_PROJECT:-}" ] || [ -n "${BUILD_URL:-}" ]; then
+            CFG="$(mktemp)"
+            jq \
+              --arg p "${NOTIFICATION_PROJECT:-}" \
+              --arg b "${BUILD_URL:-}" \
+              'if ($p | length) > 0 then .base.project = $p else . end
+               | if ($b | length) > 0 then .base.links.build = $b else . end' \
+              notifications/config.json > "$CFG"
+          fi
+          MODE_FLAG="--dry-run"
+          if [ "${NOTIFICATION_MODE}" = "live" ]; then
+            MODE_FLAG="--live"
+          fi
+          npx --yes allure-notifications@6.0.12 send \
+            --config "$CFG" \
+            ${MODE_FLAG} \
+            --out collage.png
 
   manual-tests:
     if: >-
@@ -684,10 +1202,98 @@ jobs:
           RUN_ENV: ${{ inputs.env }}
         run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=manual
         working-directory: ${{ env.TESTS_DIR }}
-      - if: always() && env.TESTS_LANG == 'java'
-        uses: ./.github/actions/allure-ci
+      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
+        continue-on-error: true
+        id: setup-allurectl
+        uses: allure-framework/setup-allurectl@v1
         with:
-          tests-dir: ${{ env.TESTS_DIR }}
-          artifact-suffix: ${{ env.LAYER }}-tests
-          notification-project: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
-          launch-name: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
+          allure-endpoint: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
+          allure-token: ${{ env.ALLURE_TOKEN }}
+          allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
+
+      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
+        continue-on-error: true
+        working-directory: ${{ env.TESTS_DIR }}
+        env:
+          ALLURE_ENDPOINT: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
+          ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
+          ALLURE_PROJECT_ID: ${{ env.ALLURE_PROJECT_ID }}
+          ALLURE_LAUNCH_NAME: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
+        run: |
+          set -euo pipefail
+          RESULTS="build/allure-results"
+          if [ ! -d "$RESULTS" ] || [ -z "$(ls -A "$RESULTS" 2>/dev/null || true)" ]; then
+            echo "No allure-results at ${RESULTS} — skip TestOps upload"
+            exit 0
+          fi
+          ARGS=(
+            upload "$RESULTS"
+            --endpoint "${ALLURE_ENDPOINT}"
+            --token "${ALLURE_TOKEN}"
+            --project-id "${ALLURE_PROJECT_ID}"
+          )
+          if [ -n "${ALLURE_LAUNCH_NAME:-}" ]; then
+            ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
+          fi
+          allurectl "${ARGS[@]}"
+
+      - if: always() && env.TESTS_LANG == 'java'
+        uses: actions/setup-node@v6
+        with:
+          node-version: "26"
+
+      - if: always() && env.TESTS_LANG == 'java'
+        continue-on-error: true
+        id: allure-report
+        working-directory: ${{ env.TESTS_DIR }}
+        run: |
+          set -euo pipefail
+          ARGS=(generate "build/allure-results" -o "build/reports/allure-report/allureReport")
+          CONFIG="allurerc.mjs"
+          if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
+            ARGS+=(--config "$CONFIG")
+          fi
+          npx --yes allure@3.13.0 "${ARGS[@]}"
+
+      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-report-${{ env.LAYER }}-tests
+          path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
+          if-no-files-found: ignore
+
+      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+        continue-on-error: true
+        working-directory: ${{ env.TESTS_DIR }}
+        env:
+          NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
+          BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TELEGRAM_BOT_TOKEN: ${{ env.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ env.TELEGRAM_CHAT_ID || '-1004381150566' }}
+          TELEGRAM_TOPIC_ID: ${{ env.TELEGRAM_TOPIC_ID || '3' }}
+          NOTIFICATION_MODE: ${{ github.event_name != 'pull_request' && 'live' || 'dry-run' }}
+        run: |
+          set -euo pipefail
+          if [ ! -f notifications/config.json ]; then
+            echo "No notifications/config.json — skip Telegram"
+            exit 0
+          fi
+          CFG=notifications/config.json
+          if [ -n "${NOTIFICATION_PROJECT:-}" ] || [ -n "${BUILD_URL:-}" ]; then
+            CFG="$(mktemp)"
+            jq \
+              --arg p "${NOTIFICATION_PROJECT:-}" \
+              --arg b "${BUILD_URL:-}" \
+              'if ($p | length) > 0 then .base.project = $p else . end
+               | if ($b | length) > 0 then .base.links.build = $b else . end' \
+              notifications/config.json > "$CFG"
+          fi
+          MODE_FLAG="--dry-run"
+          if [ "${NOTIFICATION_MODE}" = "live" ]; then
+            MODE_FLAG="--live"
+          fi
+          npx --yes allure-notifications@6.0.12 send \
+            --config "$CFG" \
+            ${MODE_FLAG} \
+            --out collage.png
