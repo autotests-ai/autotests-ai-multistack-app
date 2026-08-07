@@ -22,11 +22,14 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 import org.openqa.selenium.MutableCapabilities;
+import org.openqa.selenium.SessionNotCreatedException;
 import org.openqa.selenium.chrome.ChromeOptions;
 
 import java.util.HashMap;
 
 import static com.codeborne.selenide.Selenide.closeWebDriver;
+import static com.codeborne.selenide.Selenide.open;
+import static com.codeborne.selenide.Selenide.sleep;
 
 
 @Scope("browser")
@@ -39,6 +42,9 @@ public class TestBase extends AllureMeta {
     
     protected static final TestConfig config = ConfigReader.testConfig;
     private static final SimpleReport selenideReport = new SimpleReport();
+
+    private static final int SESSION_ATTEMPTS = 3;
+    private static final long SESSION_RETRY_DELAY_MS = 3_000;
 
     private static boolean allureResultsEnabled() {
         return !"none".equals(config.allureReportMode());
@@ -97,11 +103,36 @@ public class TestBase extends AllureMeta {
         }
     }
 
+    /**
+     * A shared Selenoid hub can refuse a session when it has no free slot, which
+     * surfaces as {@link SessionNotCreatedException} from the first browser call
+     * inside a test. Claiming the session here — with retries — keeps that hub
+     * hiccup out of the test body.
+     */
+    private static void ensureBrowserSession() {
+        if (WebDriverRunner.hasWebDriverStarted()) {
+            return;
+        }
+        for (int attempt = 1; ; attempt++) {
+            try {
+                open();
+                return;
+            } catch (SessionNotCreatedException hubRefusedSession) {
+                closeWebDriver();
+                if (attempt >= SESSION_ATTEMPTS) {
+                    throw hubRefusedSession;
+                }
+                sleep(SESSION_RETRY_DELAY_MS);
+            }
+        }
+    }
+
     @BeforeEach
     void beforeEach() {
         if (config.logToConsole() && config.selenideLogToConsole()) {
             selenideReport.start();
         }
+        ensureBrowserSession();
         if (!config.closeBrowserAfterEach() && WebDriverRunner.hasWebDriverStarted()) {
             BrowserSessionHelper.resetPageState();
         }
