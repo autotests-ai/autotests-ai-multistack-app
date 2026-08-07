@@ -89,6 +89,9 @@ allure {
             }
         }
     }
+    report {
+        configFile.set(layout.projectDirectory.file('allurerc.mjs'))
+    }
 }
 
 dependencies {

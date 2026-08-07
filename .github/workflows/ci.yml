@@ -8,8 +8,8 @@ name: CI
 # names and RUN_LABEL are derived from them. Swap TESTS / TESTS_DIR / TESTS_LANG (or
 # BACKEND / FRONTEND) when the teaching default changes; job ids stay layer names.
 #
-# Allure: test jobs publish raw results; non-gating per-layer reporting jobs handle
-# TestOps upload, static reports and Telegram without blocking the delivery DAG.
+# Allure: test jobs publish raw results; publish-allure-report merges them once for
+# TestOps, GitHub Pages and send-allure-notifications (non-gating observability leaves).
 # Pyramid layers (classical): unit · integration (no UI) · api · e2e · manual
 # Sideways FE: component (jsdom). Visual (@Tag visual) inside e2e; baselines → e2e-update-baselines.
 # CD on main (two lanes; deploy host serialized via concurrency group).
@@ -99,6 +99,10 @@ env:
   # java|javascript|typescript|python — harness / api / browser layer jobs follow this
   TESTS_LANG: java
   APP_SLUG: reference-app-copy
+  # ── Allure paths (literals — keep in sync with TESTS_DIR above) ───────────
+  ALLURE_RESULTS_DIR: tests/java/tests-java-gradle-junit5-allure3-selenide/build/allure-results
+  ALLURE_REPORT_DIR: tests/java/tests-java-gradle-junit5-allure3-selenide/build/reports/allure-report/allureReport
+  ALLURE_AWESOME_DIR: tests/java/tests-java-gradle-junit5-allure3-selenide/build/reports/allure-report/allureReport/awesome
   JAVA_VERSION: "21"
   NODE_VERSION: "26"
   PYTHON_VERSION: "3.12"
@@ -1327,90 +1331,306 @@ jobs:
           if-no-files-found: ignore
           retention-days: 1
 
-  # Non-gating observability leaves. Each reporter depends only on its producer,
-  # keeping graph edges local while builds, deploys and later tests stay unblocked.
-  # GitHub supports YAML anchors; the shared steps remain a single source of truth.
-  report-unit:
-    name: report-unit
-    needs: unit-tests
-    if: ${{ always() && !cancelled() && needs.unit-tests.result != 'skipped' }}
+  # Non-gating observability: one merged Allure report at the CI tip, then Telegram.
+  publish-allure-report:
+    name: publish-allure-report
+    needs:
+      - unit-tests
+      - component-tests
+      - tests-harness-backend
+      - tests-harness-frontend
+      - e2e-mock-tests
+      - integration-tests
+      - api-tests
+      - e2e-tests
+      - e2e-update-baselines
+      - manual-tests
+    if: always() && !cancelled()
     continue-on-error: true
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     permissions:
-      contents: read
+      contents: write
+      actions: read
     env:
-      REPORT_LAYER: unit
-      REPORT_NOTIFY: "false"
-    steps: &report-steps
+      REPORT_ID: ${{ github.run_id }}
+      GH_PAGES_BASE: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+    outputs:
+      testops_launch_url: ${{ steps.testops-upload.outputs.launch_url }}
+      report_generated: ${{ steps.allure-report.outcome == 'success' }}
+      gh_pages_deployed: ${{ steps.gh-pages-deploy.outcome == 'success' }}
+    steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - name: Download raw Allure results
-        id: results
+
+      - name: Load Allure history
+        uses: actions/checkout@v7
         continue-on-error: true
-        uses: actions/download-artifact@v8
         with:
-          name: allure-results-${{ env.REPORT_LAYER }}
-          path: allure-results
-      - name: Install pinned allurectl
-        if: steps.results.outcome == 'success' && env.ALLURE_PROJECT_ID != ''
-        id: setup-allurectl
-        uses: allure-framework/setup-allurectl@v1
-        with:
-          allurectl-version: ${{ env.ALLURECTL_VERSION }}
-      - name: Upload results to a layer-specific TestOps launch
-        if: steps.results.outcome == 'success' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
-        continue-on-error: true
-        env:
-          ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
-          ALLURE_LAUNCH_NAME: "${{ env.REPORT_LAYER }} — ${{ env.RUN_LABEL }}"
-          ALLURE_JOB_UID: "${{ github.repository }}/actions/workflows/ci.yml/${{ env.REPORT_LAYER }}"
-          ALLURE_JOB_RUN_UID: "${{ github.run_id }}-${{ github.run_attempt }}-${{ env.REPORT_LAYER }}"
-          ALLURE_JOB_NAME: "${{ github.repository }} — ${{ env.REPORT_LAYER }}"
-          ALLURE_JOB_RUN_NAME: "${{ env.REPORT_LAYER }} #${{ github.run_number }}.${{ github.run_attempt }}"
-        run: |
-          set -euo pipefail
-          if [ -z "${ALLURE_TOKEN:-}" ]; then
-            echo "No ALLURE_TOKEN — skip TestOps upload"
-            exit 0
-          fi
-          allurectl upload "allure-results" \
-            --endpoint "${ALLURE_ENDPOINT}" \
-            --token "${ALLURE_TOKEN}" \
-            --project-id "${ALLURE_PROJECT_ID}" \
-            --launch-name "${ALLURE_LAUNCH_NAME}"
+          ref: gh-pages
+          path: gh-pages
+          sparse-checkout: history.jsonl
+          sparse-checkout-cone-mode: false
+
       - name: Set up pinned Node.js
-        if: steps.results.outcome == 'success'
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
+
       - name: Install pinned Allure CLIs
-        if: steps.results.outcome == 'success'
         run: npm ci
         working-directory: ${{ env.TESTS_DIR }}
-      - name: Generate standard Allure report
+
+      - name: Download merged raw Allure results
+        id: results
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          pattern: allure-results-*
+          path: ${{ env.ALLURE_RESULTS_DIR }}
+          merge-multiple: true
+
+      - name: Verify merged Allure results
+        id: merged-results
         if: steps.results.outcome == 'success'
+        env:
+          ALLURE_RESULTS: ${{ env.ALLURE_RESULTS_DIR }}
+        run: |
+          if [ -n "$(find "${ALLURE_RESULTS}" -type f 2>/dev/null | head -1)" ]; then
+            echo "has_results=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_results=false" >> "$GITHUB_OUTPUT"
+            echo "No merged Allure results — skip publish"
+          fi
+
+      - name: Restore Allure history
+        if: steps.merged-results.outputs.has_results == 'true'
+        run: |
+          if [ -f gh-pages/history.jsonl ]; then
+            cp gh-pages/history.jsonl "${{ env.TESTS_DIR }}/history.jsonl"
+          elif [ -f "${{ env.TESTS_DIR }}/history.jsonl" ]; then
+            echo "Using checked-in history.jsonl"
+          fi
+
+      - name: Install pinned allurectl
+        if: steps.merged-results.outputs.has_results == 'true' && env.ALLURE_PROJECT_ID != ''
+        id: setup-allurectl
+        continue-on-error: true
+        uses: allure-framework/setup-allurectl@v1
+        with:
+          allurectl-version: ${{ env.ALLURECTL_VERSION }}
+
+      - name: Write executor.json
+        if: steps.merged-results.outputs.has_results == 'true'
+        env:
+          ALLURE_RESULTS: ${{ env.ALLURE_RESULTS_DIR }}
+        run: |
+          mkdir -p "${ALLURE_RESULTS}"
+          cat > "${ALLURE_RESULTS}/executor.json" <<EOF
+          {
+            "reportName": "Run #${{ github.run_number }}",
+            "buildOrder": ${{ github.run_number }},
+            "reportUrl": "${GH_PAGES_BASE}/reports/${REPORT_ID}/awesome/index.html",
+            "buildUrl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          }
+          EOF
+
+      - name: Upload merged results to Allure TestOps
+        if: >-
+          always() &&
+          steps.merged-results.outputs.has_results == 'true' &&
+          env.ALLURE_PROJECT_ID != ''
+        continue-on-error: true
+        id: testops-upload
+        working-directory: ${{ env.TESTS_DIR }}
+        env:
+          ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
+          ALLURE_LAUNCH_NAME: "${{ env.APP_SLUG }} CI — ${{ env.RUN_LABEL }}"
+          ALLURE_JOB_UID: "${{ github.repository }}/actions/workflows/ci.yml/publish-allure-report"
+          ALLURE_JOB_RUN_UID: "${{ github.run_id }}-${{ github.run_attempt }}-publish-allure-report"
+          ALLURE_JOB_NAME: "${{ github.repository }} — publish-allure-report"
+          ALLURE_JOB_RUN_NAME: "CI #${{ github.run_number }}.${{ github.run_attempt }}"
+        run: |
+          set +e
+          set -uo pipefail
+          if [ -z "${ALLURE_TOKEN:-}" ]; then
+            echo "No ALLURE_TOKEN — skip TestOps upload"
+            exit 0
+          fi
+          if ! command -v allurectl >/dev/null 2>&1; then
+            echo "allurectl not available — skip TestOps upload"
+            exit 0
+          fi
+          allurectl upload "build/allure-results" \
+            --endpoint "${ALLURE_ENDPOINT}" \
+            --token "${ALLURE_TOKEN}" \
+            --project-id "${ALLURE_PROJECT_ID}" \
+            --launch-name "${ALLURE_LAUNCH_NAME}" 2>&1 | tee allurectl-upload.log
+          UPLOAD_EXIT=${PIPESTATUS[0]}
+          if [ "$UPLOAD_EXIT" -eq 0 ]; then
+            LAUNCH_URL=$(grep -Eo 'https://[^ ]+/launch/[0-9]+' allurectl-upload.log | head -1 || true)
+            if [ -z "$LAUNCH_URL" ] && allurectl job-run env >/tmp/allure-env 2>/dev/null; then
+              # shellcheck disable=SC1091
+              source /tmp/allure-env
+              LAUNCH_URL="${ALLURE_LAUNCH_URL:-}"
+            fi
+            if [ -n "$LAUNCH_URL" ]; then
+              echo "launch_url=${LAUNCH_URL}" >> "$GITHUB_OUTPUT"
+              echo "TESTOPS_LAUNCH_URL=${LAUNCH_URL}" >> "$GITHUB_ENV"
+            fi
+          fi
+          exit 0
+
+      - name: Allure quality gate + report
+        if: always() && steps.merged-results.outputs.has_results == 'true'
         id: allure-report
-        run: '"${TESTS_DIR}/node_modules/.bin/allure" generate "${GITHUB_WORKSPACE}/allure-results" -o "${GITHUB_WORKSPACE}/allure-report"'
-      - name: Publish Allure report
-        if: steps.allure-report.outcome == 'success'
+        continue-on-error: true
+        working-directory: ${{ env.TESTS_DIR }}
+        run: |
+          set +e
+          npx --no-install allure quality-gate build/allure-results --config allurerc.mjs
+          echo "QUALITY_GATE_EXIT=$?" >> "$GITHUB_ENV"
+          npx --no-install allure generate build/allure-results \
+            -o build/reports/allure-report/allureReport \
+            --config allurerc.mjs
+          REPORT_EXIT=$?
+          set -e
+          exit "${REPORT_EXIT}"
+
+      - name: Publish merged Allure report artifact
+        if: always() && steps.allure-report.outcome == 'success'
         continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
-          name: allure-report-${{ env.REPORT_LAYER }}-tests
-          path: allure-report/
+          name: allure-report-ci
+          path: ${{ env.ALLURE_REPORT_DIR }}/
           if-no-files-found: ignore
           retention-days: 14
+
+      - name: Prepare GitHub Pages
+        id: pages-prepare
+        if: >-
+          always() &&
+          github.event_name != 'pull_request' &&
+          steps.allure-report.outcome == 'success'
+        env:
+          ALLURE_REPORT_ROOT: ${{ env.ALLURE_REPORT_DIR }}
+          ALLURE_AWESOME: ${{ env.ALLURE_AWESOME_DIR }}
+        run: |
+          if [ ! -f "${ALLURE_AWESOME}/index.html" ]; then
+            echo "No ${ALLURE_AWESOME}/index.html — skip GitHub Pages"
+            exit 0
+          fi
+          mkdir -p pages/reports/${REPORT_ID}
+          cp -r "${ALLURE_REPORT_ROOT}/." "pages/reports/${REPORT_ID}/"
+          rm -rf pages/reports/latest
+          cp -r "pages/reports/${REPORT_ID}" pages/reports/latest
+          if [ -f "${{ env.TESTS_DIR }}/history.jsonl" ]; then
+            cp "${{ env.TESTS_DIR }}/history.jsonl" pages/history.jsonl
+          elif [ -f "${ALLURE_REPORT_ROOT}/history.jsonl" ]; then
+            cp "${ALLURE_REPORT_ROOT}/history.jsonl" pages/history.jsonl
+          fi
+          echo "${REPORT_ID}" > pages/latest-run-id.txt
+          touch pages/.nojekyll
+
+      - name: Deploy Allure report to GitHub Pages
+        id: gh-pages-deploy
+        if: >-
+          always() &&
+          github.event_name != 'pull_request' &&
+          steps.allure-report.outcome == 'success' &&
+          steps.pages-prepare.outcome == 'success' &&
+          hashFiles('pages/reports/**/awesome/index.html') != ''
+        continue-on-error: true
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: pages
+          enable_jekyll: false
+          keep_files: true
+
+      - name: Job summary
+        if: always()
+        env:
+          ALLURE_AWESOME: ${{ env.ALLURE_AWESOME_DIR }}
+        run: |
+          {
+            echo "## publish-allure-report"
+            echo ""
+            echo "- [GitHub Actions run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+            if [ "${{ steps.gh-pages-deploy.outcome }}" = "success" ]; then
+              echo "- [Allure report](${GH_PAGES_BASE}/reports/latest/awesome/index.html)"
+              echo "- [Allure dashboard](${GH_PAGES_BASE}/reports/latest/dashboard/index.html)"
+            elif [ -f "${ALLURE_AWESOME}/index.html" ]; then
+              echo "- Allure report artifact: uploaded (GitHub Pages not deployed)"
+            fi
+            if [ -n "${TESTOPS_LAUNCH_URL:-}" ]; then
+              echo "- [Allure TestOps launch](${TESTOPS_LAUNCH_URL})"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  send-allure-notifications:
+    name: send-allure-notifications
+    needs: publish-allure-report
+    if: always() && !cancelled() && needs.publish-allure-report.result != 'skipped'
+    continue-on-error: true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    env:
+      GH_PAGES_BASE: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Download merged Allure report
+        id: report
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: allure-report-ci
+          path: allure-report
+
+      - name: Download merged raw Allure results
+        if: steps.report.outcome == 'success'
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          pattern: allure-results-*
+          path: ${{ env.ALLURE_RESULTS_DIR }}
+          merge-multiple: true
+
+      - name: Set up pinned Node.js
+        if: steps.report.outcome == 'success'
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
+
+      - name: Install pinned Allure notification CLI
+        if: steps.report.outcome == 'success'
+        run: npm ci
+        working-directory: ${{ env.TESTS_DIR }}
+
       - name: Send Allure Telegram notification
-        if: env.REPORT_NOTIFY == 'true' && steps.allure-report.outcome == 'success'
+        if: always() && steps.report.outcome == 'success'
         continue-on-error: true
         working-directory: ${{ env.TESTS_DIR }}
         env:
-          NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} ${{ env.REPORT_LAYER }} #${{ github.run_number }}"
+          NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} CI #${{ github.run_number }}"
           BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TESTOPS_LAUNCH_URL: ${{ needs.publish-allure-report.outputs.testops_launch_url }}
+          ALLURE_FOLDER: ${{ github.workspace }}/allure-report/awesome
+          ALLURE_RESULTS_FOLDER: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+          GH_PAGES_DEPLOYED: ${{ needs.publish-allure-report.outputs.gh_pages_deployed }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID || '-1004381150566' }}
           TELEGRAM_TOPIC_ID: ${{ secrets.TELEGRAM_REFERENCE_APP_TOPIC_ID || vars.TELEGRAM_REFERENCE_APP_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || vars.TELEGRAM_TOPIC_ID || '3' }}
@@ -1421,155 +1641,24 @@ jobs:
             echo "No Telegram token — skip notification"
             exit 0
           fi
-          ALLURE_FOLDER="${GITHUB_WORKSPACE}/allure-report"
-          ALLURE_RESULTS="${GITHUB_WORKSPACE}/allure-results"
           if [ ! -f "${ALLURE_FOLDER}/summary.json" ]; then
             echo "No ${ALLURE_FOLDER}/summary.json — skip Telegram"
             exit 0
           fi
-          CFG=notifications/config.ci.json
-          jq \
-            --arg p "${NOTIFICATION_PROJECT}" \
-            --arg b "${BUILD_URL}" \
-            --arg af "${ALLURE_FOLDER}" \
-            --arg ar "${ALLURE_RESULTS}" \
-            '.base.project = $p
-             | .base.links.build = $b
-             | .base.allureFolder = $af
-             | .base.allureResultsFolder = $ar' \
-            notifications/config.json > "$CFG"
+          if [ "${GH_PAGES_DEPLOYED}" = "true" ]; then
+            export ALLURE_REPORT_URL="${GH_PAGES_BASE}/reports/latest/awesome/index.html"
+            export ALLURE_DASHBOARD_URL="${GH_PAGES_BASE}/reports/latest/dashboard/index.html"
+          else
+            export ALLURE_REPORT_URL=""
+            export ALLURE_DASHBOARD_URL=""
+          fi
+          node scripts/render-notifications-config.mjs
           if [ "${NOTIFICATION_MODE}" = "live" ]; then
             MODE_FLAG="--live"
           else
             MODE_FLAG="--dry-run"
           fi
           npx --no-install allure-notifications send \
-            --config "$CFG" \
+            --config notifications/config.runtime.json \
             "${MODE_FLAG}" \
             --out collage.png
-
-  report-harness-backend:
-    name: report-harness-backend
-    needs: tests-harness-backend
-    if: ${{ always() && !cancelled() && needs.tests-harness-backend.result != 'skipped' }}
-    continue-on-error: true
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    permissions:
-      contents: read
-    env:
-      REPORT_LAYER: harness-backend
-      REPORT_NOTIFY: "true"
-    steps: *report-steps
-
-  report-component:
-    name: report-component
-    needs: component-tests
-    if: ${{ always() && !cancelled() && needs.component-tests.result != 'skipped' }}
-    continue-on-error: true
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    permissions:
-      contents: read
-    env:
-      REPORT_LAYER: component
-      REPORT_NOTIFY: "false"
-    steps: *report-steps
-
-  report-harness-frontend:
-    name: report-harness-frontend
-    needs: tests-harness-frontend
-    if: ${{ always() && !cancelled() && needs.tests-harness-frontend.result != 'skipped' }}
-    continue-on-error: true
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    permissions:
-      contents: read
-    env:
-      REPORT_LAYER: harness-frontend
-      REPORT_NOTIFY: "true"
-    steps: *report-steps
-
-  report-e2e-mock:
-    name: report-e2e-mock
-    needs: e2e-mock-tests
-    if: ${{ always() && !cancelled() && needs.e2e-mock-tests.result != 'skipped' }}
-    continue-on-error: true
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    permissions:
-      contents: read
-    env:
-      REPORT_LAYER: e2e-mock
-      REPORT_NOTIFY: "true"
-    steps: *report-steps
-
-  report-integration:
-    name: report-integration
-    needs: integration-tests
-    if: ${{ always() && !cancelled() && needs.integration-tests.result != 'skipped' }}
-    continue-on-error: true
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    permissions:
-      contents: read
-    env:
-      REPORT_LAYER: integration
-      REPORT_NOTIFY: "true"
-    steps: *report-steps
-
-  report-api:
-    name: report-api
-    needs: api-tests
-    if: ${{ always() && !cancelled() && needs.api-tests.result != 'skipped' }}
-    continue-on-error: true
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    permissions:
-      contents: read
-    env:
-      REPORT_LAYER: api
-      REPORT_NOTIFY: "true"
-    steps: *report-steps
-
-  report-e2e:
-    name: report-e2e
-    needs: e2e-tests
-    if: ${{ always() && !cancelled() && needs.e2e-tests.result != 'skipped' }}
-    continue-on-error: true
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    permissions:
-      contents: read
-    env:
-      REPORT_LAYER: e2e
-      REPORT_NOTIFY: "true"
-    steps: *report-steps
-
-  report-e2e-baselines:
-    name: report-e2e-baselines
-    needs: e2e-update-baselines
-    if: ${{ always() && !cancelled() && needs.e2e-update-baselines.result != 'skipped' }}
-    continue-on-error: true
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    permissions:
-      contents: read
-    env:
-      REPORT_LAYER: e2e-baselines
-      REPORT_NOTIFY: "true"
-    steps: *report-steps
-
-  report-manual:
-    name: report-manual
-    needs: manual-tests
-    if: ${{ always() && !cancelled() && needs.manual-tests.result != 'skipped' }}
-    continue-on-error: true
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    permissions:
-      contents: read
-    env:
-      REPORT_LAYER: manual
-      REPORT_NOTIFY: "true"
-    steps: *report-steps
