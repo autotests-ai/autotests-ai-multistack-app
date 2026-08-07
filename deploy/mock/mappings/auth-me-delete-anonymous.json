@@ -1,0 +1,10 @@
+{
+  "priority": 10,
+  "request": {
+    "method": "DELETE",
+    "urlPath": "/api/auth/me"
+  },
+  "response": {
+    "status": 401
+  }
+}
