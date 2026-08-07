@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test;
 class HeaderActiveNavTests extends TestBase {
 
     @Test
-    @Tag("smoke")
     @Severity(SeverityLevel.MINOR)
     @DisplayName("Direct /login load highlights Login")
     void directLoginLoadHighlightsLogin() {
@@ -25,7 +24,6 @@ class HeaderActiveNavTests extends TestBase {
     }
 
     @Test
-    @Tag("smoke")
     @Severity(SeverityLevel.MINOR)
     @DisplayName("Direct /register load highlights Register")
     void directRegisterLoadHighlightsRegister() {
@@ -34,7 +32,6 @@ class HeaderActiveNavTests extends TestBase {
     }
 
     @Test
-    @Tag("smoke")
     @Severity(SeverityLevel.MINOR)
     @DisplayName("In-form link Register -> Login re-syncs the active item")
     void inFormLinkFromRegisterToLoginSyncsHeader() {
@@ -45,7 +42,6 @@ class HeaderActiveNavTests extends TestBase {
     }
 
     @Test
-    @Tag("smoke")
     @Severity(SeverityLevel.MINOR)
     @DisplayName("In-form link Login -> Register re-syncs the active item")
     void inFormLinkFromLoginToRegisterSyncsHeader() {

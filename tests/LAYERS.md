@@ -79,7 +79,6 @@ shapes as the real controllers, including `401` on `/api/auth/me` without a bear
 
 `@Tag("mock")` — four mount tests (Home / Login / Register):
 `HomeLayoutTests`, `LoginFormTests`, `LoginEmbedTests`, `RegisterFormTests`.
-They also carry `@Tag("smoke")` for local thin UI runs (`-DincludeTags=smoke`).
 
 ```bash
 docker compose --profile mock up -d stand-gateway   # :9911 + api-mock + react frontend

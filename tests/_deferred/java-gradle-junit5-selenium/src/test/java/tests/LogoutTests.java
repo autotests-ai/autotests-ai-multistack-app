@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test;
 class LogoutTests extends TestBase {
 
     @Test
-    @Tag("smoke")
     @Tag("positive")
     @Severity(SeverityLevel.NORMAL)
     @DisplayName("User can logout after form login")

@@ -20,7 +20,6 @@ class LoginTests extends TestBase {
     private static final String WRONG_CREDENTIALS = "Wrong login or password";
 
     @Test
-    @Tag("smoke")
     @Tag("positive")
     @Severity(SeverityLevel.CRITICAL)
     @DisplayName("User is logged in with valid credentials")
@@ -31,7 +30,6 @@ class LoginTests extends TestBase {
     }
 
     @Test
-    @Tag("smoke")
     @Tag("negative")
     @Severity(SeverityLevel.NORMAL)
     @DisplayName("Empty username shows validation error")
@@ -43,7 +41,6 @@ class LoginTests extends TestBase {
     }
 
     @Test
-    @Tag("smoke")
     @Tag("negative")
     @Severity(SeverityLevel.NORMAL)
     @DisplayName("Empty password shows validation error")
@@ -55,7 +52,6 @@ class LoginTests extends TestBase {
     }
 
     @Test
-    @Tag("smoke")
     @Tag("negative")
     @Severity(SeverityLevel.CRITICAL)
     @DisplayName("Wrong password shows readable error")

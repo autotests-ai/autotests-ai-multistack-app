@@ -19,7 +19,6 @@ class HomeLayoutTests extends TestBase {
 
     @Test
     @Tag("e2e")
-    @Tag("smoke")
     @Tag("mock")
     @DisplayName("Home shows embedded header and reference layout")
     void homeLayoutIsMounted() {

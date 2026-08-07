@@ -25,7 +25,7 @@ One task `test`; the layer is a tag filter, the stand is `-Denv` ([../../LAYERS.
 | harness-frontend | `./gradlew test -Denv=reference_ci -DincludeTags=harness-frontend` | CSS + HAR helpers · CI frontend lane |
 | integration | `./gradlew test -Denv=reference_ci -DincludeTags=integration` | wired backend smoke · `tests/integration/` (health, PostgreSQL items, auth round-trip, seed) |
 | api | `./gradlew test -Denv=reference_ci -DincludeTags=api` | Rest Assured · `tests/api/` (`AuthApiTests`, `ReferenceApiTests`) |
-| e2e smoke | `./gradlew test -Denv=reference_ci -DincludeTags=smoke` | thin UI slice (`@Tag e2e` + `smoke`); FE lane → `sonar-tests` |
+| mock | `./gradlew test -Denv=reference_mock -DincludeTags=mock` | stub API mount checks · CI job `e2e-mock-tests` |
 | e2e | `./gradlew test -Denv=reference_ci -DincludeTags=e2e -DexcludeTags=visual` | flow; add `,visual` for PNG baselines |
 | e2e baselines | `./gradlew test -Denv=reference_ci -DincludeTags=visual -DupdateBaselines=true` | refresh PNGs under `src/test/resources/screenshots/` |
 | manual | `./gradlew test -Denv=reference_ci -DincludeTags=manual` | **in code** — `@Manual` + Allure steps · `tests/manual/` (not a wiki checklist) |

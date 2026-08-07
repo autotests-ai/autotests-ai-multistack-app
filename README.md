@@ -74,13 +74,13 @@ Canon: [tests/LAYERS.md](tests/LAYERS.md) · all jobs live in [`.github/workflow
 |-----|-------|
 | `unit-tests` | `BACKEND_DIR` — command by `BACKEND_LANG` (gradle/JaCoCo, pytest, `go test`, or `npm test`) |
 | `tests-harness-backend` | `TESTS_DIR` — java: `-DincludeTags=harness-backend` + JaCoCo (`ConfigReader`); PR without deploy; on `main` after `deploy-backend`, before `integration-tests` |
-| `tests-harness-frontend` | `TESTS_DIR` — java: `-DincludeTags=harness-frontend` + JaCoCo (CSS/HAR helpers); PR without deploy; on `main` after `deploy-frontend`, before `e2e-smoke` |
+| `tests-harness-frontend` | `TESTS_DIR` — java: `-DincludeTags=harness-frontend` + JaCoCo (CSS/HAR helpers); PR without deploy; on `main` after `deploy-frontend`, before `e2e-mock-tests` |
 | `component-tests` | `FRONTEND_DIR` — `npm test` |
 | `integration-tests` | `TESTS_DIR` — after harness-backend (java: `-DincludeTags=integration`); dispatch `layers=integration\|api\|all` |
 | `api-tests` | `TESTS_DIR` — after `integration-tests` (java: `-DincludeTags=api`); dispatch `layers=api\|all` |
-| `e2e-smoke` | after harness-frontend on push — java: `-DincludeTags=smoke` (FE lane; mock-backend target) |
+| `e2e-mock-tests` | after harness-frontend on push — java: `-Denv=reference_mock -DincludeTags=mock` (stub API on runner) |
 | `sonar-tests` | after **both** harness jobs (PR + main); umbrella harness + tests-module Sonar gate |
-| `e2e-tests` | after `api-tests` + `e2e-smoke` + `sonar-tests` — java: `-DincludeTags=e2e`; dispatch `layers=e2e\|all` |
+| `e2e-tests` | after `api-tests` + `e2e-mock-tests` + `sonar-tests` — java: `-DincludeTags=e2e`; dispatch `layers=e2e\|all` |
 | `e2e-update-baselines` | dispatch `update_baselines=true` — java: `-DincludeTags=visual -DupdateBaselines=true` |
 | `manual-tests` | after `e2e-tests`; dispatch `layers=manual\|all` — java: `-DincludeTags=manual` |
 
@@ -159,7 +159,7 @@ One workflow — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 | Event | Jobs |
 |-------|------|
 | pull request | `unit-tests` · `component-tests` · `tests-harness-backend` · `tests-harness-frontend` · `sonar-tests` |
-| push to `main` | same four → BE lane through `api-tests`; FE lane through `e2e-smoke`; both harness → `sonar-tests`; join at `e2e-tests` → `manual-tests` |
+| push to `main` | same four → BE lane through `api-tests`; FE lane through `e2e-mock-tests`; both harness → `sonar-tests`; join at `e2e-tests` → `manual-tests` |
 
 `build` runs `docker compose build` + `docker compose push`, so `docker-compose.yml` stays the only place describing how an image is built. Images go to GHCR as `ghcr.io/autotests-ai/reference-app-copy-<service>:<sha>`; the tag comes from `IMAGE_TAG` (defaults to `latest` locally).
 

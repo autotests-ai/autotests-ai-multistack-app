@@ -18,7 +18,6 @@ import java.util.UUID;
 class RegisterTests extends TestBase {
 
     @Test
-    @Tag("smoke")
     @Tag("positive")
     @Severity(SeverityLevel.CRITICAL)
     @DisplayName("New user can register and land on home")

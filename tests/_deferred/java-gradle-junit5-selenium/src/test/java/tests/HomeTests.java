@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test;
 class HomeTests extends TestBase {
 
     @Test
-    @Tag("smoke")
     @Severity(SeverityLevel.BLOCKER)
     @DisplayName("Page load fetches health and items from API")
     void pageLoadFetchesItems() {
