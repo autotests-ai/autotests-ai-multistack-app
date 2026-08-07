@@ -41,6 +41,6 @@ describe('registerServiceWorker', () => {
     vi.stubEnv('DEV', false);
     vi.stubGlobal('navigator', {});
 
-    registerServiceWorker();
+    expect(() => registerServiceWorker()).not.toThrow();
   });
 });

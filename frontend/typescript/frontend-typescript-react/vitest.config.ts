@@ -32,7 +32,15 @@ export default defineConfig({
       reporter: ['text', 'lcov'],
       reportsDirectory: './coverage',
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/test/**', 'src/**/*.d.ts'],
+      // main.tsx / styles.ts are bootstrap (createRoot, CSS imports) — nothing to assert in jsdom.
+      exclude: ['src/test/**', 'src/**/*.d.ts', 'src/main.tsx', 'src/styles.ts'],
+      // Regression floor, not a target: raise when coverage grows, never lower silently.
+      thresholds: {
+        lines: 92,
+        statements: 92,
+        branches: 82,
+        functions: 95,
+      },
     },
   },
 });

@@ -141,6 +141,21 @@ describe('HomePage', () => {
     expect(localStorage.getItem('authToken')).toBeNull();
   });
 
+  it('shows health error state when health API fails', async () => {
+    stubDefaultApis((url) => {
+      if (url.includes('/api/health')) {
+        return jsonResponse({ message: 'down' }, false, 500);
+      }
+      return null;
+    });
+
+    renderHome();
+
+    await waitFor(() =>
+      expect(screen.getByTestId('health-status')).toHaveTextContent('✗ health: HTTP 500'),
+    );
+  });
+
   it('shows items error state when items API fails', async () => {
     stubDefaultApis((url) => {
       if (url.includes('/api/items')) {
