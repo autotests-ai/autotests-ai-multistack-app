@@ -22,6 +22,7 @@ class RegisterFormTests extends TestBase {
 
     @Test
     @Tag("e2e")
+    @Tag("smoke")
     @Tag("mock")
     @DisplayName("Register form fields and submit are visible")
     void registerFormIsMounted() {
