@@ -8,7 +8,7 @@ name: CI
 # names and RUN_LABEL are derived from them. Swap TESTS / TESTS_DIR / TESTS_LANG (or
 # BACKEND / FRONTEND) when the teaching default changes; job ids stay layer names.
 #
-# Allure: test jobs publish raw results; a non-gating reporting matrix handles
+# Allure: test jobs publish raw results; non-gating per-layer reporting jobs handle
 # TestOps upload, static reports and Telegram without blocking the delivery DAG.
 # Pyramid layers (classical): unit · integration (no UI) · api · e2e · manual
 # Sideways FE: component (jsdom). Visual (@Tag visual) inside e2e; baselines → e2e-update-baselines.
@@ -122,42 +122,8 @@ env:
   ALLURE_PROJECT_ID: ${{ vars.ALLURE_PROJECT_ID }}
 
 jobs:
-  changes:
-    runs-on: ubuntu-24.04
-    outputs:
-      backend: ${{ steps.set.outputs.backend }}
-      frontend: ${{ steps.set.outputs.frontend }}
-      tests: ${{ steps.set.outputs.tests }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Detect changed paths
-        id: set
-        env:
-          BEFORE: ${{ github.event.before }}
-        run: |
-          set -euo pipefail
-          emit() { printf '%s=%s\n' "$1" "$2" >> "$GITHUB_OUTPUT"; }
-          if [ "${{ github.event_name }}" != "push" ] || [ "${{ github.ref }}" != "refs/heads/main" ]; then
-            emit backend false; emit frontend false; emit tests false
-            exit 0
-          fi
-          # Force-push and first-push leave `before` unusable (nulled, or a commit this clone
-          # never fetched); diffing against it aborts the job, so fall back to "everything".
-          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] \
-             || ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
-            emit backend true; emit frontend true; emit tests true
-            exit 0
-          fi
-          CHANGED="$(git diff --name-only "$BEFORE" "$GITHUB_SHA")"
-          match() { printf '%s\n' "$CHANGED" | grep -qE "$1"; }
-          SHARED='deploy/|docker-compose|\.github/workflows/ci\.yml'
-          match "^(backend/|${SHARED})"  && emit backend true  || emit backend false
-          match "^(frontend/|${SHARED})" && emit frontend true || emit frontend false
-          match "^(tests/|${SHARED})"    && emit tests true    || emit tests false
-
+  # Keep the backend root first: GitHub has no explicit graph coordinates and uses
+  # declaration order as a layout hint for otherwise independent jobs.
   unit-tests:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -261,6 +227,42 @@ jobs:
           path: ${{ env.BACKEND_DIR }}/build/allure-results/**
           if-no-files-found: ignore
           retention-days: 1
+
+  changes:
+    runs-on: ubuntu-24.04
+    outputs:
+      backend: ${{ steps.set.outputs.backend }}
+      frontend: ${{ steps.set.outputs.frontend }}
+      tests: ${{ steps.set.outputs.tests }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Detect changed paths
+        id: set
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          emit() { printf '%s=%s\n' "$1" "$2" >> "$GITHUB_OUTPUT"; }
+          if [ "${{ github.event_name }}" != "push" ] || [ "${{ github.ref }}" != "refs/heads/main" ]; then
+            emit backend false; emit frontend false; emit tests false
+            exit 0
+          fi
+          # Force-push and first-push leave `before` unusable (nulled, or a commit this clone
+          # never fetched); diffing against it aborts the job, so fall back to "everything".
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] \
+             || ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+            emit backend true; emit frontend true; emit tests true
+            exit 0
+          fi
+          CHANGED="$(git diff --name-only "$BEFORE" "$GITHUB_SHA")"
+          match() { printf '%s\n' "$CHANGED" | grep -qE "$1"; }
+          SHARED='deploy/|docker-compose|\.github/workflows/ci\.yml'
+          match "^(backend/|${SHARED})"  && emit backend true  || emit backend false
+          match "^(frontend/|${SHARED})" && emit frontend true || emit frontend false
+          match "^(tests/|${SHARED})"    && emit tests true    || emit tests false
 
   component-tests:
     runs-on: ubuntu-24.04
@@ -1325,52 +1327,22 @@ jobs:
           if-no-files-found: ignore
           retention-days: 1
 
-  # Non-gating observability fan-out. Test jobs expose only raw results, so builds,
-  # deploys and downstream test layers never wait for TestOps/report/Telegram work.
-  report-tests:
-    name: report-${{ matrix.layer }}
-    needs:
-      - unit-tests
-      - component-tests
-      - tests-harness-backend
-      - tests-harness-frontend
-      - e2e-mock-tests
-      - integration-tests
-      - api-tests
-      - e2e-tests
-      - e2e-update-baselines
-      - manual-tests
-    if: ${{ always() && !cancelled() }}
+  # Non-gating observability leaves. Each reporter depends only on its producer,
+  # keeping graph edges local while builds, deploys and later tests stay unblocked.
+  # GitHub supports YAML anchors; the shared steps remain a single source of truth.
+  report-unit:
+    name: report-unit
+    needs: unit-tests
+    if: ${{ always() && !cancelled() && needs.unit-tests.result != 'skipped' }}
     continue-on-error: true
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - layer: unit
-            notify: false
-          - layer: component
-            notify: false
-          - layer: harness-backend
-            notify: true
-          - layer: harness-frontend
-            notify: true
-          - layer: e2e-mock
-            notify: true
-          - layer: integration
-            notify: true
-          - layer: api
-            notify: true
-          - layer: e2e
-            notify: true
-          - layer: e2e-baselines
-            notify: true
-          - layer: manual
-            notify: true
-    steps:
+    env:
+      REPORT_LAYER: unit
+      REPORT_NOTIFY: "false"
+    steps: &report-steps
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
@@ -1379,7 +1351,7 @@ jobs:
         continue-on-error: true
         uses: actions/download-artifact@v8
         with:
-          name: allure-results-${{ matrix.layer }}
+          name: allure-results-${{ env.REPORT_LAYER }}
           path: allure-results
       - name: Install pinned allurectl
         if: steps.results.outcome == 'success' && env.ALLURE_PROJECT_ID != ''
@@ -1392,11 +1364,11 @@ jobs:
         continue-on-error: true
         env:
           ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
-          ALLURE_LAUNCH_NAME: "${{ matrix.layer }} — ${{ env.RUN_LABEL }}"
-          ALLURE_JOB_UID: "${{ github.repository }}/actions/workflows/ci.yml/${{ matrix.layer }}"
-          ALLURE_JOB_RUN_UID: "${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.layer }}"
-          ALLURE_JOB_NAME: "${{ github.repository }} — ${{ matrix.layer }}"
-          ALLURE_JOB_RUN_NAME: "${{ matrix.layer }} #${{ github.run_number }}.${{ github.run_attempt }}"
+          ALLURE_LAUNCH_NAME: "${{ env.REPORT_LAYER }} — ${{ env.RUN_LABEL }}"
+          ALLURE_JOB_UID: "${{ github.repository }}/actions/workflows/ci.yml/${{ env.REPORT_LAYER }}"
+          ALLURE_JOB_RUN_UID: "${{ github.run_id }}-${{ github.run_attempt }}-${{ env.REPORT_LAYER }}"
+          ALLURE_JOB_NAME: "${{ github.repository }} — ${{ env.REPORT_LAYER }}"
+          ALLURE_JOB_RUN_NAME: "${{ env.REPORT_LAYER }} #${{ github.run_number }}.${{ github.run_attempt }}"
         run: |
           set -euo pipefail
           if [ -z "${ALLURE_TOKEN:-}" ]; then
@@ -1428,16 +1400,16 @@ jobs:
         continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
-          name: allure-report-${{ matrix.layer }}-tests
+          name: allure-report-${{ env.REPORT_LAYER }}-tests
           path: allure-report/
           if-no-files-found: ignore
           retention-days: 14
       - name: Send Allure Telegram notification
-        if: matrix.notify && steps.allure-report.outcome == 'success'
+        if: env.REPORT_NOTIFY == 'true' && steps.allure-report.outcome == 'success'
         continue-on-error: true
         working-directory: ${{ env.TESTS_DIR }}
         env:
-          NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} ${{ matrix.layer }} #${{ github.run_number }}"
+          NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} ${{ env.REPORT_LAYER }} #${{ github.run_number }}"
           BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID || '-1004381150566' }}
@@ -1475,3 +1447,129 @@ jobs:
             --config "$CFG" \
             "${MODE_FLAG}" \
             --out collage.png
+
+  report-harness-backend:
+    name: report-harness-backend
+    needs: tests-harness-backend
+    if: ${{ always() && !cancelled() && needs.tests-harness-backend.result != 'skipped' }}
+    continue-on-error: true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      REPORT_LAYER: harness-backend
+      REPORT_NOTIFY: "true"
+    steps: *report-steps
+
+  report-component:
+    name: report-component
+    needs: component-tests
+    if: ${{ always() && !cancelled() && needs.component-tests.result != 'skipped' }}
+    continue-on-error: true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      REPORT_LAYER: component
+      REPORT_NOTIFY: "false"
+    steps: *report-steps
+
+  report-harness-frontend:
+    name: report-harness-frontend
+    needs: tests-harness-frontend
+    if: ${{ always() && !cancelled() && needs.tests-harness-frontend.result != 'skipped' }}
+    continue-on-error: true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      REPORT_LAYER: harness-frontend
+      REPORT_NOTIFY: "true"
+    steps: *report-steps
+
+  report-e2e-mock:
+    name: report-e2e-mock
+    needs: e2e-mock-tests
+    if: ${{ always() && !cancelled() && needs.e2e-mock-tests.result != 'skipped' }}
+    continue-on-error: true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      REPORT_LAYER: e2e-mock
+      REPORT_NOTIFY: "true"
+    steps: *report-steps
+
+  report-integration:
+    name: report-integration
+    needs: integration-tests
+    if: ${{ always() && !cancelled() && needs.integration-tests.result != 'skipped' }}
+    continue-on-error: true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      REPORT_LAYER: integration
+      REPORT_NOTIFY: "true"
+    steps: *report-steps
+
+  report-api:
+    name: report-api
+    needs: api-tests
+    if: ${{ always() && !cancelled() && needs.api-tests.result != 'skipped' }}
+    continue-on-error: true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      REPORT_LAYER: api
+      REPORT_NOTIFY: "true"
+    steps: *report-steps
+
+  report-e2e:
+    name: report-e2e
+    needs: e2e-tests
+    if: ${{ always() && !cancelled() && needs.e2e-tests.result != 'skipped' }}
+    continue-on-error: true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      REPORT_LAYER: e2e
+      REPORT_NOTIFY: "true"
+    steps: *report-steps
+
+  report-e2e-baselines:
+    name: report-e2e-baselines
+    needs: e2e-update-baselines
+    if: ${{ always() && !cancelled() && needs.e2e-update-baselines.result != 'skipped' }}
+    continue-on-error: true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      REPORT_LAYER: e2e-baselines
+      REPORT_NOTIFY: "true"
+    steps: *report-steps
+
+  report-manual:
+    name: report-manual
+    needs: manual-tests
+    if: ${{ always() && !cancelled() && needs.manual-tests.result != 'skipped' }}
+    continue-on-error: true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      REPORT_LAYER: manual
+      REPORT_NOTIFY: "true"
+    steps: *report-steps
