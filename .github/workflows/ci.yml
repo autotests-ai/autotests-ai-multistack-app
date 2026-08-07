@@ -1145,11 +1145,14 @@ jobs:
         working-directory: ${{ env.TESTS_DIR }}
         run: scripts/install-chrome-for-testing.sh --verify
       # stand-gateway serves the SPA and proxies /api/ to WireMock stubs (deploy/mock/mappings).
+      # Naming the service is load-bearing: a bare `up` also starts every profile-less service,
+      # so --build would compile all twelve backends the mock stand never talks to. depends_on
+      # pulls in exactly frontend-typescript-react (built) and api-mock (pulled).
       - if: env.TESTS_LANG == 'java'
         name: Bring up mock stand
         run: |
           set -euo pipefail
-          docker compose --profile mock up -d --build
+          docker compose --profile mock up -d --build stand-gateway
           curl -fsS --retry 30 --retry-delay 2 --retry-all-errors \
             "http://127.0.0.1:${MOCK_GATEWAY_PORT}/api/health"
         env:

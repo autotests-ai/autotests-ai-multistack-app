@@ -81,7 +81,7 @@ shapes as the real controllers, including `401` on `/api/auth/me` without a bear
 `HomeLayoutTests`, `LoginFormTests`, `LoginEmbedTests`, `RegisterFormTests`.
 
 ```bash
-docker compose --profile mock up -d          # stand-gateway :9911 + api-mock + frontend
+docker compose --profile mock up -d stand-gateway   # :9911 + api-mock + react frontend
 ./gradlew test -Denv=reference_mock -DincludeTags=mock
 ```
 
@@ -109,7 +109,7 @@ task — `test`:
 | Stand (`-Denv`) | Where it points |
 |-----------------|-----------------|
 | `reference_ci` | the compose stack on this machine — UI `:9811`, API `:8800` (`docker compose up -d` first) |
-| `reference_mock` | mock profile — UI + stub API same origin `:9911` (`docker compose --profile mock up -d` first) |
+| `reference_mock` | mock profile — UI + stub API same origin `:9911` (`docker compose --profile mock up -d stand-gateway` first) |
 | `reference_prod` | [reference-app-copy.autotests.ai/backend-java-spring](https://reference-app-copy.autotests.ai/backend-java-spring), browsers from the Selenoid hub |
 
 Anything else — `headless`, `enableHar`, `enableVideo`, `updateBaselines`, `allureReportMode` — is a
