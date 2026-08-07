@@ -78,4 +78,35 @@ class CorsConfigTest extends UnitTestBase {
         assertTrue(CorsConfig.sameHost("https://reference-app-copy.autotests.ai", request));
         assertFalse(CorsConfig.sameHost("https://evil.example.com", request));
     }
+
+    @Test
+    @DisplayName("sameHost falls back to server name when Host header is absent")
+    void sameHostUsesServerName() {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/auth/login");
+        request.setServerName("reference-app-copy.autotests.ai");
+
+        assertTrue(CorsConfig.sameHost("https://reference-app-copy.autotests.ai", request));
+    }
+
+    @Test
+    @DisplayName("sameHost rejects malformed and host-less origins")
+    void sameHostRejectsInvalidOrigin() {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/auth/login");
+        request.addHeader(HttpHeaders.HOST, "reference-app-copy.autotests.ai");
+
+        assertFalse(CorsConfig.sameHost("not-a-uri", request));
+        assertFalse(CorsConfig.sameHost("file:///tmp/page.html", request));
+        assertFalse(CorsConfig.sameHost("http://bad uri", request));
+    }
+
+    @Test
+    @DisplayName("corsForRequest ignores non-API paths and null requests")
+    void corsForRequestSkipsNonApiPaths() {
+        CorsConfig corsConfig = new CorsConfig(DEV_ORIGINS);
+        CorsConfiguration template = corsConfig.corsConfigurationSource()
+                .getCorsConfiguration(new MockHttpServletRequest("GET", "/api/health"));
+
+        assertNull(corsConfig.corsForRequest(null, template));
+        assertNull(corsConfig.corsForRequest(new MockHttpServletRequest("GET", "/"), template));
+    }
 }
