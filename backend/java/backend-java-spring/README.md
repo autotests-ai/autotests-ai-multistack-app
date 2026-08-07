@@ -10,8 +10,12 @@ https://reference-app-copy.autotests.ai/backend-java-spring/{frontend}/
 https://reference-app-copy.autotests.ai/backend-java-spring/api/
 ```
 
-Unit tests: `src/test/java/`.
-Run: `./gradlew check` (JaCoCo gate: 100% line coverage).
+Tests: `src/test/java/` — plain units, `@WebMvcTest` slices (suite label `slice`) and a
+persistence slice (`@DataJpaTest` + Testcontainers PostgreSQL: Flyway migrations, seed,
+unique constraint against the real database — **requires a running Docker daemon**, same
+as docker-compose for the app itself).
+Run: `./gradlew check` (JaCoCo gate: 100% line **and** 100% branch coverage — earned by
+behavioral tests; entity plumbing is executed by the persistence slice, not by reflection).
 
 ## Contract
 
@@ -26,6 +30,12 @@ Run: `./gradlew check` (JaCoCo gate: 100% line coverage).
 | POST | `/api/auth/login` | — | 200 | `{"token","username","redirectUrl":"/"}` |
 | POST | `/api/auth/logout` | — | 204 | empty |
 | GET | `/api/auth/me` | Bearer | 200 | `{"username"}` |
+| DELETE | `/api/auth/me` | Bearer | 204 | empty |
+
+Logout is **stateless by design**: it never invalidates the JWT server-side — the token keeps
+verifying until it expires or the account is deleted. `DELETE /api/auth/me` is the authenticated
+self-delete: after it, the same token yields 401 (user row is gone) — and test suites use it to
+clean up the accounts they register.
 
 Errors are always `{"message": "..."}`:
 

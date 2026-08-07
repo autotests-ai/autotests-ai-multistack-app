@@ -7,7 +7,7 @@ import dev.reference.app.dto.ItemDto;
 import dev.reference.app.dto.ItemsResponse;
 import dev.reference.app.service.ItemService;
 import dev.reference.app.service.JwtService;
-import dev.reference.app.allure.UnitTestBase;
+import dev.reference.app.allure.SliceTestBase;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = ApiController.class)
 @Import({SecurityConfig.class, CorsConfig.class})
 @DisplayName("ApiController")
-class ApiControllerTest extends UnitTestBase {
+class ApiControllerTest extends SliceTestBase {
 
     @Autowired
     private MockMvc mockMvc;

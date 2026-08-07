@@ -178,4 +178,29 @@ class AuthServiceTest extends UnitTestBase {
         assertEquals(401, ex.getStatus());
         assertEquals("Unauthorized", ex.getMessage());
     }
+
+    @Test
+    @DisplayName("deleteAccount removes the authenticated user")
+    void deleteAccountRemovesUser() {
+        var user = new UserEntity(USERNAME, HASH);
+        when(userRepository.findByUsername(USERNAME)).thenReturn(Optional.of(user));
+
+        authService.deleteAccount(USERNAME);
+
+        verify(userRepository).delete(user);
+    }
+
+    @Test
+    @DisplayName("deleteAccount rejects a user that no longer exists")
+    void deleteAccountUnknownUser() {
+        when(userRepository.findByUsername(USERNAME)).thenReturn(Optional.empty());
+
+        AuthException ex = assertThrows(
+                AuthException.class,
+                () -> authService.deleteAccount(USERNAME)
+        );
+
+        assertEquals(401, ex.getStatus());
+        assertEquals("Unauthorized", ex.getMessage());
+    }
 }

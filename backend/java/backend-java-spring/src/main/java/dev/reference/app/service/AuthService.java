@@ -68,6 +68,18 @@ public class AuthService {
         return new UserProfileResponse(username);
     }
 
+    /**
+     * Authenticated self-delete. Tokens are stateless, so a JWT issued earlier keeps verifying
+     * after deletion — but every endpoint that resolves the user ({@code /me}, this one) answers
+     * 401 once the row is gone. Also lets test suites clean up the users they register.
+     */
+    @Transactional
+    public void deleteAccount(String username) {
+        UserEntity user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AuthException(401, "Unauthorized"));
+        userRepository.delete(user);
+    }
+
     private AuthResponse buildAuthResponse(String username) {
         return new AuthResponse(
                 jwtService.createToken(username),

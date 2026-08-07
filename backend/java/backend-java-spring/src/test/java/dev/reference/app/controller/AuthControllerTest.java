@@ -9,7 +9,7 @@ import dev.reference.app.dto.UserProfileResponse;
 import dev.reference.app.exception.AuthException;
 import dev.reference.app.service.AuthService;
 import dev.reference.app.service.JwtService;
-import dev.reference.app.allure.UnitTestBase;
+import dev.reference.app.allure.SliceTestBase;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -26,10 +26,13 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -41,7 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = AuthController.class)
 @Import({AuthExceptionHandler.class, SecurityConfig.class, CorsConfig.class})
 @DisplayName("AuthController")
-class AuthControllerTest extends UnitTestBase {
+class AuthControllerTest extends SliceTestBase {
 
     @Autowired
     private MockMvc mockMvc;
@@ -135,12 +138,43 @@ class AuthControllerTest extends UnitTestBase {
     }
 
     @Test
-    @DisplayName("POST /api/auth/register rejects short password with 400")
+    @DisplayName("POST /api/auth/register rejects short password with 400 and a field message")
     void registerRejectsShortPassword() throws Exception {
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"shortuser\",\"password\":\"abc\"}"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", containsString("password")));
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/login rejects blank credentials with 400 joining both field errors")
+    void loginRejectsBlankCredentials() throws Exception {
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"\",\"password\":\"\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", allOf(
+                        containsString("username"),
+                        containsString("password"),
+                        containsString("; "))));
+    }
+
+    @Test
+    @DisplayName("DELETE /api/auth/me removes the authenticated account with 204")
+    void deleteAccountReturnsNoContent() throws Exception {
+        mockMvc.perform(delete("/api/auth/me")
+                        .with(authentication(new UsernamePasswordAuthenticationToken("user1", null, List.of()))))
+                .andExpect(status().isNoContent());
+
+        verify(authService).deleteAccount("user1");
+    }
+
+    @Test
+    @DisplayName("DELETE /api/auth/me without token returns 401")
+    void deleteAccountRequiresAuthentication() throws Exception {
+        mockMvc.perform(delete("/api/auth/me"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

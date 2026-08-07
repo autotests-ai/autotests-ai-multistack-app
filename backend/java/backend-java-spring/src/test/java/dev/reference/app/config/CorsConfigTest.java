@@ -6,11 +6,14 @@ import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
+import jakarta.servlet.http.HttpServletRequest;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -108,5 +111,33 @@ class CorsConfigTest extends UnitTestBase {
 
         assertNull(corsConfig.corsForRequest(null, template));
         assertNull(corsConfig.corsForRequest(new MockHttpServletRequest("GET", "/"), template));
+    }
+
+    @Test
+    @DisplayName("corsForRequest does not admit a foreign origin from another host")
+    void corsForRequestIgnoresForeignOrigin() {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/auth/login");
+        request.addHeader(HttpHeaders.HOST, "reference-app-copy.autotests.ai");
+        request.addHeader(HttpHeaders.ORIGIN, "https://evil.example.com");
+
+        CorsConfiguration cors = new CorsConfig(DEV_ORIGINS)
+                .corsConfigurationSource()
+                .getCorsConfiguration(request);
+
+        assertNotNull(cors);
+        assertEquals(DEV_ORIGINS, cors.getAllowedOriginPatterns());
+        assertNull(cors.checkOrigin("https://evil.example.com"));
+    }
+
+    @Test
+    @DisplayName("sameHost falls back to server name when Host header is blank")
+    void sameHostFallsBackWhenHostHeaderBlank() {
+        // MockHttpServletRequest derives getServerName() from the Host header, so a blank
+        // header needs a hand-rolled stub to keep the two values independent.
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getHeader(HttpHeaders.HOST)).thenReturn("   ");
+        when(request.getServerName()).thenReturn("reference-app-copy.autotests.ai");
+
+        assertTrue(CorsConfig.sameHost("https://reference-app-copy.autotests.ai", request));
     }
 }
