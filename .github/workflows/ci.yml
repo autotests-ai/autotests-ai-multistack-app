@@ -8,8 +8,9 @@ name: CI
 # names and RUN_LABEL are derived from them. Swap TESTS / TESTS_DIR / TESTS_LANG (or
 # BACKEND / FRONTEND) when the teaching default changes; job ids stay layer names.
 #
-# Allure: test jobs publish raw results; publish-allure-report merges them once for
-# TestOps, GitHub Pages and send-allure-notifications (non-gating observability leaves).
+# Allure: testops-context opens one shared TestOps job-run; test jobs stream live and
+# publish raw results. publish-allure-report merges once for Pages/report, stops the
+# job-run and hands one launch URL to send-allure-notifications (all non-gating).
 # Pyramid layers (classical): unit · integration (no UI) · api · e2e · manual
 # Sideways FE: component (jsdom). Visual (@Tag visual) inside e2e; baselines → e2e-update-baselines.
 # CD on main (two lanes; deploy host serialized via concurrency group).
@@ -75,12 +76,23 @@ on:
         description: "Run e2e-tests, then e2e-update-baselines to refresh visual PNG baselines"
         type: boolean
         default: false
+      ALLURE_JOB_RUN_ID:
+        description: "Allure TestOps service parameter. Leave blank."
+        type: string
+        required: false
+        default: ""
+      ALLURE_USERNAME:
+        description: "Allure TestOps service parameter. Leave blank."
+        type: string
+        required: false
+        default: ""
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
+  actions: read
   contents: read
 
 env:
@@ -109,6 +121,9 @@ env:
   GO_VERSION: "1.25"
   CHROME_FOR_TESTING_VERSION: "148.0.7778.178"
   ALLURECTL_VERSION: "2.22.0"
+  ALLURE_JOB_RUN_ID: ${{ inputs.ALLURE_JOB_RUN_ID || '' }}
+  ALLURE_JOB_RUN_UID: ${{ github.run_id }}-${{ github.run_attempt }}
+  ALLURE_USERNAME: ${{ inputs.ALLURE_USERNAME || '' }}
   SONAR_SCANNER_NPM_VERSION: "5.0.0"
   SONAR_QUALITY_GATE_TIMEOUT: "600"
   # ── Derived (literals — workflow env cannot nest env.*; keep in sync above) ─
@@ -126,17 +141,153 @@ env:
   ALLURE_PROJECT_ID: ${{ vars.ALLURE_PROJECT_ID }}
 
 jobs:
+  # Create/adopt one TestOps job-run before tests fan out. This job is deliberately
+  # non-gating: missing credentials, fork PRs or a TestOps outage disable live upload
+  # without preventing the test jobs from running and publishing raw artifacts.
+  testops-context:
+    name: testops-context
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      enabled: ${{ steps.context.outputs.enabled }}
+      launch_id: ${{ steps.context.outputs.launch_id }}
+      job_run_id: ${{ steps.context.outputs.job_run_id }}
+      launch_url: ${{ steps.context.outputs.launch_url }}
+    steps:
+      - name: Check TestOps configuration
+        id: configured
+        env:
+          ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
+        run: |
+          if [ -n "${ALLURE_TOKEN:-}" ] && [ -n "${ALLURE_PROJECT_ID:-}" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "TestOps credentials unavailable — live upload disabled"
+          fi
+
+      - name: Install and configure pinned allurectl
+        if: steps.configured.outputs.enabled == 'true'
+        id: setup-allurectl
+        continue-on-error: true
+        uses: allure-framework/setup-allurectl@v1
+        with:
+          allurectl-version: ${{ env.ALLURECTL_VERSION }}
+          allure-endpoint: ${{ env.ALLURE_ENDPOINT }}
+          allure-token: ${{ secrets.ALLURE_TOKEN }}
+          allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
+
+      - name: Create or adopt shared TestOps context
+        id: context
+        if: always()
+        env:
+          ALLURE_LAUNCH_NAME: "${{ env.APP_SLUG }} CI — ${{ env.RUN_LABEL }}"
+        run: |
+          set +e
+          set -uo pipefail
+
+          emit_disabled() {
+            local cleanup_job_run_id="${1:-}"
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "launch_id=" >> "$GITHUB_OUTPUT"
+            echo "job_run_id=${cleanup_job_run_id}" >> "$GITHUB_OUTPUT"
+            echo "launch_url=" >> "$GITHUB_OUTPUT"
+          }
+
+          if [ "${{ steps.configured.outputs.enabled }}" != "true" ] ||
+             [ "${{ steps.setup-allurectl.outcome }}" != "success" ] ||
+             ! command -v allurectl >/dev/null 2>&1; then
+            emit_disabled
+            exit 0
+          fi
+
+          JOB_RUN_ID="${ALLURE_JOB_RUN_ID:-}"
+          if [ -z "$JOB_RUN_ID" ]; then
+            JOB_RUN_BRANCH="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
+            JOB_RUN_ID="$(
+              allurectl --http-timeout 30s job-run start \
+                --project-id "$ALLURE_PROJECT_ID" \
+                --ci-type github \
+                --ci-endpoint "$GITHUB_SERVER_URL" \
+                --job-name "$GITHUB_WORKFLOW" \
+                --job-uid "$ALLURE_JOB_UID" \
+                --job-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/workflows/ci.yml" \
+                --job-run-name "#$GITHUB_RUN_NUMBER.$GITHUB_RUN_ATTEMPT" \
+                --job-run-uid "$ALLURE_JOB_RUN_UID" \
+                --job-run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+                --job-run-branch "$JOB_RUN_BRANCH" \
+                --launch-name "$ALLURE_LAUNCH_NAME" \
+                --format ID \
+                --no-header
+            )"
+            START_EXIT=$?
+            JOB_RUN_ID="$(printf '%s' "$JOB_RUN_ID" | tr -d '[:space:]')"
+            if [ "$START_EXIT" -ne 0 ]; then
+              echo "Unable to create TestOps job-run — live upload disabled"
+              emit_disabled
+              exit 0
+            fi
+          fi
+
+          JOB_ENV="$(
+            allurectl --http-timeout 30s job-run env \
+              --project-id "$ALLURE_PROJECT_ID" \
+              --job-run-id "$JOB_RUN_ID"
+          )"
+          ENV_EXIT=$?
+          if [ "$ENV_EXIT" -ne 0 ]; then
+            echo "Unable to resolve TestOps job-run context — live upload disabled"
+            emit_disabled "$JOB_RUN_ID"
+            exit 0
+          fi
+
+          # `job-run env` is the official shell-assignment handoff contract.
+          # Export it locally, then expose only non-secret numeric IDs and URL.
+          # shellcheck disable=SC2046
+          export $(printf '%s\n' "$JOB_ENV")
+          if ! [[ "${ALLURE_JOB_RUN_ID:-}" =~ ^[0-9]+$ ]] ||
+             ! [[ "${ALLURE_LAUNCH_ID:-}" =~ ^[0-9]+$ ]]; then
+            echo "Invalid TestOps context IDs — live upload disabled"
+            emit_disabled "$JOB_RUN_ID"
+            exit 0
+          fi
+
+          LAUNCH_URL="${ALLURE_LAUNCH_URL:-${ALLURE_ENDPOINT%/}/launch/${ALLURE_LAUNCH_ID}}"
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+          echo "launch_id=${ALLURE_LAUNCH_ID}" >> "$GITHUB_OUTPUT"
+          echo "job_run_id=${ALLURE_JOB_RUN_ID}" >> "$GITHUB_OUTPUT"
+          echo "launch_url=${LAUNCH_URL}" >> "$GITHUB_OUTPUT"
+
   # Keep the backend root first: GitHub has no explicit graph coordinates and uses
   # declaration order as a layout hint for otherwise independent jobs.
   unit-tests:
+    needs: testops-context
+    if: always() && !cancelled()
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       LAYER: unit
+      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
+      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
+      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+
+      - &setup-live-allurectl
+        name: Install pinned allurectl for live upload
+        if: env.ALLURE_LIVE_ENABLED == 'true'
+        continue-on-error: true
+        uses: allure-framework/setup-allurectl@v1
+        with:
+          allurectl-version: ${{ env.ALLURECTL_VERSION }}
+          allure-endpoint: ${{ env.ALLURE_ENDPOINT }}
+          allure-token: ${{ secrets.ALLURE_TOKEN }}
+          allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
 
       # ── java / kotlin (Gradle + JaCoCo) ───────────────────────────────────
       - if: env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin'
@@ -169,7 +320,11 @@ jobs:
       - name: Run unit tests (Gradle + JaCoCo)
         if: env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin'
         id: run-tests
-        run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.BACKEND_DIR }}/build/allure-results
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          ./gradlew test jacocoTestReport jacocoTestCoverageVerification
         working-directory: ${{ env.BACKEND_DIR }}
       - if: (env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin') && steps.run-tests.outcome == 'success'
         uses: actions/upload-artifact@v7
@@ -193,7 +348,11 @@ jobs:
         working-directory: ${{ env.BACKEND_DIR }}
       - name: Run Python tests (pytest)
         if: env.BACKEND_LANG == 'python'
-        run: python -m pytest
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.BACKEND_DIR }}/build/allure-results
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          python -m pytest
         working-directory: ${{ env.BACKEND_DIR }}
 
       # ── go ───────────────────────────────────────────────────────────────
@@ -204,7 +363,11 @@ jobs:
           cache-dependency-path: ${{ env.BACKEND_DIR }}/go.sum
       - name: Run Go unit tests
         if: env.BACKEND_LANG == 'go'
-        run: go test ./...
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.BACKEND_DIR }}/build/allure-results
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          go test ./...
         working-directory: ${{ env.BACKEND_DIR }}
 
       # ── javascript / typescript ──────────────────────────────────────────
@@ -220,7 +383,11 @@ jobs:
         working-directory: ${{ env.BACKEND_DIR }}
       - name: Run backend unit tests (npm)
         if: env.BACKEND_LANG == 'javascript' || env.BACKEND_LANG == 'typescript'
-        run: npm test
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.BACKEND_DIR }}/build/allure-results
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          npm test
         working-directory: ${{ env.BACKEND_DIR }}
       - name: Publish raw Allure results
         if: always()
@@ -269,14 +436,20 @@ jobs:
           match "^(tests/|${SHARED})"    && emit tests true    || emit tests false
 
   component-tests:
+    needs: testops-context
+    if: always() && !cancelled()
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       LAYER: component
+      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
+      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
+      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+      - *setup-live-allurectl
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -293,7 +466,11 @@ jobs:
         working-directory: ${{ env.FRONTEND_DIR }}
       - name: Run component tests (Vitest + coverage)
         id: run-tests
-        run: npm test -- --coverage
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.FRONTEND_DIR }}/allure-results
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          npm test -- --coverage
         working-directory: ${{ env.FRONTEND_DIR }}
       - if: steps.run-tests.outcome == 'success'
         uses: actions/upload-artifact@v7
@@ -312,14 +489,20 @@ jobs:
           retention-days: 1
 
   tests-harness-backend:
+    needs: testops-context
+    if: always() && !cancelled()
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       LAYER: harness-backend
+      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
+      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
+      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+      - *setup-live-allurectl
 
       # ── java (Gradle tags + JaCoCo gate) ──────────────────────────────────
       - if: env.TESTS_LANG == 'java'
@@ -343,7 +526,12 @@ jobs:
       - name: Run harness-backend tests (Gradle)
         if: env.TESTS_LANG == 'java'
         id: run-tests
-        run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags=harness-backend
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          ./gradlew test jacocoTestReport jacocoTestCoverageVerification
+          -Denv=reference_ci -DincludeTags=harness-backend
         working-directory: ${{ env.TESTS_DIR }}
       - if: env.TESTS_LANG == 'java' && steps.run-tests.outcome == 'success'
         uses: actions/upload-artifact@v7
@@ -365,14 +553,20 @@ jobs:
           retention-days: 1
 
   tests-harness-frontend:
+    needs: testops-context
+    if: always() && !cancelled()
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       LAYER: harness-frontend
+      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
+      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
+      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+      - *setup-live-allurectl
 
       # ── java (Gradle tags + JaCoCo gate) ──────────────────────────────────
       - if: env.TESTS_LANG == 'java'
@@ -396,7 +590,12 @@ jobs:
       - name: Run harness-frontend tests (Gradle)
         if: env.TESTS_LANG == 'java'
         id: run-tests
-        run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags=harness-frontend
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          ./gradlew test jacocoTestReport jacocoTestCoverageVerification
+          -Denv=reference_ci -DincludeTags=harness-frontend
         working-directory: ${{ env.TESTS_DIR }}
       - if: env.TESTS_LANG == 'java' && steps.run-tests.outcome == 'success'
         uses: actions/upload-artifact@v7
@@ -424,7 +623,11 @@ jobs:
         working-directory: ${{ env.TESTS_DIR }}
       - name: Run tests (npm)
         if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
-        run: npm test
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          npm test
         working-directory: ${{ env.TESTS_DIR }}
 
       # ── python (full suite; no tag pyramid yet) ───────────────────────────
@@ -440,7 +643,11 @@ jobs:
         working-directory: ${{ env.TESTS_DIR }}
       - name: Run Python tests (pytest)
         if: env.TESTS_LANG == 'python'
-        run: python -m pytest
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          python -m pytest
         working-directory: ${{ env.TESTS_DIR }}
       - name: Publish raw Allure results
         if: always()
@@ -801,9 +1008,9 @@ jobs:
 
   # Stub API on runner (compose --profile mock); gates FE deploy; PR + FE-touch push.
   e2e-mock-tests:
-    needs: [changes]
+    needs: [changes, testops-context]
     if: >-
-      !cancelled() && (
+      always() && !cancelled() && (
         github.event_name == 'pull_request' ||
         (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
          needs.changes.outputs.frontend == 'true') ||
@@ -815,10 +1022,14 @@ jobs:
     timeout-minutes: 30
     env:
       LAYER: e2e-mock
+      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
+      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
+      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+      - *setup-live-allurectl
 
       # ── java (-Denv=reference_mock -DincludeTags=mock) ────────────────────
       - if: env.TESTS_LANG == 'java'
@@ -860,9 +1071,12 @@ jobs:
         if: env.TESTS_LANG == 'java'
         id: run-tests
         env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
           CHROME_BINARY_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
           CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
-        run: ./gradlew test -Denv=reference_mock -DincludeTags=mock
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          ./gradlew test -Denv=reference_mock -DincludeTags=mock
         working-directory: ${{ env.TESTS_DIR }}
       - name: Tear down mock stand
         if: always() && env.TESTS_LANG == 'java'
@@ -962,9 +1176,9 @@ jobs:
           curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${API_HEALTH}"
 
   integration-tests:
-    needs: stand-ready
+    needs: [stand-ready, testops-context]
     if: >-
-      !cancelled() && needs.stand-ready.result == 'success' && (
+      always() && !cancelled() && needs.stand-ready.result == 'success' && (
         (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
         (github.event_name == 'workflow_dispatch' && inputs.run_integration)
       )
@@ -972,10 +1186,14 @@ jobs:
     timeout-minutes: 20
     env:
       LAYER: integration
+      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
+      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
+      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+      - *setup-live-allurectl
 
       # ── java (no UI — Rest Assured against deployed API) ─────────────────
       - if: env.TESTS_LANG == 'java'
@@ -994,7 +1212,11 @@ jobs:
       - name: Run integration tests (Gradle)
         if: env.TESTS_LANG == 'java'
         id: run-tests
-        run: ./gradlew test -Denv=reference_prod -DincludeTags=integration
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          ./gradlew test -Denv=reference_prod -DincludeTags=integration
         working-directory: ${{ env.TESTS_DIR }}
       # ── javascript / typescript (full suite) ──────────────────────────────
       - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
@@ -1013,7 +1235,11 @@ jobs:
         working-directory: ${{ env.TESTS_DIR }}
       - name: Run tests (npm)
         if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
-        run: npm test
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          npm test
         working-directory: ${{ env.TESTS_DIR }}
 
       # ── python (full suite) ──────────────────────────────────────────────
@@ -1029,7 +1255,11 @@ jobs:
         working-directory: ${{ env.TESTS_DIR }}
       - name: Run Python tests (pytest)
         if: env.TESTS_LANG == 'python'
-        run: python -m pytest
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          python -m pytest
         working-directory: ${{ env.TESTS_DIR }}
       - name: Publish raw Allure results
         if: always()
@@ -1042,9 +1272,9 @@ jobs:
           retention-days: 1
 
   api-tests:
-    needs: stand-ready
+    needs: [stand-ready, testops-context]
     if: >-
-      !cancelled() && needs.stand-ready.result == 'success' && (
+      always() && !cancelled() && needs.stand-ready.result == 'success' && (
         (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
         (github.event_name == 'workflow_dispatch' && inputs.run_api)
       )
@@ -1052,10 +1282,14 @@ jobs:
     timeout-minutes: 20
     env:
       LAYER: api
+      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
+      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
+      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+      - *setup-live-allurectl
 
       # ── java (no UI — Rest Assured API contract against deployed backend) ─
       - if: env.TESTS_LANG == 'java'
@@ -1074,7 +1308,11 @@ jobs:
       - name: Run API tests (Gradle)
         if: env.TESTS_LANG == 'java'
         id: run-tests
-        run: ./gradlew test -Denv=reference_prod -DincludeTags=api
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          ./gradlew test -Denv=reference_prod -DincludeTags=api
         working-directory: ${{ env.TESTS_DIR }}
       # ── javascript / typescript (full suite) ──────────────────────────────
       - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
@@ -1093,7 +1331,11 @@ jobs:
         working-directory: ${{ env.TESTS_DIR }}
       - name: Run tests (npm)
         if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
-        run: npm test
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          npm test
         working-directory: ${{ env.TESTS_DIR }}
 
       # ── python (full suite) ──────────────────────────────────────────────
@@ -1109,7 +1351,11 @@ jobs:
         working-directory: ${{ env.TESTS_DIR }}
       - name: Run Python tests (pytest)
         if: env.TESTS_LANG == 'python'
-        run: python -m pytest
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          python -m pytest
         working-directory: ${{ env.TESTS_DIR }}
       - name: Publish raw Allure results
         if: always()
@@ -1123,9 +1369,9 @@ jobs:
 
   # Join integration + api on main; dispatch e2e/visual when upstream layer jobs were skipped.
   e2e-tests:
-    needs: [integration-tests, api-tests]
+    needs: [integration-tests, api-tests, testops-context]
     if: >-
-      !cancelled() && (
+      always() && !cancelled() && (
         (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
          needs.integration-tests.result == 'success' &&
          needs.api-tests.result == 'success') ||
@@ -1142,10 +1388,14 @@ jobs:
     timeout-minutes: 30
     env:
       LAYER: e2e
+      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
+      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
+      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+      - *setup-live-allurectl
 
       # ── java: -DincludeTags / -DexcludeTags (override via dispatch inputs) ─
       - if: env.TESTS_LANG == 'java'
@@ -1162,6 +1412,7 @@ jobs:
         if: env.TESTS_LANG == 'java'
         id: run-tests
         env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
           RUN_ENV: reference_prod
           INCLUDE_TAGS: ${{ inputs.include_tags }}
           EXCLUDE_TAGS: ${{ inputs.exclude_tags }}
@@ -1187,7 +1438,7 @@ jobs:
           elif [ -n "${DEFAULT_EXCLUDE}" ]; then
             ARGS+=(-DexcludeTags="${DEFAULT_EXCLUDE}")
           fi
-          ./gradlew test "${ARGS[@]}"
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh" ./gradlew test "${ARGS[@]}"
         working-directory: ${{ env.TESTS_DIR }}
       # ── javascript / typescript (full suite; no tag pyramid yet) ──────────
       - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
@@ -1206,7 +1457,11 @@ jobs:
         working-directory: ${{ env.TESTS_DIR }}
       - name: Run tests (npm)
         if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
-        run: npm test
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          npm test
         working-directory: ${{ env.TESTS_DIR }}
 
       # ── python (full suite; no tag pyramid yet) ───────────────────────────
@@ -1222,7 +1477,11 @@ jobs:
         working-directory: ${{ env.TESTS_DIR }}
       - name: Run Python tests (pytest)
         if: env.TESTS_LANG == 'python'
-        run: python -m pytest
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          python -m pytest
         working-directory: ${{ env.TESTS_DIR }}
       - name: Publish raw Allure results
         if: always()
@@ -1236,9 +1495,9 @@ jobs:
 
   # Optional after e2e; skipped on push and when update_baselines=false.
   e2e-update-baselines:
-    needs: [e2e-tests]
+    needs: [e2e-tests, testops-context]
     if: >-
-      !cancelled() &&
+      always() && !cancelled() &&
       needs.e2e-tests.result == 'success' &&
       github.event_name == 'workflow_dispatch' &&
       inputs.update_baselines == true
@@ -1246,10 +1505,14 @@ jobs:
     timeout-minutes: 30
     env:
       LAYER: e2e-baselines
+      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
+      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
+      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+      - *setup-live-allurectl
 
       - if: env.TESTS_LANG == 'java'
         uses: actions/setup-java@v5
@@ -1265,8 +1528,11 @@ jobs:
         if: env.TESTS_LANG == 'java'
         id: run-tests
         env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
           RUN_ENV: reference_prod
-        run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=visual -DupdateBaselines=true
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=visual -DupdateBaselines=true
         working-directory: ${{ env.TESTS_DIR }}
       - name: Publish raw Allure results
         if: always()
@@ -1287,9 +1553,9 @@ jobs:
 
   # Main-chain tip after e2e; manual execution is explicit.
   manual-tests:
-    needs: [e2e-tests, stand-ready]
+    needs: [e2e-tests, stand-ready, testops-context]
     if: >-
-      !cancelled() &&
+      always() && !cancelled() &&
       github.event_name == 'workflow_dispatch' &&
       inputs.run_manual &&
       needs.stand-ready.result == 'success' &&
@@ -1298,10 +1564,14 @@ jobs:
     timeout-minutes: 30
     env:
       LAYER: manual
+      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
+      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
+      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+      - *setup-live-allurectl
 
       # ── java (-DincludeTags=manual) ───────────────────────────────────────
       - if: env.TESTS_LANG == 'java'
@@ -1318,8 +1588,11 @@ jobs:
         if: env.TESTS_LANG == 'java'
         id: run-tests
         env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
           RUN_ENV: reference_prod
-        run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=manual
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=manual
         working-directory: ${{ env.TESTS_DIR }}
       - name: Publish raw Allure results
         if: always()
@@ -1345,6 +1618,7 @@ jobs:
       - e2e-tests
       - e2e-update-baselines
       - manual-tests
+      - testops-context
     if: always() && !cancelled()
     continue-on-error: true
     runs-on: ubuntu-24.04
@@ -1356,7 +1630,7 @@ jobs:
       REPORT_ID: ${{ github.run_id }}
       GH_PAGES_BASE: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
     outputs:
-      testops_launch_url: ${{ steps.testops-upload.outputs.launch_url }}
+      testops_launch_url: ${{ steps.resolve-testops-url.outputs.launch_url }}
       report_generated: ${{ steps.allure-report.outcome == 'success' }}
       gh_pages_deployed: ${{ steps.gh-pages-deploy.outcome == 'success' }}
     steps:
@@ -1416,12 +1690,15 @@ jobs:
           fi
 
       - name: Install pinned allurectl
-        if: steps.merged-results.outputs.has_results == 'true' && env.ALLURE_PROJECT_ID != ''
+        if: always() && env.ALLURE_PROJECT_ID != ''
         id: setup-allurectl
         continue-on-error: true
         uses: allure-framework/setup-allurectl@v1
         with:
           allurectl-version: ${{ env.ALLURECTL_VERSION }}
+          allure-endpoint: ${{ env.ALLURE_ENDPOINT }}
+          allure-token: ${{ secrets.ALLURE_TOKEN }}
+          allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
 
       - name: Write executor.json
         if: steps.merged-results.outputs.has_results == 'true'
@@ -1438,9 +1715,10 @@ jobs:
           }
           EOF
 
-      - name: Upload merged results to Allure TestOps
+      - name: Fallback upload merged results to Allure TestOps
         if: >-
           always() &&
+          needs.testops-context.outputs.enabled != 'true' &&
           steps.merged-results.outputs.has_results == 'true' &&
           env.ALLURE_PROJECT_ID != ''
         continue-on-error: true
@@ -1449,10 +1727,6 @@ jobs:
         env:
           ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
           ALLURE_LAUNCH_NAME: "${{ env.APP_SLUG }} CI — ${{ env.RUN_LABEL }}"
-          ALLURE_JOB_UID: "${{ github.repository }}/actions/workflows/ci.yml/publish-allure-report"
-          ALLURE_JOB_RUN_UID: "${{ github.run_id }}-${{ github.run_attempt }}-publish-allure-report"
-          ALLURE_JOB_NAME: "${{ github.repository }} — publish-allure-report"
-          ALLURE_JOB_RUN_NAME: "CI #${{ github.run_number }}.${{ github.run_attempt }}"
         run: |
           set +e
           set -uo pipefail
@@ -1483,6 +1757,33 @@ jobs:
             fi
           fi
           exit 0
+
+      - name: Stop shared TestOps job-run
+        if: >-
+          always() &&
+          needs.testops-context.outputs.job_run_id != '' &&
+          steps.setup-allurectl.outcome == 'success'
+        continue-on-error: true
+        env:
+          ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
+        run: |
+          set -euo pipefail
+          allurectl --http-timeout 30s job-run stop \
+            --project-id "$ALLURE_PROJECT_ID" \
+            --job-run-id "$ALLURE_JOB_RUN_ID"
+
+      - name: Resolve TestOps launch URL
+        id: resolve-testops-url
+        if: always()
+        env:
+          LIVE_LAUNCH_URL: ${{ needs.testops-context.outputs.launch_url }}
+          FALLBACK_LAUNCH_URL: ${{ steps.testops-upload.outputs.launch_url }}
+        run: |
+          LAUNCH_URL="${LIVE_LAUNCH_URL:-${FALLBACK_LAUNCH_URL:-}}"
+          echo "launch_url=${LAUNCH_URL}" >> "$GITHUB_OUTPUT"
+          if [ -n "$LAUNCH_URL" ]; then
+            echo "TESTOPS_LAUNCH_URL=${LAUNCH_URL}" >> "$GITHUB_ENV"
+          fi
 
       - name: Allure quality gate + report
         if: always() && steps.merged-results.outputs.has_results == 'true'
