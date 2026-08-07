@@ -2,8 +2,14 @@
   "private": true,
   "name": "reference-app-copy-tests-allure",
   "description": "Optional local pins for the Allure report and notification CLIs used by CI",
+  "engines": {
+    "node": ">=26"
+  },
   "dependencies": {
-    "allure": "3.13.0",
+    "allure": "3.14.3",
     "allure-notifications": "6.0.12"
+  },
+  "overrides": {
+    "adm-zip": "0.6.0"
   }
 }
