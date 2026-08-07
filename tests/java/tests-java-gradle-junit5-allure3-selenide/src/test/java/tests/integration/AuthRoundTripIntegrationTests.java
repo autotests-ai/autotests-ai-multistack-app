@@ -2,11 +2,12 @@ package tests.integration;
 
 import annotations.Layer;
 import api.ApiTestBase;
+import api.model.LoginRequest;
+import api.model.RegisterRequest;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
-import io.restassured.http.ContentType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -16,30 +17,34 @@ import static org.hamcrest.Matchers.equalTo;
 
 @Layer("integration")
 @Epic("Authentication")
-@Feature("Session round-trip")
+@Feature("Account lifecycle")
 @Severity(SeverityLevel.CRITICAL)
-@DisplayName("Auth round-trip")
+@DisplayName("Auth account lifecycle")
 class AuthRoundTripIntegrationTests extends ApiTestBase {
 
+    /**
+     * Full account lifecycle across separate HTTP requests — proves DB and JWT are wired
+     * together on the deployed stand, and documents that logout is stateless: the JWT keeps
+     * working until the account itself is gone. Deletes the user it registers, so the stand
+     * does not accumulate test accounts.
+     */
     @Test
     @Tag("integration")
-    @DisplayName("register → login → me → logout survives separate HTTP requests (DB + JWT wired)")
-    void registerLoginProfileLogoutRoundTrip() {
+    @DisplayName("register → login → me → logout (stateless: token survives) → delete → me is 401")
+    void accountLifecycleRoundTrip() {
         String username = "int_" + java.util.UUID.randomUUID().toString().substring(0, 8);
         String password = "password123";
 
-        given()
-                .contentType(ContentType.JSON)
-                .body("{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}")
+        given(jsonSpec)
+                .body(new RegisterRequest(username, password))
                 .when()
                 .post("/api/auth/register")
                 .then()
                 .statusCode(201)
                 .body("username", equalTo(username));
 
-        String sessionToken = given()
-                .contentType(ContentType.JSON)
-                .body("{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}")
+        String token = given(jsonSpec)
+                .body(new LoginRequest(username, password))
                 .when()
                 .post("/api/auth/login")
                 .then()
@@ -48,7 +53,7 @@ class AuthRoundTripIntegrationTests extends ApiTestBase {
                 .path("token");
 
         given()
-                .header("Authorization", "Bearer " + sessionToken)
+                .header("Authorization", "Bearer " + token)
                 .when()
                 .get("/api/auth/me")
                 .then()
@@ -56,10 +61,34 @@ class AuthRoundTripIntegrationTests extends ApiTestBase {
                 .body("username", equalTo(username));
 
         given()
-                .header("Authorization", "Bearer " + sessionToken)
+                .header("Authorization", "Bearer " + token)
                 .when()
                 .post("/api/auth/logout")
                 .then()
                 .statusCode(204);
+
+        // Stateless JWT: logout does not invalidate the token server-side — by design.
+        given()
+                .header("Authorization", "Bearer " + token)
+                .when()
+                .get("/api/auth/me")
+                .then()
+                .statusCode(200)
+                .body("username", equalTo(username));
+
+        given()
+                .header("Authorization", "Bearer " + token)
+                .when()
+                .delete("/api/auth/me")
+                .then()
+                .statusCode(204);
+
+        // The token still verifies cryptographically, but the account is gone → 401.
+        given()
+                .header("Authorization", "Bearer " + token)
+                .when()
+                .get("/api/auth/me")
+                .then()
+                .statusCode(401);
     }
 }

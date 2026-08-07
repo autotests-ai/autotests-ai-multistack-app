@@ -31,6 +31,7 @@ buildscript {
         sonarPluginVersion  = '6.2.0.5505'
         selenideVersion     = '7.17.0'
         restAssuredVersion  = '5.5.7'
+        jacksonVersion      = '2.18.2'
         ownerVersion        = '1.0.12'
         testParallelForks   = 1
         defaultEnv          = 'reference_ci'
@@ -103,6 +104,8 @@ dependencies {
             "org.aeonbits.owner:owner:${ownerVersion}",
             "org.junit.jupiter:junit-jupiter:${junitVersion}",
             "io.rest-assured:rest-assured:${restAssuredVersion}",
+            "io.rest-assured:json-schema-validator:${restAssuredVersion}",
+            "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}",
             'io.qameta.allure:allure-rest-assured')
     testRuntimeOnly (
             'org.junit.platform:junit-platform-launcher',

@@ -27,4 +27,15 @@ class SessionTests extends TestBase {
                 .shouldHideWelcomePanel()
                 .shouldClearAuthToken();
     }
+
+    @Test
+    @Tag("e2e")
+    @Tag("positive")
+    @DisplayName("Session survives a page reload (token in localStorage)")
+    void sessionSurvivesReload() {
+        homePage.openPageWithLocalStorageAuthentication("user1", "password1")
+                .shouldHaveWelcomeMessage("Welcome, user1!")
+                .reloadPage()
+                .shouldHaveWelcomeMessage("Welcome, user1!");
+    }
 }

@@ -12,8 +12,12 @@ import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 
+/**
+ * Wiring facts about the deployed system — values that depend on which module is deployed
+ * and what it is connected to. Response shapes/types are the api layer's job
+ * ({@code tests.api.ReferenceApiTests}); this class asserts none of them.
+ */
 @Layer("integration")
 @Epic("Wired backend")
 @Feature("Health and data source")
@@ -23,27 +27,25 @@ class BackendWiringIntegrationTests extends ApiTestBase {
 
     @Test
     @Tag("integration")
-    @DisplayName("GET /api/health — deployed service matches active backend module")
+    @DisplayName("GET /api/health — deployed service is the active backend module, not a neighbour")
     void healthReportsActiveBackendService() {
         given()
                 .when()
                 .get("/api/health")
                 .then()
                 .statusCode(200)
-                .body("status", equalTo("ok"))
                 .body("service", equalTo(config.apiHealthService()));
     }
 
     @Test
     @Tag("integration")
-    @DisplayName("GET /api/items — catalogue is served from PostgreSQL, not fallback")
+    @DisplayName("GET /api/items — catalogue is served from PostgreSQL, not a stub or fallback")
     void itemsAreWiredToPostgreSQL() {
         given()
                 .when()
                 .get("/api/items")
                 .then()
                 .statusCode(200)
-                .body("source", equalTo("postgresql"))
-                .body("items.size()", greaterThanOrEqualTo(3));
+                .body("source", equalTo("postgresql"));
     }
 }

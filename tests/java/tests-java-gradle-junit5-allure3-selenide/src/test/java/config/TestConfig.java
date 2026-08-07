@@ -70,30 +70,6 @@ public interface TestConfig extends Config {
     @DefaultValue("")
     String remoteUrl();
 
-    @Key("hubProbeUrl")
-    @DefaultValue("https://example.com/")
-    String hubProbeUrl();
-
-    @Key("playwrightWsEndpoint")
-    @DefaultValue("ws://127.0.0.1:4444/playwright/playwright-chromium/1.61.1")
-    String playwrightWsEndpoint();
-
-    @Key("playwrightSessionName")
-    @DefaultValue("java-playwright-tests")
-    String playwrightSessionName();
-
-    @Key("playwrightSessionTimeout")
-    @DefaultValue("5m")
-    String playwrightSessionTimeout();
-
-    @Key("playwrightEnableVnc")
-    @DefaultValue("false")
-    boolean playwrightEnableVnc();
-
-    @Key("playwrightEnableVideo")
-    @DefaultValue("false")
-    boolean playwrightEnableVideo();
-
     @Key("browser")
     @DefaultValue("chrome")
     String browser();

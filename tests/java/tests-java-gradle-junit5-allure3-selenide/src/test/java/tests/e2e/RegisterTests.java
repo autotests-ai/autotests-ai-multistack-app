@@ -2,10 +2,12 @@ package tests.e2e;
 
 import tests.TestBase;
 import annotations.Layer;
+import api.AuthApiClient;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -23,18 +25,31 @@ class RegisterTests extends TestBase {
             "Password must be at least 6 characters";
     private static final String DUPLICATE_USERNAME_MESSAGE = "Username already taken";
 
+    private static final String REGISTER_PASSWORD = "password123";
+
     private final RegisterPage registerPage = new RegisterPage();
+
+    /** Username registered by the test — deleted through the API afterwards. */
+    private String registeredUsername;
+
+    @AfterEach
+    void cleanupRegisteredUser() {
+        if (registeredUsername != null) {
+            AuthApiClient.deleteAccountQuietly(registeredUsername, REGISTER_PASSWORD);
+            registeredUsername = null;
+        }
+    }
 
     @Test
     @Tag("e2e")
     @Tag("positive")
     @DisplayName("New user can register and land on home")
     void shouldRegisterNewUser() {
-        String username = "user_" + java.util.UUID.randomUUID().toString().substring(0, 8);
+        registeredUsername = "user_" + java.util.UUID.randomUUID().toString().substring(0, 8);
 
         registerPage.openPage()
-                .fillAndSubmitForm(username, "password123", "password123")
-                .shouldHaveWelcomeMessage("Welcome, " + username + "!");
+                .fillAndSubmitForm(registeredUsername, REGISTER_PASSWORD, REGISTER_PASSWORD)
+                .shouldHaveWelcomeMessage("Welcome, " + registeredUsername + "!");
     }
 
     @Test

@@ -4,18 +4,14 @@ import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.open;
-import static com.codeborne.selenide.WebDriverConditions.url;
-import static com.codeborne.selenide.Selenide.webdriver;
 
-import config.ConfigReader;
 import com.codeborne.selenide.SelenideElement;
 import io.qameta.allure.Step;
 
-import java.time.Duration;
+import static pages.PageTimeouts.PAGE_READY;
 
 public class LoginPage {
 
-    private final SelenideElement loginForm = $("[data-testid='login-form']");
     private final SelenideElement embeddedHeader = $("[data-testid='header']");
     private final SelenideElement loginInput = $("[data-testid='login-input']");
     private final SelenideElement passwordInput = $("[data-testid='password-input']");
@@ -51,27 +47,26 @@ public class LoginPage {
     @Step("Submit login form")
     public HomePage submit() {
         submitButton.click();
-        // React Router navigates to / without a trailing slash on the directory base URL.
-        webdriver().shouldHave(url(ConfigReader.resolveWebBaseUrl()));
+        BrowserUrl.shouldBeAtAppRoot();
         return new HomePage();
     }
 
     @Step("Submit login form expecting validation error")
     public LoginPage submitExpectingError() {
         submitButton.click();
-        errorMessage.shouldBe(visible, Duration.ofSeconds(10));
+        errorMessage.shouldBe(visible, PAGE_READY);
         return this;
     }
 
     @Step("Verify embedded header is mounted")
     public LoginPage shouldShowEmbeddedHeader() {
-        embeddedHeader.shouldBe(visible, Duration.ofSeconds(10));
+        embeddedHeader.shouldBe(visible, PAGE_READY);
         return this;
     }
 
     @Step("Verify login form is mounted")
     public LoginPage shouldShowLoginForm() {
-        formTitle.shouldBe(visible);
+        formTitle.shouldBe(visible, PAGE_READY);
         loginInput.shouldBe(visible);
         passwordInput.shouldBe(visible);
         submitButton.shouldBe(visible);

@@ -7,14 +7,12 @@ import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.Wait;
 import static com.codeborne.selenide.Selenide.executeJavaScript;
 import static com.codeborne.selenide.Selenide.open;
-import static io.restassured.RestAssured.given;
+import static com.codeborne.selenide.Selenide.refresh;
+import static pages.PageTimeouts.PAGE_READY;
 
+import api.AuthApiClient;
 import com.codeborne.selenide.SelenideElement;
-import config.ConfigReader;
 import io.qameta.allure.Step;
-import io.restassured.http.ContentType;
-
-import java.time.Duration;
 
 public class HomePage {
 
@@ -41,17 +39,15 @@ public class HomePage {
         return this;
     }
 
+    @Step("Reload current page")
+    public HomePage reloadPage() {
+        refresh();
+        return this;
+    }
+
     @Step("Open home page with local storage authentication")
     public HomePage openPageWithLocalStorageAuthentication(String username, String password) {
-        String token = given()
-                .contentType(ContentType.JSON)
-                .body("{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}")
-                .when()
-                .post(apiPath("/api/auth/login"))
-                .then()
-                .statusCode(200)
-                .extract()
-                .path("token");
+        String token = AuthApiClient.login(username, password);
 
         open("/login");
         executeJavaScript(
@@ -77,21 +73,21 @@ public class HomePage {
 
     @Step("Verify home layout is mounted")
     public HomePage shouldShowLayout() {
-        layout.shouldBe(visible, Duration.ofSeconds(10));
+        layout.shouldBe(visible, PAGE_READY);
         itemsList.shouldBe(visible);
         return this;
     }
 
     @Step("Verify embedded header is mounted")
     public HomePage shouldShowEmbeddedHeader() {
-        header.shouldBe(visible, Duration.ofSeconds(10));
+        header.shouldBe(visible, PAGE_READY);
         return this;
     }
 
     @Step("Verify welcome panel stays hidden")
     public HomePage shouldHideWelcomePanel() {
         // Panel uses the HTML hidden attribute (welcome === null); remote Chrome may still report isDisplayed().
-        welcomePanel.shouldHave(attribute("hidden"), Duration.ofSeconds(10));
+        welcomePanel.shouldHave(attribute("hidden"), PAGE_READY);
         return this;
     }
 
@@ -106,19 +102,31 @@ public class HomePage {
 
     @Step("Verify health status contains: {textFragment}")
     public HomePage shouldShowHealthText(String textFragment) {
-        healthStatus.shouldHave(text(textFragment), Duration.ofSeconds(10));
+        healthStatus.shouldHave(text(textFragment), PAGE_READY);
         return this;
     }
 
     @Step("Verify items list contains: {textFragment}")
     public HomePage shouldShowItemText(String textFragment) {
-        itemsList.shouldHave(text(textFragment), Duration.ofSeconds(10));
+        itemsList.shouldHave(text(textFragment), PAGE_READY);
+        return this;
+    }
+
+    @Step("Verify items panel shows a readable error: {textFragment}")
+    public HomePage shouldShowItemsError(String textFragment) {
+        itemsList.shouldHave(text(textFragment), PAGE_READY);
+        return this;
+    }
+
+    @Step("Verify health panel shows a readable error: {textFragment}")
+    public HomePage shouldShowHealthError(String textFragment) {
+        healthStatus.shouldHave(text(textFragment), PAGE_READY);
         return this;
     }
 
     @Step("Verify welcome message: {message}")
     public HomePage shouldHaveWelcomeMessage(String message) {
-        welcomePanel.shouldBe(visible, Duration.ofSeconds(10));
+        welcomePanel.shouldBe(visible, PAGE_READY);
         welcomeMessage.shouldHave(text(message));
         return this;
     }
@@ -127,11 +135,5 @@ public class HomePage {
     public LoginPage clickLogoutButton() {
         logoutButton.click();
         return new LoginPage();
-    }
-
-    private static String apiPath(String path) {
-        var base = ConfigReader.resolveApiBaseUrl();
-        var suffix = path.startsWith("/") ? path.substring(1) : path;
-        return base + suffix;
     }
 }

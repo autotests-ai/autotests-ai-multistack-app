@@ -4,18 +4,14 @@ import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.open;
-import static com.codeborne.selenide.Selenide.webdriver;
-import static com.codeborne.selenide.WebDriverConditions.url;
 
 import com.codeborne.selenide.SelenideElement;
-import config.ConfigReader;
 import io.qameta.allure.Step;
 
-import java.time.Duration;
+import static pages.PageTimeouts.PAGE_READY;
 
 public class RegisterPage {
 
-    private final SelenideElement registerForm = $("[data-testid='register-form']");
     private final SelenideElement loginInput = $("[data-testid='login-input']");
     private final SelenideElement passwordInput = $("[data-testid='password-input']");
     private final SelenideElement confirmPasswordInput = $("[data-testid='confirm-password-input']");
@@ -58,21 +54,20 @@ public class RegisterPage {
     @Step("Submit register form")
     public HomePage submit() {
         submitButton.click();
-        // React Router navigates to / without a trailing slash on the directory base URL.
-        webdriver().shouldHave(url(ConfigReader.resolveWebBaseUrl()));
+        BrowserUrl.shouldBeAtAppRoot();
         return new HomePage();
     }
 
     @Step("Submit register form expecting validation or API error")
     public RegisterPage submitExpectingError() {
         submitButton.click();
-        errorMessage.shouldBe(visible, Duration.ofSeconds(10));
+        errorMessage.shouldBe(visible, PAGE_READY);
         return this;
     }
 
     @Step("Verify register form is mounted")
     public RegisterPage shouldShowRegisterForm() {
-        formTitle.shouldBe(visible);
+        formTitle.shouldBe(visible, PAGE_READY);
         loginInput.shouldBe(visible);
         passwordInput.shouldBe(visible);
         confirmPasswordInput.shouldBe(visible);
@@ -88,7 +83,7 @@ public class RegisterPage {
 
     @Step("Verify error message: {message}")
     public RegisterPage shouldHaveErrorMessage(String message) {
-        errorMessage.shouldBe(visible, Duration.ofSeconds(10));
+        errorMessage.shouldBe(visible, PAGE_READY);
         errorMessage.shouldHave(text(message));
         return this;
     }
