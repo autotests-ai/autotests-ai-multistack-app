@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -22,6 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @Epic("Authentication")
@@ -41,7 +44,7 @@ class UserSeederTest extends UnitTestBase {
 
     @BeforeEach
     void setUp() {
-        userSeeder = new UserSeeder(userRepository, passwordEncoder);
+        userSeeder = new UserSeeder(userRepository, passwordEncoder, "user1", "password1");
     }
 
     @Test
@@ -66,5 +69,20 @@ class UserSeederTest extends UnitTestBase {
         userSeeder.run(mock(ApplicationArguments.class));
 
         verify(userRepository, never()).save(any());
+    }
+
+    @ParameterizedTest(name = "username=\"{0}\" password=\"{1}\"")
+    @CsvSource({
+            "'', password1",
+            "user1, ''",
+            "'', ''"
+    })
+    @DisplayName("skips seeding when credentials are not configured")
+    void skipsSeedingWhenCredentialsMissing(String username, String password) {
+        var seeder = new UserSeeder(userRepository, passwordEncoder, username, password);
+
+        seeder.run(mock(ApplicationArguments.class));
+
+        verifyNoInteractions(userRepository);
     }
 }
