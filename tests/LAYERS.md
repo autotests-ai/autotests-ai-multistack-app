@@ -27,6 +27,22 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
 **Not classical:** calling Chrome “mount” checks `integration`. Those are thin **e2e** (`@Tag("mock")`).
 
+## integration vs api — intent, not tag
+
+Same Rest Assured, same stand — different question. **api** asserts the HTTP contract:
+status codes, JSON Schemas (`src/test/resources/schemas/`), error envelopes — values that hold
+on *any* healthy deployment. **integration** asserts wiring facts of *this* deployment: which
+module answered (`service` id), where data physically lives (`source=postgresql`), whether the
+Flyway seed arrived. No assertion appears in both layers:
+
+| Question | Layer | Example |
+|----------|-------|---------|
+| Is `{token, username, redirectUrl}` the login response shape? | api | `AuthApiTests` + `schemas/auth-response.json` |
+| Did the deploy wire PostgreSQL, not a stub? | integration | `BackendWiringIntegrationTests` (`source=postgresql`) |
+| Does a duplicate username answer 409? | api | `AuthApiTests.registerDuplicateUsername` |
+| Is seed user1 present after deploy? | integration | `SeedDataIntegrationTests` |
+| Do DB and JWT survive separate HTTP requests? | integration | `AuthRoundTripIntegrationTests` (full lifecycle incl. stateless logout + `DELETE /me`) |
+
 ## Manual lives in code (canon)
 
 Manual / exploratory cases are **first-class sources in the test module**, not spreadsheets
@@ -46,8 +62,8 @@ Self-check of the **tests module helpers** before / alongside product layers —
 
 | Slice | Tags | CI job | Gates |
 |-------|------|--------|-------|
-| backend | `harness` + `harness-backend` | `tests-harness-backend` | PR / dispatch integration\|api (no deploy); on `main` after `deploy-backend`, before `integration-tests` |
-| frontend | `harness` + `harness-frontend` | `tests-harness-frontend` | PR (no deploy); on `main` after `deploy-frontend`, before `e2e-mock-tests` |
+| backend | `harness` + `harness-backend` | `tests-harness-backend` | every PR + push (no deploy needed); feeds `sonar-tests` |
+| frontend | `harness` + `harness-frontend` | `tests-harness-frontend` | every PR + push (no deploy needed); feeds `sonar-tests` |
 | umbrella | `harness` | `sonar-tests` | after **both** harness jobs (PR + main); umbrella helpers + tests-module Sonar gate |
 
 ```bash
@@ -62,10 +78,10 @@ Self-check of the **tests module helpers** before / alongside product layers —
 
 | Slice | Tag | CI |
 |-------|-----|-----|
-| UI on a stub API | `@Tag("mock")` (+ `@Tag("e2e")`) | job `e2e-mock-tests` on push to `main` (FE lane → join at `e2e-tests`) |
-| Flow (default `layers=e2e`) | `@Tag("e2e")` exclude visual | job `e2e-tests` (after `api-tests` + `e2e-mock-tests` + `sonar-tests`) |
-| Flow + visual (`layers=all`) | `e2e,visual` | job `e2e-tests` |
-| Refresh baselines | `@Tag("visual")` + `-DupdateBaselines=true` | job `e2e-update-baselines` |
+| UI on a stub API | `@Tag("mock")` (+ `@Tag("e2e")`) | job `e2e-mock-tests` on every PR; on push to `main` when frontend changed |
+| Flow | `@Tag("e2e")` exclude visual | job `e2e-tests` (after `integration-tests` + `api-tests`) |
+| Flow + visual (dispatch `run_visual`) | `e2e,visual` | job `e2e-tests` |
+| Refresh baselines | `@Tag("visual")` + `-DupdateBaselines=true` | job `e2e-update-baselines` (dispatch `update_baselines`) |
 
 Local refresh: `./gradlew test -Denv=reference_ci -DincludeTags=visual -DupdateBaselines=true`
 
@@ -78,7 +94,11 @@ has no `/api` route, so a **stand-gateway** (compose profile `mock`, port **9911
 shapes as the real controllers, including `401` on `/api/auth/me` without a bearer token.
 
 `@Tag("mock")` — four mount tests (Home / Login / Register):
-`HomeLayoutTests`, `LoginFormTests`, `LoginEmbedTests`, `RegisterFormTests`.
+`HomeLayoutTests`, `LoginFormTests`, `LoginEmbedTests`, `RegisterFormTests` — plus
+`HomeErrorStateTests`: WireMock **scenarios** inject `500` into `/api/items` / `/api/health`
+(states toggled via the admin API, which the gateway proxies at `/__admin/`), so the UI
+error-panels get real-browser coverage that a healthy backend can never produce. On stands
+without `/__admin/` (ci/prod) these tests skip by JUnit assumption instead of failing.
 
 ```bash
 docker compose --profile mock up -d stand-gateway   # :9911 + api-mock + react frontend
@@ -108,7 +128,7 @@ task — `test`:
 
 | Stand (`-Denv`) | Where it points |
 |-----------------|-----------------|
-| `reference_ci` | the compose stack on this machine — UI `:9811`, API `:8800` (`docker compose up -d` first) |
+| `reference_ci` | the compose stack on this machine — UI + real `/api` same origin via `stand-gateway-ci` `:9821`, direct API `:8800` (`docker compose up -d` first) |
 | `reference_mock` | mock profile — UI + stub API same origin `:9911` (`docker compose --profile mock up -d stand-gateway` first) |
 | `reference_prod` | [reference-app-copy.autotests.ai/backend-java-spring](https://reference-app-copy.autotests.ai/backend-java-spring), browsers from the Selenoid hub |
 
@@ -124,8 +144,8 @@ suite (`npm test` / `pytest` with `UI_URL` / `BASE_URL`) — no Gradle tag slice
 |-------|------|-------|----------|-----|
 | unit | backend | active `BACKEND_DIR` (default `backend/java/backend-java-spring/`) | all backend unit tests | by `BACKEND_LANG`: gradle+JaCoCo · `pytest` · `go test` · `npm test` — see [backend/README.md](../backend/README.md) |
 | component | frontend | `frontend/typescript/frontend-typescript-react/src/test/` | Vitest | `npm test` |
-| integration | tests | `…/tests/integration/` (`BackendWiringIntegrationTests`, `AuthRoundTripIntegrationTests`, `SeedDataIntegrationTests`) | `@Tag("integration")` | java → `-DincludeTags=integration` via `integration-tests` (after harness-backend) |
-| api | tests | `…/tests/api/` (`AuthApiTests`, `ReferenceApiTests`) | `@Tag("api")` | java → `-DincludeTags=api` via `api-tests` (after `integration-tests`) |
+| integration | tests | `…/tests/integration/` (`BackendWiringIntegrationTests`, `AuthRoundTripIntegrationTests`, `SeedDataIntegrationTests`) | `@Tag("integration")` | java → `-DincludeTags=integration` via `integration-tests` (after `stand-ready`) |
+| api | tests | `…/tests/api/` (`AuthApiTests`, `ReferenceApiTests`) | `@Tag("api")` | java → `-DincludeTags=api` via `api-tests` (**parallel** to `integration-tests`, both after `stand-ready`) |
 | e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `visual` / `mock`) | `e2e-mock-tests` (push, `mock`); `e2e-tests` (after lanes + `sonar-tests` join) |
 | manual | tests | `…/tests/manual/` **in code** | `@Tag("manual")` + `@Manual` | java → `-DincludeTags=manual` via `manual-tests` (after `e2e-tests`, dispatch) |
 
@@ -138,10 +158,10 @@ Paths SSOT: `backend/scripts/paths.sh`. Module naming: [NAMING.md](NAMING.md).
 
 | Job | Product under test |
 |-----|--------------------|
-| `unit-tests` | **Application** (active backend — services, controllers, JWT; toolchain from `BACKEND_LANG`) |
+| `unit-tests` | **Application** (active backend — plain units, `@WebMvcTest` slices and the `@DataJpaTest`+Testcontainers persistence slice; Allure suite label `slice` separates them inside the `unit` layer; toolchain from `BACKEND_LANG`; Docker required for the persistence slice) |
 | `tests-harness-backend` | **Test tooling (BE lane)** — `ConfigReader` |
 | `tests-harness-frontend` | **Test tooling (FE lane)** — CSS helpers, HAR helpers |
-| `component-tests` | **Application** (active frontend — Vitest) |
+| `component-tests` | **Application** (active frontend — Vitest; coverage thresholds gate regressions) |
 
 Students: product unit layers (`unit-tests` / `component-tests`); harness = helper checks that higher layers depend on.
 
@@ -163,9 +183,9 @@ Integration is **HTTP / wired backend**, no browser. Chrome checks belong under 
 
 | Trigger | Jobs |
 |---------|------|
-| Pull request (blocks merge) | `unit-tests`, `component-tests`, `tests-harness-backend`, `tests-harness-frontend`, `sonar-tests` |
-| Push to `main` | Sonar/build/deploy per lane → BE: `tests-harness-backend` → `integration-tests` → `api-tests`; FE: `tests-harness-frontend` → `e2e-mock-tests`; both harness → `sonar-tests`; join at `e2e-tests` → `manual-tests` (skip unless dispatch) |
-| `workflow_dispatch` | `integration` / `api` / `e2e` / `manual` / `all` behind `layers`; tag overrides on e2e; `e2e-update-baselines` behind `update_baselines=true`; `env` |
+| Pull request (blocks merge) | `unit-tests`, `component-tests`, `tests-harness-backend`, `tests-harness-frontend`, `e2e-mock-tests`, `sonar-backend`, `sonar-tests`, `sonar-frontend` |
+| Push to `main` | the PR set (`e2e-mock-tests` only when frontend changed) + build/deploy lanes → `stand-ready` → `integration-tests` **∥** `api-tests` → `e2e-tests` (visual excluded) → `manual-tests` (skip unless dispatch) |
+| `workflow_dispatch` | per-layer booleans `run_integration` / `run_api` / `run_mock` / `run_e2e` / `run_visual` / `run_manual`; `update_baselines=true` → `e2e-update-baselines`; `include_tags` / `exclude_tags` overrides on e2e; `deploy=none\|backend\|frontend\|both` |
 
 Active stack and prod URL are workflow `env` defaults in [`ci.yml`](../.github/workflows/ci.yml)
 (`BACKEND`, `BACKEND_LANG`, `FRONTEND`, `TESTS`, `TESTS_LANG`) — change once, jobs reuse them.
@@ -195,17 +215,35 @@ Every job in [`ci.yml`](../.github/workflows/ci.yml) is checkout, language setup
 or `BACKEND_LANG`), one `./gradlew test …` / `npm test` / `pytest`. No composite actions, no
 wrapper scripts — the command a student runs locally is the command CI runs.
 
-Dispatch `layers=integration|api|e2e|manual|all`. To add another, copy `manual-tests` and change
-the java `-D` flags.
+Dispatch is per-layer booleans (`run_integration`, `run_api`, `run_mock`, `run_e2e`,
+`run_visual`, `run_manual`) plus `update_baselines` and `include_tags`/`exclude_tags` overrides.
+To add another layer, copy `manual-tests` and change the java `-D` flags.
 
-## CD graph (lanes join at `e2e-tests`)
+## Test data and secrets
+
+- Register-flow tests (api / e2e / integration) create `user_*` accounts and **delete them**
+  through `DELETE /api/auth/me` (`AuthApiClient.deleteAccountQuietly`) — the prod stand does
+  not accumulate test users. The lifecycle round-trip also documents stateless logout: the JWT
+  survives `logout` and dies with the account.
+- `reference_prod.properties` commits the **creds-less** hub URL. CI passes the real one via
+  the `SELENOID_REMOTE_URL` secret (`-DremoteUrl=…` in `e2e-tests` / `e2e-update-baselines`);
+  locally export it the same way when you need the shared hub.
+
+## CD graph
 
 ```
-tests-harness-backend → integration-tests → api-tests ─────────────┐
-tests-harness-backend ──┐                                          │
-tests-harness-frontend ───┼→ sonar-tests (tests-module Sonar)       ├→ e2e-tests → manual-tests
-tests-harness-frontend → e2e-mock-tests (stub API on the runner) ──┘
+every run (PR + main):
+  unit-tests → sonar-backend            component-tests → sonar-frontend
+  tests-harness-backend ─┐
+  tests-harness-frontend ┴→ sonar-tests          e2e-mock-tests (every PR; main when FE changed)
+
+main only:
+  build-backend + sonar-backend → deploy-backend ──────────────┐
+  build-frontend + sonar-frontend + e2e-mock → deploy-frontend ┴→ stand-ready
+  stand-ready → integration-tests ∥ api-tests → e2e-tests → manual-tests (dispatch-only)
 ```
 
+`integration-tests` and `api-tests` are **parallel** — both gate on `stand-ready`, neither on
+the other: wiring facts and HTTP contract are independent questions about the same deploy.
 `sonar-tests` scans **testinfra helpers** (`-DincludeTags=harness`), not api/e2e results.
 It runs after both harness slices — on **PR** and **main**.

@@ -1434,9 +1434,14 @@ jobs:
           EXCLUDE_TAGS: ${{ inputs.exclude_tags }}
           RUN_E2E: ${{ github.event_name == 'push' || inputs.run_e2e || inputs.update_baselines }}
           RUN_VISUAL: ${{ inputs.run_visual }}
+          # Selenoid hub URL with credentials — config files commit only the creds-less URL.
+          SELENOID_REMOTE_URL: ${{ secrets.SELENOID_REMOTE_URL }}
         run: |
           set -euo pipefail
           ARGS=(-Denv="$RUN_ENV")
+          if [ -n "${SELENOID_REMOTE_URL:-}" ]; then
+            ARGS+=(-DremoteUrl="${SELENOID_REMOTE_URL}")
+          fi
           DEFAULT_EXCLUDE=""
           if [ -n "${INCLUDE_TAGS}" ]; then
             ARGS+=(-DincludeTags="${INCLUDE_TAGS}")
@@ -1546,9 +1551,11 @@ jobs:
         env:
           ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
           RUN_ENV: reference_prod
+          SELENOID_REMOTE_URL: ${{ secrets.SELENOID_REMOTE_URL }}
         run: >-
           "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
           ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=visual -DupdateBaselines=true
+          ${SELENOID_REMOTE_URL:+"-DremoteUrl=$SELENOID_REMOTE_URL"}
         working-directory: ${{ env.TESTS_DIR }}
       - name: Publish raw Allure results
         if: always()
