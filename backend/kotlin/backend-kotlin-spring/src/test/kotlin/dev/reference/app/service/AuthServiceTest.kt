@@ -156,6 +156,30 @@ class AuthServiceTest {
         assertEquals("Unauthorized", ex.message)
     }
 
+    @Test
+    @DisplayName("deleteAccount removes the row of an existing user")
+    fun deleteAccountRemovesUser() {
+        val user = UserEntity(username = USERNAME, passwordHash = HASH)
+        `when`(userRepository.findByUsername(USERNAME)).thenReturn(Optional.of(user))
+
+        authService.deleteAccount(USERNAME)
+
+        verify(userRepository).delete(user)
+    }
+
+    @Test
+    @DisplayName("deleteAccount rejects a token whose user is already gone")
+    fun deleteAccountUnknownUser() {
+        `when`(userRepository.findByUsername(USERNAME)).thenReturn(Optional.empty())
+
+        val ex = assertThrows(AuthException::class.java) {
+            authService.deleteAccount(USERNAME)
+        }
+
+        assertEquals(401, ex.status)
+        assertEquals("Unauthorized", ex.message)
+    }
+
     companion object {
         private const val USERNAME = "user1"
         private const val PASSWORD = "password1"

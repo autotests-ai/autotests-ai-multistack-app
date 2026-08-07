@@ -39,6 +39,7 @@ class SecurityConfig(
                     .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/register").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/auth/logout").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
+                    .requestMatchers(HttpMethod.DELETE, "/api/auth/me").authenticated()
                     .requestMatchers("/api/**").authenticated()
                     .anyRequest().denyAll()
             }

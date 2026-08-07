@@ -110,4 +110,14 @@ describe('AuthService', () => {
   it('rejects the profile of a vanished user with 401', async () => {
     await expectApiError(service.profile('ghost'), 401, 'Unauthorized');
   });
+
+  it('deletes the account of an existing user', async () => {
+    await service.deleteAccount(SEED_USERNAME);
+
+    expect(await store.findUserByUsername(SEED_USERNAME)).toBeNull();
+  });
+
+  it('rejects deleting an account that is already gone with 401', async () => {
+    await expectApiError(service.deleteAccount('ghost'), 401, 'Unauthorized');
+  });
 });

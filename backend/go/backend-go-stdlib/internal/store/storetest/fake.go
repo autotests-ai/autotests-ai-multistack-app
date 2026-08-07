@@ -20,6 +20,7 @@ type Fake struct {
 	InsertItemErr error
 	FindUserErr   error
 	CreateUserErr error
+	DeleteUserErr error
 
 	nextItemID int64
 	nextUserID int64
@@ -94,4 +95,15 @@ func (f *Fake) CreateUser(_ context.Context, username, passwordHash string) (sto
 	}
 	f.WithUser(username, passwordHash)
 	return f.Users[len(f.Users)-1], nil
+}
+
+// DeleteUser implements store.Store.
+func (f *Fake) DeleteUser(_ context.Context, username string) error {
+	if f.DeleteUserErr != nil {
+		return f.DeleteUserErr
+	}
+	f.Users = slices.DeleteFunc(f.Users, func(user store.User) bool {
+		return user.Username == username
+	})
+	return nil
 }

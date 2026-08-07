@@ -1,7 +1,10 @@
 // Package security holds credential validation, password hashing and JWT handling.
 package security
 
-import "unicode/utf8"
+import (
+	"strings"
+	"unicode/utf8"
+)
 
 // Credential bounds shared with every other reference backend.
 const (
@@ -17,6 +20,10 @@ const (
 	MessagePasswordRequired = "password is required"
 	MessageUsernameLength   = "username must be 3-64 characters"
 	MessagePasswordLength   = "password must be 6-128 characters"
+
+	// MessageSeparator joins the messages of every violating field, exactly like the
+	// reference handler that collects the whole bean-validation binding result.
+	MessageSeparator = "; "
 )
 
 // Credentials is the raw /api/auth request body. The fields stay `any` so that a missing
@@ -27,22 +34,36 @@ type Credentials struct {
 	Password any `json:"password"`
 }
 
-// Validate returns the trusted string values, or a non-empty message describing the first
-// violation. Lengths are counted in runes, matching Python's len() on str.
+// Validate returns the trusted string values, or a non-empty message naming every field
+// that violates the contract, joined with MessageSeparator. Lengths are counted in runes,
+// matching Python's len() on str.
 func (c Credentials) Validate() (username string, password string, message string) {
-	username, ok := c.Username.(string)
-	if !ok || username == "" {
-		return "", "", MessageUsernameRequired
+	username, usernameMessage := checkField(c.Username, UsernameMinLength, UsernameMaxLength,
+		MessageUsernameRequired, MessageUsernameLength)
+	password, passwordMessage := checkField(c.Password, PasswordMinLength, PasswordMaxLength,
+		MessagePasswordRequired, MessagePasswordLength)
+
+	violations := make([]string, 0, 2)
+	for _, violation := range []string{usernameMessage, passwordMessage} {
+		if violation != "" {
+			violations = append(violations, violation)
+		}
 	}
-	password, ok = c.Password.(string)
-	if !ok || password == "" {
-		return "", "", MessagePasswordRequired
-	}
-	if n := utf8.RuneCountInString(username); n < UsernameMinLength || n > UsernameMaxLength {
-		return "", "", MessageUsernameLength
-	}
-	if n := utf8.RuneCountInString(password); n < PasswordMinLength || n > PasswordMaxLength {
-		return "", "", MessagePasswordLength
+	if len(violations) > 0 {
+		return "", "", strings.Join(violations, MessageSeparator)
 	}
 	return username, password, ""
+}
+
+// checkField reports at most one violation per field: "is required" outranks the length
+// bound, so a blank value never yields two messages for the same field.
+func checkField(raw any, minLength, maxLength int, required, length string) (value string, message string) {
+	value, ok := raw.(string)
+	if !ok || value == "" {
+		return "", required
+	}
+	if n := utf8.RuneCountInString(value); n < minLength || n > maxLength {
+		return "", length
+	}
+	return value, ""
 }

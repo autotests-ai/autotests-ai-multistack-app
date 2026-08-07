@@ -29,7 +29,13 @@ describe('validateCredentials', () => {
     );
   });
 
-  it('reports the username problem first', () => {
-    expect(validateCredentials('ab', 'x')).toBe('username must be 3-64 characters');
+  it('joins every failing field with "; ", username first', () => {
+    expect(validateCredentials('', '')).toBe('username is required; password is required');
+    expect(validateCredentials('ab', 'x')).toBe(
+      'username must be 3-64 characters; password must be 6-128 characters',
+    );
+    expect(validateCredentials('ab', '')).toBe(
+      'username must be 3-64 characters; password is required',
+    );
   });
 });

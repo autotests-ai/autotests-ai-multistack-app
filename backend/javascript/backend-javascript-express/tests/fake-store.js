@@ -49,6 +49,10 @@ function createFakeStore({ items = [], users = [] } = {}) {
       state.users.push(user);
       return { id: user.id, username };
     },
+
+    async deleteUser(username) {
+      state.users = state.users.filter((user) => user.username !== username);
+    },
   };
 }
 

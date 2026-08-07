@@ -54,6 +54,18 @@ export class AuthService {
     return { username };
   }
 
+  /**
+   * Authenticated self-delete. Tokens are stateless, so a JWT issued earlier keeps
+   * verifying after deletion — but every endpoint that resolves the user answers 401
+   * once the row is gone.
+   */
+  async deleteAccount(username: string): Promise<void> {
+    if ((await this.store.findUserByUsername(username)) === null) {
+      throw new ApiException(HttpStatus.UNAUTHORIZED, 'Unauthorized');
+    }
+    await this.store.deleteUser(username);
+  }
+
   private requireValid(body: CredentialsDto): { username: string; password: string } {
     const error = validateCredentials(body?.username, body?.password);
     if (error !== null) {

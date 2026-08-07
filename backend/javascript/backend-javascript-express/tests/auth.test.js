@@ -54,7 +54,7 @@ describe('POST /api/auth/register', () => {
     [{ username: 'newcomer' }, 'password is required'],
     [{ username: 'ab', password: 'password1' }, 'username must be 3-64 characters'],
     [{ username: 'newcomer', password: '12345' }, 'password must be 6-128 characters'],
-    [{}, 'username is required'],
+    [{}, 'username is required; password is required'],
   ])('answers 400 for %p', async (body, message) => {
     const { app } = buildApp();
     const response = await request(app).post('/api/auth/register').send(body);
@@ -62,16 +62,39 @@ describe('POST /api/auth/register', () => {
     expect(response.status).toBe(400);
     expect(response.body).toEqual({ message });
   });
+});
 
-  it('answers 400 for a body that is not valid JSON', async () => {
+describe('bodies that are not a JSON object', () => {
+  const NOT_JSON = { message: 'Request body is not valid JSON' };
+  const ENDPOINTS = ['/api/auth/register', '/api/auth/login'];
+
+  it.each([
+    ['malformed JSON', '{not json'],
+    ['plain text', 'not json'],
+    ['a JSON array', '["a","b"]'],
+    ['a JSON scalar', '"user1"'],
+  ])('answer 400 for %s', async (_label, raw) => {
+    const { app } = buildApp();
+
+    for (const endpoint of ENDPOINTS) {
+      const response = await request(app)
+        .post(endpoint)
+        .set('Content-Type', 'application/json')
+        .send(raw);
+
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual(NOT_JSON);
+    }
+  });
+
+  it.each(ENDPOINTS)('answer 400 for an empty body on %s', async (endpoint) => {
     const { app } = buildApp();
     const response = await request(app)
-      .post('/api/auth/register')
-      .set('Content-Type', 'application/json')
-      .send('{not json');
+      .post(endpoint)
+      .set('Content-Type', 'application/json');
 
     expect(response.status).toBe(400);
-    expect(response.body).toEqual({ message: 'username is required' });
+    expect(response.body).toEqual(NOT_JSON);
   });
 });
 
@@ -213,5 +236,63 @@ describe('GET /api/auth/me', () => {
 
     expect(response.status).toBe(401);
     expect(response.body).toEqual({ message: 'Unauthorized' });
+  });
+});
+
+describe('DELETE /api/auth/me', () => {
+  async function registerUser(app, username) {
+    const response = await request(app)
+      .post('/api/auth/register')
+      .send({ username, password: 'password1' });
+    return response.body.token;
+  }
+
+  it('removes the authenticated account and answers 204 with an empty body', async () => {
+    const { app, store } = buildApp();
+    const token = await registerUser(app, 'deleteme');
+
+    const response = await request(app)
+      .delete('/api/auth/me')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(204);
+    expect(response.text).toBe('');
+    expect(store.state.users.map((user) => user.username)).toEqual(['user1']);
+  });
+
+  it('leaves a stateless token verifying but unusable: /me answers 401', async () => {
+    const { app } = buildApp();
+    const token = await registerUser(app, 'deleteme');
+    await request(app).delete('/api/auth/me').set('Authorization', `Bearer ${token}`);
+
+    const response = await request(app)
+      .get('/api/auth/me')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ message: 'Unauthorized' });
+  });
+
+  it('answers 401 without a token and keeps every user', async () => {
+    const { app, store } = buildApp();
+
+    const response = await request(app).delete('/api/auth/me');
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ message: 'Unauthorized' });
+    expect(store.state.users).toHaveLength(1);
+  });
+
+  it('rejects login after the account is deleted', async () => {
+    const { app } = buildApp();
+    const token = await registerUser(app, 'gonesoon');
+    await request(app).delete('/api/auth/me').set('Authorization', `Bearer ${token}`);
+
+    const response = await request(app)
+      .post('/api/auth/login')
+      .send({ username: 'gonesoon', password: 'password1' });
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ message: 'Wrong login or password' });
   });
 });

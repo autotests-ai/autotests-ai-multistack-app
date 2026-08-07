@@ -87,6 +87,14 @@ describe('PostgresStore', () => {
     );
   });
 
+  it('deletes a user by username', async () => {
+    const db = new FakeDb([[]]);
+
+    await expect(new PostgresStore(db).deleteUser('user1')).resolves.toBeUndefined();
+    expect(db.calls[0]!.text).toContain('DELETE FROM users');
+    expect(db.calls[0]!.values).toEqual(['user1']);
+  });
+
   it('rethrows unrelated database failures', async () => {
     const db = new FakeDb([], Object.assign(new Error('connection lost'), { code: '08006' }));
 

@@ -1,5 +1,24 @@
 from __future__ import annotations
 
+from django.http import JsonResponse
+
+
+class ApiBoundaryMiddleware:
+    """
+    The reference security chain authenticates every /api/** path before routing, so a
+    method no view accepts answers 401 instead of advertising which methods exist.
+    Unmapped /api/** paths are handled by the catch-all route in `api.urls`.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        if response.status_code == 405 and request.path.startswith("/api/"):
+            return JsonResponse({"message": "Unauthorized"}, status=401)
+        return response
+
 
 class CorsMiddleware:
     def __init__(self, get_response):

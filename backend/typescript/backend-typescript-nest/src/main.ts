@@ -4,7 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { Pool } from 'pg';
 
 import { AppModule } from './app.module';
-import { configureApp } from './bootstrap';
+import { APP_OPTIONS, configureApp } from './bootstrap';
 import { loadConfig } from './config';
 import { PostgresStore } from './store/postgres-store';
 import { applySchema } from './store/schema';
@@ -18,7 +18,9 @@ async function main(): Promise<void> {
   const store = new PostgresStore(pool);
   await seedData(store);
 
-  const app = configureApp(await NestFactory.create(AppModule.forRoot({ config, store })));
+  const app = configureApp(
+    await NestFactory.create(AppModule.forRoot({ config, store }), APP_OPTIONS),
+  );
   await app.listen(config.serverPort, '0.0.0.0');
   console.log(`${config.serviceName} listening on 0.0.0.0:${config.serverPort}`);
 

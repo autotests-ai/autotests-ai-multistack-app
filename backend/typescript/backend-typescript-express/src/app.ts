@@ -2,7 +2,8 @@ import express, { type Express } from 'express';
 
 import { SERVICE_NAME } from './config';
 import { corsMiddleware } from './middleware/cors';
-import { errorHandler, notFoundHandler } from './middleware/errors';
+import { apiFallbackHandler, errorHandler, notFoundHandler } from './middleware/errors';
+import { jsonBodyParser } from './middleware/json';
 import { createApiRouter } from './routes/api';
 import { createAuthRouter } from './routes/auth';
 import type { JwtService } from './security/jwt';
@@ -20,11 +21,12 @@ export function createApp(deps: AppDeps): Express {
   app.disable('x-powered-by');
 
   app.use('/api', corsMiddleware);
-  app.use(express.json());
+  app.use(jsonBodyParser);
 
   app.use('/api', createApiRouter({ store: deps.store, serviceName: deps.serviceName ?? SERVICE_NAME }));
   app.use('/api/auth', createAuthRouter({ store: deps.store, jwtService: deps.jwtService }));
 
+  app.use('/api', apiFallbackHandler);
   app.use(notFoundHandler);
   app.use(errorHandler);
 

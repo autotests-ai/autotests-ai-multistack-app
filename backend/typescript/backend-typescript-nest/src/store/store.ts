@@ -27,4 +27,5 @@ export interface Store {
   insertItem(name: string, description: string): Promise<ItemRecord>;
   findUserByUsername(username: string): Promise<UserRecord | null>;
   insertUser(username: string, passwordHash: string): Promise<UserRecord>;
+  deleteUser(username: string): Promise<void>;
 }

@@ -79,4 +79,10 @@ export class PostgresStore implements Store {
       throw error;
     }
   }
+
+  // An absent row is not an error: the caller already proved the user existed, and
+  // losing a race with a concurrent delete must not become a 500.
+  async deleteUser(username: string): Promise<void> {
+    await this.db.query('DELETE FROM users WHERE username = $1', [username]);
+  }
 }

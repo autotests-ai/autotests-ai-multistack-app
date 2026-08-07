@@ -19,6 +19,7 @@ const (
 	messageBadCredentials = "Wrong login or password"
 	messageUnauthorized   = "Unauthorized"
 	messageDuplicateUser  = "Username already taken"
+	messageInvalidJSON    = "Request body is not valid JSON"
 	messageServerError    = "Internal server error"
 
 	itemsSource  = "postgresql"
@@ -132,6 +133,25 @@ func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 	h.writeJSON(w, http.StatusOK, profileResponse{Username: username})
 }
 
+// DeleteAccount is the authenticated self-delete. Tokens are stateless, so a JWT issued
+// earlier keeps verifying after deletion — but RequireAuth answers 401 once the row is gone.
+func (h *Handler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
+	username, _ := r.Context().Value(usernameKey).(string)
+	if err := h.store.DeleteUser(r.Context(), username); err != nil {
+		h.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// APIFallback answers an unmapped path or method under /api/ with 401 instead of 404: the
+// reference authenticates the whole prefix before routing, so a request never reveals
+// which routes exist. Only the /api/ catch-all pattern reaches here, so every path outside
+// it keeps the ServeMux 404.
+func (h *Handler) APIFallback(w http.ResponseWriter, _ *http.Request) {
+	h.unauthorized(w)
+}
+
 // RequireAuth rejects anything without a valid Bearer token for an existing user.
 func (h *Handler) RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -181,10 +201,15 @@ func (h *Handler) serverError(w http.ResponseWriter, err error) {
 }
 
 // credentials decodes and validates the body, writing 400 itself when it is not usable.
-// A malformed body is treated as an empty one, which yields "username is required".
+// Anything but a JSON object — empty, malformed, an array, a scalar — is messageInvalidJSON,
+// so the decode target is a pointer: a literal `null` leaves it nil instead of passing for
+// an empty object, which must still go through validation.
 func (h *Handler) credentials(w http.ResponseWriter, r *http.Request) (username, password string, ok bool) {
-	var body security.Credentials
-	_ = json.NewDecoder(r.Body).Decode(&body)
+	var body *security.Credentials
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body == nil {
+		h.writeJSON(w, http.StatusBadRequest, errorResponse{Message: messageInvalidJSON})
+		return "", "", false
+	}
 
 	username, password, message := body.Validate()
 	if message != "" {

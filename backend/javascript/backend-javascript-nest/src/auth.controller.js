@@ -4,6 +4,7 @@ const {
   Controller,
   Post,
   Get,
+  Delete,
   Body,
   Req,
   HttpCode,
@@ -43,11 +44,19 @@ class AuthController {
   me(request) {
     return { username: request.user.username };
   }
+
+  @Delete('me')
+  @HttpCode(204)
+  @UseGuards(AuthGuard)
+  async deleteAccount(request) {
+    await this.auth.deleteAccount(request.user.username);
+  }
 }
 
 injectConstructor(AuthController, AuthService);
 decorateParams(AuthController, 'register', Body());
 decorateParams(AuthController, 'login', Body());
 decorateParams(AuthController, 'me', Req());
+decorateParams(AuthController, 'deleteAccount', Req());
 
 module.exports = { AuthController };

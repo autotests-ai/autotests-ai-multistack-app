@@ -54,6 +54,29 @@ def test_validate_credentials_accepts():
     assert validate_credentials("user1", "password1") is None
 
 
+def test_validate_credentials_joins_every_failing_field():
+    assert validate_credentials("", "") == "username is required; password is required"
+    assert (
+        validate_credentials("ab", "123")
+        == "username must be 3-64 characters; password must be 6-128 characters"
+    )
+
+
+def test_unmapped_api_path_requires_authentication(client):
+    # The reference authenticates /api/** before routing, so 404 would leak the API shape.
+    response = client.get("/api/nope")
+
+    assert response.status_code == 401
+    assert response.json()["message"] == "Unauthorized"
+
+
+def test_unmapped_api_method_requires_authentication(client):
+    response = client.delete("/api/items")
+
+    assert response.status_code == 401
+    assert response.json()["message"] == "Unauthorized"
+
+
 def test_register_validation_errors(client):
     response = client.post(
         "/api/auth/register",
@@ -83,31 +106,15 @@ def test_login_unknown_user(client):
     assert response.json()["message"] == "Wrong login or password"
 
 
-def test_register_empty_body(client):
-    response = client.post(
-        "/api/auth/register",
-        data=b"",
-        content_type="application/json",
-    )
+@pytest.mark.parametrize("path", ["/api/auth/register", "/api/auth/login"])
+@pytest.mark.parametrize(
+    "body", [b"", b"not-json", json.dumps(["user1", "password1"]).encode()]
+)
+def test_auth_rejects_a_body_that_is_not_a_json_object(client, path, body):
+    response = client.post(path, data=body, content_type="application/json")
+
     assert response.status_code == 400
-
-
-def test_register_malformed_json(client):
-    response = client.post(
-        "/api/auth/register",
-        data=b"not-json",
-        content_type="application/json",
-    )
-    assert response.status_code == 400
-
-
-def test_register_non_object_json(client):
-    response = client.post(
-        "/api/auth/register",
-        data=json.dumps(["user1", "password1"]),
-        content_type="application/json",
-    )
-    assert response.status_code == 400
+    assert response.json()["message"] == "Request body is not valid JSON"
 
 
 def test_me_rejects_garbage_token(client):

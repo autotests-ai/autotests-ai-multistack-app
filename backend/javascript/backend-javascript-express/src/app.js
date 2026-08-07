@@ -71,7 +71,22 @@ function createApp({ store, settings = config(), jwt } = {}) {
     }
   });
 
+  api.delete('/auth/me', async (req, res, next) => {
+    try {
+      await auth.deleteAccount(req.get('authorization'));
+      res.status(204).end();
+    } catch (error) {
+      next(error);
+    }
+  });
+
   app.use('/api', api);
+
+  // The reference authenticates /api/** before it routes, so an unmapped path —
+  // or a method no route there allows — never reaches a 404.
+  app.use('/api', (req, res, next) => {
+    next(new ApiError(401, 'Unauthorized'));
+  });
 
   app.use((req, res) => {
     res.status(404).json({ message: 'Not Found' });

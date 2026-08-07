@@ -20,6 +20,7 @@ const (
 	messageBadCredentials = "Wrong login or password"
 	messageUnauthorized   = "Unauthorized"
 	messageDuplicateUser  = "Username already taken"
+	messageInvalidJSON    = "Request body is not valid JSON"
 	messageServerError    = "Internal server error"
 
 	itemsSource        = "postgresql"
@@ -130,6 +131,27 @@ func (h *Handler) Me(c *gin.Context) {
 	c.JSON(http.StatusOK, profileResponse{Username: name})
 }
 
+// DeleteAccount is the authenticated self-delete. Tokens are stateless, so a JWT issued
+// earlier keeps verifying after deletion — but RequireAuth answers 401 once the row is gone.
+func (h *Handler) DeleteAccount(c *gin.Context) {
+	username, _ := c.Get(contextUsernameKey)
+	name, _ := username.(string)
+	if err := h.store.DeleteUser(c.Request.Context(), name); err != nil {
+		h.serverError(c, err)
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
+
+// APIFallback answers an unmapped path or method under /api/ with 401 instead of 404: the
+// reference authenticates the whole prefix before routing, so a request never reveals
+// which routes exist. Paths outside /api/ write nothing and keep gin's own 404/405 body.
+func (h *Handler) APIFallback(c *gin.Context) {
+	if strings.HasPrefix(c.Request.URL.Path, apiPrefix) {
+		unauthorized(c)
+	}
+}
+
 // RequireAuth rejects anything without a valid Bearer token for an existing user.
 func (h *Handler) RequireAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -180,10 +202,15 @@ func unauthorized(c *gin.Context) {
 }
 
 // credentials decodes and validates the body, writing 400 itself when it is not usable.
-// A malformed body is treated as an empty one, which yields "username is required".
+// Anything but a JSON object — empty, malformed, an array, a scalar — is messageInvalidJSON,
+// so the decode target is a pointer: a literal `null` leaves it nil instead of passing for
+// an empty object, which must still go through validation.
 func credentials(c *gin.Context) (username, password string, ok bool) {
-	var body security.Credentials
-	_ = json.NewDecoder(c.Request.Body).Decode(&body)
+	var body *security.Credentials
+	if err := json.NewDecoder(c.Request.Body).Decode(&body); err != nil || body == nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse{Message: messageInvalidJSON})
+		return "", "", false
+	}
 
 	username, password, message := body.Validate()
 	if message != "" {

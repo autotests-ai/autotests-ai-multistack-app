@@ -20,6 +20,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -158,5 +159,24 @@ class AuthControllerTest {
                 .content("""{}"""),
         )
             .andExpect(status().isBadRequest)
+    }
+
+    @Test
+    @DisplayName("DELETE /api/auth/me removes the authenticated account with 204")
+    fun deleteAccountReturnsNoContent() {
+        mockMvc.perform(
+            delete("/api/auth/me")
+                .with(authentication(UsernamePasswordAuthenticationToken("user1", null, emptyList()))),
+        )
+            .andExpect(status().isNoContent)
+
+        verify(authService).deleteAccount("user1")
+    }
+
+    @Test
+    @DisplayName("DELETE /api/auth/me without token returns 401")
+    fun deleteAccountRequiresAuthentication() {
+        mockMvc.perform(delete("/api/auth/me"))
+            .andExpect(status().isUnauthorized)
     }
 }

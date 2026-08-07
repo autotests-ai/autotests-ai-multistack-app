@@ -22,6 +22,7 @@ from app.schemas import (
 )
 from app.security import check_password, current_username, hash_password
 from app.seed import seed_data
+from app.validation import validation_message
 
 
 def create_app(*, init_db: bool = True) -> FastAPI:
@@ -46,12 +47,9 @@ def create_app(*, init_db: bool = True) -> FastAPI:
     async def validation_exception_handler(
         _request: Request, exc: RequestValidationError
     ):
-        first = exc.errors()[0] if exc.errors() else {}
-        loc = first.get("loc", ())
-        field = loc[-1] if loc else "body"
         return JSONResponse(
             status_code=400,
-            content={"message": f"{field} is invalid"},
+            content={"message": validation_message(exc.errors())},
         )
 
     @app.get("/api/health", response_model=HealthResponse)
@@ -114,6 +112,26 @@ def create_app(*, init_db: bool = True) -> FastAPI:
     @app.get("/api/auth/me", response_model=UserProfileResponse)
     def me(username: str = Depends(current_username)) -> UserProfileResponse:
         return UserProfileResponse(username=username)
+
+    # Authenticated self-delete. Tokens are stateless: a JWT issued earlier keeps verifying
+    # after deletion, but current_username answers 401 once the row is gone.
+    @app.delete("/api/auth/me", status_code=204)
+    def delete_account(username: str = Depends(current_username)) -> Response:
+        with SessionLocal() as session:
+            user = session.scalar(select(User).where(User.username == username))
+            session.delete(user)
+            session.commit()
+        return Response(status_code=204)
+
+    # Registered last so it only catches what the real routes above did not: the reference
+    # security chain authenticates every /api/** path, and a 404 would leak the API shape.
+    @app.api_route(
+        "/api/{unmapped:path}",
+        methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+        include_in_schema=False,
+    )
+    def unmapped_api(unmapped: str) -> Response:
+        raise HTTPException(status_code=401, detail={"message": "Unauthorized"})
 
     if init_db:
         apply_schema()

@@ -10,6 +10,11 @@ func NewRouter(h *Handler) *gin.Engine {
 	engine := gin.New()
 	engine.Use(gin.Logger(), gin.Recovery(), CORS())
 
+	// NoMethod stays dormant until gin is told to tell 405 apart from 404.
+	engine.HandleMethodNotAllowed = true
+	engine.NoRoute(h.APIFallback)
+	engine.NoMethod(h.APIFallback)
+
 	api := engine.Group(apiPrefix)
 	api.GET("/health", h.Health)
 	api.GET("/items", h.Items)
@@ -19,6 +24,7 @@ func NewRouter(h *Handler) *gin.Engine {
 	auth.POST("/login", h.Login)
 	auth.POST("/logout", h.Logout)
 	auth.GET("/me", h.RequireAuth(), h.Me)
+	auth.DELETE("/me", h.RequireAuth(), h.DeleteAccount)
 
 	return engine
 }

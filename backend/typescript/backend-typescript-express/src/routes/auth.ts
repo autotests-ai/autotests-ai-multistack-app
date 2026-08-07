@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import { POST_AUTH_REDIRECT } from '../config';
 import { requireAuth } from '../middleware/auth';
+import { requireJsonObjectBody } from '../middleware/json';
 import type { JwtService } from '../security/jwt';
 import { checkPassword, hashPassword } from '../security/password';
 import type { Store } from '../store';
@@ -22,8 +23,8 @@ export function createAuthRouter(deps: AuthRouterDeps): Router {
     redirectUrl: POST_AUTH_REDIRECT,
   });
 
-  router.post('/register', async (req, res) => {
-    const body = (req.body ?? {}) as Record<string, unknown>;
+  router.post('/register', requireJsonObjectBody, async (req, res) => {
+    const body = req.body as Record<string, unknown>;
     const error = validateCredentials(body.username, body.password);
     if (error !== null) {
       res.status(400).json({ message: error });
@@ -51,8 +52,8 @@ export function createAuthRouter(deps: AuthRouterDeps): Router {
     res.status(201).json(authResponse(username));
   });
 
-  router.post('/login', async (req, res) => {
-    const body = (req.body ?? {}) as Record<string, unknown>;
+  router.post('/login', requireJsonObjectBody, async (req, res) => {
+    const body = req.body as Record<string, unknown>;
     const error = validateCredentials(body.username, body.password);
     if (error !== null) {
       res.status(400).json({ message: error });
@@ -77,6 +78,13 @@ export function createAuthRouter(deps: AuthRouterDeps): Router {
 
   router.get('/me', requireAuth(deps), (_req, res) => {
     res.json({ username: res.locals.username as string });
+  });
+
+  // Authenticated self-delete. Tokens are stateless, so a JWT issued earlier keeps
+  // verifying after deletion — but requireAuth answers 401 once the row is gone.
+  router.delete('/me', requireAuth(deps), async (_req, res) => {
+    await deps.store.deleteUser(res.locals.username as string);
+    res.status(204).end();
   });
 
   return router;

@@ -52,3 +52,41 @@ def test_register_conflict(client):
 def test_logout(client):
     response = client.post("/api/auth/logout")
     assert response.status_code == 204
+
+
+def test_delete_account(client):
+    register = client.post(
+        "/api/auth/register",
+        json={"username": "deleteme", "password": "password123"},
+    )
+    token = register.json()["token"]
+
+    deleted = client.delete("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
+    assert deleted.status_code == 204
+    assert deleted.content == b""
+
+    # Stateless JWT: the token still verifies, but the user row it names is gone.
+    me = client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
+    assert me.status_code == 401
+
+
+def test_delete_account_unauthorized(client):
+    response = client.delete("/api/auth/me")
+    assert response.status_code == 401
+    assert response.json()["message"] == "Unauthorized"
+
+
+def test_login_after_delete(client):
+    register = client.post(
+        "/api/auth/register",
+        json={"username": "gonesoon", "password": "password123"},
+    )
+    token = register.json()["token"]
+    client.delete("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
+
+    response = client.post(
+        "/api/auth/login",
+        json={"username": "gonesoon", "password": "password123"},
+    )
+    assert response.status_code == 401
+    assert response.json()["message"] == "Wrong login or password"

@@ -55,6 +55,18 @@ class AuthService(
         return UserProfileResponse(username)
     }
 
+    /**
+     * Authenticated self-delete. Tokens are stateless, so a JWT issued earlier keeps verifying
+     * after deletion — but every endpoint that resolves the user ([profile], this one) answers
+     * 401 once the row is gone. Also lets test suites clean up the users they register.
+     */
+    @Transactional
+    fun deleteAccount(username: String) {
+        val user = userRepository.findByUsername(username)
+            .orElseThrow { AuthException(401, "Unauthorized") }
+        userRepository.delete(user)
+    }
+
     private fun buildAuthResponse(username: String): AuthResponse =
         AuthResponse(
             jwtService.createToken(username),

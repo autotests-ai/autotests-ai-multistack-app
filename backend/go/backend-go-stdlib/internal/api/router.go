@@ -16,6 +16,10 @@ func NewRouter(h *Handler) http.Handler {
 	mux.HandleFunc("POST /api/auth/login", h.Login)
 	mux.HandleFunc("POST /api/auth/logout", h.Logout)
 	mux.Handle("GET /api/auth/me", h.RequireAuth(http.HandlerFunc(h.Me)))
+	mux.Handle("DELETE /api/auth/me", h.RequireAuth(http.HandlerFunc(h.DeleteAccount)))
+	// Pattern precedence keeps every mapped route ahead of this catch-all, which therefore
+	// only sees the paths and methods that no route claims.
+	mux.HandleFunc("/api/", h.APIFallback)
 
 	return logging(CORS(mux))
 }

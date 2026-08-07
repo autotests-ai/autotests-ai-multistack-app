@@ -74,9 +74,25 @@ describe('api routes', () => {
     );
   });
 
-  it('keeps the {message} error shape for unknown routes', async () => {
+  it('answers an unmapped /api path with 401, like the reference security chain', async () => {
     context = await createTestApp();
     const response = await request(context.app.getHttpServer()).get('/api/nope');
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ message: 'Unauthorized' });
+  });
+
+  it('answers a method no mapped /api route allows with 401', async () => {
+    context = await createTestApp();
+    const response = await request(context.app.getHttpServer()).get('/api/auth/login');
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ message: 'Unauthorized' });
+  });
+
+  it('keeps the {message} 404 shape outside /api', async () => {
+    context = await createTestApp();
+    const response = await request(context.app.getHttpServer()).get('/nope');
 
     expect(response.status).toBe(404);
     expect(Object.keys(response.body)).toEqual(['message']);

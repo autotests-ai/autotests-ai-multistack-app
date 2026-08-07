@@ -21,9 +21,17 @@ def _auth_response(username: str):
     }
 
 
+def _json_object():
+    """The parsed body, or None when it never was a JSON object (unreadable or a list)."""
+    body = request.get_json(silent=True)
+    return body if isinstance(body, dict) else None
+
+
 @auth_bp.post("/register")
 def register():
-    body = request.get_json(silent=True) or {}
+    body = _json_object()
+    if body is None:
+        return jsonify({"message": "Request body is not valid JSON"}), 400
     error = validate_credentials(body.get("username"), body.get("password"))
     if error:
         return jsonify({"message": error}), 400
@@ -44,7 +52,9 @@ def register():
 
 @auth_bp.post("/login")
 def login():
-    body = request.get_json(silent=True) or {}
+    body = _json_object()
+    if body is None:
+        return jsonify({"message": "Request body is not valid JSON"}), 400
     error = validate_credentials(body.get("username"), body.get("password"))
     if error:
         return jsonify({"message": error}), 400
@@ -69,3 +79,18 @@ def me():
     if denied is not None:
         return denied
     return jsonify({"username": g.username})
+
+
+# Authenticated self-delete. Tokens are stateless: a JWT issued earlier keeps verifying after
+# deletion, but every endpoint that resolves the user answers 401 once the row is gone.
+@auth_bp.delete("/me")
+def delete_account():
+    denied = require_auth()
+    if denied is not None:
+        return denied
+
+    with SessionLocal() as session:
+        user = session.scalar(select(User).where(User.username == g.username))
+        session.delete(user)
+        session.commit()
+    return ("", 204)

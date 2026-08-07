@@ -113,6 +113,37 @@ describe('auth routes', () => {
       expect(response.status).toBe(400);
       expect(response.body).toEqual({ message: 'password must be 6-128 characters' });
     });
+
+    it('joins both field errors into one 400 message', async () => {
+      const response = await http().post('/api/auth/login').send({ username: '', password: '' });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({ message: 'username is required; password is required' });
+    });
+  });
+
+  describe.each(['/api/auth/register', '/api/auth/login'])('JSON body of %s', (path) => {
+    const postRaw = (raw: string) =>
+      http().post(path).set('Content-Type', 'application/json').send(raw);
+
+    it.each([
+      ['a body that is not JSON', 'not json'],
+      ['an empty body', ''],
+      ['a JSON array', '["a","b"]'],
+      ['a JSON scalar', '"user1"'],
+    ])('rejects %s with 400', async (_case, raw) => {
+      const response = await postRaw(raw);
+
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({ message: 'Request body is not valid JSON' });
+    });
+
+    it('validates an empty JSON object instead of calling it malformed', async () => {
+      const response = await postRaw('{}');
+
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({ message: 'username is required; password is required' });
+    });
   });
 
   describe('POST /api/auth/logout', () => {
@@ -172,6 +203,55 @@ describe('auth routes', () => {
 
       expect(response.status).toBe(401);
       expect(response.body).toEqual({ message: 'Unauthorized' });
+    });
+  });
+
+  describe('DELETE /api/auth/me', () => {
+    async function registerUser(username: string): Promise<string> {
+      const response = await http()
+        .post('/api/auth/register')
+        .send({ username, password: 'password123' });
+      return response.body.token as string;
+    }
+
+    it('removes the authenticated account and answers 204 with an empty body', async () => {
+      const token = await registerUser('deleteme');
+
+      const response = await http().delete('/api/auth/me').set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(204);
+      expect(response.text).toBe('');
+      await expect(context.store.listUsernames()).resolves.toEqual([SEED_USERNAME]);
+    });
+
+    it('leaves a stateless token verifying but unusable: /me answers 401', async () => {
+      const token = await registerUser('deleteme');
+      await http().delete('/api/auth/me').set('Authorization', `Bearer ${token}`);
+
+      const response = await http().get('/api/auth/me').set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(401);
+      expect(response.body).toEqual({ message: 'Unauthorized' });
+    });
+
+    it('rejects a missing header with 401 and keeps every user', async () => {
+      const response = await http().delete('/api/auth/me');
+
+      expect(response.status).toBe(401);
+      expect(response.body).toEqual({ message: 'Unauthorized' });
+      await expect(context.store.listUsernames()).resolves.toEqual([SEED_USERNAME]);
+    });
+
+    it('rejects login after the account is deleted', async () => {
+      const token = await registerUser('gonesoon');
+      await http().delete('/api/auth/me').set('Authorization', `Bearer ${token}`);
+
+      const response = await http()
+        .post('/api/auth/login')
+        .send({ username: 'gonesoon', password: 'password123' });
+
+      expect(response.status).toBe(401);
+      expect(response.body).toEqual({ message: 'Wrong login or password' });
     });
   });
 });

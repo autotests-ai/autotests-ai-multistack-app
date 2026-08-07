@@ -76,12 +76,30 @@ describe('CORS on /api/**', () => {
   });
 });
 
-describe('unknown routes', () => {
+describe('unknown routes outside /api', () => {
   it('use the same error envelope', async () => {
     const { app } = buildApp();
     const response = await request(app).get('/nope');
 
     expect(response.status).toBe(404);
     expect(response.body).toEqual({ message: 'Not Found' });
+  });
+});
+
+describe('unmapped routes under /api', () => {
+  it('answer 401, because the reference authenticates before it routes', async () => {
+    const { app } = buildApp();
+    const response = await request(app).get('/api/nope');
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ message: 'Unauthorized' });
+  });
+
+  it('answer 401 for a method no route allows', async () => {
+    const { app } = buildApp();
+    const response = await request(app).put('/api/health');
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ message: 'Unauthorized' });
   });
 });

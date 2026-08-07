@@ -8,6 +8,13 @@ import (
 	"dev.reference/backend-go-stdlib/internal/security"
 )
 
+// The contract reports every violating field in one message, joined with "; ".
+var (
+	bothRequired      = security.MessageUsernameRequired + security.MessageSeparator + security.MessagePasswordRequired
+	bothWrongLength   = security.MessageUsernameLength + security.MessageSeparator + security.MessagePasswordLength
+	requiredAndLength = security.MessageUsernameRequired + security.MessageSeparator + security.MessagePasswordLength
+)
+
 func TestCredentialsValidate(t *testing.T) {
 	cases := []struct {
 		name     string
@@ -17,8 +24,8 @@ func TestCredentialsValidate(t *testing.T) {
 		message  string
 	}{
 		{name: "valid", body: `{"username":"user1","password":"password1"}`, username: "user1", password: "password1"},
-		{name: "empty body", body: `{}`, message: security.MessageUsernameRequired},
-		{name: "malformed json", body: `not json`, message: security.MessageUsernameRequired},
+		{name: "empty body", body: `{}`, message: bothRequired},
+		{name: "malformed json", body: `not json`, message: bothRequired},
 		{name: "null username", body: `{"username":null,"password":"password1"}`, message: security.MessageUsernameRequired},
 		{name: "numeric username", body: `{"username":42,"password":"password1"}`, message: security.MessageUsernameRequired},
 		{name: "blank username", body: `{"username":"","password":"password1"}`, message: security.MessageUsernameRequired},
@@ -27,6 +34,9 @@ func TestCredentialsValidate(t *testing.T) {
 		{name: "blank password", body: `{"username":"user1","password":""}`, message: security.MessagePasswordRequired},
 		{name: "username too short", body: `{"username":"ab","password":"password1"}`, message: security.MessageUsernameLength},
 		{name: "password too short", body: `{"username":"user1","password":"pass"}`, message: security.MessagePasswordLength},
+		{name: "both fields blank", body: `{"username":"","password":""}`, message: bothRequired},
+		{name: "both fields too short", body: `{"username":"ab","password":"pass"}`, message: bothWrongLength},
+		{name: "blank username with short password", body: `{"username":"","password":"pass"}`, message: requiredAndLength},
 	}
 
 	for _, tc := range cases {

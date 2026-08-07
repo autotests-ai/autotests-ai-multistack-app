@@ -1,6 +1,6 @@
 'use strict';
 
-const { validateCredentials } = require('../src/validation');
+const { validateCredentials, isJsonObject } = require('../src/validation');
 
 describe('validateCredentials', () => {
   it('accepts credentials inside both length windows', () => {
@@ -45,9 +45,41 @@ describe('validateCredentials', () => {
     );
   });
 
-  it('reports the username problem before the password problem', () => {
+  it('joins both length problems, username first', () => {
     expect(validateCredentials('ab', '123')).toBe(
-      'username must be 3-64 characters'
+      'username must be 3-64 characters; password must be 6-128 characters'
     );
   });
+
+  it('joins both required messages when neither field is given', () => {
+    expect(validateCredentials('', '')).toBe(
+      'username is required; password is required'
+    );
+    expect(validateCredentials(undefined, undefined)).toBe(
+      'username is required; password is required'
+    );
+  });
+
+  it('joins a missing field with the other field length problem', () => {
+    expect(validateCredentials('', '123')).toBe(
+      'username is required; password must be 6-128 characters'
+    );
+    expect(validateCredentials('ab', '')).toBe(
+      'username must be 3-64 characters; password is required'
+    );
+  });
+});
+
+describe('isJsonObject', () => {
+  it('accepts any plain object, including an empty one', () => {
+    expect(isJsonObject({})).toBe(true);
+    expect(isJsonObject({ username: 'user1' })).toBe(true);
+  });
+
+  it.each([null, undefined, 'user1', 42, true, ['a', 'b']])(
+    'rejects %p',
+    (value) => {
+      expect(isJsonObject(value)).toBe(false);
+    }
+  );
 });

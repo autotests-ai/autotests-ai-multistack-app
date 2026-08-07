@@ -57,7 +57,7 @@ describe('POST /api/auth/register', () => {
     [{ username: 'newcomer' }, 'password is required'],
     [{ username: 'ab', password: 'password1' }, 'username must be 3-64 characters'],
     [{ username: 'newcomer', password: '12345' }, 'password must be 6-128 characters'],
-    [{}, 'username is required'],
+    [{}, 'username is required; password is required'],
   ])('answers 400 for %p', async (body, message) => {
     const { server, close } = await buildApp();
     const response = await request(server)
@@ -68,16 +68,40 @@ describe('POST /api/auth/register', () => {
     expect(response.body).toEqual({ message });
     await close();
   });
+});
 
-  it('answers 400 for a body that is not valid JSON', async () => {
+describe('bodies that are not a JSON object', () => {
+  const NOT_JSON = { message: 'Request body is not valid JSON' };
+  const ENDPOINTS = ['/api/auth/register', '/api/auth/login'];
+
+  it.each([
+    ['malformed JSON', '{not json'],
+    ['plain text', 'not json'],
+    ['a JSON array', '["a","b"]'],
+    ['a JSON scalar', '"user1"'],
+  ])('answer 400 for %s', async (_label, raw) => {
+    const { server, close } = await buildApp();
+
+    for (const endpoint of ENDPOINTS) {
+      const response = await request(server)
+        .post(endpoint)
+        .set('Content-Type', 'application/json')
+        .send(raw);
+
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual(NOT_JSON);
+    }
+    await close();
+  });
+
+  it.each(ENDPOINTS)('answer 400 for an empty body on %s', async (endpoint) => {
     const { server, close } = await buildApp();
     const response = await request(server)
-      .post('/api/auth/register')
-      .set('Content-Type', 'application/json')
-      .send('{not json');
+      .post(endpoint)
+      .set('Content-Type', 'application/json');
 
     expect(response.status).toBe(400);
-    expect(response.body).toEqual({ message: 'username is required' });
+    expect(response.body).toEqual(NOT_JSON);
     await close();
   });
 });
@@ -229,6 +253,72 @@ describe('GET /api/auth/me', () => {
 
     expect(response.status).toBe(401);
     expect(response.body).toEqual({ message: 'Unauthorized' });
+    await close();
+  });
+});
+
+describe('DELETE /api/auth/me', () => {
+  async function registerUser(server, username) {
+    const response = await request(server)
+      .post('/api/auth/register')
+      .send({ username, password: 'password1' });
+    return response.body.token;
+  }
+
+  it('removes the authenticated account and answers 204 with an empty body', async () => {
+    const { server, store, close } = await buildApp();
+    const token = await registerUser(server, 'deleteme');
+
+    const response = await request(server)
+      .delete('/api/auth/me')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(204);
+    expect(response.text).toBe('');
+    expect(store.state.users.map((user) => user.username)).toEqual(['user1']);
+    await close();
+  });
+
+  it('leaves a stateless token verifying but unusable: /me answers 401', async () => {
+    const { server, close } = await buildApp();
+    const token = await registerUser(server, 'deleteme');
+    await request(server)
+      .delete('/api/auth/me')
+      .set('Authorization', `Bearer ${token}`);
+
+    const response = await request(server)
+      .get('/api/auth/me')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ message: 'Unauthorized' });
+    await close();
+  });
+
+  it('answers 401 without a token and keeps every user', async () => {
+    const { server, store, close } = await buildApp();
+
+    const response = await request(server).delete('/api/auth/me');
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ message: 'Unauthorized' });
+    expect(store.state.users).toHaveLength(1);
+    await close();
+  });
+
+  it('rejects login after the account is deleted', async () => {
+    const { server, close } = await buildApp();
+    const token = await registerUser(server, 'gonesoon');
+    await request(server)
+      .delete('/api/auth/me')
+      .set('Authorization', `Bearer ${token}`);
+
+    const response = await request(server)
+      .post('/api/auth/login')
+      .send({ username: 'gonesoon', password: 'password1' });
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ message: 'Wrong login or password' });
     await close();
   });
 });

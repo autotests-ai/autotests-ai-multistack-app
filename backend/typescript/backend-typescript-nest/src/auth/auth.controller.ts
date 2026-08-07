@@ -1,4 +1,6 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Controller, Delete, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+
+import { JsonBody } from '../common/json-body.decorator';
 
 import { AuthService } from './auth.service';
 import { CurrentUser } from './current-user.decorator';
@@ -11,14 +13,14 @@ export class AuthController {
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  register(@Body() body: CredentialsDto): Promise<AuthResponse> {
-    return this.authService.register(body ?? {});
+  register(@JsonBody() body: CredentialsDto): Promise<AuthResponse> {
+    return this.authService.register(body);
   }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  login(@Body() body: CredentialsDto): Promise<AuthResponse> {
-    return this.authService.login(body ?? {});
+  login(@JsonBody() body: CredentialsDto): Promise<AuthResponse> {
+    return this.authService.login(body);
   }
 
   @Post('logout')
@@ -31,5 +33,12 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   me(@CurrentUser() username: string): Promise<UserProfileResponse> {
     return this.authService.profile(username);
+  }
+
+  @Delete('me')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard)
+  deleteAccount(@CurrentUser() username: string): Promise<void> {
+    return this.authService.deleteAccount(username);
   }
 }

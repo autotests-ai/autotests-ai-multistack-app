@@ -35,6 +35,7 @@ type Store interface {
 	InsertItem(ctx context.Context, name, description string) error
 	FindUserByUsername(ctx context.Context, username string) (User, error)
 	CreateUser(ctx context.Context, username, passwordHash string) (User, error)
+	DeleteUser(ctx context.Context, username string) error
 }
 
 // SplitStatements chops a schema file into individual statements, because the pgx

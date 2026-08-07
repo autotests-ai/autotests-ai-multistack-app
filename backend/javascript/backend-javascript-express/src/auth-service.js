@@ -2,7 +2,7 @@
 
 const { ApiError, DuplicateUsernameError } = require('./errors');
 const { hashPassword, checkPassword } = require('./passwords');
-const { validateCredentials } = require('./validation');
+const { validateCredentials, isJsonObject } = require('./validation');
 
 /**
  * Contract logic for /api/auth/**, independent of Express so it can be unit
@@ -17,13 +17,19 @@ function createAuthService({ store, jwt, postAuthRedirect = '/' }) {
     };
   }
 
+  /**
+   * A body that was not a JSON object reaches here as null from lenientJson().
+   * A parsed `{}` is not that case: it goes through field validation.
+   */
   function credentialsOrThrow(body) {
-    const source = body && typeof body === 'object' ? body : {};
-    const error = validateCredentials(source.username, source.password);
+    if (!isJsonObject(body)) {
+      throw new ApiError(400, 'Request body is not valid JSON');
+    }
+    const error = validateCredentials(body.username, body.password);
     if (error) {
       throw new ApiError(400, error);
     }
-    return { username: source.username, password: source.password };
+    return { username: body.username, password: body.password };
   }
 
   async function register(body) {
@@ -69,7 +75,16 @@ function createAuthService({ store, jwt, postAuthRedirect = '/' }) {
     return { username };
   }
 
-  return { register, login, profile };
+  /**
+   * Authenticated self-delete. Tokens are stateless, so a JWT issued earlier keeps
+   * verifying after deletion — but profile() answers 401 once the row is gone.
+   */
+  async function deleteAccount(authorizationHeader) {
+    const { username } = await profile(authorizationHeader);
+    await store.deleteUser(username);
+  }
+
+  return { register, login, profile, deleteAccount };
 }
 
 module.exports = { createAuthService };

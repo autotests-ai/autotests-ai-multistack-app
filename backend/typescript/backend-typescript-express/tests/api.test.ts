@@ -77,9 +77,28 @@ describe('CORS', () => {
 });
 
 describe('unknown routes', () => {
-  it('answer with the {message} error shape', async () => {
-    const { app } = await createTestContext();
-    const response = await request(app).get('/api/nope');
+  let context: TestContext;
+
+  beforeEach(async () => {
+    context = await createTestContext();
+  });
+
+  it('answer an unmapped /api path with 401, like the reference security chain', async () => {
+    const response = await request(context.app).get('/api/nope');
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ message: 'Unauthorized' });
+  });
+
+  it('answer a method no mapped /api route allows with 401', async () => {
+    const response = await request(context.app).get('/api/auth/login');
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ message: 'Unauthorized' });
+  });
+
+  it('answer a path outside /api with 404', async () => {
+    const response = await request(context.app).get('/nope');
 
     expect(response.status).toBe(404);
     expect(response.body).toEqual({ message: 'Not found' });

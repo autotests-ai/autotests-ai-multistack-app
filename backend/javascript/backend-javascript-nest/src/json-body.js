@@ -2,16 +2,21 @@
 
 const express = require('express');
 
-/** Anything unparseable becomes `{}` so validation reports the missing field. */
+const { isJsonObject } = require('./validation');
+
+/**
+ * Returns null for an absent, malformed or non-object body, so the controller
+ * can answer "not valid JSON" instead of guessing from a missing field later.
+ */
 function parseJsonBody(raw) {
   if (!raw || raw.length === 0) {
-    return {};
+    return null;
   }
   try {
     const parsed = JSON.parse(raw.toString('utf8'));
-    return parsed !== null && typeof parsed === 'object' ? parsed : {};
+    return isJsonObject(parsed) ? parsed : null;
   } catch {
-    return {};
+    return null;
   }
 }
 

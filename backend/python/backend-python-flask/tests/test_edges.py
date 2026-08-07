@@ -61,6 +61,44 @@ def test_validate_credentials_accepts():
     assert validate_credentials("user1", "password1") is None
 
 
+def test_validate_credentials_joins_every_failing_field():
+    assert validate_credentials("", "") == "username is required; password is required"
+    assert (
+        validate_credentials("ab", "123")
+        == "username must be 3-64 characters; password must be 6-128 characters"
+    )
+
+
+@pytest.mark.parametrize("path", ["/api/auth/register", "/api/auth/login"])
+@pytest.mark.parametrize("body", [b"not json", b"", b'["user1","password1"]'])
+def test_auth_rejects_a_body_that_is_not_a_json_object(client, path, body):
+    response = client.post(path, data=body, content_type="application/json")
+
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "Request body is not valid JSON"
+
+
+def test_unmapped_api_path_requires_authentication(client):
+    # The reference authenticates /api/** before routing, so 404 would leak the API shape.
+    response = client.get("/api/nope")
+
+    assert response.status_code == 401
+    assert response.get_json()["message"] == "Unauthorized"
+
+
+def test_unmapped_api_method_requires_authentication(client):
+    response = client.delete("/api/items")
+
+    assert response.status_code == 401
+
+
+def test_unmapped_path_outside_the_api_stays_a_404(client):
+    response = client.get("/nope")
+
+    assert response.status_code == 404
+    assert response.get_json()["message"] == "Not Found"
+
+
 def test_register_validation_errors(client):
     response = client.post(
         "/api/auth/register",

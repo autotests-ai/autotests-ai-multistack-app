@@ -106,6 +106,17 @@ func TestPostgresUsers(t *testing.T) {
 	if _, err := pg.FindUserByUsername(ctx, username+"-missing"); !errors.Is(err, store.ErrUserNotFound) {
 		t.Fatalf("FindUserByUsername error = %v, want ErrUserNotFound", err)
 	}
+
+	if err := pg.DeleteUser(ctx, username); err != nil {
+		t.Fatalf("DeleteUser: %v", err)
+	}
+	if _, err := pg.FindUserByUsername(ctx, username); !errors.Is(err, store.ErrUserNotFound) {
+		t.Fatalf("FindUserByUsername after delete = %v, want ErrUserNotFound", err)
+	}
+	// Deleting an already-deleted user is a no-op, not an error.
+	if err := pg.DeleteUser(ctx, username); err != nil {
+		t.Fatalf("second DeleteUser: %v", err)
+	}
 }
 
 func TestPostgresSeedIsIdempotent(t *testing.T) {

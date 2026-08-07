@@ -4,7 +4,7 @@ const { Injectable } = require('@nestjs/common');
 
 const { ApiException, DuplicateUsernameError } = require('./errors');
 const { hashPassword, checkPassword } = require('./passwords');
-const { validateCredentials } = require('./validation');
+const { validateCredentials, isJsonObject } = require('./validation');
 const { injectConstructor } = require('./di');
 const { JwtService } = require('./jwt.service');
 const { STORE, SETTINGS } = require('./tokens');
@@ -25,13 +25,19 @@ class AuthService {
     };
   }
 
+  /**
+   * A body that was not a JSON object reaches here as null from lenientJson().
+   * A parsed `{}` is not that case: it goes through field validation.
+   */
   credentialsOrThrow(body) {
-    const source = body && typeof body === 'object' ? body : {};
-    const error = validateCredentials(source.username, source.password);
+    if (!isJsonObject(body)) {
+      throw new ApiException(400, 'Request body is not valid JSON');
+    }
+    const error = validateCredentials(body.username, body.password);
     if (error) {
       throw new ApiException(400, error);
     }
-    return { username: source.username, password: source.password };
+    return { username: body.username, password: body.password };
   }
 
   async register(body) {
@@ -75,6 +81,14 @@ class AuthService {
       throw new ApiException(401, 'Unauthorized');
     }
     return { username };
+  }
+
+  /**
+   * Authenticated self-delete. Tokens are stateless, so a JWT issued earlier keeps
+   * verifying after deletion — but AuthGuard answers 401 once the row is gone.
+   */
+  async deleteAccount(username) {
+    await this.store.deleteUser(username);
   }
 }
 

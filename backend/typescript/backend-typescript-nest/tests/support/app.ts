@@ -2,7 +2,7 @@ import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 
 import { AppModule } from '../../src/app.module';
-import { configureApp } from '../../src/bootstrap';
+import { APP_OPTIONS, configureApp } from '../../src/bootstrap';
 import { SERVICE_NAME, type AppConfig } from '../../src/config';
 import { JwtService } from '../../src/security/jwt.service';
 import { seedData } from '../../src/store/seed';
@@ -35,7 +35,7 @@ export async function createTestApp(options: { seed?: boolean } = {}): Promise<T
     imports: [AppModule.forRoot({ config: TEST_CONFIG, store })],
   }).compile();
 
-  const app = configureApp(moduleRef.createNestApplication());
+  const app = configureApp(moduleRef.createNestApplication(APP_OPTIONS));
   await app.init();
 
   return { app, store, jwtService: app.get(JwtService) };

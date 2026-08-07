@@ -77,6 +77,12 @@ function createPgStore(databaseUrl) {
       }
     },
 
+    // An absent row is not an error: the caller already proved the user existed, and
+    // losing a race with a concurrent delete must not become a 500.
+    async deleteUser(username) {
+      await pool.query('DELETE FROM users WHERE username = $1', [username]);
+    },
+
     async close() {
       await pool.end();
     },

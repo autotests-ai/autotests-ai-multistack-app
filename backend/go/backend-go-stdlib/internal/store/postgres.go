@@ -146,6 +146,15 @@ func (p *Postgres) CreateUser(ctx context.Context, username, passwordHash string
 	return user, nil
 }
 
+// DeleteUser removes a user row. An absent row is not an error: the caller already proved
+// the user existed, and losing a race with a concurrent delete must not become a 500.
+func (p *Postgres) DeleteUser(ctx context.Context, username string) error {
+	if _, err := p.db.ExecContext(ctx, `DELETE FROM users WHERE username = $1`, username); err != nil {
+		return fmt.Errorf("delete user: %w", err)
+	}
+	return nil
+}
+
 func isUniqueViolation(err error) bool {
 	var pgErr *pgconn.PgError
 	return errors.As(err, &pgErr) && pgErr.Code == uniqueViolationCode

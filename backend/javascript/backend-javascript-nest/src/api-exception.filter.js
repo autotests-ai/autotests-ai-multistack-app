@@ -10,10 +10,21 @@ class ApiExceptionFilter {
   }
 
   catch(exception, host) {
-    const response = host.switchToHttp().getResponse();
+    const http = host.switchToHttp();
+    const response = http.getResponse();
 
     if (exception instanceof HttpException) {
-      response.status(exception.getStatus()).json({
+      const status = exception.getStatus();
+      // Nest routes before it can authenticate, so its own 404 for an unmapped
+      // path — or a method no route allows — would expose an /api/** surface
+      // that the reference answers with 401.
+      if (status === HttpStatus.NOT_FOUND && isApiPath(http.getRequest().path)) {
+        response
+          .status(HttpStatus.UNAUTHORIZED)
+          .json({ message: 'Unauthorized' });
+        return;
+      }
+      response.status(status).json({
         message: messageOf(exception.getResponse()),
       });
       return;
@@ -24,6 +35,13 @@ class ApiExceptionFilter {
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
       .json({ message: 'Internal Server Error' });
   }
+}
+
+/** True for the `/api/**` surface the reference guards, `/api` itself included. */
+function isApiPath(path) {
+  return (
+    typeof path === 'string' && (path === '/api' || path.startsWith('/api/'))
+  );
 }
 
 function messageOf(payload) {
@@ -39,4 +57,4 @@ function messageOf(payload) {
   return 'Error';
 }
 
-module.exports = { ApiExceptionFilter, messageOf };
+module.exports = { ApiExceptionFilter, messageOf, isApiPath };

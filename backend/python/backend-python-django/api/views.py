@@ -13,14 +13,17 @@ from api.jwt_util import create_token, extract_username
 from api.models import Item, User
 
 
-def _json_body(request) -> dict:
-    if not request.body:
-        return {}
+def _json_body(request) -> dict | None:
+    """The parsed body, or None when it never was a JSON object (unreadable or a list)."""
     try:
         data = json.loads(request.body.decode())
     except (json.JSONDecodeError, UnicodeDecodeError):
-        return {}
-    return data if isinstance(data, dict) else {}
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _unreadable_body() -> JsonResponse:
+    return JsonResponse({"message": "Request body is not valid JSON"}, status=400)
 
 
 def _auth_response(username: str) -> dict:
@@ -49,6 +52,8 @@ def items(_request):
 @require_http_methods(["POST"])
 def register(request):
     body = _json_body(request)
+    if body is None:
+        return _unreadable_body()
     error = validate_credentials(body.get("username"), body.get("password"))
     if error:
         return JsonResponse({"message": error}, status=400)
@@ -71,6 +76,8 @@ def register(request):
 @require_http_methods(["POST"])
 def login(request):
     body = _json_body(request)
+    if body is None:
+        return _unreadable_body()
     error = validate_credentials(body.get("username"), body.get("password"))
     if error:
         return JsonResponse({"message": error}, status=400)
@@ -92,12 +99,34 @@ def logout(_request):
     return HttpResponse(status=204)
 
 
-@require_GET
-def me(request):
+def _authenticated_username(request) -> str | None:
     header = request.headers.get("Authorization", "")
     if not header.startswith("Bearer "):
-        return JsonResponse({"message": "Unauthorized"}, status=401)
+        return None
     username = extract_username(header[7:])
     if not username or not User.objects.filter(username=username).exists():
+        return None
+    return username
+
+
+# GET and DELETE share one view: Django routes by path, and the 401 for an anonymous caller
+# must win over the 405 that a method-restricted view would answer first.
+# DELETE is the authenticated self-delete — tokens are stateless, so a JWT issued earlier keeps
+# verifying after deletion, but this view answers 401 once the row is gone.
+@csrf_exempt
+@require_http_methods(["GET", "DELETE"])
+def me(request):
+    username = _authenticated_username(request)
+    if username is None:
         return JsonResponse({"message": "Unauthorized"}, status=401)
+    if request.method == "DELETE":
+        User.objects.filter(username=username).delete()
+        return HttpResponse(status=204)
     return JsonResponse({"username": username})
+
+
+# The reference security chain authenticates every /api/** path before routing, so an
+# unmapped one answers 401 — a client must not learn which API paths exist.
+@csrf_exempt
+def unmapped(_request):
+    return JsonResponse({"message": "Unauthorized"}, status=401)

@@ -262,15 +262,17 @@ func TestCredentialValidationIsRejectedWith400(t *testing.T) {
 		body    string
 		message string
 	}{
-		{name: "no body", body: "", message: "username is required"},
-		{name: "empty object", body: `{}`, message: "username is required"},
-		{name: "malformed json", body: `{`, message: "username is required"},
+		{name: "empty object", body: `{}`, message: "username is required; password is required"},
 		{name: "username not a string", body: `{"username":7,"password":"password1"}`, message: "username is required"},
 		{name: "missing password", body: `{"username":"user1"}`, message: "password is required"},
 		{name: "username too short", body: `{"username":"ab","password":"password1"}`, message: "username must be 3-64 characters"},
 		{name: "username too long", body: `{"username":"` + strings.Repeat("u", 65) + `","password":"password1"}`, message: "username must be 3-64 characters"},
 		{name: "password too short", body: `{"username":"user1","password":"short"}`, message: "password must be 6-128 characters"},
 		{name: "password too long", body: `{"username":"user1","password":"` + strings.Repeat("p", 129) + `"}`, message: "password must be 6-128 characters"},
+		// Every violating field is reported, joined with "; ", as in the reference.
+		{name: "both fields blank", body: `{"username":"","password":""}`, message: "username is required; password is required"},
+		{name: "both fields too short", body: `{"username":"ab","password":"short"}`, message: "username must be 3-64 characters; password must be 6-128 characters"},
+		{name: "blank username with short password", body: `{"username":"","password":"short"}`, message: "username is required; password must be 6-128 characters"},
 	}
 
 	for _, path := range []string{"/api/auth/register", "/api/auth/login"} {
@@ -283,6 +285,62 @@ func TestCredentialValidationIsRejectedWith400(t *testing.T) {
 			})
 		}
 	}
+}
+
+func TestBodyThatIsNotAJSONObjectIsRejectedWith400(t *testing.T) {
+	cases := map[string]string{
+		"no body":          "",
+		"plain text":       "not json",
+		"truncated object": `{`,
+		"json array":       `["a","b"]`,
+		"json string":      `"user1"`,
+		"json number":      `42`,
+		"json null":        `null`,
+	}
+
+	for _, path := range []string{"/api/auth/register", "/api/auth/login"} {
+		for name, body := range cases {
+			t.Run(path+"/"+name, func(t *testing.T) {
+				recorder := seededHarness(t).do(t, http.MethodPost, path, body, nil)
+
+				requireStatus(t, recorder, http.StatusBadRequest)
+				requireMessage(t, recorder, "Request body is not valid JSON")
+			})
+		}
+	}
+}
+
+func TestUnmappedApiRequestsRequireAuthentication(t *testing.T) {
+	h := seededHarness(t)
+	cases := []struct {
+		name   string
+		method string
+		path   string
+	}{
+		{name: "unknown path", method: http.MethodGet, path: "/api/nope"},
+		{name: "unknown path under auth", method: http.MethodGet, path: "/api/auth/nope"},
+		{name: "method not mapped on login", method: http.MethodGet, path: "/api/auth/login"},
+		{name: "method not mapped on items", method: http.MethodDelete, path: "/api/items"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := h.do(t, tc.method, tc.path, "", nil)
+
+			requireStatus(t, recorder, http.StatusUnauthorized)
+			requireMessage(t, recorder, "Unauthorized")
+		})
+	}
+}
+
+func TestUnmappedPathOutsideApiIsNotFound(t *testing.T) {
+	// The reference answers 401 here too, but only /api/** is contract-tested, so paths
+	// outside the prefix keep the framework default.
+	h := seededHarness(t)
+
+	recorder := h.do(t, http.MethodGet, "/nope", "", nil)
+
+	requireStatus(t, recorder, http.StatusNotFound)
 }
 
 func TestLogout(t *testing.T) {
@@ -368,6 +426,70 @@ func TestMeDatabaseFailure(t *testing.T) {
 
 	requireStatus(t, recorder, http.StatusInternalServerError)
 	requireMessage(t, recorder, "Internal server error")
+}
+
+func TestDeleteAccount(t *testing.T) {
+	h := seededHarness(t)
+	token, err := h.tokens.Create(testUser)
+	if err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+
+	recorder := h.do(t, http.MethodDelete, "/api/auth/me", "", map[string]string{"Authorization": "Bearer " + token})
+
+	requireStatus(t, recorder, http.StatusNoContent)
+	if body := recorder.Body.String(); body != "" {
+		t.Fatalf("body = %q, want empty", body)
+	}
+	if len(h.store.Users) != 0 {
+		t.Fatalf("users = %+v, want none left", h.store.Users)
+	}
+
+	// Stateless JWT: the token still verifies, but the user row it names is gone.
+	profile := h.do(t, http.MethodGet, "/api/auth/me", "", map[string]string{"Authorization": "Bearer " + token})
+	requireStatus(t, profile, http.StatusUnauthorized)
+}
+
+func TestDeleteAccountWithoutToken(t *testing.T) {
+	h := seededHarness(t)
+
+	recorder := h.do(t, http.MethodDelete, "/api/auth/me", "", nil)
+
+	requireStatus(t, recorder, http.StatusUnauthorized)
+	requireMessage(t, recorder, "Unauthorized")
+	if len(h.store.Users) != 1 {
+		t.Fatalf("users = %+v, want the seeded user untouched", h.store.Users)
+	}
+}
+
+func TestDeleteAccountDatabaseFailure(t *testing.T) {
+	h := seededHarness(t)
+	token, err := h.tokens.Create(testUser)
+	if err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	h.store.DeleteUserErr = errors.New("db down")
+
+	recorder := h.do(t, http.MethodDelete, "/api/auth/me", "", map[string]string{"Authorization": "Bearer " + token})
+
+	requireStatus(t, recorder, http.StatusInternalServerError)
+	requireMessage(t, recorder, "Internal server error")
+}
+
+func TestLoginAfterDeleteIsRejected(t *testing.T) {
+	h := newHarness(t, storetest.New())
+
+	registered := h.do(t, http.MethodPost, "/api/auth/register", `{"username":"gonesoon","password":"password1"}`, nil)
+	requireStatus(t, registered, http.StatusCreated)
+	token, _ := decode[map[string]any](t, registered)["token"].(string)
+
+	deleted := h.do(t, http.MethodDelete, "/api/auth/me", "", map[string]string{"Authorization": "Bearer " + token})
+	requireStatus(t, deleted, http.StatusNoContent)
+
+	loggedIn := h.do(t, http.MethodPost, "/api/auth/login", `{"username":"gonesoon","password":"password1"}`, nil)
+
+	requireStatus(t, loggedIn, http.StatusUnauthorized)
+	requireMessage(t, loggedIn, "Wrong login or password")
 }
 
 func TestMaximumLengthPasswordRoundTrips(t *testing.T) {

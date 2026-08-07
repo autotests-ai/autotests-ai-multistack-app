@@ -4,7 +4,7 @@ import { UsernameTakenError } from '../../src/store/store';
 /** In-memory `Store` so route tests need no PostgreSQL. */
 export class FakeStore implements Store {
   private readonly items: ItemRecord[] = [];
-  private readonly users: UserRecord[] = [];
+  private users: UserRecord[] = [];
   private nextItemId = 1;
   private nextUserId = 1;
 
@@ -40,5 +40,14 @@ export class FakeStore implements Store {
     const user: UserRecord = { id: this.nextUserId++, username, passwordHash };
     this.users.push(user);
     return user;
+  }
+
+  async deleteUser(username: string): Promise<void> {
+    this.users = this.users.filter((user) => user.username !== username);
+  }
+
+  /** Lets tests assert what survived a delete. */
+  async listUsernames(): Promise<string[]> {
+    return this.users.map((user) => user.username);
   }
 }

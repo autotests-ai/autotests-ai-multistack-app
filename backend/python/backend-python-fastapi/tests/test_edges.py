@@ -71,9 +71,41 @@ def test_me_rejects_token_for_missing_user(client):
 def test_string_http_exception_is_wrapped(client):
     # Unknown path → StarletteHTTPException with a string detail, which the
     # handler must wrap into {"message": ...} rather than echoing the detail.
-    response = client.get("/api/does-not-exist")
+    response = client.get("/does-not-exist")
     assert response.status_code == 404
     assert response.json() == {"message": "Not Found"}
+
+
+def test_unmapped_api_path_requires_authentication(client):
+    # The reference authenticates /api/** before routing, so 404 would leak the API shape.
+    response = client.get("/api/does-not-exist")
+
+    assert response.status_code == 401
+    assert response.json() == {"message": "Unauthorized"}
+
+
+def test_unmapped_api_method_requires_authentication(client):
+    response = client.delete("/api/items")
+
+    assert response.status_code == 401
+
+
+@pytest.mark.parametrize("path", ["/api/auth/register", "/api/auth/login"])
+@pytest.mark.parametrize("body", [b"not json", b"", b'["user1","password1"]'])
+def test_auth_rejects_a_body_that_is_not_a_json_object(client, path, body):
+    response = client.post(
+        path, content=body, headers={"Content-Type": "application/json"}
+    )
+
+    assert response.status_code == 400
+    assert response.json()["message"] == "Request body is not valid JSON"
+
+
+def test_validation_message_joins_every_failing_field(client):
+    response = client.post("/api/auth/login", json={"username": "", "password": ""})
+
+    assert response.status_code == 400
+    assert response.json()["message"] == "username is invalid; password is invalid"
 
 
 def test_extract_username_rejects_non_string_sub():
