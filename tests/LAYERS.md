@@ -12,28 +12,32 @@ Module folders: `-` between segments, `_` in compounds (`react_testing_library`,
                     ├─────────────┤
                     │     e2e     │  UI through browser (@Tag e2e; optional visual / mock)
                     ├─────────────┤
-                    │     api     │  HTTP contract (Rest Assured @Tag api)
+                    │     api     │  HTTP contract (@Tag api — any client / language)
                     ├─────────────┤
-                    │ integration │  wired system smoke, no UI (health / seed @Tag integration)
+                    │ integration │  deploy wiring facts, no UI (@Tag integration)
                     ├─────────────┤
                     │component│  React in jsdom (Vitest) — sideways FE, not classical tip
                     ├─────────────┤
-                    │ unit │ active backend (product code)
+                    │ unit │ active backend (product code; incl. Spring slices)
                     └─────────────┘
 ```
 
-`component` sits **beside** the Java ladder (frontend zone), not inside `tests/java/…`.  
+`component` sits **beside** the tests ladder (frontend zone), not inside `tests/<lang>/…`.  
 DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
-**Not classical:** calling Chrome “mount” checks `integration`. Those are thin **e2e** (`@Tag("mock")`).
+**Not classical:** calling Chrome “mount” checks `integration`. Those are thin **e2e** (`@Tag("mock")`).  
+**Not classical either:** Spring `@WebMvcTest` / `@DataJpaTest` — those stay in **unit** (see slices below).
 
 ## integration vs api — intent, not tag
 
-Same Rest Assured, same stand — different question. **api** asserts the HTTP contract:
-status codes, JSON Schemas (`src/test/resources/schemas/`), error envelopes — values that hold
-on *any* healthy deployment. **integration** asserts wiring facts of *this* deployment: which
-module answered (`service` id), where data physically lives (`source=postgresql`), whether the
-Flyway seed arrived. No assertion appears in both layers:
+Same HTTP calls, same stand — different question. Client is whatever the active tests
+module uses (Java today: Rest Assured; Playwright/pytest helpers when those stacks grow
+an `api` slice). **api** asserts the HTTP contract: status codes, JSON Schemas
+(`src/test/resources/schemas/`), error envelopes — values that hold on *any* healthy
+deployment of the shared JSON API (any `BACKEND_LANG`). **integration** asserts wiring
+facts of *this* deployment: which module answered (`service` id), where data physically
+lives (`source=postgresql`), whether the Flyway seed arrived, whether DB + JWT hold
+across separate requests. No assertion appears in both layers:
 
 | Question | Layer | Example |
 |----------|-------|---------|
@@ -41,7 +45,7 @@ Flyway seed arrived. No assertion appears in both layers:
 | Did the deploy wire PostgreSQL, not a stub? | integration | `BackendWiringIntegrationTests` (`source=postgresql`) |
 | Does a duplicate username answer 409? | api | `AuthApiTests.registerDuplicateUsername` |
 | Is seed user1 present after deploy? | integration | `SeedDataIntegrationTests` |
-| Do DB and JWT survive separate HTTP requests? | integration | `AuthRoundTripIntegrationTests` (full lifecycle incl. stateless logout + `DELETE /me`) |
+| Do DB and JWT survive separate HTTP requests? | integration | `AuthRoundTripIntegrationTests` (full lifecycle: register → login → me → logout still 200 → `DELETE /me` → me is 401) |
 
 ## Manual lives in code (canon)
 
@@ -78,27 +82,32 @@ Self-check of the **tests module helpers** before / alongside product layers —
 
 | Slice | Tag | CI |
 |-------|-----|-----|
-| UI on a stub API | `@Tag("mock")` (+ `@Tag("e2e")`) | job `e2e-mock-tests` on every PR; on push to `main` when frontend changed |
+| UI on stub API (mount + error injection) | `@Tag("mock")` (+ `@Tag("e2e")`) | job `e2e-mock-tests` on every PR; on push to `main` when frontend changed |
 | Flow | `@Tag("e2e")` exclude visual | job `e2e-tests` (after `integration-tests` + `api-tests`) |
 | Flow + visual (dispatch `run_visual`) | `e2e,visual` | job `e2e-tests` |
 | Refresh baselines | `@Tag("visual")` + `-DupdateBaselines=true` | job `e2e-update-baselines` (dispatch `update_baselines`) |
 
 Local refresh: `./gradlew test -Denv=reference_ci -DincludeTags=visual -DupdateBaselines=true`
 
-**Mock stand** — browser mount checks that need only valid `/api/*` JSON, not a live backend.
+**Mock stand** — browser checks that need controlled `/api/*` JSON, not a live backend.
 Stand = `-Denv=reference_mock`; slice = `-DincludeTags=mock`.
 
 The SPA is served at document root and resolves API to `/api`; the frontend container nginx
 has no `/api` route, so a **stand-gateway** (compose profile `mock`, port **9911**) proxies
-`/` → frontend and `/api/` → WireMock stubs in `deploy/mock/mappings/`. Stubs answer the same
-shapes as the real controllers, including `401` on `/api/auth/me` without a bearer token.
+`/` → frontend and `/api/` → WireMock stubs in `deploy/mock/mappings/`. Default stubs answer
+the same shapes as the real controllers (incl. `401` on `/api/auth/me` without a bearer).
+The gateway also proxies WireMock admin at `/__admin/` for scenario switches.
 
-`@Tag("mock")` — four mount tests (Home / Login / Register):
-`HomeLayoutTests`, `LoginFormTests`, `LoginEmbedTests`, `RegisterFormTests` — plus
-`HomeErrorStateTests`: WireMock **scenarios** inject `500` into `/api/items` / `/api/health`
-(states toggled via the admin API, which the gateway proxies at `/__admin/`), so the UI
-error-panels get real-browser coverage that a healthy backend can never produce. On stands
-without `/__admin/` (ci/prod) these tests skip by JUnit assumption instead of failing.
+Two `@Tag("mock")` flavours in the same job:
+
+| Flavour | What | Classes / mechanism |
+|---------|------|---------------------|
+| Mount (happy stubs) | layout / form chrome with a healthy stub API | `HomeLayoutTests`, `LoginFormTests`, `LoginEmbedTests`, `RegisterFormTests` |
+| Error injection | UI error panels a live backend can never produce | `HomeErrorStateTests` — `MockScenarios` flips WireMock scenarios `items` / `health` to state `error` → mappings `items-error.json` / `health-error.json` answer `500` |
+
+On stands without `/__admin/` (ci/prod) the error-injection tests **skip by JUnit assumption**
+instead of failing — same suite, honest report. Happy-mount tests need only the stub
+mappings; they do not call admin.
 
 ```bash
 docker compose --profile mock up -d stand-gateway   # :9911 + api-mock + react frontend
@@ -142,10 +151,10 @@ suite (`npm test` / `pytest` with `UI_URL` / `BASE_URL`) — no Gradle tag slice
 
 | Layer | Zone | Where | Selector | Run |
 |-------|------|-------|----------|-----|
-| unit | backend | active `BACKEND_DIR` (default `backend/java/backend-java-spring/`) | all backend unit tests | by `BACKEND_LANG`: gradle+JaCoCo · `pytest` · `go test` · `npm test` — see [backend/README.md](../backend/README.md) |
+| unit | backend | active `BACKEND_DIR` (default `backend/java/backend-java-spring/`) | all backend unit tests (plain + Spring slices) | by `BACKEND_LANG`: gradle+JaCoCo · `pytest` · `go test` · `npm test` — see [backend/README.md](../backend/README.md) |
 | component | frontend | `frontend/typescript/frontend-typescript-react/src/test/` | Vitest | `npm test` |
 | integration | tests | `…/tests/integration/` (`BackendWiringIntegrationTests`, `AuthRoundTripIntegrationTests`, `SeedDataIntegrationTests`) | `@Tag("integration")` | java → `-DincludeTags=integration` via `integration-tests` (after `stand-ready`) |
-| api | tests | `…/tests/api/` (`AuthApiTests`, `ReferenceApiTests`) | `@Tag("api")` | java → `-DincludeTags=api` via `api-tests` (**parallel** to `integration-tests`, both after `stand-ready`) |
+| api | tests | `…/tests/api/` (`AuthApiTests`, `ReferenceApiTests`) — HTTP contract of the shared JSON API | `@Tag("api")` (java today; other `TESTS_LANG` can grow the same slice) | java → `-DincludeTags=api` via `api-tests` (**parallel** to `integration-tests`, both after `stand-ready`); retarget any backend with `-DapiBaseUrl` / `-DapiHealthService` |
 | e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `visual` / `mock`) | `e2e-mock-tests` (push, `mock`); `e2e-tests` (after lanes + `sonar-tests` join) |
 | manual | tests | `…/tests/manual/` **in code** | `@Tag("manual")` + `@Manual` | java → `-DincludeTags=manual` via `manual-tests` (after `e2e-tests`, dispatch) |
 
@@ -154,16 +163,31 @@ Bare `./gradlew test` (java) runs **everything**, integration included — there
 Active teaching module defaults: `tests/java/tests-java-gradle-junit5-allure3-selenide/` (`TESTS_LANG=java`).  
 Paths SSOT: `backend/scripts/paths.sh`. Module naming: [NAMING.md](NAMING.md).
 
-## Why `unit` and `harness`?
+## Why `unit` and `harness`? (and why Spring “slices” ≠ integration)
 
 | Job | Product under test |
 |-----|--------------------|
-| `unit-tests` | **Application** (active backend — plain units, `@WebMvcTest` slices and the `@DataJpaTest`+Testcontainers persistence slice; Allure suite label `slice` separates them inside the `unit` layer; toolchain from `BACKEND_LANG`; Docker required for the persistence slice) |
+| `unit-tests` | **Application** (active backend — toolchain from `BACKEND_LANG`) |
 | `tests-harness-backend` | **Test tooling (BE lane)** — `ConfigReader` |
 | `tests-harness-frontend` | **Test tooling (FE lane)** — CSS helpers, HAR helpers |
 | `component-tests` | **Application** (active frontend — Vitest; coverage thresholds gate regressions) |
 
 Students: product unit layers (`unit-tests` / `component-tests`); harness = helper checks that higher layers depend on.
+
+**Slices (java Spring, inside `unit-tests` — not the classical integration layer).**  
+After the integration/api split, “slice” means a *partial Spring context* in the backend
+module, still `layer=unit` / job `unit-tests`. Allure `suite=slice` (`SliceTestBase`)
+separates them from one-class-in-isolation units in the report — the teaching pyramid
+stays six classical layers; we do **not** promote these to `@Tag("integration")`.
+
+| Slice | Spring test | What it proves | Docker? |
+|-------|-------------|----------------|---------|
+| Web MVC | `@WebMvcTest` (+ `SecurityChainTest` with a real `JwtService`) | controller / security chain in isolation | no |
+| Persistence | `@DataJpaTest` + Testcontainers (`PostgresSliceTestBase`, `postgres:16-alpine`) | Flyway + entities against the same Postgres the app ships with | yes |
+
+Classical **integration** (`tests/…/integration/`, job `integration-tests`) is the other
+question: the *deployed* stand’s wiring over HTTP. Do not rename Spring slices to
+`integration` and do not move deploy wiring checks into `unit-tests`.
 
 The 100% line-coverage gate (`jacocoTestCoverageVerification`) is java-only and slices by
 `-DincludeTags` (`harness-backend` → `ConfigReader`; `harness-frontend` → `LayoutCss`/`TokensCss`;
