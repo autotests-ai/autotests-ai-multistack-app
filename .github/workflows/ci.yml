@@ -1104,8 +1104,6 @@ jobs:
     timeout-minutes: 30
     env:
       LAYER: e2e-mock
-      # helpers/LocalChromePin refuses system Chrome and reads only ~/.local/share/chrome-for-testing.
-      CHROME_PIN: "148.0.7778.178"
     steps:
       - uses: actions/checkout@v7
 
@@ -1122,27 +1120,30 @@ jobs:
           cache-read-only: true
       # reference_mock has no remoteUrl: the stand lives on the runner's localhost, which a
       # Selenoid browser could not reach, so the browser has to be local too.
+      # helpers/LocalChromePin refuses system Chrome and reads only ~/.local/share/chrome-for-testing;
+      # the pinned build is declared in src/test/resources/chrome-for-testing.properties.
+      - if: env.TESTS_LANG == 'java'
+        id: chrome-pin
+        name: Resolve pinned Chrome version
+        working-directory: ${{ env.TESTS_DIR }}
+        run: |
+          set -euo pipefail
+          version="$(scripts/install-chrome-for-testing.sh --print-version)"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
       - if: env.TESTS_LANG == 'java'
         id: chrome-cache
         uses: actions/cache@v4
         with:
           path: ~/.local/share/chrome-for-testing
-          key: chrome-for-testing-linux-${{ env.CHROME_PIN }}
+          key: chrome-for-testing-linux-${{ steps.chrome-pin.outputs.version }}
       - if: env.TESTS_LANG == 'java' && steps.chrome-cache.outputs.cache-hit != 'true'
         name: Install pinned Chrome for Testing
-        run: |
-          set -euo pipefail
-          for pkg in chrome chromedriver; do
-            npx --yes @puppeteer/browsers install "${pkg}@${CHROME_PIN}" \
-              --platform linux --path "${HOME}/.local/share/chrome-for-testing"
-          done
+        working-directory: ${{ env.TESTS_DIR }}
+        run: scripts/install-chrome-for-testing.sh
       - if: env.TESTS_LANG == 'java'
         name: Verify pinned Chrome
-        run: |
-          set -euo pipefail
-          ROOT="${HOME}/.local/share/chrome-for-testing"
-          "${ROOT}/chrome/linux-${CHROME_PIN}/chrome-linux64/chrome" --version
-          "${ROOT}/chromedriver/linux-${CHROME_PIN}/chromedriver-linux64/chromedriver" --version
+        working-directory: ${{ env.TESTS_DIR }}
+        run: scripts/install-chrome-for-testing.sh --verify
       # stand-gateway serves the SPA and proxies /api/ to WireMock stubs (deploy/mock/mappings).
       - if: env.TESTS_LANG == 'java'
         name: Bring up mock stand
