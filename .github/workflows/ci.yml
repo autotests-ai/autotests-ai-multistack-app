@@ -118,7 +118,8 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - id: set
+      - name: Detect changed paths
+        id: set
         env:
           BEFORE: ${{ github.event.before }}
         run: |
@@ -178,7 +179,8 @@ jobs:
           key: gradle-cc-${{ env.BACKEND }}-${{ hashFiles('backend/kotlin/backend-kotlin-spring/*.gradle*', 'backend/kotlin/backend-kotlin-spring/gradle/wrapper/gradle-wrapper.properties') }}-${{ github.sha }}
           restore-keys: |
             gradle-cc-${{ env.BACKEND }}-
-      - if: env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin'
+      - name: Run unit tests (Gradle + JaCoCo)
+        if: env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin'
         id: run-tests
         run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification
         working-directory: ${{ env.BACKEND_DIR }}
@@ -201,7 +203,8 @@ jobs:
           allure-token: ${{ env.ALLURE_TOKEN }}
           allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
 
-      - if: always() && (env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin') && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
+      - name: Upload Allure results to TestOps
+        if: always() && (env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin') && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
         continue-on-error: true
         working-directory: ${{ env.BACKEND_DIR }}
         env:
@@ -233,7 +236,8 @@ jobs:
         with:
           node-version: "26"
 
-      - if: always() && (env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin')
+      - name: Generate Allure report
+        if: always() && (env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin')
         continue-on-error: true
         id: allure-report
         working-directory: ${{ env.BACKEND_DIR }}
@@ -258,10 +262,12 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
           cache-dependency-path: ${{ env.BACKEND_DIR }}/requirements.txt
-      - if: env.BACKEND_LANG == 'python'
+      - name: Install Python dependencies
+        if: env.BACKEND_LANG == 'python'
         run: python -m pip install -r requirements.txt
         working-directory: ${{ env.BACKEND_DIR }}
-      - if: env.BACKEND_LANG == 'python'
+      - name: Run Python tests (pytest)
+        if: env.BACKEND_LANG == 'python'
         run: python -m pytest
         working-directory: ${{ env.BACKEND_DIR }}
 
@@ -271,7 +277,8 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: ${{ env.BACKEND_DIR }}/go.sum
-      - if: env.BACKEND_LANG == 'go'
+      - name: Run Go unit tests
+        if: env.BACKEND_LANG == 'go'
         run: go test ./...
         working-directory: ${{ env.BACKEND_DIR }}
 
@@ -282,10 +289,12 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: ${{ env.BACKEND_DIR }}/package-lock.json
-      - if: env.BACKEND_LANG == 'javascript' || env.BACKEND_LANG == 'typescript'
+      - name: Install backend npm dependencies
+        if: env.BACKEND_LANG == 'javascript' || env.BACKEND_LANG == 'typescript'
         run: npm ci
         working-directory: ${{ env.BACKEND_DIR }}
-      - if: env.BACKEND_LANG == 'javascript' || env.BACKEND_LANG == 'typescript'
+      - name: Run backend unit tests (npm)
+        if: env.BACKEND_LANG == 'javascript' || env.BACKEND_LANG == 'typescript'
         run: npm test
         working-directory: ${{ env.BACKEND_DIR }}
 
@@ -301,13 +310,17 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: ${{ env.FRONTEND_DIR }}/package-lock.json
-      - run: npm ci
+      - name: Install frontend npm dependencies
+        run: npm ci
         working-directory: ${{ env.FRONTEND_DIR }}
-      - run: npm run lint
+      - name: Lint frontend
+        run: npm run lint
         working-directory: ${{ env.FRONTEND_DIR }}
-      - run: npm run typecheck
+      - name: Typecheck frontend
+        run: npm run typecheck
         working-directory: ${{ env.FRONTEND_DIR }}
-      - id: run-tests
+      - name: Run component tests (Vitest + coverage)
+        id: run-tests
         run: npm test -- --coverage
         working-directory: ${{ env.FRONTEND_DIR }}
       - if: steps.run-tests.outcome == 'success'
@@ -325,7 +338,8 @@ jobs:
           allure-token: ${{ env.ALLURE_TOKEN }}
           allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
 
-      - if: always() && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
+      - name: Upload Allure results to TestOps
+        if: always() && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
         continue-on-error: true
         working-directory: ${{ env.FRONTEND_DIR }}
         env:
@@ -357,7 +371,8 @@ jobs:
         with:
           node-version: "26"
 
-      - if: always()
+      - name: Generate Allure report
+        if: always()
         continue-on-error: true
         id: allure-report
         working-directory: ${{ env.FRONTEND_DIR }}
@@ -407,7 +422,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       # Coverage gate reads build/jacoco/test.exec, so it is only meaningful with this filter.
       # Allure results stay on (default allure3) for TestOps / report / Telegram steps below.
-      - if: env.TESTS_LANG == 'java'
+      - name: Run harness-backend tests (Gradle)
+        if: env.TESTS_LANG == 'java'
         id: run-tests
         run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags=harness-backend
         working-directory: ${{ env.TESTS_DIR }}
@@ -430,7 +446,8 @@ jobs:
           allure-token: ${{ env.ALLURE_TOKEN }}
           allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
 
-      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
+      - name: Upload Allure results to TestOps
+        if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
         continue-on-error: true
         working-directory: ${{ env.TESTS_DIR }}
         env:
@@ -462,7 +479,8 @@ jobs:
         with:
           node-version: "26"
 
-      - if: always() && env.TESTS_LANG == 'java'
+      - name: Generate Allure report
+        if: always() && env.TESTS_LANG == 'java'
         continue-on-error: true
         id: allure-report
         working-directory: ${{ env.TESTS_DIR }}
@@ -483,7 +501,8 @@ jobs:
           path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
           if-no-files-found: ignore
 
-      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+      - name: Send Allure Telegram notification
+        if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
         continue-on-error: true
         working-directory: ${{ env.TESTS_DIR }}
         env:
@@ -559,7 +578,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       # Coverage gate reads build/jacoco/test.exec, so it is only meaningful with this filter.
       # Allure results stay on (default allure3) for TestOps / report / Telegram steps below.
-      - if: env.TESTS_LANG == 'java'
+      - name: Run harness-frontend tests (Gradle)
+        if: env.TESTS_LANG == 'java'
         id: run-tests
         run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags=harness-frontend
         working-directory: ${{ env.TESTS_DIR }}
@@ -582,7 +602,8 @@ jobs:
           allure-token: ${{ env.ALLURE_TOKEN }}
           allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
 
-      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
+      - name: Upload Allure results to TestOps
+        if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
         continue-on-error: true
         working-directory: ${{ env.TESTS_DIR }}
         env:
@@ -614,7 +635,8 @@ jobs:
         with:
           node-version: "26"
 
-      - if: always() && env.TESTS_LANG == 'java'
+      - name: Generate Allure report
+        if: always() && env.TESTS_LANG == 'java'
         continue-on-error: true
         id: allure-report
         working-directory: ${{ env.TESTS_DIR }}
@@ -635,7 +657,8 @@ jobs:
           path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
           if-no-files-found: ignore
 
-      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+      - name: Send Allure Telegram notification
+        if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
         continue-on-error: true
         working-directory: ${{ env.TESTS_DIR }}
         env:
@@ -685,13 +708,16 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
-      - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
+      - name: Install npm dependencies
+        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
         run: npm ci
         working-directory: ${{ env.TESTS_DIR }}
-      - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
+      - name: Install Playwright Chromium
+        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
         run: npx playwright install --with-deps chromium
         working-directory: ${{ env.TESTS_DIR }}
-      - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
+      - name: Run tests (npm)
+        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
         run: npm test
         working-directory: ${{ env.TESTS_DIR }}
 
@@ -702,10 +728,12 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
           cache-dependency-path: ${{ env.TESTS_DIR }}/requirements.txt
-      - if: env.TESTS_LANG == 'python'
+      - name: Install Python dependencies
+        if: env.TESTS_LANG == 'python'
         run: python -m pip install -r requirements.txt
         working-directory: ${{ env.TESTS_DIR }}
-      - if: env.TESTS_LANG == 'python'
+      - name: Run Python tests (pytest)
+        if: env.TESTS_LANG == 'python'
         run: python -m pytest
         working-directory: ${{ env.TESTS_DIR }}
 
@@ -775,7 +803,8 @@ jobs:
             --report-task "$REPORT_TASK" \
             --project-key "$SONAR_PROJECT_KEY" \
             --url "$SONAR_HOST_URL"
-      - if: always()
+      - name: Write Sonar summary (backend)
+        if: always()
         run: |
           {
             echo "## sonar-backend"
@@ -867,7 +896,8 @@ jobs:
             --report-task "$REPORT_TASK" \
             --project-key "$SONAR_PROJECT_KEY" \
             --url "$SONAR_HOST_URL"
-      - if: always()
+      - name: Write Sonar summary (tests)
+        if: always()
         run: |
           {
             echo "## sonar-tests"
@@ -934,7 +964,8 @@ jobs:
             --report-task "$REPORT_TASK" \
             --project-key "$SONAR_PROJECT_KEY" \
             --url "$SONAR_HOST_URL"
-      - if: always()
+      - name: Write Sonar summary (frontend)
+        if: always()
         run: |
           {
             echo "## sonar-frontend"
@@ -967,8 +998,10 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - run: docker compose build ${{ env.BACKEND }}
-      - run: docker compose push ${{ env.BACKEND }}
+      - name: Build backend Docker image
+        run: docker compose build ${{ env.BACKEND }}
+      - name: Push backend Docker image to GHCR
+        run: docker compose push ${{ env.BACKEND }}
       # Keep the newest N GHCR versions; never delete a version that carries `latest`.
       # Needs repo Admin on the package (Manage Actions access). No PAT — GITHUB_TOKEN only.
       - name: Retain last 10 GHCR versions (backend)
@@ -1021,8 +1054,10 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - run: docker compose build ${{ env.FRONTEND }}
-      - run: docker compose push ${{ env.FRONTEND }}
+      - name: Build frontend Docker image
+        run: docker compose build ${{ env.FRONTEND }}
+      - name: Push frontend Docker image to GHCR
+        run: docker compose push ${{ env.FRONTEND }}
       - name: Retain last 10 GHCR versions (frontend)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -1068,7 +1103,8 @@ jobs:
       contents: read
       packages: read
     steps:
-      - uses: appleboy/ssh-action@v1.2.5
+      - name: Deploy backend to stand
+        uses: appleboy/ssh-action@v1.2.5
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -1122,9 +1158,9 @@ jobs:
       # Selenoid browser could not reach, so the browser has to be local too.
       # helpers/LocalChromePin refuses system Chrome and reads only ~/.local/share/chrome-for-testing;
       # the pinned build is declared in src/test/resources/chrome-for-testing.properties.
-      - if: env.TESTS_LANG == 'java'
+      - name: Resolve pinned Chrome version
+        if: env.TESTS_LANG == 'java'
         id: chrome-pin
-        name: Resolve pinned Chrome version
         working-directory: ${{ env.TESTS_DIR }}
         run: |
           set -euo pipefail
@@ -1136,20 +1172,20 @@ jobs:
         with:
           path: ~/.local/share/chrome-for-testing
           key: chrome-for-testing-linux-${{ steps.chrome-pin.outputs.version }}
-      - if: env.TESTS_LANG == 'java' && steps.chrome-cache.outputs.cache-hit != 'true'
-        name: Install pinned Chrome for Testing
+      - name: Install pinned Chrome for Testing
+        if: env.TESTS_LANG == 'java' && steps.chrome-cache.outputs.cache-hit != 'true'
         working-directory: ${{ env.TESTS_DIR }}
         run: scripts/install-chrome-for-testing.sh
-      - if: env.TESTS_LANG == 'java'
-        name: Verify pinned Chrome
+      - name: Verify pinned Chrome
+        if: env.TESTS_LANG == 'java'
         working-directory: ${{ env.TESTS_DIR }}
         run: scripts/install-chrome-for-testing.sh --verify
       # stand-gateway serves the SPA and proxies /api/ to WireMock stubs (deploy/mock/mappings).
       # Naming the service is load-bearing: a bare `up` also starts every profile-less service,
       # so --build would compile all twelve backends the mock stand never talks to. depends_on
       # pulls in exactly frontend-typescript-react (built) and api-mock (pulled).
-      - if: env.TESTS_LANG == 'java'
-        name: Bring up mock stand
+      - name: Bring up mock stand
+        if: env.TESTS_LANG == 'java'
         run: |
           set -euo pipefail
           docker compose --profile mock up -d --build stand-gateway
@@ -1157,13 +1193,14 @@ jobs:
             "http://127.0.0.1:${MOCK_GATEWAY_PORT}/api/health"
         env:
           MOCK_GATEWAY_PORT: "9911"
-      - if: env.TESTS_LANG == 'java'
+      - name: Run e2e mock tests (Gradle)
+        if: env.TESTS_LANG == 'java'
         id: run-tests
         run: ./gradlew test -Denv=reference_mock -DincludeTags=mock
         working-directory: ${{ env.TESTS_DIR }}
-      - if: always() && env.TESTS_LANG == 'java'
+      - name: Tear down mock stand
+        if: always() && env.TESTS_LANG == 'java'
         continue-on-error: true
-        name: Tear down mock stand
         run: docker compose --profile mock down -v --remove-orphans
       - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
         continue-on-error: true
@@ -1174,7 +1211,8 @@ jobs:
           allure-token: ${{ env.ALLURE_TOKEN }}
           allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
 
-      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
+      - name: Upload Allure results to TestOps
+        if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
         continue-on-error: true
         working-directory: ${{ env.TESTS_DIR }}
         env:
@@ -1206,7 +1244,8 @@ jobs:
         with:
           node-version: "26"
 
-      - if: always() && env.TESTS_LANG == 'java'
+      - name: Generate Allure report
+        if: always() && env.TESTS_LANG == 'java'
         continue-on-error: true
         id: allure-report
         working-directory: ${{ env.TESTS_DIR }}
@@ -1227,7 +1266,8 @@ jobs:
           path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
           if-no-files-found: ignore
 
-      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+      - name: Send Allure Telegram notification
+        if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
         continue-on-error: true
         working-directory: ${{ env.TESTS_DIR }}
         env:
@@ -1288,7 +1328,8 @@ jobs:
       contents: read
       packages: read
     steps:
-      - uses: appleboy/ssh-action@v1.2.5
+      - name: Deploy frontend to stand
+        uses: appleboy/ssh-action@v1.2.5
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -1367,7 +1408,8 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: true
-      - if: env.TESTS_LANG == 'java'
+      - name: Run integration tests (Gradle)
+        if: env.TESTS_LANG == 'java'
         id: run-tests
         run: ./gradlew test -Denv=reference_prod -DincludeTags=integration
         working-directory: ${{ env.TESTS_DIR }}
@@ -1380,7 +1422,8 @@ jobs:
           allure-token: ${{ env.ALLURE_TOKEN }}
           allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
 
-      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
+      - name: Upload Allure results to TestOps
+        if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
         continue-on-error: true
         working-directory: ${{ env.TESTS_DIR }}
         env:
@@ -1412,7 +1455,8 @@ jobs:
         with:
           node-version: "26"
 
-      - if: always() && env.TESTS_LANG == 'java'
+      - name: Generate Allure report
+        if: always() && env.TESTS_LANG == 'java'
         continue-on-error: true
         id: allure-report
         working-directory: ${{ env.TESTS_DIR }}
@@ -1433,7 +1477,8 @@ jobs:
           path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
           if-no-files-found: ignore
 
-      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+      - name: Send Allure Telegram notification
+        if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
         continue-on-error: true
         working-directory: ${{ env.TESTS_DIR }}
         env:
@@ -1483,13 +1528,16 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
-      - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
+      - name: Install npm dependencies
+        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
         run: npm ci
         working-directory: ${{ env.TESTS_DIR }}
-      - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
+      - name: Install Playwright Chromium
+        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
         run: npx playwright install --with-deps chromium
         working-directory: ${{ env.TESTS_DIR }}
-      - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
+      - name: Run tests (npm)
+        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
         run: npm test
         working-directory: ${{ env.TESTS_DIR }}
 
@@ -1500,10 +1548,12 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
           cache-dependency-path: ${{ env.TESTS_DIR }}/requirements.txt
-      - if: env.TESTS_LANG == 'python'
+      - name: Install Python dependencies
+        if: env.TESTS_LANG == 'python'
         run: python -m pip install -r requirements.txt
         working-directory: ${{ env.TESTS_DIR }}
-      - if: env.TESTS_LANG == 'python'
+      - name: Run Python tests (pytest)
+        if: env.TESTS_LANG == 'python'
         run: python -m pytest
         working-directory: ${{ env.TESTS_DIR }}
 
@@ -1533,7 +1583,8 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: true
-      - if: env.TESTS_LANG == 'java'
+      - name: Run API tests (Gradle)
+        if: env.TESTS_LANG == 'java'
         id: run-tests
         run: ./gradlew test -Denv=reference_prod -DincludeTags=api
         working-directory: ${{ env.TESTS_DIR }}
@@ -1546,7 +1597,8 @@ jobs:
           allure-token: ${{ env.ALLURE_TOKEN }}
           allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
 
-      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
+      - name: Upload Allure results to TestOps
+        if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
         continue-on-error: true
         working-directory: ${{ env.TESTS_DIR }}
         env:
@@ -1578,7 +1630,8 @@ jobs:
         with:
           node-version: "26"
 
-      - if: always() && env.TESTS_LANG == 'java'
+      - name: Generate Allure report
+        if: always() && env.TESTS_LANG == 'java'
         continue-on-error: true
         id: allure-report
         working-directory: ${{ env.TESTS_DIR }}
@@ -1599,7 +1652,8 @@ jobs:
           path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
           if-no-files-found: ignore
 
-      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+      - name: Send Allure Telegram notification
+        if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
         continue-on-error: true
         working-directory: ${{ env.TESTS_DIR }}
         env:
@@ -1649,13 +1703,16 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
-      - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
+      - name: Install npm dependencies
+        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
         run: npm ci
         working-directory: ${{ env.TESTS_DIR }}
-      - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
+      - name: Install Playwright Chromium
+        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
         run: npx playwright install --with-deps chromium
         working-directory: ${{ env.TESTS_DIR }}
-      - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
+      - name: Run tests (npm)
+        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
         run: npm test
         working-directory: ${{ env.TESTS_DIR }}
 
@@ -1666,10 +1723,12 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
           cache-dependency-path: ${{ env.TESTS_DIR }}/requirements.txt
-      - if: env.TESTS_LANG == 'python'
+      - name: Install Python dependencies
+        if: env.TESTS_LANG == 'python'
         run: python -m pip install -r requirements.txt
         working-directory: ${{ env.TESTS_DIR }}
-      - if: env.TESTS_LANG == 'python'
+      - name: Run Python tests (pytest)
+        if: env.TESTS_LANG == 'python'
         run: python -m pytest
         working-directory: ${{ env.TESTS_DIR }}
 
@@ -1704,7 +1763,8 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: true
-      - if: env.TESTS_LANG == 'java'
+      - name: Run e2e tests (Gradle with tag filters)
+        if: env.TESTS_LANG == 'java'
         id: run-tests
         env:
           # push has no inputs, and -Denv= (empty) is not the same as omitting it:
@@ -1736,7 +1796,8 @@ jobs:
           allure-token: ${{ env.ALLURE_TOKEN }}
           allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
 
-      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
+      - name: Upload Allure results to TestOps
+        if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
         continue-on-error: true
         working-directory: ${{ env.TESTS_DIR }}
         env:
@@ -1768,7 +1829,8 @@ jobs:
         with:
           node-version: "26"
 
-      - if: always() && env.TESTS_LANG == 'java'
+      - name: Generate Allure report
+        if: always() && env.TESTS_LANG == 'java'
         continue-on-error: true
         id: allure-report
         working-directory: ${{ env.TESTS_DIR }}
@@ -1789,7 +1851,8 @@ jobs:
           path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
           if-no-files-found: ignore
 
-      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+      - name: Send Allure Telegram notification
+        if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
         continue-on-error: true
         working-directory: ${{ env.TESTS_DIR }}
         env:
@@ -1839,13 +1902,16 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
-      - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
+      - name: Install npm dependencies
+        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
         run: npm ci
         working-directory: ${{ env.TESTS_DIR }}
-      - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
+      - name: Install Playwright Chromium
+        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
         run: npx playwright install --with-deps chromium
         working-directory: ${{ env.TESTS_DIR }}
-      - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
+      - name: Run tests (npm)
+        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
         run: npm test
         working-directory: ${{ env.TESTS_DIR }}
 
@@ -1856,10 +1922,12 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
           cache-dependency-path: ${{ env.TESTS_DIR }}/requirements.txt
-      - if: env.TESTS_LANG == 'python'
+      - name: Install Python dependencies
+        if: env.TESTS_LANG == 'python'
         run: python -m pip install -r requirements.txt
         working-directory: ${{ env.TESTS_DIR }}
-      - if: env.TESTS_LANG == 'python'
+      - name: Run Python tests (pytest)
+        if: env.TESTS_LANG == 'python'
         run: python -m pytest
         working-directory: ${{ env.TESTS_DIR }}
 
@@ -1887,7 +1955,8 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: true
-      - if: env.TESTS_LANG == 'java'
+      - name: Run e2e visual baseline update (Gradle)
+        if: env.TESTS_LANG == 'java'
         id: run-tests
         env:
           RUN_ENV: ${{ inputs.env || 'reference_prod' }}
@@ -1902,7 +1971,8 @@ jobs:
           allure-token: ${{ env.ALLURE_TOKEN }}
           allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
 
-      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
+      - name: Upload e2e baseline Allure results to TestOps
+        if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
         continue-on-error: true
         working-directory: ${{ env.TESTS_DIR }}
         env:
@@ -1934,7 +2004,8 @@ jobs:
         with:
           node-version: "26"
 
-      - if: always() && env.TESTS_LANG == 'java'
+      - name: Generate Allure report
+        if: always() && env.TESTS_LANG == 'java'
         continue-on-error: true
         id: allure-report
         working-directory: ${{ env.TESTS_DIR }}
@@ -1955,7 +2026,8 @@ jobs:
           path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
           if-no-files-found: ignore
 
-      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+      - name: Send Allure Telegram notification
+        if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
         continue-on-error: true
         working-directory: ${{ env.TESTS_DIR }}
         env:
@@ -2032,7 +2104,8 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: true
-      - if: env.TESTS_LANG == 'java'
+      - name: Run manual tests (Gradle)
+        if: env.TESTS_LANG == 'java'
         id: run-tests
         env:
           RUN_ENV: ${{ inputs.env || 'reference_prod' }}
@@ -2047,7 +2120,8 @@ jobs:
           allure-token: ${{ env.ALLURE_TOKEN }}
           allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
 
-      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
+      - name: Upload Allure results to TestOps
+        if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
         continue-on-error: true
         working-directory: ${{ env.TESTS_DIR }}
         env:
@@ -2079,7 +2153,8 @@ jobs:
         with:
           node-version: "26"
 
-      - if: always() && env.TESTS_LANG == 'java'
+      - name: Generate Allure report
+        if: always() && env.TESTS_LANG == 'java'
         continue-on-error: true
         id: allure-report
         working-directory: ${{ env.TESTS_DIR }}
@@ -2100,7 +2175,8 @@ jobs:
           path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
           if-no-files-found: ignore
 
-      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+      - name: Send Allure Telegram notification
+        if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
         continue-on-error: true
         working-directory: ${{ env.TESTS_DIR }}
         env:
