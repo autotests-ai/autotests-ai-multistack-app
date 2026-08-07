@@ -89,9 +89,6 @@ allure {
             }
         }
     }
-    report {
-        configFile.set(layout.projectDirectory.file('allurerc.mjs'))
-    }
 }
 
 dependencies {
@@ -137,6 +134,15 @@ def resolveConfiguredBaseUrl = { String env ->
         return null
     }
     throw new GradleException("Set baseUrl or basePath in config/${env}.properties")
+}
+
+// JaCoCo is only needed for harness coverage gates; browser/prod layers skip the agent
+// so configuration cache entries do not pin absolute paths under GRADLE_USER_HOME.
+def harnessJacocoTags = ['harness', 'harness-backend', 'harness-frontend'] as Set
+
+def jacocoEnabledForCurrentRun = {
+    def tags = (System.getProperty('includeTags') ?: '').split(',').collect { it.trim() }.findAll { it } as Set
+    return tags.isEmpty() || tags.any { harnessJacocoTags.contains(it) }
 }
 
 // Layers that never touch the app through a browser — nothing to health-check.
@@ -185,6 +191,9 @@ tasks.register('healthCheck') {
 test {
     dependsOn healthCheck
     description = 'Run tests: -Denv=<stand> -DincludeTags=<tags> -DexcludeTags=<tags>'
+    jacoco {
+        enabled = jacocoEnabledForCurrentRun()
+    }
     useJUnitPlatform {
         def includeTagsProp = System.getProperty('includeTags')
         if (includeTagsProp) {
@@ -224,9 +233,8 @@ tasks.register('allureAgentInspect', Exec) {
     dependsOn test
     def resultsDir = allureResultsDir.path
     def outputDir = layout.buildDirectory.dir('agent-output').get().asFile.path
-    def configFile = layout.projectDirectory.file('allurerc.mjs').asFile.path
     commandLine 'npx', '--yes', "allure@${allureVersion}", 'agent', 'inspect',
-            resultsDir, '--output', outputDir, '--config', configFile
+            resultsDir, '--output', outputDir
 }
 
 def agentOutputDir = layout.buildDirectory.dir('agent-output').get().asFile
@@ -246,14 +254,12 @@ tasks.register('allureAgentQuery', Exec) {
 
 tasks.register('allureQualityGate', Exec) {
     group = 'verification'
-    description = 'Allure 3 quality gate on build/allure-results (rules in allurerc.mjs)'
+    description = 'Allure 3 quality gate on build/allure-results (default rules)'
     onlyIf {
         System.getProperty('allureReportMode', 'allure3') != 'none' && hasAllureResults()
     }
     def resultsDir = allureResultsDir.path
-    def configFile = layout.projectDirectory.file('allurerc.mjs').asFile.path
-    commandLine 'npx', '--yes', "allure@${allureVersion}", 'quality-gate',
-            resultsDir, '--config', configFile
+    commandLine 'npx', '--yes', "allure@${allureVersion}", 'quality-gate', resultsDir
 }
 
 if (allureAgentMode == 'inspect' && allureReportMode != 'none') {

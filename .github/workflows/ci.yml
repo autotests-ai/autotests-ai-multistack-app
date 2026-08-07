@@ -821,18 +821,13 @@ jobs:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
       # Gradle User Home cache read-only (harness jobs may have warmed entries on main).
+      # No configuration-cache restore here: read-only jobs must not reuse entries that pin
+      # absolute GRADLE_USER_HOME paths (e.g. JaCoCo agent jars) from other runners.
       - if: env.TESTS_LANG == 'java'
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: true
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-      - if: env.TESTS_LANG == 'java'
-        uses: actions/cache@v6
-        with:
-          path: ${{ env.TESTS_DIR }}/.gradle/configuration-cache
-          key: gradle-cc-${{ env.TESTS }}-${{ github.job }}-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
-          restore-keys: |
-            gradle-cc-${{ env.TESTS }}-${{ github.job }}-
       # reference_mock has no remoteUrl: the stand lives on the runner's localhost, which a
       # Selenoid browser could not reach, so the browser has to be local too.
       - name: Install pinned Chrome for Testing
@@ -983,18 +978,13 @@ jobs:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
       # Gradle User Home cache read-only (harness jobs may have warmed entries on main).
+      # No configuration-cache restore here: read-only jobs must not reuse entries that pin
+      # absolute GRADLE_USER_HOME paths (e.g. JaCoCo agent jars) from other runners.
       - if: env.TESTS_LANG == 'java'
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: true
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-      - if: env.TESTS_LANG == 'java'
-        uses: actions/cache@v6
-        with:
-          path: ${{ env.TESTS_DIR }}/.gradle/configuration-cache
-          key: gradle-cc-${{ env.TESTS }}-${{ github.job }}-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
-          restore-keys: |
-            gradle-cc-${{ env.TESTS }}-${{ github.job }}-
       - name: Run integration tests (Gradle)
         if: env.TESTS_LANG == 'java'
         id: run-tests
@@ -1068,18 +1058,13 @@ jobs:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
       # Gradle User Home cache read-only (harness jobs may have warmed entries on main).
+      # No configuration-cache restore here: read-only jobs must not reuse entries that pin
+      # absolute GRADLE_USER_HOME paths (e.g. JaCoCo agent jars) from other runners.
       - if: env.TESTS_LANG == 'java'
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: true
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-      - if: env.TESTS_LANG == 'java'
-        uses: actions/cache@v6
-        with:
-          path: ${{ env.TESTS_DIR }}/.gradle/configuration-cache
-          key: gradle-cc-${{ env.TESTS }}-${{ github.job }}-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
-          restore-keys: |
-            gradle-cc-${{ env.TESTS }}-${{ github.job }}-
       - name: Run API tests (Gradle)
         if: env.TESTS_LANG == 'java'
         id: run-tests
@@ -1167,13 +1152,6 @@ jobs:
         with:
           cache-read-only: true
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-      - if: env.TESTS_LANG == 'java'
-        uses: actions/cache@v6
-        with:
-          path: ${{ env.TESTS_DIR }}/.gradle/configuration-cache
-          key: gradle-cc-${{ env.TESTS }}-${{ github.job }}-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
-          restore-keys: |
-            gradle-cc-${{ env.TESTS }}-${{ github.job }}-
       - name: Run e2e tests (Gradle with tag filters)
         if: env.TESTS_LANG == 'java'
         id: run-tests
@@ -1277,13 +1255,6 @@ jobs:
         with:
           cache-read-only: true
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-      - if: env.TESTS_LANG == 'java'
-        uses: actions/cache@v6
-        with:
-          path: ${{ env.TESTS_DIR }}/.gradle/configuration-cache
-          key: gradle-cc-${{ env.TESTS }}-${{ github.job }}-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
-          restore-keys: |
-            gradle-cc-${{ env.TESTS }}-${{ github.job }}-
       - name: Run e2e visual baseline update (Gradle)
         if: env.TESTS_LANG == 'java'
         id: run-tests
@@ -1337,13 +1308,6 @@ jobs:
         with:
           cache-read-only: true
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-      - if: env.TESTS_LANG == 'java'
-        uses: actions/cache@v6
-        with:
-          path: ${{ env.TESTS_DIR }}/.gradle/configuration-cache
-          key: gradle-cc-${{ env.TESTS }}-${{ github.job }}-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
-          restore-keys: |
-            gradle-cc-${{ env.TESTS }}-${{ github.job }}-
       - name: Run manual tests (Gradle)
         if: env.TESTS_LANG == 'java'
         id: run-tests
