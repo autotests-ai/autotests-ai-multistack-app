@@ -1,6 +1,7 @@
 const { expect } = require('@playwright/test');
 const { test } = require('../src/helpers/fixtures/fixture');
 const { UserBuilder } = require('../src/helpers/builders');
+const { deleteAccountQuietly } = require('../src/helpers/api');
 
 const LOGIN_REQUIRED = 'Login is required (minimum 3 characters)';
 const PASSWORD_REQUIRED = 'Password is required (minimum 6 characters)';
@@ -37,13 +38,17 @@ test('Неверный пароль показывает читаемую оши
   await expect(webApp.login.errorMessage).toContainText(WRONG_CREDENTIALS);
 });
 
-test('Новый пользователь может зарегистрироваться', async ({ webApp }) => {
+test('Новый пользователь может зарегистрироваться', async ({ webApp, request }) => {
   const user = new UserBuilder().withUsername().withPassword().build();
-  await webApp.register.open();
-  await webApp.register.signup(user.username, user.password);
-  await expect(webApp.home.getWelcomeText()).toContainText(
-    `Welcome, ${user.username}!`,
-  );
+  try {
+    await webApp.register.open();
+    await webApp.register.signup(user.username, user.password);
+    await expect(webApp.home.getWelcomeText()).toContainText(
+      `Welcome, ${user.username}!`,
+    );
+  } finally {
+    await deleteAccountQuietly(request, user.username, user.password);
+  }
 });
 
 test('Пользователь может выйти после логина', async ({ webApp }) => {

@@ -1,3 +1,5 @@
+const { isAppRootUrl } = require('../helpers/env');
+
 exports.LoginPage = class LoginPage {
   /**
    * @param {import('@playwright/test').Page} page
@@ -14,17 +16,15 @@ exports.LoginPage = class LoginPage {
   }
 
   async open() {
-    await this.page.goto('/login');
+    // Relative to baseURL (ends with '/') — stays inside path-mounted deploys.
+    await this.page.goto('login');
   }
 
   async login(username, password) {
     await this.loginInput.fill(username);
     await this.passwordInput.fill(password);
     await this.submitButton.click();
-    await this.page.waitForURL((url) => {
-      const path = new URL(url).pathname;
-      return path === '/' || path === '';
-    });
+    await this.page.waitForURL(isAppRootUrl);
   }
 
   async typeUsername(username) {

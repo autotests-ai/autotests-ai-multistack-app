@@ -63,10 +63,16 @@ class BasePage:
         self.driver.execute_script("arguments[0].click();", el)
 
     def wait_url_is_home(self) -> None:
+        """SPA root is `/` on root-origin stands but `/{backend}/{frontend}` on prod
+        path-mounts — compare against the configured base, trailing-slash-insensitive."""
         expected = urlparse(self.config.base_url)
+        expected_path = expected.path.rstrip("/")
 
         def _at_home(driver: WebDriver) -> bool:
             current = urlparse(driver.current_url)
-            return current.netloc == expected.netloc and current.path in {"", "/"}
+            return (
+                current.netloc == expected.netloc
+                and current.path.rstrip("/") == expected_path
+            )
 
         self.wait().until(_at_home)

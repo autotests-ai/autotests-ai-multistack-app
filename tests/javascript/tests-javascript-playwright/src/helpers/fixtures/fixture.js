@@ -2,6 +2,7 @@ const fs = require('fs');
 const { test: base } = require('@playwright/test');
 const { App } = require('../../pages/app');
 const {
+  BASE_URL,
   attachBrowserConsoleLogs,
   attachHarLogs,
   attachLastScreenshot,
@@ -12,8 +13,6 @@ const {
 const Attachments = require('../attachments');
 const { pageSourceQuiet, screenshotQuiet } = require('../quiet-page');
 const { createHarCollector } = require('../har-collect');
-
-const BASE_URL = process.env.UI_URL || 'https://reference-app.autotests.ai';
 
 function wantAnyAttachments() {
   return (

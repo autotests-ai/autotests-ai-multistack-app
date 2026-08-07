@@ -13,7 +13,8 @@ exports.HomePage = class HomePage {
   }
 
   async open() {
-    await this.page.goto('/');
+    // '.' resolves to the baseURL directory — the SPA root on both root and path mounts.
+    await this.page.goto('.');
   }
 
   async logout() {
