@@ -150,41 +150,35 @@ def shouldSkipHealthCheck = {
     return !includeTags.isEmpty() && includeTags.every { browserlessTags.contains(it) }
 }
 
-def runAppHealthCheck = { String env ->
-    if (shouldSkipHealthCheck()) {
-        return
-    }
-    def baseUrl = resolveConfiguredBaseUrl(env)
-    if (baseUrl == null || !baseUrl.startsWith('http')) {
-        return
-    }
-    def healthUrl = new URL(baseUrl)
-    try {
-        def conn = (java.net.HttpURLConnection) healthUrl.openConnection()
-        conn.setRequestMethod('GET')
-        conn.setConnectTimeout(5000)
-        conn.setReadTimeout(5000)
-        def code = conn.responseCode
-        if (code != 200) {
-            throw new GradleException(
-                    "App health check failed: GET ${healthUrl} returned HTTP ${code}. " +
-                    'Start stack: docker compose up -d (or cd backend && ./gradlew bootRun)'
-            )
-        }
-    } catch (java.net.ConnectException | java.net.SocketTimeoutException e) {
-        throw new GradleException(
-                "App health check failed: cannot reach ${healthUrl} (${e.class.simpleName}). " +
-                'Start stack: docker compose up -d (or cd backend && ./gradlew bootRun)',
-                e
-        )
-    }
-}
+// Resolve project files while configuring the task. The execution action then captures only
+// a plain URL string, which is safe to serialize in Gradle's configuration cache.
+def healthCheckUrl = shouldSkipHealthCheck() ? null : resolveConfiguredBaseUrl(testEnv)
 
 tasks.register('healthCheck') {
     group = 'verification'
     description = 'GET baseUrl/ — auto-skip for -DincludeTags=harness*|api|integration and -DskipHealthCheck=true'
+    onlyIf { healthCheckUrl != null && healthCheckUrl.startsWith('http') }
     doLast {
-        runAppHealthCheck(testEnv)
+        def healthUrl = new URL(healthCheckUrl)
+        try {
+            def conn = (java.net.HttpURLConnection) healthUrl.openConnection()
+            conn.setRequestMethod('GET')
+            conn.setConnectTimeout(5000)
+            conn.setReadTimeout(5000)
+            def code = conn.responseCode
+            if (code != 200) {
+                throw new GradleException(
+                        "App health check failed: GET ${healthUrl} returned HTTP ${code}. " +
+                        'Start stack: docker compose up -d (or cd backend && ./gradlew bootRun)'
+                )
+            }
+        } catch (java.net.ConnectException | java.net.SocketTimeoutException e) {
+            throw new GradleException(
+                    "App health check failed: cannot reach ${healthUrl} (${e.class.simpleName}). " +
+                    'Start stack: docker compose up -d (or cd backend && ./gradlew bootRun)',
+                    e
+            )
+        }
     }
 }
 
