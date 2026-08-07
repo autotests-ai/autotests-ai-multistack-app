@@ -11,4 +11,4 @@ Post-auth state (welcome message, logout) lives on `HomePage` at `/`.
 
 ## Stands
 
-`reference_ci.properties`: `baseUrl=http://localhost:9811/` · `reference_prod.properties`: the deployed host.
+`reference_ci.properties`: `baseUrl=http://localhost:9821/` (stand-gateway-ci) · `reference_prod.properties`: the deployed host.

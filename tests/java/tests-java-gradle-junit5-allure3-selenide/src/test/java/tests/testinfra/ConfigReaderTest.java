@@ -104,13 +104,13 @@ class ConfigReaderTest extends AllureMeta {
     @Test
     @DisplayName("resolveWebBaseUrl strips trailing slash from loaded config")
     void resolveWebBaseUrlStripsTrailingSlashFromLoadedConfig() {
-        assertEquals("http://localhost:9811", ConfigReader.resolveWebBaseUrl());
+        assertEquals("http://localhost:9821", ConfigReader.resolveWebBaseUrl());
     }
 
     @Test
     @DisplayName("resolveBaseUrl uses loaded config")
     void resolveBaseUrlUsesLoadedConfig() {
-        assertEquals("http://localhost:9811/", ConfigReader.resolveBaseUrl());
+        assertEquals("http://localhost:9821/", ConfigReader.resolveBaseUrl());
     }
 
     @Test
