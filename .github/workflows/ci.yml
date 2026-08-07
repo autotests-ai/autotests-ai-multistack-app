@@ -8,7 +8,8 @@ name: CI
 # names and RUN_LABEL are derived from them. Swap TESTS / TESTS_DIR / TESTS_LANG (or
 # BACKEND / FRONTEND) when the teaching default changes; job ids stay layer names.
 #
-# Allure: TestOps upload + `allure generate` + Telegram per job (native inline, no scripts).
+# Allure: test jobs publish raw results; a non-gating reporting matrix handles
+# TestOps upload, static reports and Telegram without blocking the delivery DAG.
 # Pyramid layers (classical): unit · integration (no UI) · api · e2e · manual
 # Sideways FE: component (jsdom). Visual (@Tag visual) inside e2e; baselines → e2e-update-baselines.
 # CD on main (two lanes; deploy host serialized via concurrency group).
@@ -38,25 +39,40 @@ on:
         type: choice
         options: [none, backend, frontend, both]
         default: none
-      env:
-        description: "Stand for -Denv when TESTS_LANG=java (reference_ci needs a compose stack, which a runner has none of)"
-        type: choice
-        options: [reference_prod, reference_ci]
-        default: reference_prod
-      layers:
-        description: "Comma-separated layer jobs: integration,api,mock,e2e,visual,manual (none/empty = skip; harness always runs as required checks)"
-        type: string
-        default: none
+      run_integration:
+        description: "Run integration tests against reference_prod"
+        type: boolean
+        default: false
+      run_api:
+        description: "Run API contract tests against reference_prod"
+        type: boolean
+        default: false
+      run_mock:
+        description: "Run mock E2E tests on the runner"
+        type: boolean
+        default: false
+      run_e2e:
+        description: "Run regular E2E tests (visual excluded unless run_visual=true)"
+        type: boolean
+        default: false
+      run_visual:
+        description: "Include visual tests in e2e-tests"
+        type: boolean
+        default: false
+      run_manual:
+        description: "Run tests tagged manual against reference_prod"
+        type: boolean
+        default: false
       include_tags:
-        description: "e2e-tests (java): override -DincludeTags (e.g. e2e,visual,mock). Empty = job default from layers."
+        description: "e2e-tests (java): override -DincludeTags. Empty = run_e2e/run_visual selection."
         type: string
         default: ""
       exclude_tags:
-        description: "e2e-tests (java): override -DexcludeTags (e.g. visual). Empty = job default from layers."
+        description: "e2e-tests (java): add -DexcludeTags independently of include_tags"
         type: string
         default: ""
       update_baselines:
-        description: "Run e2e-update-baselines: -DincludeTags=visual -DupdateBaselines=true (refresh PNG baselines)"
+        description: "Run e2e-tests, then e2e-update-baselines to refresh visual PNG baselines"
         type: boolean
         default: false
 
@@ -66,8 +82,6 @@ concurrency:
 
 permissions:
   contents: read
-  pull-requests: write
-  checks: write
 
 env:
   IMAGE_TAG: ${{ github.sha }}
@@ -89,6 +103,10 @@ env:
   NODE_VERSION: "26"
   PYTHON_VERSION: "3.12"
   GO_VERSION: "1.25"
+  CHROME_FOR_TESTING_VERSION: "148.0.7778.178"
+  ALLURECTL_VERSION: "2.22.0"
+  SONAR_SCANNER_NPM_VERSION: "5.0.0"
+  SONAR_QUALITY_GATE_TIMEOUT: "600"
   # ── Derived (literals — workflow env cannot nest env.*; keep in sync above) ─
   PUBLIC_HOST: reference-app-copy.autotests.ai
   APP_URL: https://reference-app-copy.autotests.ai/backend-java-spring/frontend-typescript-react/
@@ -99,17 +117,13 @@ env:
   GHCR_FRONTEND_PACKAGE: reference-app-copy-frontend-typescript-react
   RUN_LABEL: "${{ github.repository }} #${{ github.run_number }}"
   SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL || 'https://sonar.qa.guru' }}
-  # ── Allure / Telegram (inlined in jobs below; set once) ─────────────────
+  # ── Non-secret reporting defaults ───────────────────────────────────────
   ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
-  ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
   ALLURE_PROJECT_ID: ${{ vars.ALLURE_PROJECT_ID }}
-  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
-  TELEGRAM_CHAT_ID: "-1004381150566"
-  TELEGRAM_TOPIC_ID: ${{ secrets.TELEGRAM_REFERENCE_APP_TOPIC_ID || vars.TELEGRAM_REFERENCE_APP_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || vars.TELEGRAM_TOPIC_ID || '3' }}
 
 jobs:
   changes:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       backend: ${{ steps.set.outputs.backend }}
       frontend: ${{ steps.set.outputs.frontend }}
@@ -118,6 +132,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Detect changed paths
         id: set
         env:
@@ -144,12 +159,14 @@ jobs:
           match "^(tests/|${SHARED})"    && emit tests true    || emit tests false
 
   unit-tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       LAYER: unit
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       # ── java / kotlin (Gradle + JaCoCo) ───────────────────────────────────
       - if: env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin'
@@ -193,67 +210,6 @@ jobs:
             ${{ env.BACKEND_DIR }}/build/reports/jacoco/**
             ${{ env.BACKEND_DIR }}/build/classes/**
           if-no-files-found: error
-      - if: always() && (env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin') && env.ALLURE_PROJECT_ID != ''
-        continue-on-error: true
-        id: setup-allurectl
-        uses: allure-framework/setup-allurectl@v1
-        with:
-          allure-endpoint: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
-          allure-token: ${{ env.ALLURE_TOKEN }}
-          allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
-
-      - name: Upload Allure results to TestOps
-        if: always() && (env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin') && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
-        continue-on-error: true
-        working-directory: ${{ env.BACKEND_DIR }}
-        env:
-          ALLURE_ENDPOINT: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
-          ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
-          ALLURE_PROJECT_ID: ${{ env.ALLURE_PROJECT_ID }}
-          ALLURE_LAUNCH_NAME: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
-        run: |
-          set -euo pipefail
-          RESULTS="build/allure-results"
-          if [ ! -d "$RESULTS" ] || [ -z "$(ls -A "$RESULTS" 2>/dev/null || true)" ]; then
-            echo "No allure-results at ${RESULTS} — skip TestOps upload"
-            exit 0
-          fi
-          ARGS=(
-            upload "$RESULTS"
-            --endpoint "${ALLURE_ENDPOINT}"
-            --token "${ALLURE_TOKEN}"
-            --project-id "${ALLURE_PROJECT_ID}"
-          )
-          if [ -n "${ALLURE_LAUNCH_NAME:-}" ]; then
-            ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
-          fi
-          allurectl "${ARGS[@]}"
-
-
-      - if: always() && (env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin')
-        uses: actions/setup-node@v6
-        with:
-          node-version: "26"
-
-      - name: Generate Allure report
-        if: always() && (env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin')
-        continue-on-error: true
-        id: allure-report
-        working-directory: ${{ env.BACKEND_DIR }}
-        run: |
-          set -euo pipefail
-          ARGS=(generate "build/allure-results" -o "build/reports/allure-report")
-          npx --yes allure@3.13.0 "${ARGS[@]}"
-
-      - if: always() && (env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin') && steps.allure-report.outcome == 'success'
-        continue-on-error: true
-        uses: actions/upload-artifact@v7
-        with:
-          name: allure-report-unit-tests
-          path: ${{ env.BACKEND_DIR }}/build/reports/allure-report/
-          if-no-files-found: ignore
-
-
       # ── python ───────────────────────────────────────────────────────────
       - if: env.BACKEND_LANG == 'python'
         uses: actions/setup-python@v6
@@ -296,14 +252,25 @@ jobs:
         if: env.BACKEND_LANG == 'javascript' || env.BACKEND_LANG == 'typescript'
         run: npm test
         working-directory: ${{ env.BACKEND_DIR }}
+      - name: Publish raw Allure results
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-results-unit
+          path: ${{ env.BACKEND_DIR }}/build/allure-results/**
+          if-no-files-found: ignore
+          retention-days: 1
 
   component-tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       LAYER: component
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -328,74 +295,25 @@ jobs:
           name: coverage-frontend
           path: ${{ env.FRONTEND_DIR }}/coverage/
           if-no-files-found: error
-      - if: always() && env.ALLURE_PROJECT_ID != ''
-        continue-on-error: true
-        id: setup-allurectl
-        uses: allure-framework/setup-allurectl@v1
-        with:
-          allure-endpoint: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
-          allure-token: ${{ env.ALLURE_TOKEN }}
-          allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
-
-      - name: Upload Allure results to TestOps
-        if: always() && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
-        continue-on-error: true
-        working-directory: ${{ env.FRONTEND_DIR }}
-        env:
-          ALLURE_ENDPOINT: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
-          ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
-          ALLURE_PROJECT_ID: ${{ env.ALLURE_PROJECT_ID }}
-          ALLURE_LAUNCH_NAME: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
-        run: |
-          set -euo pipefail
-          RESULTS="allure-results"
-          if [ ! -d "$RESULTS" ] || [ -z "$(ls -A "$RESULTS" 2>/dev/null || true)" ]; then
-            echo "No allure-results at ${RESULTS} — skip TestOps upload"
-            exit 0
-          fi
-          ARGS=(
-            upload "$RESULTS"
-            --endpoint "${ALLURE_ENDPOINT}"
-            --token "${ALLURE_TOKEN}"
-            --project-id "${ALLURE_PROJECT_ID}"
-          )
-          if [ -n "${ALLURE_LAUNCH_NAME:-}" ]; then
-            ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
-          fi
-          allurectl "${ARGS[@]}"
-
-
-      - if: always()
-        uses: actions/setup-node@v6
-        with:
-          node-version: "26"
-
-      - name: Generate Allure report
+      - name: Publish raw Allure results
         if: always()
-        continue-on-error: true
-        id: allure-report
-        working-directory: ${{ env.FRONTEND_DIR }}
-        run: |
-          set -euo pipefail
-          ARGS=(generate "allure-results" -o "allure-report")
-          npx --yes allure@3.13.0 "${ARGS[@]}"
-
-      - if: always() && steps.allure-report.outcome == 'success'
         continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
-          name: allure-report-component-tests
-          path: ${{ env.FRONTEND_DIR }}/allure-report/
+          name: allure-results-component
+          path: ${{ env.FRONTEND_DIR }}/allure-results/**
           if-no-files-found: ignore
-
+          retention-days: 1
 
   tests-harness-backend:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       LAYER: harness-backend
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       # ── java (Gradle tags + JaCoCo gate) ──────────────────────────────────
       - if: env.TESTS_LANG == 'java'
@@ -415,7 +333,7 @@ jobs:
           restore-keys: |
             gradle-cc-${{ env.TESTS }}-${{ github.job }}-
       # Coverage gate reads build/jacoco/test.exec, so it is only meaningful with this filter.
-      # Allure results stay on (default allure3) for TestOps / report / Telegram steps below.
+      # Allure results stay on (default allure3) and are published for the reporting matrix.
       - name: Run harness-backend tests (Gradle)
         if: env.TESTS_LANG == 'java'
         id: run-tests
@@ -430,128 +348,25 @@ jobs:
             ${{ env.TESTS_DIR }}/build/reports/jacoco/**
             ${{ env.TESTS_DIR }}/build/classes/**
           if-no-files-found: error
-      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
-        continue-on-error: true
-        id: setup-allurectl
-        uses: allure-framework/setup-allurectl@v1
-        with:
-          allure-endpoint: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
-          allure-token: ${{ env.ALLURE_TOKEN }}
-          allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
-
-      - name: Upload Allure results to TestOps
-        if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
-        continue-on-error: true
-        working-directory: ${{ env.TESTS_DIR }}
-        env:
-          ALLURE_ENDPOINT: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
-          ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
-          ALLURE_PROJECT_ID: ${{ env.ALLURE_PROJECT_ID }}
-          ALLURE_LAUNCH_NAME: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
-        run: |
-          set -euo pipefail
-          RESULTS="build/allure-results"
-          if [ ! -d "$RESULTS" ] || [ -z "$(ls -A "$RESULTS" 2>/dev/null || true)" ]; then
-            echo "No allure-results at ${RESULTS} — skip TestOps upload"
-            exit 0
-          fi
-          ARGS=(
-            upload "$RESULTS"
-            --endpoint "${ALLURE_ENDPOINT}"
-            --token "${ALLURE_TOKEN}"
-            --project-id "${ALLURE_PROJECT_ID}"
-          )
-          if [ -n "${ALLURE_LAUNCH_NAME:-}" ]; then
-            ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
-          fi
-          allurectl "${ARGS[@]}"
-
-
-      - if: always() && env.TESTS_LANG == 'java'
-        uses: actions/setup-node@v6
-        with:
-          node-version: "26"
-          cache: npm
-          cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
-      - name: Install pinned Allure CLIs
-        if: always() && env.TESTS_LANG == 'java'
-        run: npm ci
-        working-directory: ${{ env.TESTS_DIR }}
-
-      - name: Generate Allure report
-        if: always() && env.TESTS_LANG == 'java'
-        continue-on-error: true
-        id: allure-report
-        working-directory: ${{ env.TESTS_DIR }}
-        run: |
-          set -euo pipefail
-          ARGS=(generate "build/allure-results" -o "build/reports/allure-report/allureReport")
-          CONFIG="allurerc.mjs"
-          if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
-            ARGS+=(--config "$CONFIG")
-          fi
-          npx --no-install allure "${ARGS[@]}"
-
-      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+      - name: Publish raw Allure results
+        if: always()
         continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
-          name: allure-report-${{ env.LAYER }}-tests
-          path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
+          name: allure-results-harness-backend
+          path: ${{ env.TESTS_DIR }}/build/allure-results/**
           if-no-files-found: ignore
-
-      - name: Send Allure Telegram notification
-        if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
-        continue-on-error: true
-        working-directory: ${{ env.TESTS_DIR }}
-        env:
-          NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
-          BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          TELEGRAM_BOT_TOKEN: ${{ env.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ env.TELEGRAM_CHAT_ID || '-1004381150566' }}
-          TELEGRAM_TOPIC_ID: ${{ env.TELEGRAM_TOPIC_ID || '3' }}
-          NOTIFICATION_MODE: ${{ github.event_name != 'pull_request' && 'live' || 'dry-run' }}
-        run: |
-          set -euo pipefail
-          if [ ! -f notifications/config.json ]; then
-            echo "No notifications/config.json — skip Telegram"
-            exit 0
-          fi
-          ALLURE_FOLDER="${PWD}/build/reports/allure-report/allureReport/awesome"
-          ALLURE_RESULTS="${PWD}/build/allure-results"
-          if [ ! -f "${ALLURE_FOLDER}/summary.json" ]; then
-            echo "No ${ALLURE_FOLDER}/summary.json — skip Telegram"
-            exit 0
-          fi
-          CFG=notifications/config.ci.json
-          jq \
-            --arg p "${NOTIFICATION_PROJECT:-}" \
-            --arg b "${BUILD_URL:-}" \
-            --arg af "${ALLURE_FOLDER}" \
-            --arg ar "${ALLURE_RESULTS}" \
-            'if ($p | length) > 0 then .base.project = $p else . end
-             | if ($b | length) > 0 then .base.links.build = $b else . end
-             | .base.allureFolder = $af
-             | .base.allureResultsFolder = $ar' \
-            notifications/config.json > "$CFG"
-          MODE_FLAG="--dry-run"
-          if [ "${NOTIFICATION_MODE}" = "live" ]; then
-            MODE_FLAG="--live"
-          fi
-          npx --no-install allure-notifications send \
-            --config "$CFG" \
-            ${MODE_FLAG} \
-            --out collage.png
-
-
+          retention-days: 1
 
   tests-harness-frontend:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       LAYER: harness-frontend
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       # ── java (Gradle tags + JaCoCo gate) ──────────────────────────────────
       - if: env.TESTS_LANG == 'java'
@@ -571,7 +386,7 @@ jobs:
           restore-keys: |
             gradle-cc-${{ env.TESTS }}-${{ github.job }}-
       # Coverage gate reads build/jacoco/test.exec, so it is only meaningful with this filter.
-      # Allure results stay on (default allure3) for TestOps / report / Telegram steps below.
+      # Allure results stay on (default allure3) and are published for the reporting matrix.
       - name: Run harness-frontend tests (Gradle)
         if: env.TESTS_LANG == 'java'
         id: run-tests
@@ -586,120 +401,6 @@ jobs:
             ${{ env.TESTS_DIR }}/build/reports/jacoco/**
             ${{ env.TESTS_DIR }}/build/classes/**
           if-no-files-found: error
-      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
-        continue-on-error: true
-        id: setup-allurectl
-        uses: allure-framework/setup-allurectl@v1
-        with:
-          allure-endpoint: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
-          allure-token: ${{ env.ALLURE_TOKEN }}
-          allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
-
-      - name: Upload Allure results to TestOps
-        if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
-        continue-on-error: true
-        working-directory: ${{ env.TESTS_DIR }}
-        env:
-          ALLURE_ENDPOINT: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
-          ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
-          ALLURE_PROJECT_ID: ${{ env.ALLURE_PROJECT_ID }}
-          ALLURE_LAUNCH_NAME: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
-        run: |
-          set -euo pipefail
-          RESULTS="build/allure-results"
-          if [ ! -d "$RESULTS" ] || [ -z "$(ls -A "$RESULTS" 2>/dev/null || true)" ]; then
-            echo "No allure-results at ${RESULTS} — skip TestOps upload"
-            exit 0
-          fi
-          ARGS=(
-            upload "$RESULTS"
-            --endpoint "${ALLURE_ENDPOINT}"
-            --token "${ALLURE_TOKEN}"
-            --project-id "${ALLURE_PROJECT_ID}"
-          )
-          if [ -n "${ALLURE_LAUNCH_NAME:-}" ]; then
-            ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
-          fi
-          allurectl "${ARGS[@]}"
-
-
-      - if: always() && env.TESTS_LANG == 'java'
-        uses: actions/setup-node@v6
-        with:
-          node-version: "26"
-          cache: npm
-          cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
-      - name: Install pinned Allure CLIs
-        if: always() && env.TESTS_LANG == 'java'
-        run: npm ci
-        working-directory: ${{ env.TESTS_DIR }}
-
-      - name: Generate Allure report
-        if: always() && env.TESTS_LANG == 'java'
-        continue-on-error: true
-        id: allure-report
-        working-directory: ${{ env.TESTS_DIR }}
-        run: |
-          set -euo pipefail
-          ARGS=(generate "build/allure-results" -o "build/reports/allure-report/allureReport")
-          CONFIG="allurerc.mjs"
-          if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
-            ARGS+=(--config "$CONFIG")
-          fi
-          npx --no-install allure "${ARGS[@]}"
-
-      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
-        continue-on-error: true
-        uses: actions/upload-artifact@v7
-        with:
-          name: allure-report-${{ env.LAYER }}-tests
-          path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
-          if-no-files-found: ignore
-
-      - name: Send Allure Telegram notification
-        if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
-        continue-on-error: true
-        working-directory: ${{ env.TESTS_DIR }}
-        env:
-          NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
-          BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          TELEGRAM_BOT_TOKEN: ${{ env.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ env.TELEGRAM_CHAT_ID || '-1004381150566' }}
-          TELEGRAM_TOPIC_ID: ${{ env.TELEGRAM_TOPIC_ID || '3' }}
-          NOTIFICATION_MODE: ${{ github.event_name != 'pull_request' && 'live' || 'dry-run' }}
-        run: |
-          set -euo pipefail
-          if [ ! -f notifications/config.json ]; then
-            echo "No notifications/config.json — skip Telegram"
-            exit 0
-          fi
-          ALLURE_FOLDER="${PWD}/build/reports/allure-report/allureReport/awesome"
-          ALLURE_RESULTS="${PWD}/build/allure-results"
-          if [ ! -f "${ALLURE_FOLDER}/summary.json" ]; then
-            echo "No ${ALLURE_FOLDER}/summary.json — skip Telegram"
-            exit 0
-          fi
-          CFG=notifications/config.ci.json
-          jq \
-            --arg p "${NOTIFICATION_PROJECT:-}" \
-            --arg b "${BUILD_URL:-}" \
-            --arg af "${ALLURE_FOLDER}" \
-            --arg ar "${ALLURE_RESULTS}" \
-            'if ($p | length) > 0 then .base.project = $p else . end
-             | if ($b | length) > 0 then .base.links.build = $b else . end
-             | .base.allureFolder = $af
-             | .base.allureResultsFolder = $ar' \
-            notifications/config.json > "$CFG"
-          MODE_FLAG="--dry-run"
-          if [ "${NOTIFICATION_MODE}" = "live" ]; then
-            MODE_FLAG="--live"
-          fi
-          npx --no-install allure-notifications send \
-            --config "$CFG" \
-            ${MODE_FLAG} \
-            --out collage.png
-
-
       # ── javascript / typescript (full suite; no tag pyramid yet) ──────────
       - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
         uses: actions/setup-node@v6
@@ -735,21 +436,30 @@ jobs:
         if: env.TESTS_LANG == 'python'
         run: python -m pytest
         working-directory: ${{ env.TESTS_DIR }}
+      - name: Publish raw Allure results
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-results-harness-frontend
+          path: ${{ env.TESTS_DIR }}/build/allure-results/**
+          if-no-files-found: ignore
+          retention-days: 1
 
   # Quality axis (SonarQube) — hard gate before deploy (not build). Coverage reused via artifacts.
-  # Gate poll: scripts/sonar-gate-wait.py only (no external .sh wrappers).
+  # Quality Gate wait is native in each scanner (`sonar.qualitygate.wait=true`).
   sonar-backend:
     needs: [unit-tests]
     if: ${{ !cancelled() && needs.unit-tests.result == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
       SONAR_PROJECT_KEY: ${{ vars.SONAR_BACKEND_PROJECT_KEY || 'reference-app-copy-backend-java-spring' }}
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -757,18 +467,14 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
         with:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-      - uses: actions/cache@v6
-        with:
-          path: ${{ env.BACKEND_DIR }}/.gradle/configuration-cache
-          key: gradle-cc-${{ env.BACKEND }}-${{ hashFiles('backend/java/backend-java-spring/*.gradle*', 'backend/java/backend-java-spring/gradle/wrapper/gradle-wrapper.properties', 'backend/java/backend-java-spring/gradle.properties') }}-${{ github.sha }}
-          restore-keys: |
-            gradle-cc-${{ env.BACKEND }}-
       - uses: actions/download-artifact@v8
         with:
           name: coverage-backend
           path: ${{ env.BACKEND_DIR }}/build
       - name: Sonar scan + gate (backend)
         working-directory: ${{ env.BACKEND_DIR }}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           set -euo pipefail
           if [[ ! -f build/reports/jacoco/test/jacocoTestReport.xml ]]; then
@@ -780,28 +486,15 @@ jobs:
             echo "ERROR: SONAR_TOKEN unset" >&2
             exit 1
           fi
-          if ! curl -sf --max-time 15 "${SONAR_HOST_URL%/}/api/system/status" >/dev/null; then
-            echo "ERROR: Sonar host unreachable: ${SONAR_HOST_URL}" >&2
-            exit 1
-          fi
 
           echo "==> sonar scan (coverage artifact) → ${SONAR_HOST_URL} (${SONAR_PROJECT_KEY})"
           # Token via env only (SONAR_TOKEN) — never argv (canon: docs/sonar/GITHUB-ACTIONS.md).
           ./gradlew sonar --no-daemon \
             -Dsonar.host.url="${SONAR_HOST_URL}" \
             -Dsonar.projectKey="${SONAR_PROJECT_KEY}" \
-            -Dsonar.projectName="${SONAR_PROJECT_KEY}"
-
-          echo "==> quality gate poll"
-          REPORT_TASK="build/sonar/report-task.txt"
-          if [[ ! -f "$REPORT_TASK" ]]; then
-            echo "ERROR: report-task not found: $REPORT_TASK" >&2
-            exit 1
-          fi
-          python "${GITHUB_WORKSPACE}/scripts/sonar-gate-wait.py" \
-            --report-task "$REPORT_TASK" \
-            --project-key "$SONAR_PROJECT_KEY" \
-            --url "$SONAR_HOST_URL"
+            -Dsonar.projectName="${SONAR_PROJECT_KEY}" \
+            -Dsonar.qualitygate.wait=true \
+            -Dsonar.qualitygate.timeout="${SONAR_QUALITY_GATE_TIMEOUT}"
       - name: Write Sonar summary (backend)
         if: always()
         run: |
@@ -821,15 +514,15 @@ jobs:
       !cancelled() &&
       needs.tests-harness-backend.result == 'success' &&
       needs.tests-harness-frontend.result == 'success'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
       SONAR_PROJECT_KEY: ${{ vars.SONAR_TESTS_PROJECT_KEY || 'reference-app-copy-tests-java-gradle-junit5-allure3-selenide' }}
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -843,9 +536,6 @@ jobs:
           key: gradle-cc-${{ env.TESTS }}-${{ github.job }}-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
           restore-keys: |
             gradle-cc-${{ env.TESTS }}-${{ github.job }}-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
       - uses: actions/download-artifact@v8
         with:
           name: coverage-harness-backend
@@ -856,6 +546,8 @@ jobs:
           path: harness-frontend
       - name: Sonar scan + gate (tests)
         working-directory: ${{ env.TESTS_DIR }}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           set -euo pipefail
           JACOCO_XML_PATHS="${GITHUB_WORKSPACE}/harness-backend/reports/jacoco/test/jacocoTestReport.xml,${GITHUB_WORKSPACE}/harness-frontend/reports/jacoco/test/jacocoTestReport.xml"
@@ -873,28 +565,15 @@ jobs:
             echo "ERROR: SONAR_TOKEN unset" >&2
             exit 1
           fi
-          if ! curl -sf --max-time 15 "${SONAR_HOST_URL%/}/api/system/status" >/dev/null; then
-            echo "ERROR: Sonar host unreachable: ${SONAR_HOST_URL}" >&2
-            exit 1
-          fi
 
           echo "==> sonar scan (harness coverage artifacts) → ${SONAR_HOST_URL} (${SONAR_PROJECT_KEY})"
           ./gradlew sonar --no-daemon \
             -Dsonar.host.url="${SONAR_HOST_URL}" \
             -Dsonar.projectKey="${SONAR_PROJECT_KEY}" \
             -Dsonar.projectName="${SONAR_PROJECT_KEY}" \
-            -Dsonar.coverage.jacoco.xmlReportPaths="${JACOCO_XML_PATHS}"
-
-          echo "==> quality gate poll"
-          REPORT_TASK="build/sonar/report-task.txt"
-          if [[ ! -f "$REPORT_TASK" ]]; then
-            echo "ERROR: report-task not found: $REPORT_TASK" >&2
-            exit 1
-          fi
-          python "${GITHUB_WORKSPACE}/scripts/sonar-gate-wait.py" \
-            --report-task "$REPORT_TASK" \
-            --project-key "$SONAR_PROJECT_KEY" \
-            --url "$SONAR_HOST_URL"
+            -Dsonar.coverage.jacoco.xmlReportPaths="${JACOCO_XML_PATHS}" \
+            -Dsonar.qualitygate.wait=true \
+            -Dsonar.qualitygate.timeout="${SONAR_QUALITY_GATE_TIMEOUT}"
       - name: Write Sonar summary (tests)
         if: always()
         run: |
@@ -910,15 +589,15 @@ jobs:
   sonar-frontend:
     needs: [component-tests]
     if: ${{ !cancelled() && needs.component-tests.result == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
       SONAR_PROJECT_KEY: ${{ vars.SONAR_FRONTEND_PROJECT_KEY || 'reference-app-copy-frontend-typescript-react' }}
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -930,6 +609,8 @@ jobs:
           path: ${{ env.FRONTEND_DIR }}/coverage
       - name: Sonar scan + gate (frontend)
         working-directory: ${{ env.FRONTEND_DIR }}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           set -euo pipefail
           if [[ ! -d coverage ]] || [ -z "$(ls -A coverage 2>/dev/null || true)" ]; then
@@ -942,27 +623,14 @@ jobs:
             echo "ERROR: SONAR_TOKEN unset" >&2
             exit 1
           fi
-          if ! curl -sf --max-time 15 "${SONAR_HOST_URL%/}/api/system/status" >/dev/null; then
-            echo "ERROR: Sonar host unreachable: ${SONAR_HOST_URL}" >&2
-            exit 1
-          fi
 
           echo "==> sonar scan (coverage artifact) → ${SONAR_HOST_URL} (${SONAR_PROJECT_KEY})"
-          npx --yes @sonar/scan \
+          npx --yes "@sonar/scan@${SONAR_SCANNER_NPM_VERSION}" \
             -Dsonar.host.url="${SONAR_HOST_URL}" \
             -Dsonar.projectKey="${SONAR_PROJECT_KEY}" \
-            -Dsonar.projectName="${SONAR_PROJECT_KEY}"
-
-          echo "==> quality gate poll"
-          REPORT_TASK=".scannerwork/report-task.txt"
-          if [[ ! -f "$REPORT_TASK" ]]; then
-            echo "ERROR: report-task not found: $REPORT_TASK" >&2
-            exit 1
-          fi
-          python "${GITHUB_WORKSPACE}/scripts/sonar-gate-wait.py" \
-            --report-task "$REPORT_TASK" \
-            --project-key "$SONAR_PROJECT_KEY" \
-            --url "$SONAR_HOST_URL"
+            -Dsonar.projectName="${SONAR_PROJECT_KEY}" \
+            -Dsonar.qualitygate.wait=true \
+            -Dsonar.qualitygate.timeout="${SONAR_QUALITY_GATE_TIMEOUT}"
       - name: Write Sonar summary (frontend)
         if: always()
         run: |
@@ -985,13 +653,15 @@ jobs:
         (github.event_name == 'workflow_dispatch' &&
          (inputs.deploy == 'backend' || inputs.deploy == 'both'))
       )
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
       contents: read
       packages: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: docker/login-action@v4
         with:
           registry: ghcr.io
@@ -1001,35 +671,6 @@ jobs:
         run: docker compose build ${{ env.BACKEND }}
       - name: Push backend Docker image to GHCR
         run: docker compose push ${{ env.BACKEND }}
-      # Keep the newest N GHCR versions; never delete a version that carries `latest`.
-      # Needs repo Admin on the package (Manage Actions access). No PAT — GITHUB_TOKEN only.
-      - name: Retain last 10 GHCR versions (backend)
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          KEEP: "10"
-          GHCR_PACKAGE: ${{ env.GHCR_BACKEND_PACKAGE }}
-        run: |
-          set -euo pipefail
-          org="${{ github.repository_owner }}"
-          pkg="${GHCR_PACKAGE}"
-          echo "Cleaning ghcr.io/${org}/${pkg} (keep ${KEEP}; protect latest)"
-          to_delete="$(
-            gh api --paginate \
-              "/orgs/${org}/packages/container/${pkg}/versions" \
-              --jq '.[] | select((.metadata.container.tags // [] | index("latest")) | not) | "\(.created_at)\t\(.id)"' \
-              | sort -r \
-              | tail -n "+$((KEEP + 1))" \
-              | cut -f2
-          )"
-          if [ -z "${to_delete}" ]; then
-            echo "Nothing to delete for ${pkg}"
-            exit 0
-          fi
-          while IFS= read -r id; do
-            [ -n "${id}" ] || continue
-            echo "DELETE ${pkg} version ${id}"
-            gh api --method DELETE "/orgs/${org}/packages/container/${pkg}/versions/${id}"
-          done <<< "${to_delete}"
 
   build-frontend:
     needs: [component-tests, changes]
@@ -1041,13 +682,15 @@ jobs:
         (github.event_name == 'workflow_dispatch' &&
          (inputs.deploy == 'frontend' || inputs.deploy == 'both'))
       )
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
       contents: read
       packages: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: docker/login-action@v4
         with:
           registry: ghcr.io
@@ -1057,33 +700,57 @@ jobs:
         run: docker compose build ${{ env.FRONTEND }}
       - name: Push frontend Docker image to GHCR
         run: docker compose push ${{ env.FRONTEND }}
-      - name: Retain last 10 GHCR versions (frontend)
+
+  # Registry housekeeping is deliberately non-gating: API/permission failures must not
+  # prevent deployment of an image that was already built and pushed successfully.
+  ghcr-retention:
+    needs: [build-backend, build-frontend]
+    if: >-
+      !cancelled() &&
+      (needs.build-backend.result == 'success' || needs.build-frontend.result == 'success')
+    continue-on-error: true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Retain last 10 GHCR versions
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           KEEP: "10"
-          GHCR_PACKAGE: ${{ env.GHCR_FRONTEND_PACKAGE }}
+          BACKEND_BUILD_RESULT: ${{ needs.build-backend.result }}
+          FRONTEND_BUILD_RESULT: ${{ needs.build-frontend.result }}
         run: |
           set -euo pipefail
           org="${{ github.repository_owner }}"
-          pkg="${GHCR_PACKAGE}"
-          echo "Cleaning ghcr.io/${org}/${pkg} (keep ${KEEP}; protect latest)"
-          to_delete="$(
-            gh api --paginate \
-              "/orgs/${org}/packages/container/${pkg}/versions" \
-              --jq '.[] | select((.metadata.container.tags // [] | index("latest")) | not) | "\(.created_at)\t\(.id)"' \
-              | sort -r \
-              | tail -n "+$((KEEP + 1))" \
-              | cut -f2
-          )"
-          if [ -z "${to_delete}" ]; then
-            echo "Nothing to delete for ${pkg}"
-            exit 0
+          packages=()
+          if [ "${BACKEND_BUILD_RESULT}" = "success" ]; then
+            packages+=("${GHCR_BACKEND_PACKAGE}")
           fi
-          while IFS= read -r id; do
-            [ -n "${id}" ] || continue
-            echo "DELETE ${pkg} version ${id}"
-            gh api --method DELETE "/orgs/${org}/packages/container/${pkg}/versions/${id}"
-          done <<< "${to_delete}"
+          if [ "${FRONTEND_BUILD_RESULT}" = "success" ]; then
+            packages+=("${GHCR_FRONTEND_PACKAGE}")
+          fi
+          for pkg in "${packages[@]}"; do
+            echo "Cleaning ghcr.io/${org}/${pkg} (keep ${KEEP}; protect latest)"
+            to_delete="$(
+              gh api --paginate \
+                "/orgs/${org}/packages/container/${pkg}/versions" \
+                --jq '.[] | select((.metadata.container.tags // [] | index("latest")) | not) | "\(.created_at)\t\(.id)"' \
+                | sort -r \
+                | tail -n "+$((KEEP + 1))" \
+                | cut -f2
+            )"
+            if [ -z "${to_delete}" ]; then
+              echo "Nothing to delete for ${pkg}"
+              continue
+            fi
+            while IFS= read -r id; do
+              [ -n "${id}" ] || continue
+              echo "DELETE ${pkg} version ${id}"
+              gh api --method DELETE "/orgs/${org}/packages/container/${pkg}/versions/${id}"
+            done <<< "${to_delete}"
+          done
 
   deploy-backend:
     needs: [build-backend, sonar-backend]
@@ -1091,8 +758,11 @@ jobs:
       !cancelled() &&
       needs.build-backend.result == 'success' &&
       needs.sonar-backend.result == 'success'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
+    environment:
+      name: ${{ vars.DEPLOY_ENVIRONMENT || 'reference-production' }}
+      url: ${{ env.APP_URL }}
     # Shared deploy host: serialize git checkout with deploy-frontend (same checkout dir).
     concurrency:
       group: deploy-reference-app-copy
@@ -1132,15 +802,17 @@ jobs:
         (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
          needs.changes.outputs.frontend == 'true') ||
         (github.event_name == 'workflow_dispatch' &&
-         (contains(format(',{0},', inputs.layers), ',mock,') ||
+         (inputs.run_mock ||
           inputs.deploy == 'frontend' || inputs.deploy == 'both'))
       )
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
       LAYER: e2e-mock
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       # ── java (-Denv=reference_mock -DincludeTags=mock) ────────────────────
       - if: env.TESTS_LANG == 'java'
@@ -1163,30 +835,13 @@ jobs:
             gradle-cc-${{ env.TESTS }}-${{ github.job }}-
       # reference_mock has no remoteUrl: the stand lives on the runner's localhost, which a
       # Selenoid browser could not reach, so the browser has to be local too.
-      # helpers/LocalChromePin refuses system Chrome and reads only ~/.local/share/chrome-for-testing;
-      # the pinned build is declared in src/test/resources/chrome-for-testing.properties.
-      - name: Resolve pinned Chrome version
-        if: env.TESTS_LANG == 'java'
-        id: chrome-pin
-        working-directory: ${{ env.TESTS_DIR }}
-        run: |
-          set -euo pipefail
-          version="$(scripts/install-chrome-for-testing.sh --print-version)"
-          echo "version=${version}" >> "$GITHUB_OUTPUT"
-      - if: env.TESTS_LANG == 'java'
-        id: chrome-cache
-        uses: actions/cache@v6
-        with:
-          path: ~/.local/share/chrome-for-testing
-          key: chrome-for-testing-linux-${{ steps.chrome-pin.outputs.version }}
       - name: Install pinned Chrome for Testing
-        if: env.TESTS_LANG == 'java' && steps.chrome-cache.outputs.cache-hit != 'true'
-        working-directory: ${{ env.TESTS_DIR }}
-        run: scripts/install-chrome-for-testing.sh
-      - name: Verify pinned Chrome
         if: env.TESTS_LANG == 'java'
-        working-directory: ${{ env.TESTS_DIR }}
-        run: scripts/install-chrome-for-testing.sh --verify
+        id: setup-chrome
+        uses: browser-actions/setup-chrome@v2.1.2
+        with:
+          chrome-version: ${{ env.CHROME_FOR_TESTING_VERSION }}
+          install-chromedriver: true
       # stand-gateway serves the SPA and proxies /api/ to WireMock stubs (deploy/mock/mappings).
       # Naming the service is load-bearing: a bare `up` also starts every profile-less service,
       # so --build would compile all twelve backends the mock stand never talks to. depends_on
@@ -1203,125 +858,24 @@ jobs:
       - name: Run e2e mock tests (Gradle)
         if: env.TESTS_LANG == 'java'
         id: run-tests
+        env:
+          CHROME_BINARY_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+          CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
         run: ./gradlew test -Denv=reference_mock -DincludeTags=mock
         working-directory: ${{ env.TESTS_DIR }}
       - name: Tear down mock stand
         if: always() && env.TESTS_LANG == 'java'
         continue-on-error: true
         run: docker compose --profile mock down -v --remove-orphans
-      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
-        continue-on-error: true
-        id: setup-allurectl
-        uses: allure-framework/setup-allurectl@v1
-        with:
-          allure-endpoint: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
-          allure-token: ${{ env.ALLURE_TOKEN }}
-          allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
-
-      - name: Upload Allure results to TestOps
-        if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
-        continue-on-error: true
-        working-directory: ${{ env.TESTS_DIR }}
-        env:
-          ALLURE_ENDPOINT: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
-          ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
-          ALLURE_PROJECT_ID: ${{ env.ALLURE_PROJECT_ID }}
-          ALLURE_LAUNCH_NAME: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
-        run: |
-          set -euo pipefail
-          RESULTS="build/allure-results"
-          if [ ! -d "$RESULTS" ] || [ -z "$(ls -A "$RESULTS" 2>/dev/null || true)" ]; then
-            echo "No allure-results at ${RESULTS} — skip TestOps upload"
-            exit 0
-          fi
-          ARGS=(
-            upload "$RESULTS"
-            --endpoint "${ALLURE_ENDPOINT}"
-            --token "${ALLURE_TOKEN}"
-            --project-id "${ALLURE_PROJECT_ID}"
-          )
-          if [ -n "${ALLURE_LAUNCH_NAME:-}" ]; then
-            ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
-          fi
-          allurectl "${ARGS[@]}"
-
-
-      - if: always() && env.TESTS_LANG == 'java'
-        uses: actions/setup-node@v6
-        with:
-          node-version: "26"
-          cache: npm
-          cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
-      - name: Install pinned Allure CLIs
-        if: always() && env.TESTS_LANG == 'java'
-        run: npm ci
-        working-directory: ${{ env.TESTS_DIR }}
-
-      - name: Generate Allure report
-        if: always() && env.TESTS_LANG == 'java'
-        continue-on-error: true
-        id: allure-report
-        working-directory: ${{ env.TESTS_DIR }}
-        run: |
-          set -euo pipefail
-          ARGS=(generate "build/allure-results" -o "build/reports/allure-report/allureReport")
-          CONFIG="allurerc.mjs"
-          if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
-            ARGS+=(--config "$CONFIG")
-          fi
-          npx --no-install allure "${ARGS[@]}"
-
-      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+      - name: Publish raw Allure results
+        if: always()
         continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
-          name: allure-report-${{ env.LAYER }}-tests
-          path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
+          name: allure-results-e2e-mock
+          path: ${{ env.TESTS_DIR }}/build/allure-results/**
           if-no-files-found: ignore
-
-      - name: Send Allure Telegram notification
-        if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
-        continue-on-error: true
-        working-directory: ${{ env.TESTS_DIR }}
-        env:
-          NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
-          BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          TELEGRAM_BOT_TOKEN: ${{ env.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ env.TELEGRAM_CHAT_ID || '-1004381150566' }}
-          TELEGRAM_TOPIC_ID: ${{ env.TELEGRAM_TOPIC_ID || '3' }}
-          NOTIFICATION_MODE: ${{ github.event_name != 'pull_request' && 'live' || 'dry-run' }}
-        run: |
-          set -euo pipefail
-          if [ ! -f notifications/config.json ]; then
-            echo "No notifications/config.json — skip Telegram"
-            exit 0
-          fi
-          ALLURE_FOLDER="${PWD}/build/reports/allure-report/allureReport/awesome"
-          ALLURE_RESULTS="${PWD}/build/allure-results"
-          if [ ! -f "${ALLURE_FOLDER}/summary.json" ]; then
-            echo "No ${ALLURE_FOLDER}/summary.json — skip Telegram"
-            exit 0
-          fi
-          CFG=notifications/config.ci.json
-          jq \
-            --arg p "${NOTIFICATION_PROJECT:-}" \
-            --arg b "${BUILD_URL:-}" \
-            --arg af "${ALLURE_FOLDER}" \
-            --arg ar "${ALLURE_RESULTS}" \
-            'if ($p | length) > 0 then .base.project = $p else . end
-             | if ($b | length) > 0 then .base.links.build = $b else . end
-             | .base.allureFolder = $af
-             | .base.allureResultsFolder = $ar' \
-            notifications/config.json > "$CFG"
-          MODE_FLAG="--dry-run"
-          if [ "${NOTIFICATION_MODE}" = "live" ]; then
-            MODE_FLAG="--live"
-          fi
-          npx --no-install allure-notifications send \
-            --config "$CFG" \
-            ${MODE_FLAG} \
-            --out collage.png
-
+          retention-days: 1
 
   # FE deploy after build + sonar + mock gate; shared host lock with deploy-backend.
   deploy-frontend:
@@ -1331,8 +885,11 @@ jobs:
       needs.build-frontend.result == 'success' &&
       needs.sonar-frontend.result == 'success' &&
       needs.e2e-mock-tests.result == 'success'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
+    environment:
+      name: ${{ vars.DEPLOY_ENVIRONMENT || 'reference-production' }}
+      url: ${{ env.APP_URL }}
     # Independent of backend lane; shared host lock via concurrency (same checkout dir).
     concurrency:
       group: deploy-reference-app-copy
@@ -1376,13 +933,21 @@ jobs:
           needs.deploy-frontend.result == 'success' ||
           needs.changes.outputs.tests == 'true')) ||
         (github.event_name == 'workflow_dispatch' &&
-         (contains(format(',{0},', inputs.layers), ',integration,') ||
-          contains(format(',{0},', inputs.layers), ',api,') ||
-          contains(format(',{0},', inputs.layers), ',e2e,') ||
-          contains(format(',{0},', inputs.layers), ',visual,') ||
-          contains(format(',{0},', inputs.layers), ',manual,')))
+         (inputs.deploy != 'none' ||
+          inputs.run_integration ||
+          inputs.run_api ||
+          inputs.run_e2e ||
+          inputs.run_visual ||
+          inputs.run_manual ||
+          inputs.update_baselines ||
+          inputs.include_tags != '' ||
+          inputs.exclude_tags != '') &&
+         (!(inputs.deploy == 'backend' || inputs.deploy == 'both') ||
+          needs.deploy-backend.result == 'success') &&
+         (!(inputs.deploy == 'frontend' || inputs.deploy == 'both') ||
+          needs.deploy-frontend.result == 'success'))
       )
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Verify live stand (UI + API health)
@@ -1400,15 +965,16 @@ jobs:
     if: >-
       !cancelled() && needs.stand-ready.result == 'success' && (
         (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-        (github.event_name == 'workflow_dispatch' &&
-         contains(format(',{0},', inputs.layers), ',integration,'))
+        (github.event_name == 'workflow_dispatch' && inputs.run_integration)
       )
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       LAYER: integration
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       # ── java (no UI — Rest Assured against deployed API) ─────────────────
       - if: env.TESTS_LANG == 'java'
@@ -1434,120 +1000,6 @@ jobs:
         id: run-tests
         run: ./gradlew test -Denv=reference_prod -DincludeTags=integration
         working-directory: ${{ env.TESTS_DIR }}
-      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
-        continue-on-error: true
-        id: setup-allurectl
-        uses: allure-framework/setup-allurectl@v1
-        with:
-          allure-endpoint: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
-          allure-token: ${{ env.ALLURE_TOKEN }}
-          allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
-
-      - name: Upload Allure results to TestOps
-        if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
-        continue-on-error: true
-        working-directory: ${{ env.TESTS_DIR }}
-        env:
-          ALLURE_ENDPOINT: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
-          ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
-          ALLURE_PROJECT_ID: ${{ env.ALLURE_PROJECT_ID }}
-          ALLURE_LAUNCH_NAME: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
-        run: |
-          set -euo pipefail
-          RESULTS="build/allure-results"
-          if [ ! -d "$RESULTS" ] || [ -z "$(ls -A "$RESULTS" 2>/dev/null || true)" ]; then
-            echo "No allure-results at ${RESULTS} — skip TestOps upload"
-            exit 0
-          fi
-          ARGS=(
-            upload "$RESULTS"
-            --endpoint "${ALLURE_ENDPOINT}"
-            --token "${ALLURE_TOKEN}"
-            --project-id "${ALLURE_PROJECT_ID}"
-          )
-          if [ -n "${ALLURE_LAUNCH_NAME:-}" ]; then
-            ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
-          fi
-          allurectl "${ARGS[@]}"
-
-
-      - if: always() && env.TESTS_LANG == 'java'
-        uses: actions/setup-node@v6
-        with:
-          node-version: "26"
-          cache: npm
-          cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
-      - name: Install pinned Allure CLIs
-        if: always() && env.TESTS_LANG == 'java'
-        run: npm ci
-        working-directory: ${{ env.TESTS_DIR }}
-
-      - name: Generate Allure report
-        if: always() && env.TESTS_LANG == 'java'
-        continue-on-error: true
-        id: allure-report
-        working-directory: ${{ env.TESTS_DIR }}
-        run: |
-          set -euo pipefail
-          ARGS=(generate "build/allure-results" -o "build/reports/allure-report/allureReport")
-          CONFIG="allurerc.mjs"
-          if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
-            ARGS+=(--config "$CONFIG")
-          fi
-          npx --no-install allure "${ARGS[@]}"
-
-      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
-        continue-on-error: true
-        uses: actions/upload-artifact@v7
-        with:
-          name: allure-report-${{ env.LAYER }}-tests
-          path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
-          if-no-files-found: ignore
-
-      - name: Send Allure Telegram notification
-        if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
-        continue-on-error: true
-        working-directory: ${{ env.TESTS_DIR }}
-        env:
-          NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
-          BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          TELEGRAM_BOT_TOKEN: ${{ env.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ env.TELEGRAM_CHAT_ID || '-1004381150566' }}
-          TELEGRAM_TOPIC_ID: ${{ env.TELEGRAM_TOPIC_ID || '3' }}
-          NOTIFICATION_MODE: ${{ github.event_name != 'pull_request' && 'live' || 'dry-run' }}
-        run: |
-          set -euo pipefail
-          if [ ! -f notifications/config.json ]; then
-            echo "No notifications/config.json — skip Telegram"
-            exit 0
-          fi
-          ALLURE_FOLDER="${PWD}/build/reports/allure-report/allureReport/awesome"
-          ALLURE_RESULTS="${PWD}/build/allure-results"
-          if [ ! -f "${ALLURE_FOLDER}/summary.json" ]; then
-            echo "No ${ALLURE_FOLDER}/summary.json — skip Telegram"
-            exit 0
-          fi
-          CFG=notifications/config.ci.json
-          jq \
-            --arg p "${NOTIFICATION_PROJECT:-}" \
-            --arg b "${BUILD_URL:-}" \
-            --arg af "${ALLURE_FOLDER}" \
-            --arg ar "${ALLURE_RESULTS}" \
-            'if ($p | length) > 0 then .base.project = $p else . end
-             | if ($b | length) > 0 then .base.links.build = $b else . end
-             | .base.allureFolder = $af
-             | .base.allureResultsFolder = $ar' \
-            notifications/config.json > "$CFG"
-          MODE_FLAG="--dry-run"
-          if [ "${NOTIFICATION_MODE}" = "live" ]; then
-            MODE_FLAG="--live"
-          fi
-          npx --no-install allure-notifications send \
-            --config "$CFG" \
-            ${MODE_FLAG} \
-            --out collage.png
-
-
       # ── javascript / typescript (full suite) ──────────────────────────────
       - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
         uses: actions/setup-node@v6
@@ -1583,21 +1035,31 @@ jobs:
         if: env.TESTS_LANG == 'python'
         run: python -m pytest
         working-directory: ${{ env.TESTS_DIR }}
+      - name: Publish raw Allure results
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-results-integration
+          path: ${{ env.TESTS_DIR }}/build/allure-results/**
+          if-no-files-found: ignore
+          retention-days: 1
 
   api-tests:
     needs: stand-ready
     if: >-
       !cancelled() && needs.stand-ready.result == 'success' && (
         (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-        (github.event_name == 'workflow_dispatch' &&
-         contains(format(',{0},', inputs.layers), ',api,'))
+        (github.event_name == 'workflow_dispatch' && inputs.run_api)
       )
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       LAYER: api
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       # ── java (no UI — Rest Assured API contract against deployed backend) ─
       - if: env.TESTS_LANG == 'java'
@@ -1623,120 +1085,6 @@ jobs:
         id: run-tests
         run: ./gradlew test -Denv=reference_prod -DincludeTags=api
         working-directory: ${{ env.TESTS_DIR }}
-      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
-        continue-on-error: true
-        id: setup-allurectl
-        uses: allure-framework/setup-allurectl@v1
-        with:
-          allure-endpoint: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
-          allure-token: ${{ env.ALLURE_TOKEN }}
-          allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
-
-      - name: Upload Allure results to TestOps
-        if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
-        continue-on-error: true
-        working-directory: ${{ env.TESTS_DIR }}
-        env:
-          ALLURE_ENDPOINT: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
-          ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
-          ALLURE_PROJECT_ID: ${{ env.ALLURE_PROJECT_ID }}
-          ALLURE_LAUNCH_NAME: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
-        run: |
-          set -euo pipefail
-          RESULTS="build/allure-results"
-          if [ ! -d "$RESULTS" ] || [ -z "$(ls -A "$RESULTS" 2>/dev/null || true)" ]; then
-            echo "No allure-results at ${RESULTS} — skip TestOps upload"
-            exit 0
-          fi
-          ARGS=(
-            upload "$RESULTS"
-            --endpoint "${ALLURE_ENDPOINT}"
-            --token "${ALLURE_TOKEN}"
-            --project-id "${ALLURE_PROJECT_ID}"
-          )
-          if [ -n "${ALLURE_LAUNCH_NAME:-}" ]; then
-            ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
-          fi
-          allurectl "${ARGS[@]}"
-
-
-      - if: always() && env.TESTS_LANG == 'java'
-        uses: actions/setup-node@v6
-        with:
-          node-version: "26"
-          cache: npm
-          cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
-      - name: Install pinned Allure CLIs
-        if: always() && env.TESTS_LANG == 'java'
-        run: npm ci
-        working-directory: ${{ env.TESTS_DIR }}
-
-      - name: Generate Allure report
-        if: always() && env.TESTS_LANG == 'java'
-        continue-on-error: true
-        id: allure-report
-        working-directory: ${{ env.TESTS_DIR }}
-        run: |
-          set -euo pipefail
-          ARGS=(generate "build/allure-results" -o "build/reports/allure-report/allureReport")
-          CONFIG="allurerc.mjs"
-          if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
-            ARGS+=(--config "$CONFIG")
-          fi
-          npx --no-install allure "${ARGS[@]}"
-
-      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
-        continue-on-error: true
-        uses: actions/upload-artifact@v7
-        with:
-          name: allure-report-${{ env.LAYER }}-tests
-          path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
-          if-no-files-found: ignore
-
-      - name: Send Allure Telegram notification
-        if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
-        continue-on-error: true
-        working-directory: ${{ env.TESTS_DIR }}
-        env:
-          NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
-          BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          TELEGRAM_BOT_TOKEN: ${{ env.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ env.TELEGRAM_CHAT_ID || '-1004381150566' }}
-          TELEGRAM_TOPIC_ID: ${{ env.TELEGRAM_TOPIC_ID || '3' }}
-          NOTIFICATION_MODE: ${{ github.event_name != 'pull_request' && 'live' || 'dry-run' }}
-        run: |
-          set -euo pipefail
-          if [ ! -f notifications/config.json ]; then
-            echo "No notifications/config.json — skip Telegram"
-            exit 0
-          fi
-          ALLURE_FOLDER="${PWD}/build/reports/allure-report/allureReport/awesome"
-          ALLURE_RESULTS="${PWD}/build/allure-results"
-          if [ ! -f "${ALLURE_FOLDER}/summary.json" ]; then
-            echo "No ${ALLURE_FOLDER}/summary.json — skip Telegram"
-            exit 0
-          fi
-          CFG=notifications/config.ci.json
-          jq \
-            --arg p "${NOTIFICATION_PROJECT:-}" \
-            --arg b "${BUILD_URL:-}" \
-            --arg af "${ALLURE_FOLDER}" \
-            --arg ar "${ALLURE_RESULTS}" \
-            'if ($p | length) > 0 then .base.project = $p else . end
-             | if ($b | length) > 0 then .base.links.build = $b else . end
-             | .base.allureFolder = $af
-             | .base.allureResultsFolder = $ar' \
-            notifications/config.json > "$CFG"
-          MODE_FLAG="--dry-run"
-          if [ "${NOTIFICATION_MODE}" = "live" ]; then
-            MODE_FLAG="--live"
-          fi
-          npx --no-install allure-notifications send \
-            --config "$CFG" \
-            ${MODE_FLAG} \
-            --out collage.png
-
-
       # ── javascript / typescript (full suite) ──────────────────────────────
       - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
         uses: actions/setup-node@v6
@@ -1772,6 +1120,15 @@ jobs:
         if: env.TESTS_LANG == 'python'
         run: python -m pytest
         working-directory: ${{ env.TESTS_DIR }}
+      - name: Publish raw Allure results
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-results-api
+          path: ${{ env.TESTS_DIR }}/build/allure-results/**
+          if-no-files-found: ignore
+          retention-days: 1
 
   # Join integration + api on main; dispatch e2e/visual when upstream layer jobs were skipped.
   e2e-tests:
@@ -1782,17 +1139,22 @@ jobs:
          needs.integration-tests.result == 'success' &&
          needs.api-tests.result == 'success') ||
         (github.event_name == 'workflow_dispatch' &&
-         (contains(format(',{0},', inputs.layers), ',e2e,') ||
-          contains(format(',{0},', inputs.layers), ',visual,')) &&
+         (inputs.run_e2e ||
+          inputs.run_visual ||
+          inputs.update_baselines ||
+          inputs.include_tags != '' ||
+          inputs.exclude_tags != '') &&
          (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped') &&
          (needs.api-tests.result == 'success' || needs.api-tests.result == 'skipped'))
       )
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
       LAYER: e2e
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       # ── java: -DincludeTags / -DexcludeTags (override via dispatch inputs) ─
       - if: env.TESTS_LANG == 'java'
@@ -1816,140 +1178,33 @@ jobs:
         if: env.TESTS_LANG == 'java'
         id: run-tests
         env:
-          # push has no inputs, and -Denv= (empty) is not the same as omitting it:
-          # System.getProperty('env', default) returns "" and the config lookup fails.
-          RUN_ENV: ${{ inputs.env || 'reference_prod' }}
+          RUN_ENV: reference_prod
           INCLUDE_TAGS: ${{ inputs.include_tags }}
           EXCLUDE_TAGS: ${{ inputs.exclude_tags }}
-          LAYERS: ${{ inputs.layers }}
+          RUN_E2E: ${{ github.event_name == 'push' || inputs.run_e2e || inputs.update_baselines }}
+          RUN_VISUAL: ${{ inputs.run_visual }}
         run: |
           set -euo pipefail
           ARGS=(-Denv="$RUN_ENV")
-          LAYERS_WRAPPED=",${LAYERS},"
+          DEFAULT_EXCLUDE=""
           if [ -n "${INCLUDE_TAGS}" ]; then
             ARGS+=(-DincludeTags="${INCLUDE_TAGS}")
-            [ -n "${EXCLUDE_TAGS}" ] && ARGS+=(-DexcludeTags="${EXCLUDE_TAGS}")
-          elif [[ "$LAYERS_WRAPPED" == *",visual,"* ]]; then
-            ARGS+=(-DincludeTags=visual)
           else
-            ARGS+=(-DincludeTags=e2e -DexcludeTags=visual)
+            TAGS=()
+            [ "${RUN_E2E}" = "true" ] && TAGS+=(e2e)
+            [ "${RUN_VISUAL}" = "true" ] && TAGS+=(visual)
+            [ "${#TAGS[@]}" -gt 0 ] || TAGS=(e2e)
+            TAGS_CSV="$(IFS=,; echo "${TAGS[*]}")"
+            ARGS+=(-DincludeTags="${TAGS_CSV}")
+            [[ ",${TAGS_CSV}," == *",visual,"* ]] || DEFAULT_EXCLUDE=visual
+          fi
+          if [ -n "${EXCLUDE_TAGS}" ]; then
+            ARGS+=(-DexcludeTags="${EXCLUDE_TAGS}")
+          elif [ -n "${DEFAULT_EXCLUDE}" ]; then
+            ARGS+=(-DexcludeTags="${DEFAULT_EXCLUDE}")
           fi
           ./gradlew test "${ARGS[@]}"
         working-directory: ${{ env.TESTS_DIR }}
-      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
-        continue-on-error: true
-        id: setup-allurectl
-        uses: allure-framework/setup-allurectl@v1
-        with:
-          allure-endpoint: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
-          allure-token: ${{ env.ALLURE_TOKEN }}
-          allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
-
-      - name: Upload Allure results to TestOps
-        if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
-        continue-on-error: true
-        working-directory: ${{ env.TESTS_DIR }}
-        env:
-          ALLURE_ENDPOINT: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
-          ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
-          ALLURE_PROJECT_ID: ${{ env.ALLURE_PROJECT_ID }}
-          ALLURE_LAUNCH_NAME: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
-        run: |
-          set -euo pipefail
-          RESULTS="build/allure-results"
-          if [ ! -d "$RESULTS" ] || [ -z "$(ls -A "$RESULTS" 2>/dev/null || true)" ]; then
-            echo "No allure-results at ${RESULTS} — skip TestOps upload"
-            exit 0
-          fi
-          ARGS=(
-            upload "$RESULTS"
-            --endpoint "${ALLURE_ENDPOINT}"
-            --token "${ALLURE_TOKEN}"
-            --project-id "${ALLURE_PROJECT_ID}"
-          )
-          if [ -n "${ALLURE_LAUNCH_NAME:-}" ]; then
-            ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
-          fi
-          allurectl "${ARGS[@]}"
-
-
-      - if: always() && env.TESTS_LANG == 'java'
-        uses: actions/setup-node@v6
-        with:
-          node-version: "26"
-          cache: npm
-          cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
-      - name: Install pinned Allure CLIs
-        if: always() && env.TESTS_LANG == 'java'
-        run: npm ci
-        working-directory: ${{ env.TESTS_DIR }}
-
-      - name: Generate Allure report
-        if: always() && env.TESTS_LANG == 'java'
-        continue-on-error: true
-        id: allure-report
-        working-directory: ${{ env.TESTS_DIR }}
-        run: |
-          set -euo pipefail
-          ARGS=(generate "build/allure-results" -o "build/reports/allure-report/allureReport")
-          CONFIG="allurerc.mjs"
-          if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
-            ARGS+=(--config "$CONFIG")
-          fi
-          npx --no-install allure "${ARGS[@]}"
-
-      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
-        continue-on-error: true
-        uses: actions/upload-artifact@v7
-        with:
-          name: allure-report-${{ env.LAYER }}-tests
-          path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
-          if-no-files-found: ignore
-
-      - name: Send Allure Telegram notification
-        if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
-        continue-on-error: true
-        working-directory: ${{ env.TESTS_DIR }}
-        env:
-          NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
-          BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          TELEGRAM_BOT_TOKEN: ${{ env.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ env.TELEGRAM_CHAT_ID || '-1004381150566' }}
-          TELEGRAM_TOPIC_ID: ${{ env.TELEGRAM_TOPIC_ID || '3' }}
-          NOTIFICATION_MODE: ${{ github.event_name != 'pull_request' && 'live' || 'dry-run' }}
-        run: |
-          set -euo pipefail
-          if [ ! -f notifications/config.json ]; then
-            echo "No notifications/config.json — skip Telegram"
-            exit 0
-          fi
-          ALLURE_FOLDER="${PWD}/build/reports/allure-report/allureReport/awesome"
-          ALLURE_RESULTS="${PWD}/build/allure-results"
-          if [ ! -f "${ALLURE_FOLDER}/summary.json" ]; then
-            echo "No ${ALLURE_FOLDER}/summary.json — skip Telegram"
-            exit 0
-          fi
-          CFG=notifications/config.ci.json
-          jq \
-            --arg p "${NOTIFICATION_PROJECT:-}" \
-            --arg b "${BUILD_URL:-}" \
-            --arg af "${ALLURE_FOLDER}" \
-            --arg ar "${ALLURE_RESULTS}" \
-            'if ($p | length) > 0 then .base.project = $p else . end
-             | if ($b | length) > 0 then .base.links.build = $b else . end
-             | .base.allureFolder = $af
-             | .base.allureResultsFolder = $ar' \
-            notifications/config.json > "$CFG"
-          MODE_FLAG="--dry-run"
-          if [ "${NOTIFICATION_MODE}" = "live" ]; then
-            MODE_FLAG="--live"
-          fi
-          npx --no-install allure-notifications send \
-            --config "$CFG" \
-            ${MODE_FLAG} \
-            --out collage.png
-
-
       # ── javascript / typescript (full suite; no tag pyramid yet) ──────────
       - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
         uses: actions/setup-node@v6
@@ -1985,6 +1240,15 @@ jobs:
         if: env.TESTS_LANG == 'python'
         run: python -m pytest
         working-directory: ${{ env.TESTS_DIR }}
+      - name: Publish raw Allure results
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-results-e2e
+          path: ${{ env.TESTS_DIR }}/build/allure-results/**
+          if-no-files-found: ignore
+          retention-days: 1
 
   # Optional after e2e; skipped on push and when update_baselines=false.
   e2e-update-baselines:
@@ -1994,12 +1258,14 @@ jobs:
       needs.e2e-tests.result == 'success' &&
       github.event_name == 'workflow_dispatch' &&
       inputs.update_baselines == true
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
-      LAYER: e2e
+      LAYER: e2e-baselines
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - if: env.TESTS_LANG == 'java'
         uses: actions/setup-java@v5
@@ -2022,123 +1288,18 @@ jobs:
         if: env.TESTS_LANG == 'java'
         id: run-tests
         env:
-          RUN_ENV: ${{ inputs.env || 'reference_prod' }}
+          RUN_ENV: reference_prod
         run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=visual -DupdateBaselines=true
         working-directory: ${{ env.TESTS_DIR }}
-      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
-        continue-on-error: true
-        id: setup-allurectl
-        uses: allure-framework/setup-allurectl@v1
-        with:
-          allure-endpoint: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
-          allure-token: ${{ env.ALLURE_TOKEN }}
-          allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
-
-      - name: Upload e2e baseline Allure results to TestOps
-        if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
-        continue-on-error: true
-        working-directory: ${{ env.TESTS_DIR }}
-        env:
-          ALLURE_ENDPOINT: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
-          ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
-          ALLURE_PROJECT_ID: ${{ env.ALLURE_PROJECT_ID }}
-          ALLURE_LAUNCH_NAME: "e2e baselines — ${{ env.RUN_LABEL }}"
-        run: |
-          set -euo pipefail
-          RESULTS="build/allure-results"
-          if [ ! -d "$RESULTS" ] || [ -z "$(ls -A "$RESULTS" 2>/dev/null || true)" ]; then
-            echo "No allure-results at ${RESULTS} — skip TestOps upload"
-            exit 0
-          fi
-          ARGS=(
-            upload "$RESULTS"
-            --endpoint "${ALLURE_ENDPOINT}"
-            --token "${ALLURE_TOKEN}"
-            --project-id "${ALLURE_PROJECT_ID}"
-          )
-          if [ -n "${ALLURE_LAUNCH_NAME:-}" ]; then
-            ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
-          fi
-          allurectl "${ARGS[@]}"
-
-
-      - if: always() && env.TESTS_LANG == 'java'
-        uses: actions/setup-node@v6
-        with:
-          node-version: "26"
-          cache: npm
-          cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
-      - name: Install pinned Allure CLIs
-        if: always() && env.TESTS_LANG == 'java'
-        run: npm ci
-        working-directory: ${{ env.TESTS_DIR }}
-
-      - name: Generate Allure report
-        if: always() && env.TESTS_LANG == 'java'
-        continue-on-error: true
-        id: allure-report
-        working-directory: ${{ env.TESTS_DIR }}
-        run: |
-          set -euo pipefail
-          ARGS=(generate "build/allure-results" -o "build/reports/allure-report/allureReport")
-          CONFIG="allurerc.mjs"
-          if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
-            ARGS+=(--config "$CONFIG")
-          fi
-          npx --no-install allure "${ARGS[@]}"
-
-      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+      - name: Publish raw Allure results
+        if: always()
         continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
-          name: allure-report-${{ env.LAYER }}-tests
-          path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
+          name: allure-results-e2e-baselines
+          path: ${{ env.TESTS_DIR }}/build/allure-results/**
           if-no-files-found: ignore
-
-      - name: Send Allure Telegram notification
-        if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
-        continue-on-error: true
-        working-directory: ${{ env.TESTS_DIR }}
-        env:
-          NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
-          BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          TELEGRAM_BOT_TOKEN: ${{ env.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ env.TELEGRAM_CHAT_ID || '-1004381150566' }}
-          TELEGRAM_TOPIC_ID: ${{ env.TELEGRAM_TOPIC_ID || '3' }}
-          NOTIFICATION_MODE: ${{ github.event_name != 'pull_request' && 'live' || 'dry-run' }}
-        run: |
-          set -euo pipefail
-          if [ ! -f notifications/config.json ]; then
-            echo "No notifications/config.json — skip Telegram"
-            exit 0
-          fi
-          ALLURE_FOLDER="${PWD}/build/reports/allure-report/allureReport/awesome"
-          ALLURE_RESULTS="${PWD}/build/allure-results"
-          if [ ! -f "${ALLURE_FOLDER}/summary.json" ]; then
-            echo "No ${ALLURE_FOLDER}/summary.json — skip Telegram"
-            exit 0
-          fi
-          CFG=notifications/config.ci.json
-          jq \
-            --arg p "${NOTIFICATION_PROJECT:-}" \
-            --arg b "${BUILD_URL:-}" \
-            --arg af "${ALLURE_FOLDER}" \
-            --arg ar "${ALLURE_RESULTS}" \
-            'if ($p | length) > 0 then .base.project = $p else . end
-             | if ($b | length) > 0 then .base.links.build = $b else . end
-             | .base.allureFolder = $af
-             | .base.allureResultsFolder = $ar' \
-            notifications/config.json > "$CFG"
-          MODE_FLAG="--dry-run"
-          if [ "${NOTIFICATION_MODE}" = "live" ]; then
-            MODE_FLAG="--live"
-          fi
-          npx --no-install allure-notifications send \
-            --config "$CFG" \
-            ${MODE_FLAG} \
-            --out collage.png
-
-
+          retention-days: 1
       - if: always() && env.TESTS_LANG == 'java'
         continue-on-error: true
         uses: actions/upload-artifact@v7
@@ -2147,21 +1308,23 @@ jobs:
           path: ${{ env.TESTS_DIR }}/src/test/resources/screenshots/
           if-no-files-found: ignore
 
-  # Main-chain tip after e2e; auto-skip on push / layers≠manual|all.
+  # Main-chain tip after e2e; manual execution is explicit.
   manual-tests:
     needs: [e2e-tests, stand-ready]
     if: >-
       !cancelled() &&
       github.event_name == 'workflow_dispatch' &&
-      contains(format(',{0},', inputs.layers), ',manual,') &&
+      inputs.run_manual &&
       needs.stand-ready.result == 'success' &&
       (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
       LAYER: manual
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       # ── java (-DincludeTags=manual) ───────────────────────────────────────
       - if: env.TESTS_LANG == 'java'
@@ -2185,120 +1348,166 @@ jobs:
         if: env.TESTS_LANG == 'java'
         id: run-tests
         env:
-          RUN_ENV: ${{ inputs.env || 'reference_prod' }}
+          RUN_ENV: reference_prod
         run: ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=manual
         working-directory: ${{ env.TESTS_DIR }}
-      - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
-        continue-on-error: true
-        id: setup-allurectl
-        uses: allure-framework/setup-allurectl@v1
-        with:
-          allure-endpoint: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
-          allure-token: ${{ env.ALLURE_TOKEN }}
-          allure-project-id: ${{ env.ALLURE_PROJECT_ID }}
-
-      - name: Upload Allure results to TestOps
-        if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
-        continue-on-error: true
-        working-directory: ${{ env.TESTS_DIR }}
-        env:
-          ALLURE_ENDPOINT: ${{ env.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
-          ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
-          ALLURE_PROJECT_ID: ${{ env.ALLURE_PROJECT_ID }}
-          ALLURE_LAUNCH_NAME: "${{ env.LAYER }} — ${{ env.RUN_LABEL }}"
-        run: |
-          set -euo pipefail
-          RESULTS="build/allure-results"
-          if [ ! -d "$RESULTS" ] || [ -z "$(ls -A "$RESULTS" 2>/dev/null || true)" ]; then
-            echo "No allure-results at ${RESULTS} — skip TestOps upload"
-            exit 0
-          fi
-          ARGS=(
-            upload "$RESULTS"
-            --endpoint "${ALLURE_ENDPOINT}"
-            --token "${ALLURE_TOKEN}"
-            --project-id "${ALLURE_PROJECT_ID}"
-          )
-          if [ -n "${ALLURE_LAUNCH_NAME:-}" ]; then
-            ARGS+=(--launch-name "${ALLURE_LAUNCH_NAME}")
-          fi
-          allurectl "${ARGS[@]}"
-
-
-      - if: always() && env.TESTS_LANG == 'java'
-        uses: actions/setup-node@v6
-        with:
-          node-version: "26"
-          cache: npm
-          cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
-      - name: Install pinned Allure CLIs
-        if: always() && env.TESTS_LANG == 'java'
-        run: npm ci
-        working-directory: ${{ env.TESTS_DIR }}
-
-      - name: Generate Allure report
-        if: always() && env.TESTS_LANG == 'java'
-        continue-on-error: true
-        id: allure-report
-        working-directory: ${{ env.TESTS_DIR }}
-        run: |
-          set -euo pipefail
-          ARGS=(generate "build/allure-results" -o "build/reports/allure-report/allureReport")
-          CONFIG="allurerc.mjs"
-          if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
-            ARGS+=(--config "$CONFIG")
-          fi
-          npx --no-install allure "${ARGS[@]}"
-
-      - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+      - name: Publish raw Allure results
+        if: always()
         continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
-          name: allure-report-${{ env.LAYER }}-tests
-          path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
+          name: allure-results-manual
+          path: ${{ env.TESTS_DIR }}/build/allure-results/**
           if-no-files-found: ignore
+          retention-days: 1
 
+  # Non-gating observability fan-out. Test jobs expose only raw results, so builds,
+  # deploys and downstream test layers never wait for TestOps/report/Telegram work.
+  report-tests:
+    name: report-${{ matrix.layer }}
+    needs:
+      - unit-tests
+      - component-tests
+      - tests-harness-backend
+      - tests-harness-frontend
+      - e2e-mock-tests
+      - integration-tests
+      - api-tests
+      - e2e-tests
+      - e2e-update-baselines
+      - manual-tests
+    if: ${{ always() && !cancelled() }}
+    continue-on-error: true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - layer: unit
+            notify: false
+          - layer: component
+            notify: false
+          - layer: harness-backend
+            notify: true
+          - layer: harness-frontend
+            notify: true
+          - layer: e2e-mock
+            notify: true
+          - layer: integration
+            notify: true
+          - layer: api
+            notify: true
+          - layer: e2e
+            notify: true
+          - layer: e2e-baselines
+            notify: true
+          - layer: manual
+            notify: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Download raw Allure results
+        id: results
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: allure-results-${{ matrix.layer }}
+          path: allure-results
+      - name: Install pinned allurectl
+        if: steps.results.outcome == 'success' && env.ALLURE_PROJECT_ID != ''
+        id: setup-allurectl
+        uses: allure-framework/setup-allurectl@v1
+        with:
+          allurectl-version: ${{ env.ALLURECTL_VERSION }}
+      - name: Upload results to a layer-specific TestOps launch
+        if: steps.results.outcome == 'success' && env.ALLURE_PROJECT_ID != '' && steps.setup-allurectl.outcome == 'success'
+        continue-on-error: true
+        env:
+          ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
+          ALLURE_LAUNCH_NAME: "${{ matrix.layer }} — ${{ env.RUN_LABEL }}"
+          ALLURE_JOB_UID: "${{ github.repository }}/actions/workflows/ci.yml/${{ matrix.layer }}"
+          ALLURE_JOB_RUN_UID: "${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.layer }}"
+          ALLURE_JOB_NAME: "${{ github.repository }} — ${{ matrix.layer }}"
+          ALLURE_JOB_RUN_NAME: "${{ matrix.layer }} #${{ github.run_number }}.${{ github.run_attempt }}"
+        run: |
+          set -euo pipefail
+          if [ -z "${ALLURE_TOKEN:-}" ]; then
+            echo "No ALLURE_TOKEN — skip TestOps upload"
+            exit 0
+          fi
+          allurectl upload "allure-results" \
+            --endpoint "${ALLURE_ENDPOINT}" \
+            --token "${ALLURE_TOKEN}" \
+            --project-id "${ALLURE_PROJECT_ID}" \
+            --launch-name "${ALLURE_LAUNCH_NAME}"
+      - name: Set up pinned Node.js
+        if: steps.results.outcome == 'success'
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
+      - name: Install pinned Allure CLIs
+        if: steps.results.outcome == 'success'
+        run: npm ci
+        working-directory: ${{ env.TESTS_DIR }}
+      - name: Generate standard Allure report
+        if: steps.results.outcome == 'success'
+        id: allure-report
+        run: '"${TESTS_DIR}/node_modules/.bin/allure" generate "${GITHUB_WORKSPACE}/allure-results" -o "${GITHUB_WORKSPACE}/allure-report"'
+      - name: Publish Allure report
+        if: steps.allure-report.outcome == 'success'
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-report-${{ matrix.layer }}-tests
+          path: allure-report/
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Send Allure Telegram notification
-        if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
+        if: matrix.notify && steps.allure-report.outcome == 'success'
         continue-on-error: true
         working-directory: ${{ env.TESTS_DIR }}
         env:
-          NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} ${{ env.LAYER }} #${{ github.run_number }}"
+          NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} ${{ matrix.layer }} #${{ github.run_number }}"
           BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          TELEGRAM_BOT_TOKEN: ${{ env.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ env.TELEGRAM_CHAT_ID || '-1004381150566' }}
-          TELEGRAM_TOPIC_ID: ${{ env.TELEGRAM_TOPIC_ID || '3' }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID || '-1004381150566' }}
+          TELEGRAM_TOPIC_ID: ${{ secrets.TELEGRAM_REFERENCE_APP_TOPIC_ID || vars.TELEGRAM_REFERENCE_APP_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || vars.TELEGRAM_TOPIC_ID || '3' }}
           NOTIFICATION_MODE: ${{ github.event_name != 'pull_request' && 'live' || 'dry-run' }}
         run: |
           set -euo pipefail
-          if [ ! -f notifications/config.json ]; then
-            echo "No notifications/config.json — skip Telegram"
+          if [ -z "${TELEGRAM_BOT_TOKEN:-}" ]; then
+            echo "No Telegram token — skip notification"
             exit 0
           fi
-          ALLURE_FOLDER="${PWD}/build/reports/allure-report/allureReport/awesome"
-          ALLURE_RESULTS="${PWD}/build/allure-results"
+          ALLURE_FOLDER="${GITHUB_WORKSPACE}/allure-report"
+          ALLURE_RESULTS="${GITHUB_WORKSPACE}/allure-results"
           if [ ! -f "${ALLURE_FOLDER}/summary.json" ]; then
             echo "No ${ALLURE_FOLDER}/summary.json — skip Telegram"
             exit 0
           fi
           CFG=notifications/config.ci.json
           jq \
-            --arg p "${NOTIFICATION_PROJECT:-}" \
-            --arg b "${BUILD_URL:-}" \
+            --arg p "${NOTIFICATION_PROJECT}" \
+            --arg b "${BUILD_URL}" \
             --arg af "${ALLURE_FOLDER}" \
             --arg ar "${ALLURE_RESULTS}" \
-            'if ($p | length) > 0 then .base.project = $p else . end
-             | if ($b | length) > 0 then .base.links.build = $b else . end
+            '.base.project = $p
+             | .base.links.build = $b
              | .base.allureFolder = $af
              | .base.allureResultsFolder = $ar' \
             notifications/config.json > "$CFG"
-          MODE_FLAG="--dry-run"
           if [ "${NOTIFICATION_MODE}" = "live" ]; then
             MODE_FLAG="--live"
+          else
+            MODE_FLAG="--dry-run"
           fi
           npx --no-install allure-notifications send \
             --config "$CFG" \
-            ${MODE_FLAG} \
+            "${MODE_FLAG}" \
             --out collage.png
-
-

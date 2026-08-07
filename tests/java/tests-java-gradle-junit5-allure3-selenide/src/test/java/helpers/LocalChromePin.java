@@ -17,6 +17,8 @@ public final class LocalChromePin {
     private static final String PIN_RESOURCE = "/chrome-for-testing.properties";
     private static final String PIN_OVERRIDE = "chromeForTestingVersion";
     private static final String INSTALLER = "scripts/install-chrome-for-testing.sh";
+    private static final String CHROME_BINARY_ENV = "CHROME_BINARY_PATH";
+    private static final String CHROMEDRIVER_ENV = "CHROMEDRIVER_PATH";
 
     private LocalChromePin() {
     }
@@ -30,11 +32,17 @@ public final class LocalChromePin {
         var version = pinnedVersion();
         requireSameMajor(browserVersion, version);
 
-        var chrome = chromeBinary(version);
+        var chrome = executableOverride(CHROME_BINARY_ENV);
+        if (chrome == null) {
+            chrome = chromeBinary(version);
+        }
         if (!Files.isExecutable(chrome)) {
             throw notInstalled("Chrome " + version + " browser binary", chrome);
         }
-        var driver = chromeDriver(version);
+        var driver = executableOverride(CHROMEDRIVER_ENV);
+        if (driver == null) {
+            driver = chromeDriver(version);
+        }
         if (!Files.isExecutable(driver)) {
             var cached = seleniumCacheDriver(version);
             if (!Files.isExecutable(cached)) {
@@ -46,6 +54,11 @@ public final class LocalChromePin {
         Configuration.browserBinary = chrome.toString();
         System.setProperty("webdriver.chrome.driver", driver.toString());
         Configuration.browserVersion = null;
+    }
+
+    private static Path executableOverride(String environmentVariable) {
+        var value = System.getenv(environmentVariable);
+        return value == null || value.isBlank() ? null : Path.of(value.trim());
     }
 
     /** Exact Chrome for Testing build — SSOT for the installer, CI cache key and this resolver. */
