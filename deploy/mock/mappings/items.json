@@ -1,4 +1,6 @@
 {
+  "scenarioName": "items",
+  "requiredScenarioState": "Started",
   "request": {
     "method": "GET",
     "urlPath": "/api/items"

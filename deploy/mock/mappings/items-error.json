@@ -1,0 +1,17 @@
+{
+  "scenarioName": "items",
+  "requiredScenarioState": "error",
+  "request": {
+    "method": "GET",
+    "urlPath": "/api/items"
+  },
+  "response": {
+    "status": 500,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "message": "Injected failure — UI error-state slice"
+    }
+  }
+}
