@@ -1,8 +1,9 @@
 {
   "private": true,
   "name": "reference-app-copy-tests-allure",
-  "description": "Optional local Allure 3 pin; CI uses npx allure@3.13.0 + allure-notifications@6.0.12 send",
+  "description": "Optional local pins for the Allure report and notification CLIs used by CI",
   "dependencies": {
-    "allure": "3.13.0"
+    "allure": "3.13.0",
+    "allure-notifications": "6.0.12"
   }
 }

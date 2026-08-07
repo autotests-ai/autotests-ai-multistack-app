@@ -188,11 +188,10 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: coverage-backend
-          path: ${{ env.BACKEND_DIR }}/build/
-          include: |
-            jacoco/**
-            reports/jacoco/**
-            classes/**
+          path: |
+            ${{ env.BACKEND_DIR }}/build/jacoco/**
+            ${{ env.BACKEND_DIR }}/build/reports/jacoco/**
+            ${{ env.BACKEND_DIR }}/build/classes/**
           if-no-files-found: error
       - if: always() && (env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin') && env.ALLURE_PROJECT_ID != ''
         continue-on-error: true
@@ -412,14 +411,9 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ${{ env.TESTS_DIR }}/.gradle/configuration-cache
-          key: gradle-cc-${{ env.TESTS }}-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
+          key: gradle-cc-${{ env.TESTS }}-${{ github.job }}-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
           restore-keys: |
-            gradle-cc-${{ env.TESTS }}-
-      # Node for Allure analytics finalizedBy on test (when allureReportMode ≠ none).
-      - if: env.TESTS_LANG == 'java'
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
+            gradle-cc-${{ env.TESTS }}-${{ github.job }}-
       # Coverage gate reads build/jacoco/test.exec, so it is only meaningful with this filter.
       # Allure results stay on (default allure3) for TestOps / report / Telegram steps below.
       - name: Run harness-backend tests (Gradle)
@@ -431,11 +425,10 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: coverage-harness-backend
-          path: ${{ env.TESTS_DIR }}/build/
-          include: |
-            jacoco/**
-            reports/jacoco/**
-            classes/**
+          path: |
+            ${{ env.TESTS_DIR }}/build/jacoco/**
+            ${{ env.TESTS_DIR }}/build/reports/jacoco/**
+            ${{ env.TESTS_DIR }}/build/classes/**
           if-no-files-found: error
       - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
         continue-on-error: true
@@ -478,6 +471,12 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "26"
+          cache: npm
+          cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
+      - name: Install pinned Allure CLIs
+        if: always() && env.TESTS_LANG == 'java'
+        run: npm ci
+        working-directory: ${{ env.TESTS_DIR }}
 
       - name: Generate Allure report
         if: always() && env.TESTS_LANG == 'java'
@@ -491,7 +490,7 @@ jobs:
           if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
             ARGS+=(--config "$CONFIG")
           fi
-          npx --yes allure@3.13.0 "${ARGS[@]}"
+          npx --no-install allure "${ARGS[@]}"
 
       - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
         continue-on-error: true
@@ -539,7 +538,7 @@ jobs:
           if [ "${NOTIFICATION_MODE}" = "live" ]; then
             MODE_FLAG="--live"
           fi
-          npx --yes allure-notifications@6.0.12 send \
+          npx --no-install allure-notifications send \
             --config "$CFG" \
             ${MODE_FLAG} \
             --out collage.png
@@ -568,14 +567,9 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ${{ env.TESTS_DIR }}/.gradle/configuration-cache
-          key: gradle-cc-${{ env.TESTS }}-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
+          key: gradle-cc-${{ env.TESTS }}-${{ github.job }}-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
           restore-keys: |
-            gradle-cc-${{ env.TESTS }}-
-      # Node for Allure analytics finalizedBy on test (when allureReportMode ≠ none).
-      - if: env.TESTS_LANG == 'java'
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
+            gradle-cc-${{ env.TESTS }}-${{ github.job }}-
       # Coverage gate reads build/jacoco/test.exec, so it is only meaningful with this filter.
       # Allure results stay on (default allure3) for TestOps / report / Telegram steps below.
       - name: Run harness-frontend tests (Gradle)
@@ -587,11 +581,10 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: coverage-harness-frontend
-          path: ${{ env.TESTS_DIR }}/build/
-          include: |
-            jacoco/**
-            reports/jacoco/**
-            classes/**
+          path: |
+            ${{ env.TESTS_DIR }}/build/jacoco/**
+            ${{ env.TESTS_DIR }}/build/reports/jacoco/**
+            ${{ env.TESTS_DIR }}/build/classes/**
           if-no-files-found: error
       - if: always() && env.TESTS_LANG == 'java' && env.ALLURE_PROJECT_ID != ''
         continue-on-error: true
@@ -634,6 +627,12 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "26"
+          cache: npm
+          cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
+      - name: Install pinned Allure CLIs
+        if: always() && env.TESTS_LANG == 'java'
+        run: npm ci
+        working-directory: ${{ env.TESTS_DIR }}
 
       - name: Generate Allure report
         if: always() && env.TESTS_LANG == 'java'
@@ -647,7 +646,7 @@ jobs:
           if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
             ARGS+=(--config "$CONFIG")
           fi
-          npx --yes allure@3.13.0 "${ARGS[@]}"
+          npx --no-install allure "${ARGS[@]}"
 
       - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
         continue-on-error: true
@@ -695,7 +694,7 @@ jobs:
           if [ "${NOTIFICATION_MODE}" = "live" ]; then
             MODE_FLAG="--live"
           fi
-          npx --yes allure-notifications@6.0.12 send \
+          npx --no-install allure-notifications send \
             --config "$CFG" \
             ${MODE_FLAG} \
             --out collage.png
@@ -841,9 +840,9 @@ jobs:
       - uses: actions/cache@v6
         with:
           path: ${{ env.TESTS_DIR }}/.gradle/configuration-cache
-          key: gradle-cc-${{ env.TESTS }}-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
+          key: gradle-cc-${{ env.TESTS }}-${{ github.job }}-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
           restore-keys: |
-            gradle-cc-${{ env.TESTS }}-
+            gradle-cc-${{ env.TESTS }}-${{ github.job }}-
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -1154,6 +1153,14 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: true
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+      - if: env.TESTS_LANG == 'java'
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.TESTS_DIR }}/.gradle/configuration-cache
+          key: gradle-cc-${{ env.TESTS }}-${{ github.job }}-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
+          restore-keys: |
+            gradle-cc-${{ env.TESTS }}-${{ github.job }}-
       # reference_mock has no remoteUrl: the stand lives on the runner's localhost, which a
       # Selenoid browser could not reach, so the browser has to be local too.
       # helpers/LocalChromePin refuses system Chrome and reads only ~/.local/share/chrome-for-testing;
@@ -1168,7 +1175,7 @@ jobs:
           echo "version=${version}" >> "$GITHUB_OUTPUT"
       - if: env.TESTS_LANG == 'java'
         id: chrome-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.local/share/chrome-for-testing
           key: chrome-for-testing-linux-${{ steps.chrome-pin.outputs.version }}
@@ -1243,6 +1250,12 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "26"
+          cache: npm
+          cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
+      - name: Install pinned Allure CLIs
+        if: always() && env.TESTS_LANG == 'java'
+        run: npm ci
+        working-directory: ${{ env.TESTS_DIR }}
 
       - name: Generate Allure report
         if: always() && env.TESTS_LANG == 'java'
@@ -1256,7 +1269,7 @@ jobs:
           if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
             ARGS+=(--config "$CONFIG")
           fi
-          npx --yes allure@3.13.0 "${ARGS[@]}"
+          npx --no-install allure "${ARGS[@]}"
 
       - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
         continue-on-error: true
@@ -1304,7 +1317,7 @@ jobs:
           if [ "${NOTIFICATION_MODE}" = "live" ]; then
             MODE_FLAG="--live"
           fi
-          npx --yes allure-notifications@6.0.12 send \
+          npx --no-install allure-notifications send \
             --config "$CFG" \
             ${MODE_FLAG} \
             --out collage.png
@@ -1408,6 +1421,14 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: true
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+      - if: env.TESTS_LANG == 'java'
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.TESTS_DIR }}/.gradle/configuration-cache
+          key: gradle-cc-${{ env.TESTS }}-${{ github.job }}-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
+          restore-keys: |
+            gradle-cc-${{ env.TESTS }}-${{ github.job }}-
       - name: Run integration tests (Gradle)
         if: env.TESTS_LANG == 'java'
         id: run-tests
@@ -1454,6 +1475,12 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "26"
+          cache: npm
+          cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
+      - name: Install pinned Allure CLIs
+        if: always() && env.TESTS_LANG == 'java'
+        run: npm ci
+        working-directory: ${{ env.TESTS_DIR }}
 
       - name: Generate Allure report
         if: always() && env.TESTS_LANG == 'java'
@@ -1467,7 +1494,7 @@ jobs:
           if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
             ARGS+=(--config "$CONFIG")
           fi
-          npx --yes allure@3.13.0 "${ARGS[@]}"
+          npx --no-install allure "${ARGS[@]}"
 
       - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
         continue-on-error: true
@@ -1515,7 +1542,7 @@ jobs:
           if [ "${NOTIFICATION_MODE}" = "live" ]; then
             MODE_FLAG="--live"
           fi
-          npx --yes allure-notifications@6.0.12 send \
+          npx --no-install allure-notifications send \
             --config "$CFG" \
             ${MODE_FLAG} \
             --out collage.png
@@ -1583,6 +1610,14 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: true
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+      - if: env.TESTS_LANG == 'java'
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.TESTS_DIR }}/.gradle/configuration-cache
+          key: gradle-cc-${{ env.TESTS }}-${{ github.job }}-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
+          restore-keys: |
+            gradle-cc-${{ env.TESTS }}-${{ github.job }}-
       - name: Run API tests (Gradle)
         if: env.TESTS_LANG == 'java'
         id: run-tests
@@ -1629,6 +1664,12 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "26"
+          cache: npm
+          cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
+      - name: Install pinned Allure CLIs
+        if: always() && env.TESTS_LANG == 'java'
+        run: npm ci
+        working-directory: ${{ env.TESTS_DIR }}
 
       - name: Generate Allure report
         if: always() && env.TESTS_LANG == 'java'
@@ -1642,7 +1683,7 @@ jobs:
           if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
             ARGS+=(--config "$CONFIG")
           fi
-          npx --yes allure@3.13.0 "${ARGS[@]}"
+          npx --no-install allure "${ARGS[@]}"
 
       - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
         continue-on-error: true
@@ -1690,7 +1731,7 @@ jobs:
           if [ "${NOTIFICATION_MODE}" = "live" ]; then
             MODE_FLAG="--live"
           fi
-          npx --yes allure-notifications@6.0.12 send \
+          npx --no-install allure-notifications send \
             --config "$CFG" \
             ${MODE_FLAG} \
             --out collage.png
@@ -1763,6 +1804,14 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: true
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+      - if: env.TESTS_LANG == 'java'
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.TESTS_DIR }}/.gradle/configuration-cache
+          key: gradle-cc-${{ env.TESTS }}-${{ github.job }}-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
+          restore-keys: |
+            gradle-cc-${{ env.TESTS }}-${{ github.job }}-
       - name: Run e2e tests (Gradle with tag filters)
         if: env.TESTS_LANG == 'java'
         id: run-tests
@@ -1828,6 +1877,12 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "26"
+          cache: npm
+          cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
+      - name: Install pinned Allure CLIs
+        if: always() && env.TESTS_LANG == 'java'
+        run: npm ci
+        working-directory: ${{ env.TESTS_DIR }}
 
       - name: Generate Allure report
         if: always() && env.TESTS_LANG == 'java'
@@ -1841,7 +1896,7 @@ jobs:
           if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
             ARGS+=(--config "$CONFIG")
           fi
-          npx --yes allure@3.13.0 "${ARGS[@]}"
+          npx --no-install allure "${ARGS[@]}"
 
       - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
         continue-on-error: true
@@ -1889,7 +1944,7 @@ jobs:
           if [ "${NOTIFICATION_MODE}" = "live" ]; then
             MODE_FLAG="--live"
           fi
-          npx --yes allure-notifications@6.0.12 send \
+          npx --no-install allure-notifications send \
             --config "$CFG" \
             ${MODE_FLAG} \
             --out collage.png
@@ -1955,6 +2010,14 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: true
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+      - if: env.TESTS_LANG == 'java'
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.TESTS_DIR }}/.gradle/configuration-cache
+          key: gradle-cc-${{ env.TESTS }}-${{ github.job }}-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
+          restore-keys: |
+            gradle-cc-${{ env.TESTS }}-${{ github.job }}-
       - name: Run e2e visual baseline update (Gradle)
         if: env.TESTS_LANG == 'java'
         id: run-tests
@@ -2003,6 +2066,12 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "26"
+          cache: npm
+          cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
+      - name: Install pinned Allure CLIs
+        if: always() && env.TESTS_LANG == 'java'
+        run: npm ci
+        working-directory: ${{ env.TESTS_DIR }}
 
       - name: Generate Allure report
         if: always() && env.TESTS_LANG == 'java'
@@ -2016,7 +2085,7 @@ jobs:
           if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
             ARGS+=(--config "$CONFIG")
           fi
-          npx --yes allure@3.13.0 "${ARGS[@]}"
+          npx --no-install allure "${ARGS[@]}"
 
       - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
         continue-on-error: true
@@ -2064,7 +2133,7 @@ jobs:
           if [ "${NOTIFICATION_MODE}" = "live" ]; then
             MODE_FLAG="--live"
           fi
-          npx --yes allure-notifications@6.0.12 send \
+          npx --no-install allure-notifications send \
             --config "$CFG" \
             ${MODE_FLAG} \
             --out collage.png
@@ -2104,6 +2173,14 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: true
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+      - if: env.TESTS_LANG == 'java'
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.TESTS_DIR }}/.gradle/configuration-cache
+          key: gradle-cc-${{ env.TESTS }}-${{ github.job }}-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
+          restore-keys: |
+            gradle-cc-${{ env.TESTS }}-${{ github.job }}-
       - name: Run manual tests (Gradle)
         if: env.TESTS_LANG == 'java'
         id: run-tests
@@ -2152,6 +2229,12 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "26"
+          cache: npm
+          cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
+      - name: Install pinned Allure CLIs
+        if: always() && env.TESTS_LANG == 'java'
+        run: npm ci
+        working-directory: ${{ env.TESTS_DIR }}
 
       - name: Generate Allure report
         if: always() && env.TESTS_LANG == 'java'
@@ -2165,7 +2248,7 @@ jobs:
           if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then
             ARGS+=(--config "$CONFIG")
           fi
-          npx --yes allure@3.13.0 "${ARGS[@]}"
+          npx --no-install allure "${ARGS[@]}"
 
       - if: always() && env.TESTS_LANG == 'java' && steps.allure-report.outcome == 'success'
         continue-on-error: true
@@ -2213,7 +2296,7 @@ jobs:
           if [ "${NOTIFICATION_MODE}" = "live" ]; then
             MODE_FLAG="--live"
           fi
-          npx --yes allure-notifications@6.0.12 send \
+          npx --no-install allure-notifications send \
             --config "$CFG" \
             ${MODE_FLAG} \
             --out collage.png
