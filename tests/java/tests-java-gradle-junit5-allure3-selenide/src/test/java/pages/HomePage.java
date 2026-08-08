@@ -26,6 +26,7 @@ public class HomePage {
     private final SelenideElement itemsList = $("[data-testid='items-list']");
     private final SelenideElement welcomeMessage = $("[data-testid='welcome-message']");
     private final SelenideElement logoutButton = $("[data-testid='logout-button']");
+    private final SelenideElement deleteAccountButton = $("[data-testid='delete-account-button']");
     private final SelenideElement welcomePanel = $("[data-testid='welcome-panel']");
     private final SelenideElement header = $("[data-testid='header']");
 
@@ -128,6 +129,19 @@ public class HomePage {
     public HomePage shouldHaveWelcomeMessage(String message) {
         welcomePanel.shouldBe(visible, PAGE_READY);
         welcomeMessage.shouldHave(text(message));
+        return this;
+    }
+
+    /**
+     * Session offers two exits: logout ends the session, delete account removes the user.
+     * Only presence is asserted here — actually clicking delete would drop the seeded
+     * account the whole prod suite logs in with. The behaviour lives in the frontend
+     * component suites, and the endpoint itself in AuthApiTests / AuthRoundTripIntegrationTests.
+     */
+    @Step("Verify session panel offers logout and delete account")
+    public HomePage shouldShowSessionActions() {
+        logoutButton.shouldBe(visible, PAGE_READY).shouldHave(text("Logout"));
+        deleteAccountButton.shouldBe(visible).shouldHave(text("Delete account"));
         return this;
     }
 

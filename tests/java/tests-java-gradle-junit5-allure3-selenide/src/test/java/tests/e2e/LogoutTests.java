@@ -36,7 +36,8 @@ class LogoutTests extends TestBase {
     @DisplayName("User can logout after localStorage authentication")
     void shouldLogoutAfterLocalStorageAuthentication() {
         homePage.openPageWithLocalStorageAuthentication("user1", "password1")
-                .shouldHaveWelcomeMessage("Welcome, user1!");
+                .shouldHaveWelcomeMessage("Welcome, user1!")
+                .shouldShowSessionActions();
 
         homePage.clickLogoutButton()
                 .shouldHaveFormTitle("Login Form");
