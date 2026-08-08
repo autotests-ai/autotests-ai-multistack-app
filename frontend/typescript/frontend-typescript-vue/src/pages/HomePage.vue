@@ -5,7 +5,8 @@ import Button from '../components/Button.vue';
 import Panel from '../components/Panel.vue';
 import { fetchHealth, fetchItems, type Item } from '../lib/api';
 import { UI_MOUNT } from '../lib/appBase';
-import { clearSession, fetchProfile, getToken, logout } from '../lib/auth';
+import { clearSession, deleteAccount, fetchProfile, getToken, logout } from '../lib/auth';
+import { DELETE_ACCOUNT_CONFIRM } from '../lib/messages';
 
 type HealthState = { text: string; error: boolean };
 type ItemsState =
@@ -74,6 +75,14 @@ async function handleLogout(): Promise<void> {
   await logout();
   await router.push('/login');
 }
+
+async function handleDeleteAccount(): Promise<void> {
+  if (!window.confirm(DELETE_ACCOUNT_CONFIRM)) {
+    return;
+  }
+  await deleteAccount();
+  await router.push('/login');
+}
 </script>
 
 <template>
@@ -98,6 +107,14 @@ async function handleLogout(): Promise<void> {
       </p>
       <Button id="logout-button" variant="primary" data-testid="logout-button" @click="handleLogout">
         Logout
+      </Button>
+      <Button
+        id="delete-account-button"
+        variant="danger"
+        data-testid="delete-account-button"
+        @click="handleDeleteAccount"
+      >
+        Delete account
       </Button>
     </Panel>
 

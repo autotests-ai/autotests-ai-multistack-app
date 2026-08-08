@@ -166,6 +166,20 @@ export async function logout(): Promise<void> {
   removeFromLocalStorage(AUTH_TOKEN_KEY);
 }
 
+// Account deletion, not logout: the row is gone server-side and the token stops
+// verifying. Local cleanup follows logout's policy — the session is dropped even
+// when the call fails, so a dead token can never keep the UI signed in.
+export async function deleteAccount(): Promise<void> {
+  const token = readLocalStorage(AUTH_TOKEN_KEY);
+  if (token) {
+    await fetch(apiUrl('/auth/me'), {
+      method: 'DELETE',
+      headers: { Authorization: 'Bearer ' + token },
+    }).catch(() => {});
+  }
+  removeFromLocalStorage(AUTH_TOKEN_KEY);
+}
+
 export function saveSession(token: string): void {
   writeLocalStorage(AUTH_TOKEN_KEY, token);
 }

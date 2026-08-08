@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchHealth, fetchItems, type Item } from '../lib/api';
 import { UI_MOUNT } from '../lib/appBase';
-import { clearSession, fetchProfile, getToken, logout } from '../lib/auth';
+import { clearSession, deleteAccount, fetchProfile, getToken, logout } from '../lib/auth';
+import { DELETE_ACCOUNT_CONFIRM } from '../lib/messages';
 
 type HealthState = { text: string; error: boolean };
 type ItemsState =
@@ -72,6 +73,14 @@ export function HomePage() {
     navigate('/login');
   };
 
+  const handleDeleteAccount = async () => {
+    if (!window.confirm(DELETE_ACCOUNT_CONFIRM)) {
+      return;
+    }
+    await deleteAccount();
+    navigate('/login');
+  };
+
   return (
     <main
       className="page-shell page-shell--below-header grid reference-app"
@@ -99,6 +108,14 @@ export function HomePage() {
           onClick={handleLogout}
         >
           Logout
+        </Button>
+        <Button
+          id="delete-account-button"
+          variant="danger"
+          data-testid="delete-account-button"
+          onClick={handleDeleteAccount}
+        >
+          Delete account
         </Button>
       </Panel>
 

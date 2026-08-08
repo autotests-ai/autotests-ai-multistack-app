@@ -20,3 +20,5 @@ export const REGISTER_MESSAGES: AuthMessages = {
   errorPasswordMismatch: 'Passwords do not match',
   errorRegistrationFailed: 'Registration failed',
 };
+
+export const DELETE_ACCOUNT_CONFIRM = 'Delete this account? This cannot be undone.';

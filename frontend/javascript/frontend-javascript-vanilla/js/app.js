@@ -3,6 +3,9 @@ const itemsList = document.querySelector('[data-testid="items-list"]');
 const welcomeMessage = document.querySelector('[data-testid="welcome-message"]');
 const welcomePanel = document.querySelector('[data-testid="welcome-panel"]');
 const logoutButton = document.getElementById('logout-button');
+const deleteAccountButton = document.getElementById('delete-account-button');
+
+const DELETE_ACCOUNT_CONFIRM = 'Delete this account? This cannot be undone.';
 
 function renderPanelBar(title) {
   return `
@@ -96,6 +99,16 @@ async function loadSession() {
 if (logoutButton) {
   logoutButton.addEventListener('click', async () => {
     await ReferenceAuth.logout();
+    window.location.href = appPath('/login');
+  });
+}
+
+if (deleteAccountButton) {
+  deleteAccountButton.addEventListener('click', async () => {
+    if (!window.confirm(DELETE_ACCOUNT_CONFIRM)) {
+      return;
+    }
+    await ReferenceAuth.deleteAccount();
     window.location.href = appPath('/login');
   });
 }
