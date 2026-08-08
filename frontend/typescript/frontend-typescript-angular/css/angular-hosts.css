@@ -1,0 +1,11 @@
+/* Angular component host elements have no counterpart in the other frontend
+   modules: <app-root> wraps what index.html mounts, and each routed page adds
+   one more element around <main>. Taking them out of layout lets the shared
+   design-system CSS see the same markup tree the React / Vue modules produce. */
+app-root,
+app-header,
+app-home-page,
+app-login-page,
+app-register-page {
+  display: contents;
+}

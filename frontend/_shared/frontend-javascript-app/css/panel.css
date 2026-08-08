@@ -19,6 +19,13 @@
   background: var(--panel-bg);
 }
 
+/* Author `display: flex` beats the UA `[hidden] { display: none }` rule, so a
+   Session panel with the HTML hidden attribute would still paint for anonymous
+   visitors. Same pattern as header.css → `.header__brand-link[hidden]`. */
+.panel[hidden] {
+  display: none;
+}
+
 .panel--terminal {
   --panel-bg: #1a1917;
   --panel-border: rgba(255, 255, 255, 0.08);

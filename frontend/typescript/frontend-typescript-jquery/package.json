@@ -1,0 +1,27 @@
+{
+  "name": "frontend-typescript-jquery",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "NODE_OPTIONS=--no-experimental-webstorage ALLURE_LABEL_epic=reference-app-copy ALLURE_LABEL_layer=component ALLURE_LABEL_scope=frontend-typescript-jquery ALLURE_LABEL_framework=jquery_jsdom vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "jquery": "^3.7.1"
+  },
+  "devDependencies": {
+    "@types/jquery": "^3.5.32",
+    "@types/node": "26.1.2",
+    "allure-js-commons": "^3.0.7",
+    "allure-vitest": "^3.0.7",
+    "jsdom": "^26.1.0",
+    "typescript": "5.9.3",
+    "vite": "^6.3.5",
+    "vitest": "^3.2.4"
+  }
+}

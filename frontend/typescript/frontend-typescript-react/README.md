@@ -1,7 +1,7 @@
 # frontend-typescript-react
 
 Product UI — TypeScript + React (same screens as vanilla / Vue).  
-`frontend-javascript-react/` is an empty **slot** (not a twin product yet).
+`frontend-javascript-react/` is the JavaScript twin — same screens, no TypeScript.
 
 Vite + React 19 + React Router. Vite `base` is `./` (one dist under
 `/{backend}/frontend-typescript-react/`); router `basename` and API paths come from
@@ -19,7 +19,7 @@ Prod URL: `https://reference-app-copy.autotests.ai/{backend}/frontend-typescript
 
 | Route | Screen | Key testids |
 |-------|--------|-------------|
-| `/` | `HomePage` | `reference-layout`, `health-panel`/`health-status`, `items-list`/`item-row`, `welcome-panel`/`welcome-message`, `logout-button` |
+| `/` | `HomePage` | `reference-layout`, `health-panel`/`health-status`, `items-list`/`item-row`, `welcome-panel`/`welcome-message`, `logout-button`, `delete-account-button` |
 | `/login` | `LoginPage` | `login-panel`, `login-form`, `login-input`, `password-input`, `submit-button`, `error-message`, `register-link`, `login-form-title` |
 | `/register` | `RegisterPage` | `register-panel`, `register-form`, `confirm-password-input`, `submit-button`, `login-link`, `register-form-title` |
 
@@ -29,6 +29,20 @@ Prod URL: `https://reference-app-copy.autotests.ai/{backend}/frontend-typescript
 `index.html`: `/{backend}/{frontend}` → bare `/{frontend}` → document root. The root case is
 what the container publish-port (`:9811`) and a bare Vite root serve, so the basename there
 is empty — a mount-shaped one matches nothing and the router renders an empty page.
+
+## Session panel
+
+Visible only once `GET /api/auth/me` returned a profile. Two actions, both ending in the
+same logged-out state at `/login`:
+
+| Button | Request | Meaning |
+|--------|---------|---------|
+| `logout-button` (`btn--primary`) | `POST /api/auth/logout` | Ends this session. The JWT is **not** invalidated server-side — logout is stateless by design. |
+| `delete-account-button` (`btn--danger`) | `DELETE /api/auth/me` | **Deletes the account.** The user row is gone and the same token now yields 401. |
+
+Delete account asks `window.confirm('Delete this account? This cannot be undone.')` first;
+cancel sends no request. Both calls are best effort and both drop the local token even when
+the API fails — a token the server has already rejected must never keep the UI signed in.
 
 ## Contracts preserved for Selenide
 

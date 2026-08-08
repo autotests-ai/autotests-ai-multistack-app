@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit",
-    "test": "NODE_OPTIONS=--no-experimental-webstorage ALLURE_LABEL_epic=reference-app-copy ALLURE_LABEL_layer=component ALLURE_LABEL_scope=vue ALLURE_LABEL_framework=vue_testing_library vitest run",
+    "test": "NODE_OPTIONS=--no-experimental-webstorage ALLURE_LABEL_epic=reference-app-copy ALLURE_LABEL_layer=component ALLURE_LABEL_scope=frontend-typescript-vue ALLURE_LABEL_framework=vue_testing_library vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {

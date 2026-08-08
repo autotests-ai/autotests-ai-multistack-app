@@ -1,0 +1,30 @@
+{
+  "name": "frontend-javascript-vue",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "NODE_OPTIONS=--no-experimental-webstorage ALLURE_LABEL_epic=reference-app-copy ALLURE_LABEL_layer=component ALLURE_LABEL_scope=frontend-javascript-vue ALLURE_LABEL_framework=vue_testing_library vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "vue": "^3.5.40",
+    "vue-router": "^4.5.1"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/user-event": "^14.6.1",
+    "@testing-library/vue": "^8.1.0",
+    "@vitejs/plugin-vue": "^6.0.8",
+    "@vue/test-utils": "^2.4.11",
+    "allure-js-commons": "^3.0.7",
+    "allure-vitest": "^3.0.7",
+    "jsdom": "^26.1.0",
+    "vite": "^6.3.5",
+    "vite-plugin-pwa": "^1.3.0",
+    "vitest": "^3.2.4"
+  }
+}

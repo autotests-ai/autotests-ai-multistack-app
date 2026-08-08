@@ -16,11 +16,25 @@ Prod URL: `https://reference-app-copy.autotests.ai/{backend}/frontend-typescript
 
 | Route | Screen | Key testids |
 |-------|--------|-------------|
-| `/` | `HomePage` | `reference-layout`, `health-panel`/`health-status`, `items-list`/`item-row`, `welcome-panel`/`welcome-message`, `logout-button` |
+| `/` | `HomePage` | `reference-layout`, `health-panel`/`health-status`, `items-list`/`item-row`, `welcome-panel`/`welcome-message`, `logout-button`, `delete-account-button` |
 | `/login` | `LoginPage` | `login-panel`, `login-form`, `login-input`, `password-input`, `submit-button`, `error-message`, `register-link`, `login-form-title` |
 | `/register` | `RegisterPage` | `register-panel`, `register-form`, `confirm-password-input`, `submit-button`, `login-link`, `register-form-title` |
 
 (Router history base strips the mount; header/`appPath` use absolute `/frontend-typescript-vue/…`.)
+
+## Session panel
+
+Visible only once `GET /api/auth/me` returned a profile. Two actions, both ending in the
+same logged-out state at `/login`:
+
+| Button | Request | Meaning |
+|--------|---------|---------|
+| `logout-button` (`btn--primary`) | `POST /api/auth/logout` | Ends this session. The JWT is **not** invalidated server-side — logout is stateless by design. |
+| `delete-account-button` (`btn--danger`) | `DELETE /api/auth/me` | **Deletes the account.** The user row is gone and the same token now yields 401. |
+
+Delete account asks `window.confirm('Delete this account? This cannot be undone.')` first;
+cancel sends no request. Both calls are best effort and both drop the local token even when
+the API fails — a token the server has already rejected must never keep the UI signed in.
 
 ## Contracts preserved for Selenide
 
