@@ -12,16 +12,16 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "jquery": "^3.7.1"
+    "jquery": "^4.0.0"
   },
   "devDependencies": {
-    "@types/jquery": "^3.5.32",
-    "@types/node": "26.1.2",
-    "allure-js-commons": "^3.0.7",
-    "allure-vitest": "^3.0.7",
-    "jsdom": "^26.1.0",
-    "typescript": "5.9.3",
-    "vite": "^6.3.5",
-    "vitest": "^3.2.4"
+    "@types/jquery": "^4.0.0",
+    "@types/node": "26.2.0",
+    "allure-js-commons": "^3.10.2",
+    "allure-vitest": "^3.10.2",
+    "jsdom": "^30.0.1",
+    "typescript": "7.0.2",
+    "vite": "^8.2.1",
+    "vitest": "^4.1.10"
   }
 }

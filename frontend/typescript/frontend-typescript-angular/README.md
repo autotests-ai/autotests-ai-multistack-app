@@ -88,7 +88,8 @@ module: on Node 26 the runtime's own empty `localStorage` global wins over the j
 - `css/app.css` adds `.panel[hidden] { display: none }` on top of the copy shared with the
   Vue module. Without it the author-level `.panel { display: flex }` beats the UA `[hidden]`
   rule and the Session panel stays on screen for anonymous visitors.
-- Angular 20 (not 21/22) is pinned on purpose: `@angular/build` — required by the Analog
-  Vite plugin — pins `vitest ^4` from v21 on, and the matrix is on Vitest 3 / TypeScript 5.9.
+- After the shared matrix is on **Vite 8 + Vitest 4** (`docs/rag/config/react-toolchain.md`),
+  this module tracks **Angular 22** + **TypeScript 6.0.3** (Angular peer `>=6 <6.1`; **not** TS 7 —
+  Compiler API returns in TS 7.1).
 
 No PWA/service worker in this module (the React and Vue modules own that baseline).
