@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { App } from '../App';
+import { routes } from '../routes';
 
 function jsonResponse(body) {
   return { ok: true, status: 200, json: async () => body };
@@ -23,11 +23,10 @@ function stubApis() {
   );
 }
 
+// Same route objects the browser entry uses, driven by an in-memory history.
 function renderApp(initialPath) {
   return render(
-    <MemoryRouter initialEntries={[initialPath]}>
-      <App />
-    </MemoryRouter>,
+    <RouterProvider router={createMemoryRouter(routes, { initialEntries: [initialPath] })} />,
   );
 }
 

@@ -72,7 +72,12 @@ npm run build      # → dist/ (packed by this module's Dockerfile)
 npm run preview    # serve dist/ on :9810
 npm run typecheck  # tsc --noEmit
 npm test           # Vitest + jsdom (src/test/)
+npm run test:smoke # only suites tagged `smoke` (Vitest 4 --tagsFilter)
 ```
+
+`smoke` is declared in `vitest.config.ts` (`test.tags`) and applied to the `home page`
+suite. Vitest 4 runs with `strictTags` on, so a tag the config does not declare fails the
+run instead of quietly matching nothing.
 
 `npm test` runs Vitest under `--no-experimental-webstorage` for the same reason as the
 React and Vue modules: on Node 26 the runtime's own empty `localStorage` global wins
@@ -85,8 +90,11 @@ clicks and submits with `fetch` and `window.confirm` stubbed.
 
 ## Build notes
 
-- `build.rollupOptions.input` lists all three HTML entry points; each page gets
-  `assets/{index,login,register}.js` and they share `assets/shared.js`.
+- `build.rolldownOptions.input` lists all three HTML entry points; each page gets
+  `assets/{index,login,register}.js` and they share `assets/shared.js`. Vite 8 bundles with
+  Rolldown, so the option is `rolldownOptions` (`rollupOptions` still works but is
+  deprecated) and the shared chunk is declared as `output.codeSplitting.groups` rather than
+  the deprecated `output.manualChunks` callback.
 - `base: './'` — relative asset URLs work under any `/{backend}/{frontend}/` prefix.
   Safe here because every page is a real file at the dist root; there are no nested
   routes to break the relative resolution.

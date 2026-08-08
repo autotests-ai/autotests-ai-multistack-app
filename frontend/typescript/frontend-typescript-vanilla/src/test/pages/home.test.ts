@@ -20,7 +20,7 @@ async function renderHome(): Promise<void> {
   await import('../../home');
 }
 
-describe('home page', () => {
+describe('home page', { tags: ['smoke'] }, () => {
   beforeEach(() => {
     localStorage.clear();
     location = stubLocation('/');

@@ -18,6 +18,19 @@ like backend unit tests under `src/test/`.
 Prod URL: `https://reference-app-copy.autotests.ai/{backend}/frontend-javascript-react/`
 (Host `/` is empty.)
 
+## Routing — data router, not `<BrowserRouter>` + `<Routes>`
+
+`src/routes.jsx` holds plain route objects; `main.jsx` feeds them to
+`createBrowserRouter(routes, { basename: APP_BASE })` and renders a single
+`<RouterProvider>`. `App` is the layout route — the header mounts once and `<Outlet />`
+swaps the page under it.
+
+This is the react-router 7 data-router API, and the reason it is worth the extra file: the
+same `routes` array is what `createMemoryRouter` replays in `src/test/App.test.jsx`, so
+routing is declared once instead of once for the browser and once for the tests. Loaders
+and actions become available on the same objects if a screen ever needs them; nothing here
+uses them yet.
+
 ## Routes
 
 | Route | Screen | Key testids |

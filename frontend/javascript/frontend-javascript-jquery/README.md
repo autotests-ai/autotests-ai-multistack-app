@@ -2,7 +2,7 @@
 
 Product UI — the same reference-app screens as
 [`frontend-javascript-vanilla`](../frontend-javascript-vanilla/), written in
-**JavaScript + jQuery 3.7**.
+**JavaScript + jQuery 4**.
 
 Three real HTML documents loading plain `<script>` files — no bundler, no build step.
 The design-system layer (tokens, `button.css`, `panel.css`, `header.css` and the
@@ -15,10 +15,21 @@ Local compose publish: `:9804`.
 
 ## jQuery is vendored — the page never touches a CDN
 
-`vendor/jquery.min.js` is the unmodified `dist/jquery.min.js` of jQuery **3.7.1**, taken
+`vendor/jquery.min.js` is the unmodified `dist/jquery.min.js` of jQuery **4.0.0**, taken
 from the npm package (`npm i && npm run vendor:jquery`) and committed here. Every page
 loads it with `<script src="vendor/jquery.min.js">`, so the container serves the library
 from its own origin and works with no outbound network.
+
+The vendored file, not the dependency range, is what runs — in the browser *and* in the
+tests, which load the same file through `src/test/helpers/page.js`. Bumping `jquery` in
+`package.json` without running `npm run vendor:jquery` therefore changes nothing anywhere,
+which is exactly how this module sat on jQuery 3.7.1 while claiming 4.
+
+Nothing here needed a jQuery 4 migration: the pages only use `$()` selectors, `.on()`,
+`.text()` / `.html()` / `.addClass()` / `.prop()` and `$.map`, all of which survived the
+major. The removed 3.x surface (`$.trim`, `$.isFunction`, `$.type`, `.bind()`,
+`.delegate()`, `.hover()`, …) was never used, because the API layer is `fetch` and jQuery
+is only the DOM idiom.
 
 ## npm is dev-only tooling
 
@@ -53,7 +64,7 @@ Login and register both redirect home when `authToken` is already present.
 | `js/auth.js` | `window.ReferenceAuth` — validation, login/register, profile, logout, `deleteAccount`. Transport is `fetch`, not `$.ajax` |
 | `js/app.js` | home screen in jQuery idiom — `$(function () { … })`, `$('[data-testid="…"]')`, `.on('click', …)`, `.text()`, `.html()`, `.prop('hidden', false)` |
 | `js/login.js`, `js/register.js` | the two forms, same jQuery idiom |
-| `vendor/jquery.min.js` | vendored jQuery 3.7.1 |
+| `vendor/jquery.min.js` | vendored jQuery 4.0.0 — refresh with `npm run vendor:jquery` after bumping the dependency, otherwise the pages keep loading the old copy |
 
 ## Session panel
 

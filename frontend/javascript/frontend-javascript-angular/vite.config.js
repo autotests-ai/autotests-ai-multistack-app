@@ -1,26 +1,13 @@
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
-import babel from 'vite-plugin-babel';
+import { angularDecorators } from './babel-decorators.js';
 
 const moduleDir = dirname(fileURLToPath(import.meta.url));
 const sharedRoot = resolve(moduleDir, '../../_shared');
 
 // Relative base: one dist works under /{backend}/frontend-javascript-angular/
 const mountBase = './';
-
-/**
- * Angular decorators from plain `.js`: Babel strips them to legacy `__decorate`
- * calls, which is exactly the shape `@angular/core` expects. Rollup cannot parse
- * decorator syntax, so this must run in `transform` (enforce: 'pre') on every
- * module under `src/`.
- */
-function angularDecorators() {
-  return babel({
-    include: [/\/src\/.*\.js$/],
-    exclude: [/node_modules/],
-  });
-}
 
 /** Move Vite-injected ./assets/* tags into the boot document.write (absolute mount). */
 function pinMountAssets() {
@@ -77,7 +64,7 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     assetsDir: 'assets',
-    rollupOptions: {
+    rolldownOptions: {
       output: {
         entryFileNames: 'assets/[name].js',
         chunkFileNames: 'assets/[name].js',

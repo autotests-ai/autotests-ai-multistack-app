@@ -12,6 +12,26 @@ Vitest + Testing Library live in [`src/test/`](src/test/) — same module as the
 Prod URL: `https://reference-app-copy.autotests.ai/{backend}/frontend-typescript-vue/`  
 (Host `/` is empty.)
 
+## vue-router 5
+
+The v5 major changed nothing in `src/router/index.ts` — this is still the recommended
+shape, and `createMemoryHistory` is still what the specs mount against:
+
+```ts
+export const router = createRouter({
+  history: createWebHistory(`${APP_BASE}/`),
+  routes: [ /* … */ ],
+});
+```
+
+v5 does ship a new matcher and an `experimental_createRouter`, but both are exported under
+`EXPERIMENTAL_*` names — not something a teaching stand should pin its routing to.
+
+TypeScript here is pinned to **6.0.3**, not the 7.0.2 the rest of the matrix uses: `vue-tsc`
+resolves `typescript/lib/tsc`, and TypeScript 7 dropped that path from its `exports` map, so
+`npm run typecheck` dies with `ERR_PACKAGE_PATH_NOT_EXPORTED` before it reads a single file.
+Move to 7 once `vue-tsc` supports it.
+
 ## Routes
 
 | Route | Screen | Key testids |

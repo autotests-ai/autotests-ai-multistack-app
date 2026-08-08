@@ -106,7 +106,7 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     assetsDir: 'assets',
-    rollupOptions: {
+    rolldownOptions: {
       input: {
         index: resolve(__dirname, 'index.html'),
         login: resolve(__dirname, 'login.html'),

@@ -113,6 +113,10 @@ export default defineConfig({
     pinMountAssets(),
   ],
   resolve: {
+    // The library alias points outside this package, so its `react` import would
+    // otherwise resolve against a copy hoisted higher in the tree — two Reacts in
+    // one render tree, which fails as "Invalid hook call".
+    dedupe: ['react', 'react-dom'],
     alias: {
       '@zero-design-system/react': reactUiSrc,
     },
@@ -121,7 +125,7 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     assetsDir: 'assets',
-    rollupOptions: {
+    rolldownOptions: {
       output: {
         entryFileNames: 'assets/[name].js',
         chunkFileNames: 'assets/[name].js',

@@ -69,7 +69,7 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     assetsDir: 'assets',
-    rollupOptions: {
+    rolldownOptions: {
       // Multi-page app: three real HTML documents, no client-side router.
       input: {
         index: resolve(__dirname, 'index.html'),
@@ -80,12 +80,12 @@ export default defineConfig({
         entryFileNames: 'assets/[name].js',
         chunkFileNames: 'assets/[name].js',
         assetFileNames: 'assets/[name][extname]',
-        // Everything the three pages share (appBase, auth, api, messages,
-        // header) in one named chunk, rather than a name Rollup picks for us.
-        manualChunks(id) {
-          return /\/src\/(?!home\.ts|login\.ts|register\.ts)[^/]+\.ts$/.test(id)
-            ? 'shared'
-            : undefined;
+        codeSplitting: {
+          // Everything the three pages share (appBase, auth, api, messages,
+          // header) in one named chunk, rather than a name the bundler picks.
+          groups: [
+            { name: 'shared', test: /\/src\/(?!home\.ts|login\.ts|register\.ts)[^/]+\.ts$/ },
+          ],
         },
       },
     },

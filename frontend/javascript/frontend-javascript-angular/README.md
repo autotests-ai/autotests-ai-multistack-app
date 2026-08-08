@@ -55,13 +55,18 @@ TypeScript program. This module runs the **JIT** compiler instead, which reads t
 - Templates are inline `template:` strings only. `templateUrl` needs the AOT resource
   loader and will not work.
 - **Babel**, not esbuild, transpiles `src/**/*.js`: esbuild only understands decorators in
-  TypeScript, and Rollup cannot even parse them. `babel.config.json` runs
+  TypeScript, and the bundler cannot even parse them. `babel-decorators.js` runs
   `@babel/plugin-proposal-decorators` in **legacy** mode (the shape `@angular/core`'s
   `makeDecorator` expects — the decorator is called with the class and returns it) plus
   `@babel/plugin-transform-class-properties` in `loose` mode (assignment semantics, i.e.
-  what `useDefineForClassFields: false` gives a TypeScript build). `vite-plugin-babel`
-  wires it into both `vite.config.js` and `vitest.config.js` at `enforce: 'pre'`, so
-  decorators are gone before anything else sees the file.
+  what `useDefineForClassFields: false` gives a TypeScript build). Both `vite.config.js`
+  and `vitest.config.js` import it, so decorators are gone before anything else sees the
+  file.
+- The plugin is **`@rolldown/plugin-babel`**, not `vite-plugin-babel`: the latter does
+  `import babel from '@babel/core'`, and Babel 8 is ESM-native with named exports only, so
+  loading the config throws before Vite starts. The Rolldown plugin is the Vite 8 / Babel 8
+  pairing and never reads `babel.config.*`, which is why the plugin list is passed inline
+  and there is no `babel.config.json` in this module any more.
 - **Dependency injection uses `inject()`, never constructor parameters.** Constructor DI
   relies on TypeScript's `emitDecoratorMetadata` to record parameter types, and Babel
   cannot emit that — there is no type information to emit. `inject()` in a field

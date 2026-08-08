@@ -16,6 +16,21 @@ Vitest + Testing Library live in [`src/test/`](src/test/) — same module as the
 Prod URL: `https://reference-app-copy.autotests.ai/{backend}/frontend-javascript-vue/`  
 (Host `/` is empty.)
 
+## vue-router 5
+
+The v5 major changed nothing in `src/router/index.js` — this is still the recommended
+shape, and `createMemoryHistory` is still what the specs mount against:
+
+```js
+export const router = createRouter({
+  history: createWebHistory(`${APP_BASE}/`),
+  routes: [ /* … */ ],
+});
+```
+
+v5 does ship a new matcher and an `experimental_createRouter`, but both are exported under
+`EXPERIMENTAL_*` names — not something a teaching stand should pin its routing to.
+
 ## Routes
 
 | Route | Screen | Key testids |

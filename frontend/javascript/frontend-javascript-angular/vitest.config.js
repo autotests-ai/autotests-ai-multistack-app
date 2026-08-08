@@ -1,8 +1,9 @@
 /// <reference types="vitest/config" />
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import AllureReporter from 'allure-vitest/reporter';
 import { defineConfig } from 'vite';
-import babel from 'vite-plugin-babel';
+import { angularDecorators } from './babel-decorators.js';
 
 const moduleDir = dirname(fileURLToPath(import.meta.url));
 const sharedRoot = resolve(moduleDir, '../../_shared');
@@ -11,7 +12,7 @@ export default defineConfig({
   base: './',
   // Same Babel pass as the production build — TestBed compiles the very same
   // decorator metadata the browser bundle does.
-  plugins: [babel({ include: [/\/src\/.*\.js$/], exclude: [/node_modules/] })],
+  plugins: [angularDecorators()],
   server: {
     fs: {
       allow: [moduleDir, sharedRoot],
@@ -23,7 +24,10 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.js', 'allure-vitest/setup'],
     include: ['src/test/**/*.test.js'],
     css: true,
-    reporters: ['default', ['allure-vitest/reporter', { resultsDir: 'allure-results' }]],
+    // Reporter instance, not the `['allure-vitest/reporter', …]` string form:
+    // that specifier can resolve to an allure-vitest hoisted above this module,
+    // which then injects a second Vitest runtime (setup + runner) into the worker.
+    reporters: ['default', new AllureReporter({ resultsDir: 'allure-results' })],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],

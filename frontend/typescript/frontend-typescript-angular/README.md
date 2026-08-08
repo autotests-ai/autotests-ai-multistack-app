@@ -1,7 +1,11 @@
 # frontend-typescript-angular
 
-Product UI — TypeScript + Angular 20 (same screens as `frontend-typescript-react` /
+Product UI — TypeScript + Angular 22 (same screens as `frontend-typescript-react` /
 `frontend-typescript-vue` / vanilla).
+
+TypeScript here is pinned to **6.0.3**, not the 7.0.2 the rest of the matrix uses:
+`@angular/compiler-cli@22` needs `typescript >=6.0 <6.1`, and TypeScript 7 has no Compiler
+API for it to build against. Forcing 7 breaks compilation, not just the peer check.
 
 Vite + standalone components + `@angular/router`, signals for local state, zoneless
 change detection (`provideZonelessChangeDetection()` — no `zone.js`). Angular is compiled

@@ -29,6 +29,27 @@ frontend slots left. Each is an **independent copy**: same screens, same `data-t
 contract, same auth surface, no shared application code. A change to the contract is a
 change in ten places, on purpose.
 
+## Toolchain — why the configs look like this in 2026
+
+Node 26, **Vite 8**, **Vitest 4**, Angular 22, Vue 3 + vue-router 5, React 19 + react-router 7,
+jQuery 4. Canon and pins: monorepo [`docs/rag/config/react-toolchain.md`](../../../../docs/rag/config/react-toolchain.md).
+
+- **Rolldown is the bundler.** Vite 8 replaced Rollup with Rolldown, so `build.rollupOptions`
+  is deprecated in favour of **`build.rolldownOptions`** — that is the name every
+  `vite.config.*` here uses. Manual chunking moved too: `output.manualChunks` →
+  `output.codeSplitting.groups` (see `frontend-typescript-vanilla`).
+- **Allure reporter is an imported instance**, not `['allure-vitest/reporter', …]`. The string
+  form is resolved outside the module directory and can pick up an `allure-vitest` hoisted
+  higher in the tree; that copy then injects its own setup file and test runner, and a second
+  Vitest runtime in one worker fails the whole suite before a single test collects.
+- **TypeScript is pinned per module, not globally.** `typescript@7.0.2` everywhere except
+  Angular (`6.0.3`, `@angular/compiler-cli` needs `>=6 <6.1`) and TypeScript Vue (`6.0.3`,
+  `vue-tsc` still loads `typescript/lib/tsc`, which TS 7 no longer exports).
+- **`--no-experimental-webstorage`** is in every `test` script: on Node 26 the runtime's own
+  empty `localStorage` global wins over the jsdom one.
+- **Test tags** (Vitest 4) mark the smoke suite in the two reference modules
+  (`frontend-typescript-vanilla`, `frontend-typescript-react`): `npm run test:smoke`.
+
 ## Product vs shared
 
 | Kind | In URL matrix? | Examples |

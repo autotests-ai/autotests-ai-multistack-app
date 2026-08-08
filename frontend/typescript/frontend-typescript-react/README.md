@@ -15,6 +15,19 @@ like backend unit tests under `src/test/`.
 Prod URL: `https://reference-app-copy.autotests.ai/{backend}/frontend-typescript-react/`  
 (Host `/` is empty.)
 
+## Routing — data router, not `<BrowserRouter>` + `<Routes>`
+
+`src/routes.tsx` holds plain route objects; `main.tsx` feeds them to
+`createBrowserRouter(routes, { basename: APP_BASE })` and renders a single
+`<RouterProvider>`. `App` is the layout route — the header mounts once and `<Outlet />`
+swaps the page under it.
+
+This is the react-router 7 data-router API, and the reason it is worth the extra file: the
+same `routes` array is what `createMemoryRouter` replays in `src/test/App.test.tsx`, so
+routing is declared once instead of once for the browser and once for the tests. Loaders
+and actions become available on the same objects if a screen ever needs them; nothing here
+uses them yet.
+
 ## Routes
 
 | Route | Screen | Key testids |
@@ -69,7 +82,12 @@ npm run build      # → dist/ (packed by this module's Dockerfile)
 npm run typecheck  # tsc --noEmit
 npm run lint       # Biome check (src + configs)
 npm test           # Vitest + RTL (src/test/)
+npm run test:smoke # only suites tagged `smoke` (Vitest 4 --tagsFilter)
 ```
+
+`smoke` is declared in `vitest.config.ts` (`test.tags`) and applied to the `App` suite —
+the shell mounts and every route resolves. Vitest 4 runs with `strictTags` on, so a tag the
+config does not declare fails the run instead of quietly matching nothing.
 
 If compose already holds `:9811`, either stop that service or run Vite with
 `vite --port <free>` — do not kill a live stand from an active chat.

@@ -12,6 +12,7 @@ import {
   validateCredentials,
 } from '../../lib/auth';
 import { LOGIN_MESSAGES } from '../../lib/messages';
+
 describe('validateCredentials', () => {
   it('requires both when empty', () => {
     expect(validateCredentials('', '', LOGIN_MESSAGES)).toBe(
