@@ -158,6 +158,16 @@ suite (`npm test` / `pytest` with `UI_URL` / `BASE_URL`) — no Gradle tag slice
 | e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `visual` / `mock`) | `e2e-mock-tests` (push, `mock`); `e2e-tests` (after lanes + `sonar-tests` join) |
 | manual | tests | `…/tests/manual/` **in code** | `@Tag("manual")` + `@Manual` | java → `-DincludeTags=manual` via `manual-tests` (after `e2e-tests`, dispatch) |
 
+### Frontend reference modules (not interchangeable)
+
+| Role | Module | Why |
+|------|--------|-----|
+| UX / product code (no Vitest) | `frontend-javascript-vanilla` | Teaching SPA without a framework runner — Session markup, auth wiring, copy |
+| Vitest / component-contract | `frontend-typescript-react` | CI deploy default (`:9811`); auth + Session behaviors other Vitest legs mirror |
+
+`frontend-javascript-react` is the JS twin of the Vitest reference — keep contract parity with `frontend-typescript-react`, do not treat it as a second canon.  
+Do **not** add Vitest to vanilla. Align new component cases from `frontend-typescript-react` (behavior), not from test counts.
+
 Bare `./gradlew test` (java) runs **everything**, integration included — there are no hidden excludes.
 
 Active teaching module defaults: `tests/java/tests-java-gradle-junit5-allure3-selenide/` (`TESTS_LANG=java`).  
