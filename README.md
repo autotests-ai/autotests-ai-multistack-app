@@ -27,8 +27,8 @@ Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/N
 
 | Zone | Current modules | Future slots |
 |------|-----------------|--------------|
-| **frontend/javascript/** | `frontend-javascript-vanilla` (active), `react` / `angular` / `vue` / `jquery` (slots) | — |
-| **frontend/typescript/** | `frontend-typescript-react` (+ RTL), `frontend-typescript-vue` (+ VTU), `angular` / `vanilla` / `jquery` (slots) | — |
+| **frontend/javascript/** | `frontend-javascript-vanilla`, `react`, `angular`, `vue`, `jquery` (all active) | — |
+| **frontend/typescript/** | `frontend-typescript-vanilla`, `react` (+ RTL), `angular`, `vue` (+ VTU), `jquery` (all active) | — |
 | **frontend/_shared/** | `frontend-javascript-app`, `frontend-javascript-embed`, `frontend-react-ui` | — |
 | **backend/java/** | `backend-java-spring` (active) | — |
 | **backend/kotlin/** | `backend-kotlin-spring` (active) | — |
@@ -108,15 +108,15 @@ SSOT: [`deploy/matrix.yaml`](deploy/matrix.yaml). Language base **+10**, stack w
 | **8850** | `backend-typescript-express` | |
 | **8851** | `backend-typescript-nest` | |
 | **9800** | `frontend-javascript-vanilla` | compose publish |
-| **9801** | `frontend-javascript-react` | slot |
-| **9802** | `frontend-javascript-angular` | slot |
-| **9803** | `frontend-javascript-vue` | slot |
-| **9804** | `frontend-javascript-jquery` | slot |
-| **9810** | `frontend-typescript-vanilla` | slot |
-| **9811** | `frontend-typescript-react` | compose publish |
-| **9812** | `frontend-typescript-angular` | slot |
+| **9801** | `frontend-javascript-react` | compose publish |
+| **9802** | `frontend-javascript-angular` | compose publish |
+| **9803** | `frontend-javascript-vue` | compose publish |
+| **9804** | `frontend-javascript-jquery` | compose publish |
+| **9810** | `frontend-typescript-vanilla` | compose publish |
+| **9811** | `frontend-typescript-react` | compose publish · CI deploy default |
+| **9812** | `frontend-typescript-angular` | compose publish |
 | **9813** | `frontend-typescript-vue` | compose publish |
-| **9814** | `frontend-typescript-jquery` | slot |
+| **9814** | `frontend-typescript-jquery` | compose publish |
 
 Next backend language → **8860+**. Next frontend language → **9820+**.  
 Container-internal: backends `:8080`, frontends `:80`.  
@@ -140,9 +140,8 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:9800/
 
 | Service | Role |
 |---------|------|
-| `frontend-typescript-react` | React SPA (`:9811`) |
-| `frontend-typescript-vue` | Vue SPA (`:9813`) |
-| `frontend-javascript-vanilla` | vanilla static (`:9800`) |
+| `frontend-*` (ten) | one nginx image per stack, `:9800`–`:9814` — same screens, independent source trees |
+| `frontend-typescript-react` | React SPA (`:9811`) — the module CI builds and deploys |
 | `backend-java-spring` | Spring JSON API (`:8800`) |
 | `backend-kotlin-spring` | Spring Kotlin JSON API (`:8810`) |
 | `backend-python-flask` | Flask JSON API (`:8820`) |

@@ -163,38 +163,48 @@ frontends:
     publish_port: 9800
 
   - id: frontend-javascript-react
-    status: slot
+    status: active
     kind: vite
     module: frontend/javascript/frontend-javascript-react
     mount: frontend-javascript-react
+    compose_service: frontend-javascript-react
+    image: reference-app-copy-frontend-javascript-react:latest
     publish_port: 9801
 
   - id: frontend-javascript-angular
-    status: slot
+    status: active
     kind: vite
     module: frontend/javascript/frontend-javascript-angular
     mount: frontend-javascript-angular
+    compose_service: frontend-javascript-angular
+    image: reference-app-copy-frontend-javascript-angular:latest
     publish_port: 9802
 
   - id: frontend-javascript-vue
-    status: slot
+    status: active
     kind: vite
     module: frontend/javascript/frontend-javascript-vue
     mount: frontend-javascript-vue
+    compose_service: frontend-javascript-vue
+    image: reference-app-copy-frontend-javascript-vue:latest
     publish_port: 9803
 
   - id: frontend-javascript-jquery
-    status: slot
+    status: active
     kind: static
     module: frontend/javascript/frontend-javascript-jquery
     mount: frontend-javascript-jquery
+    compose_service: frontend-javascript-jquery
+    image: reference-app-copy-frontend-javascript-jquery:latest
     publish_port: 9804
 
   - id: frontend-typescript-vanilla
-    status: slot
-    kind: static
+    status: active
+    kind: vite
     module: frontend/typescript/frontend-typescript-vanilla
     mount: frontend-typescript-vanilla
+    compose_service: frontend-typescript-vanilla
+    image: reference-app-copy-frontend-typescript-vanilla:latest
     publish_port: 9810
 
   - id: frontend-typescript-react
@@ -207,10 +217,12 @@ frontends:
     publish_port: 9811
 
   - id: frontend-typescript-angular
-    status: slot
+    status: active
     kind: vite
     module: frontend/typescript/frontend-typescript-angular
     mount: frontend-typescript-angular
+    compose_service: frontend-typescript-angular
+    image: reference-app-copy-frontend-typescript-angular:latest
     publish_port: 9812
 
   - id: frontend-typescript-vue
@@ -223,10 +235,12 @@ frontends:
     publish_port: 9813
 
   - id: frontend-typescript-jquery
-    status: slot
-    kind: static
+    status: active
+    kind: vite
     module: frontend/typescript/frontend-typescript-jquery
     mount: frontend-typescript-jquery
+    compose_service: frontend-typescript-jquery
+    image: reference-app-copy-frontend-typescript-jquery:latest
     publish_port: 9814
 
 # Test modules — no compose / publish ports (CI runners, not containers).

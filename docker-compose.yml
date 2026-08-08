@@ -299,6 +299,72 @@ services:
     ports:
       - "${FRONTEND_JS_VANILLA_PORT:-9800}:80"
 
+  frontend-javascript-react:
+    image: ghcr.io/autotests-ai/reference-app-copy-frontend-javascript-react:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: frontend/javascript/frontend-javascript-react/Dockerfile
+      args:
+        UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
+        REACT_UI: ${REACT_UI:-frontend/_shared/frontend-react-ui}
+    restart: unless-stopped
+    networks:
+      - reference_internal
+    ports:
+      - "${FRONTEND_JS_REACT_PORT:-9801}:80"
+
+  frontend-javascript-angular:
+    image: ghcr.io/autotests-ai/reference-app-copy-frontend-javascript-angular:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: frontend/javascript/frontend-javascript-angular/Dockerfile
+      args:
+        UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
+    restart: unless-stopped
+    networks:
+      - reference_internal
+    ports:
+      - "${FRONTEND_JS_ANGULAR_PORT:-9802}:80"
+
+  frontend-javascript-vue:
+    image: ghcr.io/autotests-ai/reference-app-copy-frontend-javascript-vue:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: frontend/javascript/frontend-javascript-vue/Dockerfile
+      args:
+        UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
+    restart: unless-stopped
+    networks:
+      - reference_internal
+    ports:
+      - "${FRONTEND_JS_VUE_PORT:-9803}:80"
+
+  frontend-javascript-jquery:
+    image: ghcr.io/autotests-ai/reference-app-copy-frontend-javascript-jquery:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: frontend/javascript/frontend-javascript-jquery/Dockerfile
+      args:
+        UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
+    restart: unless-stopped
+    networks:
+      - reference_internal
+    ports:
+      - "${FRONTEND_JS_JQUERY_PORT:-9804}:80"
+
+  frontend-typescript-vanilla:
+    image: ghcr.io/autotests-ai/reference-app-copy-frontend-typescript-vanilla:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: frontend/typescript/frontend-typescript-vanilla/Dockerfile
+      args:
+        UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
+    restart: unless-stopped
+    networks:
+      - reference_internal
+    ports:
+      - "${FRONTEND_TS_VANILLA_PORT:-9810}:80"
+
   frontend-typescript-react:
     image: ghcr.io/autotests-ai/reference-app-copy-frontend-typescript-react:${IMAGE_TAG:-latest}
     build:
@@ -313,6 +379,19 @@ services:
     ports:
       - "${FRONTEND_TS_REACT_PORT:-9811}:80"
 
+  frontend-typescript-angular:
+    image: ghcr.io/autotests-ai/reference-app-copy-frontend-typescript-angular:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: frontend/typescript/frontend-typescript-angular/Dockerfile
+      args:
+        UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
+    restart: unless-stopped
+    networks:
+      - reference_internal
+    ports:
+      - "${FRONTEND_TS_ANGULAR_PORT:-9812}:80"
+
   frontend-typescript-vue:
     image: ghcr.io/autotests-ai/reference-app-copy-frontend-typescript-vue:${IMAGE_TAG:-latest}
     build:
@@ -325,6 +404,19 @@ services:
       - reference_internal
     ports:
       - "${FRONTEND_TS_VUE_PORT:-9813}:80"
+
+  frontend-typescript-jquery:
+    image: ghcr.io/autotests-ai/reference-app-copy-frontend-typescript-jquery:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: frontend/typescript/frontend-typescript-jquery/Dockerfile
+      args:
+        UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
+    restart: unless-stopped
+    networks:
+      - reference_internal
+    ports:
+      - "${FRONTEND_TS_JQUERY_PORT:-9814}:80"
 
   api-mock:
     image: wiremock/wiremock:3.9.1

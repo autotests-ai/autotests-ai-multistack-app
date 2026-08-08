@@ -34,13 +34,8 @@ tests
 deploy
 preview
 
-# Frontend: tooling, local wire embed, stacks without Dockerfiles here
+# Frontend: tooling and the local wire embed only. Every product module now has a
+# Dockerfile and a compose service, so none of them may be excluded from the context —
+# each image copies its own module dir out of this shared root context.
 frontend/scripts
 frontend/_shared/frontend-javascript-embed
-frontend/javascript/frontend-javascript-angular
-frontend/javascript/frontend-javascript-jquery
-frontend/javascript/frontend-javascript-react
-frontend/javascript/frontend-javascript-vue
-frontend/typescript/frontend-typescript-angular
-frontend/typescript/frontend-typescript-jquery
-frontend/typescript/frontend-typescript-vanilla
