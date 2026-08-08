@@ -73,6 +73,34 @@ describe('login page', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it('shows the exact login-required error when username is empty', async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    await renderLogin();
+
+    await submitCredentials(user, '', 'password1');
+
+    expect(screen.getByTestId('error-message')).toHaveTextContent(
+      'Login is required (minimum 3 characters)',
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('shows the exact password-required error when password is empty', async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    await renderLogin();
+
+    await submitCredentials(user, 'user1', '');
+
+    expect(screen.getByTestId('error-message')).toHaveTextContent(
+      'Password is required (minimum 6 characters)',
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('stores the token and follows the redirect the API returns', async () => {
     const user = userEvent.setup();
     vi.stubGlobal(

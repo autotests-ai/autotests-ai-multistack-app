@@ -71,6 +71,32 @@ describe('login page', () => {
     expect(fetchCalls('/api/auth/login')).toHaveLength(0);
   });
 
+  it('shows the exact login-required error when username is empty', async () => {
+    await renderLogin();
+
+    submit('', 'password1');
+
+    await waitFor(() =>
+      expect(testId('error-message')).toHaveTextContent(
+        'Login is required (minimum 3 characters)',
+      ),
+    );
+    expect(fetchCalls('/api/auth/login')).toHaveLength(0);
+  });
+
+  it('shows the exact password-required error when password is empty', async () => {
+    await renderLogin();
+
+    submit('user1', '');
+
+    await waitFor(() =>
+      expect(testId('error-message')).toHaveTextContent(
+        'Password is required (minimum 6 characters)',
+      ),
+    );
+    expect(fetchCalls('/api/auth/login')).toHaveLength(0);
+  });
+
   it('rejects a short password without calling the API', async () => {
     await renderLogin();
 
@@ -81,7 +107,6 @@ describe('login page', () => {
     );
     expect(fetchCalls('/api/auth/login')).toHaveLength(0);
   });
-
   it('stores the token and follows the redirect on success', async () => {
     await renderLogin();
 

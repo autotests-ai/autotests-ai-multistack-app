@@ -113,4 +113,20 @@ describe('LoginPage', () => {
     );
     expect(localStorage.getItem('authToken')).toBeNull();
   });
+
+  it('shows the network message when the request never reaches the API', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('offline')));
+
+    renderLogin();
+    await user.type(screen.getByTestId('login-input'), 'user1');
+    await user.type(screen.getByTestId('password-input'), 'password1');
+    await user.click(screen.getByTestId('submit-button'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('error-message')).toHaveTextContent(
+        'Network error. Check your connection and try again.',
+      ),
+    );
+  });
 });

@@ -142,6 +142,13 @@ describe('network failures', () => {
   });
 });
 
+describe('fetchProfile', () => {
+  // jQuery auth wraps fetchProfile as async — missing token rejects the promise.
+  it('refuses to call the API without a token', async () => {
+    await expect(auth.fetchProfile()).rejects.toThrow('Missing auth token');
+  });
+});
+
 describe('deleteAccount', () => {
   it('sends DELETE /auth/me with the bearer token and clears the session', async () => {
     auth.saveSession('token-123');

@@ -1,16 +1,16 @@
 import { Component, provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
-import { RouterTestingHarness } from '@angular/router/testing';
-import { screen } from '@testing-library/dom';
+import { provideRouter, Router } from '@angular/router';
+import { screen, waitFor } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LoginPageComponent } from '../../app/pages/login.component';
+import { RouterTestingHarness } from '@angular/router/testing';
 
 @Component({ template: '' })
 class BlankComponent {}
 
-async function renderLogin() {
+async function renderLogin(): Promise<{ router: Router }> {
   TestBed.configureTestingModule({
     providers: [
       provideZonelessChangeDetection(),
@@ -23,7 +23,7 @@ async function renderLogin() {
   });
   const harness = await RouterTestingHarness.create('/login');
   harness.fixture.autoDetectChanges();
-  return harness;
+  return { router: TestBed.inject(Router) };
 }
 
 describe('LoginPage', () => {
@@ -32,6 +32,7 @@ describe('LoginPage', () => {
   });
 
   afterEach(() => {
+    vi.unstubAllGlobals();
     TestBed.resetTestingModule();
   });
 
@@ -70,5 +71,74 @@ describe('LoginPage', () => {
     expect(screen.getByTestId('error-message')).toHaveTextContent(
       'Password is required (minimum 6 characters)',
     );
+  });
+
+  it('saves the session and follows redirectUrl on a successful login', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          status: 200,
+          json: async () => ({ token: 'fresh-token', username: 'user1', redirectUrl: '/' }),
+        }),
+      ),
+    );
+    const { router } = await renderLogin();
+
+    await user.type(screen.getByTestId('login-input'), 'user1');
+    await user.type(screen.getByTestId('password-input'), 'password1');
+    await user.click(screen.getByTestId('submit-button'));
+
+    await waitFor(() => expect(localStorage.getItem('authToken')).toBe('fresh-token'));
+    await waitFor(() => expect(router.url).toBe('/'));
+  });
+
+  it('shows the API message when the credentials are wrong', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve({
+          ok: false,
+          status: 401,
+          json: async () => ({ message: 'Wrong login or password' }),
+        }),
+      ),
+    );
+    await renderLogin();
+
+    await user.type(screen.getByTestId('login-input'), 'user1');
+    await user.type(screen.getByTestId('password-input'), 'password1');
+    await user.click(screen.getByTestId('submit-button'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('error-message')).toHaveTextContent('Wrong login or password'),
+    );
+    expect(localStorage.getItem('authToken')).toBeNull();
+  });
+
+  it('shows the network message when the request never reaches the API', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('offline')));
+    await renderLogin();
+
+    await user.type(screen.getByTestId('login-input'), 'user1');
+    await user.type(screen.getByTestId('password-input'), 'password1');
+    await user.click(screen.getByTestId('submit-button'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('error-message')).toHaveTextContent(
+        'Network error. Check your connection and try again.',
+      ),
+    );
+  });
+
+  it('redirects an already signed-in visitor to home', async () => {
+    localStorage.setItem('authToken', 'valid-token');
+    const { router } = await renderLogin();
+
+    await waitFor(() => expect(router.url).toBe('/'));
   });
 });

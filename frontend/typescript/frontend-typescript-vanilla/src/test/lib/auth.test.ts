@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   AUTH_TOKEN_KEY,
   deleteAccount,
+  fetchProfile,
   formatMessage,
   getToken,
   login,
@@ -104,6 +105,16 @@ describe('network failures', () => {
       headers: { Authorization: 'Bearer token-123' },
     });
     expect(getToken()).toBeNull();
+  });
+});
+
+describe('fetchProfile', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('refuses to call the API without a token', () => {
+    expect(() => fetchProfile()).toThrow('Missing auth token');
   });
 });
 

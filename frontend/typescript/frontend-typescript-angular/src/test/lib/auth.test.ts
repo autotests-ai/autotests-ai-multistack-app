@@ -2,8 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   AUTH_TOKEN_KEY,
   deleteAccount,
+  fetchProfile,
+  formatMessage,
   getToken,
   logout,
+  resolveAuthErrorMessage,
   saveSession,
   validateCredentials,
 } from '../../app/lib/auth';
@@ -45,6 +48,47 @@ describe('validateCredentials', () => {
   });
 });
 
+describe('formatMessage', () => {
+  it('substitutes placeholders and blanks unknown ones', () => {
+    expect(formatMessage('min {minLogin} / {minPassword}', { minLogin: 3, minPassword: 6 })).toBe(
+      'min 3 / 6',
+    );
+    expect(formatMessage('{missing} tail', {})).toBe(' tail');
+  });
+});
+
+describe('resolveAuthErrorMessage', () => {
+  it('prefers the network message for a transport failure', () => {
+    const error = Object.assign(new Error(''), { network: true });
+
+    expect(resolveAuthErrorMessage(error, LOGIN_MESSAGES, 'fallback')).toBe(
+      'Network error. Check your connection and try again.',
+    );
+  });
+
+  it('passes the API message through', () => {
+    expect(resolveAuthErrorMessage(new Error('Wrong login or password'), LOGIN_MESSAGES, 'x')).toBe(
+      'Wrong login or password',
+    );
+  });
+
+  it('falls back when the error carries nothing usable', () => {
+    expect(resolveAuthErrorMessage(undefined, LOGIN_MESSAGES, 'Wrong login or password')).toBe(
+      'Wrong login or password',
+    );
+  });
+});
+
+describe('fetchProfile', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('refuses to call the API without a token', () => {
+    expect(() => fetchProfile()).toThrow('Missing auth token');
+  });
+});
+
 describe('session teardown', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -62,6 +106,21 @@ describe('session teardown', () => {
 
     expect(getToken()).toBeNull();
     expect(localStorage.getItem(AUTH_TOKEN_KEY)).toBeNull();
+  });
+
+  it('logout sends POST /auth/logout with the bearer token', async () => {
+    saveSession('token-123');
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 204 });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await logout();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith('/api/auth/logout', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer token-123' },
+    });
+    expect(getToken()).toBeNull();
   });
 
   it('deleteAccount sends DELETE /auth/me with the bearer token and clears the session', async () => {
@@ -107,5 +166,16 @@ describe('session teardown', () => {
 
     expect(getToken()).toBeNull();
     expect(localStorage.getItem(AUTH_TOKEN_KEY)).toBeNull();
+  });
+
+  // Account deletion is not logout: the logout endpoint must never be touched.
+  it('deleteAccount never calls the logout endpoint', async () => {
+    saveSession('token-123');
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 204 });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await deleteAccount();
+
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual(['/api/auth/me']);
   });
 });

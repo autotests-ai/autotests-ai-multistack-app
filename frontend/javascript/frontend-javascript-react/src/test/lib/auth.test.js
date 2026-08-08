@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   AUTH_TOKEN_KEY,
   deleteAccount,
+  fetchProfile,
   formatMessage,
   getToken,
   login,
@@ -11,7 +12,6 @@ import {
   validateCredentials,
 } from '../../lib/auth';
 import { LOGIN_MESSAGES } from '../../lib/messages';
-
 describe('validateCredentials', () => {
   it('requires both when empty', () => {
     expect(validateCredentials('', '', LOGIN_MESSAGES)).toBe(
@@ -91,6 +91,31 @@ describe('network failures', () => {
     expect(getToken()).toBeNull();
     expect(localStorage.getItem(AUTH_TOKEN_KEY)).toBeNull();
   });
+
+  it('logout sends POST /auth/logout with the bearer token', async () => {
+    saveSession('token-123');
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 204 });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await logout();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith('/api/auth/logout', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer token-123' },
+    });
+    expect(getToken()).toBeNull();
+  });
+});
+
+describe('fetchProfile', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('refuses to call the API without a token', () => {
+    expect(() => fetchProfile()).toThrow('Missing auth token');
+  });
 });
 
 describe('deleteAccount', () => {
@@ -145,5 +170,16 @@ describe('deleteAccount', () => {
 
     expect(getToken()).toBeNull();
     expect(localStorage.getItem(AUTH_TOKEN_KEY)).toBeNull();
+  });
+
+  // Account deletion is not logout: the logout endpoint must never be touched.
+  it('never calls the logout endpoint', async () => {
+    saveSession('token-123');
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 204 });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await deleteAccount();
+
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual(['/api/auth/me']);
   });
 });

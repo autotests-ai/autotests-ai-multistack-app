@@ -1,16 +1,16 @@
 import { Component, provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
-import { RouterTestingHarness } from '@angular/router/testing';
-import { screen } from '@testing-library/dom';
+import { provideRouter, Router } from '@angular/router';
+import { screen, waitFor } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RegisterPageComponent } from '../../app/pages/register.component';
+import { RouterTestingHarness } from '@angular/router/testing';
 
 @Component({ template: '' })
 class BlankComponent {}
 
-async function renderRegister() {
+async function renderRegister(): Promise<{ router: Router }> {
   TestBed.configureTestingModule({
     providers: [
       provideZonelessChangeDetection(),
@@ -23,7 +23,7 @@ async function renderRegister() {
   });
   const harness = await RouterTestingHarness.create('/register');
   harness.fixture.autoDetectChanges();
-  return harness;
+  return { router: TestBed.inject(Router) };
 }
 
 describe('RegisterPage', () => {
@@ -32,6 +32,7 @@ describe('RegisterPage', () => {
   });
 
   afterEach(() => {
+    vi.unstubAllGlobals();
     TestBed.resetTestingModule();
   });
 
@@ -57,5 +58,60 @@ describe('RegisterPage', () => {
     await user.click(screen.getByTestId('submit-button'));
 
     expect(screen.getByTestId('error-message')).toHaveTextContent('Passwords do not match');
+  });
+
+  it('saves the session and follows redirectUrl on a successful registration', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          status: 201,
+          json: async () => ({ token: 'new-token', username: 'newuser', redirectUrl: '/' }),
+        }),
+      ),
+    );
+    const { router } = await renderRegister();
+
+    await user.type(screen.getByTestId('login-input'), 'newuser');
+    await user.type(screen.getByTestId('password-input'), 'password123');
+    await user.type(screen.getByTestId('confirm-password-input'), 'password123');
+    await user.click(screen.getByTestId('submit-button'));
+
+    await waitFor(() => expect(localStorage.getItem('authToken')).toBe('new-token'));
+    await waitFor(() => expect(router.url).toBe('/'));
+  });
+
+  it('shows the API message when the login is already taken', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve({
+          ok: false,
+          status: 409,
+          json: async () => ({ message: 'Login already exists' }),
+        }),
+      ),
+    );
+    await renderRegister();
+
+    await user.type(screen.getByTestId('login-input'), 'newuser');
+    await user.type(screen.getByTestId('password-input'), 'password123');
+    await user.type(screen.getByTestId('confirm-password-input'), 'password123');
+    await user.click(screen.getByTestId('submit-button'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('error-message')).toHaveTextContent('Login already exists'),
+    );
+    expect(localStorage.getItem('authToken')).toBeNull();
+  });
+
+  it('redirects an already signed-in visitor to home', async () => {
+    localStorage.setItem('authToken', 'valid-token');
+    const { router } = await renderRegister();
+
+    await waitFor(() => expect(router.url).toBe('/'));
   });
 });
