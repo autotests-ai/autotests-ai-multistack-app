@@ -12,7 +12,7 @@ name: CI
 # publish raw results. publish-allure-report merges once for Pages/report, stops the
 # job-run and hands one launch URL to send-allure-notifications (all non-gating).
 # Pyramid layers (classical): unit · integration (no UI) · api · e2e · manual
-# Sideways FE: component (jsdom), one matrix leg per frontend module with a test runner.
+# Sideways FE: component (jsdom) — only the active FRONTEND (same teaching knob as deploy).
 # Visual (@Tag visual) inside e2e; baselines → e2e-update-baselines.
 # CD on main (two lanes; deploy host serialized via concurrency group).
 # needs = real dependencies only (not graph layout). Sonar gates deploy, not build.
@@ -104,9 +104,8 @@ env:
   # java|kotlin|python|go|javascript|typescript — unit-tests setup/run follows this
   BACKEND_LANG: java
   BACKEND_PORT: "8800"
-  # Deploy default only. All ten frontends in deploy/matrix.yaml are active and have a compose
-  # service; component-tests runs every module that has a test runner, but exactly one module
-  # is built, sonar-scanned and published to the stand — the one APP_URL / UI_URL point at.
+  # Deploy + component-tests + sonar-frontend target this one module. Other frontends stay
+  # active on the stand (matrix.yaml / compose) but are not CI-gated until FRONTEND flips.
   FRONTEND: frontend-typescript-react
   FRONTEND_DIR: frontend/typescript/frontend-typescript-react
   # Teaching tests module — selenide today; flip TESTS/TESTS_DIR/TESTS_LANG together
@@ -455,40 +454,14 @@ jobs:
           match "^(frontend/|${SHARED})" && emit frontend true || emit frontend false
           match "^(tests/|${SHARED})"    && emit tests true    || emit tests false
 
-  # One leg per active frontend module that ships a test runner, so activating a module in
-  # deploy/matrix.yaml also puts its suite on every PR. frontend-javascript-vanilla has no
-  # npm project (static files, covered by the browser layers) and is deliberately absent.
-  # Only FRONTEND (the deploy default) runs coverage and feeds sonar-frontend / build-frontend;
-  # `lint` and `typecheck` are --if-present because JS modules have no tsc and only some
-  # modules carry a linter config.
+  # Same teaching knob as deploy/sonar: only FRONTEND_DIR. Sibling frontends are not gated.
+  # Coverage always on (this job is the deploy default). lint/typecheck --if-present for JS.
+  # Do not point FRONTEND at frontend-javascript-vanilla (no npm/Vitest — browser layers only).
   component-tests:
     needs: testops-context
     if: always() && !cancelled()
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - id: frontend-javascript-react
-            dir: frontend/javascript/frontend-javascript-react
-          - id: frontend-javascript-angular
-            dir: frontend/javascript/frontend-javascript-angular
-          - id: frontend-javascript-vue
-            dir: frontend/javascript/frontend-javascript-vue
-          - id: frontend-javascript-jquery
-            dir: frontend/javascript/frontend-javascript-jquery
-          - id: frontend-typescript-vanilla
-            dir: frontend/typescript/frontend-typescript-vanilla
-          - id: frontend-typescript-react
-            dir: frontend/typescript/frontend-typescript-react
-            coverage: true
-          - id: frontend-typescript-angular
-            dir: frontend/typescript/frontend-typescript-angular
-          - id: frontend-typescript-vue
-            dir: frontend/typescript/frontend-typescript-vue
-          - id: frontend-typescript-jquery
-            dir: frontend/typescript/frontend-typescript-jquery
     env:
       LAYER: component
       ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
@@ -503,37 +476,37 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-          cache-dependency-path: ${{ matrix.dir }}/package-lock.json
+          cache-dependency-path: ${{ env.FRONTEND_DIR }}/package-lock.json
       - name: Install frontend npm dependencies
         run: npm ci
-        working-directory: ${{ matrix.dir }}
+        working-directory: ${{ env.FRONTEND_DIR }}
       - name: Lint frontend
         run: npm run lint --if-present
-        working-directory: ${{ matrix.dir }}
+        working-directory: ${{ env.FRONTEND_DIR }}
       - name: Typecheck frontend
         run: npm run typecheck --if-present
-        working-directory: ${{ matrix.dir }}
-      - name: Run component tests (Vitest)
+        working-directory: ${{ env.FRONTEND_DIR }}
+      - name: Run component tests (Vitest + coverage)
         id: run-tests
         env:
-          ALLURE_RESULTS: ${{ github.workspace }}/${{ matrix.dir }}/allure-results
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.FRONTEND_DIR }}/allure-results
         run: >-
           "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
-          npm test ${{ matrix.coverage && '-- --coverage' || '' }}
-        working-directory: ${{ matrix.dir }}
-      - if: matrix.coverage && steps.run-tests.outcome == 'success'
+          npm test -- --coverage
+        working-directory: ${{ env.FRONTEND_DIR }}
+      - if: steps.run-tests.outcome == 'success'
         uses: actions/upload-artifact@v7
         with:
           name: coverage-frontend
-          path: ${{ matrix.dir }}/coverage/
+          path: ${{ env.FRONTEND_DIR }}/coverage/
           if-no-files-found: error
       - name: Publish raw Allure results
         if: always()
         continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
-          name: allure-results-component-${{ matrix.id }}
-          path: ${{ matrix.dir }}/allure-results/**
+          name: allure-results-component
+          path: ${{ env.FRONTEND_DIR }}/allure-results/**
           if-no-files-found: ignore
           retention-days: 1
 

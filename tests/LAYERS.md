@@ -152,7 +152,7 @@ suite (`npm test` / `pytest` with `UI_URL` / `BASE_URL`) — no Gradle tag slice
 | Layer | Zone | Where | Selector | Run |
 |-------|------|-------|----------|-----|
 | unit | backend | active `BACKEND_DIR` (default `backend/java/backend-java-spring/`) | all backend unit tests (plain + Spring slices) | by `BACKEND_LANG`: gradle+JaCoCo · `pytest` · `go test` · `npm test` — see [backend/README.md](../backend/README.md) |
-| component | frontend | `frontend/{javascript,typescript}/frontend-*/src/test/` — one CI matrix leg per module with a test runner (all but static `frontend-javascript-vanilla`) | Vitest | `npm test` |
+| component | frontend | active `FRONTEND_DIR` only (default `frontend/typescript/frontend-typescript-react/`) — siblings not CI-gated | Vitest + coverage | `npm test -- --coverage` via `component-tests` |
 | integration | tests | `…/tests/integration/` (`BackendWiringIntegrationTests`, `AuthRoundTripIntegrationTests`, `SeedDataIntegrationTests`) | `@Tag("integration")` | java → `-DincludeTags=integration` via `integration-tests` (after `stand-ready`) |
 | api | tests | `…/tests/api/` (`AuthApiTests`, `ReferenceApiTests`) — HTTP contract of the shared JSON API | `@Tag("api")` (java today; other `TESTS_LANG` can grow the same slice) | java → `-DincludeTags=api` via `api-tests` (**parallel** to `integration-tests`, both after `stand-ready`); retarget any backend with `-DapiBaseUrl` / `-DapiHealthService` |
 | e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `visual` / `mock`) | `e2e-mock-tests` (push, `mock`); `e2e-tests` (after lanes + `sonar-tests` join) |
@@ -163,10 +163,10 @@ suite (`npm test` / `pytest` with `UI_URL` / `BASE_URL`) — no Gradle tag slice
 | Role | Module | Why |
 |------|--------|-----|
 | UX / product code (no Vitest) | `frontend-javascript-vanilla` | Teaching SPA without a framework runner — Session markup, auth wiring, copy |
-| Vitest / component-contract | `frontend-typescript-react` | CI deploy default (`:9811`); auth + Session behaviors other Vitest legs mirror |
+| Vitest / component + deploy | `frontend-typescript-react` | CI `FRONTEND` default (`:9811`); `component-tests` / sonar / build / deploy follow this knob |
 
-`frontend-javascript-react` is the JS twin of the Vitest reference — keep contract parity with `frontend-typescript-react`, do not treat it as a second canon.  
-Do **not** add Vitest to vanilla. Align new component cases from `frontend-typescript-react` (behavior), not from test counts.
+`frontend-javascript-react` is the JS twin — keep contract parity locally; CI does **not** matrix sibling frontends. Flip `FRONTEND` / `FRONTEND_DIR` together when the teaching default changes.  
+Do **not** add Vitest to vanilla; do **not** set `FRONTEND` to vanilla (no npm runner).
 
 Bare `./gradlew test` (java) runs **everything**, integration included — there are no hidden excludes.
 
@@ -180,7 +180,7 @@ Paths SSOT: `backend/scripts/paths.sh`. Module naming: [NAMING.md](NAMING.md).
 | `unit-tests` | **Application** (active backend — toolchain from `BACKEND_LANG`) |
 | `tests-harness-backend` | **Test tooling (BE lane)** — `ConfigReader` |
 | `tests-harness-frontend` | **Test tooling (FE lane)** — CSS helpers, HAR helpers |
-| `component-tests` | **Application** (every active frontend — Vitest, one leg each; the deploy default also runs coverage, whose thresholds gate regressions) |
+| `component-tests` | **Application** (active `FRONTEND_DIR` only — Vitest + coverage → `sonar-frontend` / `build-frontend`) |
 
 Students: product unit layers (`unit-tests` / `component-tests`); harness = helper checks that higher layers depend on.
 
