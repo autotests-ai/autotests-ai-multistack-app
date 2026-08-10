@@ -1,7 +1,7 @@
 /** Path matrix: /{backend}/{frontend}/ — runtime from location (shared dist × N backends). */
-const PATH_RE = /^\/(backend-[^/]+)\/(frontend-[^/]+)/;
+const PATH_RE = /^\/stack\/(backend-[^/]+)\/(frontend-[^/]+)/;
 /** Product mount without a backend prefix — container publish port and bare mount opens. */
-const MOUNT_RE = /^\/(frontend-[^/]+)/;
+const MOUNT_RE = /^\/stack\/(frontend-[^/]+)/;
 
 /** Product mount id (= matrix frontend.mount). Reported by the Health panel. */
 export const UI_MOUNT = 'frontend-typescript-jquery';
@@ -14,8 +14,8 @@ function resolveFromPathname(pathname: string) {
     return {
       backendId,
       frontendMount,
-      appBase: `/${backendId}/${frontendMount}`,
-      apiBase: `/${backendId}/api`,
+      appBase: `/stack/${backendId}/${frontendMount}`,
+      apiBase: `/stack/${backendId}/api`,
     };
   }
   const bare = pathname.match(MOUNT_RE);
@@ -23,7 +23,7 @@ function resolveFromPathname(pathname: string) {
     return {
       backendId: null as string | null,
       frontendMount: bare[1],
-      appBase: `/${bare[1]}`,
+      appBase: `/stack/${bare[1]}`,
       apiBase: '/api',
     };
   }

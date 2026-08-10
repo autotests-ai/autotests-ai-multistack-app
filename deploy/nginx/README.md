@@ -1,19 +1,28 @@
 # Host nginx (prod)
 
-One public host (`reference-app-copy.autotests.ai`):
+**Canonical URLs:** [autotests.ai/stack/](https://autotests.ai/stack/) — `/{backend}/{frontend}/` and `/{backend}/api/` under `/stack/`.
 
-- `/{backend}/api/**` → published backend port (8800 java · 8810 kotlin · 8820 flask · …)
-- `/{backend}/{frontend}/**` → that frontend's publish port (9800 / 9811 / 9813 · …), strip `/{backend}/{frontend}` → `/`
+**Retire hosts:** `reference-app-copy.autotests.ai`, `reference-app.autotests.ai` → **301** to `https://autotests.ai/stack$request_uri` (generated vhost).
 
-**Short URLs:** the same paths work on `autotests.ai` — nginx on the landing vhost returns **301** to `reference-app-copy.autotests.ai` (see `autotests-ai-app/deploy/nginx/autotests.ai.conf`, `location ~ ^/backend-`).
-
-The vhost is a plain file kept in git — edit [`reference-app-copy.autotests.ai.conf`](reference-app-copy.autotests.ai.conf) by hand and keep its upstream ports in sync with `docker-compose.yml`.
-
-Apply on the host:
+Generate from SSOT:
 
 ```bash
-sudo cp deploy/nginx/reference-app-copy.autotests.ai.conf /etc/nginx/sites-available/
-sudo nginx -t && sudo systemctl reload nginx
+python frontend/scripts/sync-stack-matrix.py
+python deploy/nginx/render_vhosts.py
 ```
 
-Deploy does not touch nginx — routing changes are a separate, manual step.
+Outputs in `deploy/nginx/generated/`:
+
+| File | Role |
+|------|------|
+| `reference-app-copy.autotests.ai.conf` | Retire vhost (301 → autotests.ai/stack/…) |
+| `autotests.ai-stack-upstreams.conf` | `upstream` blocks — include at `http{}` in autotests.ai |
+| `autotests.ai-stack-routes.conf` | `location` blocks — include inside autotests.ai `server{}` |
+
+Apply on box3:
+
+```bash
+sudo cp deploy/nginx/generated/reference-app-copy.autotests.ai.conf /etc/nginx/sites-available/
+cd /opt/autotests-ai-app && sudo bash deploy/nginx/sync-nginx.sh
+sudo nginx -t && sudo systemctl reload nginx
+```

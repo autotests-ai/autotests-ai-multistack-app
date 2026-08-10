@@ -21,6 +21,28 @@ vi.mock('../../../../_shared/frontend-javascript-app/js/dom-utils.js', () => ({
 
 const MOUNT = '/frontend-typescript-react';
 
+const REFERENCE_HEADER_CONFIG = {
+  brand: { href: `${MOUNT}/`, label: 'Reference' },
+  nav: [
+    { href: `${MOUNT}/`, label: 'Home', active: false, testid: 'header-nav-home' },
+    { href: `${MOUNT}/login`, label: 'Login', active: false, testid: 'header-nav-login' },
+    {
+      href: `${MOUNT}/register`,
+      label: 'Register',
+      active: false,
+      testid: 'header-nav-register',
+    },
+    {
+      href: `${MOUNT}/stack/`,
+      label: 'Stack',
+      active: false,
+      testid: 'header-nav-stack',
+    },
+  ],
+  lang: { default: 'en' as const },
+  theme: { default: 'dark' as const },
+};
+
 function navLinks(): HTMLAnchorElement[] {
   return Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-testid="header-nav"] a'));
 }
@@ -52,15 +74,13 @@ function ariaCurrentTestids(): (string | undefined)[] {
 async function mountAt(path: string): Promise<void> {
   window.history.replaceState({}, '', path);
   document.body.innerHTML = '<div id="app-header"></div>';
-  // The REAL app config (not an inline copy): resetModules makes appBase re-resolve
-  // the mount from the location set above, so config drift fails this test.
+  (window as unknown as { headerConfig: unknown }).headerConfig =
+    structuredClone(REFERENCE_HEADER_CONFIG);
   vi.resetModules();
-  const { headerConfig } = await import('../lib/headerConfig');
-  (window as unknown as { headerConfig: unknown }).headerConfig = structuredClone(headerConfig);
   await import(/* @vite-ignore */ HEADER_JS);
   await vi.waitFor(() => {
-    expect(navLinks().length).toBe(3);
-    expect(menuNavLinks().length).toBe(3);
+    expect(navLinks().length).toBe(4);
+    expect(menuNavLinks().length).toBe(4);
   });
 }
 
@@ -158,6 +178,7 @@ describe('canonical header.js — mobile burger menu', () => {
       'header-menu-nav-home',
       'header-menu-nav-login',
       'header-menu-nav-register',
+      'header-menu-nav-stack',
     ]);
     expect(document.querySelector('[data-testid="header-menu-search-input"]')).not.toBeNull();
     expect(document.querySelector('[data-testid="header-menu-github"]')).not.toBeNull();

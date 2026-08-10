@@ -10,8 +10,8 @@
     // <base> exists. document.write pins mount + critical assets during parse.
     // The same <base href> is what Angular's PathLocationStrategy strips.
     (function () {
-      var m = location.pathname.match(/^\/(backend-[^/]+\/frontend-[^/]+)/);
-      var fe = location.pathname.match(/^\/(frontend-[^/]+)/);
+      var m = location.pathname.match(/^\/stack\/(backend-[^/]+\/frontend-[^/]+)/);
+      var fe = location.pathname.match(/^\/stack\/(frontend-[^/]+)/);
       var mount = m ? '/' + m[1] + '/' : fe ? '/' + fe[1] + '/' : './';
       document.write('<base href="' + mount + '">');
       // __PIN_ASSETS__
