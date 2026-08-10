@@ -8,6 +8,7 @@ WORKDIR /build
 COPY frontend/typescript/frontend-typescript-react/ frontend/typescript/frontend-typescript-react/
 COPY ${REACT_UI}/ ${REACT_UI}/
 COPY frontend/_shared/frontend-javascript-app/css/ frontend/_shared/frontend-javascript-app/css/
+COPY frontend/_shared/poll-toggle.ts frontend/_shared/stack-matrix.ts frontend/_shared/
 WORKDIR /build/frontend/typescript/frontend-typescript-react
 RUN npm ci && npm run build
 
