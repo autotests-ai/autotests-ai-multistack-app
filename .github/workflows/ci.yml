@@ -11,6 +11,8 @@ name: CI
 # Allure: testops-context opens one shared TestOps job-run; test jobs stream live and
 # publish raw results. publish-allure-report merges once for Pages/report, stops the
 # job-run and hands one launch URL to send-allure-notifications (all non-gating).
+# TestOps UI rerun: workflow_dispatch + ALLURE_JOB_RUN_ID → ALLURE_KEEP_TESTPLAN=true.
+# Launch env axes: BROWSER / OS / ENDPOINT / VERSION(=sha) / BRANCH.
 # Pyramid layers (classical): unit · integration (no UI) · api · e2e · manual
 # Sideways FE: component (jsdom) — only the active FRONTEND (same teaching knob as deploy).
 # Visual (@Tag visual) inside e2e; baselines → e2e-update-baselines.
@@ -127,6 +129,15 @@ env:
   ALLURE_JOB_RUN_ID: ${{ inputs.ALLURE_JOB_RUN_ID || '' }}
   ALLURE_JOB_RUN_UID: ${{ github.run_id }}-${{ github.run_attempt }}
   ALLURE_USERNAME: ${{ inputs.ALLURE_USERNAME || '' }}
+  # TestOps UI rerun passes ALLURE_JOB_RUN_ID — keep selective testplan.
+  # Ordinary PR/push leave this false so -DincludeTags / layer jobs own selection.
+  ALLURE_KEEP_TESTPLAN: ${{ github.event_name == 'workflow_dispatch' && inputs.ALLURE_JOB_RUN_ID != '' }}
+  # Launch env axes for TestOps filters (real values — not sandbox toy OS/VERSION).
+  BROWSER: Chrome
+  OS: Linux
+  ENDPOINT: reference_prod
+  VERSION: ${{ github.sha }}
+  BRANCH: ${{ github.head_ref || github.ref_name }}
   SONAR_SCANNER_NPM_VERSION: "5.0.0"
   SONAR_QUALITY_GATE_TIMEOUT: "600"
   # ── Derived (literals — workflow env cannot nest env.*; keep in sync above) ─

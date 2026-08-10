@@ -219,7 +219,7 @@ Integration is **HTTP / wired backend**, no browser. Chrome checks belong under 
 |---------|------|
 | Pull request (blocks merge) | `unit-tests`, `component-tests`, `tests-harness-backend`, `tests-harness-frontend`, `e2e-mock-tests`, `sonar-backend`, `sonar-tests`, `sonar-frontend` |
 | Push to `main` | the PR set (`e2e-mock-tests` only when frontend changed) + build/deploy lanes → `stand-ready` → `integration-tests` **∥** `api-tests` → `e2e-tests` (visual excluded) → `manual-tests` (skip unless dispatch) |
-| `workflow_dispatch` | per-layer booleans `run_integration` / `run_api` / `run_mock` / `run_e2e` / `run_visual` / `run_manual`; `update_baselines=true` → `e2e-update-baselines`; `include_tags` / `exclude_tags` overrides on e2e; `deploy=none\|backend\|frontend\|both` |
+| `workflow_dispatch` | per-layer booleans `run_integration` / `run_api` / `run_mock` / `run_e2e` / `run_visual` / `run_manual`; `update_baselines=true` → `e2e-update-baselines`; `include_tags` / `exclude_tags` overrides on e2e; `deploy=none\|backend\|frontend\|both`; TestOps service inputs `ALLURE_JOB_RUN_ID` / `ALLURE_USERNAME` (leave blank unless TestOps UI triggers) |
 
 Active stack and prod URL are workflow `env` defaults in [`ci.yml`](../.github/workflows/ci.yml)
 (`BACKEND`, `BACKEND_LANG`, `FRONTEND`, `TESTS`, `TESTS_LANG`) — change once, jobs reuse them.
@@ -231,6 +231,28 @@ Frontend deploy does **not** wait on backend success.
 
 Nothing runs on a schedule. Full e2e has no PR job: a GitHub runner has no compose stack,
 and against prod it belongs to a deliberate dispatch run (`e2e-mock-tests` is the automatic UI gate).
+
+## TestOps (live upload + selective rerun)
+
+`testops-context` opens one shared launch/job-run; layer jobs stream via
+[`.github/scripts/run-with-allurectl.sh`](../.github/scripts/run-with-allurectl.sh)
+(`allurectl watch --job-run-child`). Missing `ALLURE_TOKEN` / `ALLURE_PROJECT_ID` disables
+live upload without failing tests — raw `allure-results` still publish.
+
+| Mode | Selection | `ALLURE_KEEP_TESTPLAN` |
+|------|-----------|------------------------|
+| PR / push / ordinary dispatch | CI layer filters (`-DincludeTags` / npm scripts) | `false` — any TestOps testplan is stripped |
+| TestOps UI rerun (`workflow_dispatch` + non-empty `ALLURE_JOB_RUN_ID`) | selective plan from TestOps | `true` — plan kept |
+
+Launch env axes (filters / dashboards in TestOps; map custom fields there if needed):
+
+| Env | Value |
+|-----|-------|
+| `BROWSER` | `Chrome` |
+| `OS` | `Linux` |
+| `ENDPOINT` | `reference_prod` |
+| `VERSION` | `github.sha` of the run |
+| `BRANCH` | `github.head_ref` or `github.ref_name` |
 
 ## Alt runners (side stacks)
 

@@ -61,6 +61,8 @@ exec allurectl --http-timeout 1m watch \
         unset ALLURE_TESTPLAN_PATH
       fi
       rm -f .allure/testplan.json
+    else
+      echo "Keeping TestOps testplan (ALLURE_KEEP_TESTPLAN=true)"
     fi
     exec "$@"
   ' bash "$@"

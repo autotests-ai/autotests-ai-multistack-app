@@ -224,7 +224,9 @@ One workflow — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 | `APP_DIR` | `/home/reference_app_copy/reference-app-copy` |
 | Deployed stacks | `env.BACKEND` + `env.FRONTEND` in `ci.yml` (defaults: java-spring + typescript-react) |
 
-Allure report, TestOps and notifications will be added later as ordinary jobs after `prod-api`.
+Allure: `testops-context` + live `allurectl watch` on test jobs → `publish-allure-report` (Pages) →
+`send-allure-notifications` (all non-gating). TestOps selective rerun: dispatch with
+`ALLURE_JOB_RUN_ID` keeps the testplan — see [tests/LAYERS.md](tests/LAYERS.md)#testops-live-upload--selective-rerun.
 
 ### GitHub secrets & variables
 
@@ -233,6 +235,9 @@ Allure report, TestOps and notifications will be added later as ordinary jobs af
 | `DEPLOY_SSH_KEY` | secret | **project-only** ed25519 for `reference_app_copy@212.92.101.15` (local: `~/.ssh/reference_app_copy_deploy`; not shared with `selenoid` / sibling apps) |
 | `DEPLOY_HOST` | variable | `212.92.101.15` — required, no fallback in the workflow |
 | `DEPLOY_USER` | variable | `reference_app_copy` |
+| `ALLURE_TOKEN` | secret | TestOps API token (live upload; optional — without it tests still run) |
+| `ALLURE_PROJECT_ID` | variable | TestOps project id |
+| `ALLURE_ENDPOINT` | variable | optional; default `https://allure.autotests.cloud` |
 
 GHCR needs no extra secret: `build` and `deploy` both authenticate with the run's `GITHUB_TOKEN` — `build` under `packages: write`, `deploy` under `packages: read`, because a freshly published package is private.
 
