@@ -1720,6 +1720,13 @@ jobs:
             echo "No merged Allure results — skip publish"
           fi
 
+      # One canonical environment.properties after merge (layer jobs may overwrite each other).
+      - name: Write launch environment axes
+        if: steps.merged-results.outputs.has_results == 'true'
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+        run: bash .github/scripts/write-allure-environment.sh
+
       - name: Restore Allure history
         if: steps.merged-results.outputs.has_results == 'true'
         run: |

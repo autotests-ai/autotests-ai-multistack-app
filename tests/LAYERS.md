@@ -244,7 +244,9 @@ live upload without failing tests — raw `allure-results` still publish.
 | PR / push / ordinary dispatch | CI layer filters (`-DincludeTags` / npm scripts) | `false` — any TestOps testplan is stripped |
 | TestOps UI rerun (`workflow_dispatch` + non-empty `ALLURE_JOB_RUN_ID`) | selective plan from TestOps | `true` — plan kept |
 
-Launch env axes (filters / dashboards in TestOps; map custom fields there if needed):
+Launch env axes → `allure-results/environment.properties` (TestOps **Окружение** /
+Report environment). Written by [`.github/scripts/write-allure-environment.sh`](../.github/scripts/write-allure-environment.sh)
+from workflow `env` (before/after each test job + once after merge in `publish-allure-report`):
 
 | Env | Value |
 |-----|-------|
@@ -253,6 +255,8 @@ Launch env axes (filters / dashboards in TestOps; map custom fields there if nee
 | `ENDPOINT` | `reference_prod` |
 | `VERSION` | `github.sha` of the run |
 | `BRANCH` | `github.head_ref` or `github.ref_name` |
+
+Look under the test/launch **Окружение** block (not Custom fields — those are Epic/Feature/Suite from code).
 
 ## Alt runners (side stacks)
 

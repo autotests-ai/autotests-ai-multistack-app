@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 # Stream Allure results when the shared TestOps context is available.
 # Test execution is always the source of truth: missing/broken TestOps falls
-# back to the unchanged command, and exec preserves its exit code.
+# back to the unchanged command, and the exit code of the test command is kept.
 #
 # Meta (layer/suite/feature) comes from the autotest code labels in results.
 # watch only uploads — it must not decide which tests run via a selective plan.
+#
+# Launch axes (BROWSER/OS/ENDPOINT/VERSION/BRANCH) → environment.properties
+# via write-allure-environment.sh (before + after tests; survives gradle clean).
 set -euo pipefail
 
 if [[ "$#" -eq 0 ]]; then
@@ -12,13 +15,35 @@ if [[ "$#" -eq 0 ]]; then
   exit 2
 fi
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+WRITE_ENV="${SCRIPT_DIR}/write-allure-environment.sh"
+export WRITE_ALLURE_ENVIRONMENT="$WRITE_ENV"
+
+write_env() {
+  if [[ -z "${ALLURE_RESULTS:-}" ]]; then
+    return 0
+  fi
+  bash "$WRITE_ENV" || true
+}
+
+run_tests_with_env() {
+  write_env
+  set +e
+  "$@"
+  local code=$?
+  set -e
+  write_env
+  return "$code"
+}
+
 fallback() {
   if [[ "${GITHUB_ACTIONS:-false}" == "true" ]]; then
     echo "::warning title=TestOps live upload unavailable::Running tests without allurectl; raw results remain available for fallback."
   else
     echo "TestOps live upload unavailable — running tests without allurectl"
   fi
-  exec "$@"
+  run_tests_with_env "$@"
+  exit $?
 }
 
 if [[ "${ALLURE_LIVE_ENABLED:-false}" != "true" ]] ||
@@ -48,7 +73,8 @@ echo "Streaming Allure results to launch ${ALLURE_LAUNCH_ID}, job-run ${ALLURE_J
 # child env. CI layer jobs already filter with -DincludeTags / npm scripts — keeping the
 # plan makes new tests (e.g. @Tag("integration") not yet in TestOps) run as 0 while the
 # job stays green. Opt into the plan only with ALLURE_KEEP_TESTPLAN=true (TestOps reruns).
-exec allurectl --http-timeout 1m watch \
+write_env
+allurectl --http-timeout 1m watch \
   --job-run-child \
   --continue-on-error \
   -- \
@@ -64,5 +90,16 @@ exec allurectl --http-timeout 1m watch \
     else
       echo "Keeping TestOps testplan (ALLURE_KEEP_TESTPLAN=true)"
     fi
-    exec "$@"
+    if [[ -n "${WRITE_ALLURE_ENVIRONMENT:-}" ]]; then
+      bash "${WRITE_ALLURE_ENVIRONMENT}" || true
+    fi
+    set +e
+    "$@"
+    code=$?
+    set -e
+    if [[ -n "${WRITE_ALLURE_ENVIRONMENT:-}" ]]; then
+      bash "${WRITE_ALLURE_ENVIRONMENT}" || true
+    fi
+    exit "$code"
   ' bash "$@"
+exit $?
