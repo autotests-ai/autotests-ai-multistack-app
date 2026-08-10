@@ -245,8 +245,9 @@ live upload without failing tests — raw `allure-results` still publish.
 | TestOps UI rerun (`workflow_dispatch` + non-empty `ALLURE_JOB_RUN_ID`) | selective plan from TestOps | `true` — plan kept |
 
 Launch env axes → `allure-results/environment.properties` (TestOps **Окружение** /
-Report environment). Written by [`.github/scripts/write-allure-environment.sh`](../.github/scripts/write-allure-environment.sh)
-from workflow `env` (before/after each test job + once after merge in `publish-allure-report`):
+Report environment). Written once after each test job by
+[`.github/scripts/write-allure-environment.sh`](../.github/scripts/write-allure-environment.sh)
+(and again after artifact merge in `publish-allure-report`), from workflow `env`:
 
 | Env | Value |
 |-----|-------|

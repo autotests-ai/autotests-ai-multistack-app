@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
-# Stream Allure results when the shared TestOps context is available.
-# Test execution is always the source of truth: missing/broken TestOps falls
-# back to the unchanged command, and the exit code of the test command is kept.
+# Stream Allure results to TestOps when the shared job-run context is available.
 #
-# Meta (layer/suite/feature) comes from the autotest code labels in results.
-# watch only uploads — it must not decide which tests run via a selective plan.
-#
-# Launch axes (BROWSER/OS/ENDPOINT/VERSION/BRANCH) → environment.properties
-# via write-allure-environment.sh (before + after tests; survives gradle clean).
+# Contract for students:
+#   1. The test command exit code always wins.
+#   2. Missing/broken TestOps → same command without allurectl (raw results stay).
+#   3. Layer/suite/feature meta comes from test-code labels, not from this wrapper.
+#   4. Launch axes (BROWSER/OS/ENDPOINT/VERSION/BRANCH) are written once *after*
+#      the run into allure-results/environment.properties (survives `gradle clean`).
 set -euo pipefail
 
 if [[ "$#" -eq 0 ]]; then
@@ -17,22 +16,21 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WRITE_ENV="${SCRIPT_DIR}/write-allure-environment.sh"
-export WRITE_ALLURE_ENVIRONMENT="$WRITE_ENV"
 
-write_env() {
-  if [[ -z "${ALLURE_RESULTS:-}" ]]; then
-    return 0
+write_allure_environment() {
+  [[ -n "${ALLURE_RESULTS:-}" ]] || return 0
+  if ! bash "$WRITE_ENV"; then
+    echo "warning: failed to write environment.properties (tests exit code unchanged)" >&2
   fi
-  bash "$WRITE_ENV" || true
 }
 
-run_tests_with_env() {
-  write_env
+# Run the payload, then write Environment — even when tests failed.
+run_then_write_env() {
   set +e
   "$@"
   local code=$?
   set -e
-  write_env
+  write_allure_environment
   return "$code"
 }
 
@@ -42,7 +40,7 @@ fallback() {
   else
     echo "TestOps live upload unavailable — running tests without allurectl"
   fi
-  run_tests_with_env "$@"
+  run_then_write_env "$@"
   exit $?
 }
 
@@ -67,19 +65,19 @@ for name in "${required[@]}"; do
 done
 
 echo "Streaming Allure results to launch ${ALLURE_LAUNCH_ID}, job-run ${ALLURE_JOB_RUN_ID}"
-# Child watchers must not stop the shared parent; publish-allure-report owns that lifecycle.
-#
-# allurectl watch may drop a TestOps selective testplan (existing cases only) into the
-# child env. CI layer jobs already filter with -DincludeTags / npm scripts — keeping the
-# plan makes new tests (e.g. @Tag("integration") not yet in TestOps) run as 0 while the
-# job stays green. Opt into the plan only with ALLURE_KEEP_TESTPLAN=true (TestOps reruns).
-write_env
+
+# allurectl watch may inject a selective testplan (existing cases only).
+# Ordinary CI already filters with -DincludeTags / npm scripts — keeping the plan
+# would skip brand-new tests and still look green. Keep the plan only when
+# TestOps UI reruns set ALLURE_KEEP_TESTPLAN=true.
+export WRITE_ALLURE_ENVIRONMENT="$WRITE_ENV"
 allurectl --http-timeout 1m watch \
   --job-run-child \
   --continue-on-error \
   -- \
   bash -c '
     set -euo pipefail
+
     if [[ "${ALLURE_KEEP_TESTPLAN:-false}" != "true" ]]; then
       if [[ -n "${ALLURE_TESTPLAN_PATH:-}" ]]; then
         echo "Ignoring TestOps testplan (${ALLURE_TESTPLAN_PATH}); CI layer filters own the selection"
@@ -90,16 +88,15 @@ allurectl --http-timeout 1m watch \
     else
       echo "Keeping TestOps testplan (ALLURE_KEEP_TESTPLAN=true)"
     fi
-    if [[ -n "${WRITE_ALLURE_ENVIRONMENT:-}" ]]; then
-      bash "${WRITE_ALLURE_ENVIRONMENT}" || true
-    fi
+
     set +e
     "$@"
     code=$?
     set -e
+
     if [[ -n "${WRITE_ALLURE_ENVIRONMENT:-}" ]]; then
-      bash "${WRITE_ALLURE_ENVIRONMENT}" || true
+      bash "${WRITE_ALLURE_ENVIRONMENT}" \
+        || echo "warning: failed to write environment.properties (tests exit code unchanged)" >&2
     fi
     exit "$code"
   ' bash "$@"
-exit $?

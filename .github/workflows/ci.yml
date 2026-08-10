@@ -1720,7 +1720,7 @@ jobs:
             echo "No merged Allure results — skip publish"
           fi
 
-      # One canonical environment.properties after merge (layer jobs may overwrite each other).
+      # Canonical environment.properties after merge (one file for Pages / fallback upload).
       - name: Write launch environment axes
         if: steps.merged-results.outputs.has_results == 'true'
         env:

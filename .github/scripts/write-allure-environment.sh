@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Write CI launch axes into allure-results/environment.properties so Report 3 /
-# TestOps show them under «Окружение». No-op when ALLURE_RESULTS or all axes unset.
+# Write CI launch axes into allure-results/environment.properties
+# so Allure Report / TestOps show them under «Окружение».
+#
+# Reads workflow env (see ci.yml). No-op when ALLURE_RESULTS or all axes are unset.
 set -euo pipefail
 
 if [[ -z "${ALLURE_RESULTS:-}" ]]; then
@@ -13,19 +15,15 @@ props="${ALLURE_RESULTS}/environment.properties"
 tmp="$(mktemp)"
 trap 'rm -f "$tmp"' EXIT
 
-append() {
-  local key="$1" val="${2:-}"
-  [[ -n "$val" ]] || return 0
+# Keep in sync with workflow env axes in .github/workflows/ci.yml.
+axes=(BROWSER OS ENDPOINT VERSION BRANCH)
+
+for key in "${axes[@]}"; do
+  val="${!key:-}"
+  [[ -n "$val" ]] || continue
   val="${val//$'\n'/ }"
   printf '%s=%s\n' "$key" "$val" >> "$tmp"
-}
-
-# Keys match workflow env / sandbox-style axes (visible in TestOps Environment).
-append BROWSER "${BROWSER:-}"
-append OS "${OS:-}"
-append ENDPOINT "${ENDPOINT:-}"
-append VERSION "${VERSION:-}"
-append BRANCH "${BRANCH:-}"
+done
 
 if [[ ! -s "$tmp" ]]; then
   echo "write-allure-environment: no axes set — skip"
@@ -34,5 +32,4 @@ fi
 
 mv "$tmp" "$props"
 trap - EXIT
-echo "Wrote Allure environment → ${props}"
-cat "$props"
+echo "Wrote ${props} ($(wc -l <"$props" | tr -d ' ') keys)"
