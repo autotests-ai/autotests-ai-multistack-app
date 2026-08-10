@@ -13,7 +13,7 @@ function envBool(name, defaultValue = false) {
  */
 const BASE_URL = `${(
   process.env.UI_URL ||
-  'https://reference-app-copy.autotests.ai/backend-java-spring/frontend-typescript-react'
+  'https://autotests.ai/stack/backend-java-spring/frontend-typescript-react'
 ).replace(/\/+$/, '')}/`;
 
 /** API root: the backend mount above the frontend segment (or the origin on root deploys). */

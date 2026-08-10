@@ -143,11 +143,12 @@ env:
   SONAR_SCANNER_NPM_VERSION: "5.0.0"
   SONAR_QUALITY_GATE_TIMEOUT: "600"
   # ── Derived (literals — workflow env cannot nest env.*; keep in sync above) ─
-  PUBLIC_HOST: reference-app-copy.autotests.ai
-  APP_URL: https://reference-app-copy.autotests.ai/backend-java-spring/frontend-typescript-react/
+  PUBLIC_HOST: autotests.ai
+  STACK_MOUNT: stack
+  APP_URL: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
   # Playwright → UI_URL; pytest → BASE_URL (same stand URL)
-  UI_URL: https://reference-app-copy.autotests.ai/backend-java-spring/frontend-typescript-react/
-  BASE_URL: https://reference-app-copy.autotests.ai/backend-java-spring/frontend-typescript-react/
+  UI_URL: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+  BASE_URL: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
   GHCR_BACKEND_PACKAGE: reference-app-copy-backend-java-spring
   GHCR_FRONTEND_PACKAGE: reference-app-copy-frontend-typescript-react
   RUN_LABEL: "${{ github.repository }} #${{ github.run_number }}"
@@ -1202,7 +1203,7 @@ jobs:
     steps:
       - name: Verify live stand (UI + API health)
         env:
-          API_HEALTH: https://${{ env.PUBLIC_HOST }}/${{ env.BACKEND }}/api/health
+          API_HEALTH: https://${{ env.PUBLIC_HOST }}/${{ env.STACK_MOUNT }}/${{ env.BACKEND }}/api/health
         run: |
           set -euo pipefail
           echo "==> UI ${UI_URL}"
