@@ -18,7 +18,7 @@ public class HomePage {
 
     /** Mirrors frontend authTokenStorageKey (backend-scoped on matrix paths). */
     private static final String AUTH_TOKEN_KEY_JS =
-            "var m=location.pathname.match(/^\\/(backend-[^/]+)\\//);"
+            "var m=location.pathname.match(/\\/(backend-[^/]+)\\//);"
                     + "return m ? 'authToken:' + m[1] : 'authToken';";
 
     private final SelenideElement layout = $("[data-testid='reference-layout']");
