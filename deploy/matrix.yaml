@@ -13,6 +13,7 @@
 # Path routing SSOT: deploy/nginx (host). Local: hit published ports directly.
 
 public_host: reference-app-copy.autotests.ai
+short_url_host: autotests.ai
 domain_suffix: reference-app-copy.autotests.ai
 
 # Shared build overlays (copied into each frontend image).

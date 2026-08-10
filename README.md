@@ -50,6 +50,8 @@ https://reference-app-copy.autotests.ai/{backend}/{frontend}/
 https://reference-app-copy.autotests.ai/{backend}/api/
 ```
 
+Short alias (301 redirect, same path): `https://autotests.ai/{backend}/{frontend}/` · `https://autotests.ai/{backend}/api/`
+
 - **first path segment** → which API answers `/{backend}/api/**`
 - **second path segment** → which frontend container answers (host nginx → publish port)
 - Frontends resolve `APP_BASE` / `API_BASE` from the URL — same `dist/` works under every backend prefix
@@ -59,7 +61,7 @@ Examples:
 - […/backend-java-spring/frontend-typescript-react/](https://reference-app-copy.autotests.ai/backend-java-spring/frontend-typescript-react/)
 - […/backend-java-spring/frontend-typescript-vue/](https://reference-app-copy.autotests.ai/backend-java-spring/frontend-typescript-vue/)
 - `…/backend-python-flask/frontend-typescript-react/`
-- `…/backend-python-fastapi/frontend-typescript-react/`
+- […/backend-python-fastapi/frontend-typescript-react/](https://autotests.ai/backend-python-fastapi/frontend-typescript-react/) (short URL → canonical host)
 - `…/backend-python-django/frontend-javascript-vanilla/`
 
 Host `/` is empty (404). One public host — no backend subdomains.
