@@ -78,7 +78,7 @@ flowchart TB
   CH[changes]
 
   TOC --> UNIT[unit-tests]
-  TOC --> COMP[component-tests<br/>active FRONTEND only]
+  TOC --> COMP[component-tests]
   TOC --> HB[tests-harness-backend]
   TOC --> HF[tests-harness-frontend]
   TOC --> MOCK[e2e-mock-tests]
@@ -131,7 +131,7 @@ flowchart TB
 | `unit-tests` | `BACKEND_DIR` — command by `BACKEND_LANG` (gradle/JaCoCo, pytest, `go test`, or `npm test`) |
 | `tests-harness-backend` | `TESTS_DIR` — java: `-DincludeTags=harness-backend` + JaCoCo (`ConfigReader`); every PR + push (no deploy) |
 | `tests-harness-frontend` | `TESTS_DIR` — java: `-DincludeTags=harness-frontend` + JaCoCo (CSS/HAR helpers); every PR + push (no deploy) |
-| `component-tests` | active `FRONTEND_DIR` only (no sibling matrix) — `npm test -- --coverage` |
+| `component-tests` | `FRONTEND_DIR` — `npm test -- --coverage` |
 | `integration-tests` | `TESTS_DIR` — after `stand-ready` (java: `-DincludeTags=integration`); wiring of *this* deploy; ∥ `api-tests` |
 | `api-tests` | `TESTS_DIR` — after `stand-ready` (java: `-DincludeTags=api`); HTTP contract; ∥ `integration-tests` |
 | `e2e-mock-tests` | every PR; on `main` when frontend changed — java: `-Denv=reference_mock -DincludeTags=mock` (stub API on runner) |
