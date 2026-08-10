@@ -70,7 +70,7 @@ Path constants: `backend/scripts/paths.sh`
 
 Canon: [tests/LAYERS.md](tests/LAYERS.md) · all jobs live in [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 
-Full CI graph (`needs` from `ci.yml`; component matrix collapsed to one node; dotted edges from `changes` are path filters / skip logic):
+Full CI graph (`needs` from `ci.yml`; dotted edges from `changes` are path filters / skip logic):
 
 ```mermaid
 flowchart TB
@@ -78,7 +78,7 @@ flowchart TB
   CH[changes]
 
   TOC --> UNIT[unit-tests]
-  TOC --> COMP[component-tests<br/>matrix FE]
+  TOC --> COMP[component-tests<br/>active FRONTEND only]
   TOC --> HB[tests-harness-backend]
   TOC --> HF[tests-harness-frontend]
   TOC --> MOCK[e2e-mock-tests]
@@ -131,7 +131,7 @@ flowchart TB
 | `unit-tests` | `BACKEND_DIR` — command by `BACKEND_LANG` (gradle/JaCoCo, pytest, `go test`, or `npm test`) |
 | `tests-harness-backend` | `TESTS_DIR` — java: `-DincludeTags=harness-backend` + JaCoCo (`ConfigReader`); every PR + push (no deploy) |
 | `tests-harness-frontend` | `TESTS_DIR` — java: `-DincludeTags=harness-frontend` + JaCoCo (CSS/HAR helpers); every PR + push (no deploy) |
-| `component-tests` | `FRONTEND_DIR` — `npm test` |
+| `component-tests` | active `FRONTEND_DIR` only (no sibling matrix) — `npm test -- --coverage` |
 | `integration-tests` | `TESTS_DIR` — after `stand-ready` (java: `-DincludeTags=integration`); wiring of *this* deploy; ∥ `api-tests` |
 | `api-tests` | `TESTS_DIR` — after `stand-ready` (java: `-DincludeTags=api`); HTTP contract; ∥ `integration-tests` |
 | `e2e-mock-tests` | every PR; on `main` when frontend changed — java: `-Denv=reference_mock -DincludeTags=mock` (stub API on runner) |
