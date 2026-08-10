@@ -70,25 +70,80 @@ Path constants: `backend/scripts/paths.sh`
 
 Canon: [tests/LAYERS.md](tests/LAYERS.md) · all jobs live in [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 
+Full CI graph (`needs` from `ci.yml`; component matrix collapsed to one node; dotted edges from `changes` are path filters / skip logic):
+
+```mermaid
+flowchart TB
+  TOC[testops-context]
+  CH[changes]
+
+  TOC --> UNIT[unit-tests]
+  TOC --> COMP[component-tests<br/>matrix FE]
+  TOC --> HB[tests-harness-backend]
+  TOC --> HF[tests-harness-frontend]
+  TOC --> MOCK[e2e-mock-tests]
+
+  CH -.-> MOCK
+  CH -.-> BB
+  CH -.-> BF
+  CH -.-> READY
+
+  UNIT --> SB[sonar-backend]
+  COMP --> SF[sonar-frontend]
+  HB --> ST[sonar-tests]
+  HF --> ST
+
+  UNIT --> BB[build-backend]
+  COMP --> BF[build-frontend]
+  BB & BF --> GHCR[ghcr-retention]
+
+  BB --> DB[deploy-backend]
+  SB --> DB
+
+  BF --> DF[deploy-frontend]
+  SF --> DF
+  MOCK --> DF
+
+  DB --> READY[stand-ready]
+  DF --> READY
+
+  READY --> INT[integration-tests]
+  READY --> API[api-tests]
+  TOC --> INT
+  TOC --> API
+
+  INT --> E2E[e2e-tests]
+  API --> E2E
+  TOC --> E2E
+
+  E2E --> BASE[e2e-update-baselines<br/>dispatch]
+  E2E --> MAN[manual-tests<br/>dispatch]
+  READY --> MAN
+  TOC --> BASE
+  TOC --> MAN
+
+  UNIT & COMP & HB & HF & MOCK & INT & API & E2E & BASE & MAN --> PUB[publish-allure-report]
+  PUB --> NTF[send-allure-notifications]
+```
+
 | Job | Where |
 |-----|-------|
 | `unit-tests` | `BACKEND_DIR` — command by `BACKEND_LANG` (gradle/JaCoCo, pytest, `go test`, or `npm test`) |
-| `tests-harness-backend` | `TESTS_DIR` — java: `-DincludeTags=harness-backend` + JaCoCo (`ConfigReader`); PR without deploy; on `main` after `deploy-backend`, before `integration-tests` |
-| `tests-harness-frontend` | `TESTS_DIR` — java: `-DincludeTags=harness-frontend` + JaCoCo (CSS/HAR helpers); PR without deploy; on `main` after `deploy-frontend`, before `e2e-mock-tests` |
+| `tests-harness-backend` | `TESTS_DIR` — java: `-DincludeTags=harness-backend` + JaCoCo (`ConfigReader`); every PR + push (no deploy) |
+| `tests-harness-frontend` | `TESTS_DIR` — java: `-DincludeTags=harness-frontend` + JaCoCo (CSS/HAR helpers); every PR + push (no deploy) |
 | `component-tests` | `FRONTEND_DIR` — `npm test` |
-| `integration-tests` | `TESTS_DIR` — after harness-backend (java: `-DincludeTags=integration`); dispatch `layers=integration\|api\|all` |
-| `api-tests` | `TESTS_DIR` — after `integration-tests` (java: `-DincludeTags=api`); dispatch `layers=api\|all` |
-| `e2e-mock-tests` | after harness-frontend on push — java: `-Denv=reference_mock -DincludeTags=mock` (stub API on runner) |
+| `integration-tests` | `TESTS_DIR` — after `stand-ready` (java: `-DincludeTags=integration`); wiring of *this* deploy; ∥ `api-tests` |
+| `api-tests` | `TESTS_DIR` — after `stand-ready` (java: `-DincludeTags=api`); HTTP contract; ∥ `integration-tests` |
+| `e2e-mock-tests` | every PR; on `main` when frontend changed — java: `-Denv=reference_mock -DincludeTags=mock` (stub API on runner) |
 | `sonar-tests` | after **both** harness jobs (PR + main); umbrella harness + tests-module Sonar gate |
-| `e2e-tests` | after `api-tests` + `e2e-mock-tests` + `sonar-tests` — java: `-DincludeTags=e2e`; dispatch `layers=e2e\|all` |
+| `e2e-tests` | after `integration-tests` **and** `api-tests` — java: `-DincludeTags=e2e` |
 | `e2e-update-baselines` | dispatch `update_baselines=true` — java: `-DincludeTags=visual -DupdateBaselines=true` |
-| `manual-tests` | after `e2e-tests`; dispatch `layers=manual\|all` — java: `-DincludeTags=manual` |
+| `manual-tests` | after `e2e-tests` + `stand-ready`; dispatch only — java: `-DincludeTags=manual` |
 
-`unit-tests`, `component-tests`, and both harness jobs block a pull request. Browser layers
-and extra language runners have no scheduled job — dispatch with `layers`
-(`integration` \| `api` \| `e2e` \| `manual` \| `all`) when you want them. Stack defaults
-(`BACKEND` / `BACKEND_LANG` / `FRONTEND` / `TESTS` / `TESTS_LANG`) live once at the top of
-[`ci.yml`](.github/workflows/ci.yml).
+`unit-tests`, `component-tests`, both harness jobs, and `e2e-mock-tests` gate a pull request.
+Prod layers (`integration` / `api` / `e2e`) run on push to `main` after deploy, or via
+`workflow_dispatch` booleans. Stack defaults (`BACKEND` / `BACKEND_LANG` / `FRONTEND` /
+`TESTS` / `TESTS_LANG`) live once at the top of [`ci.yml`](.github/workflows/ci.yml).
 
 ## Ports (local = prod host upstream)
 
