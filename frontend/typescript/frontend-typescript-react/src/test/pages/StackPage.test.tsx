@@ -80,7 +80,7 @@ describe('StackPage', () => {
   it('backend/frontend open links stay path-only (no ?tests=)', async () => {
     const locationSpy = vi.spyOn(window, 'location', 'get').mockReturnValue({
       ...window.location,
-      pathname: '/backend-java-spring/frontend-typescript-react/stack/',
+      pathname: '/stack/backend-java-spring/frontend-typescript-react/',
       search: '?tests=tests-java-gradle-junit5-allure3-selenide',
     } as Location);
 
@@ -94,14 +94,14 @@ describe('StackPage', () => {
       const frontendLink = screen.getByTestId('stack-frontend-frontend-typescript-react');
       expect(frontendLink).toHaveAttribute(
         'href',
-        '/backend-java-spring/frontend-typescript-react/stack/',
+        '/stack/backend-java-spring/frontend-typescript-react/',
       );
       expect(frontendLink.getAttribute('href')).not.toContain('?');
 
       const backendLink = screen.getByTestId('stack-backend-backend-java-spring');
       expect(backendLink).toHaveAttribute(
         'href',
-        '/backend-java-spring/frontend-typescript-react/stack/',
+        '/stack/backend-java-spring/frontend-typescript-react/',
       );
       expect(backendLink.getAttribute('href')).not.toContain('?');
 
