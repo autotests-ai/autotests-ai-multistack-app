@@ -7,6 +7,7 @@ import {
   componentTestsMeta,
   componentTestsPath,
   type FrontendModule,
+  effectiveStackPair,
   fetchStackMatrix,
   findById,
   GITHUB_MARK_PATH,
@@ -90,10 +91,12 @@ function ModuleRows({
               ? `${(item as BackendModule).language || 'backend'} · ${status}`
               : `${(item as FrontendModule).kind || 'frontend'} · ${status}`;
           const isCurrent = kind === 'backend' ? id === currentBackend : id === currentFrontend;
-          const targetBackend = kind === 'backend' ? id : currentBackend;
-          const targetFrontend = kind === 'frontend' ? id : currentFrontend;
+          const { backendId: targetBackend, frontendId: targetFrontend } = effectiveStackPair(
+            kind === 'backend' ? id : currentBackend,
+            kind === 'frontend' ? id : currentFrontend,
+          );
           const href = stackHref(targetBackend, targetFrontend);
-          const openable = isOpenable(status) && Boolean(targetBackend && targetFrontend);
+          const openable = isOpenable(status);
 
           return (
             <tr key={id} className={isCurrent ? 'stack-page__row--active' : undefined}>
@@ -248,8 +251,12 @@ function TestsBoard({
           const layers = (item.layers || []).join(' · ');
           const meta = `${item.language || 'tests'} · ${status}`;
           const isCurrent = id === currentTests;
-          const selectable = isOpenable(status) && Boolean(currentBackend && currentFrontend);
-          const href = stackHref(currentBackend, currentFrontend, id);
+          const { backendId: pairBackend, frontendId: pairFrontend } = effectiveStackPair(
+            currentBackend,
+            currentFrontend,
+          );
+          const selectable = isOpenable(status);
+          const href = stackHref(pairBackend, pairFrontend, id);
           return (
             <tr key={id} className={isCurrent ? 'stack-page__row--active' : undefined}>
               <td>

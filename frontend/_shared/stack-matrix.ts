@@ -8,6 +8,21 @@
 /** Canonical URL prefix — https://autotests.ai/stack/{backend}/{frontend}/ */
 export const STACK_PREFIX = '/stack';
 
+/** CI / deploy defaults — used when the URL has no pair yet (open links still work). */
+export const DEFAULT_STACK_BACKEND = 'backend-java-spring';
+export const DEFAULT_STACK_FRONTEND = 'frontend-typescript-react';
+
+/** Effective pair for stack hrefs when only one side is selected in the URL. */
+export function effectiveStackPair(
+  backendId: string | null,
+  frontendId: string | null,
+): { backendId: string; frontendId: string } {
+  return {
+    backendId: backendId || DEFAULT_STACK_BACKEND,
+    frontendId: frontendId || DEFAULT_STACK_FRONTEND,
+  };
+}
+
 const PATH_RE = /^\/stack\/(backend-[^/]+)\/(frontend-[^/]+)/;
 
 /** Nested product repo on GitHub — tree URLs for matrix `module` paths. */

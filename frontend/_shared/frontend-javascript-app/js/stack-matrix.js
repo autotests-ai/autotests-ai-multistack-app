@@ -7,6 +7,18 @@ import { mountHeaderPollToggle, POLL_DEFAULT_MS } from './poll-toggle.js';
 
 const STACK_PREFIX = '/stack';
 
+/** CI / deploy defaults — used when the URL has no pair yet (open links still work). */
+export const DEFAULT_STACK_BACKEND = 'backend-java-spring';
+export const DEFAULT_STACK_FRONTEND = 'frontend-typescript-react';
+
+/** Effective pair for stack hrefs when only one side is selected in the URL. */
+export function effectiveStackPair(backendId, frontendId) {
+  return {
+    backendId: backendId || DEFAULT_STACK_BACKEND,
+    frontendId: frontendId || DEFAULT_STACK_FRONTEND,
+  };
+}
+
 const PATH_RE = /^\/stack\/(backend-[^/]+)\/(frontend-[^/]+)/;
 
 /** Nested product repo on GitHub — tree URLs for matrix `module` paths. */
@@ -188,10 +200,12 @@ function rowHtml(item, kind, currentBackend, currentFrontend) {
       ? `${escapeHtml(item.language || 'backend')} · ${escapeHtml(status)}`
       : `${escapeHtml(item.kind || 'frontend')} · ${escapeHtml(status)}`;
   const isCurrent = kind === 'backend' ? id === currentBackend : id === currentFrontend;
-  const targetBackend = kind === 'backend' ? id : currentBackend;
-  const targetFrontend = kind === 'frontend' ? id : currentFrontend;
+  const { backendId: targetBackend, frontendId: targetFrontend } = effectiveStackPair(
+    kind === 'backend' ? id : currentBackend,
+    kind === 'frontend' ? id : currentFrontend,
+  );
   const href = stackHref(targetBackend, targetFrontend);
-  const openable = isOpenable(status) && targetBackend && targetFrontend;
+  const openable = isOpenable(status);
 
   const nameCell = openable
     ? `<a class="link stack-page__id${isCurrent ? ' is-active' : ''}" href="${escapeHtml(href)}" data-testid="stack-${kind}-${escapeHtml(id)}">${escapeHtml(id)}</a>`
@@ -252,8 +266,12 @@ function testsModuleRow(item, currentBackend, currentFrontend, currentTests) {
   const layers = Array.isArray(item.layers) ? item.layers : [];
   const meta = `${escapeHtml(item.language || 'tests')} · ${escapeHtml(status)}`;
   const isCurrent = id === currentTests;
-  const selectable = isOpenable(status) && currentBackend && currentFrontend;
-  const href = stackHref(currentBackend, currentFrontend, id);
+  const { backendId: pairBackend, frontendId: pairFrontend } = effectiveStackPair(
+    currentBackend,
+    currentFrontend,
+  );
+  const selectable = isOpenable(status);
+  const href = stackHref(pairBackend, pairFrontend, id);
   const nameCell = selectable
     ? `<a class="link stack-page__id${isCurrent ? ' is-active' : ''}" href="${escapeHtml(href)}" data-testid="stack-tests-${escapeHtml(id)}">${escapeHtml(id)}</a>`
     : `<span class="stack-page__id stack-page__id--disabled${isCurrent ? ' is-active' : ''}" data-testid="stack-tests-${escapeHtml(id)}">${escapeHtml(id)}</span>`;

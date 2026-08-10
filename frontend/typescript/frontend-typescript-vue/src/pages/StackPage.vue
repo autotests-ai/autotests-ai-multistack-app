@@ -10,6 +10,7 @@ import {
   comboHref,
   componentTestsMeta,
   componentTestsPath,
+  effectiveStackPair,
   fetchStackMatrix,
   shortModuleLabel,
   findById,
@@ -130,23 +131,24 @@ function layersLabel(layers?: string[]): string {
 }
 
 function rowOpenable(kind: 'backend' | 'frontend', item: BackendModule | FrontendModule): boolean {
-  const targetBackend = kind === 'backend' ? item.id : mount.backendId;
-  const targetFrontend = kind === 'frontend' ? item.id : mount.frontendId;
-  return isOpenable(item.status) && Boolean(targetBackend && targetFrontend);
+  return isOpenable(item.status);
 }
 
 function rowHref(kind: 'backend' | 'frontend', item: BackendModule | FrontendModule): string {
-  const targetBackend = kind === 'backend' ? item.id : mount.backendId;
-  const targetFrontend = kind === 'frontend' ? item.id : mount.frontendId;
-  return stackHref(targetBackend, targetFrontend);
+  const { backendId, frontendId } = effectiveStackPair(
+    kind === 'backend' ? item.id : mount.backendId,
+    kind === 'frontend' ? item.id : mount.frontendId,
+  );
+  return stackHref(backendId, frontendId);
 }
 
 function testsHref(item: TestsModule): string {
-  return stackHref(mount.backendId, mount.frontendId, item.id);
+  const { backendId, frontendId } = effectiveStackPair(mount.backendId, mount.frontendId);
+  return stackHref(backendId, frontendId, item.id);
 }
 
 function testsSelectable(item: TestsModule): boolean {
-  return isOpenable(item.status) && Boolean(mount.backendId && mount.frontendId);
+  return isOpenable(item.status);
 }
 
 function moduleGh(modulePath?: string | null): string | null {
