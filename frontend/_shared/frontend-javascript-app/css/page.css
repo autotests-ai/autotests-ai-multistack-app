@@ -1,0 +1,19 @@
+/* Page shell — shared max-width + padding; compose modifiers on <main> */
+
+.page-shell {
+  max-width: min(var(--content-max-width), calc(100% - 2 * var(--page-padding-x)));
+  margin: 0 auto;
+  padding: var(--space-6) var(--page-padding-x) var(--space-6);
+}
+
+.page-shell--below-header {
+  padding-top: calc(var(--header-occupied-height) + var(--space-6));
+}
+
+.page-shell--below-header-tight {
+  padding-top: calc(var(--header-occupied-height) + var(--space-4));
+}
+
+.page-shell--pad-bottom-lg {
+  padding-bottom: var(--space-8);
+}

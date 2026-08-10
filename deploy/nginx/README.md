@@ -18,6 +18,7 @@ Outputs in `deploy/nginx/generated/`:
 | `reference-app-copy.autotests.ai.conf` | Retire vhost (301 → autotests.ai/stack/…) |
 | `autotests.ai-stack-upstreams.conf` | `upstream` blocks — include at `http{}` in autotests.ai |
 | `autotests.ai-stack-routes.conf` | `location` blocks — include inside autotests.ai `server{}` |
+| `autotests.ai-stack-board.conf` | bare `/stack/` board + shared `/stack/js|css` — include **before** stack-routes |
 
 Apply on box3:
 

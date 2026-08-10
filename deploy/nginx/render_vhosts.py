@@ -279,12 +279,18 @@ def main() -> int:
     retire_out = args.out_dir / f"{host}.conf"
     stack_up_out = args.out_dir / f"{CANONICAL_HOST}-stack-upstreams.conf"
     stack_rt_out = args.out_dir / f"{CANONICAL_HOST}-stack-routes.conf"
+    board_tpl = (repo / "deploy" / "nginx" / "stack-board.template.conf").read_text(
+        encoding="utf-8"
+    )
+    board_out = args.out_dir / f"{CANONICAL_HOST}-stack-board.conf"
     retire_out.write_text(retire_conf, encoding="utf-8")
     stack_up_out.write_text(stack_upstreams, encoding="utf-8")
     stack_rt_out.write_text(stack_routes, encoding="utf-8")
+    board_out.write_text(board_tpl, encoding="utf-8")
     print(f"wrote {retire_out}")
     print(f"wrote {stack_up_out}")
     print(f"wrote {stack_rt_out}")
+    print(f"wrote {board_out}")
     print(f"OK: retire vhost + stack upstreams/routes ({len(backends)} be, {len(frontends)} fe)")
     return 0
 
