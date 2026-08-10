@@ -1,15 +1,15 @@
 {
   "private": true,
   "name": "reference-app-copy-tests-allure",
-  "description": "Optional local pins for the Allure report and notification CLIs used by CI",
+  "description": "Allure 3 CLI + allure-report-kit + allure-notifications pins used by CI",
   "engines": {
     "node": ">=26"
   },
   "dependencies": {
+    "@qa-guru/allure-report-kit": "0.3.0",
+    "@qa-guru/allure-report-kit-awesome": "3.14.3-2",
+    "@qa-guru/allure-report-kit-dashboard": "3.14.3-2",
     "allure": "3.14.3",
-    "allure-notifications": "6.0.12"
-  },
-  "overrides": {
-    "adm-zip": "0.6.0"
+    "@qa-guru/allure-notifications": "6.1.1"
   }
 }

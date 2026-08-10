@@ -237,7 +237,7 @@ Allure: `testops-context` + live `allurectl watch` on test jobs → `publish-all
 | `DEPLOY_USER` | variable | `reference_app_copy` |
 | `ALLURE_TOKEN` | secret | TestOps API token (live upload; optional — without it tests still run) |
 | `ALLURE_PROJECT_ID` | variable | TestOps project id |
-| `ALLURE_ENDPOINT` | variable | optional; default `https://allure.autotests.cloud` |
+| `ALLURE_ENDPOINT` | variable | optional; default `https://allure.qa.guru` |
 
 GHCR needs no extra secret: `build` and `deploy` both authenticate with the run's `GITHUB_TOKEN` — `build` under `packages: write`, `deploy` under `packages: read`, because a freshly published package is private.
 

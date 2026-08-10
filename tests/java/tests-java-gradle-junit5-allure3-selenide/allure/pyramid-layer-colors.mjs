@@ -1,7 +1,7 @@
 /**
  * Palette A (cool → warm) for Allure testing pyramid (config/tests helpers).
- * Runtime HTML theme: dashboardTheme plugin → @allure-notifications/pyramid.
- * Keep hex in sync with @allure-notifications/pyramid + pyramid-layers.json.
+ * Runtime HTML theme: @qa-guru/allure-report-kit → @qa-guru/allure-notifications-pyramid.
+ * Keep hex in sync with @qa-guru/allure-notifications-pyramid + pyramid-layers.json.
  */
 
 /** Config / @Layer order (base → tip). */

@@ -9,10 +9,12 @@ name: CI
 # BACKEND / FRONTEND) when the teaching default changes; job ids stay layer names.
 #
 # Allure: testops-context opens one shared TestOps job-run; test jobs stream live and
-# publish raw results. publish-allure-report merges once for Pages/report, stops the
-# job-run and hands one launch URL to send-allure-notifications (all non-gating).
+# publish raw results. publish-allure-report merges once for Pages/report (allure-report-kit
+# soft-fork + overview/QG lead), stops the job-run and hands one launch URL to
+# send-allure-notifications (kit collage profile; all non-gating).
 # TestOps UI rerun: workflow_dispatch + ALLURE_JOB_RUN_ID → ALLURE_KEEP_TESTPLAN=true.
 # Launch env axes: BROWSER / OS / ENDPOINT / VERSION(=sha) / BRANCH.
+# SSOT host: allure.qa.guru (legacy allure.autotests.cloud redirects).
 # Pyramid layers (classical): unit · integration (no UI) · api · e2e · manual
 # Sideways FE: component (jsdom) — only the active FRONTEND (same teaching knob as deploy).
 # Visual (@Tag visual) inside e2e; baselines → e2e-update-baselines.
@@ -151,7 +153,7 @@ env:
   RUN_LABEL: "${{ github.repository }} #${{ github.run_number }}"
   SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL || 'https://sonar.qa.guru' }}
   # ── Non-secret reporting defaults ───────────────────────────────────────
-  ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.autotests.cloud' }}
+  ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}
   ALLURE_PROJECT_ID: ${{ vars.ALLURE_PROJECT_ID }}
 
 jobs:
