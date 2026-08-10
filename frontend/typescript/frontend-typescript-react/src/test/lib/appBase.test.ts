@@ -62,4 +62,16 @@ describe('appBase — mount precedence', () => {
       'authToken:backend-python-fastapi',
     );
   });
+
+  it('normalizes relative paths for appPath and apiUrl', async () => {
+    const { appPath, apiUrl } = await loadFor(
+      '/stack/backend-java-spring/frontend-typescript-react/',
+    );
+
+    expect(appPath('js/header.js')).toBe(
+      '/stack/backend-java-spring/frontend-typescript-react/js/header.js',
+    );
+    expect(apiUrl('api/health')).toBe('/stack/backend-java-spring/api/health');
+    expect(apiUrl('/api')).toBe('/stack/backend-java-spring/api');
+  });
 });

@@ -51,6 +51,20 @@ describe('RegisterPage', () => {
     expect(await screen.findByTestId('home-landed')).toBeInTheDocument();
   });
 
+  it('shows validation error when login is too short', async () => {
+    const user = userEvent.setup();
+    renderRegister();
+
+    await user.type(screen.getByTestId('login-input'), 'ab');
+    await user.type(screen.getByTestId('password-input'), 'password123');
+    await user.type(screen.getByTestId('confirm-password-input'), 'password123');
+    await user.click(screen.getByTestId('submit-button'));
+
+    expect(screen.getByTestId('error-message')).toHaveTextContent(
+      'Login must be at least 3 characters',
+    );
+  });
+
   it('shows the exact mismatch error when passwords differ', async () => {
     const user = userEvent.setup();
     renderRegister();

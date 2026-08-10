@@ -107,6 +107,15 @@ describe('network failures', () => {
     });
     expect(getToken()).toBeNull();
   });
+
+  it('getToken returns null when localStorage is unavailable', () => {
+    const getItem = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('storage disabled');
+    });
+
+    expect(getToken()).toBeNull();
+    getItem.mockRestore();
+  });
 });
 
 describe('fetchProfile', () => {

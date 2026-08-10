@@ -125,4 +125,106 @@ describe('StackPage', () => {
     await waitFor(() => expect(screen.getByTestId('stack-error')).toBeInTheDocument());
     expect(screen.getByTestId('stack-error')).toHaveTextContent('matrix.json');
   });
+
+  it('uses CI defaults for open links on bare /stack/', async () => {
+    const locationSpy = vi.spyOn(window, 'location', 'get').mockReturnValue({
+      ...window.location,
+      pathname: '/stack/',
+      search: '',
+    } as Location);
+
+    try {
+      renderStack();
+
+      await waitFor(() =>
+        expect(screen.getByTestId('stack-frontend-frontend-typescript-react')).toBeInTheDocument(),
+      );
+
+      expect(screen.getByTestId('stack-current-pair')).toHaveTextContent(
+        'path without /{backend}/{frontend}/',
+      );
+      expect(screen.getByTestId('stack-frontend-frontend-typescript-react')).toHaveAttribute(
+        'href',
+        '/stack/backend-java-spring/frontend-typescript-react/',
+      );
+    } finally {
+      locationSpy.mockRestore();
+    }
+  });
+
+  it('labels frontend-only mounts without a backend prefix', async () => {
+    const locationSpy = vi.spyOn(window, 'location', 'get').mockReturnValue({
+      ...window.location,
+      pathname: '/stack/frontend-typescript-react/',
+      search: '',
+    } as Location);
+
+    try {
+      renderStack();
+
+      await waitFor(() => expect(screen.getByTestId('stack-current-pair')).toBeInTheDocument());
+      expect(screen.getByTestId('stack-current-pair')).toHaveTextContent(
+        '(no backend prefix) · frontend-typescript-react',
+      );
+    } finally {
+      locationSpy.mockRestore();
+    }
+  });
+
+  it('reloads matrix when the header poll toggle ticks', async () => {
+    const tools = document.createElement('div');
+    tools.setAttribute('data-testid', 'header-tools');
+    document.body.appendChild(tools);
+
+    const fetchMock = vi.fn((input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('matrix.json')) {
+        return Promise.resolve(jsonResponse(MATRIX));
+      }
+      return Promise.reject(new Error(`unexpected request: ${url}`));
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    renderStack();
+    await waitFor(() => expect(screen.getByTestId('stack-tests-board')).toBeInTheDocument());
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    const btn = tools.querySelector<HTMLButtonElement>('[data-testid="header-poll-toggle-btn"]');
+    expect(btn).toBeTruthy();
+    btn?.click();
+    btn?.click();
+
+    await waitFor(() => expect(fetchMock.mock.calls.length).toBeGreaterThan(1));
+    tools.remove();
+  });
+
+  it('renders disabled modules without open links', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('matrix.json')) {
+          return Promise.resolve(
+            jsonResponse({
+              ...MATRIX,
+              backends: [{ ...MATRIX.backends[0], status: 'slot', module: undefined }],
+              tests: [{ ...MATRIX.tests[0], layers: [], module: undefined, status: 'slot' }],
+            }),
+          );
+        }
+        return Promise.reject(new Error(`unexpected request: ${url}`));
+      }),
+    );
+
+    renderStack();
+
+    await waitFor(() => expect(screen.getByTestId('stack-tests-board')).toBeInTheDocument());
+
+    const backend = screen.getByTestId('stack-backend-backend-java-spring');
+    expect(backend.tagName).toBe('SPAN');
+    expect(screen.getAllByText('—').length).toBeGreaterThan(0);
+
+    const testsRow = screen.getByTestId('stack-tests-tests-java-gradle-junit5-allure3-selenide');
+    expect(testsRow.tagName).toBe('SPAN');
+  });
 });
