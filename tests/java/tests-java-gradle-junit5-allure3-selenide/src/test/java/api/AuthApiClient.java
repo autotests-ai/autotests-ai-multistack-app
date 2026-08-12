@@ -9,7 +9,7 @@ import io.restassured.http.ContentType;
 import static io.restassured.RestAssured.given;
 
 /**
- * Thin API client for test setup and cleanup. UI and integration tests use it to arrange
+ * Thin API client for test setup and cleanup. API and e2e tests use it to arrange
  * state through the product API instead of duplicating raw JSON strings.
  *
  * <p>Uses absolute URIs from {@link ConfigReader}, so it works from any test base
