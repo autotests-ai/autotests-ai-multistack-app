@@ -21,7 +21,7 @@ import static org.hamcrest.Matchers.equalTo;
 
 /**
  * HTTP contract of {@code /api/auth/*}: status codes, response schemas, error envelopes.
- * Wired-system facts (seed users, DB round-trips) live in {@code tests.integration}.
+ * Deployed-stand wiring facts (seed catalogue, DB round-trips) live in sibling {@code *ApiTests}.
  */
 @Layer("api")
 @Epic("Authentication")

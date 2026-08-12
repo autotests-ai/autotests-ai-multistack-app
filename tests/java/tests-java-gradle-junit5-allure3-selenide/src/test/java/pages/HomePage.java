@@ -136,7 +136,7 @@ public class HomePage {
      * Session offers two exits: logout ends the session, delete account removes the user.
      * Only presence is asserted here — actually clicking delete would drop the seeded
      * account the whole prod suite logs in with. The behaviour lives in the frontend
-     * component suites, and the endpoint itself in AuthApiTests / AuthRoundTripIntegrationTests.
+     * component suites, and the endpoint itself in AuthApiTests / AuthRoundTripApiTests.
      */
     @Step("Verify session panel offers logout and delete account")
     public HomePage shouldShowSessionActions() {

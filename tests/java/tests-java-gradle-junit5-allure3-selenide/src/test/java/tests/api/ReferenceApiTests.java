@@ -17,7 +17,7 @@ import static org.hamcrest.Matchers.equalTo;
 /**
  * HTTP contract of the reference endpoints: shapes and types, not deployment facts.
  * Which service answers and where the data physically lives is asserted by
- * {@code tests.integration.BackendWiringIntegrationTests}.
+ * {@code BackendWiringApiTests} and {@code SeedDataApiTests}.
  */
 @Layer("api")
 @Epic("Home")

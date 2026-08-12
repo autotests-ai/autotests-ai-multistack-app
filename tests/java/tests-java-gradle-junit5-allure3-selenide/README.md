@@ -23,8 +23,7 @@ One task `test`; the layer is a tag filter, the stand is `-Denv` ([../../LAYERS.
 | harness (all) | `./gradlew test -Denv=reference_ci -DincludeTags=harness` | umbrella — all `testinfra/` · CI job `sonar-tests` |
 | harness-backend | `./gradlew test -Denv=reference_ci -DincludeTags=harness-backend` | `ConfigReader` · CI backend lane |
 | harness-frontend | `./gradlew test -Denv=reference_ci -DincludeTags=harness-frontend` | CSS + HAR helpers · CI frontend lane |
-| integration | `./gradlew test -Denv=reference_ci -DincludeTags=integration` | wired backend smoke · `tests/integration/` (health, PostgreSQL items, auth round-trip, seed) |
-| api | `./gradlew test -Denv=reference_ci -DincludeTags=api` | Rest Assured · `tests/api/` (`AuthApiTests`, `ReferenceApiTests`) |
+| api | `./gradlew test -Denv=reference_ci -DincludeTags=api` | Rest Assured · `tests/api/` (contract + deployed-stand wiring) |
 | mock | `./gradlew test -Denv=reference_mock -DincludeTags=mock` | stub API mount checks · CI job `e2e-mock-tests` |
 | e2e | `./gradlew test -Denv=reference_ci -DincludeTags=e2e -DexcludeTags=visual` | flow; add `,visual` for PNG baselines |
 | e2e baselines | `./gradlew test -Denv=reference_ci -DincludeTags=visual -DupdateBaselines=true` | refresh PNGs under `src/test/resources/screenshots/` |

@@ -14,7 +14,7 @@ Module folders: `-` between segments, `_` in compounds (`react_testing_library`,
                     ├─────────────┤
                     │     api     │  HTTP contract (@Tag api — any client / language)
                     ├─────────────┤
-                    │ integration │  deploy wiring facts, no UI (@Tag integration)
+                    │ integration │  Spring app + real PG, no deploy (@Tag integration)
                     ├─────────────┤
                     │component│  React in jsdom (Vitest) — sideways FE, not classical tip
                     ├─────────────┤
@@ -30,22 +30,22 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
 ## integration vs api — intent, not tag
 
-Same HTTP calls, same stand — different question. Client is whatever the active tests
-module uses (Java today: Rest Assured; Playwright/pytest helpers when those stacks grow
-an `api` slice). **api** asserts the HTTP contract: status codes, JSON Schemas
-(`src/test/resources/schemas/`), error envelopes — values that hold on *any* healthy
-deployment of the shared JSON API (any `BACKEND_LANG`). **integration** asserts wiring
-facts of *this* deployment: which module answered (`service` id), where data physically
-lives (`source=postgresql`), whether the Flyway seed arrived, whether DB + JWT hold
-across separate requests. No assertion appears in both layers:
+**integration** = full Spring Boot context against real PostgreSQL (Testcontainers) in the
+**backend module**, before build/deploy. Proves the application wires Controller → Service →
+Repository → Postgres and Flyway seed — not HTTP against a live stand.
+
+**api** = HTTP contract and deployed-stand facts through Rest Assured (or equivalent) **after**
+`stand-ready`. Same endpoints, different question:
 
 | Question | Layer | Example |
 |----------|-------|---------|
 | Is `{token, username, redirectUrl}` the login response shape? | api | `AuthApiTests` + `schemas/auth-response.json` |
-| Did the deploy wire PostgreSQL, not a stub? | integration | `BackendWiringIntegrationTests` (`source=postgresql`) |
+| Does Flyway seed reach PostgreSQL inside the running app? | integration | `ApplicationWiringIntegrationTest` (`source=postgresql`, seed items) |
 | Does a duplicate username answer 409? | api | `AuthApiTests.registerDuplicateUsername` |
-| Is seed user1 present after deploy? | integration | `SeedDataIntegrationTests` |
-| Do DB and JWT survive separate HTTP requests? | integration | `AuthRoundTripIntegrationTests` (full lifecycle: register → login → me → logout still 200 → `DELETE /me` → me is 401) |
+| Do DB and JWT survive separate requests in-process? | integration | `AuthLifecycleIntegrationTest` |
+| Did the deploy wire PostgreSQL, not a stub? | api | `BackendWiringApiTests` (`source=postgresql`) |
+| Are seed items Alpha/Beta/Gamma visible on the stand? | api | `SeedDataApiTests` |
+| Do DB and JWT survive separate HTTP requests on prod? | api | `AuthRoundTripApiTests` |
 
 ## Manual lives in code (canon)
 
@@ -83,7 +83,7 @@ Self-check of the **tests module helpers** before / alongside product layers —
 | Slice | Tag | CI |
 |-------|-----|-----|
 | UI on stub API (mount + error injection) | `@Tag("mock")` (+ `@Tag("e2e")`) | job `e2e-mock-tests` on every PR; on push to `main` when frontend changed |
-| Flow | `@Tag("e2e")` exclude visual | job `e2e-tests` (after `integration-tests` + `api-tests`) |
+| Flow | `@Tag("e2e")` exclude visual | job `e2e-tests` (after `api-tests`) |
 | Flow + visual (dispatch `run_visual`) | `e2e,visual` | job `e2e-tests` |
 | Refresh baselines | `@Tag("visual")` + `-DupdateBaselines=true` | job `e2e-update-baselines` (dispatch `update_baselines`) |
 
@@ -129,7 +129,6 @@ task — `test`:
 ./gradlew test -Denv=reference_ci   -DincludeTags=harness-frontend
 ./gradlew test -Denv=reference_ci   -DincludeTags=harness
 ./gradlew test -Denv=reference_mock -DincludeTags=mock
-./gradlew test -Denv=reference_prod -DincludeTags=integration
 ./gradlew test -Denv=reference_prod -DincludeTags=api
 ./gradlew test -Denv=reference_prod -DincludeTags=e2e -DexcludeTags=visual
 ./gradlew test -Denv=reference_prod -DincludeTags=e2e,visual
@@ -153,8 +152,8 @@ suite (`npm test` / `pytest` with `UI_URL` / `BASE_URL`) — no Gradle tag slice
 |-------|------|-------|----------|-----|
 | unit | backend | active `BACKEND_DIR` (default `backend/java/backend-java-spring/`) | all backend unit tests (plain + Spring slices) | by `BACKEND_LANG`: gradle+JaCoCo · `pytest` · `go test` · `npm test` — see [backend/README.md](../backend/README.md) |
 | component | frontend | active `FRONTEND_DIR` only (default `frontend/typescript/frontend-typescript-react/`) — siblings not CI-gated | Vitest + coverage | `npm test -- --coverage` via `component-tests` |
-| integration | tests | `…/tests/integration/` (`BackendWiringIntegrationTests`, `AuthRoundTripIntegrationTests`, `SeedDataIntegrationTests`) | `@Tag("integration")` | java → `-DincludeTags=integration` via `integration-tests` (after `stand-ready`) |
-| api | tests | `…/tests/api/` (`AuthApiTests`, `ReferenceApiTests`) — HTTP contract of the shared JSON API | `@Tag("api")` (java today; other `TESTS_LANG` can grow the same slice) | java → `-DincludeTags=api` via `api-tests` (**parallel** to `integration-tests`, both after `stand-ready`); retarget any backend with `-DapiBaseUrl` / `-DapiHealthService` |
+| integration | backend | `backend/java/backend-java-spring/src/test/java/dev/reference/app/integration/` (`ApplicationWiringIntegrationTest`, `AuthLifecycleIntegrationTest`) | `@Tag("integration")` | `./gradlew test -DincludeTags=integration` in `BACKEND_DIR` via `integration-tests` (after `unit-tests`, **before** build/deploy; PR + main) |
+| api | tests | `…/tests/api/` (`AuthApiTests`, `ReferenceApiTests`, `BackendWiringApiTests`, `SeedDataApiTests`, `AuthRoundTripApiTests`) — HTTP contract + deployed-stand facts | `@Tag("api")` | java → `-DincludeTags=api` via `api-tests` (after `stand-ready`); retarget any backend with `-DapiBaseUrl` / `-DapiHealthService` |
 | e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `visual` / `mock`) | `e2e-mock-tests` (push, `mock`); `e2e-tests` (after lanes + `sonar-tests` join) |
 | manual | tests | `…/tests/manual/` **in code** | `@Tag("manual")` + `@Manual` | java → `-DincludeTags=manual` via `manual-tests` (after `e2e-tests`, dispatch) |
 
@@ -177,7 +176,8 @@ Paths SSOT: `backend/scripts/paths.sh`. Module naming: [NAMING.md](NAMING.md).
 
 | Job | Product under test |
 |-----|--------------------|
-| `unit-tests` | **Application** (active backend — toolchain from `BACKEND_LANG`) |
+| `unit-tests` | **Application** (active backend — toolchain from `BACKEND_LANG`; excludes `@Tag("integration")`) |
+| `integration-tests` | **Application** (full Spring Boot + Testcontainers PostgreSQL in `BACKEND_DIR`) |
 | `tests-harness-backend` | **Test tooling (BE lane)** — `ConfigReader` |
 | `tests-harness-frontend` | **Test tooling (FE lane)** — CSS helpers, HAR helpers |
 | `component-tests` | **Application** (active `FRONTEND_DIR` only — Vitest + coverage → `sonar-frontend` / `build-frontend`) |
@@ -195,9 +195,9 @@ stays six classical layers; we do **not** promote these to `@Tag("integration")`
 | Web MVC | `@WebMvcTest` (+ `SecurityChainTest` with a real `JwtService`) | controller / security chain in isolation | no |
 | Persistence | `@DataJpaTest` + Testcontainers (`PostgresSliceTestBase`, `postgres:16-alpine`) | Flyway + entities against the same Postgres the app ships with | yes |
 
-Classical **integration** (`tests/…/integration/`, job `integration-tests`) is the other
-question: the *deployed* stand’s wiring over HTTP. Do not rename Spring slices to
-`integration` and do not move deploy wiring checks into `unit-tests`.
+Classical **integration** (`backend/…/integration/`, job `integration-tests`) runs the full
+Spring context against real PostgreSQL **before** build/deploy. Do not rename Spring slices
+to `integration` and do not move deploy HTTP checks into `unit-tests` or backend integration.
 
 The 100% line-coverage gate (`jacocoTestCoverageVerification`) is java-only and slices by
 `-DincludeTags` (`harness-backend` → `ConfigReader`; `harness-frontend` → `LayoutCss`/`TokensCss`;
@@ -211,14 +211,14 @@ The 100% line-coverage gate (`jacocoTestCoverageVerification`) is java-only and 
 | Object | React SPA units | product pages in a browser |
 | Lesson | logic / props / a11y | real CSS / layout / flows |
 
-Integration is **HTTP / wired backend**, no browser. Chrome checks belong under e2e.
+Integration is **in-process Spring + PostgreSQL**, no browser. Deployed HTTP checks belong under **api**. Chrome checks belong under e2e.
 
 ## When each layer runs
 
 | Trigger | Jobs |
 |---------|------|
-| Pull request (blocks merge) | `unit-tests`, `component-tests`, `tests-harness-backend`, `tests-harness-frontend`, `e2e-mock-tests`, `sonar-backend`, `sonar-tests`, `sonar-frontend` |
-| Push to `main` | the PR set (`e2e-mock-tests` only when frontend changed) + build/deploy lanes → `stand-ready` → `integration-tests` **∥** `api-tests` → `e2e-tests` (visual excluded) → `manual-tests` (skip unless dispatch) |
+| Pull request (blocks merge) | `unit-tests`, `integration-tests`, `component-tests`, `tests-harness-backend`, `tests-harness-frontend`, `e2e-mock-tests`, `sonar-backend`, `sonar-tests`, `sonar-frontend` |
+| Push to `main` | the PR set (`e2e-mock-tests` only when frontend changed) + build/deploy lanes → `stand-ready` → `api-tests` → `e2e-tests` (visual excluded) → `manual-tests` (skip unless dispatch) |
 | `workflow_dispatch` | per-layer booleans `run_integration` / `run_api` / `run_mock` / `run_e2e` / `run_visual` / `run_manual`; `update_baselines=true` → `e2e-update-baselines`; `include_tags` / `exclude_tags` overrides on e2e; `deploy=none\|backend\|frontend\|both`; TestOps service inputs `ALLURE_JOB_RUN_ID` / `ALLURE_USERNAME` (leave blank unless TestOps UI triggers) |
 
 Active stack and prod URL are workflow `env` defaults in [`ci.yml`](../.github/workflows/ci.yml)
@@ -282,7 +282,7 @@ To add another layer, copy `manual-tests` and change the java `-D` flags.
 
 ## Test data and secrets
 
-- Register-flow tests (api / e2e / integration) create `user_*` accounts and **delete them**
+- Register-flow tests (api / e2e) create `user_*` accounts and **delete them**
   through `DELETE /api/auth/me` (`AuthApiClient.deleteAccountQuietly`) — the prod stand does
   not accumulate test users. The lifecycle round-trip also documents stateless logout: the JWT
   survives `logout` and dies with the account.
@@ -294,17 +294,18 @@ To add another layer, copy `manual-tests` and change the java `-D` flags.
 
 ```
 every run (PR + main):
-  unit-tests → sonar-backend            component-tests → sonar-frontend
+  unit-tests → integration-tests → sonar-backend
+  component-tests → sonar-frontend          e2e-mock-tests (every PR; main when FE changed)
   tests-harness-backend ─┐
-  tests-harness-frontend ┴→ sonar-tests          e2e-mock-tests (every PR; main when FE changed)
+  tests-harness-frontend ┴→ sonar-tests
 
 main only:
   build-backend + sonar-backend → deploy-backend ──────────────┐
   build-frontend + sonar-frontend + e2e-mock → deploy-frontend ┴→ stand-ready
-  stand-ready → integration-tests ∥ api-tests → e2e-tests → manual-tests (dispatch-only)
+  stand-ready → api-tests → e2e-tests → manual-tests (dispatch-only)
 ```
 
-`integration-tests` and `api-tests` are **parallel** — both gate on `stand-ready`, neither on
-the other: wiring facts and HTTP contract are independent questions about the same deploy.
+`api-tests` gates on `stand-ready` only. `integration-tests` runs in `BACKEND_DIR` before
+build/deploy and does **not** wait on `stand-ready`.
 `sonar-tests` scans **testinfra helpers** (`-DincludeTags=harness`), not api/e2e results.
 It runs after both harness slices — on **PR** and **main**.

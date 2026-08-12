@@ -1,4 +1,4 @@
-package tests.integration;
+package tests.api;
 
 import annotations.Layer;
 import api.ApiTestBase;
@@ -14,19 +14,18 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 
 /**
- * Wiring facts about the deployed system — values that depend on which module is deployed
- * and what it is connected to. Response shapes/types are the api layer's job
- * ({@code tests.api.ReferenceApiTests}); this class asserts none of them.
+ * Deployed-stand facts about the active backend module and its PostgreSQL wiring.
+ * Response shapes/types are the api layer's job ({@code ReferenceApiTests}).
  */
-@Layer("integration")
+@Layer("api")
 @Epic("Wired backend")
 @Feature("Health and data source")
 @Severity(SeverityLevel.BLOCKER)
-@DisplayName("Backend wiring")
-class BackendWiringIntegrationTests extends ApiTestBase {
+@DisplayName("Backend wiring on deployed stand")
+class BackendWiringApiTests extends ApiTestBase {
 
     @Test
-    @Tag("integration")
+    @Tag("api")
     @DisplayName("GET /api/health — deployed service is the active backend module, not a neighbour")
     void healthReportsActiveBackendService() {
         given()
@@ -38,7 +37,7 @@ class BackendWiringIntegrationTests extends ApiTestBase {
     }
 
     @Test
-    @Tag("integration")
+    @Tag("api")
     @DisplayName("GET /api/items — catalogue is served from PostgreSQL, not a stub or fallback")
     void itemsAreWiredToPostgreSQL() {
         given()

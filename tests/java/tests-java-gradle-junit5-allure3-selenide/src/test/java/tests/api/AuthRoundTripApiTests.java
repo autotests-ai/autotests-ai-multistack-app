@@ -1,4 +1,4 @@
-package tests.integration;
+package tests.api;
 
 import annotations.Layer;
 import api.ApiTestBase;
@@ -15,12 +15,12 @@ import org.junit.jupiter.api.Test;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 
-@Layer("integration")
+@Layer("api")
 @Epic("Authentication")
 @Feature("Account lifecycle")
 @Severity(SeverityLevel.CRITICAL)
-@DisplayName("Auth account lifecycle")
-class AuthRoundTripIntegrationTests extends ApiTestBase {
+@DisplayName("Auth account lifecycle on deployed stand")
+class AuthRoundTripApiTests extends ApiTestBase {
 
     /**
      * Full account lifecycle across separate HTTP requests — proves DB and JWT are wired
@@ -29,10 +29,10 @@ class AuthRoundTripIntegrationTests extends ApiTestBase {
      * does not accumulate test accounts.
      */
     @Test
-    @Tag("integration")
+    @Tag("api")
     @DisplayName("register → login → me → logout (stateless: token survives) → delete → me is 401")
     void accountLifecycleRoundTrip() {
-        String username = "int_" + java.util.UUID.randomUUID().toString().substring(0, 8);
+        String username = "api_" + java.util.UUID.randomUUID().toString().substring(0, 8);
         String password = "password123";
 
         given(jsonSpec)

@@ -22,14 +22,15 @@ name: CI
 # needs = real dependencies only (not graph layout). Sonar gates deploy, not build.
 # Deploy of either lane moves the shared host checkout dir to the new SHA.
 # Roots: unit-tests · component-tests · tests-harness-* · e2e-mock-tests · changes
-#   sonar-backend ← unit-tests · sonar-frontend ← component-tests
+#   integration-tests ← unit-tests (backend Spring+PG, pre-build; PR + main)
+#   sonar-backend ← unit-tests + integration-tests · sonar-frontend ← component-tests
 #   sonar-tests ← tests-harness-backend + tests-harness-frontend
-#   build-backend ← unit-tests · build-frontend ← component-tests
+#   build-backend ← unit-tests + integration-tests · build-frontend ← component-tests
 #   deploy-backend ← build-backend + sonar-backend
 #   deploy-frontend ← build-frontend + sonar-frontend + e2e-mock-tests
 #   stand-ready ← deploy-backend + deploy-frontend (curl live UI + /api/health)
-#   integration-tests · api-tests ← stand-ready (parallel)
-#   e2e-tests ← integration-tests + api-tests → manual-tests · e2e-update-baselines
+#   api-tests ← stand-ready
+#   e2e-tests ← api-tests → manual-tests · e2e-update-baselines
 # push main: changes gates build/deploy by path; tests + sonar always run.
 # PR: no deploy; e2e-mock-tests runs on runner (mock compose profile).
 
@@ -46,7 +47,7 @@ on:
         options: [none, backend, frontend, both]
         default: none
       run_integration:
-        description: "Run integration tests against reference_prod"
+        description: "Run backend Spring+PG integration tests (pre-deploy)"
         type: boolean
         default: false
       run_api:
@@ -358,6 +359,7 @@ jobs:
         run: >-
           "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
           ./gradlew test jacocoTestReport jacocoTestCoverageVerification
+          -DexcludeTags=integration
         working-directory: ${{ env.BACKEND_DIR }}
       - if: (env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin') && steps.run-tests.outcome == 'success'
         uses: actions/upload-artifact@v7
@@ -698,8 +700,11 @@ jobs:
   # Quality axis (SonarQube) — hard gate before deploy (not build). Coverage reused via artifacts.
   # Quality Gate wait is native in each scanner (`sonar.qualitygate.wait=true`).
   sonar-backend:
-    needs: [unit-tests]
-    if: ${{ !cancelled() && needs.unit-tests.result == 'success' }}
+    needs: [unit-tests, integration-tests]
+    if: >-
+      !cancelled() &&
+      needs.unit-tests.result == 'success' &&
+      (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped')
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
@@ -893,10 +898,11 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   build-backend:
-    needs: [unit-tests, changes]
+    needs: [unit-tests, integration-tests, changes]
     if: >-
       !cancelled() &&
       needs.unit-tests.result == 'success' &&
+      (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped') &&
       github.ref == 'refs/heads/main' && (
         (github.event_name == 'push' && needs.changes.outputs.backend == 'true') ||
         (github.event_name == 'workflow_dispatch' &&
@@ -1016,7 +1022,7 @@ jobs:
     concurrency:
       group: deploy-reference-app-copy
       cancel-in-progress: false
-    # Backend (+ postgres) — integration-tests need API :8800, not frontend.
+    # Backend (+ postgres) — api-tests need API :8800 after deploy, not frontend.
     permissions:
       contents: read
       packages: read
@@ -1212,14 +1218,15 @@ jobs:
           curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${API_HEALTH}"
 
   integration-tests:
-    needs: [stand-ready, testops-context]
+    needs: [unit-tests, testops-context]
     if: >-
-      always() && !cancelled() && needs.stand-ready.result == 'success' && (
+      always() && !cancelled() && needs.unit-tests.result == 'success' && (
+        github.event_name == 'pull_request' ||
         (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
         (github.event_name == 'workflow_dispatch' && inputs.run_integration)
       )
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 25
     env:
       LAYER: integration
       ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
@@ -1231,79 +1238,39 @@ jobs:
           persist-credentials: false
       - *setup-live-allurectl
 
-      # ── java (no UI — Rest Assured against deployed API) ─────────────────
-      - if: env.TESTS_LANG == 'java'
+      # ── java / kotlin (Spring Boot + Testcontainers PostgreSQL) ───────────
+      - if: env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin'
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
-      # Gradle User Home cache read-only (harness jobs may have warmed entries on main).
-      # No configuration-cache restore here: read-only jobs must not reuse entries that pin
-      # absolute GRADLE_USER_HOME paths (e.g. JaCoCo agent jars) from other runners.
-      - if: env.TESTS_LANG == 'java'
+      - if: env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin'
         uses: gradle/actions/setup-gradle@v6
         with:
-          cache-read-only: true
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-      - name: Run integration tests (Gradle)
-        if: env.TESTS_LANG == 'java'
+      - if: env.BACKEND_LANG == 'java'
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.BACKEND_DIR }}/.gradle/configuration-cache
+          key: gradle-cc-${{ env.BACKEND }}-integration-${{ hashFiles('backend/java/backend-java-spring/*.gradle*', 'backend/java/backend-java-spring/gradle/wrapper/gradle-wrapper.properties', 'backend/java/backend-java-spring/gradle.properties') }}-${{ github.sha }}
+          restore-keys: |
+            gradle-cc-${{ env.BACKEND }}-integration-
+      - name: Run integration tests (Gradle + Testcontainers)
+        if: env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin'
         id: run-tests
         env:
-          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.BACKEND_DIR }}/build/allure-results
         run: >-
           "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
-          ./gradlew test -Denv=reference_prod -DincludeTags=integration
-        working-directory: ${{ env.TESTS_DIR }}
-      # ── javascript / typescript (full suite) ──────────────────────────────
-      - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
-      - name: Install npm dependencies
-        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
-        run: npm ci
-        working-directory: ${{ env.TESTS_DIR }}
-      - name: Install Playwright Chromium
-        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
-        run: npx playwright install --with-deps chromium
-        working-directory: ${{ env.TESTS_DIR }}
-      - name: Run tests (npm)
-        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
-        env:
-          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
-        run: >-
-          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
-          npm test
-        working-directory: ${{ env.TESTS_DIR }}
-
-      # ── python (full suite) ──────────────────────────────────────────────
-      - if: env.TESTS_LANG == 'python'
-        uses: actions/setup-python@v6
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-          cache-dependency-path: ${{ env.TESTS_DIR }}/requirements.txt
-      - name: Install Python dependencies
-        if: env.TESTS_LANG == 'python'
-        run: python -m pip install -r requirements.txt
-        working-directory: ${{ env.TESTS_DIR }}
-      - name: Run Python tests (pytest)
-        if: env.TESTS_LANG == 'python'
-        env:
-          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
-        run: >-
-          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
-          python -m pytest
-        working-directory: ${{ env.TESTS_DIR }}
+          ./gradlew test -DincludeTags=integration
+        working-directory: ${{ env.BACKEND_DIR }}
       - name: Publish raw Allure results
         if: always()
         continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
           name: allure-results-integration
-          path: ${{ env.TESTS_DIR }}/build/allure-results/**
+          path: ${{ env.BACKEND_DIR }}/build/allure-results/**
           if-no-files-found: ignore
           retention-days: 1
 
@@ -1403,13 +1370,12 @@ jobs:
           if-no-files-found: ignore
           retention-days: 1
 
-  # Join integration + api on main; dispatch e2e/visual when upstream layer jobs were skipped.
+  # Join api on main; dispatch e2e/visual when upstream layer jobs were skipped.
   e2e-tests:
-    needs: [integration-tests, api-tests, testops-context]
+    needs: [api-tests, testops-context]
     if: >-
       always() && !cancelled() && (
         (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
-         needs.integration-tests.result == 'success' &&
          needs.api-tests.result == 'success') ||
         (github.event_name == 'workflow_dispatch' &&
          (inputs.run_e2e ||
@@ -1417,7 +1383,6 @@ jobs:
           inputs.update_baselines ||
           inputs.include_tags != '' ||
           inputs.exclude_tags != '') &&
-         (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped') &&
          (needs.api-tests.result == 'success' || needs.api-tests.result == 'skipped'))
       )
     runs-on: ubuntu-24.04
