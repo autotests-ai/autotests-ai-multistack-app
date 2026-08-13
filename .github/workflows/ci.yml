@@ -369,7 +369,8 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles(format('{0}/package-lock.json', env.TESTS_DIR)) }}
+          # hashFiles needs literal globs — keep in sync when flipping TESTS_DIR.
+          key: playwright-${{ runner.os }}-${{ hashFiles('tests/**/package-lock.json') }}
           restore-keys: |
             playwright-${{ runner.os }}-
 
@@ -520,12 +521,14 @@ jobs:
         with:
           cache-read-only: ${{ env.GRADLE_CACHE_READ_ONLY == 'true' }}
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+      # hashFiles needs literal globs (format(env.*) is rejected at workflow parse).
+      # Keep in sync when swapping BACKEND_DIR / TESTS_DIR in workflow env.
       - &cache-gradle-cc
         if: env.GRADLE_CC_IF == 'true'
         uses: actions/cache@v6
         with:
           path: ${{ env.GRADLE_CC_MODULE }}/.gradle/configuration-cache
-          key: gradle-cc-${{ env.GRADLE_CC_KEY_PREFIX }}-${{ hashFiles(format('{0}/*.gradle*', env.GRADLE_CC_MODULE), format('{0}/gradle/wrapper/gradle-wrapper.properties', env.GRADLE_CC_MODULE), format('{0}/gradle.properties', env.GRADLE_CC_MODULE)) }}-${{ github.sha }}
+          key: gradle-cc-${{ env.GRADLE_CC_KEY_PREFIX }}-${{ hashFiles('backend/java/backend-java-spring/*.gradle*', 'backend/java/backend-java-spring/gradle/wrapper/gradle-wrapper.properties', 'backend/java/backend-java-spring/gradle.properties', 'backend/kotlin/backend-kotlin-spring/*.gradle*', 'backend/kotlin/backend-kotlin-spring/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
           restore-keys: |
             gradle-cc-${{ env.GRADLE_CC_KEY_PREFIX }}-
       - name: Run unit tests (Gradle + JaCoCo)
@@ -761,7 +764,8 @@ jobs:
       LAYER: ui-mock
       SCREENSHOT_OS: linux
       SCREENSHOT_BROWSER: chrome
-      DOCKER_CACHE_SCOPE: reference-app-copy-docker-mock-stand-gateway-${{ hashFiles(format('{0}/Dockerfile', env.FRONTEND_DIR), 'deploy/mock/**') }}
+      # Stable GHA BuildKit scope — hashFiles is not allowed in job env; layers are content-addressed.
+      DOCKER_CACHE_SCOPE: reference-app-copy-docker-mock-stand-gateway
       ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
       ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
       ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
@@ -1206,7 +1210,7 @@ jobs:
       packages: write
       actions: write
     env:
-      DOCKER_CACHE_SCOPE: reference-app-copy-docker-${{ env.BACKEND }}-${{ hashFiles(format('{0}/Dockerfile', env.BACKEND_DIR), format('{0}/build.gradle', env.BACKEND_DIR), format('{0}/settings.gradle', env.BACKEND_DIR)) }}
+      DOCKER_CACHE_SCOPE: reference-app-copy-docker-${{ env.BACKEND }}
       DOCKER_CONTEXT: ${{ env.BACKEND_DIR }}
       DOCKER_FILE: ${{ env.BACKEND_DIR }}/Dockerfile
       DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/${{ env.GHCR_BACKEND_PACKAGE }}:${{ env.IMAGE_TAG }}
@@ -1241,7 +1245,7 @@ jobs:
       packages: write
       actions: write
     env:
-      DOCKER_CACHE_SCOPE: reference-app-copy-docker-${{ env.FRONTEND }}-${{ hashFiles(format('{0}/Dockerfile', env.FRONTEND_DIR), format('{0}/package-lock.json', env.FRONTEND_DIR)) }}
+      DOCKER_CACHE_SCOPE: reference-app-copy-docker-${{ env.FRONTEND }}
       DOCKER_CONTEXT: .
       DOCKER_FILE: ${{ env.FRONTEND_DIR }}/Dockerfile
       DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/${{ env.GHCR_FRONTEND_PACKAGE }}:${{ env.IMAGE_TAG }}
