@@ -74,23 +74,17 @@ Path constants: `backend/scripts/paths.sh`
 
 Canon: [tests/LAYERS.md](tests/LAYERS.md) · all jobs live in [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 
-Full CI graph (`needs` from `ci.yml`; `changes` / graph label `cd-paths` is a CD path gate for build / mock / `api-tests` — not a pyramid job; path outputs skip via `if:`):
+Full CI graph (`needs` from `ci.yml`). Push to `main` runs both CD lanes; dispatch `deploy` selects them.
 
 ```mermaid
 flowchart TB
   TOC[testops-context]
-  CH[cd-paths]
 
   TOC --> UNIT[unit-tests]
   TOC --> COMP[component-tests]
   H[tests-harness]
   TOC --> MOCK[ui-mock-tests]
   TOC --> INT[integration-tests]
-
-  CH --> MOCK
-  CH --> BB
-  CH --> BF
-  CH --> API
 
   UNIT --> INT
   UNIT --> SB[sonar-backend]
@@ -126,12 +120,12 @@ flowchart TB
 | Job | Where |
 |-----|-------|
 | `unit-tests` | `BACKEND_DIR` — command by `BACKEND_LANG` (gradle/JaCoCo, pytest, `go test`, or `npm test`); java excludes `@Tag("integration")` |
-| `tests-harness` | `TESTS_DIR` — java: `-DincludeTags=harness` + JaCoCo (helpers); backend-only (push backend paths / dispatch `deploy=backend`) → `-DincludeTags=harness-backend` (`ConfigReader`; skips TokensCss / LayoutCss / LocalChromePin). Not TestOps. |
+| `tests-harness` | `TESTS_DIR` — java: `-DincludeTags=harness` + JaCoCo (helpers); dispatch `deploy=backend` → `-DincludeTags=harness-backend` (`ConfigReader` only). Not TestOps. |
 | `component-tests` | `FRONTEND_DIR` — `npm test -- --coverage` |
 | `integration-tests` | `BACKEND_DIR` — after `unit-tests` (java: `-DincludeTags=integration`); Spring Boot + real PG; **before** build/deploy; PR + main |
 | `api-tests` | `TESTS_DIR` — after `deploy-backend` (java: `-DincludeTags=api`); HTTP contract + deployed-stand facts |
-| `ui-mock-tests` | after `component-tests`; every PR; on `main` when frontend changed — mock flows + screenshot compare on the runner; gates `build-frontend`; dispatch `update_mock_screenshots` rewrites `screenshots/mock/` |
-| `sonar-tests` | after `tests-harness` (PR + main; skipped on backend-only slice) |
+| `ui-mock-tests` | after `component-tests`; every PR + push to `main`; dispatch `deploy=frontend\|both` or `run_mock`; gates `build-frontend`; dispatch `update_mock_screenshots` rewrites `screenshots/mock/` |
+| `sonar-tests` | after `tests-harness` (PR + main; skipped when dispatch `deploy=backend`) |
 | `e2e-tests` | after `api-tests` + `deploy-frontend` — java: `-DincludeTags=e2e`; dispatch `run_screenshot` / `update_e2e_screenshots` are extra steps |
 | `manual-tests` | after `e2e-tests`; dispatch only — java: `-DincludeTags=manual` |
 
@@ -209,7 +203,7 @@ Teaching CI — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 | Event | Jobs |
 |-------|------|
 | pull request | `unit-tests` · `integration-tests` · `component-tests` · `tests-harness` · `ui-mock-tests` · `sonar-backend` · `sonar-frontend` · `sonar-tests` |
-| push to `main` | PR set (`ui-mock-tests` when frontend changed) → build/deploy lanes → `api-tests` (after backend) → `e2e-tests` (after api + frontend) → `manual-tests` (dispatch) |
+| push to `main` | PR set → both build/deploy lanes → `api-tests` (after backend) → `e2e-tests` (after api + frontend) → `manual-tests` (dispatch) |
 
 `build` runs `docker compose build` + `docker compose push`, so `docker-compose.yml` stays the only place describing how an image is built. Images go to GHCR as `ghcr.io/autotests-ai/reference-app-copy-<service>:<sha>`; the tag comes from `IMAGE_TAG` (defaults to `latest` locally).
 

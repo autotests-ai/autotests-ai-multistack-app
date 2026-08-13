@@ -23,10 +23,9 @@ name: CI
 # needs = real dependencies only (not graph layout). Sonar gates deploy, not build.
 # Deploy of either lane moves the shared host checkout dir to the new SHA.
 # Roots: unit-tests · component-tests · tests-harness · testops-context
-#   changes (graph: cd-paths) — CD path gate only; not a pyramid job
 #   integration-tests ← unit-tests (backend Spring+PG, pre-build; PR + main)
 #   sonar-backend ← unit-tests + integration-tests
-#   sonar-tests ← tests-harness (skipped on backend-only slice)
+#   sonar-tests ← tests-harness (skipped when dispatch deploy=backend)
 #   ui-mock-tests ← component-tests (jsdom first; mock compose on the runner)
 #   sonar-frontend ← component-tests + ui-mock-tests (mock skipped ⇒ sonar still runs)
 #   build-backend ← unit-tests + integration-tests · build-frontend ← ui-mock-tests
@@ -34,9 +33,8 @@ name: CI
 #   deploy-frontend ← build-frontend + sonar-frontend
 #   api-tests ← deploy-backend (curl /api/health; no join with frontend)
 #   e2e-tests ← api-tests + deploy-frontend (curl live UI) → manual-tests
-# push main: changes gates build/deploy by path; tests + sonar always run
-#   except tests-harness backend-only slice (ConfigReader; no TokensCss/LayoutCss/LocalChromePin)
-#   and sonar-tests (needs full harness coverage).
+# push main: both CD lanes. dispatch `deploy=none|backend|frontend|both` selects lanes.
+#   tests-harness backend-only slice only on dispatch deploy=backend.
 # PR: no deploy; ui-mock-tests after component-tests (mock compose profile).
 
 on:
@@ -47,7 +45,7 @@ on:
   workflow_dispatch:
     inputs:
       deploy:
-        description: "CD lanes to build+deploy (push ignores — uses path diff via changes job)"
+        description: "CD lanes to build+deploy. Push to main always does both; dispatch uses this."
         type: choice
         options: [none, backend, frontend, both]
         default: none
@@ -272,32 +270,6 @@ env:
       echo "- dashboard: ${SONAR_HOST_URL%/}/dashboard?id=${SONAR_PROJECT_KEY}"
       echo "- commit: \`${GITHUB_SHA:0:7}\`"
     } >> "$GITHUB_STEP_SUMMARY"
-  # Path booleans for CD job-level if: (skip build/deploy/mock without a runner).
-  # Not a pyramid stage — GitHub only shares outputs across jobs via a job.
-  DETECT_CHANGED_LANES: |
-    detect_changed_lanes() {
-      backend=false
-      frontend=false
-      tests=false
-      if [ "${GITHUB_EVENT_NAME}" != "push" ] || [ "${GITHUB_REF}" != "refs/heads/main" ]; then
-        :
-      elif [ -z "${BEFORE:-}" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] \
-        || ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
-        backend=true
-        frontend=true
-        tests=true
-      else
-        CHANGED="$(git diff --name-only "$BEFORE" "$GITHUB_SHA")"
-        match() { printf '%s\n' "$CHANGED" | grep -qE "$1"; }
-        SHARED='deploy/|docker-compose|\.github/workflows/ci\.yml'
-        if match "^(backend/|${SHARED})"; then backend=true; fi
-        if match "^(frontend/|${SHARED})"; then frontend=true; fi
-        if match "^(tests/|${SHARED})"; then tests=true; fi
-      fi
-      if [ -n "${GITHUB_OUTPUT:-}" ]; then
-        printf 'backend=%s\nfrontend=%s\ntests=%s\n' "$backend" "$frontend" "$tests" >> "$GITHUB_OUTPUT"
-      fi
-    }
   DOCKER_FRONTEND_BUILD_ARGS: |
     REACT_UI=frontend/_shared/frontend-react-ui
     UI_RUNTIME=frontend/_shared/frontend-javascript-app
@@ -691,28 +663,6 @@ jobs:
         working-directory: ${{ env.BACKEND_DIR }}
       - *upload-allure-results
 
-  # CD path gate — not a pyramid job. Exists so job-level `if:` can skip
-  # build/deploy/mock/api without starting a runner (GHA cannot do that from a step).
-  changes:
-    name: cd-paths
-    runs-on: ubuntu-24.04
-    env:
-      CHECKOUT_FETCH_DEPTH: "0"
-    outputs:
-      backend: ${{ steps.set.outputs.backend }}
-      frontend: ${{ steps.set.outputs.frontend }}
-      tests: ${{ steps.set.outputs.tests }}
-    steps:
-      - *checkout
-      - name: Detect changed paths
-        id: set
-        env:
-          BEFORE: ${{ github.event.before }}
-        run: |
-          set -euo pipefail
-          eval "${DETECT_CHANGED_LANES}"
-          detect_changed_lanes
-
   # Same teaching knob as deploy/sonar: only FRONTEND_DIR. Sibling frontends are not gated.
   # Coverage always on (this job is the deploy default). lint/typecheck --if-present for JS.
   # Do not point FRONTEND at frontend-javascript-vanilla (no npm/Vitest — browser layers only).
@@ -762,13 +712,12 @@ jobs:
 
   # Stub API on runner (compose --profile mock); after jsdom, before FE image push.
   ui-mock-tests:
-    needs: [changes, testops-context, component-tests]
+    needs: [testops-context, component-tests]
     if: >-
       always() && !cancelled() &&
       needs.component-tests.result == 'success' && (
         github.event_name == 'pull_request' ||
-        (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
-         needs.changes.outputs.frontend == 'true') ||
+        (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
         (github.event_name == 'workflow_dispatch' &&
          (inputs.run_mock ||
           inputs.update_mock_screenshots ||
@@ -933,8 +882,7 @@ jobs:
           if-no-files-found: ignore
 
   # Not a pyramid layer and not TestOps: JaCoCo + sonar-tests only.
-  # Backend-only (push: backend paths, no frontend/tests; dispatch deploy=backend)
-  # runs ConfigReader (`harness-backend`) and skips TokensCss / LayoutCss / LocalChromePin / HAR.
+  # Dispatch deploy=backend → ConfigReader only (skip TokensCss / LayoutCss / LocalChromePin / HAR).
   tests-harness:
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
@@ -943,7 +891,6 @@ jobs:
       slice: ${{ steps.slice.outputs.slice }}
     env:
       LAYER: harness
-      CHECKOUT_FETCH_DEPTH: "0"
       SETUP_JVM_IF: "true"
       GRADLE_CC_IF: "true"
       GRADLE_CC_MODULE: tests/java/tests-java-gradle-junit5-allure3-selenide
@@ -961,19 +908,11 @@ jobs:
       - name: Select harness slice
         id: slice
         env:
-          BEFORE: ${{ github.event.before }}
           DEPLOY: ${{ github.event.inputs.deploy || '' }}
         run: |
           set -euo pipefail
-          eval "${DETECT_CHANGED_LANES}"
-          detect_changed_lanes
           slice=all
-          if [ "$DEPLOY" = "backend" ]; then
-            slice=backend
-          elif [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/main" ] \
-            && [ "$backend" = "true" ] \
-            && [ "$frontend" != "true" ] \
-            && [ "$tests" != "true" ]; then
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ] && [ "$DEPLOY" = "backend" ]; then
             slice=backend
           fi
           echo "slice=${slice}" >> "$GITHUB_OUTPUT"
@@ -1086,8 +1025,8 @@ jobs:
         run: |
           eval "${WRITE_SONAR_SUMMARY}"
 
-  # Tests-module Sonar after full harness (umbrella tags). Backend-only slice
-  # has ConfigReader coverage only — skip rather than fail the tests-module gate.
+  # Tests-module Sonar after full harness. Dispatch deploy=backend is ConfigReader-only
+  # coverage — skip rather than fail the tests-module gate.
   sonar-tests:
     needs: [tests-harness]
     if: >-
@@ -1188,13 +1127,13 @@ jobs:
       - *write-sonar-summary
 
   build-backend:
-    needs: [unit-tests, integration-tests, changes]
+    needs: [unit-tests, integration-tests]
     if: >-
       !cancelled() &&
       needs.unit-tests.result == 'success' &&
       (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped') &&
       github.ref == 'refs/heads/main' && (
-        (github.event_name == 'push' && needs.changes.outputs.backend == 'true') ||
+        github.event_name == 'push' ||
         (github.event_name == 'workflow_dispatch' &&
          (inputs.deploy == 'backend' || inputs.deploy == 'both'))
       )
@@ -1224,12 +1163,12 @@ jobs:
         run: docker compose push ${{ env.BACKEND }}
 
   build-frontend:
-    needs: [ui-mock-tests, changes]
+    needs: [ui-mock-tests]
     if: >-
       !cancelled() &&
       needs.ui-mock-tests.result == 'success' &&
       github.ref == 'refs/heads/main' && (
-        (github.event_name == 'push' && needs.changes.outputs.frontend == 'true') ||
+        github.event_name == 'push' ||
         (github.event_name == 'workflow_dispatch' &&
          (inputs.deploy == 'frontend' || inputs.deploy == 'both'))
       )
@@ -1319,16 +1258,13 @@ jobs:
       - *ssh-deploy
 
   # Rest Assured against deployed backend — starts as soon as that lane finishes (FE may
-  # still be deploying). A skipped backend deploy is fine when tests changed or dispatch
-  # asked for api without a backend deploy; a failed backend deploy keeps this job off.
+  # still be deploying). Dispatch can run api without a backend deploy this run.
   api-tests:
-    needs: [deploy-backend, changes, testops-context]
+    needs: [deploy-backend, testops-context]
     if: >-
       always() && !cancelled() && (
         (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
-         (needs.deploy-backend.result == 'success' ||
-          (needs.deploy-backend.result == 'skipped' &&
-           needs.changes.outputs.tests == 'true'))) ||
+         needs.deploy-backend.result == 'success') ||
         (github.event_name == 'workflow_dispatch' && inputs.run_api &&
          (needs.deploy-backend.result == 'success' ||
           needs.deploy-backend.result == 'skipped') &&
