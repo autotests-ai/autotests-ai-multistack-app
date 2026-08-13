@@ -13,6 +13,7 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Locale;
 
 import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.executeAsyncJavaScript;
@@ -55,9 +56,9 @@ public final class ScreenshotBaseline {
             step("Missing baseline: " + attachmentName, () ->
                     attachPng(attachmentName + "-actual-unmatched", actual));
             throw new AssertionError(
-                    "Baseline missing for %s. Commit PNG to src/test/resources/screenshots/%s/ "
+                    "Baseline missing for %s. Commit PNG to src/test/resources/%s "
                             + "or run with -DupdateBaselines=true"
-                            .formatted(label, area));
+                            .formatted(label, baselineResourcePath(area, viewport)));
         }
 
         try {
@@ -118,12 +119,53 @@ public final class ScreenshotBaseline {
         return dir.replace('\\', '/').replaceAll("/+$", "");
     }
 
+    static String visualMode() {
+        var env = System.getProperty("env", "").trim();
+        return "reference_mock".equals(env) ? "mock" : "e2e";
+    }
+
+    static String visualOs() {
+        var override = System.getenv("VISUAL_OS");
+        var raw = (override != null && !override.isBlank())
+                ? override.trim()
+                : osFamily();
+        return mapVisualOs(raw);
+    }
+
+    private static String osFamily() {
+        var name = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
+        if (name.contains("mac") || name.contains("darwin")) {
+            return "darwin";
+        }
+        if (name.contains("win")) {
+            return "win32";
+        }
+        return "linux";
+    }
+
+    private static String mapVisualOs(String raw) {
+        var key = raw.toLowerCase(Locale.ROOT);
+        if (key.equals("darwin") || key.equals("macos") || key.startsWith("mac")) {
+            return "macos";
+        }
+        if (key.equals("win32") || key.equals("windows") || key.startsWith("win")) {
+            return "windows";
+        }
+        if (key.equals("linux") || key.contains("linux")) {
+            return "linux";
+        }
+        return key.isEmpty() ? "linux" : key;
+    }
+
     private static Path baselineFilePath(String area, int viewport) {
-        return Path.of("src", "test", "resources", baselinesDir(), area, viewport + ".png");
+        return Path.of(
+                "src", "test", "resources",
+                baselinesDir(), visualMode(), visualOs(), area, viewport + ".png");
     }
 
     private static String baselineResourcePath(String area, int viewport) {
-        return baselinesDir() + "/" + area + "/" + viewport + ".png";
+        return baselinesDir() + "/" + visualMode() + "/" + visualOs()
+                + "/" + area + "/" + viewport + ".png";
     }
 
     private static boolean baselineExists(String area, int viewport) {
