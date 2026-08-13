@@ -24,9 +24,10 @@ One task `test`; the layer is a tag filter, the stand is `-Denv` ([../../LAYERS.
 | harness-backend | `./gradlew test -Denv=reference_ci -DincludeTags=harness-backend` | `ConfigReader` · CI backend lane |
 | harness-frontend | `./gradlew test -Denv=reference_ci -DincludeTags=harness-frontend` | CSS + HAR helpers · CI frontend lane |
 | api | `./gradlew test -Denv=reference_ci -DincludeTags=api` | local compose (`reference_ci`); **CI** `api-tests` uses `-Denv=reference_prod` |
-| mock | `./gradlew test -Denv=reference_mock -DincludeTags=mock` | stub API mount checks · CI job `e2e-mock-tests` |
-| e2e | `./gradlew test -Denv=reference_ci -DincludeTags=e2e -DexcludeTags=visual` | flow; add `,visual` for PNG baselines |
-| e2e baselines | `./gradlew test -Denv=reference_ci -DincludeTags=visual -DupdateBaselines=true` | refresh PNGs under `src/test/resources/screenshots/` |
+| mock | `./gradlew test -Denv=reference_mock -DincludeTags=mock` | stub API mount checks · CI `e2e-mock-tests` step 1 |
+| visual mock | `VISUAL_OS=linux ./gradlew test -Denv=reference_mock -DincludeTags=visual` | PNG compare `screenshots/mock/linux/` · same job, step 2 |
+| e2e | `./gradlew test -Denv=reference_ci -DincludeTags=e2e -DexcludeTags=visual,mock` | flow; visual is a second stage, not a pyramid layer |
+| visual e2e refresh | `VISUAL_OS=linux ./gradlew test -Denv=reference_prod -DincludeTags=visual -DupdateBaselines=true` | writes `screenshots/e2e/linux/` · CI `e2e-update-baselines` dispatch |
 | manual | `./gradlew test -Denv=reference_ci -DincludeTags=manual` | **in code** — `@Manual` + Allure steps · `tests/manual/` (not a wiki checklist) |
 
 Swap `-Denv=reference_prod` to run the same filter against the deployed stack via Selenoid

@@ -79,14 +79,35 @@ Self-check of the **tests module helpers** before / alongside product layers —
 
 ## Mock and visual (inside e2e, not layers)
 
+Visual is **two stages**, not a pyramid layer. Same Selenide classes (`@Layer("e2e")` + `@Tag("visual")`); `-Denv` picks the PNG tree. Living Java baselines are Linux Chrome 148:
+
+```
+src/test/resources/screenshots/{mock|e2e}/linux/{area}/{viewport}.png
+```
+
+`reference_mock` → `mock/`; anything else (ci/prod) → `e2e/`. `VISUAL_OS` overrides the OS folder (`darwin` → `macos`, `linux` → `linux`, `win32` → `windows`). CI sets `VISUAL_OS=linux`.
+
 | Slice | Tag | CI |
 |-------|-----|-----|
-| UI on stub API (mount + error injection) | `@Tag("mock")` (+ `@Tag("e2e")`) | job `e2e-mock-tests` on every PR; on push to `main` when frontend changed |
-| Flow | `@Tag("e2e")` exclude visual | job `e2e-tests` (after `api-tests`) |
-| Flow + visual (dispatch `run_visual`) | `e2e,visual` | job `e2e-tests` |
-| Refresh baselines | `@Tag("visual")` + `-DupdateBaselines=true` | job `e2e-update-baselines` — `workflow_dispatch` `update_baselines` PNG rewrite (not a pyramid layer; not a CD stage after green e2e) |
+| UI on stub API (mount + error injection) | `@Tag("mock")` (+ `@Tag("e2e")`) | job `e2e-mock-tests` step 1: `-DincludeTags=mock` |
+| Visual vs stub UI | `@Tag("visual")` | same job, step 2: `-DincludeTags=visual` on the same mock compose (not Playwright) |
+| Flow | `@Tag("e2e")` exclude `visual,mock` | job `e2e-tests` (after `api-tests`; default push does **not** run visual via Selenoid) |
+| Flow + visual (dispatch `run_visual`) | `e2e,visual` | job `e2e-tests` — compare `e2e/linux` |
+| Refresh e2e baselines | `@Tag("visual")` + `-DupdateBaselines=true` | job `e2e-update-baselines` — `workflow_dispatch` `update_baselines` writes `e2e/linux` (not a pyramid layer; not a CD stage after green e2e) |
 
-Local refresh: `./gradlew test -Denv=reference_ci -DincludeTags=visual -DupdateBaselines=true`
+Gradle `includeTags=a,b` is **OR** in this module — keep mock flows and visual compare as two steps so they fail separately.
+
+Local mock visual refresh (CI-canon linux folder even on macOS):
+
+```bash
+VISUAL_OS=linux ./gradlew test -Denv=reference_mock -DincludeTags=visual -DupdateBaselines=true -Dheadless=true
+```
+
+Local e2e visual refresh (compose ci stand, or `reference_prod` + Selenoid):
+
+```bash
+VISUAL_OS=linux ./gradlew test -Denv=reference_ci -DincludeTags=visual -DupdateBaselines=true
+```
 
 **Mock stand** — browser checks that need controlled `/api/*` JSON, not a live backend.
 Stand = `-Denv=reference_mock`; slice = `-DincludeTags=mock`.
@@ -128,9 +149,10 @@ task — `test`:
 ./gradlew test -Denv=reference_ci   -DincludeTags=harness-frontend
 ./gradlew test -Denv=reference_ci   -DincludeTags=harness
 ./gradlew test -Denv=reference_mock -DincludeTags=mock
+./gradlew test -Denv=reference_mock -DincludeTags=visual
 ./gradlew test -Denv=reference_prod -DincludeTags=api
-./gradlew test -Denv=reference_prod -DincludeTags=e2e -DexcludeTags=visual
-./gradlew test -Denv=reference_prod -DincludeTags=e2e,visual
+./gradlew test -Denv=reference_prod -DincludeTags=e2e -DexcludeTags=visual,mock
+./gradlew test -Denv=reference_prod -DincludeTags=visual
 ```
 
 | Stand (`-Denv`) | Where it points |
@@ -153,7 +175,7 @@ suite (`npm test` / `pytest` with `UI_URL` / `BASE_URL`) — no Gradle tag slice
 | component | frontend | active `FRONTEND_DIR` only (default `frontend/typescript/frontend-typescript-react/`) — siblings not CI-gated | Vitest + coverage | `npm test -- --coverage` via `component-tests` |
 | integration | backend | `backend/java/backend-java-spring/src/test/java/dev/reference/app/integration/` (`ApplicationWiringIntegrationTest`, `AuthLifecycleIntegrationTest`) | `@Tag("integration")` | `./gradlew test -DincludeTags=integration` in `BACKEND_DIR` via `integration-tests` (after `unit-tests`, **before** build/deploy; PR + main) |
 | api | tests | `…/tests/api/` (`AuthApiTests`, `ReferenceApiTests`, `BackendWiringApiTests`, `SeedDataApiTests`, `AuthRoundTripApiTests`) — HTTP contract + deployed-stand facts | `@Tag("api")` | java → `-DincludeTags=api` via `api-tests` (after `stand-ready`); retarget any backend with `-DapiBaseUrl` / `-DapiHealthService` |
-| e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `visual` / `mock`) | `e2e-mock-tests` (every PR; on `main` when frontend changed); `e2e-tests` (needs `api-tests` + `testops-context`) |
+| e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `visual` / `mock`) | `e2e-mock-tests` (mock flows + visual mock PNG); `e2e-tests` (needs `api-tests`; visual excluded on default push) |
 | manual | tests | `…/tests/manual/` **in code** | `@Tag("manual")` + `@Manual` | java → `-DincludeTags=manual` via `manual-tests` (after `e2e-tests`, dispatch) |
 
 ### Frontend reference modules (not interchangeable)
