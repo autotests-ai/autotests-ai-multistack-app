@@ -99,9 +99,14 @@ export function resolveSelection(pathname, search = '') {
   return { hub: false, backendId: fromPath.backendId, frontendId: fromPath.frontendId };
 }
 
-/** Navigate to the selected pair (bare `/stack/` is not a destination). */
+/** Stay on the `/stack/` board while picking a pair (and optional tests module). */
 export function stackBoardHref(backendId, frontendId, testsId = null) {
-  return stackHref(backendId, frontendId, testsId);
+  const pair = effectiveStackPair(backendId, frontendId);
+  const params = new URLSearchParams();
+  params.set('backend', pair.backendId);
+  params.set('frontend', pair.frontendId);
+  if (testsId) params.set('tests', testsId);
+  return `${STACK_PREFIX}/?${params.toString()}`;
 }
 
 /** GitHub folder for a matrix module path (`backend/python/...`). */

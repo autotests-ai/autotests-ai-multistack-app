@@ -65,13 +65,10 @@ describe('App', { tags: ['smoke'] }, () => {
     expect(screen.getByTestId('register-form-title')).toHaveTextContent('Register');
   });
 
-  it('redirects leftover /stack to home', async () => {
+  it('routes /stack to the stack page', async () => {
     renderApp('/stack');
 
-    expect(screen.getByTestId('reference-layout')).toBeInTheDocument();
-    await waitFor(() =>
-      expect(screen.getByTestId('items-list')).toHaveTextContent('No items found.'),
-    );
-    expect(screen.queryByTestId('stack-page')).not.toBeInTheDocument();
+    expect(screen.getByTestId('stack-page')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId('stack-tests-board')).toBeInTheDocument());
   });
 });

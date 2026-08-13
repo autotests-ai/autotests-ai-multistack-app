@@ -156,7 +156,7 @@ describe('StackPage', () => {
       ).toHaveClass('stack-page__row--active');
       expect(screen.getByTestId('stack-frontend-frontend-typescript-react')).toHaveAttribute(
         'href',
-        '/stack/backend-java-spring/frontend-typescript-react/?tests=tests-java-gradle-junit5-allure3-selenide',
+        '/stack/?backend=backend-java-spring&frontend=frontend-typescript-react&tests=tests-java-gradle-junit5-allure3-selenide',
       );
       expect(screen.getByTestId('stack-open-frontend-frontend-typescript-react')).toHaveAttribute(
         'href',

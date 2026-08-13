@@ -33,7 +33,7 @@ const REFERENCE_HEADER_CONFIG = {
       testid: 'header-nav-register',
     },
     {
-      href: MOUNT,
+      href: '/stack/',
       label: 'Stack',
       active: false,
       testid: 'header-nav-stack',
@@ -125,6 +125,12 @@ describe('canonical header.js — active nav follows the route', () => {
     await mountAt(`${MOUNT}/`);
     expect(activeTestids()).toEqual(['header-nav-home']);
     expect(ariaCurrentTestids()).toEqual(['header-nav-home']);
+  });
+
+  it('highlights Stack on the /stack/ board', async () => {
+    await mountAt('/stack/');
+    expect(activeTestids()).toEqual(['header-nav-stack']);
+    expect(ariaCurrentTestids()).toEqual(['header-nav-stack']);
   });
 
   it('re-syncs on SPA pushState (in-form Register → Login link)', async () => {

@@ -1,13 +1,17 @@
-import { Navigate, type RouteObject } from 'react-router-dom';
+import type { RouteObject } from 'react-router-dom';
 import { App } from './App';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { StackPage } from './pages/StackPage';
 
 /**
  * Route objects rather than JSX `<Routes>`: the same array feeds
  * `createBrowserRouter` in `main.tsx` and `createMemoryRouter` in the tests, so
  * a route only ever has to be declared once.
+ *
+ * Prod: `/{pair}/stack` is 301 `/stack/` (host nginx). This route remains for
+ * vite-dev where `/stack` is the matrix board.
  */
 export const routes: RouteObject[] = [
   {
@@ -17,8 +21,7 @@ export const routes: RouteObject[] = [
       { index: true, element: <HomePage /> },
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
-      { path: 'stack', element: <Navigate to="/" replace /> },
-      { path: 'stack/*', element: <Navigate to="/" replace /> },
+      { path: 'stack/*', element: <StackPage /> },
     ],
   },
 ];

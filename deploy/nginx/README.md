@@ -1,6 +1,6 @@
 # Host nginx (prod)
 
-**Canonical URLs:** [autotests.ai/stack/backend-java-spring/frontend-typescript-react/](https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/) — `/{backend}/{frontend}/` and `/{backend}/api/` under `/stack/`. Bare `/stack/` **301**s to that default pair.
+**Canonical URLs:** [autotests.ai/stack/](https://autotests.ai/stack/) (matrix board) and [autotests.ai/stack/backend-java-spring/frontend-typescript-react/](https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/) — `/{backend}/{frontend}/` and `/{backend}/api/` under `/stack/`. `/stack/login` **301**s to the default pair.
 
 **Retire hosts:** `reference-app-copy.autotests.ai`, `reference-app.autotests.ai` → **301** to `https://autotests.ai/stack$request_uri` (generated vhost).
 
@@ -18,7 +18,7 @@ Outputs in `deploy/nginx/generated/`:
 | `reference-app-copy.autotests.ai.conf` | Retire vhost (301 → autotests.ai/stack/…) |
 | `autotests.ai-stack-upstreams.conf` | `upstream` blocks — include at `http{}` in autotests.ai |
 | `autotests.ai-stack-routes.conf` | `location` blocks — include inside autotests.ai `server{}` |
-| `autotests.ai-stack-board.conf` | `/stack` `/stack/` `/stack/login` `/stack/register` **301** → default pair; shared `/stack/js|css` + `matrix.json` — include **before** stack-routes |
+| `autotests.ai-stack-board.conf` | `/stack/` matrix board + `/stack/login|register` **301** → default pair; leftover `/{pair}/stack` → `/stack/`; shared `/stack/js|css` — include **before** stack-routes |
 
 Apply on box3 (retire vhost + drop the old `reference-app` proxy to `:8083`):
 

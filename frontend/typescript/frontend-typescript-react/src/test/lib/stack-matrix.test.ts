@@ -39,9 +39,9 @@ describe('stack-matrix selection', () => {
     });
   });
 
-  it('builds a board href on the selected pair, not bare /stack/', () => {
+  it('builds a board href that stays on /stack/', () => {
     expect(stackBoardHref('backend-python-flask', 'frontend-javascript-vue')).toBe(
-      '/stack/backend-python-flask/frontend-javascript-vue/',
+      '/stack/?backend=backend-python-flask&frontend=frontend-javascript-vue',
     );
   });
 

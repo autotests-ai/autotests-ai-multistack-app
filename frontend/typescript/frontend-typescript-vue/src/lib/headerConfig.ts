@@ -1,4 +1,4 @@
-import { APP_BASE, appPath } from './appBase';
+import { appPath } from './appBase';
 
 export interface HeaderNavItem {
   href: string;
@@ -15,8 +15,8 @@ export interface HeaderConfig {
   theme: { default: string };
 }
 
-/** Current stack pair — `/stack/{backend}/{frontend}`, never `…/stack`. */
-export const STACK_INDEX_HREF = APP_BASE || '/';
+/** Stack matrix board — origin `/stack/`, not `/{pair}/stack`. */
+export const STACK_INDEX_HREF = '/stack/';
 
 /**
  * Canonical header config for the reference-app SPA. Nav hrefs are mount-prefixed
