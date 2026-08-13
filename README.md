@@ -238,7 +238,7 @@ Allure: `testops-context` + live `allurectl watch` on test jobs → `publish-all
 | `ALLURE_PROJECT_ID` | variable | TestOps project id |
 | `ALLURE_ENDPOINT` | variable | optional; default `https://allure.qa.guru` |
 
-GHCR needs no extra secret: `build` and `deploy` both authenticate with the run's `GITHUB_TOKEN` — `build` under `packages: write`, `deploy` under `packages: read`, because a freshly published package is private. Old versions are pruned by [`.github/workflows/ghcr-retention.yml`](.github/workflows/ghcr-retention.yml) after CI on `main` (keep last 10, protect `latest`). That workflow is not a job in `ci.yml`: not on the teaching graph, not on the test/deploy path.
+GHCR packages are **public** (same as this repo), so image versions are not billed on the free Packages quota and CI has no janitor job. `build` still pushes with `GITHUB_TOKEN` (`packages: write`). `deploy` still logs in (`packages: read`): a **new** package name is private until the one-time Package settings → Danger Zone → Public (cannot go private again) — [backend](https://github.com/orgs/autotests-ai/packages/container/package/reference-app-copy-backend-java-spring) · [frontend](https://github.com/orgs/autotests-ai/packages/container/package/reference-app-copy-frontend-typescript-react).
 
 Sibling prod (do not touch): [reference-app.autotests.ai](https://reference-app.autotests.ai) · port `8083`.
 
