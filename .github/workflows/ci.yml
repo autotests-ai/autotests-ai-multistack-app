@@ -172,7 +172,10 @@ env:
   # &cache-gradle-cc, &setup-python, &pip-install, &setup-node, &npm-ci,
   # &install-playwright, &upload-allure-results, &write-sonar-summary,
   # &docker-login-ghcr, &setup-docker-buildx, &docker-build-push, &ssh-deploy).
-  # Job env supplies if-knobs / paths / artifact names. Gradle/test commands stay inline.
+  # Job env supplies if-knobs / paths / artifact names as LITERALS — GitHub rejects
+  # ${{ env.* }} inside jobs.<id>.env (Unrecognized named-value: 'env'). Keep in sync
+  # with BACKEND_* / FRONTEND_* / TESTS_* above. Step if/with may still use env.*.
+  # Gradle/test commands stay inline.
   ALLURE_WRITE_ENVIRONMENT: |
     write_allure_environment() {
       if [[ -z "${ALLURE_RESULTS:-}" ]]; then
@@ -483,19 +486,19 @@ jobs:
       ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
       ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
       ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
-      SETUP_JVM_IF: ${{ env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin' }}
-      GRADLE_CC_IF: ${{ env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin' }}
-      GRADLE_CC_MODULE: ${{ env.BACKEND_DIR }}
-      GRADLE_CC_KEY_PREFIX: ${{ env.BACKEND }}
+      SETUP_JVM_IF: "true"
+      GRADLE_CC_IF: "true"
+      GRADLE_CC_MODULE: backend/java/backend-java-spring
+      GRADLE_CC_KEY_PREFIX: backend-java-spring
       ALLURE_RESULTS_ARTIFACT: allure-results-unit
-      ALLURE_RESULTS_UPLOAD_PATH: ${{ env.BACKEND_DIR }}/build/allure-results/**
-      SETUP_NODE_IF: ${{ env.BACKEND_LANG == 'javascript' || env.BACKEND_LANG == 'typescript' }}
-      NODE_CACHE_DEPENDENCY_PATH: ${{ env.BACKEND_DIR }}/package-lock.json
-      SETUP_PYTHON_IF: ${{ env.BACKEND_LANG == 'python' }}
-      PYTHON_CACHE_DEPENDENCY_PATH: ${{ env.BACKEND_DIR }}/requirements.txt
-      PYTHON_WORKDIR: ${{ env.BACKEND_DIR }}
-      NPM_CI_IF: ${{ env.BACKEND_LANG == 'javascript' || env.BACKEND_LANG == 'typescript' }}
-      NPM_WORKDIR: ${{ env.BACKEND_DIR }}
+      ALLURE_RESULTS_UPLOAD_PATH: backend/java/backend-java-spring/build/allure-results/**
+      SETUP_NODE_IF: "false"
+      NODE_CACHE_DEPENDENCY_PATH: backend/java/backend-java-spring/package-lock.json
+      SETUP_PYTHON_IF: "false"
+      PYTHON_CACHE_DEPENDENCY_PATH: backend/java/backend-java-spring/requirements.txt
+      PYTHON_WORKDIR: backend/java/backend-java-spring
+      NPM_CI_IF: "false"
+      NPM_WORKDIR: backend/java/backend-java-spring
     steps:
       - &checkout
         uses: actions/checkout@v7
@@ -633,12 +636,12 @@ jobs:
       ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
       ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
       ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
-      SETUP_JVM_IF: ${{ env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin' }}
-      GRADLE_CC_IF: ${{ env.BACKEND_LANG == 'java' }}
-      GRADLE_CC_MODULE: ${{ env.BACKEND_DIR }}
-      GRADLE_CC_KEY_PREFIX: ${{ env.BACKEND }}-integration
+      SETUP_JVM_IF: "true"
+      GRADLE_CC_IF: "true"
+      GRADLE_CC_MODULE: backend/java/backend-java-spring
+      GRADLE_CC_KEY_PREFIX: backend-java-spring-integration
       ALLURE_RESULTS_ARTIFACT: allure-results-integration
-      ALLURE_RESULTS_UPLOAD_PATH: ${{ env.BACKEND_DIR }}/build/allure-results/**
+      ALLURE_RESULTS_UPLOAD_PATH: backend/java/backend-java-spring/build/allure-results/**
     steps:
       - *checkout
       - *cache-allurectl
@@ -708,11 +711,11 @@ jobs:
       ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
       ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
       SETUP_NODE_IF: "true"
-      NODE_CACHE_DEPENDENCY_PATH: ${{ env.FRONTEND_DIR }}/package-lock.json
+      NODE_CACHE_DEPENDENCY_PATH: frontend/typescript/frontend-typescript-react/package-lock.json
       NPM_CI_IF: "true"
-      NPM_WORKDIR: ${{ env.FRONTEND_DIR }}
+      NPM_WORKDIR: frontend/typescript/frontend-typescript-react
       ALLURE_RESULTS_ARTIFACT: allure-results-component
-      ALLURE_RESULTS_UPLOAD_PATH: ${{ env.FRONTEND_DIR }}/allure-results/**
+      ALLURE_RESULTS_UPLOAD_PATH: frontend/typescript/frontend-typescript-react/allure-results/**
     steps:
       - *checkout
       - *cache-allurectl
@@ -769,15 +772,17 @@ jobs:
       ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
       ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
       ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
-      SETUP_JVM_IF: ${{ env.TESTS_LANG == 'java' }}
+      SETUP_JVM_IF: "true"
       GRADLE_CACHE_READ_ONLY: "true"
-      SETUP_BUILDX_IF: ${{ env.TESTS_LANG == 'java' && 'true' || 'false' }}
+      SETUP_BUILDX_IF: "true"
       DOCKER_CONTEXT: .
-      DOCKER_FILE: ${{ env.FRONTEND_DIR }}/Dockerfile
-      DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/${{ env.GHCR_FRONTEND_PACKAGE }}:mock-local
-      DOCKER_BUILD_ARGS: ${{ env.DOCKER_FRONTEND_BUILD_ARGS }}
+      DOCKER_FILE: frontend/typescript/frontend-typescript-react/Dockerfile
+      DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/reference-app-copy-frontend-typescript-react:mock-local
+      DOCKER_BUILD_ARGS: |
+        REACT_UI=frontend/_shared/frontend-react-ui
+        UI_RUNTIME=frontend/_shared/frontend-javascript-app
       ALLURE_RESULTS_ARTIFACT: allure-results-ui-mock
-      ALLURE_RESULTS_UPLOAD_PATH: ${{ env.TESTS_DIR }}/build/allure-results/**
+      ALLURE_RESULTS_UPLOAD_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/build/allure-results/**
     steps:
       - *checkout
       - *cache-allurectl
@@ -908,12 +913,12 @@ jobs:
       ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
       ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
       ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
-      SETUP_JVM_IF: ${{ env.TESTS_LANG == 'java' }}
-      GRADLE_CC_IF: ${{ env.TESTS_LANG == 'java' }}
-      GRADLE_CC_MODULE: ${{ env.TESTS_DIR }}
-      GRADLE_CC_KEY_PREFIX: ${{ env.TESTS }}-${{ github.job }}
+      SETUP_JVM_IF: "true"
+      GRADLE_CC_IF: "true"
+      GRADLE_CC_MODULE: tests/java/tests-java-gradle-junit5-allure3-selenide
+      GRADLE_CC_KEY_PREFIX: tests-java-gradle-junit5-allure3-selenide-${{ github.job }}
       ALLURE_RESULTS_ARTIFACT: allure-results-harness-backend
-      ALLURE_RESULTS_UPLOAD_PATH: ${{ env.TESTS_DIR }}/build/allure-results/**
+      ALLURE_RESULTS_UPLOAD_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/build/allure-results/**
     steps:
       - *checkout
       - *cache-allurectl
@@ -955,20 +960,20 @@ jobs:
       ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
       ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
       ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
-      SETUP_JVM_IF: ${{ env.TESTS_LANG == 'java' }}
-      GRADLE_CC_IF: ${{ env.TESTS_LANG == 'java' }}
-      GRADLE_CC_MODULE: ${{ env.TESTS_DIR }}
-      GRADLE_CC_KEY_PREFIX: ${{ env.TESTS }}-${{ github.job }}
-      SETUP_NODE_IF: ${{ env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript' }}
-      NODE_CACHE_DEPENDENCY_PATH: ${{ env.TESTS_DIR }}/package-lock.json
-      NPM_CI_IF: ${{ env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript' }}
-      NPM_WORKDIR: ${{ env.TESTS_DIR }}
-      PLAYWRIGHT_IF: ${{ env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript' }}
-      SETUP_PYTHON_IF: ${{ env.TESTS_LANG == 'python' }}
-      PYTHON_CACHE_DEPENDENCY_PATH: ${{ env.TESTS_DIR }}/requirements.txt
-      PYTHON_WORKDIR: ${{ env.TESTS_DIR }}
+      SETUP_JVM_IF: "true"
+      GRADLE_CC_IF: "true"
+      GRADLE_CC_MODULE: tests/java/tests-java-gradle-junit5-allure3-selenide
+      GRADLE_CC_KEY_PREFIX: tests-java-gradle-junit5-allure3-selenide-${{ github.job }}
+      SETUP_NODE_IF: "false"
+      NODE_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/package-lock.json
+      NPM_CI_IF: "false"
+      NPM_WORKDIR: tests/java/tests-java-gradle-junit5-allure3-selenide
+      PLAYWRIGHT_IF: "false"
+      SETUP_PYTHON_IF: "false"
+      PYTHON_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/requirements.txt
+      PYTHON_WORKDIR: tests/java/tests-java-gradle-junit5-allure3-selenide
       ALLURE_RESULTS_ARTIFACT: allure-results-harness-frontend
-      ALLURE_RESULTS_UPLOAD_PATH: ${{ env.TESTS_DIR }}/build/allure-results/**
+      ALLURE_RESULTS_UPLOAD_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/build/allure-results/**
     steps:
       - *checkout
       - *cache-allurectl
@@ -1044,8 +1049,8 @@ jobs:
       CHECKOUT_FETCH_DEPTH: "0"
       SETUP_JVM_IF: "true"
       GRADLE_CC_IF: "true"
-      GRADLE_CC_MODULE: ${{ env.BACKEND_DIR }}
-      GRADLE_CC_KEY_PREFIX: ${{ env.BACKEND }}-sonar
+      GRADLE_CC_MODULE: backend/java/backend-java-spring
+      GRADLE_CC_KEY_PREFIX: backend-java-spring-sonar
     steps:
       - *checkout
       - *setup-java
@@ -1099,8 +1104,8 @@ jobs:
       CHECKOUT_FETCH_DEPTH: "0"
       SETUP_JVM_IF: "true"
       GRADLE_CC_IF: "true"
-      GRADLE_CC_MODULE: ${{ env.TESTS_DIR }}
-      GRADLE_CC_KEY_PREFIX: ${{ env.TESTS }}-${{ github.job }}
+      GRADLE_CC_MODULE: tests/java/tests-java-gradle-junit5-allure3-selenide
+      GRADLE_CC_KEY_PREFIX: tests-java-gradle-junit5-allure3-selenide-${{ github.job }}
     steps:
       - *checkout
       - *setup-java
@@ -1158,7 +1163,7 @@ jobs:
       SONAR_PROJECT_KEY: ${{ vars.SONAR_FRONTEND_PROJECT_KEY || 'reference-app-copy-frontend-typescript-react' }}
       CHECKOUT_FETCH_DEPTH: "0"
       SETUP_NODE_IF: "true"
-      NODE_CACHE_DEPENDENCY_PATH: ${{ env.FRONTEND_DIR }}/package-lock.json
+      NODE_CACHE_DEPENDENCY_PATH: frontend/typescript/frontend-typescript-react/package-lock.json
     steps:
       - *checkout
       - *setup-node
@@ -1210,10 +1215,10 @@ jobs:
       packages: write
       actions: write
     env:
-      DOCKER_CACHE_SCOPE: reference-app-copy-docker-${{ env.BACKEND }}
-      DOCKER_CONTEXT: ${{ env.BACKEND_DIR }}
-      DOCKER_FILE: ${{ env.BACKEND_DIR }}/Dockerfile
-      DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/${{ env.GHCR_BACKEND_PACKAGE }}:${{ env.IMAGE_TAG }}
+      DOCKER_CACHE_SCOPE: reference-app-copy-docker-backend-java-spring
+      DOCKER_CONTEXT: backend/java/backend-java-spring
+      DOCKER_FILE: backend/java/backend-java-spring/Dockerfile
+      DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/reference-app-copy-backend-java-spring:${{ github.sha }}
       DOCKER_BUILD_ARGS: ""
     steps:
       - *checkout
@@ -1245,11 +1250,13 @@ jobs:
       packages: write
       actions: write
     env:
-      DOCKER_CACHE_SCOPE: reference-app-copy-docker-${{ env.FRONTEND }}
+      DOCKER_CACHE_SCOPE: reference-app-copy-docker-frontend-typescript-react
       DOCKER_CONTEXT: .
-      DOCKER_FILE: ${{ env.FRONTEND_DIR }}/Dockerfile
-      DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/${{ env.GHCR_FRONTEND_PACKAGE }}:${{ env.IMAGE_TAG }}
-      DOCKER_BUILD_ARGS: ${{ env.DOCKER_FRONTEND_BUILD_ARGS }}
+      DOCKER_FILE: frontend/typescript/frontend-typescript-react/Dockerfile
+      DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/reference-app-copy-frontend-typescript-react:${{ github.sha }}
+      DOCKER_BUILD_ARGS: |
+        REACT_UI=frontend/_shared/frontend-react-ui
+        UI_RUNTIME=frontend/_shared/frontend-javascript-app
     steps:
       - *checkout
       - *docker-login-ghcr
@@ -1279,8 +1286,8 @@ jobs:
       packages: read
     env:
       DEPLOY_STEP_NAME: Deploy backend to stand
-      DEPLOY_COMPOSE_SERVICES: postgres postgres-ensure-dbs ${{ env.BACKEND }}
-      DEPLOY_HEALTH_URL: http://127.0.0.1:${{ env.BACKEND_PORT }}/api/health
+      DEPLOY_COMPOSE_SERVICES: postgres postgres-ensure-dbs backend-java-spring
+      DEPLOY_HEALTH_URL: http://127.0.0.1:8800/api/health
     steps:
       - &ssh-deploy
         name: ${{ env.DEPLOY_STEP_NAME }}
@@ -1316,7 +1323,7 @@ jobs:
       packages: read
     env:
       DEPLOY_STEP_NAME: Deploy frontend to stand
-      DEPLOY_COMPOSE_SERVICES: ${{ env.FRONTEND }}
+      DEPLOY_COMPOSE_SERVICES: frontend-typescript-react
       DEPLOY_HEALTH_URL: ""
     steps:
       - *ssh-deploy
@@ -1376,18 +1383,18 @@ jobs:
       ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
       ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
       ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
-      SETUP_JVM_IF: ${{ env.TESTS_LANG == 'java' }}
+      SETUP_JVM_IF: "true"
       GRADLE_CACHE_READ_ONLY: "true"
-      SETUP_NODE_IF: ${{ env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript' }}
-      NODE_CACHE_DEPENDENCY_PATH: ${{ env.TESTS_DIR }}/package-lock.json
-      NPM_CI_IF: ${{ env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript' }}
-      NPM_WORKDIR: ${{ env.TESTS_DIR }}
-      PLAYWRIGHT_IF: ${{ env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript' }}
-      SETUP_PYTHON_IF: ${{ env.TESTS_LANG == 'python' }}
-      PYTHON_CACHE_DEPENDENCY_PATH: ${{ env.TESTS_DIR }}/requirements.txt
-      PYTHON_WORKDIR: ${{ env.TESTS_DIR }}
+      SETUP_NODE_IF: "false"
+      NODE_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/package-lock.json
+      NPM_CI_IF: "false"
+      NPM_WORKDIR: tests/java/tests-java-gradle-junit5-allure3-selenide
+      PLAYWRIGHT_IF: "false"
+      SETUP_PYTHON_IF: "false"
+      PYTHON_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/requirements.txt
+      PYTHON_WORKDIR: tests/java/tests-java-gradle-junit5-allure3-selenide
       ALLURE_RESULTS_ARTIFACT: allure-results-api
-      ALLURE_RESULTS_UPLOAD_PATH: ${{ env.TESTS_DIR }}/build/allure-results/**
+      ALLURE_RESULTS_UPLOAD_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/build/allure-results/**
     steps:
       - *checkout
       - *cache-allurectl
@@ -1456,18 +1463,18 @@ jobs:
       ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
       ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
       ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
-      SETUP_JVM_IF: ${{ env.TESTS_LANG == 'java' }}
+      SETUP_JVM_IF: "true"
       GRADLE_CACHE_READ_ONLY: "true"
-      SETUP_NODE_IF: ${{ env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript' }}
-      NODE_CACHE_DEPENDENCY_PATH: ${{ env.TESTS_DIR }}/package-lock.json
-      NPM_CI_IF: ${{ env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript' }}
-      NPM_WORKDIR: ${{ env.TESTS_DIR }}
-      PLAYWRIGHT_IF: ${{ env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript' }}
-      SETUP_PYTHON_IF: ${{ env.TESTS_LANG == 'python' }}
-      PYTHON_CACHE_DEPENDENCY_PATH: ${{ env.TESTS_DIR }}/requirements.txt
-      PYTHON_WORKDIR: ${{ env.TESTS_DIR }}
+      SETUP_NODE_IF: "false"
+      NODE_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/package-lock.json
+      NPM_CI_IF: "false"
+      NPM_WORKDIR: tests/java/tests-java-gradle-junit5-allure3-selenide
+      PLAYWRIGHT_IF: "false"
+      SETUP_PYTHON_IF: "false"
+      PYTHON_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/requirements.txt
+      PYTHON_WORKDIR: tests/java/tests-java-gradle-junit5-allure3-selenide
       ALLURE_RESULTS_ARTIFACT: allure-results-e2e
-      ALLURE_RESULTS_UPLOAD_PATH: ${{ env.TESTS_DIR }}/build/allure-results/**
+      ALLURE_RESULTS_UPLOAD_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/build/allure-results/**
     steps:
       - *checkout
       - *cache-allurectl
@@ -1610,10 +1617,10 @@ jobs:
       ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
       ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
       ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
-      SETUP_JVM_IF: ${{ env.TESTS_LANG == 'java' }}
+      SETUP_JVM_IF: "true"
       GRADLE_CACHE_READ_ONLY: "true"
       ALLURE_RESULTS_ARTIFACT: allure-results-manual
-      ALLURE_RESULTS_UPLOAD_PATH: ${{ env.TESTS_DIR }}/build/allure-results/**
+      ALLURE_RESULTS_UPLOAD_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/build/allure-results/**
     steps:
       - *checkout
       - *cache-allurectl
@@ -1660,9 +1667,9 @@ jobs:
       GH_PAGES_BASE: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
       ALLURE_LIVE_ENABLED: ${{ vars.ALLURE_PROJECT_ID != '' }}
       SETUP_NODE_IF: "true"
-      NODE_CACHE_DEPENDENCY_PATH: ${{ env.TESTS_DIR }}/package-lock.json
+      NODE_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/package-lock.json
       NPM_CI_IF: "true"
-      NPM_WORKDIR: ${{ env.TESTS_DIR }}
+      NPM_WORKDIR: tests/java/tests-java-gradle-junit5-allure3-selenide
     outputs:
       testops_launch_url: ${{ steps.resolve-testops-url.outputs.launch_url }}
       report_generated: ${{ steps.allure-report.outcome == 'success' }}
@@ -1913,7 +1920,7 @@ jobs:
     env:
       GH_PAGES_BASE: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
       SETUP_NODE_IF: "true"
-      NODE_CACHE_DEPENDENCY_PATH: ${{ env.TESTS_DIR }}/package-lock.json
+      NODE_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/package-lock.json
     steps:
       - *checkout
 
