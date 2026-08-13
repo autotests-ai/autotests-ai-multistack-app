@@ -1036,57 +1036,6 @@ jobs:
       - name: Push frontend Docker image to GHCR
         run: docker compose push ${{ env.FRONTEND }}
 
-  # Registry housekeeping is deliberately non-gating: API/permission failures must not
-  # prevent deployment of an image that was already built and pushed successfully.
-  ghcr-retention:
-    needs: [build-backend, build-frontend]
-    if: >-
-      !cancelled() &&
-      (needs.build-backend.result == 'success' || needs.build-frontend.result == 'success')
-    continue-on-error: true
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Retain last 10 GHCR versions
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          KEEP: "10"
-          BACKEND_BUILD_RESULT: ${{ needs.build-backend.result }}
-          FRONTEND_BUILD_RESULT: ${{ needs.build-frontend.result }}
-        run: |
-          set -euo pipefail
-          org="${{ github.repository_owner }}"
-          packages=()
-          if [ "${BACKEND_BUILD_RESULT}" = "success" ]; then
-            packages+=("${GHCR_BACKEND_PACKAGE}")
-          fi
-          if [ "${FRONTEND_BUILD_RESULT}" = "success" ]; then
-            packages+=("${GHCR_FRONTEND_PACKAGE}")
-          fi
-          for pkg in "${packages[@]}"; do
-            echo "Cleaning ghcr.io/${org}/${pkg} (keep ${KEEP}; protect latest)"
-            to_delete="$(
-              gh api --paginate \
-                "/orgs/${org}/packages/container/${pkg}/versions" \
-                --jq '.[] | select((.metadata.container.tags // [] | index("latest")) | not) | "\(.created_at)\t\(.id)"' \
-                | sort -r \
-                | tail -n "+$((KEEP + 1))" \
-                | cut -f2
-            )"
-            if [ -z "${to_delete}" ]; then
-              echo "Nothing to delete for ${pkg}"
-              continue
-            fi
-            while IFS= read -r id; do
-              [ -n "${id}" ] || continue
-              echo "DELETE ${pkg} version ${id}"
-              gh api --method DELETE "/orgs/${org}/packages/container/${pkg}/versions/${id}"
-            done <<< "${to_delete}"
-          done
-
   deploy-backend:
     needs: [build-backend, sonar-backend]
     if: >-
