@@ -24,9 +24,10 @@ name: CI
 # Deploy of either lane moves the shared host checkout dir to the new SHA.
 # Roots: unit-tests · component-tests · tests-harness-* · changes
 #   integration-tests ← unit-tests (backend Spring+PG, pre-build; PR + main)
-#   sonar-backend ← unit-tests + integration-tests · sonar-frontend ← component-tests
+#   sonar-backend ← unit-tests + integration-tests
 #   sonar-tests ← tests-harness-backend + tests-harness-frontend
 #   ui-mock-tests ← component-tests (jsdom first; mock compose on the runner)
+#   sonar-frontend ← component-tests + ui-mock-tests (mock skipped ⇒ sonar still runs)
 #   build-backend ← unit-tests + integration-tests · build-frontend ← ui-mock-tests
 #   deploy-backend ← build-backend + sonar-backend
 #   deploy-frontend ← build-frontend + sonar-frontend
@@ -168,9 +169,10 @@ env:
 
   # ── Inline CI helpers (no .github/scripts — logic lives in workflow env) ─
   # Step templates: YAML anchors at first use (&checkout, &setup-java, &setup-gradle,
-  # &cache-gradle-cc, &upload-allure-results, &setup-node, &setup-python,
-  # &write-sonar-summary, &docker-login-ghcr, &setup-docker-buildx, &docker-build-push,
-  # &ssh-deploy). Job env supplies if-knobs / paths / artifact names.
+  # &cache-gradle-cc, &setup-python, &pip-install, &setup-node, &npm-ci,
+  # &install-playwright, &upload-allure-results, &write-sonar-summary,
+  # &docker-login-ghcr, &setup-docker-buildx, &docker-build-push, &ssh-deploy).
+  # Job env supplies if-knobs / paths / artifact names. Gradle/test commands stay inline.
   ALLURE_WRITE_ENVIRONMENT: |
     write_allure_environment() {
       if [[ -z "${ALLURE_RESULTS:-}" ]]; then
@@ -309,7 +311,6 @@ jobs:
             echo "enabled=false" >> "$GITHUB_OUTPUT"
             echo "TestOps credentials unavailable — live upload disabled"
           fi
-
 
       # Binary only (not token / launch). setup-allurectl@v1 stores under
       # $RUNNER_TOOL_CACHE/allurectl/<ver>/<goarch>/ + sibling `.complete` and
@@ -491,6 +492,9 @@ jobs:
       NODE_CACHE_DEPENDENCY_PATH: ${{ env.BACKEND_DIR }}/package-lock.json
       SETUP_PYTHON_IF: ${{ env.BACKEND_LANG == 'python' }}
       PYTHON_CACHE_DEPENDENCY_PATH: ${{ env.BACKEND_DIR }}/requirements.txt
+      PYTHON_WORKDIR: ${{ env.BACKEND_DIR }}
+      NPM_CI_IF: ${{ env.BACKEND_LANG == 'javascript' || env.BACKEND_LANG == 'typescript' }}
+      NPM_WORKDIR: ${{ env.BACKEND_DIR }}
     steps:
       - &checkout
         uses: actions/checkout@v7
@@ -550,10 +554,11 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
           cache-dependency-path: ${{ env.PYTHON_CACHE_DEPENDENCY_PATH }}
-      - name: Install Python dependencies
-        if: env.BACKEND_LANG == 'python'
+      - &pip-install
+        name: Install Python dependencies
+        if: env.SETUP_PYTHON_IF == 'true'
         run: python -m pip install -r requirements.txt
-        working-directory: ${{ env.BACKEND_DIR }}
+        working-directory: ${{ env.PYTHON_WORKDIR }}
       - name: Run Python tests (pytest)
         if: env.BACKEND_LANG == 'python'
         env:
@@ -586,10 +591,11 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: ${{ env.NODE_CACHE_DEPENDENCY_PATH }}
-      - name: Install backend npm dependencies
-        if: env.BACKEND_LANG == 'javascript' || env.BACKEND_LANG == 'typescript'
+      - &npm-ci
+        name: Install npm dependencies
+        if: env.NPM_CI_IF == 'true'
         run: npm ci
-        working-directory: ${{ env.BACKEND_DIR }}
+        working-directory: ${{ env.NPM_WORKDIR }}
       - name: Run backend unit tests (npm)
         if: env.BACKEND_LANG == 'javascript' || env.BACKEND_LANG == 'typescript'
         env:
@@ -700,6 +706,8 @@ jobs:
       ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
       SETUP_NODE_IF: "true"
       NODE_CACHE_DEPENDENCY_PATH: ${{ env.FRONTEND_DIR }}/package-lock.json
+      NPM_CI_IF: "true"
+      NPM_WORKDIR: ${{ env.FRONTEND_DIR }}
       ALLURE_RESULTS_ARTIFACT: allure-results-component
       ALLURE_RESULTS_UPLOAD_PATH: ${{ env.FRONTEND_DIR }}/allure-results/**
     steps:
@@ -707,9 +715,7 @@ jobs:
       - *cache-allurectl
       - *setup-live-allurectl
       - *setup-node
-      - name: Install frontend npm dependencies
-        run: npm ci
-        working-directory: ${{ env.FRONTEND_DIR }}
+      - *npm-ci
       - name: Lint frontend
         run: npm run lint --if-present
         working-directory: ${{ env.FRONTEND_DIR }}
@@ -731,6 +737,162 @@ jobs:
           path: ${{ env.FRONTEND_DIR }}/coverage/
           if-no-files-found: error
       - *upload-allure-results
+
+  # Stub API on runner (compose --profile mock); after jsdom, before FE image push.
+  ui-mock-tests:
+    needs: [changes, testops-context, component-tests]
+    if: >-
+      always() && !cancelled() &&
+      needs.component-tests.result == 'success' && (
+        github.event_name == 'pull_request' ||
+        (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+         needs.changes.outputs.frontend == 'true') ||
+        (github.event_name == 'workflow_dispatch' &&
+         (inputs.run_mock ||
+          inputs.update_mock_screenshots ||
+          inputs.deploy == 'frontend' || inputs.deploy == 'both'))
+      )
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: write
+    env:
+      LAYER: ui-mock
+      SCREENSHOT_OS: linux
+      SCREENSHOT_BROWSER: chrome
+      DOCKER_CACHE_SCOPE: reference-app-copy-docker-mock-stand-gateway-${{ hashFiles(format('{0}/Dockerfile', env.FRONTEND_DIR), 'deploy/mock/**') }}
+      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
+      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
+      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
+      SETUP_JVM_IF: ${{ env.TESTS_LANG == 'java' }}
+      GRADLE_CACHE_READ_ONLY: "true"
+      SETUP_BUILDX_IF: ${{ env.TESTS_LANG == 'java' && 'true' || 'false' }}
+      DOCKER_CONTEXT: .
+      DOCKER_FILE: ${{ env.FRONTEND_DIR }}/Dockerfile
+      DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/${{ env.GHCR_FRONTEND_PACKAGE }}:mock-local
+      DOCKER_BUILD_ARGS: ${{ env.DOCKER_FRONTEND_BUILD_ARGS }}
+      ALLURE_RESULTS_ARTIFACT: allure-results-ui-mock
+      ALLURE_RESULTS_UPLOAD_PATH: ${{ env.TESTS_DIR }}/build/allure-results/**
+    steps:
+      - *checkout
+      - *cache-allurectl
+      - *setup-live-allurectl
+
+      # ── java (-Denv=reference_mock -DincludeTags=mock) ────────────────────
+      # Read-only GUH (GRADLE_CACHE_READ_ONLY). No CC restore: entries pin
+      # absolute GRADLE_USER_HOME (JaCoCo agent jars) from other runners.
+      - *setup-java
+      - *setup-gradle
+      # reference_mock has no remoteUrl: the stand lives on the runner's localhost, which a
+      # Selenoid browser could not reach, so the browser has to be local too.
+      - name: Install pinned Chrome for Testing
+        if: env.TESTS_LANG == 'java'
+        id: setup-chrome
+        uses: browser-actions/setup-chrome@v2.1.2
+        with:
+          chrome-version: ${{ env.CHROME_FOR_TESTING_VERSION }}
+          install-chromedriver: true
+      # stand-gateway serves the SPA and proxies /api/ to WireMock stubs (deploy/mock/mappings).
+      # Pre-build frontend with GHA layer cache; compose up pulls api-mock and starts nginx gateway.
+      - &setup-docker-buildx
+        if: env.SETUP_BUILDX_IF != 'false'
+        uses: docker/setup-buildx-action@v4
+      - &docker-build-push
+        if: env.SETUP_BUILDX_IF != 'false'
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ env.DOCKER_CONTEXT }}
+          file: ${{ env.DOCKER_FILE }}
+          tags: ${{ env.DOCKER_TAGS }}
+          build-args: ${{ env.DOCKER_BUILD_ARGS }}
+          load: true
+          cache-from: type=gha,scope=${{ env.DOCKER_CACHE_SCOPE }}
+          cache-to: type=gha,mode=max,scope=${{ env.DOCKER_CACHE_SCOPE }}
+      - name: Bring up mock stand
+        if: env.TESTS_LANG == 'java'
+        run: |
+          set -euo pipefail
+          docker compose --profile mock up -d stand-gateway
+          curl -fsS --retry 30 --retry-delay 2 --retry-all-errors \
+            "http://127.0.0.1:${MOCK_GATEWAY_PORT}/api/health"
+        env:
+          IMAGE_TAG: mock-local
+          MOCK_GATEWAY_PORT: "9911"
+      - name: Run ui-mock tests (Gradle)
+        if: env.TESTS_LANG == 'java'
+        id: run-tests
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+          CHROME_BINARY_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+          CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
+        run: |
+          eval "${ALLURECTL_RUN}"
+          run_with_allurectl ./gradlew test -Denv=reference_mock -DincludeTags=mock
+        working-directory: ${{ env.TESTS_DIR }}
+      - name: Stash mock Allure results
+        if: always() && env.TESTS_LANG == 'java'
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          STASH="${{ env.TESTS_DIR }}/build/allure-results-mock-stash"
+          SRC="${{ env.TESTS_DIR }}/build/allure-results"
+          mkdir -p "$STASH"
+          if [ -d "$SRC" ]; then cp -R "$SRC/." "$STASH/"; fi
+      # Same mock compose stand; separate Gradle fail from includeTags=mock.
+      # includeTags CSV is OR here — do not combine mock,screenshot in one step.
+      # Compare and rewrite are mutually exclusive: a UI change would fail compare
+      # and block the rewrite.
+      - name: Run screenshot mock compare (Gradle)
+        if: >-
+          always() && !cancelled() && env.TESTS_LANG == 'java' &&
+          (github.event_name != 'workflow_dispatch' || inputs.update_mock_screenshots != true)
+        id: run-screenshot-tests
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+          CHROME_BINARY_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+          CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
+        run: |
+          eval "${ALLURECTL_RUN}"
+          run_with_allurectl ./gradlew test -Denv=reference_mock -DincludeTags=screenshot
+        working-directory: ${{ env.TESTS_DIR }}
+      - name: Update screenshots
+        if: >-
+          always() && !cancelled() && env.TESTS_LANG == 'java' &&
+          github.event_name == 'workflow_dispatch' && inputs.update_mock_screenshots
+        id: update-screenshots
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+          CHROME_BINARY_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+          CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
+        run: |
+          eval "${ALLURECTL_RUN}"
+          run_with_allurectl ./gradlew test -Denv=reference_mock -DincludeTags=screenshot -DupdateScreenshots=true
+        working-directory: ${{ env.TESTS_DIR }}
+      - name: Merge Allure results
+        if: always() && env.TESTS_LANG == 'java'
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          STASH="${{ env.TESTS_DIR }}/build/allure-results-mock-stash"
+          DEST="${{ env.TESTS_DIR }}/build/allure-results"
+          mkdir -p "$DEST"
+          if [ -d "$STASH" ]; then cp -R "$STASH/." "$DEST/"; fi
+      - name: Tear down mock stand
+        if: always() && env.TESTS_LANG == 'java'
+        continue-on-error: true
+        run: docker compose --profile mock down -v --remove-orphans
+      - *upload-allure-results
+      - name: Publish mock screenshot PNGs
+        if: >-
+          always() && env.TESTS_LANG == 'java' &&
+          github.event_name == 'workflow_dispatch' && inputs.update_mock_screenshots
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: mock-screenshot-pngs
+          path: ${{ env.TESTS_DIR }}/src/test/resources/screenshots/
+          if-no-files-found: ignore
 
   tests-harness-backend:
     needs: testops-context
@@ -795,8 +957,12 @@ jobs:
       GRADLE_CC_KEY_PREFIX: ${{ env.TESTS }}-${{ github.job }}
       SETUP_NODE_IF: ${{ env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript' }}
       NODE_CACHE_DEPENDENCY_PATH: ${{ env.TESTS_DIR }}/package-lock.json
+      NPM_CI_IF: ${{ env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript' }}
+      NPM_WORKDIR: ${{ env.TESTS_DIR }}
+      PLAYWRIGHT_IF: ${{ env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript' }}
       SETUP_PYTHON_IF: ${{ env.TESTS_LANG == 'python' }}
       PYTHON_CACHE_DEPENDENCY_PATH: ${{ env.TESTS_DIR }}/requirements.txt
+      PYTHON_WORKDIR: ${{ env.TESTS_DIR }}
       ALLURE_RESULTS_ARTIFACT: allure-results-harness-frontend
       ALLURE_RESULTS_UPLOAD_PATH: ${{ env.TESTS_DIR }}/build/allure-results/**
     steps:
@@ -830,13 +996,11 @@ jobs:
           if-no-files-found: error
       # ── javascript / typescript (full suite; no tag pyramid yet) ──────────
       - *setup-node
-      - name: Install npm dependencies
-        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
-        run: npm ci
-        working-directory: ${{ env.TESTS_DIR }}
+      - *npm-ci
       - *cache-playwright-browsers
-      - name: Install Playwright Chromium
-        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
+      - &install-playwright
+        name: Install Playwright Chromium
+        if: env.PLAYWRIGHT_IF == 'true'
         run: npx playwright install --with-deps chromium
         working-directory: ${{ env.TESTS_DIR }}
       - name: Run tests (npm)
@@ -850,10 +1014,7 @@ jobs:
 
       # ── python (full suite; no tag pyramid yet) ───────────────────────────
       - *setup-python
-      - name: Install Python dependencies
-        if: env.TESTS_LANG == 'python'
-        run: python -m pip install -r requirements.txt
-        working-directory: ${{ env.TESTS_DIR }}
+      - *pip-install
       - name: Run Python tests (pytest)
         if: env.TESTS_LANG == 'python'
         env:
@@ -982,8 +1143,11 @@ jobs:
       - *write-sonar-summary
 
   sonar-frontend:
-    needs: [component-tests]
-    if: ${{ !cancelled() && needs.component-tests.result == 'success' }}
+    needs: [component-tests, ui-mock-tests]
+    if: >-
+      !cancelled() &&
+      needs.component-tests.result == 'success' &&
+      (needs.ui-mock-tests.result == 'success' || needs.ui-mock-tests.result == 'skipped')
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
@@ -1055,20 +1219,8 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - &setup-docker-buildx
-        if: env.SETUP_BUILDX_IF != 'false'
-        uses: docker/setup-buildx-action@v4
-      - &docker-build-push
-        if: env.SETUP_BUILDX_IF != 'false'
-        uses: docker/build-push-action@v7
-        with:
-          context: ${{ env.DOCKER_CONTEXT }}
-          file: ${{ env.DOCKER_FILE }}
-          tags: ${{ env.DOCKER_TAGS }}
-          build-args: ${{ env.DOCKER_BUILD_ARGS }}
-          load: true
-          cache-from: type=gha,scope=${{ env.DOCKER_CACHE_SCOPE }}
-          cache-to: type=gha,mode=max,scope=${{ env.DOCKER_CACHE_SCOPE }}
+      - *setup-docker-buildx
+      - *docker-build-push
       - name: Push backend Docker image to GHCR
         run: docker compose push ${{ env.BACKEND }}
 
@@ -1138,150 +1290,6 @@ jobs:
           command_timeout: 15m
           envs: IMAGE_TAG,GHCR_TOKEN,DEPLOY_COMPOSE_SERVICES,DEPLOY_HEALTH_URL
           script: ${{ env.DEPLOY_SSH_SCRIPT }}
-
-  # Stub API on runner (compose --profile mock); after jsdom, before FE image push.
-  ui-mock-tests:
-    needs: [changes, testops-context, component-tests]
-    if: >-
-      always() && !cancelled() &&
-      needs.component-tests.result == 'success' && (
-        github.event_name == 'pull_request' ||
-        (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
-         needs.changes.outputs.frontend == 'true') ||
-        (github.event_name == 'workflow_dispatch' &&
-         (inputs.run_mock ||
-          inputs.update_mock_screenshots ||
-          inputs.deploy == 'frontend' || inputs.deploy == 'both'))
-      )
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    permissions:
-      contents: read
-      actions: write
-    env:
-      LAYER: ui-mock
-      SCREENSHOT_OS: linux
-      SCREENSHOT_BROWSER: chrome
-      DOCKER_CACHE_SCOPE: reference-app-copy-docker-mock-stand-gateway-${{ hashFiles(format('{0}/Dockerfile', env.FRONTEND_DIR), 'deploy/mock/**') }}
-      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
-      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
-      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
-      SETUP_JVM_IF: ${{ env.TESTS_LANG == 'java' }}
-      GRADLE_CACHE_READ_ONLY: "true"
-      SETUP_BUILDX_IF: ${{ env.TESTS_LANG == 'java' && 'true' || 'false' }}
-      DOCKER_CONTEXT: .
-      DOCKER_FILE: ${{ env.FRONTEND_DIR }}/Dockerfile
-      DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/${{ env.GHCR_FRONTEND_PACKAGE }}:mock-local
-      DOCKER_BUILD_ARGS: ${{ env.DOCKER_FRONTEND_BUILD_ARGS }}
-      ALLURE_RESULTS_ARTIFACT: allure-results-ui-mock
-      ALLURE_RESULTS_UPLOAD_PATH: ${{ env.TESTS_DIR }}/build/allure-results/**
-    steps:
-      - *checkout
-      - *cache-allurectl
-      - *setup-live-allurectl
-
-      # ── java (-Denv=reference_mock -DincludeTags=mock) ────────────────────
-      # Read-only GUH (GRADLE_CACHE_READ_ONLY). No CC restore: entries pin
-      # absolute GRADLE_USER_HOME (JaCoCo agent jars) from other runners.
-      - *setup-java
-      - *setup-gradle
-      # reference_mock has no remoteUrl: the stand lives on the runner's localhost, which a
-      # Selenoid browser could not reach, so the browser has to be local too.
-      - name: Install pinned Chrome for Testing
-        if: env.TESTS_LANG == 'java'
-        id: setup-chrome
-        uses: browser-actions/setup-chrome@v2.1.2
-        with:
-          chrome-version: ${{ env.CHROME_FOR_TESTING_VERSION }}
-          install-chromedriver: true
-      # stand-gateway serves the SPA and proxies /api/ to WireMock stubs (deploy/mock/mappings).
-      # Pre-build frontend with GHA layer cache; compose up pulls api-mock and starts nginx gateway.
-      - *setup-docker-buildx
-      - *docker-build-push
-      - name: Bring up mock stand
-        if: env.TESTS_LANG == 'java'
-        run: |
-          set -euo pipefail
-          docker compose --profile mock up -d stand-gateway
-          curl -fsS --retry 30 --retry-delay 2 --retry-all-errors \
-            "http://127.0.0.1:${MOCK_GATEWAY_PORT}/api/health"
-        env:
-          IMAGE_TAG: mock-local
-          MOCK_GATEWAY_PORT: "9911"
-      - name: Run ui-mock tests (Gradle)
-        if: env.TESTS_LANG == 'java'
-        id: run-tests
-        env:
-          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
-          CHROME_BINARY_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
-          CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
-        run: |
-          eval "${ALLURECTL_RUN}"
-          run_with_allurectl ./gradlew test -Denv=reference_mock -DincludeTags=mock
-        working-directory: ${{ env.TESTS_DIR }}
-      - name: Stash mock Allure results
-        if: always() && env.TESTS_LANG == 'java'
-        continue-on-error: true
-        run: |
-          set -euo pipefail
-          STASH="${{ env.TESTS_DIR }}/build/allure-results-mock-stash"
-          SRC="${{ env.TESTS_DIR }}/build/allure-results"
-          mkdir -p "$STASH"
-          if [ -d "$SRC" ]; then cp -R "$SRC/." "$STASH/"; fi
-      # Same mock compose stand; separate Gradle fail from includeTags=mock.
-      # includeTags CSV is OR here — do not combine mock,screenshot in one step.
-      # Compare and rewrite are mutually exclusive: a UI change would fail compare
-      # and block the rewrite.
-      - name: Run screenshot mock compare (Gradle)
-        if: >-
-          always() && !cancelled() && env.TESTS_LANG == 'java' &&
-          (github.event_name != 'workflow_dispatch' || inputs.update_mock_screenshots != true)
-        id: run-screenshot-tests
-        env:
-          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
-          CHROME_BINARY_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
-          CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
-        run: |
-          eval "${ALLURECTL_RUN}"
-          run_with_allurectl ./gradlew test -Denv=reference_mock -DincludeTags=screenshot
-        working-directory: ${{ env.TESTS_DIR }}
-      - name: Update screenshots
-        if: >-
-          always() && !cancelled() && env.TESTS_LANG == 'java' &&
-          github.event_name == 'workflow_dispatch' && inputs.update_mock_screenshots
-        id: update-screenshots
-        env:
-          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
-          CHROME_BINARY_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
-          CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
-        run: |
-          eval "${ALLURECTL_RUN}"
-          run_with_allurectl ./gradlew test -Denv=reference_mock -DincludeTags=screenshot -DupdateScreenshots=true
-        working-directory: ${{ env.TESTS_DIR }}
-      - name: Merge Allure results
-        if: always() && env.TESTS_LANG == 'java'
-        continue-on-error: true
-        run: |
-          set -euo pipefail
-          STASH="${{ env.TESTS_DIR }}/build/allure-results-mock-stash"
-          DEST="${{ env.TESTS_DIR }}/build/allure-results"
-          mkdir -p "$DEST"
-          if [ -d "$STASH" ]; then cp -R "$STASH/." "$DEST/"; fi
-      - name: Tear down mock stand
-        if: always() && env.TESTS_LANG == 'java'
-        continue-on-error: true
-        run: docker compose --profile mock down -v --remove-orphans
-      - *upload-allure-results
-      - name: Publish mock screenshot PNGs
-        if: >-
-          always() && env.TESTS_LANG == 'java' &&
-          github.event_name == 'workflow_dispatch' && inputs.update_mock_screenshots
-        continue-on-error: true
-        uses: actions/upload-artifact@v7
-        with:
-          name: mock-screenshot-pngs
-          path: ${{ env.TESTS_DIR }}/src/test/resources/screenshots/
-          if-no-files-found: ignore
 
   # FE deploy after build + sonar; mock already gated build-frontend.
   deploy-frontend:
@@ -1368,8 +1376,12 @@ jobs:
       GRADLE_CACHE_READ_ONLY: "true"
       SETUP_NODE_IF: ${{ env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript' }}
       NODE_CACHE_DEPENDENCY_PATH: ${{ env.TESTS_DIR }}/package-lock.json
+      NPM_CI_IF: ${{ env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript' }}
+      NPM_WORKDIR: ${{ env.TESTS_DIR }}
+      PLAYWRIGHT_IF: ${{ env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript' }}
       SETUP_PYTHON_IF: ${{ env.TESTS_LANG == 'python' }}
       PYTHON_CACHE_DEPENDENCY_PATH: ${{ env.TESTS_DIR }}/requirements.txt
+      PYTHON_WORKDIR: ${{ env.TESTS_DIR }}
       ALLURE_RESULTS_ARTIFACT: allure-results-api
       ALLURE_RESULTS_UPLOAD_PATH: ${{ env.TESTS_DIR }}/build/allure-results/**
     steps:
@@ -1391,15 +1403,9 @@ jobs:
         working-directory: ${{ env.TESTS_DIR }}
       # ── javascript / typescript (full suite) ──────────────────────────────
       - *setup-node
-      - name: Install npm dependencies
-        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
-        run: npm ci
-        working-directory: ${{ env.TESTS_DIR }}
+      - *npm-ci
       - *cache-playwright-browsers
-      - name: Install Playwright Chromium
-        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
-        run: npx playwright install --with-deps chromium
-        working-directory: ${{ env.TESTS_DIR }}
+      - *install-playwright
       - name: Run tests (npm)
         if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
         env:
@@ -1411,10 +1417,7 @@ jobs:
 
       # ── python (full suite) ──────────────────────────────────────────────
       - *setup-python
-      - name: Install Python dependencies
-        if: env.TESTS_LANG == 'python'
-        run: python -m pip install -r requirements.txt
-        working-directory: ${{ env.TESTS_DIR }}
+      - *pip-install
       - name: Run Python tests (pytest)
         if: env.TESTS_LANG == 'python'
         env:
@@ -1453,8 +1456,12 @@ jobs:
       GRADLE_CACHE_READ_ONLY: "true"
       SETUP_NODE_IF: ${{ env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript' }}
       NODE_CACHE_DEPENDENCY_PATH: ${{ env.TESTS_DIR }}/package-lock.json
+      NPM_CI_IF: ${{ env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript' }}
+      NPM_WORKDIR: ${{ env.TESTS_DIR }}
+      PLAYWRIGHT_IF: ${{ env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript' }}
       SETUP_PYTHON_IF: ${{ env.TESTS_LANG == 'python' }}
       PYTHON_CACHE_DEPENDENCY_PATH: ${{ env.TESTS_DIR }}/requirements.txt
+      PYTHON_WORKDIR: ${{ env.TESTS_DIR }}
       ALLURE_RESULTS_ARTIFACT: allure-results-e2e
       ALLURE_RESULTS_UPLOAD_PATH: ${{ env.TESTS_DIR }}/build/allure-results/**
     steps:
@@ -1558,15 +1565,9 @@ jobs:
           if-no-files-found: ignore
       # ── javascript / typescript (full suite; no tag pyramid yet) ──────────
       - *setup-node
-      - name: Install npm dependencies
-        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
-        run: npm ci
-        working-directory: ${{ env.TESTS_DIR }}
+      - *npm-ci
       - *cache-playwright-browsers
-      - name: Install Playwright Chromium
-        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
-        run: npx playwright install --with-deps chromium
-        working-directory: ${{ env.TESTS_DIR }}
+      - *install-playwright
       - name: Run tests (npm)
         if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
         env:
@@ -1578,10 +1579,7 @@ jobs:
 
       # ── python (full suite; no tag pyramid yet) ───────────────────────────
       - *setup-python
-      - name: Install Python dependencies
-        if: env.TESTS_LANG == 'python'
-        run: python -m pip install -r requirements.txt
-        working-directory: ${{ env.TESTS_DIR }}
+      - *pip-install
       - name: Run Python tests (pytest)
         if: env.TESTS_LANG == 'python'
         env:
@@ -1659,6 +1657,8 @@ jobs:
       ALLURE_LIVE_ENABLED: ${{ vars.ALLURE_PROJECT_ID != '' }}
       SETUP_NODE_IF: "true"
       NODE_CACHE_DEPENDENCY_PATH: ${{ env.TESTS_DIR }}/package-lock.json
+      NPM_CI_IF: "true"
+      NPM_WORKDIR: ${{ env.TESTS_DIR }}
     outputs:
       testops_launch_url: ${{ steps.resolve-testops-url.outputs.launch_url }}
       report_generated: ${{ steps.allure-report.outcome == 'success' }}
@@ -1677,9 +1677,7 @@ jobs:
 
       - *setup-node
 
-      - name: Install pinned Allure CLIs
-        run: npm ci
-        working-directory: ${{ env.TESTS_DIR }}
+      - *npm-ci
 
       - name: Download merged raw Allure results
         id: results
@@ -1910,6 +1908,8 @@ jobs:
       actions: read
     env:
       GH_PAGES_BASE: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+      SETUP_NODE_IF: "true"
+      NODE_CACHE_DEPENDENCY_PATH: ${{ env.TESTS_DIR }}/package-lock.json
     steps:
       - *checkout
 
@@ -1930,13 +1930,7 @@ jobs:
           path: ${{ env.ALLURE_RESULTS_DIR }}
           merge-multiple: true
 
-      - name: Set up pinned Node.js
-        if: steps.report.outcome == 'success'
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
+      - *setup-node
 
       - name: Install pinned Allure notification CLI
         if: steps.report.outcome == 'success'

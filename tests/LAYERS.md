@@ -320,17 +320,17 @@ To add another layer, copy `manual-tests` and change the java `-D` flags.
 ## CD graph
 
 Matches [`ci.yml`](../.github/workflows/ci.yml) `needs` (Sonar ×3 gates **deploy**, not build;
-`ui-mock-tests` after `component-tests`, before `build-frontend`):
+FE lane: `component-tests` → `ui-mock-tests` → `sonar-frontend`; mock also gates `build-frontend`):
 
 ```
 every run (PR + main):
   unit-tests → integration-tests
   unit-tests + integration-tests → sonar-backend
-  component-tests → sonar-frontend
-  component-tests → ui-mock-tests
+  component-tests → ui-mock-tests → sonar-frontend
   tests-harness-backend ─┐
   tests-harness-frontend ┴→ sonar-tests
-  ui-mock-tests (needs component-tests + changes + testops; every PR; main when FE changed)
+  ui-mock-tests (needs component-tests + changes + testops; every PR; main when FE changed;
+                 skipped mock does not skip sonar-frontend)
 
 main only:
   build-backend ← unit-tests + integration-tests + changes     (no sonar)
@@ -346,6 +346,7 @@ main only:
 build/deploy and does **not** wait on `stand-ready`.
 `sonar-tests` scans **testinfra helpers** (`-DincludeTags=harness`), not api/e2e results.
 It runs after both harness slices — on **PR** and **main**.
-`build-backend` / `build-frontend` do **not** `needs` Sonar. There is no `build-frontend` →
-`ui-mock-tests` edge (mock does not wait for the GHCR image) and no `stand-ready` →
-`integration-tests` edge.
+`build-backend` / `build-frontend` do **not** `needs` Sonar. `sonar-frontend` waits on
+`ui-mock-tests` (success or skipped — backend-only main still scans). There is no
+`build-frontend` → `ui-mock-tests` edge (mock does not wait for the GHCR image) and no
+`stand-ready` → `integration-tests` edge.
