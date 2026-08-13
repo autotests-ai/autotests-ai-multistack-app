@@ -22,7 +22,7 @@ tests/
 | Kind | Job id | Where |
 |------|--------|-------|
 | Product unit | `unit-tests` | `backend/java/backend-java-spring/src/test/` |
-| Harness | `tests-harness` | `…/tests/testinfra/` · slice by lane: `harness` / `harness-backend` / `harness-frontend` |
+| Harness | `tests-harness` | `…/tests/testinfra/` · `@Tag("harness")`; backend-only lane → `harness-backend` (`ConfigReader`) |
 | RTL | `component-tests` | `frontend/typescript/frontend-typescript-react/src/test/` |
 | integration / api / e2e / manual | `integration-tests` · `api-tests` · `ui-mock-tests` · `e2e-tests` / `manual-tests` | `backend/java/…/integration/` · `tests/api/` · `tests/e2e/` · manual stubs **in code** (`tests/manual/`) |
 

@@ -1,10 +1,10 @@
 # reference-app-copy
 
-Clean teaching fork of [reference-app](https://github.com/autotests-ai/reference-app) — **3-folder layout**, orchestrated CI/CD (block 1).
+Teaching product — **3-folder layout**, orchestrated CI/CD (block 1).
 
 GitHub: **[github.com/autotests-ai/reference-app-copy](https://github.com/autotests-ai/reference-app-copy)** · monorepo: `projects/reference-home/reference-app-copy/`
 
-Production: [reference-app-copy.autotests.ai](https://reference-app-copy.autotests.ai)
+Production: [autotests.ai/stack/](https://autotests.ai/stack/)
 
 ## Layout (3 product folders)
 
@@ -46,8 +46,8 @@ Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/N
 ### Routing (per-frontend containers × multi-backend)
 
 ```
-https://reference-app-copy.autotests.ai/{backend}/{frontend}/
-https://reference-app-copy.autotests.ai/{backend}/api/
+https://autotests.ai/stack/{backend}/{frontend}/
+https://autotests.ai/stack/{backend}/api/
 ```
 
 Short alias (301 redirect, same path): `https://autotests.ai/{backend}/{frontend}/` · `https://autotests.ai/{backend}/api/`
@@ -58,8 +58,8 @@ Short alias (301 redirect, same path): `https://autotests.ai/{backend}/{frontend
 
 Examples:
 
-- […/backend-java-spring/frontend-typescript-react/](https://reference-app-copy.autotests.ai/backend-java-spring/frontend-typescript-react/)
-- […/backend-java-spring/frontend-typescript-vue/](https://reference-app-copy.autotests.ai/backend-java-spring/frontend-typescript-vue/)
+- […/backend-java-spring/frontend-typescript-react/](https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/)
+- […/backend-java-spring/frontend-typescript-vue/](https://autotests.ai/stack/backend-java-spring/frontend-typescript-vue/)
 - `…/backend-python-flask/frontend-typescript-react/`
 - […/backend-python-fastapi/frontend-typescript-react/](https://autotests.ai/backend-python-fastapi/frontend-typescript-react/) (short URL → canonical host)
 - `…/backend-python-django/frontend-javascript-vanilla/`
@@ -125,12 +125,12 @@ flowchart TB
 | Job | Where |
 |-----|-------|
 | `unit-tests` | `BACKEND_DIR` — command by `BACKEND_LANG` (gradle/JaCoCo, pytest, `go test`, or `npm test`); java excludes `@Tag("integration")` |
-| `tests-harness` | `TESTS_DIR` — `harness` / `harness-backend` / `harness-frontend` by lane. Not TestOps. |
+| `tests-harness` | `TESTS_DIR` — full `harness` except backend-only → `harness-backend` (`ConfigReader`). Not TestOps. |
 | `component-tests` | `FRONTEND_DIR` — `npm test -- --coverage` |
 | `integration-tests` | `BACKEND_DIR` — after `unit-tests` (java: `-DincludeTags=integration`); Spring Boot + real PG; **before** build/deploy; PR + main |
 | `api-tests` | `TESTS_DIR` — after backend deploy, or tests-lane vs live stand (`-DincludeTags=api`) |
 | `ui-mock-tests` | after `component-tests`; every PR; frontend lane on main; dispatch `run_mock` / `update_mock_screenshots` |
-| `sonar-tests` | after `tests-harness` (skipped on backend-only or frontend-only lane) |
+| `sonar-tests` | after `tests-harness` (skipped on backend-only lane) |
 | `e2e-tests` | after `api-tests` + `deploy-frontend` — java: `-DincludeTags=e2e`; dispatch `run_screenshot` / `update_e2e_screenshots` are extra steps |
 | `manual-tests` | after `e2e-tests`; dispatch only — java: `-DincludeTags=manual` |
 
@@ -182,7 +182,7 @@ curl -fsS http://localhost:8822/api/health
 curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:9811/
 curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:9800/
 # prod path shape — host nginx only
-# https://reference-app-copy.autotests.ai/backend-java-spring/api/health
+# https://autotests.ai/stack/backend-java-spring/api/health
 ```
 
 | Service | Role |
@@ -198,7 +198,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:9800/
 
 ## Deploy
 
-**Production URL:** https://reference-app-copy.autotests.ai/backend-java-spring/frontend-typescript-react/
+**Production URL:** https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
 
 Teaching CI — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
@@ -233,12 +233,10 @@ Allure: `testops-context` + live `allurectl watch` on pyramid jobs (not `tests-h
 
 GHCR packages are **public** (same as this repo), so image versions are not billed on the free Packages quota and CI has no janitor job. `build` still pushes with `GITHUB_TOKEN` (`packages: write`). `deploy` still logs in (`packages: read`): a **new** package name is private until the one-time Package settings → Danger Zone → Public (cannot go private again) — [backend](https://github.com/orgs/autotests-ai/packages/container/package/reference-app-copy-backend-java-spring) · [frontend](https://github.com/orgs/autotests-ai/packages/container/package/reference-app-copy-frontend-typescript-react).
 
-Sibling prod (do not touch): [reference-app.autotests.ai](https://reference-app.autotests.ai) · port `8083`.
-
 ### Deferred (block 2+)
 
 - Legacy: [`tests/_deferred/`](tests/_deferred/)
 
 ## Related
 
-- Upstream: [autotests-ai/reference-app](https://github.com/autotests-ai/reference-app)
+- Generator template: monorepo `stacks/java-spring/`

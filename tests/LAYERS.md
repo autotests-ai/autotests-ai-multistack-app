@@ -65,9 +65,9 @@ Self-check of the **tests module helpers** before / alongside product layers —
 
 | Slice | Tags | CI | Gates |
 |-------|------|----|-------|
-| all | `harness` | `tests-harness` | PR · tests lane · mixed/`all`; feeds `sonar-tests` |
+| all | `harness` | `tests-harness` | PR · frontend · tests · mixed/`all`; feeds `sonar-tests` |
 | backend-only | `harness-backend` | same job | backend lane — `ConfigReader` only; **skips** `sonar-tests` |
-| frontend-only | `harness-frontend` | same job | frontend lane — CSS/HAR/`LocalChromePin`; **skips** `sonar-tests` |
+| frontend helpers | `harness` + `harness-frontend` | inside the all slice | CSS/HAR/`LocalChromePin` — frontend lane runs the **full** harness because UI tests read `ConfigReader` |
 
 ```bash
 ./gradlew test -Denv=reference_ci -DincludeTags=harness-backend   # + JaCoCo on ConfigReader
@@ -164,7 +164,7 @@ task — `test`:
 |-----------------|-----------------|
 | `reference_ci` | the compose stack on this machine — UI + real `/api` same origin via `stand-gateway-ci` `:9821`, direct API `:8800` (`docker compose up -d` first) |
 | `reference_mock` | mock profile — UI + stub API same origin `:9911` (`docker compose --profile mock up -d stand-gateway` first) |
-| `reference_prod` | [reference-app-copy.autotests.ai/backend-java-spring](https://reference-app-copy.autotests.ai/backend-java-spring), browsers from the Selenoid hub |
+| `reference_prod` | [reference-app-copy.autotests.ai/backend-java-spring](https://autotests.ai/stack/backend-java-spring), browsers from the Selenoid hub |
 
 Anything else — `headless`, `enableHar`, `enableVideo`, `updateScreenshots`, `allureReportMode` — is a
 per-run `-D<key>=<value>`. Available keys: `src/test/resources/config/default.properties`.
@@ -204,7 +204,7 @@ Paths SSOT: `backend/scripts/paths.sh`. Module naming: [NAMING.md](NAMING.md).
 |-----|--------------------|
 | `unit-tests` | **Application** (active backend — toolchain from `BACKEND_LANG`; excludes `@Tag("integration")`) |
 | `integration-tests` | **Application** (full Spring Boot + Testcontainers PostgreSQL in `BACKEND_DIR`) |
-| `tests-harness` | **Test tooling** — full helpers on tests/`all`; ConfigReader on backend-only; CSS/HAR/`LocalChromePin` on frontend-only |
+| `tests-harness` | **Test tooling** — full helpers except backend-only (`ConfigReader`); frontend keeps ConfigReader because UI tests read it |
 | `component-tests` | **Application** (active `FRONTEND_DIR` only — Vitest + coverage → `sonar-frontend` / `ui-mock-tests` → `build-frontend`) |
 
 Students: product unit layers (`unit-tests` / `component-tests`); harness = helper checks that higher layers depend on.
@@ -327,7 +327,7 @@ every run (PR + main):
   unit-tests → integration-tests
   unit-tests + integration-tests → sonar-backend
   component-tests → ui-mock-tests → sonar-frontend
-  tests-harness → sonar-tests (sonar-tests skipped on backend-only or frontend-only lane)
+  tests-harness → sonar-tests (sonar-tests skipped on backend-only lane)
   ui-mock-tests (needs component-tests + trigger + testops; every PR; frontend lane on main)
 
 main only (via `trigger`):
@@ -343,8 +343,8 @@ main only (via `trigger`):
 `api-tests` gates on `deploy-backend` (not a join with frontend). `integration-tests` runs in `BACKEND_DIR` before
 build/deploy and does **not** wait on deploy.
 `sonar-tests` scans **testinfra helpers** (`-DincludeTags=harness`), not api/e2e results.
-It runs after `tests-harness` on **PR** and mixed/`all`/`tests` lanes. Backend-only and
-frontend-only slices skip it (partial helper coverage).
+It runs after `tests-harness` on **PR** and **main**, except the backend-only lane
+(`harness-backend` only — no full tests-module coverage to gate).
 `build-backend` / `build-frontend` do **not** `needs` Sonar. `sonar-frontend` waits on
 `ui-mock-tests` (success or skipped — backend-only lane still scans). There is no
 `build-frontend` → `ui-mock-tests` edge (mock does not wait for the GHCR image) and no
