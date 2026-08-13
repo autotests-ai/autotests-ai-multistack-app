@@ -22,7 +22,8 @@ name: CI
 # CD on main (two lanes; deploy host serialized via concurrency group).
 # needs = real dependencies only (not graph layout). Sonar gates deploy, not build.
 # Deploy of either lane moves the shared host checkout dir to the new SHA.
-# Roots: unit-tests · component-tests · tests-harness · changes
+# Roots: unit-tests · component-tests · tests-harness · testops-context
+#   changes (graph: cd-paths) — CD path gate only; not a pyramid job
 #   integration-tests ← unit-tests (backend Spring+PG, pre-build; PR + main)
 #   sonar-backend ← unit-tests + integration-tests
 #   sonar-tests ← tests-harness (skipped on backend-only slice)
@@ -271,6 +272,32 @@ env:
       echo "- dashboard: ${SONAR_HOST_URL%/}/dashboard?id=${SONAR_PROJECT_KEY}"
       echo "- commit: \`${GITHUB_SHA:0:7}\`"
     } >> "$GITHUB_STEP_SUMMARY"
+  # Path booleans for CD job-level if: (skip build/deploy/mock without a runner).
+  # Not a pyramid stage — GitHub only shares outputs across jobs via a job.
+  DETECT_CHANGED_LANES: |
+    detect_changed_lanes() {
+      backend=false
+      frontend=false
+      tests=false
+      if [ "${GITHUB_EVENT_NAME}" != "push" ] || [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+        :
+      elif [ -z "${BEFORE:-}" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] \
+        || ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+        backend=true
+        frontend=true
+        tests=true
+      else
+        CHANGED="$(git diff --name-only "$BEFORE" "$GITHUB_SHA")"
+        match() { printf '%s\n' "$CHANGED" | grep -qE "$1"; }
+        SHARED='deploy/|docker-compose|\.github/workflows/ci\.yml'
+        if match "^(backend/|${SHARED})"; then backend=true; fi
+        if match "^(frontend/|${SHARED})"; then frontend=true; fi
+        if match "^(tests/|${SHARED})"; then tests=true; fi
+      fi
+      if [ -n "${GITHUB_OUTPUT:-}" ]; then
+        printf 'backend=%s\nfrontend=%s\ntests=%s\n' "$backend" "$frontend" "$tests" >> "$GITHUB_OUTPUT"
+      fi
+    }
   DOCKER_FRONTEND_BUILD_ARGS: |
     REACT_UI=frontend/_shared/frontend-react-ui
     UI_RUNTIME=frontend/_shared/frontend-javascript-app
@@ -664,7 +691,10 @@ jobs:
         working-directory: ${{ env.BACKEND_DIR }}
       - *upload-allure-results
 
+  # CD path gate — not a pyramid job. Exists so job-level `if:` can skip
+  # build/deploy/mock/api without starting a runner (GHA cannot do that from a step).
   changes:
+    name: cd-paths
     runs-on: ubuntu-24.04
     env:
       CHECKOUT_FETCH_DEPTH: "0"
@@ -680,24 +710,8 @@ jobs:
           BEFORE: ${{ github.event.before }}
         run: |
           set -euo pipefail
-          emit() { printf '%s=%s\n' "$1" "$2" >> "$GITHUB_OUTPUT"; }
-          if [ "${{ github.event_name }}" != "push" ] || [ "${{ github.ref }}" != "refs/heads/main" ]; then
-            emit backend false; emit frontend false; emit tests false
-            exit 0
-          fi
-          # Force-push and first-push leave `before` unusable (nulled, or a commit this clone
-          # never fetched); diffing against it aborts the job, so fall back to "everything".
-          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] \
-             || ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
-            emit backend true; emit frontend true; emit tests true
-            exit 0
-          fi
-          CHANGED="$(git diff --name-only "$BEFORE" "$GITHUB_SHA")"
-          match() { printf '%s\n' "$CHANGED" | grep -qE "$1"; }
-          SHARED='deploy/|docker-compose|\.github/workflows/ci\.yml'
-          match "^(backend/|${SHARED})"  && emit backend true  || emit backend false
-          match "^(frontend/|${SHARED})" && emit frontend true || emit frontend false
-          match "^(tests/|${SHARED})"    && emit tests true    || emit tests false
+          eval "${DETECT_CHANGED_LANES}"
+          detect_changed_lanes
 
   # Same teaching knob as deploy/sonar: only FRONTEND_DIR. Sibling frontends are not gated.
   # Coverage always on (this job is the deploy default). lint/typecheck --if-present for JS.
@@ -922,14 +936,14 @@ jobs:
   # Backend-only (push: backend paths, no frontend/tests; dispatch deploy=backend)
   # runs ConfigReader (`harness-backend`) and skips TokensCss / LayoutCss / LocalChromePin / HAR.
   tests-harness:
-    needs: [changes]
-    if: always() && !cancelled()
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     outputs:
       slice: ${{ steps.slice.outputs.slice }}
     env:
       LAYER: harness
+      CHECKOUT_FETCH_DEPTH: "0"
       SETUP_JVM_IF: "true"
       GRADLE_CC_IF: "true"
       GRADLE_CC_MODULE: tests/java/tests-java-gradle-junit5-allure3-selenide
@@ -943,30 +957,27 @@ jobs:
       PYTHON_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/requirements.txt
       PYTHON_WORKDIR: tests/java/tests-java-gradle-junit5-allure3-selenide
     steps:
+      - *checkout
       - name: Select harness slice
         id: slice
         env:
-          CHANGED_BACKEND: ${{ needs.changes.outputs.backend }}
-          CHANGED_FRONTEND: ${{ needs.changes.outputs.frontend }}
-          CHANGED_TESTS: ${{ needs.changes.outputs.tests }}
-          EVENT_NAME: ${{ github.event_name }}
-          REF: ${{ github.ref }}
+          BEFORE: ${{ github.event.before }}
           DEPLOY: ${{ github.event.inputs.deploy || '' }}
         run: |
           set -euo pipefail
+          eval "${DETECT_CHANGED_LANES}"
+          detect_changed_lanes
           slice=all
           if [ "$DEPLOY" = "backend" ]; then
             slice=backend
-          elif [ "$EVENT_NAME" = "push" ] && [ "$REF" = "refs/heads/main" ] \
-            && [ "$CHANGED_BACKEND" = "true" ] \
-            && [ "$CHANGED_FRONTEND" != "true" ] \
-            && [ "$CHANGED_TESTS" != "true" ]; then
+          elif [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/main" ] \
+            && [ "$backend" = "true" ] \
+            && [ "$frontend" != "true" ] \
+            && [ "$tests" != "true" ]; then
             slice=backend
           fi
           echo "slice=${slice}" >> "$GITHUB_OUTPUT"
           echo "Harness slice=${slice}"
-
-      - *checkout
 
       # ── java (Gradle tags + JaCoCo gate) ──────────────────────────────────
       - *setup-java

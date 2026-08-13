@@ -74,16 +74,16 @@ Path constants: `backend/scripts/paths.sh`
 
 Canon: [tests/LAYERS.md](tests/LAYERS.md) · all jobs live in [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 
-Full CI graph (`needs` from `ci.yml`; `changes` is a real `needs` parent of `tests-harness` / build / deploy / mock / `api-tests` — path outputs skip via `if:`):
+Full CI graph (`needs` from `ci.yml`; `changes` / graph label `cd-paths` is a CD path gate for build / mock / `api-tests` — not a pyramid job; path outputs skip via `if:`):
 
 ```mermaid
 flowchart TB
   TOC[testops-context]
-  CH[changes]
+  CH[cd-paths]
 
   TOC --> UNIT[unit-tests]
   TOC --> COMP[component-tests]
-  CH --> H[tests-harness]
+  H[tests-harness]
   TOC --> MOCK[ui-mock-tests]
   TOC --> INT[integration-tests]
 
