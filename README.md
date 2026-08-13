@@ -6,8 +6,6 @@ GitHub: **[github.com/autotests-ai/reference-app-copy](https://github.com/autote
 
 Production: [reference-app-copy.autotests.ai](https://reference-app-copy.autotests.ai)
 
-**Учащимся:** вопросы по стенду — напиши мне, [aanher@gmail.com](mailto:aanher@gmail.com).
-
 ## Layout (3 product folders)
 
 ```
