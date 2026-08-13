@@ -117,6 +117,58 @@ export function stackHref(
   return `${base}?tests=${encodeURIComponent(testsId)}`;
 }
 
+function queryId(params: URLSearchParams, key: string, prefix: string): string | null {
+  const value = params.get(key);
+  return value && value.startsWith(prefix) ? value : null;
+}
+
+export interface StackSelection extends MountPair {
+  hub: boolean;
+}
+
+/** `?backend=` / `?frontend=` on the bare `/stack/` board (does not collide with app URLs). */
+export function parseStackQuery(search = ''): MountPair {
+  try {
+    const raw = String(search || '');
+    const params = new URLSearchParams(raw.replace(/^\?/, '') ? raw : '');
+    return {
+      backendId: queryId(params, 'backend', 'backend-'),
+      frontendId: queryId(params, 'frontend', 'frontend-'),
+    };
+  } catch {
+    return { backendId: null, frontendId: null };
+  }
+}
+
+/**
+ * Hub (`/stack/`) has no pair in the path — select via query, defaulting to the CI pair.
+ * In-app `/stack/{backend}/{frontend}/…` keeps the path pair.
+ */
+export function resolveSelection(pathname: string, search = ''): StackSelection {
+  const fromPath = parseMount(pathname);
+  const hub = !fromPath.backendId && !fromPath.frontendId;
+  if (hub) {
+    const fromQuery = parseStackQuery(search);
+    const pair = effectiveStackPair(fromQuery.backendId, fromQuery.frontendId);
+    return { hub: true, backendId: pair.backendId, frontendId: pair.frontendId };
+  }
+  return { hub: false, backendId: fromPath.backendId, frontendId: fromPath.frontendId };
+}
+
+/** Stay on the `/stack/` board while picking a pair (and optional tests module). */
+export function stackBoardHref(
+  backendId: string | null,
+  frontendId: string | null,
+  testsId: string | null = null,
+): string {
+  const pair = effectiveStackPair(backendId, frontendId);
+  const params = new URLSearchParams();
+  params.set('backend', pair.backendId);
+  params.set('frontend', pair.frontendId);
+  if (testsId) params.set('tests', testsId);
+  return `${STACK_PREFIX}/?${params.toString()}`;
+}
+
 /** GitHub folder for a matrix module path (`backend/python/...`). */
 export function githubModuleHref(modulePath: string | null | undefined): string | null {
   if (!modulePath) return null;

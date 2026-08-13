@@ -12,6 +12,9 @@ function stubApis() {
     'fetch',
     vi.fn((input: RequestInfo | URL) => {
       const url = String(input);
+      if (url.includes('matrix.json')) {
+        return Promise.resolve(jsonResponse({ backends: [], frontends: [], tests: [] }));
+      }
       if (url.includes('/api/health')) {
         return Promise.resolve(jsonResponse({ status: 'UP', service: 'reference-app' }));
       }
@@ -60,5 +63,12 @@ describe('App', { tags: ['smoke'] }, () => {
     renderApp('/register');
 
     expect(screen.getByTestId('register-form-title')).toHaveTextContent('Register');
+  });
+
+  it('routes /stack to the stack page', async () => {
+    renderApp('/stack');
+
+    expect(screen.getByTestId('stack-page')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId('stack-tests-board')).toBeInTheDocument());
   });
 });

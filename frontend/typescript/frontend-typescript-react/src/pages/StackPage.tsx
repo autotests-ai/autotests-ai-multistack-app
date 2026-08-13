@@ -1,5 +1,6 @@
 import { Badge, Link, Panel } from '@zero-design-system/react';
 import { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { mountHeaderPollToggle, whenHeaderReady } from '../../../../_shared/poll-toggle';
 import {
   type BackendModule,
@@ -13,11 +14,12 @@ import {
   GITHUB_MARK_PATH,
   githubModuleHref,
   isOpenable,
-  parseMount,
   parseTestsId,
+  resolveSelection,
   resolveTestsId,
   type StackMatrix,
   shortModuleLabel,
+  stackBoardHref,
   stackHref,
   summarizeMatrix,
   type TestsModule,
@@ -67,11 +69,15 @@ function ModuleRows({
   items,
   currentBackend,
   currentFrontend,
+  hub,
+  testsId,
 }: {
   kind: 'backend' | 'frontend';
   items: Array<BackendModule | FrontendModule>;
   currentBackend: string | null;
   currentFrontend: string | null;
+  hub: boolean;
+  testsId: string | null;
 }) {
   return (
     <table className="stack-page__table">
@@ -96,16 +102,25 @@ function ModuleRows({
             kind === 'backend' ? id : currentBackend,
             kind === 'frontend' ? id : currentFrontend,
           );
-          const href = stackHref(targetBackend, targetFrontend);
+          const selectHref = hub
+            ? stackBoardHref(targetBackend, targetFrontend, testsId)
+            : stackHref(targetBackend, targetFrontend);
+          const openHref = stackHref(targetBackend, targetFrontend);
           const openable = isOpenable(status);
+          const rowClass = [
+            isCurrent ? 'stack-page__row--active' : '',
+            openable && hub ? 'stack-page__row--selectable' : '',
+          ]
+            .filter(Boolean)
+            .join(' ');
 
           return (
-            <tr key={id} className={isCurrent ? 'stack-page__row--active' : undefined}>
+            <tr key={id} className={rowClass || undefined}>
               <td>
                 {openable ? (
                   <Link
                     className={`stack-page__id${isCurrent ? ' is-active' : ''}`}
-                    href={href}
+                    href={selectHref}
                     data-testid={`stack-${kind}-${id}`}
                   >
                     {id}
@@ -132,7 +147,11 @@ function ModuleRows({
               </td>
               <td>
                 {openable ? (
-                  <Link className={`stack-page__open${isCurrent ? ' is-active' : ''}`} href={href}>
+                  <Link
+                    className={`stack-page__open${isCurrent ? ' is-active' : ''}`}
+                    href={openHref}
+                    data-testid={`stack-open-${kind}-${id}`}
+                  >
                     open →
                   </Link>
                 ) : (
@@ -154,6 +173,7 @@ function TestsBoard({
   currentTests,
   backend,
   frontend,
+  hub,
 }: {
   tests: TestsModule[];
   currentBackend: string | null;
@@ -161,6 +181,7 @@ function TestsBoard({
   currentTests: string | null;
   backend: BackendModule | null;
   frontend: FrontendModule | null;
+  hub: boolean;
 }) {
   const unitPath = unitTestsPath(backend);
   const componentPath = componentTestsPath(frontend);
@@ -259,7 +280,9 @@ function TestsBoard({
             currentFrontend,
           );
           const selectable = isOpenable(status);
-          const href = stackHref(pairBackend, pairFrontend, id);
+          const href = hub
+            ? stackBoardHref(pairBackend, pairFrontend, id)
+            : stackHref(pairBackend, pairFrontend, id);
           return (
             <tr key={id} className={isCurrent ? 'stack-page__row--active' : undefined}>
               <td>
@@ -318,8 +341,15 @@ function TestsBoard({
 }
 
 export function StackPage() {
-  const mount = useMemo(() => parseMount(window.location.pathname), []);
-  const requestedTests = useMemo(() => parseTestsId(window.location.search), []);
+  const routerLocation = useLocation();
+  const selection = useMemo(
+    () => resolveSelection(window.location.pathname, window.location.search),
+    [routerLocation.pathname, routerLocation.search],
+  );
+  const requestedTests = useMemo(
+    () => parseTestsId(window.location.search),
+    [routerLocation.search],
+  );
   const [state, setState] = useState<LoadState>({ status: 'loading' });
   const [reloadToken, setReloadToken] = useState(0);
 
@@ -349,20 +379,23 @@ export function StackPage() {
   const summary = state.status === 'loaded' ? summarizeMatrix(state.data) : null;
   const currentTests =
     state.status === 'loaded' ? resolveTestsId(state.data, requestedTests) : null;
-  const backend = summary ? findById(summary.backends, mount.backendId) : null;
-  const frontend = summary ? findById(summary.frontends, mount.frontendId) : null;
+  const backend = summary ? findById(summary.backends, selection.backendId) : null;
+  const frontend = summary ? findById(summary.frontends, selection.frontendId) : null;
 
   const labelParts: string[] = [];
-  if (mount.backendId && mount.frontendId) {
-    labelParts.push(`${mount.backendId} · ${mount.frontendId}`);
-  } else if (mount.frontendId) {
-    labelParts.push(`(no backend prefix) · ${mount.frontendId}`);
+  if (selection.hub || (selection.backendId && selection.frontendId)) {
+    labelParts.push(`${selection.backendId} · ${selection.frontendId}`);
+  } else if (selection.frontendId) {
+    labelParts.push(`(no backend prefix) · ${selection.frontendId}`);
   } else {
     labelParts.push('path without /{backend}/{frontend}/');
   }
   if (currentTests) labelParts.push(currentTests);
   const label = labelParts.join(' · ');
-  const homeHref = comboHref(mount.backendId, mount.frontendId, '/');
+  const homeHref =
+    selection.hub || (selection.backendId && selection.frontendId)
+      ? stackHref(selection.backendId, selection.frontendId)
+      : comboHref(selection.backendId, selection.frontendId, '/');
 
   return (
     <main className="page-shell page-shell--below-header stack-page" data-testid="stack-page">
@@ -401,8 +434,10 @@ export function StackPage() {
               <ModuleRows
                 kind="backend"
                 items={summary.backends}
-                currentBackend={mount.backendId}
-                currentFrontend={mount.frontendId}
+                currentBackend={selection.backendId}
+                currentFrontend={selection.frontendId}
+                hub={selection.hub}
+                testsId={currentTests}
               />
             </Panel>
             <Panel
@@ -413,8 +448,10 @@ export function StackPage() {
               <ModuleRows
                 kind="frontend"
                 items={summary.frontends}
-                currentBackend={mount.backendId}
-                currentFrontend={mount.frontendId}
+                currentBackend={selection.backendId}
+                currentFrontend={selection.frontendId}
+                hub={selection.hub}
+                testsId={currentTests}
               />
             </Panel>
           </div>
@@ -426,11 +463,12 @@ export function StackPage() {
           >
             <TestsBoard
               tests={summary.tests}
-              currentBackend={mount.backendId}
-              currentFrontend={mount.frontendId}
+              currentBackend={selection.backendId}
+              currentFrontend={selection.frontendId}
               currentTests={currentTests}
               backend={backend}
               frontend={frontend}
+              hub={selection.hub}
             />
           </Panel>
         </>

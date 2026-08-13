@@ -17,9 +17,10 @@ import {
   GITHUB_MARK_PATH,
   githubModuleHref,
   isOpenable,
-  parseMount,
   parseTestsId,
+  resolveSelection,
   resolveTestsId,
+  stackBoardHref,
   stackHref,
   summarizeMatrix,
   UNIT_ROW_LAYERS,
@@ -36,7 +37,7 @@ type LoadState =
   | { status: 'error'; message: string }
   | { status: 'loaded'; data: StackMatrix };
 
-const mount = parseMount(window.location.pathname);
+const selection = resolveSelection(window.location.pathname, window.location.search);
 const requestedTests = parseTestsId(window.location.search);
 const state = ref<LoadState>({ status: 'loading' });
 const githubMarkPath = GITHUB_MARK_PATH;
@@ -82,11 +83,11 @@ const currentTests = computed(() =>
 );
 
 const backend = computed(() =>
-  summary.value ? findById(summary.value.backends, mount.backendId) : null,
+  summary.value ? findById(summary.value.backends, selection.backendId) : null,
 );
 
 const frontend = computed(() =>
-  summary.value ? findById(summary.value.frontends, mount.frontendId) : null,
+  summary.value ? findById(summary.value.frontends, selection.frontendId) : null,
 );
 
 const unitPath = computed(() => unitTestsPath(backend.value));
@@ -102,10 +103,10 @@ const componentLabel = computed(
 
 const label = computed(() => {
   const parts: string[] = [];
-  if (mount.backendId && mount.frontendId) {
-    parts.push(`${mount.backendId} · ${mount.frontendId}`);
-  } else if (mount.frontendId) {
-    parts.push(`(no backend prefix) · ${mount.frontendId}`);
+  if (selection.hub || (selection.backendId && selection.frontendId)) {
+    parts.push(`${selection.backendId} · ${selection.frontendId}`);
+  } else if (selection.frontendId) {
+    parts.push(`(no backend prefix) · ${selection.frontendId}`);
   } else {
     parts.push('path without /{backend}/{frontend}/');
   }
@@ -113,7 +114,10 @@ const label = computed(() => {
   return parts.join(' · ');
 });
 
-const homeHref = comboHref(mount.backendId, mount.frontendId, '/');
+const homeHref =
+  selection.hub || (selection.backendId && selection.frontendId)
+    ? stackHref(selection.backendId, selection.frontendId)
+    : comboHref(selection.backendId, selection.frontendId, '/');
 
 function metaFor(kind: 'backend' | 'frontend', item: BackendModule | FrontendModule): string {
   const status = item.status || 'active';
@@ -135,17 +139,29 @@ function rowOpenable(kind: 'backend' | 'frontend', item: BackendModule | Fronten
   return isOpenable(item.status);
 }
 
+function rowSelectHref(kind: 'backend' | 'frontend', item: BackendModule | FrontendModule): string {
+  const { backendId, frontendId } = effectiveStackPair(
+    kind === 'backend' ? item.id : selection.backendId,
+    kind === 'frontend' ? item.id : selection.frontendId,
+  );
+  return selection.hub
+    ? stackBoardHref(backendId, frontendId, currentTests.value)
+    : stackHref(backendId, frontendId);
+}
+
 function rowHref(kind: 'backend' | 'frontend', item: BackendModule | FrontendModule): string {
   const { backendId, frontendId } = effectiveStackPair(
-    kind === 'backend' ? item.id : mount.backendId,
-    kind === 'frontend' ? item.id : mount.frontendId,
+    kind === 'backend' ? item.id : selection.backendId,
+    kind === 'frontend' ? item.id : selection.frontendId,
   );
   return stackHref(backendId, frontendId);
 }
 
 function testsHref(item: TestsModule): string {
-  const { backendId, frontendId } = effectiveStackPair(mount.backendId, mount.frontendId);
-  return stackHref(backendId, frontendId, item.id);
+  const { backendId, frontendId } = effectiveStackPair(selection.backendId, selection.frontendId);
+  return selection.hub
+    ? stackBoardHref(backendId, frontendId, item.id)
+    : stackHref(backendId, frontendId, item.id);
 }
 
 function testsSelectable(item: TestsModule): boolean {
@@ -195,14 +211,17 @@ function moduleGh(modulePath?: string | null): string | null {
               <tr
                 v-for="item in summary.backends"
                 :key="item.id"
-                :class="{ 'stack-page__row--active': item.id === mount.backendId }"
+                :class="{
+                  'stack-page__row--active': item.id === selection.backendId,
+                  'stack-page__row--selectable': selection.hub && rowOpenable('backend', item),
+                }"
               >
                 <td>
                   <a
                     v-if="rowOpenable('backend', item)"
                     class="link stack-page__id"
-                    :class="{ 'is-active': item.id === mount.backendId }"
-                    :href="rowHref('backend', item)"
+                    :class="{ 'is-active': item.id === selection.backendId }"
+                    :href="rowSelectHref('backend', item)"
                     :data-testid="`stack-backend-${item.id}`"
                   >
                     {{ item.id }}
@@ -210,7 +229,7 @@ function moduleGh(modulePath?: string | null): string | null {
                   <span
                     v-else
                     class="stack-page__id stack-page__id--disabled"
-                    :class="{ 'is-active': item.id === mount.backendId }"
+                    :class="{ 'is-active': item.id === selection.backendId }"
                     :data-testid="`stack-backend-${item.id}`"
                   >
                     {{ item.id }}
@@ -250,7 +269,7 @@ function moduleGh(modulePath?: string | null): string | null {
                   <a
                     v-if="rowOpenable('backend', item)"
                     class="link stack-page__open"
-                    :class="{ 'is-active': item.id === mount.backendId }"
+                    :class="{ 'is-active': item.id === selection.backendId }"
                     :href="rowHref('backend', item)"
                   >
                     open →
@@ -276,14 +295,17 @@ function moduleGh(modulePath?: string | null): string | null {
               <tr
                 v-for="item in summary.frontends"
                 :key="item.id"
-                :class="{ 'stack-page__row--active': item.id === mount.frontendId }"
+                :class="{
+                  'stack-page__row--active': item.id === selection.frontendId,
+                  'stack-page__row--selectable': selection.hub && rowOpenable('frontend', item),
+                }"
               >
                 <td>
                   <a
                     v-if="rowOpenable('frontend', item)"
                     class="link stack-page__id"
-                    :class="{ 'is-active': item.id === mount.frontendId }"
-                    :href="rowHref('frontend', item)"
+                    :class="{ 'is-active': item.id === selection.frontendId }"
+                    :href="rowSelectHref('frontend', item)"
                     :data-testid="`stack-frontend-${item.id}`"
                   >
                     {{ item.id }}
@@ -291,7 +313,7 @@ function moduleGh(modulePath?: string | null): string | null {
                   <span
                     v-else
                     class="stack-page__id stack-page__id--disabled"
-                    :class="{ 'is-active': item.id === mount.frontendId }"
+                    :class="{ 'is-active': item.id === selection.frontendId }"
                     :data-testid="`stack-frontend-${item.id}`"
                   >
                     {{ item.id }}
@@ -331,7 +353,7 @@ function moduleGh(modulePath?: string | null): string | null {
                   <a
                     v-if="rowOpenable('frontend', item)"
                     class="link stack-page__open"
-                    :class="{ 'is-active': item.id === mount.frontendId }"
+                    :class="{ 'is-active': item.id === selection.frontendId }"
                     :href="rowHref('frontend', item)"
                   >
                     open →
@@ -361,12 +383,12 @@ function moduleGh(modulePath?: string | null): string | null {
             </tr>
           </thead>
           <tbody>
-            <tr :class="{ 'stack-page__row--active': Boolean(mount.backendId) }">
+            <tr :class="{ 'stack-page__row--active': Boolean(selection.backendId) }">
               <td>
                 <a
                   v-if="moduleGh(unitPath)"
                   class="link stack-page__id"
-                  :class="{ 'is-active': Boolean(mount.backendId) }"
+                  :class="{ 'is-active': Boolean(selection.backendId) }"
                   :href="moduleGh(unitPath)!"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -377,7 +399,7 @@ function moduleGh(modulePath?: string | null): string | null {
                 <span
                   v-else
                   class="stack-page__id stack-page__id--disabled"
-                  :class="{ 'is-active': Boolean(mount.backendId) }"
+                  :class="{ 'is-active': Boolean(selection.backendId) }"
                   data-testid="stack-tests-unit"
                 >
                   {{ unitLabel }}
@@ -412,12 +434,12 @@ function moduleGh(modulePath?: string | null): string | null {
               <td><span class="text text--sm text--muted">—</span></td>
             </tr>
 
-            <tr :class="{ 'stack-page__row--active': Boolean(mount.frontendId) }">
+            <tr :class="{ 'stack-page__row--active': Boolean(selection.frontendId) }">
               <td>
                 <a
                   v-if="moduleGh(componentPath)"
                   class="link stack-page__id"
-                  :class="{ 'is-active': Boolean(mount.frontendId) }"
+                  :class="{ 'is-active': Boolean(selection.frontendId) }"
                   :href="moduleGh(componentPath)!"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -428,7 +450,7 @@ function moduleGh(modulePath?: string | null): string | null {
                 <span
                   v-else
                   class="stack-page__id stack-page__id--disabled"
-                  :class="{ 'is-active': Boolean(mount.frontendId) }"
+                  :class="{ 'is-active': Boolean(selection.frontendId) }"
                   data-testid="stack-tests-component"
                 >
                   {{ componentLabel }}

@@ -3,6 +3,7 @@ import { App } from './App';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { StackPage } from './pages/StackPage';
 
 /**
  * Route objects rather than JSX `<Routes>`: the same array feeds
@@ -17,6 +18,7 @@ export const routes: RouteObject[] = [
       { index: true, element: <HomePage /> },
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
+      { path: 'stack/*', element: <StackPage /> },
     ],
   },
 ];

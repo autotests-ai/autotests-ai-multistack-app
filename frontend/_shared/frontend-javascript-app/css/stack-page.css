@@ -200,6 +200,18 @@
   background: color-mix(in srgb, var(--color-info) 12%, transparent);
 }
 
+.stack-page__table tbody tr.stack-page__row--selectable {
+  cursor: pointer;
+}
+
+.stack-page__table tbody tr.stack-page__row--selectable:hover td {
+  background: color-mix(in srgb, var(--color-info) 8%, transparent);
+}
+
+.stack-page__table tbody tr.stack-page__row--selectable.stack-page__row--active:hover td {
+  background: color-mix(in srgb, var(--color-info) 16%, transparent);
+}
+
 .stack-page__id {
   font-family: var(--font-mono, ui-monospace, Menlo, monospace);
   font-size: 0.84rem;

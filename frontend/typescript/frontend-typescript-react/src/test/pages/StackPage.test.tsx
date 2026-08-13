@@ -146,11 +146,47 @@ describe('StackPage', () => {
       );
 
       expect(screen.getByTestId('stack-current-pair')).toHaveTextContent(
-        'path without /{backend}/{frontend}/',
+        'backend-java-spring · frontend-typescript-react',
       );
+      expect(screen.getByTestId('stack-backend-backend-java-spring').closest('tr')).toHaveClass(
+        'stack-page__row--active',
+      );
+      expect(
+        screen.getByTestId('stack-frontend-frontend-typescript-react').closest('tr'),
+      ).toHaveClass('stack-page__row--active');
       expect(screen.getByTestId('stack-frontend-frontend-typescript-react')).toHaveAttribute(
         'href',
+        '/stack/?backend=backend-java-spring&frontend=frontend-typescript-react&tests=tests-java-gradle-junit5-allure3-selenide',
+      );
+      expect(screen.getByTestId('stack-open-frontend-frontend-typescript-react')).toHaveAttribute(
+        'href',
         '/stack/backend-java-spring/frontend-typescript-react/',
+      );
+      expect(
+        screen.getByTestId('stack-open-frontend-frontend-typescript-react').getAttribute('href'),
+      ).not.toContain('?');
+    } finally {
+      locationSpy.mockRestore();
+    }
+  });
+
+  it('selects a pair from ?backend=&frontend= on the hub', async () => {
+    const locationSpy = vi.spyOn(window, 'location', 'get').mockReturnValue({
+      ...window.location,
+      pathname: '/stack/',
+      search: '?backend=backend-python-flask&frontend=frontend-javascript-vue',
+    } as Location);
+
+    try {
+      renderStack();
+
+      await waitFor(() =>
+        expect(screen.getByTestId('stack-current-pair')).toHaveTextContent(
+          'backend-python-flask · frontend-javascript-vue',
+        ),
+      );
+      expect(screen.getByTestId('stack-backend-backend-java-spring').closest('tr')).not.toHaveClass(
+        'stack-page__row--active',
       );
     } finally {
       locationSpy.mockRestore();
