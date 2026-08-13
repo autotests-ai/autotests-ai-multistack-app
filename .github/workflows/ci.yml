@@ -1619,7 +1619,6 @@ jobs:
     needs:
       - unit-tests
       - component-tests
-      - tests-harness
       - ui-mock-tests
       - integration-tests
       - api-tests

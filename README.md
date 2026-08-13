@@ -119,7 +119,7 @@ flowchart TB
   E2E --> MAN[manual-tests<br/>dispatch]
   TOC --> MAN
 
-  UNIT & COMP & H & MOCK & INT & API & E2E & MAN --> PUB[publish-allure-report]
+  UNIT & COMP & MOCK & INT & API & E2E & MAN --> PUB[publish-allure-report]
   PUB --> NTF[send-allure-notifications]
 ```
 
