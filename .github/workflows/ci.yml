@@ -776,7 +776,9 @@ jobs:
       SETUP_JVM_IF: "true"
       GRADLE_CACHE_READ_ONLY: "true"
       SETUP_BUILDX_IF: "true"
-      DOCKER_CONTEXT: .
+      # Build path. Do not name this DOCKER_CONTEXT — GHA injects job env into
+      # every step; Docker CLI/buildx treat DOCKER_CONTEXT as a named context.
+      DOCKER_BUILD_CONTEXT: .
       DOCKER_FILE: frontend/typescript/frontend-typescript-react/Dockerfile
       DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/reference-app-copy-frontend-typescript-react:mock-local
       DOCKER_BUILD_ARGS: |
@@ -823,7 +825,7 @@ jobs:
         if: env.SETUP_BUILDX_IF != 'false'
         uses: docker/build-push-action@v7
         with:
-          context: ${{ env.DOCKER_CONTEXT }}
+          context: ${{ env.DOCKER_BUILD_CONTEXT }}
           file: ${{ env.DOCKER_FILE }}
           tags: ${{ env.DOCKER_TAGS }}
           build-args: ${{ env.DOCKER_BUILD_ARGS }}
@@ -1228,7 +1230,7 @@ jobs:
       actions: write
     env:
       DOCKER_CACHE_SCOPE: reference-app-copy-docker-backend-java-spring
-      DOCKER_CONTEXT: backend/java/backend-java-spring
+      DOCKER_BUILD_CONTEXT: backend/java/backend-java-spring
       DOCKER_FILE: backend/java/backend-java-spring/Dockerfile
       DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/reference-app-copy-backend-java-spring:${{ github.sha }}
       DOCKER_BUILD_ARGS: ""
@@ -1263,7 +1265,7 @@ jobs:
       actions: write
     env:
       DOCKER_CACHE_SCOPE: reference-app-copy-docker-frontend-typescript-react
-      DOCKER_CONTEXT: .
+      DOCKER_BUILD_CONTEXT: .
       DOCKER_FILE: frontend/typescript/frontend-typescript-react/Dockerfile
       DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/reference-app-copy-frontend-typescript-react:${{ github.sha }}
       DOCKER_BUILD_ARGS: |
