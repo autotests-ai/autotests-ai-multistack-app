@@ -1,9 +1,8 @@
-import type { RouteObject } from 'react-router-dom';
+import { Navigate, type RouteObject } from 'react-router-dom';
 import { App } from './App';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
-import { StackPage } from './pages/StackPage';
 
 /**
  * Route objects rather than JSX `<Routes>`: the same array feeds
@@ -18,7 +17,8 @@ export const routes: RouteObject[] = [
       { index: true, element: <HomePage /> },
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
-      { path: 'stack/*', element: <StackPage /> },
+      { path: 'stack', element: <Navigate to="/" replace /> },
+      { path: 'stack/*', element: <Navigate to="/" replace /> },
     ],
   },
 ];

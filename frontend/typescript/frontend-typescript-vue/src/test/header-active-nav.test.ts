@@ -35,7 +35,7 @@ const REFERENCE_HEADER_CONFIG = {
       testid: 'header-nav-register',
     },
     {
-      href: `${MOUNT}/stack/`,
+      href: MOUNT,
       label: 'Stack',
       active: false,
       testid: 'header-nav-stack',

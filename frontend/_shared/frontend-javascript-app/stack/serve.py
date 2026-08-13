@@ -6,6 +6,7 @@ Bare `/stack/` 301s to the CI default pair — same contract as prod host nginx.
 
 from __future__ import annotations
 
+import re
 import sys
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -32,6 +33,12 @@ class StackBoardHandler(SimpleHTTPRequestHandler):
             return DEFAULT_STACK + "login"
         if raw.rstrip("/") == "/stack/register":
             return DEFAULT_STACK + "register"
+        pair_stack = re.fullmatch(
+            r"(/stack/backend-[^/]+/frontend-[^/]+)/stack/?",
+            raw,
+        )
+        if pair_stack:
+            return pair_stack.group(1) + "/"
         return None
 
     def do_HEAD(self) -> None:  # noqa: N802

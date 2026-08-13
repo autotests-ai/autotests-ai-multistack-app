@@ -32,7 +32,7 @@
         { href: appPath('/'), label: 'Home', testid: 'header-nav-home' },
         { href: appPath('/login'), label: 'Login', testid: 'header-nav-login' },
         { href: appPath('/register'), label: 'Register', testid: 'header-nav-register' },
-        { href: appPath('/stack'), label: 'Stack', active: true, testid: 'header-nav-stack' },
+        { href: window.APP_BASE || appPath('/'), label: 'Stack', active: true, testid: 'header-nav-stack' },
       ],
       lang: { default: 'en' },
       theme: { default: 'dark' },

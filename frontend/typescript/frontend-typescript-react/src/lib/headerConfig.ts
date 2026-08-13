@@ -1,8 +1,8 @@
 import type { HeaderConfig } from '@zero-design-system/react';
-import { appPath } from './appBase';
+import { APP_BASE, appPath } from './appBase';
 
-/** In-app stack board — stays on the current `/stack/{backend}/{frontend}/` pair. */
-export const STACK_INDEX_HREF = appPath('/stack');
+/** Current stack pair — `/stack/{backend}/{frontend}`, never `…/stack`. */
+export const STACK_INDEX_HREF = APP_BASE || '/';
 
 /**
  * Canonical header config for the reference-app SPA. Nav hrefs are mount-prefixed
