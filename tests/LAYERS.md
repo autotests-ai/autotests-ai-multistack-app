@@ -206,7 +206,7 @@ Paths SSOT: `backend/scripts/paths.sh`. Module naming: [NAMING.md](NAMING.md).
 | `integration-tests` | **Application** (full Spring Boot + Testcontainers PostgreSQL in `BACKEND_DIR`) |
 | `tests-harness-backend` | **Test tooling (BE lane)** — `ConfigReader` |
 | `tests-harness-frontend` | **Test tooling (FE lane)** — CSS helpers, HAR helpers |
-| `component-tests` | **Application** (active `FRONTEND_DIR` only — Vitest + coverage → `sonar-frontend` / `build-frontend`) |
+| `component-tests` | **Application** (active `FRONTEND_DIR` only — Vitest + coverage → `sonar-frontend` / `ui-mock-tests` → `build-frontend`) |
 
 Students: product unit layers (`unit-tests` / `component-tests`); harness = helper checks that higher layers depend on.
 
@@ -319,22 +319,23 @@ To add another layer, copy `manual-tests` and change the java `-D` flags.
 ## CD graph
 
 Matches [`ci.yml`](../.github/workflows/ci.yml) `needs` (Sonar ×3 gates **deploy**, not build;
-`ui-mock-tests` ∥ `build-frontend`, does **not** need it):
+`ui-mock-tests` after `component-tests`, before `build-frontend`):
 
 ```
 every run (PR + main):
   unit-tests → integration-tests
   unit-tests + integration-tests → sonar-backend
   component-tests → sonar-frontend
+  component-tests → ui-mock-tests
   tests-harness-backend ─┐
   tests-harness-frontend ┴→ sonar-tests
-  ui-mock-tests (needs changes + testops-context; every PR; main when FE changed)
+  ui-mock-tests (needs component-tests + changes + testops; every PR; main when FE changed)
 
 main only:
   build-backend ← unit-tests + integration-tests + changes     (no sonar)
-  build-frontend ← component-tests + changes                   (no sonar, no mock)
+  build-frontend ← ui-mock-tests + changes                     (no sonar)
   deploy-backend ← build-backend + sonar-backend
-  deploy-frontend ← build-frontend + sonar-frontend + ui-mock-tests
+  deploy-frontend ← build-frontend + sonar-frontend
   stand-ready ← changes + deploy-backend + deploy-frontend
   stand-ready → api-tests → e2e-tests
   manual-tests: dispatch (needs e2e-tests + stand-ready + testops)
@@ -345,4 +346,5 @@ build/deploy and does **not** wait on `stand-ready`.
 `sonar-tests` scans **testinfra helpers** (`-DincludeTags=harness`), not api/e2e results.
 It runs after both harness slices — on **PR** and **main**.
 `build-backend` / `build-frontend` do **not** `needs` Sonar. There is no `build-frontend` →
-`ui-mock-tests` edge and no `stand-ready` → `integration-tests` edge.
+`ui-mock-tests` edge (mock does not wait for the GHCR image) and no `stand-ready` →
+`integration-tests` edge.

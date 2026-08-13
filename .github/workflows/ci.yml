@@ -22,18 +22,19 @@ name: CI
 # CD on main (two lanes; deploy host serialized via concurrency group).
 # needs = real dependencies only (not graph layout). Sonar gates deploy, not build.
 # Deploy of either lane moves the shared host checkout dir to the new SHA.
-# Roots: unit-tests · component-tests · tests-harness-* · ui-mock-tests · changes
+# Roots: unit-tests · component-tests · tests-harness-* · changes
 #   integration-tests ← unit-tests (backend Spring+PG, pre-build; PR + main)
 #   sonar-backend ← unit-tests + integration-tests · sonar-frontend ← component-tests
 #   sonar-tests ← tests-harness-backend + tests-harness-frontend
-#   build-backend ← unit-tests + integration-tests · build-frontend ← component-tests
+#   ui-mock-tests ← component-tests (jsdom first; mock compose on the runner)
+#   build-backend ← unit-tests + integration-tests · build-frontend ← ui-mock-tests
 #   deploy-backend ← build-backend + sonar-backend
-#   deploy-frontend ← build-frontend + sonar-frontend + ui-mock-tests
+#   deploy-frontend ← build-frontend + sonar-frontend
 #   stand-ready ← deploy-backend + deploy-frontend (curl live UI + /api/health)
 #   api-tests ← stand-ready
 #   e2e-tests ← api-tests → manual-tests
 # push main: changes gates build/deploy by path; tests + sonar always run.
-# PR: no deploy; ui-mock-tests runs on runner (mock compose profile).
+# PR: no deploy; ui-mock-tests after component-tests (mock compose profile).
 
 on:
   pull_request:
@@ -1008,10 +1009,10 @@ jobs:
         run: docker compose push ${{ env.BACKEND }}
 
   build-frontend:
-    needs: [component-tests, changes]
+    needs: [ui-mock-tests, changes]
     if: >-
       !cancelled() &&
-      needs.component-tests.result == 'success' &&
+      needs.ui-mock-tests.result == 'success' &&
       github.ref == 'refs/heads/main' && (
         (github.event_name == 'push' && needs.changes.outputs.frontend == 'true') ||
         (github.event_name == 'workflow_dispatch' &&
@@ -1077,11 +1078,12 @@ jobs:
             curl -fsS --retry 30 --retry-delay 2 --retry-all-errors http://127.0.0.1:${{ env.BACKEND_PORT }}/api/health
             docker logout ghcr.io
 
-  # Stub API on runner (compose --profile mock); gates FE deploy; PR + FE-touch push.
+  # Stub API on runner (compose --profile mock); after jsdom, before FE image push.
   ui-mock-tests:
-    needs: [changes, testops-context]
+    needs: [changes, testops-context, component-tests]
     if: >-
-      always() && !cancelled() && (
+      always() && !cancelled() &&
+      needs.component-tests.result == 'success' && (
         github.event_name == 'pull_request' ||
         (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
          needs.changes.outputs.frontend == 'true') ||
@@ -1225,14 +1227,13 @@ jobs:
           path: ${{ env.TESTS_DIR }}/src/test/resources/screenshots/
           if-no-files-found: ignore
 
-  # FE deploy after build + sonar + mock gate; shared host lock with deploy-backend.
+  # FE deploy after build + sonar; mock already gated build-frontend.
   deploy-frontend:
-    needs: [build-frontend, sonar-frontend, ui-mock-tests]
+    needs: [build-frontend, sonar-frontend]
     if: >-
       !cancelled() &&
       needs.build-frontend.result == 'success' &&
-      needs.sonar-frontend.result == 'success' &&
-      needs.ui-mock-tests.result == 'success'
+      needs.sonar-frontend.result == 'success'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment:

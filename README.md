@@ -95,19 +95,19 @@ flowchart TB
   UNIT --> SB[sonar-backend]
   INT --> SB
   COMP --> SF[sonar-frontend]
+  COMP --> MOCK
   HB --> ST[sonar-tests]
   HF --> ST
 
   UNIT --> BB[build-backend]
   INT --> BB
-  COMP --> BF[build-frontend]
+  MOCK --> BF[build-frontend]
 
   BB --> DB[deploy-backend]
   SB --> DB
 
   BF --> DF[deploy-frontend]
   SF --> DF
-  MOCK --> DF
 
   DB --> READY[stand-ready]
   DF --> READY
@@ -134,7 +134,7 @@ flowchart TB
 | `component-tests` | `FRONTEND_DIR` — `npm test -- --coverage` |
 | `integration-tests` | `BACKEND_DIR` — after `unit-tests` (java: `-DincludeTags=integration`); Spring Boot + real PG; **before** build/deploy; PR + main |
 | `api-tests` | `TESTS_DIR` — after `stand-ready` (java: `-DincludeTags=api`); HTTP contract + deployed-stand facts |
-| `ui-mock-tests` | every PR; on `main` when frontend changed — mock flows + screenshot compare on the runner; dispatch `update_mock_screenshots` rewrites `screenshots/mock/` |
+| `ui-mock-tests` | after `component-tests`; every PR; on `main` when frontend changed — mock flows + screenshot compare on the runner; gates `build-frontend`; dispatch `update_mock_screenshots` rewrites `screenshots/mock/` |
 | `sonar-tests` | after **both** harness jobs (PR + main); umbrella harness + tests-module Sonar gate |
 | `e2e-tests` | after `api-tests` — java: `-DincludeTags=e2e`; dispatch `run_screenshot` / `update_e2e_screenshots` are extra steps |
 | `manual-tests` | after `e2e-tests` + `stand-ready`; dispatch only — java: `-DincludeTags=manual` |
