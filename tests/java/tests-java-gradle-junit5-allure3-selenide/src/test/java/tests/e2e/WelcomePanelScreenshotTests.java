@@ -22,21 +22,21 @@ import static com.codeborne.selenide.Selenide.$;
 
 @Layer("e2e")
 @Severity(SeverityLevel.MINOR)
-@Tag("visual")
+@Tag("screenshot")
 @Epic("Authentication")
 @Feature("Welcome panel")
 @Suite("Welcome panel")
-@SubSuite("visual")
+@SubSuite("screenshot")
 @Execution(ExecutionMode.SAME_THREAD)
-@DisplayName("Welcome panel visual")
-class WelcomePanelBaselineTests extends TestBase {
+@DisplayName("Welcome panel screenshot")
+class WelcomePanelScreenshotTests extends TestBase {
 
     private static final int VIEWPORT_HEIGHT = 900;
 
-    @ParameterizedTest(name = "Welcome panel matches baseline at {0}px")
+    @ParameterizedTest(name = "Welcome panel matches screenshot at {0}px")
     @ValueSource(ints = {390, 768, 1280})
-    @DisplayName("Welcome panel matches baseline")
-    void welcomePanelMatchesBaseline(int viewportWidth) {
+    @DisplayName("Welcome panel matches screenshot")
+    void welcomePanelMatchesScreenshot(int viewportWidth) {
         ViewportHelper.setViewport(viewportWidth, VIEWPORT_HEIGHT);
         var expectedUser = "reference_mock".equals(System.getProperty("env", "").trim())
                 ? "mock-user"

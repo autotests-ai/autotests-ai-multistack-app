@@ -24,21 +24,21 @@ import static com.codeborne.selenide.Selenide.$;
 
 @Layer("e2e")
 @Severity(SeverityLevel.MINOR)
-@Tag("visual")
+@Tag("screenshot")
 @Epic("Authentication")
 @Feature("Login form")
 @Suite("Login")
-@SubSuite("visual")
+@SubSuite("screenshot")
 @Execution(ExecutionMode.SAME_THREAD)
-@DisplayName("Login form visual")
-class LoginBaselineTests extends TestBase {
+@DisplayName("Login form screenshot")
+class LoginScreenshotTests extends TestBase {
 
     private static final int VIEWPORT_HEIGHT = 900;
 
-    @ParameterizedTest(name = "Login form matches baseline at {0}px")
+    @ParameterizedTest(name = "Login form matches screenshot at {0}px")
     @ValueSource(ints = {390, 768, 1280})
-    @DisplayName("Login form matches baseline")
-    void loginFormMatchesBaseline(int viewportWidth) {
+    @DisplayName("Login form matches screenshot")
+    void loginFormMatchesScreenshot(int viewportWidth) {
         ViewportHelper.setViewport(viewportWidth, VIEWPORT_HEIGHT);
         loginPage.openPage();
 

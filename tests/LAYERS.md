@@ -10,7 +10,7 @@ Module folders: `-` between segments, `_` in compounds (`react_testing_library`,
                     ┌─────────────┐
                     │   manual    │  in code — exploratory stubs (@Manual + steps)
                     ├─────────────┤
-                    │     e2e     │  UI through browser (@Tag e2e; optional visual / mock)
+                    │     e2e     │  UI through browser (@Tag e2e; optional screenshot / mock)
                     ├─────────────┤     component — jsdom job (Vitest), not a pyramid layer
                     │     api     │  HTTP contract (@Tag api — any client / language)
                     ├─────────────┤
@@ -77,40 +77,40 @@ Self-check of the **tests module helpers** before / alongside product layers —
 
 **Not** application code (that's `unit-tests` on `BACKEND_DIR` / `component-tests` on `FRONTEND_DIR`).
 
-## Mock and visual (inside e2e, not layers)
+## Mock and screenshot (inside e2e, not layers)
 
-Visual is **two stages**, not a pyramid layer. Same Selenide classes (`@Layer("e2e")` + `@Tag("visual")`); `-Denv` picks the PNG tree.
+Screenshot tests are **two stages**, not a pyramid layer. Same Selenide classes (`@Layer("e2e")` + `@Tag("screenshot")`); `-Denv` picks the PNG tree.
 
 ```
 src/test/resources/screenshots/{mock|e2e}/{linux|macos|windows}/{chrome-148}/{area}/{viewport}.png
 ```
 
-`reference_mock` → `mock/`; anything else (ci/prod) → `e2e/`. Third segment is `{browser}-{major}`: `VISUAL_BROWSER` (default `chrome`) plus major from `chrome-for-testing.properties` (same CFT pin as CI `CHROME_FOR_TESTING_VERSION`). Patch (`148.0.7778.178`), headless, and CFT vs Selenoid are **not** path segments — CFT vs Selenoid is mock vs e2e. Different browsers are sibling folders (`chrome-148/` next to a future `firefox-140/`); this job reads only its folder.
+`reference_mock` → `mock/`; anything else (ci/prod) → `e2e/`. Third segment is `{browser}-{major}`: `SCREENSHOT_BROWSER` (default `chrome`) plus major from `chrome-for-testing.properties` (same CFT pin as CI `CHROME_FOR_TESTING_VERSION`). Patch (`148.0.7778.178`), headless, and CFT vs Selenoid are **not** path segments — CFT vs Selenoid is mock vs e2e. Different browsers are sibling folders (`chrome-148/` next to a future `firefox-140/`); this job reads only its folder.
 
-`VISUAL_OS` overrides the OS folder (`darwin` → `macos`, `linux` → `linux`, `win32` → `windows`). CI SSOT is `mock/linux/chrome-148` plus the CFT pin. **Do not** set `VISUAL_OS=linux` on a Mac — that would write Linux-canon PNGs from macOS Chrome. On Mac omit `VISUAL_OS` (writes `macos`) or set `VISUAL_OS=macos`.
+`SCREENSHOT_OS` overrides the OS folder (`darwin` → `macos`, `linux` → `linux`, `win32` → `windows`). CI SSOT is `mock/linux/chrome-148` plus the CFT pin. **Do not** set `SCREENSHOT_OS=linux` on a Mac — that would write Linux-canon PNGs from macOS Chrome. On Mac omit `SCREENSHOT_OS` (writes `macos`) or set `SCREENSHOT_OS=macos`.
 
-CI jobs `e2e-mock-tests`, `e2e-tests` (when visual runs), and `e2e-update-baselines` set `VISUAL_OS=linux` and `VISUAL_BROWSER=chrome`.
+CI jobs `e2e-mock-tests`, `e2e-tests` (when screenshot runs), and `e2e-update-screenshots` set `SCREENSHOT_OS=linux` and `SCREENSHOT_BROWSER=chrome`.
 
 | Slice | Tag | CI |
 |-------|-----|-----|
 | UI on stub API (mount + error injection) | `@Tag("mock")` (+ `@Tag("e2e")`) | job `e2e-mock-tests` step 1: `-DincludeTags=mock` |
-| Visual vs stub UI | `@Tag("visual")` | same job, step 2: `-DincludeTags=visual` on the same mock compose (not Playwright) |
-| Flow | `@Tag("e2e")` exclude `visual,mock` | job `e2e-tests` (after `api-tests`; default push does **not** run visual via Selenoid) |
-| Flow + visual (dispatch `run_visual`) | `e2e,visual` | job `e2e-tests` — compare `e2e/linux/chrome-148` |
-| Refresh e2e baselines | `@Tag("visual")` + `-DupdateBaselines=true` | job `e2e-update-baselines` — `workflow_dispatch` `update_baselines` writes `e2e/linux/chrome-148` (not a pyramid layer; not a CD stage after green e2e) |
+| Screenshot vs stub UI | `@Tag("screenshot")` | same job, step 2: `-DincludeTags=screenshot` on the same mock compose (not Playwright) |
+| Flow | `@Tag("e2e")` exclude `screenshot,mock` | job `e2e-tests` (after `api-tests`; default push does **not** run screenshot via Selenoid) |
+| Flow + screenshot (dispatch `run_screenshot`) | `e2e,screenshot` | job `e2e-tests` — compare `e2e/linux/chrome-148` |
+| Refresh e2e screenshots | `@Tag("screenshot")` + `-DupdateScreenshots=true` | job `e2e-update-screenshots` — `workflow_dispatch` `update_screenshots` writes `e2e/linux/chrome-148` (not a pyramid layer; not a CD stage after green e2e) |
 
-Gradle `includeTags=a,b` is **OR** in this module — keep mock flows and visual compare as two steps so they fail separately.
+Gradle `includeTags=a,b` is **OR** in this module — keep mock flows and screenshot compare as two steps so they fail separately.
 
-Local mock visual refresh (Linux / CI writes `mock/linux/chrome-148`; on Mac do **not** force `VISUAL_OS=linux`):
+Local mock screenshot refresh (Linux / CI writes `mock/linux/chrome-148`; on Mac do **not** force `SCREENSHOT_OS=linux`):
 
 ```bash
-VISUAL_BROWSER=chrome ./gradlew test -Denv=reference_mock -DincludeTags=visual -DupdateBaselines=true -Dheadless=true
+SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=reference_mock -DincludeTags=screenshot -DupdateScreenshots=true -Dheadless=true
 ```
 
-Local e2e visual refresh (compose ci stand, or `reference_prod` + Selenoid):
+Local e2e screenshot refresh (compose ci stand, or `reference_prod` + Selenoid):
 
 ```bash
-VISUAL_BROWSER=chrome ./gradlew test -Denv=reference_ci -DincludeTags=visual -DupdateBaselines=true
+SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=reference_ci -DincludeTags=screenshot -DupdateScreenshots=true
 ```
 
 **Mock stand** — browser checks that need controlled `/api/*` JSON, not a live backend.
@@ -153,10 +153,10 @@ task — `test`:
 ./gradlew test -Denv=reference_ci   -DincludeTags=harness-frontend
 ./gradlew test -Denv=reference_ci   -DincludeTags=harness
 ./gradlew test -Denv=reference_mock -DincludeTags=mock
-./gradlew test -Denv=reference_mock -DincludeTags=visual
+./gradlew test -Denv=reference_mock -DincludeTags=screenshot
 ./gradlew test -Denv=reference_prod -DincludeTags=api
-./gradlew test -Denv=reference_prod -DincludeTags=e2e -DexcludeTags=visual,mock
-./gradlew test -Denv=reference_prod -DincludeTags=visual
+./gradlew test -Denv=reference_prod -DincludeTags=e2e -DexcludeTags=screenshot,mock
+./gradlew test -Denv=reference_prod -DincludeTags=screenshot
 ```
 
 | Stand (`-Denv`) | Where it points |
@@ -165,7 +165,7 @@ task — `test`:
 | `reference_mock` | mock profile — UI + stub API same origin `:9911` (`docker compose --profile mock up -d stand-gateway` first) |
 | `reference_prod` | [reference-app-copy.autotests.ai/backend-java-spring](https://reference-app-copy.autotests.ai/backend-java-spring), browsers from the Selenoid hub |
 
-Anything else — `headless`, `enableHar`, `enableVideo`, `updateBaselines`, `allureReportMode` — is a
+Anything else — `headless`, `enableHar`, `enableVideo`, `updateScreenshots`, `allureReportMode` — is a
 per-run `-D<key>=<value>`. Available keys: `src/test/resources/config/default.properties`.
 
 For `TESTS_LANG` ∈ `javascript` \| `typescript` \| `python`, CI runs the **full** active-module
@@ -179,7 +179,7 @@ suite (`npm test` / `pytest` with `UI_URL` / `BASE_URL`) — no Gradle tag slice
 | component | frontend | active `FRONTEND_DIR` only (default `frontend/typescript/frontend-typescript-react/`) — siblings not CI-gated | Vitest + coverage | `npm test -- --coverage` via `component-tests` |
 | integration | backend | `backend/java/backend-java-spring/src/test/java/dev/reference/app/integration/` (`ApplicationWiringIntegrationTest`, `AuthLifecycleIntegrationTest`) | `@Tag("integration")` | `./gradlew test -DincludeTags=integration` in `BACKEND_DIR` via `integration-tests` (after `unit-tests`, **before** build/deploy; PR + main) |
 | api | tests | `…/tests/api/` (`AuthApiTests`, `ReferenceApiTests`, `BackendWiringApiTests`, `SeedDataApiTests`, `AuthRoundTripApiTests`) — HTTP contract + deployed-stand facts | `@Tag("api")` | java → `-DincludeTags=api` via `api-tests` (after `stand-ready`); retarget any backend with `-DapiBaseUrl` / `-DapiHealthService` |
-| e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `visual` / `mock`) | `e2e-mock-tests` (mock flows + visual mock PNG); `e2e-tests` (needs `api-tests`; visual excluded on default push) |
+| e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `screenshot` / `mock`) | `e2e-mock-tests` (mock flows + screenshot mock PNG); `e2e-tests` (needs `api-tests`; screenshot excluded on default push) |
 | manual | tests | `…/tests/manual/` **in code** | `@Tag("manual")` + `@Manual` | java → `-DincludeTags=manual` via `manual-tests` (after `e2e-tests`, dispatch) |
 
 ### Frontend reference modules (not interchangeable)
@@ -243,8 +243,8 @@ Integration is **in-process Spring + PostgreSQL**, no browser. Deployed HTTP che
 | Trigger | Jobs |
 |---------|------|
 | Pull request (blocks merge) | `unit-tests`, `integration-tests`, `component-tests`, `tests-harness-backend`, `tests-harness-frontend`, `e2e-mock-tests`, `sonar-backend`, `sonar-tests`, `sonar-frontend` |
-| Push to `main` | the PR set (`e2e-mock-tests` only when frontend changed) + build/deploy lanes → `stand-ready` → `api-tests` → `e2e-tests` (visual excluded) → `manual-tests` (skip unless dispatch) |
-| `workflow_dispatch` | per-layer booleans `run_integration` / `run_api` / `run_mock` / `run_e2e` / `run_visual` / `run_manual`; `update_baselines=true` → `e2e-update-baselines`; `include_tags` / `exclude_tags` overrides on e2e; `deploy=none\|backend\|frontend\|both`; TestOps service inputs `ALLURE_JOB_RUN_ID` / `ALLURE_USERNAME` (leave blank unless TestOps UI triggers) |
+| Push to `main` | the PR set (`e2e-mock-tests` only when frontend changed) + build/deploy lanes → `stand-ready` → `api-tests` → `e2e-tests` (screenshot excluded) → `manual-tests` (skip unless dispatch) |
+| `workflow_dispatch` | per-layer booleans `run_integration` / `run_api` / `run_mock` / `run_e2e` / `run_screenshot` / `run_manual`; `update_screenshots=true` → `e2e-update-screenshots`; `include_tags` / `exclude_tags` overrides on e2e; `deploy=none\|backend\|frontend\|both`; TestOps service inputs `ALLURE_JOB_RUN_ID` / `ALLURE_USERNAME` (leave blank unless TestOps UI triggers) |
 
 Active stack and prod URL are workflow `env` defaults in [`ci.yml`](../.github/workflows/ci.yml)
 (`BACKEND`, `BACKEND_LANG`, `FRONTEND`, `TESTS`, `TESTS_LANG`) — change once, jobs reuse them.
@@ -302,7 +302,7 @@ or `BACKEND_LANG`), one `./gradlew test …` / `npm test` / `pytest`. No composi
 wrapper scripts — the command a student runs locally is the command CI runs.
 
 Dispatch is per-layer booleans (`run_integration`, `run_api`, `run_mock`, `run_e2e`,
-`run_visual`, `run_manual`) plus `update_baselines` and `include_tags`/`exclude_tags` overrides.
+`run_screenshot`, `run_manual`) plus `update_screenshots` and `include_tags`/`exclude_tags` overrides.
 To add another layer, copy `manual-tests` and change the java `-D` flags.
 
 ## Test data and secrets
@@ -312,7 +312,7 @@ To add another layer, copy `manual-tests` and change the java `-D` flags.
   not accumulate test users. The lifecycle round-trip also documents stateless logout: the JWT
   survives `logout` and dies with the account.
 - `reference_prod.properties` commits the **creds-less** hub URL. CI passes the real one via
-  the `SELENOID_REMOTE_URL` secret (`-DremoteUrl=…` in `e2e-tests` / `e2e-update-baselines`);
+  the `SELENOID_REMOTE_URL` secret (`-DremoteUrl=…` in `e2e-tests` / `e2e-update-screenshots`);
   locally export it the same way when you need the shared hub.
 
 ## CD graph
@@ -337,7 +337,7 @@ main only:
   stand-ready ← changes + deploy-backend + deploy-frontend
   stand-ready → api-tests → e2e-tests
   manual-tests: dispatch (needs e2e-tests + stand-ready + testops)
-  e2e-update-baselines: dispatch PNG rewrite (needs e2e-tests; not a pyramid layer)
+  e2e-update-screenshots: dispatch PNG rewrite (needs e2e-tests; not a pyramid layer)
 ```
 
 `api-tests` gates on `stand-ready` only. `integration-tests` runs in `BACKEND_DIR` before

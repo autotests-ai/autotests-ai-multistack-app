@@ -119,7 +119,7 @@ flowchart TB
   API --> E2E[e2e-tests]
   TOC --> E2E
 
-  E2E --> BASE[e2e-update-baselines<br/>dispatch PNG rewrite]
+  E2E --> BASE[e2e-update-screenshots<br/>dispatch PNG rewrite]
   E2E --> MAN[manual-tests<br/>dispatch]
   READY --> MAN
   TOC --> BASE
@@ -140,7 +140,7 @@ flowchart TB
 | `e2e-mock-tests` | every PR; on `main` when frontend changed — java: `-Denv=reference_mock -DincludeTags=mock` (stub API on runner) |
 | `sonar-tests` | after **both** harness jobs (PR + main); umbrella harness + tests-module Sonar gate |
 | `e2e-tests` | after `api-tests` — java: `-DincludeTags=e2e` |
-| `e2e-update-baselines` | dispatch `update_baselines=true` — java: `-DincludeTags=visual -DupdateBaselines=true` |
+| `e2e-update-screenshots` | dispatch `update_screenshots=true` — java: `-DincludeTags=screenshot -DupdateScreenshots=true` |
 | `manual-tests` | after `e2e-tests` + `stand-ready`; dispatch only — java: `-DincludeTags=manual` |
 
 `unit-tests`, `integration-tests`, `component-tests`, both harness jobs, and `e2e-mock-tests` gate a pull request.

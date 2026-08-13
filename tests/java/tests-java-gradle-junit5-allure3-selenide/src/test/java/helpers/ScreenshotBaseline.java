@@ -21,7 +21,7 @@ import static io.qameta.allure.Allure.step;
 
 public final class ScreenshotBaseline {
 
-    private static final Path DIFF_DIR = Path.of("build", "baseline-diff");
+    private static final Path DIFF_DIR = Path.of("build", "screenshot-diff");
     private static final int DIFF_HIGHLIGHT_RGB = 0xFFFF00FF;
     private static final int SIZE_MISMATCH_RGB = 0xFFFF0000;
 
@@ -42,27 +42,27 @@ public final class ScreenshotBaseline {
         }
 
         var label = area + "/" + viewport;
-        var baselinePath = baselineFilePath(area, viewport);
-        var baselinePresent = baselineExists(area, viewport);
+        var screenshotPath = screenshotFilePath(area, viewport);
+        var screenshotPresent = screenshotExists(area, viewport);
 
-        if (shouldUpdateBaselines()) {
-            step("Update baseline: " + attachmentName, () ->
-                    attachUpdateMode(attachmentName, actual, baselinePresent, area, viewport));
-            writeBaseline(baselinePath, actual);
+        if (shouldUpdateScreenshots()) {
+            step("Update screenshot: " + attachmentName, () ->
+                    attachUpdateMode(attachmentName, actual, screenshotPresent, area, viewport));
+            writeScreenshot(screenshotPath, actual);
             return;
         }
 
-        if (!baselinePresent) {
-            step("Missing baseline: " + attachmentName, () ->
+        if (!screenshotPresent) {
+            step("Missing screenshot: " + attachmentName, () ->
                     attachPng(attachmentName + "-actual-unmatched", actual));
             throw new AssertionError(
-                    "Baseline missing for %s. Commit PNG to src/test/resources/%s "
-                            + "or run with -DupdateBaselines=true"
-                            .formatted(label, baselineResourcePath(area, viewport)));
+                    "Screenshot missing for %s. Commit PNG to src/test/resources/%s "
+                            + "or run with -DupdateScreenshots=true"
+                            .formatted(label, screenshotResourcePath(area, viewport)));
         }
 
         try {
-            var expected = readBaseline(area, viewport);
+            var expected = readExpectedScreenshot(area, viewport);
             var comparison = compareImages(expected, actual, label);
             step("Compare screenshot: " + attachmentName, () -> {
                 if (comparison.passed()) {
@@ -70,7 +70,7 @@ public final class ScreenshotBaseline {
                     return;
                 }
 
-                attachPng(attachmentName + "-baseline", expected);
+                attachPng(attachmentName + "-expected", expected);
                 attachPng(attachmentName + "-actual", actual);
                 attachPng(attachmentName + "-diff", comparison.diffPng());
                 saveFailArtifacts(label, actual, comparison.diffPng());
@@ -82,17 +82,17 @@ public final class ScreenshotBaseline {
     }
 
     private static void attachUpdateMode(
-            String attachmentName, byte[] actual, boolean baselinePresent, String area, int viewport) {
-        if (baselinePresent) {
+            String attachmentName, byte[] actual, boolean screenshotPresent, String area, int viewport) {
+        if (screenshotPresent) {
             try {
-                attachPng(attachmentName + "-baseline-old", readBaseline(area, viewport));
+                attachPng(attachmentName + "-screenshot-old", readExpectedScreenshot(area, viewport));
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
-            attachPng(attachmentName + "-baseline-new", actual);
+            attachPng(attachmentName + "-screenshot-new", actual);
             return;
         }
-        attachPng(attachmentName + "-baseline-new", actual);
+        attachPng(attachmentName + "-screenshot-new", actual);
     }
 
     private static void waitForStableLayout() {
@@ -107,44 +107,44 @@ public final class ScreenshotBaseline {
         Allure.addAttachment(name, "image/png", new ByteArrayInputStream(png), ".png");
     }
 
-    private static boolean shouldUpdateBaselines() {
-        return ConfigReader.testConfig.updateBaselines();
+    private static boolean shouldUpdateScreenshots() {
+        return ConfigReader.testConfig.updateScreenshots();
     }
 
-    private static String baselinesDir() {
-        var dir = ConfigReader.testConfig.baselinesDir().trim();
+    private static String screenshotsDir() {
+        var dir = ConfigReader.testConfig.screenshotsDir().trim();
         if (dir.isEmpty()) {
-            throw new IllegalStateException("baselinesDir must not be empty");
+            throw new IllegalStateException("screenshotsDir must not be empty");
         }
         return dir.replace('\\', '/').replaceAll("/+$", "");
     }
 
-    static String visualMode() {
+    static String screenshotMode() {
         var env = System.getProperty("env", "").trim();
         return "reference_mock".equals(env) ? "mock" : "e2e";
     }
 
-    static String visualOs() {
-        var override = System.getenv("VISUAL_OS");
+    static String screenshotOs() {
+        var override = System.getenv("SCREENSHOT_OS");
         var raw = (override != null && !override.isBlank())
                 ? override.trim()
                 : osFamily();
-        return mapVisualOs(raw);
+        return mapScreenshotOs(raw);
     }
 
-    static String visualBrowserFolder() {
-        return visualBrowser() + "-" + visualBrowserMajor();
+    static String screenshotBrowserFolder() {
+        return screenshotBrowser() + "-" + screenshotBrowserMajor();
     }
 
-    static String visualBrowser() {
-        var override = System.getenv("VISUAL_BROWSER");
+    static String screenshotBrowser() {
+        var override = System.getenv("SCREENSHOT_BROWSER");
         if (override != null && !override.isBlank()) {
             return override.trim().toLowerCase(Locale.ROOT);
         }
         return "chrome";
     }
 
-    static String visualBrowserMajor() {
+    static String screenshotBrowserMajor() {
         return LocalChromePin.pinnedVersion().split("\\.")[0];
     }
 
@@ -159,7 +159,7 @@ public final class ScreenshotBaseline {
         return "linux";
     }
 
-    private static String mapVisualOs(String raw) {
+    private static String mapScreenshotOs(String raw) {
         var key = raw.toLowerCase(Locale.ROOT);
         if (key.equals("darwin") || key.equals("macos") || key.startsWith("mac")) {
             return "macos";
@@ -173,45 +173,45 @@ public final class ScreenshotBaseline {
         return key.isEmpty() ? "linux" : key;
     }
 
-    private static Path baselineFilePath(String area, int viewport) {
+    private static Path screenshotFilePath(String area, int viewport) {
         return Path.of(
                 "src", "test", "resources",
-                baselinesDir(), visualMode(), visualOs(), visualBrowserFolder(),
+                screenshotsDir(), screenshotMode(), screenshotOs(), screenshotBrowserFolder(),
                 area, viewport + ".png");
     }
 
-    private static String baselineResourcePath(String area, int viewport) {
-        return baselinesDir() + "/" + visualMode() + "/" + visualOs()
-                + "/" + visualBrowserFolder() + "/" + area + "/" + viewport + ".png";
+    private static String screenshotResourcePath(String area, int viewport) {
+        return screenshotsDir() + "/" + screenshotMode() + "/" + screenshotOs()
+                + "/" + screenshotBrowserFolder() + "/" + area + "/" + viewport + ".png";
     }
 
-    private static boolean baselineExists(String area, int viewport) {
-        var resource = baselineResourcePath(area, viewport);
+    private static boolean screenshotExists(String area, int viewport) {
+        var resource = screenshotResourcePath(area, viewport);
         if (Thread.currentThread().getContextClassLoader().getResource(resource) != null) {
             return true;
         }
-        return Files.exists(baselineFilePath(area, viewport));
+        return Files.exists(screenshotFilePath(area, viewport));
     }
 
-    private static byte[] readBaseline(String area, int viewport) throws IOException {
-        var resource = baselineResourcePath(area, viewport);
+    private static byte[] readExpectedScreenshot(String area, int viewport) throws IOException {
+        var resource = screenshotResourcePath(area, viewport);
         var url = Thread.currentThread().getContextClassLoader().getResource(resource);
         if (url != null) {
             try (InputStream in = url.openStream()) {
                 return in.readAllBytes();
             }
         }
-        var path = baselineFilePath(area, viewport);
+        var path = screenshotFilePath(area, viewport);
         if (Files.exists(path)) {
             return Files.readAllBytes(path);
         }
-        throw new IOException("Baseline not found: " + resource);
+        throw new IOException("Screenshot not found: " + resource);
     }
 
-    private static void writeBaseline(Path baselinePath, byte[] png) {
+    private static void writeScreenshot(Path screenshotPath, byte[] png) {
         try {
-            Files.createDirectories(baselinePath.getParent());
-            Files.write(baselinePath, png);
+            Files.createDirectories(screenshotPath.getParent());
+            Files.write(screenshotPath, png);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -253,7 +253,7 @@ public final class ScreenshotBaseline {
             }
         }
 
-        var maxDiffRatio = ConfigReader.testConfig.visualDiffThreshold();
+        var maxDiffRatio = ConfigReader.testConfig.screenshotDiffThreshold();
         var diffRatio = (double) diffPixels / totalPixels;
         if (diffRatio > maxDiffRatio) {
             return new ImageComparison(

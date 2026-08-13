@@ -110,17 +110,17 @@ public interface TestConfig extends Config {
     @DefaultValue("")
     String videoFolder();
 
-    @Key("updateBaselines")
+    @Key("updateScreenshots")
     @DefaultValue("false")
-    boolean updateBaselines();
+    boolean updateScreenshots();
 
-    @Key("baselinesDir")
+    @Key("screenshotsDir")
     @DefaultValue("screenshots")
-    String baselinesDir();
+    String screenshotsDir();
 
-    @Key("visualDiffThreshold")
+    @Key("screenshotDiffThreshold")
     @DefaultValue("0.015")
-    double visualDiffThreshold();
+    double screenshotDiffThreshold();
 
     @Key("logToConsole")
     @DefaultValue("true")

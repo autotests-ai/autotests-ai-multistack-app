@@ -21,12 +21,12 @@ import static com.codeborne.selenide.Selenide.open;
 
 @Layer("e2e")
 @Severity(SeverityLevel.MINOR)
-@Tag("visual")
+@Tag("screenshot")
 @Epic("Home")
 @Feature("Home layout")
 @Execution(ExecutionMode.SAME_THREAD)
-@DisplayName("Home layout visual")
-class HomeLayoutBaselineTests extends TestBase {
+@DisplayName("Home layout screenshot")
+class HomeLayoutScreenshotTests extends TestBase {
 
     private static final int VIEWPORT_WIDTH = 1280;
     private static final int VIEWPORT_HEIGHT = 900;
@@ -40,8 +40,8 @@ class HomeLayoutBaselineTests extends TestBase {
     }
 
     @Test
-    @DisplayName("Home layout matches baseline at 1280px")
-    void homeLayoutMatchesBaseline() {
+    @DisplayName("Home layout matches screenshot at 1280px")
+    void homeLayoutMatchesScreenshot() {
         var layout = $("[data-testid='reference-layout']").shouldBe(visible);
         ScreenshotBaseline.captureAndCompare(
                 layout,

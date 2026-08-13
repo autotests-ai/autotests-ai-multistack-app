@@ -35,8 +35,8 @@ The Java module has one Gradle task — `test`. The layer is a tag filter, the s
 ./gradlew test -Denv=reference_ci -DincludeTags=harness-backend
 ./gradlew test -Denv=reference_ci -DincludeTags=harness-frontend
 ./gradlew test -Denv=reference_mock -DincludeTags=mock
-./gradlew test -Denv=reference_mock -DincludeTags=visual
-./gradlew test -Denv=reference_prod -DincludeTags=e2e -DexcludeTags=visual,mock
+./gradlew test -Denv=reference_mock -DincludeTags=screenshot
+./gradlew test -Denv=reference_prod -DincludeTags=e2e -DexcludeTags=screenshot,mock
 ```
 
-Visual is two Selenide stages (`screenshots/{mock|e2e}/{os}/{chrome-148}/…`), not a pyramid layer — see [LAYERS.md](LAYERS.md).
+Screenshot tests are two Selenide stages (`screenshots/{mock|e2e}/{os}/{chrome-148}/…`), not a pyramid layer — see [LAYERS.md](LAYERS.md).
