@@ -89,6 +89,9 @@ export function findById(items, id) {
   return items.find((item) => item && item.id === id) || null;
 }
 
+/** Pyramid layers hosted in the backend test tree (not tests/<lang>/). */
+export const UNIT_ROW_LAYERS = ['unit', 'integration'];
+
 /** Unit tests live inside the selected backend module (not under tests/). */
 export function unitTestsPath(backend) {
   if (!backend?.module) return null;
@@ -237,7 +240,7 @@ function layersCell(layers) {
   return `<td class="stack-page__layers-cell"><span class="stack-page__layers" data-testid="stack-tests-layers">${escapeHtml(list.join(' · '))}</span></td>`;
 }
 
-function derivedLayerRow(layer, boundId, modulePath, meta, present, label = null) {
+function derivedLayerRow(layer, boundId, modulePath, meta, present, label = null, layers = null) {
   const status = present ? 'derived' : 'slot';
   const isActive = Boolean(boundId);
   const display = label || layer;
@@ -253,7 +256,7 @@ function derivedLayerRow(layer, boundId, modulePath, meta, present, label = null
       ${name}
       <div class="text text--sm text--muted stack-page__meta">${escapeHtml(meta)}</div>
     </td>
-    ${layersCell([layer])}
+    ${layersCell(layers || [layer])}
     <td class="stack-page__gh-cell">${ghCell}</td>
     <td>${statusBadge(status)}</td>
     <td><span class="text text--sm text--muted">—</span></td>
@@ -375,6 +378,7 @@ export function mountStackPage(root, data, pathname = window.location.pathname, 
               unitMeta,
               Boolean(unitPath),
               shortModuleLabel(unitPath) || 'unit',
+              UNIT_ROW_LAYERS,
             )}
             ${derivedLayerRow(
               'component',

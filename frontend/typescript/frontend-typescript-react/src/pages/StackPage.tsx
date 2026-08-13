@@ -21,6 +21,7 @@ import {
   stackHref,
   summarizeMatrix,
   type TestsModule,
+  UNIT_ROW_LAYERS,
   unitTestsMeta,
   unitTestsPath,
 } from '../../../../_shared/stack-matrix';
@@ -169,6 +170,7 @@ function TestsBoard({
   const derived = [
     {
       layer: 'unit',
+      layers: UNIT_ROW_LAYERS,
       bound: currentBackend,
       path: unitPath,
       label: shortModuleLabel(unitPath) || 'unit',
@@ -177,6 +179,7 @@ function TestsBoard({
     },
     {
       layer: 'component',
+      layers: ['component'],
       bound: currentFrontend,
       path: componentPath,
       label: shortModuleLabel(componentPath) || 'component',
@@ -226,7 +229,7 @@ function TestsBoard({
               </td>
               <td className="stack-page__layers-cell">
                 <span className="stack-page__layers" data-testid="stack-tests-layers">
-                  {row.layer}
+                  {row.layers.join(' · ')}
                 </span>
               </td>
               <td className="stack-page__gh-cell">

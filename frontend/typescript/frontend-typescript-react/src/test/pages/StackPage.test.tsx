@@ -75,6 +75,11 @@ describe('StackPage', () => {
     expect(screen.getByTestId('stack-current-pair')).toBeInTheDocument();
     expect(screen.getByTestId('stack-backend-backend-java-spring')).toBeInTheDocument();
     expect(screen.getByTestId('stack-frontend-frontend-typescript-react')).toBeInTheDocument();
+
+    const layerCells = screen.getAllByTestId('stack-tests-layers');
+    expect(layerCells[0]).toHaveTextContent('unit · integration');
+    expect(layerCells[1]).toHaveTextContent('component');
+    expect(layerCells[2]).toHaveTextContent('api · e2e');
   });
 
   it('backend/frontend open links stay path-only (no ?tests=)', async () => {

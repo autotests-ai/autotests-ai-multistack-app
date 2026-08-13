@@ -136,7 +136,7 @@
       "language": "java",
       "module": "tests/java/tests-java-gradle-junit5-allure3-selenide",
       "layers": [
-        "integration",
+        "api",
         "e2e"
       ]
     },
@@ -155,7 +155,7 @@
       "language": "java",
       "module": "tests/java/tests-java-gradle-junit5-allure2-selenide",
       "layers": [
-        "integration",
+        "api",
         "e2e"
       ]
     },
@@ -165,7 +165,7 @@
       "language": "java",
       "module": "tests/java/tests-java-gradle-junit5-no_allure-selenide",
       "layers": [
-        "integration",
+        "api",
         "e2e"
       ]
     },
@@ -193,7 +193,7 @@
       "language": "java",
       "module": "tests/java/tests-java-maven-junit5-allure3-selenide",
       "layers": [
-        "integration",
+        "api",
         "e2e"
       ]
     },
@@ -203,7 +203,7 @@
       "language": "kotlin",
       "module": "tests/kotlin/tests-kotlin-gradle-junit5-allure3-selenide",
       "layers": [
-        "integration",
+        "api",
         "e2e"
       ]
     },

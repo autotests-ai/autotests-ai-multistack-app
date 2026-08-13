@@ -22,6 +22,7 @@ import {
   resolveTestsId,
   stackHref,
   summarizeMatrix,
+  UNIT_ROW_LAYERS,
   unitTestsMeta,
   unitTestsPath,
   type BackendModule,
@@ -384,7 +385,7 @@ function moduleGh(modulePath?: string | null): string | null {
                 <div class="text text--sm text--muted stack-page__meta">{{ unitMeta }}</div>
               </td>
               <td class="stack-page__layers-cell">
-                <span class="stack-page__layers" data-testid="stack-tests-layers">unit</span>
+                <span class="stack-page__layers" data-testid="stack-tests-layers">{{ layersLabel(UNIT_ROW_LAYERS) }}</span>
               </td>
               <td class="stack-page__gh-cell">
                 <a

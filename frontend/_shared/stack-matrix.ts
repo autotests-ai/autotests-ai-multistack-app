@@ -141,6 +141,9 @@ export function findById<T extends { id: string }>(
   return items.find((item) => item.id === id) ?? null;
 }
 
+/** Pyramid layers hosted in the backend test tree (not tests/<lang>/). */
+export const UNIT_ROW_LAYERS: string[] = ['unit', 'integration'];
+
 /** Unit tests live inside the selected backend module (not under tests/). */
 export function unitTestsPath(backend: BackendModule | null): string | null {
   if (!backend?.module) return null;
