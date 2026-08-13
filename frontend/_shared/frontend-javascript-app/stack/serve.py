@@ -3,13 +3,11 @@
 
 from __future__ import annotations
 
-import re
 import sys
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_STACK = "/stack/backend-java-spring/frontend-typescript-react/"
 
 
 class StackBoardHandler(SimpleHTTPRequestHandler):
@@ -21,29 +19,15 @@ class StackBoardHandler(SimpleHTTPRequestHandler):
         self.send_header("Location", location)
         self.end_headers()
 
-    def _redirect_target(self) -> str | None:
-        raw = self.path.split("?", 1)[0]
-        if raw == "/stack":
-            return "/stack/"
-        if raw.rstrip("/") == "/stack/login":
-            return DEFAULT_STACK + "login"
-        if raw.rstrip("/") == "/stack/register":
-            return DEFAULT_STACK + "register"
-        if re.fullmatch(r"/stack/backend-[^/]+/frontend-[^/]+/stack/?", raw):
-            return "/stack/"
-        return None
-
     def do_HEAD(self) -> None:  # noqa: N802
-        target = self._redirect_target()
-        if target:
-            self._redirect(target)
+        if self.path.split("?", 1)[0] == "/stack":
+            self._redirect("/stack/")
             return
         super().do_HEAD()
 
     def do_GET(self) -> None:  # noqa: N802
-        target = self._redirect_target()
-        if target:
-            self._redirect(target)
+        if self.path.split("?", 1)[0] == "/stack":
+            self._redirect("/stack/")
             return
         super().do_GET()
 

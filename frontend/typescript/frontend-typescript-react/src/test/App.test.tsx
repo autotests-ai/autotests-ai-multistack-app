@@ -64,11 +64,4 @@ describe('App', { tags: ['smoke'] }, () => {
 
     expect(screen.getByTestId('register-form-title')).toHaveTextContent('Register');
   });
-
-  it('routes /stack to the stack page', async () => {
-    renderApp('/stack');
-
-    expect(screen.getByTestId('stack-page')).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByTestId('stack-tests-board')).toBeInTheDocument());
-  });
 });

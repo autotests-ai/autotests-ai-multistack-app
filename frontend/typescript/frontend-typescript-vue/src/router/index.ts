@@ -3,7 +3,6 @@ import { APP_BASE } from '../lib/appBase';
 import HomePage from '../pages/HomePage.vue';
 import LoginPage from '../pages/LoginPage.vue';
 import RegisterPage from '../pages/RegisterPage.vue';
-import StackPage from '../pages/StackPage.vue';
 
 /**
  * History mode under the product mount. createWebHistory(APP_BASE + '/') so
@@ -15,6 +14,5 @@ export const router = createRouter({
     { path: '/', name: 'home', component: HomePage },
     { path: '/login', name: 'login', component: LoginPage },
     { path: '/register', name: 'register', component: RegisterPage },
-    { path: '/stack/:pathMatch(.*)*', name: 'stack', component: StackPage },
   ],
 });
