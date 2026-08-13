@@ -34,7 +34,7 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 Repository → Postgres and Flyway seed — not HTTP against a live stand.
 
 **api** = HTTP contract and deployed-stand facts through Rest Assured (or equivalent) **after**
-`stand-ready`. Same endpoints, different question:
+`deploy-backend`. Same endpoints, different question:
 
 | Question | Layer | Example |
 |----------|-------|---------|
@@ -179,8 +179,8 @@ suite (`npm test` / `pytest` with `UI_URL` / `BASE_URL`) — no Gradle tag slice
 | unit | backend | active `BACKEND_DIR` (default `backend/java/backend-java-spring/`) | java: `-DexcludeTags=integration` (no `@Tag("unit")` job filter; plain + Spring slices) | by `BACKEND_LANG`: gradle+JaCoCo · `pytest` · `go test` · `npm test` — see [backend/README.md](../backend/README.md) |
 | component | frontend | active `FRONTEND_DIR` only (default `frontend/typescript/frontend-typescript-react/`) — siblings not CI-gated | Vitest + coverage | `npm test -- --coverage` via `component-tests` |
 | integration | backend | `backend/java/backend-java-spring/src/test/java/dev/reference/app/integration/` (`ApplicationWiringIntegrationTest`, `AuthLifecycleIntegrationTest`) | `@Tag("integration")` | `./gradlew test -DincludeTags=integration` in `BACKEND_DIR` via `integration-tests` (after `unit-tests`, **before** build/deploy; PR + main) |
-| api | tests | `…/tests/api/` (`AuthApiTests`, `ReferenceApiTests`, `BackendWiringApiTests`, `SeedDataApiTests`, `AuthRoundTripApiTests`) — HTTP contract + deployed-stand facts | `@Tag("api")` | java → `-DincludeTags=api` via `api-tests` (after `stand-ready`); retarget any backend with `-DapiBaseUrl` / `-DapiHealthService` |
-| e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `screenshot` / `mock`) | `ui-mock-tests` (mock flows + screenshot mock PNG); `e2e-tests` (needs `api-tests`; screenshot excluded on default push) |
+| api | tests | `…/tests/api/` (`AuthApiTests`, `ReferenceApiTests`, `BackendWiringApiTests`, `SeedDataApiTests`, `AuthRoundTripApiTests`) — HTTP contract + deployed-stand facts | `@Tag("api")` | java → `-DincludeTags=api` via `api-tests` (after `deploy-backend`); retarget any backend with `-DapiBaseUrl` / `-DapiHealthService` |
+| e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `screenshot` / `mock`) | `ui-mock-tests` (mock flows + screenshot mock PNG); `e2e-tests` (needs `api-tests` + `deploy-frontend`; screenshot excluded on default push) |
 | manual | tests | `…/tests/manual/` **in code** | `@Tag("manual")` + `@Manual` | java → `-DincludeTags=manual` via `manual-tests` (after `e2e-tests`, dispatch) |
 
 ### Frontend reference modules (not interchangeable)
@@ -244,7 +244,7 @@ Integration is **in-process Spring + PostgreSQL**, no browser. Deployed HTTP che
 | Trigger | Jobs |
 |---------|------|
 | Pull request (blocks merge) | `unit-tests`, `integration-tests`, `component-tests`, `tests-harness-backend`, `tests-harness-frontend`, `ui-mock-tests`, `sonar-backend`, `sonar-tests`, `sonar-frontend` |
-| Push to `main` | the PR set (`ui-mock-tests` only when frontend changed) + build/deploy lanes → `stand-ready` → `api-tests` → `e2e-tests` (screenshot excluded) → `manual-tests` (skip unless dispatch) |
+| Push to `main` | the PR set (`ui-mock-tests` only when frontend changed) + build/deploy lanes → `api-tests` (after `deploy-backend`) → `e2e-tests` (after `api-tests` + `deploy-frontend`; screenshot excluded) → `manual-tests` (skip unless dispatch) |
 | `workflow_dispatch` | per-layer booleans `run_integration` / `run_api` / `run_mock` / `run_e2e` / `run_screenshot` / `run_manual`; `update_mock_screenshots` / `update_e2e_screenshots` rewrite PNG in `ui-mock-tests` / `e2e-tests`; `include_tags` / `exclude_tags` overrides on e2e; `deploy=none\|backend\|frontend\|both`; TestOps service inputs `ALLURE_JOB_RUN_ID` / `ALLURE_USERNAME` (leave blank unless TestOps UI triggers) |
 
 Active stack and prod URL are workflow `env` defaults in [`ci.yml`](../.github/workflows/ci.yml)
@@ -337,16 +337,16 @@ main only:
   build-frontend ← ui-mock-tests + changes                     (no sonar)
   deploy-backend ← build-backend + sonar-backend
   deploy-frontend ← build-frontend + sonar-frontend
-  stand-ready ← changes + deploy-backend + deploy-frontend
-  stand-ready → api-tests → e2e-tests
-  manual-tests: dispatch (needs e2e-tests + stand-ready + testops)
+  api-tests ← deploy-backend + changes
+  e2e-tests ← api-tests + deploy-frontend
+  manual-tests: dispatch (needs e2e-tests + testops)
 ```
 
-`api-tests` gates on `stand-ready` only. `integration-tests` runs in `BACKEND_DIR` before
-build/deploy and does **not** wait on `stand-ready`.
+`api-tests` gates on `deploy-backend` (not a join with frontend). `integration-tests` runs in `BACKEND_DIR` before
+build/deploy and does **not** wait on deploy.
 `sonar-tests` scans **testinfra helpers** (`-DincludeTags=harness`), not api/e2e results.
 It runs after both harness slices — on **PR** and **main**.
 `build-backend` / `build-frontend` do **not** `needs` Sonar. `sonar-frontend` waits on
 `ui-mock-tests` (success or skipped — backend-only main still scans). There is no
 `build-frontend` → `ui-mock-tests` edge (mock does not wait for the GHCR image) and no
-`stand-ready` → `integration-tests` edge.
+deploy → `integration-tests` edge.

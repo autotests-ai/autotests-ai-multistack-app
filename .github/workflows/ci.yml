@@ -31,9 +31,8 @@ name: CI
 #   build-backend ← unit-tests + integration-tests · build-frontend ← ui-mock-tests
 #   deploy-backend ← build-backend + sonar-backend
 #   deploy-frontend ← build-frontend + sonar-frontend
-#   stand-ready ← deploy-backend + deploy-frontend (curl live UI + /api/health)
-#   api-tests ← stand-ready
-#   e2e-tests ← api-tests → manual-tests
+#   api-tests ← deploy-backend (curl /api/health; no join with frontend)
+#   e2e-tests ← api-tests + deploy-frontend (curl live UI) → manual-tests
 # push main: changes gates build/deploy by path; tests + sonar always run.
 # PR: no deploy; ui-mock-tests after component-tests (mock compose profile).
 
@@ -1342,53 +1341,22 @@ jobs:
     steps:
       - *ssh-deploy
 
-  # Curl live UI + API health after deploy lanes (handles partial/skipped deploy).
-  stand-ready:
-    needs: [changes, deploy-backend, deploy-frontend]
-    # A lane that did not deploy is fine — the stand keeps whatever is already live. A push that
-    # deployed nothing and touched no test source has nothing to verify, so the prod layers stay
-    # off: a README commit must not spend an e2e run against prod.
-    if: >-
-      !cancelled() && (
-        (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
-         (needs.deploy-backend.result == 'success' || needs.deploy-backend.result == 'skipped') &&
-         (needs.deploy-frontend.result == 'success' || needs.deploy-frontend.result == 'skipped') &&
-         (needs.deploy-backend.result == 'success' ||
-          needs.deploy-frontend.result == 'success' ||
-          needs.changes.outputs.tests == 'true')) ||
-        (github.event_name == 'workflow_dispatch' &&
-         (inputs.deploy != 'none' ||
-          inputs.run_api ||
-          inputs.run_e2e ||
-          inputs.run_screenshot ||
-          inputs.run_manual ||
-          inputs.update_e2e_screenshots ||
-          inputs.include_tags != '' ||
-          inputs.exclude_tags != '') &&
-         (!(inputs.deploy == 'backend' || inputs.deploy == 'both') ||
-          needs.deploy-backend.result == 'success') &&
-         (!(inputs.deploy == 'frontend' || inputs.deploy == 'both') ||
-          needs.deploy-frontend.result == 'success'))
-      )
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    steps:
-      - name: Verify live stand (UI + API health)
-        env:
-          API_HEALTH: https://${{ env.PUBLIC_HOST }}/${{ env.STACK_MOUNT }}/${{ env.BACKEND }}/api/health
-        run: |
-          set -euo pipefail
-          echo "==> UI ${UI_URL}"
-          curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${UI_URL}"
-          echo "==> API ${API_HEALTH}"
-          curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${API_HEALTH}"
-
+  # Rest Assured against deployed backend — starts as soon as that lane finishes (FE may
+  # still be deploying). A skipped backend deploy is fine when tests changed or dispatch
+  # asked for api without a backend deploy; a failed backend deploy keeps this job off.
   api-tests:
-    needs: [stand-ready, testops-context]
+    needs: [deploy-backend, changes, testops-context]
     if: >-
-      always() && !cancelled() && needs.stand-ready.result == 'success' && (
-        (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-        (github.event_name == 'workflow_dispatch' && inputs.run_api)
+      always() && !cancelled() && (
+        (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+         (needs.deploy-backend.result == 'success' ||
+          (needs.deploy-backend.result == 'skipped' &&
+           needs.changes.outputs.tests == 'true'))) ||
+        (github.event_name == 'workflow_dispatch' && inputs.run_api &&
+         (needs.deploy-backend.result == 'success' ||
+          needs.deploy-backend.result == 'skipped') &&
+         (!(inputs.deploy == 'backend' || inputs.deploy == 'both') ||
+          needs.deploy-backend.result == 'success'))
       )
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -1410,6 +1378,13 @@ jobs:
       ALLURE_RESULTS_ARTIFACT: allure-results-api
       ALLURE_RESULTS_UPLOAD_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/build/allure-results/**
     steps:
+      - name: Wait for live API
+        env:
+          API_HEALTH: https://${{ env.PUBLIC_HOST }}/${{ env.STACK_MOUNT }}/${{ env.BACKEND }}/api/health
+        run: |
+          set -euo pipefail
+          echo "==> API ${API_HEALTH}"
+          curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${API_HEALTH}"
       - *checkout
       - *cache-allurectl
       - *setup-live-allurectl
@@ -1453,20 +1428,28 @@ jobs:
         working-directory: ${{ env.TESTS_DIR }}
       - *upload-allure-results
 
-  # Join api on main; dispatch e2e/screenshot when upstream layer jobs were skipped.
+  # After API layer; also wait for frontend deploy (skipped = keep live UI).
+  # Frontend-only push skips api-tests and still runs e2e.
   e2e-tests:
-    needs: [api-tests, testops-context]
+    needs: [api-tests, deploy-frontend, testops-context]
     if: >-
       always() && !cancelled() && (
-        (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
-         needs.api-tests.result == 'success') ||
-        (github.event_name == 'workflow_dispatch' &&
-         (inputs.run_e2e ||
-          inputs.run_screenshot ||
-          inputs.update_e2e_screenshots ||
-          inputs.include_tags != '' ||
-          inputs.exclude_tags != '') &&
-         (needs.api-tests.result == 'success' || needs.api-tests.result == 'skipped'))
+        (needs.deploy-frontend.result == 'success' ||
+         needs.deploy-frontend.result == 'skipped') && (
+          (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+           (needs.api-tests.result == 'success' ||
+            (needs.api-tests.result == 'skipped' &&
+             needs.deploy-frontend.result == 'success'))) ||
+          (github.event_name == 'workflow_dispatch' &&
+           (inputs.run_e2e ||
+            inputs.run_screenshot ||
+            inputs.update_e2e_screenshots ||
+            inputs.include_tags != '' ||
+            inputs.exclude_tags != '') &&
+           (needs.api-tests.result == 'success' || needs.api-tests.result == 'skipped') &&
+           (!(inputs.deploy == 'frontend' || inputs.deploy == 'both') ||
+            needs.deploy-frontend.result == 'success'))
+        )
       )
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -1490,6 +1473,11 @@ jobs:
       ALLURE_RESULTS_ARTIFACT: allure-results-e2e
       ALLURE_RESULTS_UPLOAD_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/build/allure-results/**
     steps:
+      - name: Wait for live UI
+        run: |
+          set -euo pipefail
+          echo "==> UI ${UI_URL}"
+          curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${UI_URL}"
       - *checkout
       - *cache-allurectl
       - *setup-live-allurectl
@@ -1617,12 +1605,11 @@ jobs:
 
   # Main-chain tip after e2e; manual execution is explicit.
   manual-tests:
-    needs: [e2e-tests, stand-ready, testops-context]
+    needs: [e2e-tests, testops-context]
     if: >-
       always() && !cancelled() &&
       github.event_name == 'workflow_dispatch' &&
       inputs.run_manual &&
-      needs.stand-ready.result == 'success' &&
       (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped')
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -1636,6 +1623,11 @@ jobs:
       ALLURE_RESULTS_ARTIFACT: allure-results-manual
       ALLURE_RESULTS_UPLOAD_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/build/allure-results/**
     steps:
+      - name: Wait for live UI
+        run: |
+          set -euo pipefail
+          echo "==> UI ${UI_URL}"
+          curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${UI_URL}"
       - *checkout
       - *cache-allurectl
       - *setup-live-allurectl
