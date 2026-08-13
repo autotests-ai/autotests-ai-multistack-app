@@ -74,17 +74,24 @@ Path constants: `backend/scripts/paths.sh`
 
 Canon: [tests/LAYERS.md](tests/LAYERS.md) · all jobs live in [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 
-Full CI graph (`needs` from `ci.yml`). Push to `main` runs both CD lanes; dispatch `deploy` selects them.
+Full CI graph (`needs` from `ci.yml`). `trigger` is the same contract as dispatch `deploy` (`backend` / `frontend` / `tests` / `all`); push infers from paths.
 
 ```mermaid
 flowchart TB
+  TRG[trigger]
   TOC[testops-context]
 
   TOC --> UNIT[unit-tests]
   TOC --> COMP[component-tests]
-  H[tests-harness]
+  TRG --> H[tests-harness]
   TOC --> MOCK[ui-mock-tests]
   TOC --> INT[integration-tests]
+
+  TRG --> MOCK
+  TRG --> BB
+  TRG --> BF
+  TRG --> API
+  TRG --> E2E
 
   UNIT --> INT
   UNIT --> SB[sonar-backend]
@@ -120,20 +127,17 @@ flowchart TB
 | Job | Where |
 |-----|-------|
 | `unit-tests` | `BACKEND_DIR` — command by `BACKEND_LANG` (gradle/JaCoCo, pytest, `go test`, or `npm test`); java excludes `@Tag("integration")` |
-| `tests-harness` | `TESTS_DIR` — java: `-DincludeTags=harness` + JaCoCo (helpers); dispatch `deploy=backend` → `-DincludeTags=harness-backend` (`ConfigReader` only). Not TestOps. |
+| `tests-harness` | `TESTS_DIR` — java: `-DincludeTags=harness` + JaCoCo; backend-only lane → `harness-backend` (`ConfigReader` only). Not TestOps. |
 | `component-tests` | `FRONTEND_DIR` — `npm test -- --coverage` |
 | `integration-tests` | `BACKEND_DIR` — after `unit-tests` (java: `-DincludeTags=integration`); Spring Boot + real PG; **before** build/deploy; PR + main |
-| `api-tests` | `TESTS_DIR` — after `deploy-backend` (java: `-DincludeTags=api`); HTTP contract + deployed-stand facts |
-| `ui-mock-tests` | after `component-tests`; every PR + push to `main`; dispatch `deploy=frontend\|both` or `run_mock`; gates `build-frontend`; dispatch `update_mock_screenshots` rewrites `screenshots/mock/` |
-| `sonar-tests` | after `tests-harness` (PR + main; skipped when dispatch `deploy=backend`) |
+| `api-tests` | `TESTS_DIR` — after backend deploy, or tests-lane vs live stand (`-DincludeTags=api`) |
+| `ui-mock-tests` | after `component-tests`; every PR; frontend lane on main; dispatch `run_mock` / `update_mock_screenshots` |
+| `sonar-tests` | after `tests-harness` (skipped on backend-only lane) |
 | `e2e-tests` | after `api-tests` + `deploy-frontend` — java: `-DincludeTags=e2e`; dispatch `run_screenshot` / `update_e2e_screenshots` are extra steps |
 | `manual-tests` | after `e2e-tests`; dispatch only — java: `-DincludeTags=manual` |
 
 `unit-tests`, `integration-tests`, `component-tests`, `tests-harness`, and `ui-mock-tests` gate a pull request.
-Post-deploy layers (`api` / `e2e`) run on push to `main` after the matching deploy lane
-(`api-tests` ← `deploy-backend`, `e2e-tests` ← `api-tests` + `deploy-frontend`), or via
-`workflow_dispatch` booleans. Stack defaults (`BACKEND` / `BACKEND_LANG` / `FRONTEND` /
-`TESTS` / `TESTS_LANG`) live once at the top of [`ci.yml`](.github/workflows/ci.yml).
+Post-deploy layers (`api` / `e2e`) follow `trigger` lanes: backend deploy, frontend deploy, or tests-lane against the live stand. Dispatch `deploy=none|backend|frontend|tests|all` is the same contract; push infers from `backend/` · `frontend/` · `tests/`.
 
 ## Ports (local = prod host upstream)
 
@@ -203,7 +207,7 @@ Teaching CI — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 | Event | Jobs |
 |-------|------|
 | pull request | `unit-tests` · `integration-tests` · `component-tests` · `tests-harness` · `ui-mock-tests` · `sonar-backend` · `sonar-frontend` · `sonar-tests` |
-| push to `main` | PR set → both build/deploy lanes → `api-tests` (after backend) → `e2e-tests` (after api + frontend) → `manual-tests` (dispatch) |
+| push to `main` | PR set + lanes from paths (`tests/` ⇒ api/e2e vs live stand, no image deploy) |
 
 `build` runs `docker compose build` + `docker compose push`, so `docker-compose.yml` stays the only place describing how an image is built. Images go to GHCR as `ghcr.io/autotests-ai/reference-app-copy-<service>:<sha>`; the tag comes from `IMAGE_TAG` (defaults to `latest` locally).
 

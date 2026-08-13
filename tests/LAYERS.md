@@ -65,8 +65,8 @@ Self-check of the **tests module helpers** before / alongside product layers —
 
 | Slice | Tags | CI | Gates |
 |-------|------|----|-------|
-| all | `harness` | `tests-harness` | PR + push; dispatch unless `deploy=backend`; feeds `sonar-tests` |
-| backend-only | `harness-backend` | same job | dispatch `deploy=backend` — `ConfigReader` only (no TokensCss / LayoutCss / LocalChromePin / HAR); **skips** `sonar-tests` |
+| all | `harness` | `tests-harness` | PR + push + dispatch unless backend-only lane; feeds `sonar-tests` |
+| backend-only | `harness-backend` | same job | `trigger` backend without frontend/tests — `ConfigReader` only; **skips** `sonar-tests` |
 | frontend helpers | `harness` + `harness-frontend` | inside the all slice | CSS helpers, HAR, `LocalChromePin` |
 
 ```bash
@@ -204,7 +204,7 @@ Paths SSOT: `backend/scripts/paths.sh`. Module naming: [NAMING.md](NAMING.md).
 |-----|--------------------|
 | `unit-tests` | **Application** (active backend — toolchain from `BACKEND_LANG`; excludes `@Tag("integration")`) |
 | `integration-tests` | **Application** (full Spring Boot + Testcontainers PostgreSQL in `BACKEND_DIR`) |
-| `tests-harness` | **Test tooling** — `ConfigReader` always; CSS/HAR/`LocalChromePin` unless dispatch `deploy=backend` |
+| `tests-harness` | **Test tooling** — `ConfigReader` always; CSS/HAR/`LocalChromePin` unless backend-only lane |
 | `component-tests` | **Application** (active `FRONTEND_DIR` only — Vitest + coverage → `sonar-frontend` / `ui-mock-tests` → `build-frontend`) |
 
 Students: product unit layers (`unit-tests` / `component-tests`); harness = helper checks that higher layers depend on.
@@ -244,8 +244,8 @@ Integration is **in-process Spring + PostgreSQL**, no browser. Deployed HTTP che
 | Trigger | Jobs |
 |---------|------|
 | Pull request (blocks merge) | `unit-tests`, `integration-tests`, `component-tests`, `tests-harness`, `ui-mock-tests`, `sonar-backend`, `sonar-tests`, `sonar-frontend` |
-| Push to `main` | the PR set + both build/deploy lanes → `api-tests` (after `deploy-backend`) → `e2e-tests` (after `api-tests` + `deploy-frontend`; screenshot excluded) → `manual-tests` (skip unless dispatch) |
-| `workflow_dispatch` | per-layer booleans `run_integration` / `run_api` / `run_mock` / `run_e2e` / `run_screenshot` / `run_manual`; `update_mock_screenshots` / `update_e2e_screenshots` rewrite PNG in `ui-mock-tests` / `e2e-tests`; `include_tags` / `exclude_tags` overrides on e2e; `deploy=none\|backend\|frontend\|both`; TestOps service inputs `ALLURE_JOB_RUN_ID` / `ALLURE_USERNAME` (leave blank unless TestOps UI triggers) |
+| Push to `main` | PR set + `trigger` lanes from paths (`backend/` · `frontend/` · `tests/`) → matching CD and/or api/e2e vs live stand |
+| `workflow_dispatch` | `deploy=none\|backend\|frontend\|tests\|all` (same flags as `trigger`); per-layer booleans `run_integration` / `run_api` / `run_mock` / `run_e2e` / `run_screenshot` / `run_manual`; screenshot rewrite flags; TestOps `ALLURE_JOB_RUN_ID` / `ALLURE_USERNAME` |
 
 Active stack and prod URL are workflow `env` defaults in [`ci.yml`](../.github/workflows/ci.yml)
 (`BACKEND`, `BACKEND_LANG`, `FRONTEND`, `TESTS`, `TESTS_LANG`) — change once, jobs reuse them.
@@ -327,16 +327,15 @@ every run (PR + main):
   unit-tests → integration-tests
   unit-tests + integration-tests → sonar-backend
   component-tests → ui-mock-tests → sonar-frontend
-  tests-harness → sonar-tests (sonar-tests skipped when dispatch deploy=backend)
-  ui-mock-tests (needs component-tests + testops; every PR + push main;
-                 skipped mock does not skip sonar-frontend)
+  tests-harness → sonar-tests (sonar-tests skipped on backend-only lane)
+  ui-mock-tests (needs component-tests + trigger + testops; every PR; frontend lane on main)
 
-main only:
-  build-backend ← unit-tests + integration-tests     (no sonar; push always, dispatch via `deploy`)
-  build-frontend ← ui-mock-tests                     (no sonar; push always, dispatch via `deploy`)
+main only (via `trigger`):
+  build-backend ← unit-tests + integration-tests + trigger.backend
+  build-frontend ← ui-mock-tests + trigger.frontend
   deploy-backend ← build-backend + sonar-backend
   deploy-frontend ← build-frontend + sonar-frontend
-  api-tests ← deploy-backend
+  api-tests ← deploy-backend (or tests-lane vs live stand)
   e2e-tests ← api-tests + deploy-frontend
   manual-tests: dispatch (needs e2e-tests + testops)
 ```
@@ -344,9 +343,9 @@ main only:
 `api-tests` gates on `deploy-backend` (not a join with frontend). `integration-tests` runs in `BACKEND_DIR` before
 build/deploy and does **not** wait on deploy.
 `sonar-tests` scans **testinfra helpers** (`-DincludeTags=harness`), not api/e2e results.
-It runs after `tests-harness` on **PR** and **main**, except dispatch `deploy=backend`
+It runs after `tests-harness` on **PR** and **main**, except the backend-only lane
 (`harness-backend` only — no full tests-module coverage to gate).
 `build-backend` / `build-frontend` do **not** `needs` Sonar. `sonar-frontend` waits on
-`ui-mock-tests` (success or skipped — dispatch `deploy=backend` still scans). There is no
+`ui-mock-tests` (success or skipped — backend-only lane still scans). There is no
 `build-frontend` → `ui-mock-tests` edge (mock does not wait for the GHCR image) and no
 deploy → `integration-tests` edge.
