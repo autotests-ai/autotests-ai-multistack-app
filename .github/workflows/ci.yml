@@ -17,22 +17,23 @@ name: CI
 # SSOT host: allure.qa.guru (legacy allure.autotests.cloud redirects).
 # Pyramid layers (classical): unit · integration (no UI) · api · e2e · manual
 # Sideways FE: component (jsdom) — only the active FRONTEND (same teaching knob as deploy).
-# Screenshot (@Tag screenshot) inside e2e: mock compare in e2e-mock-tests; e2e PNG refresh → e2e-update-screenshots.
+# Screenshot (@Tag screenshot): compare in ui-mock-tests (every PR) and e2e-tests (dispatch);
+# rewrite is a step in those jobs (update_mock_screenshots / update_e2e_screenshots), not a CD job.
 # CD on main (two lanes; deploy host serialized via concurrency group).
 # needs = real dependencies only (not graph layout). Sonar gates deploy, not build.
 # Deploy of either lane moves the shared host checkout dir to the new SHA.
-# Roots: unit-tests · component-tests · tests-harness-* · e2e-mock-tests · changes
+# Roots: unit-tests · component-tests · tests-harness-* · ui-mock-tests · changes
 #   integration-tests ← unit-tests (backend Spring+PG, pre-build; PR + main)
 #   sonar-backend ← unit-tests + integration-tests · sonar-frontend ← component-tests
 #   sonar-tests ← tests-harness-backend + tests-harness-frontend
 #   build-backend ← unit-tests + integration-tests · build-frontend ← component-tests
 #   deploy-backend ← build-backend + sonar-backend
-#   deploy-frontend ← build-frontend + sonar-frontend + e2e-mock-tests
+#   deploy-frontend ← build-frontend + sonar-frontend + ui-mock-tests
 #   stand-ready ← deploy-backend + deploy-frontend (curl live UI + /api/health)
 #   api-tests ← stand-ready
-#   e2e-tests ← api-tests → manual-tests · e2e-update-screenshots
+#   e2e-tests ← api-tests → manual-tests
 # push main: changes gates build/deploy by path; tests + sonar always run.
-# PR: no deploy; e2e-mock-tests runs on runner (mock compose profile).
+# PR: no deploy; ui-mock-tests runs on runner (mock compose profile).
 
 on:
   pull_request:
@@ -55,7 +56,7 @@ on:
         type: boolean
         default: false
       run_mock:
-        description: "Run mock E2E tests on the runner"
+        description: "Run ui-mock tests on the runner (flows + screenshot compare)"
         type: boolean
         default: false
       run_e2e:
@@ -63,7 +64,7 @@ on:
         type: boolean
         default: false
       run_screenshot:
-        description: "Include screenshot tests in e2e-tests"
+        description: "e2e-tests: compare screenshot PNGs (Selenoid)"
         type: boolean
         default: false
       run_manual:
@@ -78,8 +79,12 @@ on:
         description: "e2e-tests (java): add -DexcludeTags independently of include_tags"
         type: string
         default: ""
-      update_screenshots:
-        description: "Run e2e-tests, then e2e-update-screenshots to refresh screenshot PNGs"
+      update_mock_screenshots:
+        description: "ui-mock-tests: rewrite mock screenshot PNGs (skips compare)"
+        type: boolean
+        default: false
+      update_e2e_screenshots:
+        description: "e2e-tests: rewrite e2e screenshot PNGs (skips compare)"
         type: boolean
         default: false
       ALLURE_JOB_RUN_ID:
@@ -1124,7 +1129,7 @@ jobs:
             docker logout ghcr.io
 
   # Stub API on runner (compose --profile mock); gates FE deploy; PR + FE-touch push.
-  e2e-mock-tests:
+  ui-mock-tests:
     needs: [changes, testops-context]
     if: >-
       always() && !cancelled() && (
@@ -1133,12 +1138,13 @@ jobs:
          needs.changes.outputs.frontend == 'true') ||
         (github.event_name == 'workflow_dispatch' &&
          (inputs.run_mock ||
+          inputs.update_mock_screenshots ||
           inputs.deploy == 'frontend' || inputs.deploy == 'both'))
       )
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
-      LAYER: e2e-mock
+      LAYER: ui-mock
       SCREENSHOT_OS: linux
       SCREENSHOT_BROWSER: chrome
       ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
@@ -1187,7 +1193,7 @@ jobs:
             "http://127.0.0.1:${MOCK_GATEWAY_PORT}/api/health"
         env:
           MOCK_GATEWAY_PORT: "9911"
-      - name: Run e2e mock tests (Gradle)
+      - name: Run ui-mock tests (Gradle)
         if: env.TESTS_LANG == 'java'
         id: run-tests
         env:
@@ -1209,8 +1215,12 @@ jobs:
           if [ -d "$SRC" ]; then cp -R "$SRC/." "$STASH/"; fi
       # Same mock compose stand; separate Gradle fail from includeTags=mock.
       # includeTags CSV is OR here — do not combine mock,screenshot in one step.
+      # Compare and rewrite are mutually exclusive: a UI change would fail compare
+      # and block the rewrite.
       - name: Run screenshot mock compare (Gradle)
-        if: always() && !cancelled() && env.TESTS_LANG == 'java'
+        if: >-
+          always() && !cancelled() && env.TESTS_LANG == 'java' &&
+          (github.event_name != 'workflow_dispatch' || inputs.update_mock_screenshots != true)
         id: run-screenshot-tests
         env:
           ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
@@ -1219,6 +1229,19 @@ jobs:
         run: >-
           "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
           ./gradlew test -Denv=reference_mock -DincludeTags=screenshot
+        working-directory: ${{ env.TESTS_DIR }}
+      - name: Update screenshots
+        if: >-
+          always() && !cancelled() && env.TESTS_LANG == 'java' &&
+          github.event_name == 'workflow_dispatch' && inputs.update_mock_screenshots
+        id: update-screenshots
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+          CHROME_BINARY_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+          CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          ./gradlew test -Denv=reference_mock -DincludeTags=screenshot -DupdateScreenshots=true
         working-directory: ${{ env.TESTS_DIR }}
       - name: Merge Allure results
         if: always() && env.TESTS_LANG == 'java'
@@ -1238,19 +1261,29 @@ jobs:
         continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
-          name: allure-results-e2e-mock
+          name: allure-results-ui-mock
           path: ${{ env.TESTS_DIR }}/build/allure-results/**
           if-no-files-found: ignore
           retention-days: 1
+      - name: Publish mock screenshot PNGs
+        if: >-
+          always() && env.TESTS_LANG == 'java' &&
+          github.event_name == 'workflow_dispatch' && inputs.update_mock_screenshots
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: mock-screenshot-pngs
+          path: ${{ env.TESTS_DIR }}/src/test/resources/screenshots/
+          if-no-files-found: ignore
 
   # FE deploy after build + sonar + mock gate; shared host lock with deploy-backend.
   deploy-frontend:
-    needs: [build-frontend, sonar-frontend, e2e-mock-tests]
+    needs: [build-frontend, sonar-frontend, ui-mock-tests]
     if: >-
       !cancelled() &&
       needs.build-frontend.result == 'success' &&
       needs.sonar-frontend.result == 'success' &&
-      needs.e2e-mock-tests.result == 'success'
+      needs.ui-mock-tests.result == 'success'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment:
@@ -1304,7 +1337,7 @@ jobs:
           inputs.run_e2e ||
           inputs.run_screenshot ||
           inputs.run_manual ||
-          inputs.update_screenshots ||
+          inputs.update_e2e_screenshots ||
           inputs.include_tags != '' ||
           inputs.exclude_tags != '') &&
          (!(inputs.deploy == 'backend' || inputs.deploy == 'both') ||
@@ -1432,7 +1465,7 @@ jobs:
         (github.event_name == 'workflow_dispatch' &&
          (inputs.run_e2e ||
           inputs.run_screenshot ||
-          inputs.update_screenshots ||
+          inputs.update_e2e_screenshots ||
           inputs.include_tags != '' ||
           inputs.exclude_tags != '') &&
          (needs.api-tests.result == 'success' || needs.api-tests.result == 'skipped'))
@@ -1465,15 +1498,19 @@ jobs:
           cache-read-only: true
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
       - name: Run e2e tests (Gradle with tag filters)
-        if: env.TESTS_LANG == 'java'
+        if: >-
+          env.TESTS_LANG == 'java' && (
+            github.event_name == 'push' ||
+            inputs.run_e2e ||
+            inputs.include_tags != '' ||
+            inputs.exclude_tags != ''
+          )
         id: run-tests
         env:
           ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
           RUN_ENV: reference_prod
           INCLUDE_TAGS: ${{ inputs.include_tags }}
           EXCLUDE_TAGS: ${{ inputs.exclude_tags }}
-          RUN_E2E: ${{ github.event_name == 'push' || inputs.run_e2e || inputs.update_screenshots }}
-          RUN_SCREENSHOT: ${{ inputs.run_screenshot }}
           # Selenoid hub URL with credentials — config files commit only the creds-less URL.
           SELENOID_REMOTE_URL: ${{ secrets.SELENOID_REMOTE_URL }}
         run: |
@@ -1482,26 +1519,76 @@ jobs:
           if [ -n "${SELENOID_REMOTE_URL:-}" ]; then
             ARGS+=(-DremoteUrl="${SELENOID_REMOTE_URL}")
           fi
-          DEFAULT_EXCLUDE=""
           if [ -n "${INCLUDE_TAGS}" ]; then
             ARGS+=(-DincludeTags="${INCLUDE_TAGS}")
           else
-            TAGS=()
-            [ "${RUN_E2E}" = "true" ] && TAGS+=(e2e)
-            [ "${RUN_SCREENSHOT}" = "true" ] && TAGS+=(screenshot)
-            [ "${#TAGS[@]}" -gt 0 ] || TAGS=(e2e)
-            TAGS_CSV="$(IFS=,; echo "${TAGS[*]}")"
-            ARGS+=(-DincludeTags="${TAGS_CSV}")
-            DEFAULT_EXCLUDE=mock
-            [[ ",${TAGS_CSV}," == *",screenshot,"* ]] || DEFAULT_EXCLUDE=mock,screenshot
+            ARGS+=(-DincludeTags=e2e)
           fi
           if [ -n "${EXCLUDE_TAGS}" ]; then
             ARGS+=(-DexcludeTags="${EXCLUDE_TAGS}")
-          elif [ -n "${DEFAULT_EXCLUDE}" ]; then
-            ARGS+=(-DexcludeTags="${DEFAULT_EXCLUDE}")
+          else
+            ARGS+=(-DexcludeTags=mock,screenshot)
           fi
           "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh" ./gradlew test "${ARGS[@]}"
         working-directory: ${{ env.TESTS_DIR }}
+      - name: Stash e2e Allure results
+        if: always() && env.TESTS_LANG == 'java'
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          STASH="${{ env.TESTS_DIR }}/build/allure-results-e2e-stash"
+          SRC="${{ env.TESTS_DIR }}/build/allure-results"
+          mkdir -p "$STASH"
+          if [ -d "$SRC" ]; then cp -R "$SRC/." "$STASH/"; fi
+      - name: Run screenshot e2e compare (Gradle)
+        if: >-
+          always() && !cancelled() && env.TESTS_LANG == 'java' &&
+          github.event_name == 'workflow_dispatch' &&
+          inputs.run_screenshot &&
+          inputs.update_e2e_screenshots != true
+        id: run-screenshot-tests
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+          RUN_ENV: reference_prod
+          SELENOID_REMOTE_URL: ${{ secrets.SELENOID_REMOTE_URL }}
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=screenshot -DexcludeTags=mock
+          ${SELENOID_REMOTE_URL:+"-DremoteUrl=$SELENOID_REMOTE_URL"}
+        working-directory: ${{ env.TESTS_DIR }}
+      - name: Update screenshots
+        if: >-
+          always() && !cancelled() && env.TESTS_LANG == 'java' &&
+          github.event_name == 'workflow_dispatch' && inputs.update_e2e_screenshots
+        id: update-screenshots
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+          RUN_ENV: reference_prod
+          SELENOID_REMOTE_URL: ${{ secrets.SELENOID_REMOTE_URL }}
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=screenshot -DupdateScreenshots=true
+          ${SELENOID_REMOTE_URL:+"-DremoteUrl=$SELENOID_REMOTE_URL"}
+        working-directory: ${{ env.TESTS_DIR }}
+      - name: Merge Allure results
+        if: always() && env.TESTS_LANG == 'java'
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          STASH="${{ env.TESTS_DIR }}/build/allure-results-e2e-stash"
+          DEST="${{ env.TESTS_DIR }}/build/allure-results"
+          mkdir -p "$DEST"
+          if [ -d "$STASH" ]; then cp -R "$STASH/." "$DEST/"; fi
+      - name: Publish e2e screenshot PNGs
+        if: >-
+          always() && env.TESTS_LANG == 'java' &&
+          github.event_name == 'workflow_dispatch' && inputs.update_e2e_screenshots
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-screenshot-pngs
+          path: ${{ env.TESTS_DIR }}/src/test/resources/screenshots/
+          if-no-files-found: ignore
       # ── javascript / typescript (full suite; no tag pyramid yet) ──────────
       - if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
         uses: actions/setup-node@v6
@@ -1554,69 +1641,6 @@ jobs:
           path: ${{ env.TESTS_DIR }}/build/allure-results/**
           if-no-files-found: ignore
           retention-days: 1
-
-  # Optional after e2e; skipped on push and when update_screenshots=false.
-  e2e-update-screenshots:
-    needs: [e2e-tests, testops-context]
-    if: >-
-      always() && !cancelled() &&
-      needs.e2e-tests.result == 'success' &&
-      github.event_name == 'workflow_dispatch' &&
-      inputs.update_screenshots == true
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    env:
-      LAYER: e2e-screenshots
-      SCREENSHOT_OS: linux
-      SCREENSHOT_BROWSER: chrome
-      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
-      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
-      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      - *cache-allurectl
-      - *setup-live-allurectl
-
-      - if: env.TESTS_LANG == 'java'
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: ${{ env.JAVA_VERSION }}
-      - if: env.TESTS_LANG == 'java'
-        uses: gradle/actions/setup-gradle@v6
-        with:
-          cache-read-only: true
-          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-      - name: Run e2e screenshot update (Gradle)
-        if: env.TESTS_LANG == 'java'
-        id: run-tests
-        env:
-          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
-          RUN_ENV: reference_prod
-          SELENOID_REMOTE_URL: ${{ secrets.SELENOID_REMOTE_URL }}
-        run: >-
-          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
-          ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=screenshot -DupdateScreenshots=true
-          ${SELENOID_REMOTE_URL:+"-DremoteUrl=$SELENOID_REMOTE_URL"}
-        working-directory: ${{ env.TESTS_DIR }}
-      - name: Publish raw Allure results
-        if: always()
-        continue-on-error: true
-        uses: actions/upload-artifact@v7
-        with:
-          name: allure-results-e2e-screenshots
-          path: ${{ env.TESTS_DIR }}/build/allure-results/**
-          if-no-files-found: ignore
-          retention-days: 1
-      - if: always() && env.TESTS_LANG == 'java'
-        continue-on-error: true
-        uses: actions/upload-artifact@v7
-        with:
-          name: e2e-screenshot-pngs
-          path: ${{ env.TESTS_DIR }}/src/test/resources/screenshots/
-          if-no-files-found: ignore
 
   # Main-chain tip after e2e; manual execution is explicit.
   manual-tests:
@@ -1680,11 +1704,10 @@ jobs:
       - component-tests
       - tests-harness-backend
       - tests-harness-frontend
-      - e2e-mock-tests
+      - ui-mock-tests
       - integration-tests
       - api-tests
       - e2e-tests
-      - e2e-update-screenshots
       - manual-tests
       - testops-context
     if: always() && !cancelled()
