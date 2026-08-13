@@ -25,7 +25,7 @@ name: CI
 # Roots: unit-tests · component-tests · tests-harness · testops-context
 #   integration-tests ← unit-tests (backend Spring+PG, pre-build; PR + main)
 #   sonar-backend ← unit-tests + integration-tests
-#   sonar-tests ← tests-harness (skipped on backend-only lane)
+#   sonar-tests ← tests-harness (full slice only)
 #   ui-mock-tests ← component-tests (jsdom first; mock compose on the runner)
 #   sonar-frontend ← component-tests + ui-mock-tests (mock skipped ⇒ sonar still runs)
 #   build-backend ← unit-tests + integration-tests · build-frontend ← ui-mock-tests
@@ -932,7 +932,7 @@ jobs:
           if-no-files-found: ignore
 
   # Not a pyramid layer and not TestOps: JaCoCo + sonar-tests only.
-  # Backend-only lane → ConfigReader only (skip TokensCss / LayoutCss / LocalChromePin / HAR).
+  # Backend-only → ConfigReader. Frontend-only → CSS/HAR/LocalChromePin.
   tests-harness:
     needs: [trigger]
     if: ${{ !cancelled() }}
@@ -965,11 +965,17 @@ jobs:
         run: |
           set -euo pipefail
           slice=all
+          tags=harness
           if [ "$LANE_BACKEND" = "true" ] && [ "$LANE_FRONTEND" != "true" ] && [ "$LANE_TESTS" != "true" ]; then
             slice=backend
+            tags=harness-backend
+          elif [ "$LANE_FRONTEND" = "true" ] && [ "$LANE_BACKEND" != "true" ] && [ "$LANE_TESTS" != "true" ]; then
+            slice=frontend
+            tags=harness-frontend
           fi
           echo "slice=${slice}" >> "$GITHUB_OUTPUT"
-          echo "Harness slice=${slice}"
+          echo "HARNESS_INCLUDE_TAGS=${tags}" >> "$GITHUB_ENV"
+          echo "Harness slice=${slice} includeTags=${tags}"
 
       # ── java (Gradle tags + JaCoCo gate) ──────────────────────────────────
       - *setup-java
@@ -978,18 +984,11 @@ jobs:
       # Coverage gate reads build/jacoco/test.exec, so it is only meaningful with this filter.
       # Not streamed to TestOps (helpers, not product cases).
       - name: Run harness tests (Gradle)
-        if: env.TESTS_LANG == 'java' && steps.slice.outputs.slice != 'backend'
+        if: env.TESTS_LANG == 'java'
         id: run-tests
-        run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags=harness
+        run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags="${HARNESS_INCLUDE_TAGS}"
         working-directory: ${{ env.TESTS_DIR }}
-      - name: Run harness-backend tests (Gradle)
-        if: env.TESTS_LANG == 'java' && steps.slice.outputs.slice == 'backend'
-        id: run-tests-backend
-        run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags=harness-backend
-        working-directory: ${{ env.TESTS_DIR }}
-      - if: >-
-          env.TESTS_LANG == 'java' &&
-          (steps.run-tests.outcome == 'success' || steps.run-tests-backend.outcome == 'success')
+      - if: env.TESTS_LANG == 'java' && steps.run-tests.outcome == 'success'
         uses: actions/upload-artifact@v7
         with:
           name: coverage-harness
@@ -1078,14 +1077,14 @@ jobs:
         run: |
           eval "${WRITE_SONAR_SUMMARY}"
 
-  # Tests-module Sonar after full harness. Backend-only lane is ConfigReader-only
+  # Tests-module Sonar after full harness. Partial lanes lack the other helpers'
   # coverage — skip rather than fail the tests-module gate.
   sonar-tests:
     needs: [tests-harness]
     if: >-
       !cancelled() &&
       needs.tests-harness.result == 'success' &&
-      needs.tests-harness.outputs.slice != 'backend'
+      needs.tests-harness.outputs.slice == 'all'
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:

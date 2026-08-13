@@ -125,12 +125,12 @@ flowchart TB
 | Job | Where |
 |-----|-------|
 | `unit-tests` | `BACKEND_DIR` — command by `BACKEND_LANG` (gradle/JaCoCo, pytest, `go test`, or `npm test`); java excludes `@Tag("integration")` |
-| `tests-harness` | `TESTS_DIR` — java: `-DincludeTags=harness` + JaCoCo; backend-only lane → `harness-backend` (`ConfigReader` only). Not TestOps. |
+| `tests-harness` | `TESTS_DIR` — `harness` / `harness-backend` / `harness-frontend` by lane. Not TestOps. |
 | `component-tests` | `FRONTEND_DIR` — `npm test -- --coverage` |
 | `integration-tests` | `BACKEND_DIR` — after `unit-tests` (java: `-DincludeTags=integration`); Spring Boot + real PG; **before** build/deploy; PR + main |
 | `api-tests` | `TESTS_DIR` — after backend deploy, or tests-lane vs live stand (`-DincludeTags=api`) |
 | `ui-mock-tests` | after `component-tests`; every PR; frontend lane on main; dispatch `run_mock` / `update_mock_screenshots` |
-| `sonar-tests` | after `tests-harness` (skipped on backend-only lane) |
+| `sonar-tests` | after `tests-harness` (skipped on backend-only or frontend-only lane) |
 | `e2e-tests` | after `api-tests` + `deploy-frontend` — java: `-DincludeTags=e2e`; dispatch `run_screenshot` / `update_e2e_screenshots` are extra steps |
 | `manual-tests` | after `e2e-tests`; dispatch only — java: `-DincludeTags=manual` |
 
