@@ -260,10 +260,11 @@ and against prod it belongs to a deliberate dispatch run (`ui-mock-tests` is the
 
 ## TestOps (live upload + selective rerun)
 
-`testops-context` opens one shared launch/job-run; layer jobs stream via
-[`.github/scripts/run-with-allurectl.sh`](../.github/scripts/run-with-allurectl.sh)
-(`allurectl watch --job-run-child`). Missing `ALLURE_TOKEN` / `ALLURE_PROJECT_ID` disables
-live upload without failing tests — raw `allure-results` still publish.
+`testops-context` opens one shared launch/job-run; layer jobs stream via workflow
+env helper `ALLURECTL_RUN` → `run_with_allurectl` in
+[`.github/workflows/ci.yml`](../.github/workflows/ci.yml) (`allurectl watch --job-run-child`).
+Missing `ALLURE_TOKEN` / `ALLURE_PROJECT_ID` disables live upload without failing tests — raw
+`allure-results` still publish.
 
 | Mode | Selection | `ALLURE_KEEP_TESTPLAN` |
 |------|-----------|------------------------|
@@ -271,9 +272,9 @@ live upload without failing tests — raw `allure-results` still publish.
 | TestOps UI rerun (`workflow_dispatch` + non-empty `ALLURE_JOB_RUN_ID`) | selective plan from TestOps | `true` — plan kept |
 
 Launch env axes → `allure-results/environment.properties` (TestOps **Окружение** /
-Report environment). Written once after each test job by
-[`.github/scripts/write-allure-environment.sh`](../.github/scripts/write-allure-environment.sh)
-(and again after artifact merge in `publish-allure-report`), from workflow `env`:
+Report environment). Written once after each test job by `ALLURE_WRITE_ENVIRONMENT` in
+[`.github/workflows/ci.yml`](../.github/workflows/ci.yml) (and again after artifact merge in
+`publish-allure-report`), from workflow `env`:
 
 | Env | Value |
 |-----|-------|
