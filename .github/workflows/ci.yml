@@ -17,7 +17,7 @@ name: CI
 # SSOT host: allure.qa.guru (legacy allure.autotests.cloud redirects).
 # Pyramid layers (classical): unit · integration (no UI) · api · e2e · manual
 # Sideways FE: component (jsdom) — only the active FRONTEND (same teaching knob as deploy).
-# Visual (@Tag visual) inside e2e; baselines → e2e-update-baselines.
+# Visual (@Tag visual) inside e2e: mock compare in e2e-mock-tests; e2e PNG refresh → e2e-update-baselines.
 # CD on main (two lanes; deploy host serialized via concurrency group).
 # needs = real dependencies only (not graph layout). Sonar gates deploy, not build.
 # Deploy of either lane moves the shared host checkout dir to the new SHA.
@@ -1139,6 +1139,7 @@ jobs:
     timeout-minutes: 30
     env:
       LAYER: e2e-mock
+      VISUAL_OS: linux
       ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
       ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
       ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
@@ -1196,6 +1197,37 @@ jobs:
           "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
           ./gradlew test -Denv=reference_mock -DincludeTags=mock
         working-directory: ${{ env.TESTS_DIR }}
+      - name: Stash mock Allure results
+        if: always() && env.TESTS_LANG == 'java'
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          STASH="${{ env.TESTS_DIR }}/build/allure-results-mock-stash"
+          SRC="${{ env.TESTS_DIR }}/build/allure-results"
+          mkdir -p "$STASH"
+          if [ -d "$SRC" ]; then cp -R "$SRC/." "$STASH/"; fi
+      # Same mock compose stand; separate Gradle fail from includeTags=mock.
+      # includeTags CSV is OR here — do not combine mock,visual in one step.
+      - name: Run visual mock compare (Gradle)
+        if: always() && !cancelled() && env.TESTS_LANG == 'java'
+        id: run-visual-tests
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+          CHROME_BINARY_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+          CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          ./gradlew test -Denv=reference_mock -DincludeTags=visual
+        working-directory: ${{ env.TESTS_DIR }}
+      - name: Merge Allure results
+        if: always() && env.TESTS_LANG == 'java'
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          STASH="${{ env.TESTS_DIR }}/build/allure-results-mock-stash"
+          DEST="${{ env.TESTS_DIR }}/build/allure-results"
+          mkdir -p "$DEST"
+          if [ -d "$STASH" ]; then cp -R "$STASH/." "$DEST/"; fi
       - name: Tear down mock stand
         if: always() && env.TESTS_LANG == 'java'
         continue-on-error: true
@@ -1532,6 +1564,7 @@ jobs:
     timeout-minutes: 30
     env:
       LAYER: e2e-baselines
+      VISUAL_OS: linux
       ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
       ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
       ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
