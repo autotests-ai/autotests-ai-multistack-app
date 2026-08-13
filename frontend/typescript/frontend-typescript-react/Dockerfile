@@ -5,12 +5,18 @@ ARG UI_RUNTIME=frontend/_shared/frontend-javascript-app
 FROM node:26-alpine AS build
 ARG REACT_UI
 WORKDIR /build
+COPY frontend/typescript/frontend-typescript-react/package.json \
+     frontend/typescript/frontend-typescript-react/package-lock.json \
+     frontend/typescript/frontend-typescript-react/
+WORKDIR /build/frontend/typescript/frontend-typescript-react
+RUN npm ci
+WORKDIR /build
 COPY frontend/typescript/frontend-typescript-react/ frontend/typescript/frontend-typescript-react/
 COPY ${REACT_UI}/ ${REACT_UI}/
 COPY frontend/_shared/frontend-javascript-app/css/ frontend/_shared/frontend-javascript-app/css/
 COPY frontend/_shared/poll-toggle.ts frontend/_shared/stack-matrix.ts frontend/_shared/
 WORKDIR /build/frontend/typescript/frontend-typescript-react
-RUN npm ci && npm run build
+RUN npm run build
 
 FROM nginx:1.27-alpine
 ARG UI_RUNTIME

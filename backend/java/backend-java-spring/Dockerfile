@@ -1,10 +1,12 @@
+# syntax=docker/dockerfile:1
 # API-only Spring Boot image. UI is served by per-frontend nginx containers, not this jar.
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /app
 COPY gradlew settings.gradle build.gradle ./
 COPY gradle ./gradle
 COPY src ./src
-RUN chmod +x gradlew && ./gradlew bootJar --no-daemon
+RUN --mount=type=cache,target=/root/.gradle \
+    chmod +x gradlew && ./gradlew bootJar --no-daemon
 
 FROM eclipse-temurin:21-jre-alpine
 RUN apk add --no-cache wget \

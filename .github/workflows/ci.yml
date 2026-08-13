@@ -169,7 +169,8 @@ env:
 
   # ── Inline CI helpers (no .github/scripts — logic lives in workflow env) ─
   # Step templates: YAML anchors at first use (&checkout, &setup-java, &setup-gradle,
-  # &cache-gradle-cc, &setup-python, &pip-install, &setup-node, &npm-ci,
+  # &cache-gradle-cc, &cache-allurectl, &cache-playwright-browsers,
+  # &cache-chrome-for-testing, &setup-python, &pip-install, &setup-node, &npm-ci,
   # &install-playwright, &upload-allure-results, &write-sonar-summary,
   # &docker-login-ghcr, &setup-docker-buildx, &docker-build-push, &ssh-deploy).
   # Job env supplies if-knobs / paths / artifact names as LITERALS — GitHub rejects
@@ -795,6 +796,17 @@ jobs:
       - *setup-gradle
       # reference_mock has no remoteUrl: the stand lives on the runner's localhost, which a
       # Selenoid browser could not reach, so the browser has to be local too.
+      # setup-chrome only has an in-runner tool-cache; persist it like allurectl.
+      # Path is $RUNNER_TOOL_CACHE/setup-chrome/{chrome,chromedriver}/<ver>/<arch>/.
+      - &cache-chrome-for-testing
+        name: Cache Chrome for Testing
+        if: env.TESTS_LANG == 'java'
+        id: cache-chrome-for-testing
+        continue-on-error: true
+        uses: actions/cache@v6
+        with:
+          path: ${{ runner.tool_cache }}/setup-chrome
+          key: chrome-for-testing-${{ runner.os }}-${{ runner.arch }}-${{ env.CHROME_FOR_TESTING_VERSION }}
       - name: Install pinned Chrome for Testing
         if: env.TESTS_LANG == 'java'
         id: setup-chrome
