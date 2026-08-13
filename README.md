@@ -83,7 +83,7 @@ flowchart TB
   TOC --> COMP[component-tests]
   TOC --> HB[tests-harness-backend]
   TOC --> HF[tests-harness-frontend]
-  TOC --> MOCK[e2e-mock-tests]
+  TOC --> MOCK[ui-mock-tests]
   TOC --> INT[integration-tests]
 
   CH --> MOCK
@@ -119,13 +119,11 @@ flowchart TB
   API --> E2E[e2e-tests]
   TOC --> E2E
 
-  E2E --> BASE[e2e-update-screenshots<br/>dispatch PNG rewrite]
   E2E --> MAN[manual-tests<br/>dispatch]
   READY --> MAN
-  TOC --> BASE
   TOC --> MAN
 
-  UNIT & COMP & HB & HF & MOCK & INT & API & E2E & BASE & MAN --> PUB[publish-allure-report]
+  UNIT & COMP & HB & HF & MOCK & INT & API & E2E & MAN --> PUB[publish-allure-report]
   PUB --> NTF[send-allure-notifications]
 ```
 
@@ -137,13 +135,12 @@ flowchart TB
 | `component-tests` | `FRONTEND_DIR` — `npm test -- --coverage` |
 | `integration-tests` | `BACKEND_DIR` — after `unit-tests` (java: `-DincludeTags=integration`); Spring Boot + real PG; **before** build/deploy; PR + main |
 | `api-tests` | `TESTS_DIR` — after `stand-ready` (java: `-DincludeTags=api`); HTTP contract + deployed-stand facts |
-| `e2e-mock-tests` | every PR; on `main` when frontend changed — java: `-Denv=reference_mock -DincludeTags=mock` (stub API on runner) |
+| `ui-mock-tests` | every PR; on `main` when frontend changed — mock flows + screenshot compare on the runner; dispatch `update_mock_screenshots` rewrites `screenshots/mock/` |
 | `sonar-tests` | after **both** harness jobs (PR + main); umbrella harness + tests-module Sonar gate |
-| `e2e-tests` | after `api-tests` — java: `-DincludeTags=e2e` |
-| `e2e-update-screenshots` | dispatch `update_screenshots=true` — java: `-DincludeTags=screenshot -DupdateScreenshots=true` |
+| `e2e-tests` | after `api-tests` — java: `-DincludeTags=e2e`; dispatch `run_screenshot` / `update_e2e_screenshots` are extra steps |
 | `manual-tests` | after `e2e-tests` + `stand-ready`; dispatch only — java: `-DincludeTags=manual` |
 
-`unit-tests`, `integration-tests`, `component-tests`, both harness jobs, and `e2e-mock-tests` gate a pull request.
+`unit-tests`, `integration-tests`, `component-tests`, both harness jobs, and `ui-mock-tests` gate a pull request.
 Post-deploy layers (`api` / `e2e`) run on push to `main` after `stand-ready`, or via
 `workflow_dispatch` booleans. Stack defaults (`BACKEND` / `BACKEND_LANG` / `FRONTEND` /
 `TESTS` / `TESTS_LANG`) live once at the top of [`ci.yml`](.github/workflows/ci.yml).
@@ -215,8 +212,8 @@ One workflow — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
 | Event | Jobs |
 |-------|------|
-| pull request | `unit-tests` · `integration-tests` · `component-tests` · `tests-harness-backend` · `tests-harness-frontend` · `e2e-mock-tests` · `sonar-backend` · `sonar-frontend` · `sonar-tests` |
-| push to `main` | PR set (`e2e-mock-tests` when frontend changed) → build/deploy lanes → `stand-ready` → `api-tests` → `e2e-tests` → `manual-tests` (dispatch) |
+| pull request | `unit-tests` · `integration-tests` · `component-tests` · `tests-harness-backend` · `tests-harness-frontend` · `ui-mock-tests` · `sonar-backend` · `sonar-frontend` · `sonar-tests` |
+| push to `main` | PR set (`ui-mock-tests` when frontend changed) → build/deploy lanes → `stand-ready` → `api-tests` → `e2e-tests` → `manual-tests` (dispatch) |
 
 `build` runs `docker compose build` + `docker compose push`, so `docker-compose.yml` stays the only place describing how an image is built. Images go to GHCR as `ghcr.io/autotests-ai/reference-app-copy-<service>:<sha>`; the tag comes from `IMAGE_TAG` (defaults to `latest` locally).
 

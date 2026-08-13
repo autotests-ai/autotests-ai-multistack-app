@@ -89,15 +89,16 @@ src/test/resources/screenshots/{mock|e2e}/{linux|macos|windows}/{chrome-148}/{ar
 
 `SCREENSHOT_OS` overrides the OS folder (`darwin` → `macos`, `linux` → `linux`, `win32` → `windows`). CI SSOT is `mock/linux/chrome-148` plus the CFT pin. **Do not** set `SCREENSHOT_OS=linux` on a Mac — that would write Linux-canon PNGs from macOS Chrome. On Mac omit `SCREENSHOT_OS` (writes `macos`) or set `SCREENSHOT_OS=macos`.
 
-CI jobs `e2e-mock-tests`, `e2e-tests` (when screenshot runs), and `e2e-update-screenshots` set `SCREENSHOT_OS=linux` and `SCREENSHOT_BROWSER=chrome`.
+CI jobs `ui-mock-tests` and `e2e-tests` set `SCREENSHOT_OS=linux` and `SCREENSHOT_BROWSER=chrome`. Screenshot **compare** is a step in each job (mock: every PR; e2e: dispatch `run_screenshot`). Screenshot **rewrite** is a step `Update screenshots` in the same jobs (`update_mock_screenshots` / `update_e2e_screenshots`) — independent flags, not a CD job.
 
 | Slice | Tag | CI |
 |-------|-----|-----|
-| UI on stub API (mount + error injection) | `@Tag("mock")` (+ `@Tag("e2e")`) | job `e2e-mock-tests` step 1: `-DincludeTags=mock` |
-| Screenshot vs stub UI | `@Tag("screenshot")` | same job, step 2: `-DincludeTags=screenshot` on the same mock compose (not Playwright) |
+| UI on stub API (mount + error injection) | `@Tag("mock")` (+ `@Tag("e2e")`) | job `ui-mock-tests` step 1: `-DincludeTags=mock` |
+| Screenshot vs stub UI | `@Tag("screenshot")` | same job, compare step: `-DincludeTags=screenshot` (every PR; not Playwright) |
+| Refresh mock screenshots | `@Tag("screenshot")` + `-DupdateScreenshots=true` | same job, step `Update screenshots` — dispatch `update_mock_screenshots` writes `mock/linux/chrome-148` (skips compare) |
 | Flow | `@Tag("e2e")` exclude `screenshot,mock` | job `e2e-tests` (after `api-tests`; default push does **not** run screenshot via Selenoid) |
-| Flow + screenshot (dispatch `run_screenshot`) | `e2e,screenshot` | job `e2e-tests` — compare `e2e/linux/chrome-148` |
-| Refresh e2e screenshots | `@Tag("screenshot")` + `-DupdateScreenshots=true` | job `e2e-update-screenshots` — `workflow_dispatch` `update_screenshots` writes `e2e/linux/chrome-148` (not a pyramid layer; not a CD stage after green e2e) |
+| Screenshot vs live UI | `@Tag("screenshot")` | job `e2e-tests`, compare step — dispatch `run_screenshot` compares `e2e/linux/chrome-148` |
+| Refresh e2e screenshots | `@Tag("screenshot")` + `-DupdateScreenshots=true` | job `e2e-tests`, step `Update screenshots` — dispatch `update_e2e_screenshots` writes `e2e/linux/chrome-148` (skips compare; independent of mock rewrite) |
 
 Gradle `includeTags=a,b` is **OR** in this module — keep mock flows and screenshot compare as two steps so they fail separately.
 
@@ -179,7 +180,7 @@ suite (`npm test` / `pytest` with `UI_URL` / `BASE_URL`) — no Gradle tag slice
 | component | frontend | active `FRONTEND_DIR` only (default `frontend/typescript/frontend-typescript-react/`) — siblings not CI-gated | Vitest + coverage | `npm test -- --coverage` via `component-tests` |
 | integration | backend | `backend/java/backend-java-spring/src/test/java/dev/reference/app/integration/` (`ApplicationWiringIntegrationTest`, `AuthLifecycleIntegrationTest`) | `@Tag("integration")` | `./gradlew test -DincludeTags=integration` in `BACKEND_DIR` via `integration-tests` (after `unit-tests`, **before** build/deploy; PR + main) |
 | api | tests | `…/tests/api/` (`AuthApiTests`, `ReferenceApiTests`, `BackendWiringApiTests`, `SeedDataApiTests`, `AuthRoundTripApiTests`) — HTTP contract + deployed-stand facts | `@Tag("api")` | java → `-DincludeTags=api` via `api-tests` (after `stand-ready`); retarget any backend with `-DapiBaseUrl` / `-DapiHealthService` |
-| e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `screenshot` / `mock`) | `e2e-mock-tests` (mock flows + screenshot mock PNG); `e2e-tests` (needs `api-tests`; screenshot excluded on default push) |
+| e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `screenshot` / `mock`) | `ui-mock-tests` (mock flows + screenshot mock PNG); `e2e-tests` (needs `api-tests`; screenshot excluded on default push) |
 | manual | tests | `…/tests/manual/` **in code** | `@Tag("manual")` + `@Manual` | java → `-DincludeTags=manual` via `manual-tests` (after `e2e-tests`, dispatch) |
 
 ### Frontend reference modules (not interchangeable)
@@ -242,9 +243,9 @@ Integration is **in-process Spring + PostgreSQL**, no browser. Deployed HTTP che
 
 | Trigger | Jobs |
 |---------|------|
-| Pull request (blocks merge) | `unit-tests`, `integration-tests`, `component-tests`, `tests-harness-backend`, `tests-harness-frontend`, `e2e-mock-tests`, `sonar-backend`, `sonar-tests`, `sonar-frontend` |
-| Push to `main` | the PR set (`e2e-mock-tests` only when frontend changed) + build/deploy lanes → `stand-ready` → `api-tests` → `e2e-tests` (screenshot excluded) → `manual-tests` (skip unless dispatch) |
-| `workflow_dispatch` | per-layer booleans `run_integration` / `run_api` / `run_mock` / `run_e2e` / `run_screenshot` / `run_manual`; `update_screenshots=true` → `e2e-update-screenshots`; `include_tags` / `exclude_tags` overrides on e2e; `deploy=none\|backend\|frontend\|both`; TestOps service inputs `ALLURE_JOB_RUN_ID` / `ALLURE_USERNAME` (leave blank unless TestOps UI triggers) |
+| Pull request (blocks merge) | `unit-tests`, `integration-tests`, `component-tests`, `tests-harness-backend`, `tests-harness-frontend`, `ui-mock-tests`, `sonar-backend`, `sonar-tests`, `sonar-frontend` |
+| Push to `main` | the PR set (`ui-mock-tests` only when frontend changed) + build/deploy lanes → `stand-ready` → `api-tests` → `e2e-tests` (screenshot excluded) → `manual-tests` (skip unless dispatch) |
+| `workflow_dispatch` | per-layer booleans `run_integration` / `run_api` / `run_mock` / `run_e2e` / `run_screenshot` / `run_manual`; `update_mock_screenshots` / `update_e2e_screenshots` rewrite PNG in `ui-mock-tests` / `e2e-tests`; `include_tags` / `exclude_tags` overrides on e2e; `deploy=none\|backend\|frontend\|both`; TestOps service inputs `ALLURE_JOB_RUN_ID` / `ALLURE_USERNAME` (leave blank unless TestOps UI triggers) |
 
 Active stack and prod URL are workflow `env` defaults in [`ci.yml`](../.github/workflows/ci.yml)
 (`BACKEND`, `BACKEND_LANG`, `FRONTEND`, `TESTS`, `TESTS_LANG`) — change once, jobs reuse them.
@@ -255,7 +256,7 @@ Deploy jobs share concurrency group `deploy-reference-app-copy` (one checkout di
 Frontend deploy does **not** wait on backend success.
 
 Nothing runs on a schedule. Full e2e has no PR job: a GitHub runner has no compose stack,
-and against prod it belongs to a deliberate dispatch run (`e2e-mock-tests` is the automatic UI gate).
+and against prod it belongs to a deliberate dispatch run (`ui-mock-tests` is the automatic UI gate).
 
 ## TestOps (live upload + selective rerun)
 
@@ -302,7 +303,7 @@ or `BACKEND_LANG`), one `./gradlew test …` / `npm test` / `pytest`. No composi
 wrapper scripts — the command a student runs locally is the command CI runs.
 
 Dispatch is per-layer booleans (`run_integration`, `run_api`, `run_mock`, `run_e2e`,
-`run_screenshot`, `run_manual`) plus `update_screenshots` and `include_tags`/`exclude_tags` overrides.
+`run_screenshot`, `run_manual`) plus `update_mock_screenshots` / `update_e2e_screenshots` and `include_tags`/`exclude_tags` overrides.
 To add another layer, copy `manual-tests` and change the java `-D` flags.
 
 ## Test data and secrets
@@ -312,13 +313,13 @@ To add another layer, copy `manual-tests` and change the java `-D` flags.
   not accumulate test users. The lifecycle round-trip also documents stateless logout: the JWT
   survives `logout` and dies with the account.
 - `reference_prod.properties` commits the **creds-less** hub URL. CI passes the real one via
-  the `SELENOID_REMOTE_URL` secret (`-DremoteUrl=…` in `e2e-tests` / `e2e-update-screenshots`);
+  the `SELENOID_REMOTE_URL` secret (`-DremoteUrl=…` in `e2e-tests`);
   locally export it the same way when you need the shared hub.
 
 ## CD graph
 
 Matches [`ci.yml`](../.github/workflows/ci.yml) `needs` (Sonar ×3 gates **deploy**, not build;
-`e2e-mock-tests` ∥ `build-frontend`, does **not** need it):
+`ui-mock-tests` ∥ `build-frontend`, does **not** need it):
 
 ```
 every run (PR + main):
@@ -327,17 +328,16 @@ every run (PR + main):
   component-tests → sonar-frontend
   tests-harness-backend ─┐
   tests-harness-frontend ┴→ sonar-tests
-  e2e-mock-tests (needs changes + testops-context; every PR; main when FE changed)
+  ui-mock-tests (needs changes + testops-context; every PR; main when FE changed)
 
 main only:
   build-backend ← unit-tests + integration-tests + changes     (no sonar)
   build-frontend ← component-tests + changes                   (no sonar, no mock)
   deploy-backend ← build-backend + sonar-backend
-  deploy-frontend ← build-frontend + sonar-frontend + e2e-mock-tests
+  deploy-frontend ← build-frontend + sonar-frontend + ui-mock-tests
   stand-ready ← changes + deploy-backend + deploy-frontend
   stand-ready → api-tests → e2e-tests
   manual-tests: dispatch (needs e2e-tests + stand-ready + testops)
-  e2e-update-screenshots: dispatch PNG rewrite (needs e2e-tests; not a pyramid layer)
 ```
 
 `api-tests` gates on `stand-ready` only. `integration-tests` runs in `BACKEND_DIR` before
@@ -345,4 +345,4 @@ build/deploy and does **not** wait on `stand-ready`.
 `sonar-tests` scans **testinfra helpers** (`-DincludeTags=harness`), not api/e2e results.
 It runs after both harness slices — on **PR** and **main**.
 `build-backend` / `build-frontend` do **not** `needs` Sonar. There is no `build-frontend` →
-`e2e-mock-tests` edge and no `stand-ready` → `integration-tests` edge.
+`ui-mock-tests` edge and no `stand-ready` → `integration-tests` edge.
