@@ -2,7 +2,7 @@
   "base": {
     "project": "Reference App Copy",
     "environment": "CI",
-    "comment": "Напиши мне - aanher@gmail.com",
+    "comment": "",
     "language": "ru",
     "allureFolder": "./build/reports/allure-report/allureReport/awesome",
     "allureResultsFolder": "./build/allure-results",
