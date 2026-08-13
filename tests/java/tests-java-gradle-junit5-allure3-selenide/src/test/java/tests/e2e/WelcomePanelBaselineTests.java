@@ -38,9 +38,12 @@ class WelcomePanelBaselineTests extends TestBase {
     @DisplayName("Welcome panel matches baseline")
     void welcomePanelMatchesBaseline(int viewportWidth) {
         ViewportHelper.setViewport(viewportWidth, VIEWPORT_HEIGHT);
+        var expectedUser = "reference_mock".equals(System.getProperty("env", "").trim())
+                ? "mock-user"
+                : "user1";
         loginPage.openPage()
                 .fillAndSubmitForm("user1", "password1")
-                .shouldHaveWelcomeMessage("Welcome, user1!");
+                .shouldHaveWelcomeMessage("Welcome, " + expectedUser + "!");
 
         var welcomePanel = $("[data-testid='welcome-panel']").shouldBe(visible);
         ScreenshotBaseline.captureAndCompare(
