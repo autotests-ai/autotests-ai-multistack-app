@@ -20,13 +20,19 @@
   <div id="app-header"></div>
   <script src="/stack/js/app-base.js"></script>
   <script>
+    (function () {
+      var path = String(location.pathname || '').replace(/\/+$/, '');
+      if (path === '/stack') {
+        location.replace(appPath('/') + (location.search || ''));
+      }
+    })();
     window.headerConfig = {
       brand: { href: appPath('/'), label: 'Reference' },
       nav: [
         { href: appPath('/'), label: 'Home', testid: 'header-nav-home' },
         { href: appPath('/login'), label: 'Login', testid: 'header-nav-login' },
         { href: appPath('/register'), label: 'Register', testid: 'header-nav-register' },
-        { href: appPath('/stack/'), label: 'Stack', active: true, testid: 'header-nav-stack' },
+        { href: appPath('/stack'), label: 'Stack', active: true, testid: 'header-nav-stack' },
       ],
       lang: { default: 'en' },
       theme: { default: 'dark' },

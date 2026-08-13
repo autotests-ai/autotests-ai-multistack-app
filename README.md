@@ -4,7 +4,7 @@ Teaching product — **3-folder layout**, orchestrated CI/CD (block 1).
 
 GitHub: **[github.com/autotests-ai/reference-app-copy](https://github.com/autotests-ai/reference-app-copy)** · monorepo: `projects/reference-home/reference-app-copy/`
 
-Production: [autotests.ai/stack/](https://autotests.ai/stack/)
+Production: [autotests.ai/stack/backend-java-spring/frontend-typescript-react/](https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/)
 
 ## Layout (3 product folders)
 

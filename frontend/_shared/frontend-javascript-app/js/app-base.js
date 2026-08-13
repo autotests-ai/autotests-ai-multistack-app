@@ -1,5 +1,8 @@
 (function (w) {
   // Path matrix: /stack/{backend}/{frontend}/ (canonical) or legacy /{backend}/{frontend}/.
+  // Hub `/stack/` has no pair — nav still prefixes the selected (or CI default) stack.
+  var DEFAULT_BACKEND = 'backend-java-spring';
+  var DEFAULT_FRONTEND = 'frontend-typescript-react';
   var stackPair = w.location.pathname.match(
     /^\/stack\/(backend-[^/]+)\/(frontend[-_][a-z0-9_-]+)/,
   );
@@ -10,6 +13,20 @@
   var legacyFe = w.location.pathname.match(/^(\/frontend[-_][a-z0-9_-]+)/);
 
   w.UI_MOUNT = 'frontend-javascript-vanilla';
+
+  function queryOrDefaultPair() {
+    var params;
+    try {
+      params = new URLSearchParams(w.location.search || '');
+    } catch (e) {
+      params = { get: function () { return null; } };
+    }
+    var be = params.get('backend') || '';
+    var fe = params.get('frontend') || '';
+    if (!/^backend-/.test(be)) be = DEFAULT_BACKEND;
+    if (!/^frontend[-_]/.test(fe)) fe = DEFAULT_FRONTEND;
+    return { be: be, fe: fe };
+  }
 
   if (stackPair) {
     w.BACKEND_ID = stackPair[1];
@@ -25,16 +42,18 @@
     w.BACKEND_ID = null;
     w.UI_MOUNT = stackFe[1];
     w.APP_BASE = '/stack/' + stackFe[1];
-    w.API_BASE = '/stack/backend-java-spring/api';
+    w.API_BASE = '/stack/' + DEFAULT_BACKEND + '/api';
   } else if (legacyFe) {
     w.BACKEND_ID = null;
     w.UI_MOUNT = legacyFe[1].slice(1);
     w.APP_BASE = legacyFe[1];
     w.API_BASE = '/api';
   } else if (String(w.location.pathname || '').indexOf('/stack') === 0) {
-    w.BACKEND_ID = null;
-    w.APP_BASE = '/stack';
-    w.API_BASE = '/stack/backend-java-spring/api';
+    var pair = queryOrDefaultPair();
+    w.BACKEND_ID = pair.be;
+    w.UI_MOUNT = pair.fe;
+    w.APP_BASE = '/stack/' + pair.be + '/' + pair.fe;
+    w.API_BASE = '/stack/' + pair.be + '/api';
   } else {
     w.BACKEND_ID = null;
     w.APP_BASE = '';

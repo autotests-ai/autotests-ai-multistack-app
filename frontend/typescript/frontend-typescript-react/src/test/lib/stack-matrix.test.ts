@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  comboHref,
   parseStackQuery,
   resolveSelection,
   stackBoardHref,
@@ -38,9 +39,18 @@ describe('stack-matrix selection', () => {
     });
   });
 
-  it('builds a board href that stays on /stack/', () => {
+  it('builds a board href on the selected pair, not bare /stack/', () => {
     expect(stackBoardHref('backend-python-flask', 'frontend-javascript-vue')).toBe(
-      '/stack/?backend=backend-python-flask&frontend=frontend-javascript-vue',
+      '/stack/backend-python-flask/frontend-javascript-vue/',
+    );
+  });
+
+  it('never emits a bare /stack/login — fills the CI default pair', () => {
+    expect(comboHref(null, null, '/login')).toBe(
+      '/stack/backend-java-spring/frontend-typescript-react/login',
+    );
+    expect(comboHref(null, null, '/')).toBe(
+      '/stack/backend-java-spring/frontend-typescript-react/',
     );
   });
 });

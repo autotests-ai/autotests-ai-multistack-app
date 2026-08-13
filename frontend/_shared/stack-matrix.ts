@@ -99,12 +99,8 @@ export function comboHref(
 ): string {
   let p = path == null || path === '' ? '/' : String(path);
   if (!p.startsWith('/')) p = `/${p}`;
-  if (!backendId || !frontendId) {
-    if (frontendId) return `${STACK_PREFIX}/${frontendId}${p === '/' ? '/' : p}`;
-    if (p === '/' || p === '') return `${STACK_PREFIX}/`;
-    return p.startsWith(STACK_PREFIX) ? p : `${STACK_PREFIX}${p}`;
-  }
-  return `${STACK_PREFIX}/${backendId}/${frontendId}${p === '/' ? '/' : p}`;
+  const pair = effectiveStackPair(backendId, frontendId);
+  return `${STACK_PREFIX}/${pair.backendId}/${pair.frontendId}${p === '/' ? '/' : p}`;
 }
 
 export function stackHref(
@@ -155,18 +151,13 @@ export function resolveSelection(pathname: string, search = ''): StackSelection 
   return { hub: false, backendId: fromPath.backendId, frontendId: fromPath.frontendId };
 }
 
-/** Stay on the `/stack/` board while picking a pair (and optional tests module). */
+/** Navigate to the selected pair (bare `/stack/` is not a destination). */
 export function stackBoardHref(
   backendId: string | null,
   frontendId: string | null,
   testsId: string | null = null,
 ): string {
-  const pair = effectiveStackPair(backendId, frontendId);
-  const params = new URLSearchParams();
-  params.set('backend', pair.backendId);
-  params.set('frontend', pair.frontendId);
-  if (testsId) params.set('tests', testsId);
-  return `${STACK_PREFIX}/?${params.toString()}`;
+  return stackHref(backendId, frontendId, testsId);
 }
 
 /** GitHub folder for a matrix module path (`backend/python/...`). */

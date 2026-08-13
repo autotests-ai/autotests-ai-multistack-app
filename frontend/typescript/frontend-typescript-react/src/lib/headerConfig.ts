@@ -1,8 +1,8 @@
 import type { HeaderConfig } from '@zero-design-system/react';
 import { appPath } from './appBase';
 
-/** Canonical stack matrix index on autotests.ai landing. */
-export const STACK_INDEX_HREF = 'https://autotests.ai/stack/';
+/** In-app stack board — stays on the current `/stack/{backend}/{frontend}/` pair. */
+export const STACK_INDEX_HREF = appPath('/stack');
 
 /**
  * Canonical header config for the reference-app SPA. Nav hrefs are mount-prefixed
