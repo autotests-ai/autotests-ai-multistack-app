@@ -324,6 +324,7 @@ function buildHeaderMenu(root, config) {
   searchInput.name = 'header-menu-search';
   searchInput.className = 'input';
   searchInput.placeholder = 'Поиск';
+  searchInput.autocomplete = 'off';
   searchInput.dataset.testid = 'header-menu-search-input';
   searchInput.setAttribute('aria-label', 'Поиск');
   menuSearch.appendChild(searchInput);
