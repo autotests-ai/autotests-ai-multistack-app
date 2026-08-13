@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "ngc -p tsconfig.json --noEmit",
-    "test": "NODE_OPTIONS=--no-experimental-webstorage ALLURE_LABEL_epic=reference-app-copy ALLURE_LABEL_layer=component ALLURE_LABEL_scope=frontend-typescript-angular ALLURE_LABEL_framework=angular_testbed vitest run",
+    "test": "NODE_OPTIONS=--no-experimental-webstorage ALLURE_LABEL_epic=autotests-ai-multistack-app ALLURE_LABEL_layer=component ALLURE_LABEL_scope=frontend-typescript-angular ALLURE_LABEL_framework=angular_testbed vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {

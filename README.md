@@ -1,15 +1,15 @@
-# reference-app-copy
+# autotests-ai-multistack-app
 
 Teaching product — **3-folder layout**, orchestrated CI/CD (block 1).
 
-GitHub: **[github.com/autotests-ai/reference-app-copy](https://github.com/autotests-ai/reference-app-copy)** · monorepo: `projects/reference-home/reference-app-copy/`
+GitHub: **[github.com/autotests-ai/autotests-ai-multistack-app](https://github.com/autotests-ai/autotests-ai-multistack-app)** · monorepo: `projects/autotests-ai-multistack-home/autotests-ai-multistack-app/`
 
 Production: [autotests.ai/stack/backend-java-spring/frontend-typescript-react/](https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/)
 
 ## Layout (3 product folders)
 
 ```
-reference-app-copy/
+autotests-ai-multistack-app/
   frontend/          # UI by language → stack
   backend/           # server by language → stack
   tests/             # automation — see tests/LAYERS.md
@@ -207,13 +207,13 @@ Teaching CI — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 | pull request | `unit-tests` · `integration-tests` · `component-tests` · `tests-harness` · `ui-mock-tests` · `sonar-backend` · `sonar-frontend` · `sonar-tests` |
 | push to `main` | PR set + lanes from paths (`tests/` ⇒ api/e2e vs live stand, no image deploy) |
 
-`build` runs `docker compose build` + `docker compose push`, so `docker-compose.yml` stays the only place describing how an image is built. Images go to GHCR as `ghcr.io/autotests-ai/reference-app-copy-<service>:<sha>`; the tag comes from `IMAGE_TAG` (defaults to `latest` locally).
+`build` runs `docker compose build` + `docker compose push`, so `docker-compose.yml` stays the only place describing how an image is built. Images go to GHCR as `ghcr.io/autotests-ai/autotests-ai-multistack-app-<service>:<sha>`; the tag comes from `IMAGE_TAG` (defaults to `latest` locally).
 
 `deploy` connects over SSH and runs six lines: checkout the deployed commit, log in to GHCR, `docker compose pull`, `docker compose up -d`, then `curl --retry` on `/api/health`. There is no deploy script on the host. The script opens with `set -euo pipefail` — otherwise a failed `pull` would leave the previous containers running and the health check would still answer `200`.
 
 | Setting | Value |
 |---------|-------|
-| `APP_DIR` | `/home/reference_app_copy/reference-app-copy` |
+| `APP_DIR` | `/home/reference_app_copy/autotests-ai-multistack-app` |
 | Deployed stacks | `env.BACKEND` + `env.FRONTEND` in `ci.yml` (defaults: java-spring + typescript-react) |
 
 Allure: `testops-context` + live `allurectl watch` on pyramid jobs (not `tests-harness`) → `publish-allure-report` (Pages) →
@@ -231,7 +231,7 @@ Allure: `testops-context` + live `allurectl watch` on pyramid jobs (not `tests-h
 | `ALLURE_PROJECT_ID` | variable | TestOps project id |
 | `ALLURE_ENDPOINT` | variable | optional; default `https://allure.qa.guru` |
 
-GHCR packages are **public** (same as this repo), so image versions are not billed on the free Packages quota and CI has no janitor job. `build` still pushes with `GITHUB_TOKEN` (`packages: write`). `deploy` still logs in (`packages: read`): a **new** package name is private until the one-time Package settings → Danger Zone → Public (cannot go private again) — [backend](https://github.com/orgs/autotests-ai/packages/container/package/reference-app-copy-backend-java-spring) · [frontend](https://github.com/orgs/autotests-ai/packages/container/package/reference-app-copy-frontend-typescript-react).
+GHCR packages are **public** (same as this repo), so image versions are not billed on the free Packages quota and CI has no janitor job. `build` still pushes with `GITHUB_TOKEN` (`packages: write`). `deploy` still logs in (`packages: read`): a **new** package name is private until the one-time Package settings → Danger Zone → Public (cannot go private again) — [backend](https://github.com/orgs/autotests-ai/packages/container/package/autotests-ai-multistack-app-backend-java-spring) · [frontend](https://github.com/orgs/autotests-ai/packages/container/package/autotests-ai-multistack-app-frontend-typescript-react).
 
 ### Deferred (block 2+)
 

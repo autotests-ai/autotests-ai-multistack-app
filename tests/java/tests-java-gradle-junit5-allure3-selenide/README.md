@@ -2,7 +2,7 @@
 
 Gradle · JUnit 5 · Allure 3 · Selenide · Rest Assured.
 
-Canonical Java automation module for reference-app-copy ([`ci.yml`](../../../.github/workflows/ci.yml)).
+Canonical Java automation module for autotests-ai-multistack-app ([`ci.yml`](../../../.github/workflows/ci.yml)).
 
 **Not** backend unit tests → `backend/java/backend-java-spring/src/test/java/`.  
 **Not** RTL → `frontend/typescript/frontend-typescript-react/src/test/`.

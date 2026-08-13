@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """SonarQube quality gate poll via report-task.txt (ceTaskId → analysisId).
 
-Standalone copy for the reference-app-copy product repo (no monorepo imports).
+Standalone copy for the autotests-ai-multistack-app product repo (no monorepo imports).
 Canon twin: zero-design-system/scripts/sonar-gate-wait.py
 """
 

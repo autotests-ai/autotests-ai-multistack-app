@@ -10,7 +10,7 @@ beforeEach(async (ctx) => {
   await label('language', 'typescript');
   await label('scope', 'react');
   await label('framework', 'react_testing_library');
-  await label('epic', 'reference-app-copy');
+  await label('epic', 'autotests-ai-multistack-app');
 
   // TestOps Suites groups by suite/feature (parentSuite alone stays flat).
   // describe() → folder; it() → display name. No per-test annotations needed.

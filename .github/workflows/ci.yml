@@ -125,7 +125,7 @@ env:
   TESTS_DIR: tests/java/tests-java-gradle-junit5-allure3-selenide
   # java|javascript|typescript|python — harness / api / browser layer jobs follow this
   TESTS_LANG: java
-  APP_SLUG: reference-app-copy
+  APP_SLUG: autotests-ai-multistack-app
   # ── Allure paths (literals — keep in sync with TESTS_DIR above) ───────────
   ALLURE_RESULTS_DIR: tests/java/tests-java-gradle-junit5-allure3-selenide/build/allure-results
   ALLURE_REPORT_DIR: tests/java/tests-java-gradle-junit5-allure3-selenide/build/reports/allure-report/allureReport
@@ -159,8 +159,8 @@ env:
   # Playwright → UI_URL; pytest → BASE_URL (same stand URL)
   UI_URL: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
   BASE_URL: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
-  GHCR_BACKEND_PACKAGE: reference-app-copy-backend-java-spring
-  GHCR_FRONTEND_PACKAGE: reference-app-copy-frontend-typescript-react
+  GHCR_BACKEND_PACKAGE: autotests-ai-multistack-app-backend-java-spring
+  GHCR_FRONTEND_PACKAGE: autotests-ai-multistack-app-frontend-typescript-react
   RUN_LABEL: "${{ github.repository }} #${{ github.run_number }}"
   SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL || 'https://sonar.qa.guru' }}
   # ── Non-secret reporting defaults ───────────────────────────────────────
@@ -275,7 +275,7 @@ env:
     UI_RUNTIME=frontend/_shared/frontend-javascript-app
   DEPLOY_SSH_SCRIPT: |
     set -euo pipefail
-    cd /home/reference_app_copy/reference-app-copy
+    cd /home/reference_app_copy/autotests-ai-multistack-app
     git fetch origin
     git checkout --force "$IMAGE_TAG"
     echo "$GHCR_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
@@ -783,7 +783,7 @@ jobs:
       SCREENSHOT_OS: linux
       SCREENSHOT_BROWSER: chrome
       # Stable GHA BuildKit scope — hashFiles is not allowed in job env; layers are content-addressed.
-      DOCKER_CACHE_SCOPE: reference-app-copy-docker-mock-stand-gateway
+      DOCKER_CACHE_SCOPE: autotests-ai-multistack-app-docker-mock-stand-gateway
       ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
       ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
       ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
@@ -794,10 +794,16 @@ jobs:
       # every step; Docker CLI/buildx treat DOCKER_CONTEXT as a named context.
       DOCKER_BUILD_CONTEXT: .
       DOCKER_FILE: frontend/typescript/frontend-typescript-react/Dockerfile
-      DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/reference-app-copy-frontend-typescript-react:mock-local
+      DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/autotests-ai-multistack-app-frontend-typescript-react:mock-local
       DOCKER_BUILD_ARGS: |
         REACT_UI=frontend/_shared/frontend-react-ui
         UI_RUNTIME=frontend/_shared/frontend-javascript-app
+      DOCKER_OCI_LABELS: |
+        org.opencontainers.image.title=autotests-ai-multistack-app-frontend-typescript-react
+        org.opencontainers.image.description=autotests-ai-multistack-app · frontend-typescript-react
+        org.opencontainers.image.source=https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url=https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor=autotests-ai
       ALLURE_RESULTS_ARTIFACT: allure-results-ui-mock
       ALLURE_RESULTS_UPLOAD_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/build/allure-results/**
     steps:
@@ -843,6 +849,7 @@ jobs:
           file: ${{ env.DOCKER_FILE }}
           tags: ${{ env.DOCKER_TAGS }}
           build-args: ${{ env.DOCKER_BUILD_ARGS }}
+          labels: ${{ env.DOCKER_OCI_LABELS }}
           load: true
           cache-from: type=gha,scope=${{ env.DOCKER_CACHE_SCOPE }}
           cache-to: type=gha,mode=max,scope=${{ env.DOCKER_CACHE_SCOPE }}
@@ -1029,7 +1036,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
-      SONAR_PROJECT_KEY: ${{ vars.SONAR_BACKEND_PROJECT_KEY || 'reference-app-copy-backend-java-spring' }}
+      SONAR_PROJECT_KEY: ${{ vars.SONAR_BACKEND_PROJECT_KEY || 'autotests-ai-multistack-app-backend-java-spring' }}
       CHECKOUT_FETCH_DEPTH: "0"
       SETUP_JVM_IF: "true"
       GRADLE_CC_IF: "true"
@@ -1085,7 +1092,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
-      SONAR_PROJECT_KEY: ${{ vars.SONAR_TESTS_PROJECT_KEY || 'reference-app-copy-tests-java-gradle-junit5-allure3-selenide' }}
+      SONAR_PROJECT_KEY: ${{ vars.SONAR_TESTS_PROJECT_KEY || 'autotests-ai-multistack-app-tests-java-gradle-junit5-allure3-selenide' }}
       CHECKOUT_FETCH_DEPTH: "0"
       SETUP_JVM_IF: "true"
       GRADLE_CC_IF: "true"
@@ -1138,7 +1145,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
-      SONAR_PROJECT_KEY: ${{ vars.SONAR_FRONTEND_PROJECT_KEY || 'reference-app-copy-frontend-typescript-react' }}
+      SONAR_PROJECT_KEY: ${{ vars.SONAR_FRONTEND_PROJECT_KEY || 'autotests-ai-multistack-app-frontend-typescript-react' }}
       CHECKOUT_FETCH_DEPTH: "0"
       SETUP_NODE_IF: "true"
       NODE_CACHE_DEPENDENCY_PATH: frontend/typescript/frontend-typescript-react/package-lock.json
@@ -1190,11 +1197,17 @@ jobs:
       packages: write
       actions: write
     env:
-      DOCKER_CACHE_SCOPE: reference-app-copy-docker-backend-java-spring
+      DOCKER_CACHE_SCOPE: autotests-ai-multistack-app-docker-backend-java-spring
       DOCKER_BUILD_CONTEXT: backend/java/backend-java-spring
       DOCKER_FILE: backend/java/backend-java-spring/Dockerfile
-      DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/reference-app-copy-backend-java-spring:${{ github.sha }}
+      DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/autotests-ai-multistack-app-backend-java-spring:${{ github.sha }}
       DOCKER_BUILD_ARGS: ""
+      DOCKER_OCI_LABELS: |
+        org.opencontainers.image.title=autotests-ai-multistack-app-backend-java-spring
+        org.opencontainers.image.description=autotests-ai-multistack-app · backend-java-spring
+        org.opencontainers.image.source=https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url=https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor=autotests-ai
     steps:
       - *checkout
       - &docker-login-ghcr
@@ -1222,13 +1235,19 @@ jobs:
       packages: write
       actions: write
     env:
-      DOCKER_CACHE_SCOPE: reference-app-copy-docker-frontend-typescript-react
+      DOCKER_CACHE_SCOPE: autotests-ai-multistack-app-docker-frontend-typescript-react
       DOCKER_BUILD_CONTEXT: .
       DOCKER_FILE: frontend/typescript/frontend-typescript-react/Dockerfile
-      DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/reference-app-copy-frontend-typescript-react:${{ github.sha }}
+      DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/autotests-ai-multistack-app-frontend-typescript-react:${{ github.sha }}
       DOCKER_BUILD_ARGS: |
         REACT_UI=frontend/_shared/frontend-react-ui
         UI_RUNTIME=frontend/_shared/frontend-javascript-app
+      DOCKER_OCI_LABELS: |
+        org.opencontainers.image.title=autotests-ai-multistack-app-frontend-typescript-react
+        org.opencontainers.image.description=autotests-ai-multistack-app · frontend-typescript-react
+        org.opencontainers.image.source=https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url=https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor=autotests-ai
     steps:
       - *checkout
       - *docker-login-ghcr
@@ -1250,7 +1269,7 @@ jobs:
       url: ${{ env.APP_URL }}
     # Shared deploy host: serialize git checkout with deploy-frontend (same checkout dir).
     concurrency:
-      group: deploy-reference-app-copy
+      group: deploy-autotests-ai-multistack-app
       cancel-in-progress: false
     # Backend (+ postgres) — api-tests need API :8800 after deploy, not frontend.
     permissions:
@@ -1288,7 +1307,7 @@ jobs:
       url: ${{ env.APP_URL }}
     # Independent of backend lane; shared host lock via concurrency (same checkout dir).
     concurrency:
-      group: deploy-reference-app-copy
+      group: deploy-autotests-ai-multistack-app
       cancel-in-progress: false
     permissions:
       contents: read

@@ -1,6 +1,6 @@
 # Test layers (canonical map)
 
-Teaching pyramid for reference-app-copy — **classical** names (ISTQB-style):
+Teaching pyramid for autotests-ai-multistack-app — **classical** names (ISTQB-style):
 unit → integration (wired, no UI) → api → e2e → manual.
 **One** CI file: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
 (pyramid + Allure 3 / TestOps / Notifications + JaCoCo + Sonar quality axis).  
@@ -252,7 +252,7 @@ Active stack and prod URL are workflow `env` defaults in [`ci.yml`](../.github/w
 Job ids are layers or languages, not tools (`e2e-tests`, not `selenide-tests`; `javascript-tests`,
 not `playwright-tests`).
 
-Deploy jobs share concurrency group `deploy-reference-app-copy` (one checkout dir on the host).
+Deploy jobs share concurrency group `deploy-autotests-ai-multistack-app` (one checkout dir on the host).
 Frontend deploy does **not** wait on backend success.
 
 Nothing runs on a schedule. Full e2e has no PR job: a GitHub runner has no compose stack,

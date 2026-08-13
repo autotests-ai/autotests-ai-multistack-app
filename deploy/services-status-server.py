@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Local status board for reference-app-copy published services.
+"""Local status board for autotests-ai-multistack-app published services.
 
 Serves deploy/services-status.html and GET /api/status (live probes).
 SSOT ports: deploy/matrix.yaml · live publish: docker compose ps.
@@ -263,7 +263,7 @@ def build_status() -> dict[str, Any]:
     active = [s for s in services if s["matrix_status"] == "active"]
     return {
         "ok": True,
-        "project": "reference-app-copy",
+        "project": "autotests-ai-multistack-app",
         "checked_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
         "matrix": str(MATRIX_PATH.relative_to(ROOT)),
         "summary": {

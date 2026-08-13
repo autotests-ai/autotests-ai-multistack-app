@@ -1,6 +1,6 @@
 # Page objects
 
-**reference-app-copy** — home page at app root. Resolved via `baseUrl` in `config/${env}.properties`.
+**autotests-ai-multistack-app** — home page at app root. Resolved via `baseUrl` in `config/${env}.properties`.
 
 | Page | Class | Open |
 |------|-------|------|

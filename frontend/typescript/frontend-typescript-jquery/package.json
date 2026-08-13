@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test": "NODE_OPTIONS=--no-experimental-webstorage ALLURE_LABEL_epic=reference-app-copy ALLURE_LABEL_layer=component ALLURE_LABEL_scope=frontend-typescript-jquery ALLURE_LABEL_framework=jquery_jsdom vitest run",
+    "test": "NODE_OPTIONS=--no-experimental-webstorage ALLURE_LABEL_epic=autotests-ai-multistack-app ALLURE_LABEL_layer=component ALLURE_LABEL_scope=frontend-typescript-jquery ALLURE_LABEL_framework=jquery_jsdom vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {

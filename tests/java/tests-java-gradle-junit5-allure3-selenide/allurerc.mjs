@@ -1,5 +1,5 @@
 import { createAllureConfig } from "./allure/create-config.mjs";
 
 export default createAllureConfig({
-  slug: "reference-app-copy",
+  slug: "autotests-ai-multistack-app",
 });

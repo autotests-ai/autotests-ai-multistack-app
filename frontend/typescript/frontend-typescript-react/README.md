@@ -71,7 +71,7 @@ publishes `window.headerConfig` and injects `js/header.js` from the mount
 
 **`npm run dev` alone is not a full product stand:** Vite does not serve
 `js/header.js` / header templates. Use Docker/compose (or the monorepo
-`python scripts/stands/ensure.py reference-app-copy`) so the image overlay provides
+`python scripts/stands/ensure.py autotests-ai-multistack-app`) so the image overlay provides
 the runtime. Without it the SPA mounts but the header script 404s.
 
 ## Scripts

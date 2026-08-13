@@ -1,4 +1,4 @@
-# SSOT: backend path × frontend path matrix for reference-app-copy.
+# SSOT: backend path × frontend path matrix for autotests-ai-multistack-app.
 # Reference data for docs and deploy/services-status-server.py. CI does not read this file.
 # URL: https://autotests.ai/stack/{backend}/{frontend}/
 #      https://autotests.ai/stack/{backend}/api/
@@ -29,7 +29,7 @@ backends:
     module: backend/java/backend-java-spring
     compose_service: backend-java-spring
     compose_profile: null
-    image: reference-app-copy-backend-java-spring:latest
+    image: autotests-ai-multistack-app-backend-java-spring:latest
     internal_port: 8080
     publish_port: 8800
     db_name: reference_app_java_spring
@@ -41,7 +41,7 @@ backends:
     module: backend/kotlin/backend-kotlin-spring
     compose_service: backend-kotlin-spring
     compose_profile: null
-    image: reference-app-copy-backend-kotlin-spring:latest
+    image: autotests-ai-multistack-app-backend-kotlin-spring:latest
     internal_port: 8080
     publish_port: 8810
     db_name: reference_app_kotlin_spring
@@ -53,7 +53,7 @@ backends:
     module: backend/python/backend-python-flask
     compose_service: backend-python-flask
     compose_profile: null
-    image: reference-app-copy-backend-python-flask:latest
+    image: autotests-ai-multistack-app-backend-python-flask:latest
     internal_port: 8080
     publish_port: 8820
     db_name: reference_app_python_flask
@@ -65,7 +65,7 @@ backends:
     module: backend/python/backend-python-fastapi
     compose_service: backend-python-fastapi
     compose_profile: null
-    image: reference-app-copy-backend-python-fastapi:latest
+    image: autotests-ai-multistack-app-backend-python-fastapi:latest
     internal_port: 8080
     publish_port: 8821
     db_name: reference_app_python_fastapi
@@ -77,7 +77,7 @@ backends:
     module: backend/python/backend-python-django
     compose_service: backend-python-django
     compose_profile: null
-    image: reference-app-copy-backend-python-django:latest
+    image: autotests-ai-multistack-app-backend-python-django:latest
     internal_port: 8080
     publish_port: 8822
     db_name: reference_app_python_django
@@ -89,7 +89,7 @@ backends:
     module: backend/go/backend-go-gin
     compose_service: backend-go-gin
     compose_profile: null
-    image: reference-app-copy-backend-go-gin:latest
+    image: autotests-ai-multistack-app-backend-go-gin:latest
     internal_port: 8080
     publish_port: 8830
     db_name: reference_app_go_gin
@@ -101,7 +101,7 @@ backends:
     module: backend/go/backend-go-stdlib
     compose_service: backend-go-stdlib
     compose_profile: null
-    image: reference-app-copy-backend-go-stdlib:latest
+    image: autotests-ai-multistack-app-backend-go-stdlib:latest
     internal_port: 8080
     publish_port: 8831
     db_name: reference_app_go_stdlib
@@ -113,7 +113,7 @@ backends:
     module: backend/javascript/backend-javascript-express
     compose_service: backend-javascript-express
     compose_profile: null
-    image: reference-app-copy-backend-javascript-express:latest
+    image: autotests-ai-multistack-app-backend-javascript-express:latest
     internal_port: 8080
     publish_port: 8840
     db_name: reference_app_javascript_express
@@ -125,7 +125,7 @@ backends:
     module: backend/javascript/backend-javascript-nest
     compose_service: backend-javascript-nest
     compose_profile: null
-    image: reference-app-copy-backend-javascript-nest:latest
+    image: autotests-ai-multistack-app-backend-javascript-nest:latest
     internal_port: 8080
     publish_port: 8841
     db_name: reference_app_javascript_nest
@@ -137,7 +137,7 @@ backends:
     module: backend/typescript/backend-typescript-express
     compose_service: backend-typescript-express
     compose_profile: null
-    image: reference-app-copy-backend-typescript-express:latest
+    image: autotests-ai-multistack-app-backend-typescript-express:latest
     internal_port: 8080
     publish_port: 8850
     db_name: reference_app_typescript_express
@@ -149,7 +149,7 @@ backends:
     module: backend/typescript/backend-typescript-nest
     compose_service: backend-typescript-nest
     compose_profile: null
-    image: reference-app-copy-backend-typescript-nest:latest
+    image: autotests-ai-multistack-app-backend-typescript-nest:latest
     internal_port: 8080
     publish_port: 8851
     db_name: reference_app_typescript_nest
@@ -162,7 +162,7 @@ frontends:
     module: frontend/javascript/frontend-javascript-vanilla
     mount: frontend-javascript-vanilla
     compose_service: frontend-javascript-vanilla
-    image: reference-app-copy-frontend-javascript-vanilla:latest
+    image: autotests-ai-multistack-app-frontend-javascript-vanilla:latest
     publish_port: 9800
 
   - id: frontend-javascript-react
@@ -171,7 +171,7 @@ frontends:
     module: frontend/javascript/frontend-javascript-react
     mount: frontend-javascript-react
     compose_service: frontend-javascript-react
-    image: reference-app-copy-frontend-javascript-react:latest
+    image: autotests-ai-multistack-app-frontend-javascript-react:latest
     publish_port: 9801
 
   - id: frontend-javascript-angular
@@ -180,7 +180,7 @@ frontends:
     module: frontend/javascript/frontend-javascript-angular
     mount: frontend-javascript-angular
     compose_service: frontend-javascript-angular
-    image: reference-app-copy-frontend-javascript-angular:latest
+    image: autotests-ai-multistack-app-frontend-javascript-angular:latest
     publish_port: 9802
 
   - id: frontend-javascript-vue
@@ -189,7 +189,7 @@ frontends:
     module: frontend/javascript/frontend-javascript-vue
     mount: frontend-javascript-vue
     compose_service: frontend-javascript-vue
-    image: reference-app-copy-frontend-javascript-vue:latest
+    image: autotests-ai-multistack-app-frontend-javascript-vue:latest
     publish_port: 9803
 
   - id: frontend-javascript-jquery
@@ -198,7 +198,7 @@ frontends:
     module: frontend/javascript/frontend-javascript-jquery
     mount: frontend-javascript-jquery
     compose_service: frontend-javascript-jquery
-    image: reference-app-copy-frontend-javascript-jquery:latest
+    image: autotests-ai-multistack-app-frontend-javascript-jquery:latest
     publish_port: 9804
 
   - id: frontend-typescript-vanilla
@@ -207,7 +207,7 @@ frontends:
     module: frontend/typescript/frontend-typescript-vanilla
     mount: frontend-typescript-vanilla
     compose_service: frontend-typescript-vanilla
-    image: reference-app-copy-frontend-typescript-vanilla:latest
+    image: autotests-ai-multistack-app-frontend-typescript-vanilla:latest
     publish_port: 9810
 
   - id: frontend-typescript-react
@@ -216,7 +216,7 @@ frontends:
     module: frontend/typescript/frontend-typescript-react
     mount: frontend-typescript-react
     compose_service: frontend-typescript-react
-    image: reference-app-copy-frontend-typescript-react:latest
+    image: autotests-ai-multistack-app-frontend-typescript-react:latest
     publish_port: 9811
 
   - id: frontend-typescript-angular
@@ -225,7 +225,7 @@ frontends:
     module: frontend/typescript/frontend-typescript-angular
     mount: frontend-typescript-angular
     compose_service: frontend-typescript-angular
-    image: reference-app-copy-frontend-typescript-angular:latest
+    image: autotests-ai-multistack-app-frontend-typescript-angular:latest
     publish_port: 9812
 
   - id: frontend-typescript-vue
@@ -234,7 +234,7 @@ frontends:
     module: frontend/typescript/frontend-typescript-vue
     mount: frontend-typescript-vue
     compose_service: frontend-typescript-vue
-    image: reference-app-copy-frontend-typescript-vue:latest
+    image: autotests-ai-multistack-app-frontend-typescript-vue:latest
     publish_port: 9813
 
   - id: frontend-typescript-jquery
@@ -243,7 +243,7 @@ frontends:
     module: frontend/typescript/frontend-typescript-jquery
     mount: frontend-typescript-jquery
     compose_service: frontend-typescript-jquery
-    image: reference-app-copy-frontend-typescript-jquery:latest
+    image: autotests-ai-multistack-app-frontend-typescript-jquery:latest
     publish_port: 9814
 
 # Test modules — no compose / publish ports (CI runners, not containers).

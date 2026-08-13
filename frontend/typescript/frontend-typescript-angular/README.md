@@ -76,7 +76,7 @@ diagnostics.
 
 **`npm run dev` alone is not a full product stand:** Vite does not serve
 `js/header.js` / header templates. Use Docker/compose (or monorepo
-`python scripts/stands/ensure.py reference-app-copy`) for the `UI_RUNTIME` overlay.
+`python scripts/stands/ensure.py autotests-ai-multistack-app`) for the `UI_RUNTIME` overlay.
 
 `npm test` runs Vitest under `--no-experimental-webstorage` for the same reason as the React
 module: on Node 26 the runtime's own empty `localStorage` global wins over the jsdom one.

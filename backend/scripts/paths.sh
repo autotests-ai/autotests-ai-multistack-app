@@ -1,4 +1,4 @@
-# SSOT path constants for reference-app-copy (source from scripts that need them).
+# SSOT path constants for autotests-ai-multistack-app (source from scripts that need them).
 #
 # Naming: tests-{lang}-{build}-{framework}-{reporting}-{automation}
 #   - between segments; _ only in compounds (no_allure, react_testing_library).

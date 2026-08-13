@@ -7,7 +7,7 @@
     "dev": "node scripts/dev-server.mjs",
     "preview": "node scripts/dev-server.mjs",
     "build": "node -e \"console.log('static module — nothing to bundle; the Dockerfile overlays the UI runtime and serves these files as-is')\"",
-    "test": "NODE_OPTIONS=--no-experimental-webstorage ALLURE_LABEL_epic=reference-app-copy ALLURE_LABEL_layer=component ALLURE_LABEL_scope=frontend-javascript-jquery ALLURE_LABEL_framework=jquery_jsdom vitest run",
+    "test": "NODE_OPTIONS=--no-experimental-webstorage ALLURE_LABEL_epic=autotests-ai-multistack-app ALLURE_LABEL_layer=component ALLURE_LABEL_scope=frontend-javascript-jquery ALLURE_LABEL_framework=jquery_jsdom vitest run",
     "test:watch": "vitest",
     "vendor:jquery": "node -e \"require('node:fs').copyFileSync('node_modules/jquery/dist/jquery.min.js', 'vendor/jquery.min.js')\""
   },

@@ -27,7 +27,7 @@ cat > "$DEST/package.json" <<'EOF'
   "version": "0.1.0-pilot",
   "private": true,
   "type": "module",
-  "description": "Vendored react-ui sources for standalone reference-app-copy builds (sync via frontend/scripts/sync-react-ui.sh)",
+  "description": "Vendored react-ui sources for standalone autotests-ai-multistack-app builds (sync via frontend/scripts/sync-react-ui.sh)",
   "exports": {
     ".": "./src/index.ts"
   }
@@ -38,7 +38,7 @@ cat > "$DEST/README.md" <<'EOF'
 # frontend-react-ui
 
 Vendored copy of monorepo `packages/react-ui/src` for standalone Docker/GHA builds of
-`reference-app-copy` (no monorepo checkout on the build host).
+`autotests-ai-multistack-app` (no monorepo checkout on the build host).
 
 **Deliberately test-stripped:** the sync excludes `*.test.tsx` / `test/`. Component quality
 is guaranteed upstream in monorepo `packages/react-ui` (its own Vitest+RTL suite); this copy

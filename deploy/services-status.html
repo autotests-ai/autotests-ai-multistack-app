@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>reference-app-copy · services</title>
+  <title>autotests-ai-multistack-app · services</title>
   <style>
     :root {
       --bg: #f3f1ec;
@@ -171,7 +171,7 @@
   <main>
     <header>
       <div>
-        <h1>reference-app-copy · services</h1>
+        <h1>autotests-ai-multistack-app · services</h1>
         <p class="lead">Локальные publish-порты из <code>deploy/matrix.yaml</code> + live probe.</p>
       </div>
       <div class="toolbar">
@@ -296,7 +296,7 @@
         if (!res.ok) throw new Error("HTTP " + res.status);
         render(await res.json());
       } catch (e) {
-        errEl.textContent = "Не удалось загрузить /api/status — запусти services-status-server.py (стенд reference-app-copy-status). " + e;
+        errEl.textContent = "Не удалось загрузить /api/status — запусти services-status-server.py (стенд autotests-ai-multistack-app-status). " + e;
         errEl.classList.add("show");
       } finally {
         btn.disabled = false;

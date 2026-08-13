@@ -10,7 +10,7 @@ services:
       - pgdata:/var/lib/postgresql/data
       - ./deploy/postgres/init-databases.sh:/docker-entrypoint-initdb.d/01-init-databases.sh:ro
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U reference -d postgres"]
       interval: 5s
@@ -31,11 +31,17 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
 
   backend-java-spring:
-    image: ghcr.io/autotests-ai/reference-app-copy-backend-java-spring:${IMAGE_TAG:-latest}
+    image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-java-spring:${IMAGE_TAG:-latest}
     build:
+      labels:
+        org.opencontainers.image.title: autotests-ai-multistack-app-backend-java-spring
+        org.opencontainers.image.description: autotests-ai-multistack-app · backend-java-spring
+        org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor: autotests-ai
       context: ./backend/java/backend-java-spring
     restart: unless-stopped
     environment:
@@ -45,20 +51,26 @@ services:
       DB_USER: reference
       DB_PASSWORD: reference
       SERVER_PORT: 8080
-      JWT_SECRET: ${JWT_SECRET:-reference-app-dev-secret-change-in-production-min-32-chars}
+      JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
         condition: service_healthy
       postgres-ensure-dbs:
         condition: service_completed_successfully
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_JAVA_PORT:-8800}:8080"
 
   backend-kotlin-spring:
-    image: ghcr.io/autotests-ai/reference-app-copy-backend-kotlin-spring:${IMAGE_TAG:-latest}
+    image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-kotlin-spring:${IMAGE_TAG:-latest}
     build:
+      labels:
+        org.opencontainers.image.title: autotests-ai-multistack-app-backend-kotlin-spring
+        org.opencontainers.image.description: autotests-ai-multistack-app · backend-kotlin-spring
+        org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor: autotests-ai
       context: ./backend/kotlin/backend-kotlin-spring
     restart: unless-stopped
     environment:
@@ -68,20 +80,26 @@ services:
       DB_USER: reference
       DB_PASSWORD: reference
       SERVER_PORT: 8080
-      JWT_SECRET: ${JWT_SECRET:-reference-app-dev-secret-change-in-production-min-32-chars}
+      JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
         condition: service_healthy
       postgres-ensure-dbs:
         condition: service_completed_successfully
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_KOTLIN_PORT:-8810}:8080"
 
   backend-python-flask:
-    image: ghcr.io/autotests-ai/reference-app-copy-backend-python-flask:${IMAGE_TAG:-latest}
+    image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-python-flask:${IMAGE_TAG:-latest}
     build:
+      labels:
+        org.opencontainers.image.title: autotests-ai-multistack-app-backend-python-flask
+        org.opencontainers.image.description: autotests-ai-multistack-app · backend-python-flask
+        org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor: autotests-ai
       context: ./backend/python/backend-python-flask
     restart: unless-stopped
     environment:
@@ -91,20 +109,26 @@ services:
       DB_USER: reference
       DB_PASSWORD: reference
       SERVER_PORT: 8080
-      JWT_SECRET: ${JWT_SECRET:-reference-app-dev-secret-change-in-production-min-32-chars}
+      JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
         condition: service_healthy
       postgres-ensure-dbs:
         condition: service_completed_successfully
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_FLASK_PORT:-8820}:8080"
 
   backend-python-fastapi:
-    image: ghcr.io/autotests-ai/reference-app-copy-backend-python-fastapi:${IMAGE_TAG:-latest}
+    image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-python-fastapi:${IMAGE_TAG:-latest}
     build:
+      labels:
+        org.opencontainers.image.title: autotests-ai-multistack-app-backend-python-fastapi
+        org.opencontainers.image.description: autotests-ai-multistack-app · backend-python-fastapi
+        org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor: autotests-ai
       context: ./backend/python/backend-python-fastapi
     restart: unless-stopped
     environment:
@@ -114,20 +138,26 @@ services:
       DB_USER: reference
       DB_PASSWORD: reference
       SERVER_PORT: 8080
-      JWT_SECRET: ${JWT_SECRET:-reference-app-dev-secret-change-in-production-min-32-chars}
+      JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
         condition: service_healthy
       postgres-ensure-dbs:
         condition: service_completed_successfully
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_FASTAPI_PORT:-8821}:8080"
 
   backend-python-django:
-    image: ghcr.io/autotests-ai/reference-app-copy-backend-python-django:${IMAGE_TAG:-latest}
+    image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-python-django:${IMAGE_TAG:-latest}
     build:
+      labels:
+        org.opencontainers.image.title: autotests-ai-multistack-app-backend-python-django
+        org.opencontainers.image.description: autotests-ai-multistack-app · backend-python-django
+        org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor: autotests-ai
       context: ./backend/python/backend-python-django
     restart: unless-stopped
     environment:
@@ -137,20 +167,26 @@ services:
       DB_USER: reference
       DB_PASSWORD: reference
       SERVER_PORT: 8080
-      JWT_SECRET: ${JWT_SECRET:-reference-app-dev-secret-change-in-production-min-32-chars}
+      JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
         condition: service_healthy
       postgres-ensure-dbs:
         condition: service_completed_successfully
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_DJANGO_PORT:-8822}:8080"
 
   backend-go-gin:
-    image: ghcr.io/autotests-ai/reference-app-copy-backend-go-gin:${IMAGE_TAG:-latest}
+    image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-go-gin:${IMAGE_TAG:-latest}
     build:
+      labels:
+        org.opencontainers.image.title: autotests-ai-multistack-app-backend-go-gin
+        org.opencontainers.image.description: autotests-ai-multistack-app · backend-go-gin
+        org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor: autotests-ai
       context: ./backend/go/backend-go-gin
     restart: unless-stopped
     environment:
@@ -160,20 +196,26 @@ services:
       DB_USER: reference
       DB_PASSWORD: reference
       SERVER_PORT: 8080
-      JWT_SECRET: ${JWT_SECRET:-reference-app-dev-secret-change-in-production-min-32-chars}
+      JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
         condition: service_healthy
       postgres-ensure-dbs:
         condition: service_completed_successfully
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_GO_GIN_PORT:-8830}:8080"
 
   backend-go-stdlib:
-    image: ghcr.io/autotests-ai/reference-app-copy-backend-go-stdlib:${IMAGE_TAG:-latest}
+    image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-go-stdlib:${IMAGE_TAG:-latest}
     build:
+      labels:
+        org.opencontainers.image.title: autotests-ai-multistack-app-backend-go-stdlib
+        org.opencontainers.image.description: autotests-ai-multistack-app · backend-go-stdlib
+        org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor: autotests-ai
       context: ./backend/go/backend-go-stdlib
     restart: unless-stopped
     environment:
@@ -183,20 +225,26 @@ services:
       DB_USER: reference
       DB_PASSWORD: reference
       SERVER_PORT: 8080
-      JWT_SECRET: ${JWT_SECRET:-reference-app-dev-secret-change-in-production-min-32-chars}
+      JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
         condition: service_healthy
       postgres-ensure-dbs:
         condition: service_completed_successfully
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_GO_STDLIB_PORT:-8831}:8080"
 
   backend-javascript-express:
-    image: ghcr.io/autotests-ai/reference-app-copy-backend-javascript-express:${IMAGE_TAG:-latest}
+    image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-javascript-express:${IMAGE_TAG:-latest}
     build:
+      labels:
+        org.opencontainers.image.title: autotests-ai-multistack-app-backend-javascript-express
+        org.opencontainers.image.description: autotests-ai-multistack-app · backend-javascript-express
+        org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor: autotests-ai
       context: ./backend/javascript/backend-javascript-express
     restart: unless-stopped
     environment:
@@ -206,20 +254,26 @@ services:
       DB_USER: reference
       DB_PASSWORD: reference
       SERVER_PORT: 8080
-      JWT_SECRET: ${JWT_SECRET:-reference-app-dev-secret-change-in-production-min-32-chars}
+      JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
         condition: service_healthy
       postgres-ensure-dbs:
         condition: service_completed_successfully
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_JS_EXPRESS_PORT:-8840}:8080"
 
   backend-javascript-nest:
-    image: ghcr.io/autotests-ai/reference-app-copy-backend-javascript-nest:${IMAGE_TAG:-latest}
+    image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-javascript-nest:${IMAGE_TAG:-latest}
     build:
+      labels:
+        org.opencontainers.image.title: autotests-ai-multistack-app-backend-javascript-nest
+        org.opencontainers.image.description: autotests-ai-multistack-app · backend-javascript-nest
+        org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor: autotests-ai
       context: ./backend/javascript/backend-javascript-nest
     restart: unless-stopped
     environment:
@@ -229,20 +283,26 @@ services:
       DB_USER: reference
       DB_PASSWORD: reference
       SERVER_PORT: 8080
-      JWT_SECRET: ${JWT_SECRET:-reference-app-dev-secret-change-in-production-min-32-chars}
+      JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
         condition: service_healthy
       postgres-ensure-dbs:
         condition: service_completed_successfully
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_JS_NEST_PORT:-8841}:8080"
 
   backend-typescript-express:
-    image: ghcr.io/autotests-ai/reference-app-copy-backend-typescript-express:${IMAGE_TAG:-latest}
+    image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-typescript-express:${IMAGE_TAG:-latest}
     build:
+      labels:
+        org.opencontainers.image.title: autotests-ai-multistack-app-backend-typescript-express
+        org.opencontainers.image.description: autotests-ai-multistack-app · backend-typescript-express
+        org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor: autotests-ai
       context: ./backend/typescript/backend-typescript-express
     restart: unless-stopped
     environment:
@@ -252,20 +312,26 @@ services:
       DB_USER: reference
       DB_PASSWORD: reference
       SERVER_PORT: 8080
-      JWT_SECRET: ${JWT_SECRET:-reference-app-dev-secret-change-in-production-min-32-chars}
+      JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
         condition: service_healthy
       postgres-ensure-dbs:
         condition: service_completed_successfully
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_TS_EXPRESS_PORT:-8850}:8080"
 
   backend-typescript-nest:
-    image: ghcr.io/autotests-ai/reference-app-copy-backend-typescript-nest:${IMAGE_TAG:-latest}
+    image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-typescript-nest:${IMAGE_TAG:-latest}
     build:
+      labels:
+        org.opencontainers.image.title: autotests-ai-multistack-app-backend-typescript-nest
+        org.opencontainers.image.description: autotests-ai-multistack-app · backend-typescript-nest
+        org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor: autotests-ai
       context: ./backend/typescript/backend-typescript-nest
     restart: unless-stopped
     environment:
@@ -275,33 +341,45 @@ services:
       DB_USER: reference
       DB_PASSWORD: reference
       SERVER_PORT: 8080
-      JWT_SECRET: ${JWT_SECRET:-reference-app-dev-secret-change-in-production-min-32-chars}
+      JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
         condition: service_healthy
       postgres-ensure-dbs:
         condition: service_completed_successfully
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_TS_NEST_PORT:-8851}:8080"
 
   frontend-javascript-vanilla:
-    image: ghcr.io/autotests-ai/reference-app-copy-frontend-javascript-vanilla:${IMAGE_TAG:-latest}
+    image: ghcr.io/autotests-ai/autotests-ai-multistack-app-frontend-javascript-vanilla:${IMAGE_TAG:-latest}
     build:
+      labels:
+        org.opencontainers.image.title: autotests-ai-multistack-app-frontend-javascript-vanilla
+        org.opencontainers.image.description: autotests-ai-multistack-app · frontend-javascript-vanilla
+        org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor: autotests-ai
       context: .
       dockerfile: frontend/javascript/frontend-javascript-vanilla/Dockerfile
       args:
         UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
     restart: unless-stopped
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
     ports:
       - "${FRONTEND_JS_VANILLA_PORT:-9800}:80"
 
   frontend-javascript-react:
-    image: ghcr.io/autotests-ai/reference-app-copy-frontend-javascript-react:${IMAGE_TAG:-latest}
+    image: ghcr.io/autotests-ai/autotests-ai-multistack-app-frontend-javascript-react:${IMAGE_TAG:-latest}
     build:
+      labels:
+        org.opencontainers.image.title: autotests-ai-multistack-app-frontend-javascript-react
+        org.opencontainers.image.description: autotests-ai-multistack-app · frontend-javascript-react
+        org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor: autotests-ai
       context: .
       dockerfile: frontend/javascript/frontend-javascript-react/Dockerfile
       args:
@@ -309,65 +387,95 @@ services:
         REACT_UI: ${REACT_UI:-frontend/_shared/frontend-react-ui}
     restart: unless-stopped
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
     ports:
       - "${FRONTEND_JS_REACT_PORT:-9801}:80"
 
   frontend-javascript-angular:
-    image: ghcr.io/autotests-ai/reference-app-copy-frontend-javascript-angular:${IMAGE_TAG:-latest}
+    image: ghcr.io/autotests-ai/autotests-ai-multistack-app-frontend-javascript-angular:${IMAGE_TAG:-latest}
     build:
+      labels:
+        org.opencontainers.image.title: autotests-ai-multistack-app-frontend-javascript-angular
+        org.opencontainers.image.description: autotests-ai-multistack-app · frontend-javascript-angular
+        org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor: autotests-ai
       context: .
       dockerfile: frontend/javascript/frontend-javascript-angular/Dockerfile
       args:
         UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
     restart: unless-stopped
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
     ports:
       - "${FRONTEND_JS_ANGULAR_PORT:-9802}:80"
 
   frontend-javascript-vue:
-    image: ghcr.io/autotests-ai/reference-app-copy-frontend-javascript-vue:${IMAGE_TAG:-latest}
+    image: ghcr.io/autotests-ai/autotests-ai-multistack-app-frontend-javascript-vue:${IMAGE_TAG:-latest}
     build:
+      labels:
+        org.opencontainers.image.title: autotests-ai-multistack-app-frontend-javascript-vue
+        org.opencontainers.image.description: autotests-ai-multistack-app · frontend-javascript-vue
+        org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor: autotests-ai
       context: .
       dockerfile: frontend/javascript/frontend-javascript-vue/Dockerfile
       args:
         UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
     restart: unless-stopped
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
     ports:
       - "${FRONTEND_JS_VUE_PORT:-9803}:80"
 
   frontend-javascript-jquery:
-    image: ghcr.io/autotests-ai/reference-app-copy-frontend-javascript-jquery:${IMAGE_TAG:-latest}
+    image: ghcr.io/autotests-ai/autotests-ai-multistack-app-frontend-javascript-jquery:${IMAGE_TAG:-latest}
     build:
+      labels:
+        org.opencontainers.image.title: autotests-ai-multistack-app-frontend-javascript-jquery
+        org.opencontainers.image.description: autotests-ai-multistack-app · frontend-javascript-jquery
+        org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor: autotests-ai
       context: .
       dockerfile: frontend/javascript/frontend-javascript-jquery/Dockerfile
       args:
         UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
     restart: unless-stopped
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
     ports:
       - "${FRONTEND_JS_JQUERY_PORT:-9804}:80"
 
   frontend-typescript-vanilla:
-    image: ghcr.io/autotests-ai/reference-app-copy-frontend-typescript-vanilla:${IMAGE_TAG:-latest}
+    image: ghcr.io/autotests-ai/autotests-ai-multistack-app-frontend-typescript-vanilla:${IMAGE_TAG:-latest}
     build:
+      labels:
+        org.opencontainers.image.title: autotests-ai-multistack-app-frontend-typescript-vanilla
+        org.opencontainers.image.description: autotests-ai-multistack-app · frontend-typescript-vanilla
+        org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor: autotests-ai
       context: .
       dockerfile: frontend/typescript/frontend-typescript-vanilla/Dockerfile
       args:
         UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
     restart: unless-stopped
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
     ports:
       - "${FRONTEND_TS_VANILLA_PORT:-9810}:80"
 
   frontend-typescript-react:
-    image: ghcr.io/autotests-ai/reference-app-copy-frontend-typescript-react:${IMAGE_TAG:-latest}
+    image: ghcr.io/autotests-ai/autotests-ai-multistack-app-frontend-typescript-react:${IMAGE_TAG:-latest}
     build:
+      labels:
+        org.opencontainers.image.title: autotests-ai-multistack-app-frontend-typescript-react
+        org.opencontainers.image.description: autotests-ai-multistack-app · frontend-typescript-react
+        org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor: autotests-ai
       context: .
       dockerfile: frontend/typescript/frontend-typescript-react/Dockerfile
       args:
@@ -375,46 +483,64 @@ services:
         REACT_UI: ${REACT_UI:-frontend/_shared/frontend-react-ui}
     restart: unless-stopped
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
     ports:
       - "${FRONTEND_TS_REACT_PORT:-9811}:80"
 
   frontend-typescript-angular:
-    image: ghcr.io/autotests-ai/reference-app-copy-frontend-typescript-angular:${IMAGE_TAG:-latest}
+    image: ghcr.io/autotests-ai/autotests-ai-multistack-app-frontend-typescript-angular:${IMAGE_TAG:-latest}
     build:
+      labels:
+        org.opencontainers.image.title: autotests-ai-multistack-app-frontend-typescript-angular
+        org.opencontainers.image.description: autotests-ai-multistack-app · frontend-typescript-angular
+        org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor: autotests-ai
       context: .
       dockerfile: frontend/typescript/frontend-typescript-angular/Dockerfile
       args:
         UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
     restart: unless-stopped
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
     ports:
       - "${FRONTEND_TS_ANGULAR_PORT:-9812}:80"
 
   frontend-typescript-vue:
-    image: ghcr.io/autotests-ai/reference-app-copy-frontend-typescript-vue:${IMAGE_TAG:-latest}
+    image: ghcr.io/autotests-ai/autotests-ai-multistack-app-frontend-typescript-vue:${IMAGE_TAG:-latest}
     build:
+      labels:
+        org.opencontainers.image.title: autotests-ai-multistack-app-frontend-typescript-vue
+        org.opencontainers.image.description: autotests-ai-multistack-app · frontend-typescript-vue
+        org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor: autotests-ai
       context: .
       dockerfile: frontend/typescript/frontend-typescript-vue/Dockerfile
       args:
         UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
     restart: unless-stopped
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
     ports:
       - "${FRONTEND_TS_VUE_PORT:-9813}:80"
 
   frontend-typescript-jquery:
-    image: ghcr.io/autotests-ai/reference-app-copy-frontend-typescript-jquery:${IMAGE_TAG:-latest}
+    image: ghcr.io/autotests-ai/autotests-ai-multistack-app-frontend-typescript-jquery:${IMAGE_TAG:-latest}
     build:
+      labels:
+        org.opencontainers.image.title: autotests-ai-multistack-app-frontend-typescript-jquery
+        org.opencontainers.image.description: autotests-ai-multistack-app · frontend-typescript-jquery
+        org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor: autotests-ai
       context: .
       dockerfile: frontend/typescript/frontend-typescript-jquery/Dockerfile
       args:
         UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
     restart: unless-stopped
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
     ports:
       - "${FRONTEND_TS_JQUERY_PORT:-9814}:80"
 
@@ -425,7 +551,7 @@ services:
     volumes:
       - ./deploy/mock/mappings:/home/wiremock/mappings:ro
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
 
   stand-gateway:
     image: nginx:1.27-alpine
@@ -439,7 +565,7 @@ services:
       api-mock:
         condition: service_started
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
     ports:
       - "${MOCK_GATEWAY_PORT:-9911}:80"
 
@@ -457,12 +583,12 @@ services:
       backend-java-spring:
         condition: service_started
     networks:
-      - reference_internal
+      - autotests_ai_multistack_internal
     ports:
       - "${CI_GATEWAY_PORT:-9821}:80"
 
 networks:
-  reference_internal:
+  autotests_ai_multistack_internal:
     driver: bridge
 
 volumes:

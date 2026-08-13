@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "reference-app-copy-tests-allure",
+  "name": "autotests-ai-multistack-app-tests-allure",
   "description": "Allure 3 CLI + allure-report-kit + allure-notifications pins used by CI",
   "engines": {
     "node": ">=26"

@@ -7,7 +7,7 @@ import json
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]  # reference-app-copy/
+ROOT = Path(__file__).resolve().parents[2]  # autotests-ai-multistack-app/
 MATRIX = ROOT / "deploy" / "matrix.yaml"
 OUT = (
     ROOT

@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY",
-    "django-insecure-reference-app-copy-dev-only",
+    "django-insecure-autotests-ai-multistack-app-dev-only",
 )
 
 DEBUG = os.environ.get("DJANGO_DEBUG", "0") == "1"
