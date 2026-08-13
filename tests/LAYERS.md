@@ -79,34 +79,38 @@ Self-check of the **tests module helpers** before / alongside product layers —
 
 ## Mock and visual (inside e2e, not layers)
 
-Visual is **two stages**, not a pyramid layer. Same Selenide classes (`@Layer("e2e")` + `@Tag("visual")`); `-Denv` picks the PNG tree. Living Java baselines are Linux Chrome 148:
+Visual is **two stages**, not a pyramid layer. Same Selenide classes (`@Layer("e2e")` + `@Tag("visual")`); `-Denv` picks the PNG tree.
 
 ```
-src/test/resources/screenshots/{mock|e2e}/linux/{area}/{viewport}.png
+src/test/resources/screenshots/{mock|e2e}/{linux|macos|windows}/{chrome-148}/{area}/{viewport}.png
 ```
 
-`reference_mock` → `mock/`; anything else (ci/prod) → `e2e/`. `VISUAL_OS` overrides the OS folder (`darwin` → `macos`, `linux` → `linux`, `win32` → `windows`). CI sets `VISUAL_OS=linux`.
+`reference_mock` → `mock/`; anything else (ci/prod) → `e2e/`. Third segment is `{browser}-{major}`: `VISUAL_BROWSER` (default `chrome`) plus major from `chrome-for-testing.properties` (same CFT pin as CI `CHROME_FOR_TESTING_VERSION`). Patch (`148.0.7778.178`), headless, and CFT vs Selenoid are **not** path segments — CFT vs Selenoid is mock vs e2e. Different browsers are sibling folders (`chrome-148/` next to a future `firefox-140/`); this job reads only its folder.
+
+`VISUAL_OS` overrides the OS folder (`darwin` → `macos`, `linux` → `linux`, `win32` → `windows`). CI SSOT is `mock/linux/chrome-148` plus the CFT pin. **Do not** set `VISUAL_OS=linux` on a Mac — that would write Linux-canon PNGs from macOS Chrome. On Mac omit `VISUAL_OS` (writes `macos`) or set `VISUAL_OS=macos`.
+
+CI jobs `e2e-mock-tests`, `e2e-tests` (when visual runs), and `e2e-update-baselines` set `VISUAL_OS=linux` and `VISUAL_BROWSER=chrome`.
 
 | Slice | Tag | CI |
 |-------|-----|-----|
 | UI on stub API (mount + error injection) | `@Tag("mock")` (+ `@Tag("e2e")`) | job `e2e-mock-tests` step 1: `-DincludeTags=mock` |
 | Visual vs stub UI | `@Tag("visual")` | same job, step 2: `-DincludeTags=visual` on the same mock compose (not Playwright) |
 | Flow | `@Tag("e2e")` exclude `visual,mock` | job `e2e-tests` (after `api-tests`; default push does **not** run visual via Selenoid) |
-| Flow + visual (dispatch `run_visual`) | `e2e,visual` | job `e2e-tests` — compare `e2e/linux` |
-| Refresh e2e baselines | `@Tag("visual")` + `-DupdateBaselines=true` | job `e2e-update-baselines` — `workflow_dispatch` `update_baselines` writes `e2e/linux` (not a pyramid layer; not a CD stage after green e2e) |
+| Flow + visual (dispatch `run_visual`) | `e2e,visual` | job `e2e-tests` — compare `e2e/linux/chrome-148` |
+| Refresh e2e baselines | `@Tag("visual")` + `-DupdateBaselines=true` | job `e2e-update-baselines` — `workflow_dispatch` `update_baselines` writes `e2e/linux/chrome-148` (not a pyramid layer; not a CD stage after green e2e) |
 
 Gradle `includeTags=a,b` is **OR** in this module — keep mock flows and visual compare as two steps so they fail separately.
 
-Local mock visual refresh (CI-canon linux folder even on macOS):
+Local mock visual refresh (Linux / CI writes `mock/linux/chrome-148`; on Mac do **not** force `VISUAL_OS=linux`):
 
 ```bash
-VISUAL_OS=linux ./gradlew test -Denv=reference_mock -DincludeTags=visual -DupdateBaselines=true -Dheadless=true
+VISUAL_BROWSER=chrome ./gradlew test -Denv=reference_mock -DincludeTags=visual -DupdateBaselines=true -Dheadless=true
 ```
 
 Local e2e visual refresh (compose ci stand, or `reference_prod` + Selenoid):
 
 ```bash
-VISUAL_OS=linux ./gradlew test -Denv=reference_ci -DincludeTags=visual -DupdateBaselines=true
+VISUAL_BROWSER=chrome ./gradlew test -Denv=reference_ci -DincludeTags=visual -DupdateBaselines=true
 ```
 
 **Mock stand** — browser checks that need controlled `/api/*` JSON, not a live backend.

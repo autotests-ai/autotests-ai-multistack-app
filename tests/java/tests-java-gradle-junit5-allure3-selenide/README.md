@@ -25,14 +25,19 @@ One task `test`; the layer is a tag filter, the stand is `-Denv` ([../../LAYERS.
 | harness-frontend | `./gradlew test -Denv=reference_ci -DincludeTags=harness-frontend` | CSS + HAR helpers · CI frontend lane |
 | api | `./gradlew test -Denv=reference_ci -DincludeTags=api` | local compose (`reference_ci`); **CI** `api-tests` uses `-Denv=reference_prod` |
 | mock | `./gradlew test -Denv=reference_mock -DincludeTags=mock` | stub API mount checks · CI `e2e-mock-tests` step 1 |
-| visual mock | `VISUAL_OS=linux ./gradlew test -Denv=reference_mock -DincludeTags=visual` | PNG compare `screenshots/mock/linux/` · same job, step 2 |
+| visual mock | `VISUAL_BROWSER=chrome ./gradlew test -Denv=reference_mock -DincludeTags=visual` | PNG compare `screenshots/mock/linux/chrome-148/` on CI · same job, step 2 |
 | e2e | `./gradlew test -Denv=reference_ci -DincludeTags=e2e -DexcludeTags=visual,mock` | flow; visual is a second stage, not a pyramid layer |
-| visual e2e refresh | `VISUAL_OS=linux ./gradlew test -Denv=reference_prod -DincludeTags=visual -DupdateBaselines=true` | writes `screenshots/e2e/linux/` · CI `e2e-update-baselines` dispatch |
+| visual e2e refresh | `VISUAL_BROWSER=chrome ./gradlew test -Denv=reference_prod -DincludeTags=visual -DupdateBaselines=true` | writes `screenshots/e2e/linux/chrome-148/` · CI `e2e-update-baselines` dispatch |
 | manual | `./gradlew test -Denv=reference_ci -DincludeTags=manual` | **in code** — `@Manual` + Allure steps · `tests/manual/` (not a wiki checklist) |
 
 Swap `-Denv=reference_prod` to run the same filter against the deployed stack via Selenoid
 (CI `api-tests` / `e2e-tests` already use `reference_prod`; local api/e2e against compose stay on `reference_ci`).
 Stands live in `src/test/resources/config/`; every other key is a `-D` override on top of
 `default.properties`.
+
+Visual PNG path: `screenshots/{mock|e2e}/{linux|macos|windows}/{chrome-148}/{area}/{viewport}.png`.
+CI SSOT is `mock/linux/chrome-148` plus the CFT pin in `chrome-for-testing.properties`.
+Other browsers are sibling folders (`firefox-140/` would not be read by this job).
+Do **not** set `VISUAL_OS=linux` on a Mac.
 
 Naming matrix for other Java stacks: [../../NAMING.md](../../NAMING.md).
