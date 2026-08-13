@@ -13,6 +13,9 @@ const outPath = path.join(testsDir, "notifications/config.runtime.json");
 const cfg = JSON.parse(fs.readFileSync(templatePath, "utf8"));
 
 cfg.base.project = process.env.NOTIFICATION_PROJECT || cfg.base.project;
+if (process.env.NOTIFICATION_COMMENT != null && process.env.NOTIFICATION_COMMENT !== "") {
+  cfg.base.comment = process.env.NOTIFICATION_COMMENT;
+}
 cfg.base.allureFolder = process.env.ALLURE_FOLDER || cfg.base.allureFolder;
 cfg.base.allureResultsFolder =
   process.env.ALLURE_RESULTS_FOLDER || cfg.base.allureResultsFolder;
