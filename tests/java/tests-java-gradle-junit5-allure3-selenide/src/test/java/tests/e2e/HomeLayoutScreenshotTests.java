@@ -1,7 +1,7 @@
 package tests.e2e;
 
 import annotations.Layer;
-import helpers.ScreenshotBaseline;
+import helpers.ScreenshotHelper;
 import helpers.ViewportHelper;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -43,7 +43,7 @@ class HomeLayoutScreenshotTests extends TestBase {
     @DisplayName("Home layout matches screenshot at 1280px")
     void homeLayoutMatchesScreenshot() {
         var layout = $("[data-testid='reference-layout']").shouldBe(visible);
-        ScreenshotBaseline.captureAndCompare(
+        ScreenshotHelper.captureAndCompare(
                 layout,
                 "home-layout",
                 VIEWPORT_WIDTH,

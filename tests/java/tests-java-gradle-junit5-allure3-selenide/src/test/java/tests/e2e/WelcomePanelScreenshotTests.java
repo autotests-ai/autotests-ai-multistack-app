@@ -4,7 +4,7 @@ import tests.TestBase;
 import annotations.Layer;
 import annotations.SubSuite;
 import annotations.Suite;
-import helpers.ScreenshotBaseline;
+import helpers.ScreenshotHelper;
 import helpers.ViewportHelper;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -46,7 +46,7 @@ class WelcomePanelScreenshotTests extends TestBase {
                 .shouldHaveWelcomeMessage("Welcome, " + expectedUser + "!");
 
         var welcomePanel = $("[data-testid='welcome-panel']").shouldBe(visible);
-        ScreenshotBaseline.captureAndCompare(
+        ScreenshotHelper.captureAndCompare(
                 welcomePanel,
                 "welcome-panel",
                 viewportWidth,

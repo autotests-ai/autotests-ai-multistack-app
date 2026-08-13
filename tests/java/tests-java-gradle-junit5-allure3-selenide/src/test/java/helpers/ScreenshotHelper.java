@@ -19,13 +19,13 @@ import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.executeAsyncJavaScript;
 import static io.qameta.allure.Allure.step;
 
-public final class ScreenshotBaseline {
+public final class ScreenshotHelper {
 
     private static final Path DIFF_DIR = Path.of("build", "screenshot-diff");
     private static final int DIFF_HIGHLIGHT_RGB = 0xFFFF00FF;
     private static final int SIZE_MISMATCH_RGB = 0xFFFF0000;
 
-    private ScreenshotBaseline() {
+    private ScreenshotHelper() {
     }
 
     public static void captureAndCompare(

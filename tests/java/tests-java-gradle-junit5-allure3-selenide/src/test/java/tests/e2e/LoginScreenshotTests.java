@@ -4,7 +4,7 @@ import tests.TestBase;
 import annotations.Layer;
 import annotations.SubSuite;
 import annotations.Suite;
-import helpers.ScreenshotBaseline;
+import helpers.ScreenshotHelper;
 import helpers.ViewportHelper;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -43,7 +43,7 @@ class LoginScreenshotTests extends TestBase {
         loginPage.openPage();
 
         var panel = $("[data-testid='login-form']").shouldBe(visible, Duration.ofSeconds(10));
-        ScreenshotBaseline.captureAndCompare(
+        ScreenshotHelper.captureAndCompare(
                 panel,
                 "login",
                 viewportWidth,

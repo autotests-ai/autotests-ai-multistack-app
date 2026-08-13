@@ -52,7 +52,7 @@ java {
 }
 
 def sonarHarnessScopeExclusions =
-        '**/*Test.java,**/*Tests.java,**/pages/**,**/api/**,**/annotations/**,**/allure/**,**/extensions/**,**/tests/**,**/helpers/BrowserSessionHelper.java,**/helpers/HarCapture.java,**/helpers/HarViewerHtml.java,**/helpers/LocalChromePin.java,**/helpers/ScreenshotBaseline.java,**/helpers/ViewportHelper.java,**/config/TestConfig.java'
+        '**/*Test.java,**/*Tests.java,**/pages/**,**/api/**,**/annotations/**,**/allure/**,**/extensions/**,**/tests/**,**/helpers/BrowserSessionHelper.java,**/helpers/HarCapture.java,**/helpers/HarViewerHtml.java,**/helpers/LocalChromePin.java,**/helpers/ScreenshotHelper.java,**/helpers/ViewportHelper.java,**/config/TestConfig.java'
 
 sonar {
     properties {
