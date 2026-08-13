@@ -132,6 +132,22 @@ public final class ScreenshotBaseline {
         return mapVisualOs(raw);
     }
 
+    static String visualBrowserFolder() {
+        return visualBrowser() + "-" + visualBrowserMajor();
+    }
+
+    static String visualBrowser() {
+        var override = System.getenv("VISUAL_BROWSER");
+        if (override != null && !override.isBlank()) {
+            return override.trim().toLowerCase(Locale.ROOT);
+        }
+        return "chrome";
+    }
+
+    static String visualBrowserMajor() {
+        return LocalChromePin.pinnedVersion().split("\\.")[0];
+    }
+
     private static String osFamily() {
         var name = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
         if (name.contains("mac") || name.contains("darwin")) {
@@ -160,12 +176,13 @@ public final class ScreenshotBaseline {
     private static Path baselineFilePath(String area, int viewport) {
         return Path.of(
                 "src", "test", "resources",
-                baselinesDir(), visualMode(), visualOs(), area, viewport + ".png");
+                baselinesDir(), visualMode(), visualOs(), visualBrowserFolder(),
+                area, viewport + ".png");
     }
 
     private static String baselineResourcePath(String area, int viewport) {
         return baselinesDir() + "/" + visualMode() + "/" + visualOs()
-                + "/" + area + "/" + viewport + ".png";
+                + "/" + visualBrowserFolder() + "/" + area + "/" + viewport + ".png";
     }
 
     private static boolean baselineExists(String area, int viewport) {
