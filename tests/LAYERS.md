@@ -164,7 +164,7 @@ task — `test`:
 |-----------------|-----------------|
 | `reference_ci` | the compose stack on this machine — UI + real `/api` same origin via `stand-gateway-ci` `:9821`, direct API `:8800` (`docker compose up -d` first) |
 | `reference_mock` | mock profile — UI + stub API same origin `:9911` (`docker compose --profile mock up -d stand-gateway` first) |
-| `reference_prod` | [reference-app-copy.autotests.ai/backend-java-spring](https://autotests.ai/stack/backend-java-spring), browsers from the Selenoid hub |
+| `reference_prod` | [autotests.ai/stack/backend-java-spring](https://autotests.ai/stack/backend-java-spring), browsers from the Selenoid hub |
 
 Anything else — `headless`, `enableHar`, `enableVideo`, `updateScreenshots`, `allureReportMode` — is a
 per-run `-D<key>=<value>`. Available keys: `src/test/resources/config/default.properties`.

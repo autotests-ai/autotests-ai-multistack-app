@@ -6,7 +6,7 @@ UI smoke in [RealWorldTests](https://github.com/KurenkoValentina/RealWorldTests)
 
 ```bash
 cd tests-js
-cp .env.example .env   # UI_URL=https://reference-app.autotests.ai
+cp .env.example .env   # UI_URL=https://autotests.ai/stack/backend-java-spring/frontend-typescript-react
 npm ci
 npx playwright install chromium   # local only; skip when using PW_WS_ENDPOINT
 npm test
@@ -15,7 +15,7 @@ npm test
 ## Remote (Selenoid Playwright)
 
 ```bash
-export UI_URL=https://reference-app.autotests.ai
+export UI_URL=https://autotests.ai/stack/backend-java-spring/frontend-typescript-react
 export PW_WS_ENDPOINT='wss://selenoid.qa.guru/playwright/playwright-chromium/1.61.1?accessKey=…'
 npm test
 ```

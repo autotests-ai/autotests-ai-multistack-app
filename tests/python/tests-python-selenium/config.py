@@ -49,11 +49,14 @@ def load_config() -> TestConfig:
     base = (
         os.environ.get(
             "BASE_URL",
-            "https://reference-app-copy.autotests.ai/backend-java-spring/frontend-typescript-react/",
+            "https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/",
         ).rstrip("/")
         + "/"
     )
-    api = os.environ.get("API_BASE_URL", base).rstrip("/") + "/"
+    api = os.environ.get(
+        "API_BASE_URL",
+        "https://autotests.ai/stack/backend-java-spring/",
+    ).rstrip("/") + "/"
     full = _attach_full()
     enable_video = full or _bool("ENABLE_VIDEO")
     enable_har = full or _bool("ENABLE_HAR")

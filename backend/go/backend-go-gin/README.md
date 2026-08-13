@@ -6,8 +6,8 @@ Postgres DB: `reference_app_go_gin`.
 **Status:** active.
 
 ```
-https://reference-app-copy.autotests.ai/backend-go-gin/{frontend}/
-https://reference-app-copy.autotests.ai/backend-go-gin/api/
+https://autotests.ai/stack/backend-go-gin/{frontend}/
+https://autotests.ai/stack/backend-go-gin/api/
 ```
 
 Unit tests: `internal/**/*_test.go`.  

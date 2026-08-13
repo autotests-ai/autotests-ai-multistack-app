@@ -6,8 +6,8 @@ Postgres DB: `reference_app_python_django`.
 **Status:** active.
 
 ```
-https://reference-app-copy.autotests.ai/backend-python-django/{frontend}/
-https://reference-app-copy.autotests.ai/backend-python-django/api/
+https://autotests.ai/stack/backend-python-django/{frontend}/
+https://autotests.ai/stack/backend-python-django/api/
 ```
 
 Unit tests: `tests/`.

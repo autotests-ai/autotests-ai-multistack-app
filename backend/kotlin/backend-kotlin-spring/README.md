@@ -6,8 +6,8 @@ Postgres DB: `reference_app_kotlin_spring`.
 **Status:** active.
 
 ```
-https://reference-app-copy.autotests.ai/backend-kotlin-spring/{frontend}/
-https://reference-app-copy.autotests.ai/backend-kotlin-spring/api/
+https://autotests.ai/stack/backend-kotlin-spring/{frontend}/
+https://autotests.ai/stack/backend-kotlin-spring/api/
 ```
 
 Unit tests: `src/test/kotlin/`.  

@@ -6,7 +6,7 @@ Static files + lean design-system runtime from
 [`frontend/_shared/frontend-javascript-app`](../../_shared/frontend-javascript-app/)
 (overlaid in the module Dockerfile). Header markup stays SSOT in `js/header.js`.
 
-Prod URL: `https://reference-app-copy.autotests.ai/{backend}/frontend-javascript-vanilla/`  
+Prod URL: `https://autotests.ai/stack/{backend}/frontend-javascript-vanilla/`  
 Local compose publish: `:9800`.
 
 ## Screens

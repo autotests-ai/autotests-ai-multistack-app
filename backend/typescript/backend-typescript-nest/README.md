@@ -6,8 +6,8 @@ Postgres DB: `reference_app_typescript_nest`.
 **Status:** active.
 
 ```
-https://reference-app-copy.autotests.ai/backend-typescript-nest/{frontend}/
-https://reference-app-copy.autotests.ai/backend-typescript-nest/api/
+https://autotests.ai/stack/backend-typescript-nest/{frontend}/
+https://autotests.ai/stack/backend-typescript-nest/api/
 ```
 
 Unit tests: `tests/` (Jest + ts-jest + `@nestjs/testing`, no database required).  

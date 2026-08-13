@@ -19,7 +19,7 @@ the only local component wrappers are `Panel` (panel chrome) and `AppHeader`
 Vitest + `@angular/core/testing` TestBed live in [`src/test/`](src/test/) — same module as
 the product.
 
-Prod URL: `https://reference-app-copy.autotests.ai/{backend}/frontend-typescript-angular/`  
+Prod URL: `https://autotests.ai/stack/{backend}/frontend-typescript-angular/`  
 (Host `/` is empty.) Dev/preview port: **9812**.
 
 ## Routes

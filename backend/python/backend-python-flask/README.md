@@ -6,8 +6,8 @@ Python Flask JSON API — same OpenAPI contract as `backend-java-spring`
 **Status:** active.
 
 ```
-https://reference-app-copy.autotests.ai/backend-python-flask/{frontend}/
-https://reference-app-copy.autotests.ai/backend-python-flask/api/
+https://autotests.ai/stack/backend-python-flask/{frontend}/
+https://autotests.ai/stack/backend-python-flask/api/
 ```
 
 Unit tests: `tests/`.

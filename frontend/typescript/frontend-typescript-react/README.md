@@ -12,7 +12,7 @@ committed [`frontend/_shared/frontend-react-ui`](../../_shared/frontend-react-ui
 RTL / Vitest live in [`src/test/`](src/test/) (`component_rtl`) — same module as the product,
 like backend unit tests under `src/test/`.
 
-Prod URL: `https://reference-app-copy.autotests.ai/{backend}/frontend-typescript-react/`  
+Prod URL: `https://autotests.ai/stack/{backend}/frontend-typescript-react/`  
 (Host `/` is empty.)
 
 ## Routing — data router, not `<BrowserRouter>` + `<Routes>`

@@ -6,8 +6,8 @@ Postgres DB: `reference_app_python_fastapi`.
 **Status:** active.
 
 ```
-https://reference-app-copy.autotests.ai/backend-python-fastapi/{frontend}/
-https://reference-app-copy.autotests.ai/backend-python-fastapi/api/
+https://autotests.ai/stack/backend-python-fastapi/{frontend}/
+https://autotests.ai/stack/backend-python-fastapi/api/
 ```
 
 Unit tests: `tests/`.

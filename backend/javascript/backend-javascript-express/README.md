@@ -6,8 +6,8 @@ Postgres DB: `reference_app_javascript_express`.
 **Status:** active.
 
 ```
-https://reference-app-copy.autotests.ai/backend-javascript-express/{frontend}/
-https://reference-app-copy.autotests.ai/backend-javascript-express/api/
+https://autotests.ai/stack/backend-javascript-express/{frontend}/
+https://autotests.ai/stack/backend-javascript-express/api/
 ```
 
 Unit tests: `tests/`. Run: `npm test`

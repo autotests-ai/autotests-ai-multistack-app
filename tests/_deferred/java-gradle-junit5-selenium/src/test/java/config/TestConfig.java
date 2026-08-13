@@ -15,7 +15,7 @@ public record TestConfig(
         boolean enableVideo
 ) {
     public static TestConfig load() {
-        String base = propOrEnv("baseUrl", "BASE_URL", "https://reference-app.autotests.ai/");
+        String base = propOrEnv("baseUrl", "BASE_URL", "https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/");
         String api = propOrEnv("apiBaseUrl", "API_BASE_URL", base);
         return new TestConfig(
                 withSlash(base),

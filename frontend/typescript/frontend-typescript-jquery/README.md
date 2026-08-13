@@ -15,7 +15,7 @@ module's nginx image. Header markup stays SSOT in `js/header.js`.
 
 Vitest + jsdom specs live in [`src/test/`](src/test/) — same module as the product.
 
-Prod URL: `https://reference-app-copy.autotests.ai/{backend}/frontend-typescript-jquery/`  
+Prod URL: `https://autotests.ai/stack/{backend}/frontend-typescript-jquery/`  
 Local compose publish / dev / preview port: `:9814`. (Host `/` is empty.)
 
 ## Screens

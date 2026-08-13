@@ -6,8 +6,8 @@ Postgres DB: `reference_app_typescript_express`.
 **Status:** active.
 
 ```
-https://reference-app-copy.autotests.ai/backend-typescript-express/{frontend}/
-https://reference-app-copy.autotests.ai/backend-typescript-express/api/
+https://autotests.ai/stack/backend-typescript-express/{frontend}/
+https://autotests.ai/stack/backend-typescript-express/api/
 ```
 
 Unit tests: `tests/` (Jest + ts-jest, no database required).  

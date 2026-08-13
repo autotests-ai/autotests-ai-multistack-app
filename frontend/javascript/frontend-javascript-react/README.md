@@ -15,7 +15,7 @@ and Vite compiles it straight from this JS project — the alias is all the wiri
 RTL / Vitest live in [`src/test/`](src/test/) (`component_rtl`) — same module as the product,
 like backend unit tests under `src/test/`.
 
-Prod URL: `https://reference-app-copy.autotests.ai/{backend}/frontend-javascript-react/`
+Prod URL: `https://autotests.ai/stack/{backend}/frontend-javascript-react/`
 (Host `/` is empty.)
 
 ## Routing — data router, not `<BrowserRouter>` + `<Routes>`

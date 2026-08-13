@@ -58,7 +58,7 @@ module.exports = defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: [['line'], ['allure-playwright']],
   use: {
-    baseURL: process.env.UI_URL || 'https://reference-app.autotests.ai',
+    baseURL: process.env.UI_URL || 'https://autotests.ai/stack/backend-java-spring/frontend-typescript-react',
     screenshot: 'only-on-failure',
     trace: 'on-first-retry',
     ...(connectOptions ? { connectOptions } : {}),

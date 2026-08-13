@@ -13,7 +13,7 @@ no `tsconfig.json`, no `vue-tsc` and no `typecheck` script.
 
 Vitest + Testing Library live in [`src/test/`](src/test/) — same module as the product.
 
-Prod URL: `https://reference-app-copy.autotests.ai/{backend}/frontend-javascript-vue/`  
+Prod URL: `https://autotests.ai/stack/{backend}/frontend-javascript-vue/`  
 (Host `/` is empty.)
 
 ## vue-router 5

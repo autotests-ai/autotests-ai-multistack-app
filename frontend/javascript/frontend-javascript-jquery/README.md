@@ -10,7 +10,7 @@ The design-system layer (tokens, `button.css`, `panel.css`, `header.css` and the
 [`frontend/_shared/frontend-javascript-app`](../../_shared/frontend-javascript-app/),
 overlaid in the module Dockerfile. Header markup stays SSOT in `js/header.js`.
 
-Prod URL: `https://reference-app-copy.autotests.ai/{backend}/frontend-javascript-jquery/`  
+Prod URL: `https://autotests.ai/stack/{backend}/frontend-javascript-jquery/`  
 Local compose publish: `:9804`.
 
 ## jQuery is vendored — the page never touches a CDN

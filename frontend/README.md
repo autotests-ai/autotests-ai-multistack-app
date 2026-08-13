@@ -76,7 +76,7 @@ keep the UI signed in. Backend contract: [`backend/java/backend-java-spring/READ
 ## Prod routing (per-frontend containers × N backends)
 
 ```
-https://reference-app-copy.autotests.ai/{backend}/{frontend}/
+https://autotests.ai/stack/{backend}/{frontend}/
 ```
 
 - **One source tree** per frontend module — never duplicated per backend

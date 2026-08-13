@@ -15,7 +15,7 @@ exports.UserBuilder = class UserBuilder {
     return this;
   }
 
-  /** Seeded demo user on reference-app.autotests.ai */
+  /** Seeded demo user on the teaching stack */
   withSeededUser() {
     this.user.username = 'user1';
     this.user.password = 'password1';

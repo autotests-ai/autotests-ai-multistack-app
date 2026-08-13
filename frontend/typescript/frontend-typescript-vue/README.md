@@ -9,7 +9,7 @@ thin Vue wrappers for Panel / Button / PlaqueField / AppHeader (header markup st
 
 Vitest + Testing Library live in [`src/test/`](src/test/) — same module as the product.
 
-Prod URL: `https://reference-app-copy.autotests.ai/{backend}/frontend-typescript-vue/`  
+Prod URL: `https://autotests.ai/stack/{backend}/frontend-typescript-vue/`  
 (Host `/` is empty.)
 
 ## vue-router 5

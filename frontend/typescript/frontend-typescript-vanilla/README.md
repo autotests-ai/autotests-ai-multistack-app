@@ -15,7 +15,7 @@ stays SSOT in `js/header.js` and is never reimplemented here.
 
 Vitest + jsdom live in [`src/test/`](src/test/) — same module as the product.
 
-Prod URL: `https://reference-app-copy.autotests.ai/{backend}/frontend-typescript-vanilla/`
+Prod URL: `https://autotests.ai/stack/{backend}/frontend-typescript-vanilla/`
 (Host `/` is empty.)
 Local compose publish: `:9810`. Dev/preview: `:9810`.
 

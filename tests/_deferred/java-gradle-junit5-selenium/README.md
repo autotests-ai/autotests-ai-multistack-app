@@ -19,7 +19,7 @@ Defaults:
 
 | Key | Default |
 |-----|---------|
-| `baseUrl` / `BASE_URL` | `https://reference-app.autotests.ai/` |
+| `baseUrl` / `BASE_URL` | `https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/` |
 | `browserVersion` | `148.0` (Chrome for Testing via `LocalChromePin`) |
 | `headless` | `true` |
 
@@ -32,7 +32,7 @@ Against local compose:
 ## Remote (Selenoid WebDriver)
 
 ```bash
-export BASE_URL=https://reference-app.autotests.ai/
+export BASE_URL=https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
 export REMOTE_URL=https://user1:1234@selenoid.qa.guru/wd/hub
 export BROWSER_VERSION=148.0
 ./gradlew test

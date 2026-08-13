@@ -6,8 +6,8 @@ Postgres DB: `reference_app_javascript_nest`.
 **Status:** active. Teaching twin of the usual TS Nest path.
 
 ```
-https://reference-app-copy.autotests.ai/backend-javascript-nest/{frontend}/
-https://reference-app-copy.autotests.ai/backend-javascript-nest/api/
+https://autotests.ai/stack/backend-javascript-nest/{frontend}/
+https://autotests.ai/stack/backend-javascript-nest/api/
 ```
 
 Unit tests: `tests/`. Run: `npm test`

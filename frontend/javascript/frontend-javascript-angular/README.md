@@ -12,7 +12,7 @@ SSOT in `js/header.js`).
 
 Vitest + Angular `TestBed` live in [`src/test/`](src/test/) — same module as the product.
 
-Prod URL: `https://reference-app-copy.autotests.ai/{backend}/frontend-javascript-angular/`  
+Prod URL: `https://autotests.ai/stack/{backend}/frontend-javascript-angular/`  
 (Host `/` is empty.) Dev/preview port: **9802**.
 
 ## Routes

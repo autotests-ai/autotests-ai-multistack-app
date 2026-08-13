@@ -59,8 +59,8 @@ class CorsConfigTest extends UnitTestBase {
     @DisplayName("admits the deployment host when Origin matches the request Host")
     void apiCorsAllowsSameHostOrigin() {
         MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/auth/login");
-        request.addHeader(HttpHeaders.HOST, "reference-app-copy.autotests.ai");
-        request.addHeader(HttpHeaders.ORIGIN, "https://reference-app-copy.autotests.ai");
+        request.addHeader(HttpHeaders.HOST, "autotests.ai");
+        request.addHeader(HttpHeaders.ORIGIN, "https://autotests.ai");
 
         CorsConfiguration cors = new CorsConfig(DEV_ORIGINS)
                 .corsConfigurationSource()
@@ -68,17 +68,17 @@ class CorsConfigTest extends UnitTestBase {
 
         assertNotNull(cors);
         assertEquals(
-                "https://reference-app-copy.autotests.ai",
-                cors.checkOrigin("https://reference-app-copy.autotests.ai"));
+                "https://autotests.ai",
+                cors.checkOrigin("https://autotests.ai"));
     }
 
     @Test
     @DisplayName("sameHost matches Origin host to the Host header")
     void sameHostUsesHostHeader() {
         MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/auth/login");
-        request.addHeader(HttpHeaders.HOST, "reference-app-copy.autotests.ai:443");
+        request.addHeader(HttpHeaders.HOST, "autotests.ai:443");
 
-        assertTrue(CorsConfig.sameHost("https://reference-app-copy.autotests.ai", request));
+        assertTrue(CorsConfig.sameHost("https://autotests.ai", request));
         assertFalse(CorsConfig.sameHost("https://evil.example.com", request));
     }
 
@@ -86,16 +86,16 @@ class CorsConfigTest extends UnitTestBase {
     @DisplayName("sameHost falls back to server name when Host header is absent")
     void sameHostUsesServerName() {
         MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/auth/login");
-        request.setServerName("reference-app-copy.autotests.ai");
+        request.setServerName("autotests.ai");
 
-        assertTrue(CorsConfig.sameHost("https://reference-app-copy.autotests.ai", request));
+        assertTrue(CorsConfig.sameHost("https://autotests.ai", request));
     }
 
     @Test
     @DisplayName("sameHost rejects malformed and host-less origins")
     void sameHostRejectsInvalidOrigin() {
         MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/auth/login");
-        request.addHeader(HttpHeaders.HOST, "reference-app-copy.autotests.ai");
+        request.addHeader(HttpHeaders.HOST, "autotests.ai");
 
         assertFalse(CorsConfig.sameHost("not-a-uri", request));
         assertFalse(CorsConfig.sameHost("file:///tmp/page.html", request));
@@ -117,7 +117,7 @@ class CorsConfigTest extends UnitTestBase {
     @DisplayName("corsForRequest does not admit a foreign origin from another host")
     void corsForRequestIgnoresForeignOrigin() {
         MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/auth/login");
-        request.addHeader(HttpHeaders.HOST, "reference-app-copy.autotests.ai");
+        request.addHeader(HttpHeaders.HOST, "autotests.ai");
         request.addHeader(HttpHeaders.ORIGIN, "https://evil.example.com");
 
         CorsConfiguration cors = new CorsConfig(DEV_ORIGINS)
@@ -136,8 +136,8 @@ class CorsConfigTest extends UnitTestBase {
         // header needs a hand-rolled stub to keep the two values independent.
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getHeader(HttpHeaders.HOST)).thenReturn("   ");
-        when(request.getServerName()).thenReturn("reference-app-copy.autotests.ai");
+        when(request.getServerName()).thenReturn("autotests.ai");
 
-        assertTrue(CorsConfig.sameHost("https://reference-app-copy.autotests.ai", request));
+        assertTrue(CorsConfig.sameHost("https://autotests.ai", request));
     }
 }

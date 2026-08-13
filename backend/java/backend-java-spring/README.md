@@ -6,8 +6,8 @@ Postgres DB: `reference_app_java_spring`.
 **Status:** active.
 
 ```
-https://reference-app-copy.autotests.ai/backend-java-spring/{frontend}/
-https://reference-app-copy.autotests.ai/backend-java-spring/api/
+https://autotests.ai/stack/backend-java-spring/{frontend}/
+https://autotests.ai/stack/backend-java-spring/api/
 ```
 
 Tests: `src/test/java/` — plain units, `@WebMvcTest` slices (suite label `slice`) and a
