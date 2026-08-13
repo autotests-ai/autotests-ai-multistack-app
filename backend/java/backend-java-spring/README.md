@@ -14,6 +14,10 @@ Tests: `src/test/java/` — plain units, `@WebMvcTest` slices (suite label `slic
 persistence slice (`@DataJpaTest` + Testcontainers PostgreSQL: Flyway migrations, seed,
 unique constraint against the real database — **requires a running Docker daemon**, same
 as docker-compose for the app itself).
+Classical **integration** is `src/test/java/dev/reference/app/integration/` +
+`IntegrationTestBase` (`@SpringBootTest` + Testcontainers PG) — CI job `integration-tests`
+(after `unit-tests`, before build/deploy). `TestRestTemplate` on `RANDOM_PORT` talks to that
+in-process context; it is **not** the `api` layer (RestAssured in `tests/api/` after `stand-ready`).
 Run: `./gradlew check` (JaCoCo gate: 100% line **and** 100% branch coverage — earned by
 behavioral tests; entity plumbing is executed by the persistence slice, not by reflection).
 

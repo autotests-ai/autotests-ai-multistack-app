@@ -11,18 +11,17 @@ Module folders: `-` between segments, `_` in compounds (`react_testing_library`,
                     │   manual    │  in code — exploratory stubs (@Manual + steps)
                     ├─────────────┤
                     │     e2e     │  UI through browser (@Tag e2e; optional visual / mock)
-                    ├─────────────┤
+                    ├─────────────┤     component — jsdom job (Vitest), not a pyramid layer
                     │     api     │  HTTP contract (@Tag api — any client / language)
                     ├─────────────┤
                     │ integration │  Spring app + real PG, no deploy (@Tag integration)
                     ├─────────────┤
-                    │component│  React in jsdom (Vitest) — sideways FE, not classical tip
-                    ├─────────────┤
-                    │ unit │ active backend (product code; incl. Spring slices)
+                    │    unit     │  backend product; CI `-DexcludeTags=integration`
                     └─────────────┘
 ```
 
-`component` sits **beside** the tests ladder (frontend zone), not inside `tests/<lang>/…`.  
+Five classical layers: unit → integration → api → e2e → manual.  
+`component` sits **beside** the ladder (frontend jsdom job), not between unit and integration, not inside `tests/<lang>/…`.  
 DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
 **Not classical:** calling Chrome “mount” checks `integration`. Those are thin **e2e** (`@Tag("mock")`).  
@@ -85,7 +84,7 @@ Self-check of the **tests module helpers** before / alongside product layers —
 | UI on stub API (mount + error injection) | `@Tag("mock")` (+ `@Tag("e2e")`) | job `e2e-mock-tests` on every PR; on push to `main` when frontend changed |
 | Flow | `@Tag("e2e")` exclude visual | job `e2e-tests` (after `api-tests`) |
 | Flow + visual (dispatch `run_visual`) | `e2e,visual` | job `e2e-tests` |
-| Refresh baselines | `@Tag("visual")` + `-DupdateBaselines=true` | job `e2e-update-baselines` (dispatch `update_baselines`) |
+| Refresh baselines | `@Tag("visual")` + `-DupdateBaselines=true` | job `e2e-update-baselines` — `workflow_dispatch` `update_baselines` PNG rewrite (not a pyramid layer; not a CD stage after green e2e) |
 
 Local refresh: `./gradlew test -Denv=reference_ci -DincludeTags=visual -DupdateBaselines=true`
 
@@ -150,11 +149,11 @@ suite (`npm test` / `pytest` with `UI_URL` / `BASE_URL`) — no Gradle tag slice
 
 | Layer | Zone | Where | Selector | Run |
 |-------|------|-------|----------|-----|
-| unit | backend | active `BACKEND_DIR` (default `backend/java/backend-java-spring/`) | all backend unit tests (plain + Spring slices) | by `BACKEND_LANG`: gradle+JaCoCo · `pytest` · `go test` · `npm test` — see [backend/README.md](../backend/README.md) |
+| unit | backend | active `BACKEND_DIR` (default `backend/java/backend-java-spring/`) | java: `-DexcludeTags=integration` (no `@Tag("unit")` job filter; plain + Spring slices) | by `BACKEND_LANG`: gradle+JaCoCo · `pytest` · `go test` · `npm test` — see [backend/README.md](../backend/README.md) |
 | component | frontend | active `FRONTEND_DIR` only (default `frontend/typescript/frontend-typescript-react/`) — siblings not CI-gated | Vitest + coverage | `npm test -- --coverage` via `component-tests` |
 | integration | backend | `backend/java/backend-java-spring/src/test/java/dev/reference/app/integration/` (`ApplicationWiringIntegrationTest`, `AuthLifecycleIntegrationTest`) | `@Tag("integration")` | `./gradlew test -DincludeTags=integration` in `BACKEND_DIR` via `integration-tests` (after `unit-tests`, **before** build/deploy; PR + main) |
 | api | tests | `…/tests/api/` (`AuthApiTests`, `ReferenceApiTests`, `BackendWiringApiTests`, `SeedDataApiTests`, `AuthRoundTripApiTests`) — HTTP contract + deployed-stand facts | `@Tag("api")` | java → `-DincludeTags=api` via `api-tests` (after `stand-ready`); retarget any backend with `-DapiBaseUrl` / `-DapiHealthService` |
-| e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `visual` / `mock`) | `e2e-mock-tests` (push, `mock`); `e2e-tests` (after lanes + `sonar-tests` join) |
+| e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `visual` / `mock`) | `e2e-mock-tests` (every PR; on `main` when frontend changed); `e2e-tests` (needs `api-tests` + `testops-context`) |
 | manual | tests | `…/tests/manual/` **in code** | `@Tag("manual")` + `@Manual` | java → `-DincludeTags=manual` via `manual-tests` (after `e2e-tests`, dispatch) |
 
 ### Frontend reference modules (not interchangeable)
@@ -187,8 +186,8 @@ Students: product unit layers (`unit-tests` / `component-tests`); harness = help
 **Slices (java Spring, inside `unit-tests` — not the classical integration layer).**  
 After the integration/api split, “slice” means a *partial Spring context* in the backend
 module, still `layer=unit` / job `unit-tests`. Allure `suite=slice` (`SliceTestBase`)
-separates them from one-class-in-isolation units in the report — the teaching pyramid
-stays six classical layers; we do **not** promote these to `@Tag("integration")`.
+separates them from one-class-in-isolation units in the report. Slices are **not** a
+sixth pyramid layer; we do **not** promote them to `@Tag("integration")`.
 
 | Slice | Spring test | What it proves | Docker? |
 |-------|-------------|----------------|---------|
@@ -292,20 +291,32 @@ To add another layer, copy `manual-tests` and change the java `-D` flags.
 
 ## CD graph
 
+Matches [`ci.yml`](../.github/workflows/ci.yml) `needs` (Sonar ×3 gates **deploy**, not build;
+`e2e-mock-tests` ∥ `build-frontend`, does **not** need it):
+
 ```
 every run (PR + main):
-  unit-tests → integration-tests → sonar-backend
-  component-tests → sonar-frontend          e2e-mock-tests (every PR; main when FE changed)
+  unit-tests → integration-tests
+  unit-tests + integration-tests → sonar-backend
+  component-tests → sonar-frontend
   tests-harness-backend ─┐
   tests-harness-frontend ┴→ sonar-tests
+  e2e-mock-tests (needs changes + testops-context; every PR; main when FE changed)
 
 main only:
-  build-backend + sonar-backend → deploy-backend ──────────────┐
-  build-frontend + sonar-frontend + e2e-mock → deploy-frontend ┴→ stand-ready
-  stand-ready → api-tests → e2e-tests → manual-tests (dispatch-only)
+  build-backend ← unit-tests + integration-tests + changes     (no sonar)
+  build-frontend ← component-tests + changes                   (no sonar, no mock)
+  deploy-backend ← build-backend + sonar-backend
+  deploy-frontend ← build-frontend + sonar-frontend + e2e-mock-tests
+  stand-ready ← changes + deploy-backend + deploy-frontend
+  stand-ready → api-tests → e2e-tests
+  manual-tests: dispatch (needs e2e-tests + stand-ready + testops)
+  e2e-update-baselines: dispatch PNG rewrite (needs e2e-tests; not a pyramid layer)
 ```
 
 `api-tests` gates on `stand-ready` only. `integration-tests` runs in `BACKEND_DIR` before
 build/deploy and does **not** wait on `stand-ready`.
 `sonar-tests` scans **testinfra helpers** (`-DincludeTags=harness`), not api/e2e results.
 It runs after both harness slices — on **PR** and **main**.
+`build-backend` / `build-frontend` do **not** `needs` Sonar. There is no `build-frontend` →
+`e2e-mock-tests` edge and no `stand-ready` → `integration-tests` edge.

@@ -72,7 +72,7 @@ Path constants: `backend/scripts/paths.sh`
 
 Canon: [tests/LAYERS.md](tests/LAYERS.md) · all jobs live in [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 
-Full CI graph (`needs` from `ci.yml`; dotted edges from `changes` are path filters / skip logic):
+Full CI graph (`needs` from `ci.yml`; `changes` is a real `needs` parent of build/deploy/mock/stand-ready — path outputs only skip via `if:`):
 
 ```mermaid
 flowchart TB
@@ -86,10 +86,10 @@ flowchart TB
   TOC --> MOCK[e2e-mock-tests]
   TOC --> INT[integration-tests]
 
-  CH -.-> MOCK
-  CH -.-> BB
-  CH -.-> BF
-  CH -.-> READY
+  CH --> MOCK
+  CH --> BB
+  CH --> BF
+  CH --> READY
 
   UNIT --> INT
   UNIT --> SB[sonar-backend]
@@ -119,7 +119,7 @@ flowchart TB
   API --> E2E[e2e-tests]
   TOC --> E2E
 
-  E2E --> BASE[e2e-update-baselines<br/>dispatch]
+  E2E --> BASE[e2e-update-baselines<br/>dispatch PNG rewrite]
   E2E --> MAN[manual-tests<br/>dispatch]
   READY --> MAN
   TOC --> BASE
@@ -215,8 +215,8 @@ One workflow — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
 | Event | Jobs |
 |-------|------|
-| pull request | `unit-tests` · `component-tests` · `tests-harness-backend` · `tests-harness-frontend` · `sonar-tests` |
-| push to `main` | same four → BE lane through `api-tests`; FE lane through `e2e-mock-tests`; both harness → `sonar-tests`; join at `e2e-tests` → `manual-tests` |
+| pull request | `unit-tests` · `integration-tests` · `component-tests` · `tests-harness-backend` · `tests-harness-frontend` · `e2e-mock-tests` · `sonar-backend` · `sonar-frontend` · `sonar-tests` |
+| push to `main` | PR set (`e2e-mock-tests` when frontend changed) → build/deploy lanes → `stand-ready` → `api-tests` → `e2e-tests` → `manual-tests` (dispatch) |
 
 `build` runs `docker compose build` + `docker compose push`, so `docker-compose.yml` stays the only place describing how an image is built. Images go to GHCR as `ghcr.io/autotests-ai/reference-app-copy-<service>:<sha>`; the tag comes from `IMAGE_TAG` (defaults to `latest` locally).
 

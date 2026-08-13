@@ -23,13 +23,14 @@ One task `test`; the layer is a tag filter, the stand is `-Denv` ([../../LAYERS.
 | harness (all) | `./gradlew test -Denv=reference_ci -DincludeTags=harness` | umbrella — all `testinfra/` · CI job `sonar-tests` |
 | harness-backend | `./gradlew test -Denv=reference_ci -DincludeTags=harness-backend` | `ConfigReader` · CI backend lane |
 | harness-frontend | `./gradlew test -Denv=reference_ci -DincludeTags=harness-frontend` | CSS + HAR helpers · CI frontend lane |
-| api | `./gradlew test -Denv=reference_ci -DincludeTags=api` | Rest Assured · `tests/api/` (contract + deployed-stand wiring) |
+| api | `./gradlew test -Denv=reference_ci -DincludeTags=api` | local compose (`reference_ci`); **CI** `api-tests` uses `-Denv=reference_prod` |
 | mock | `./gradlew test -Denv=reference_mock -DincludeTags=mock` | stub API mount checks · CI job `e2e-mock-tests` |
 | e2e | `./gradlew test -Denv=reference_ci -DincludeTags=e2e -DexcludeTags=visual` | flow; add `,visual` for PNG baselines |
 | e2e baselines | `./gradlew test -Denv=reference_ci -DincludeTags=visual -DupdateBaselines=true` | refresh PNGs under `src/test/resources/screenshots/` |
 | manual | `./gradlew test -Denv=reference_ci -DincludeTags=manual` | **in code** — `@Manual` + Allure steps · `tests/manual/` (not a wiki checklist) |
 
-Swap `-Denv=reference_prod` to run the same filter against the deployed stack via Selenoid.
+Swap `-Denv=reference_prod` to run the same filter against the deployed stack via Selenoid
+(CI `api-tests` / `e2e-tests` already use `reference_prod`; local api/e2e against compose stay on `reference_ci`).
 Stands live in `src/test/resources/config/`; every other key is a `-D` override on top of
 `default.properties`.
 
