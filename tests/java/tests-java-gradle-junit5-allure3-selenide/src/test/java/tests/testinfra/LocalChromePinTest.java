@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Feature("LocalChromePin")
 @Severity(SeverityLevel.NORMAL)
 @Tag("harness")
-@Tag("harness-backend")
+@Tag("harness-frontend")
 @DisplayName("LocalChromePin")
 @Execution(ExecutionMode.SAME_THREAD)
 class LocalChromePinTest extends AllureMeta {

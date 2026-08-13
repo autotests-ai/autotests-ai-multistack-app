@@ -20,9 +20,9 @@ One task `test`; the layer is a tag filter, the stand is `-Denv` ([../../LAYERS.
 
 | Layer | Command | Notes |
 |-------|---------|--------|
-| harness (all) | `./gradlew test -Denv=reference_ci -DincludeTags=harness` | umbrella — all `testinfra/` · CI job `sonar-tests` |
-| harness-backend | `./gradlew test -Denv=reference_ci -DincludeTags=harness-backend` | `ConfigReader` · CI backend lane |
-| harness-frontend | `./gradlew test -Denv=reference_ci -DincludeTags=harness-frontend` | CSS + HAR helpers · CI frontend lane |
+| harness (all) | `./gradlew test -Denv=reference_ci -DincludeTags=harness` | umbrella — all `testinfra/` · CI job `tests-harness` (feeds `sonar-tests`) |
+| harness-backend | `./gradlew test -Denv=reference_ci -DincludeTags=harness-backend` | `ConfigReader` · CI backend-only slice |
+| harness-frontend | `./gradlew test -Denv=reference_ci -DincludeTags=harness-frontend` | CSS + HAR + `LocalChromePin` · inside full `tests-harness` |
 | api | `./gradlew test -Denv=reference_ci -DincludeTags=api` | local compose (`reference_ci`); **CI** `api-tests` uses `-Denv=reference_prod` |
 | mock | `./gradlew test -Denv=reference_mock -DincludeTags=mock` | stub API mount checks · CI `ui-mock-tests` step 1 |
 | screenshot mock | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=reference_mock -DincludeTags=screenshot` | PNG compare `screenshots/mock/linux/chrome-148/` · CI `ui-mock-tests` compare step |

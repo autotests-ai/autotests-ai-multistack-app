@@ -22,8 +22,7 @@ tests/
 | Kind | Job id | Where |
 |------|--------|-------|
 | Product unit | `unit-tests` | `backend/java/backend-java-spring/src/test/` |
-| Harness (BE) | `tests-harness-backend` | `…/tests/testinfra/` · `@Tag("harness-backend")` — `ConfigReader` |
-| Harness (FE) | `tests-harness-frontend` | `…/tests/testinfra/` · `@Tag("harness-frontend")` — CSS/HAR helpers |
+| Harness | `tests-harness` | `…/tests/testinfra/` · `@Tag("harness")` — helpers; backend-only CI → `@Tag("harness-backend")` (`ConfigReader` only) |
 | RTL | `component-tests` | `frontend/typescript/frontend-typescript-react/src/test/` |
 | integration / api / e2e / manual | `integration-tests` · `api-tests` · `ui-mock-tests` · `e2e-tests` / `manual-tests` | `backend/java/…/integration/` · `tests/api/` · `tests/e2e/` · manual stubs **in code** (`tests/manual/`) |
 
@@ -32,8 +31,8 @@ CI: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
 The Java module has one Gradle task — `test`. The layer is a tag filter, the stand is `-Denv`:
 
 ```bash
+./gradlew test -Denv=reference_ci -DincludeTags=harness
 ./gradlew test -Denv=reference_ci -DincludeTags=harness-backend
-./gradlew test -Denv=reference_ci -DincludeTags=harness-frontend
 ./gradlew test -Denv=reference_mock -DincludeTags=mock
 ./gradlew test -Denv=reference_mock -DincludeTags=screenshot
 ./gradlew test -Denv=reference_prod -DincludeTags=e2e -DexcludeTags=screenshot,mock

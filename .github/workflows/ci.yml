@@ -22,10 +22,10 @@ name: CI
 # CD on main (two lanes; deploy host serialized via concurrency group).
 # needs = real dependencies only (not graph layout). Sonar gates deploy, not build.
 # Deploy of either lane moves the shared host checkout dir to the new SHA.
-# Roots: unit-tests · component-tests · tests-harness-* · changes
+# Roots: unit-tests · component-tests · tests-harness · changes
 #   integration-tests ← unit-tests (backend Spring+PG, pre-build; PR + main)
 #   sonar-backend ← unit-tests + integration-tests
-#   sonar-tests ← tests-harness-backend + tests-harness-frontend
+#   sonar-tests ← tests-harness (skipped on backend-only slice)
 #   ui-mock-tests ← component-tests (jsdom first; mock compose on the runner)
 #   sonar-frontend ← component-tests + ui-mock-tests (mock skipped ⇒ sonar still runs)
 #   build-backend ← unit-tests + integration-tests · build-frontend ← ui-mock-tests
@@ -33,7 +33,9 @@ name: CI
 #   deploy-frontend ← build-frontend + sonar-frontend
 #   api-tests ← deploy-backend (curl /api/health; no join with frontend)
 #   e2e-tests ← api-tests + deploy-frontend (curl live UI) → manual-tests
-# push main: changes gates build/deploy by path; tests + sonar always run.
+# push main: changes gates build/deploy by path; tests + sonar always run
+#   except tests-harness backend-only slice (ConfigReader; no TokensCss/LayoutCss/LocalChromePin)
+#   and sonar-tests (needs full harness coverage).
 # PR: no deploy; ui-mock-tests after component-tests (mock compose profile).
 
 on:
@@ -916,63 +918,18 @@ jobs:
           path: ${{ env.TESTS_DIR }}/src/test/resources/screenshots/
           if-no-files-found: ignore
 
-  tests-harness-backend:
-    needs: testops-context
+  # Not a pyramid layer and not TestOps: JaCoCo + sonar-tests only.
+  # Backend-only (push: backend paths, no frontend/tests; dispatch deploy=backend)
+  # runs ConfigReader (`harness-backend`) and skips TokensCss / LayoutCss / LocalChromePin / HAR.
+  tests-harness:
+    needs: [changes]
     if: always() && !cancelled()
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    outputs:
+      slice: ${{ steps.slice.outputs.slice }}
     env:
-      LAYER: harness-backend
-      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
-      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
-      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
-      SETUP_JVM_IF: "true"
-      GRADLE_CC_IF: "true"
-      GRADLE_CC_MODULE: tests/java/tests-java-gradle-junit5-allure3-selenide
-      GRADLE_CC_KEY_PREFIX: tests-java-gradle-junit5-allure3-selenide-${{ github.job }}
-      ALLURE_RESULTS_ARTIFACT: allure-results-harness-backend
-      ALLURE_RESULTS_UPLOAD_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/build/allure-results/**
-    steps:
-      - *checkout
-      - *cache-allurectl
-      - *setup-live-allurectl
-
-      # ── java (Gradle tags + JaCoCo gate) ──────────────────────────────────
-      - *setup-java
-      - *setup-gradle
-      - *cache-gradle-cc
-      # Coverage gate reads build/jacoco/test.exec, so it is only meaningful with this filter.
-      # Allure results stay on (default allure3) and are published for the reporting matrix.
-      - name: Run harness-backend tests (Gradle)
-        if: env.TESTS_LANG == 'java'
-        id: run-tests
-        env:
-          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
-        run: |
-          eval "${ALLURECTL_RUN}"
-          run_with_allurectl ./gradlew test jacocoTestReport jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags=harness-backend
-        working-directory: ${{ env.TESTS_DIR }}
-      - if: env.TESTS_LANG == 'java' && steps.run-tests.outcome == 'success'
-        uses: actions/upload-artifact@v7
-        with:
-          name: coverage-harness-backend
-          path: |
-            ${{ env.TESTS_DIR }}/build/jacoco/**
-            ${{ env.TESTS_DIR }}/build/reports/jacoco/**
-            ${{ env.TESTS_DIR }}/build/classes/**
-          if-no-files-found: error
-      - *upload-allure-results
-
-  tests-harness-frontend:
-    needs: testops-context
-    if: always() && !cancelled()
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    env:
-      LAYER: harness-frontend
-      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
-      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
-      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
+      LAYER: harness
       SETUP_JVM_IF: "true"
       GRADLE_CC_IF: "true"
       GRADLE_CC_MODULE: tests/java/tests-java-gradle-junit5-allure3-selenide
@@ -985,32 +942,54 @@ jobs:
       SETUP_PYTHON_IF: "false"
       PYTHON_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/requirements.txt
       PYTHON_WORKDIR: tests/java/tests-java-gradle-junit5-allure3-selenide
-      ALLURE_RESULTS_ARTIFACT: allure-results-harness-frontend
-      ALLURE_RESULTS_UPLOAD_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/build/allure-results/**
     steps:
+      - name: Select harness slice
+        id: slice
+        env:
+          CHANGED_BACKEND: ${{ needs.changes.outputs.backend }}
+          CHANGED_FRONTEND: ${{ needs.changes.outputs.frontend }}
+          CHANGED_TESTS: ${{ needs.changes.outputs.tests }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          DEPLOY: ${{ github.event.inputs.deploy || '' }}
+        run: |
+          set -euo pipefail
+          slice=all
+          if [ "$DEPLOY" = "backend" ]; then
+            slice=backend
+          elif [ "$EVENT_NAME" = "push" ] && [ "$REF" = "refs/heads/main" ] \
+            && [ "$CHANGED_BACKEND" = "true" ] \
+            && [ "$CHANGED_FRONTEND" != "true" ] \
+            && [ "$CHANGED_TESTS" != "true" ]; then
+            slice=backend
+          fi
+          echo "slice=${slice}" >> "$GITHUB_OUTPUT"
+          echo "Harness slice=${slice}"
+
       - *checkout
-      - *cache-allurectl
-      - *setup-live-allurectl
 
       # ── java (Gradle tags + JaCoCo gate) ──────────────────────────────────
       - *setup-java
       - *setup-gradle
       - *cache-gradle-cc
       # Coverage gate reads build/jacoco/test.exec, so it is only meaningful with this filter.
-      # Allure results stay on (default allure3) and are published for the reporting matrix.
-      - name: Run harness-frontend tests (Gradle)
-        if: env.TESTS_LANG == 'java'
+      # Not streamed to TestOps (helpers, not product cases).
+      - name: Run harness tests (Gradle)
+        if: env.TESTS_LANG == 'java' && steps.slice.outputs.slice != 'backend'
         id: run-tests
-        env:
-          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
-        run: |
-          eval "${ALLURECTL_RUN}"
-          run_with_allurectl ./gradlew test jacocoTestReport jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags=harness-frontend
+        run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags=harness
         working-directory: ${{ env.TESTS_DIR }}
-      - if: env.TESTS_LANG == 'java' && steps.run-tests.outcome == 'success'
+      - name: Run harness-backend tests (Gradle)
+        if: env.TESTS_LANG == 'java' && steps.slice.outputs.slice == 'backend'
+        id: run-tests-backend
+        run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags=harness-backend
+        working-directory: ${{ env.TESTS_DIR }}
+      - if: >-
+          env.TESTS_LANG == 'java' &&
+          (steps.run-tests.outcome == 'success' || steps.run-tests-backend.outcome == 'success')
         uses: actions/upload-artifact@v7
         with:
-          name: coverage-harness-frontend
+          name: coverage-harness
           path: |
             ${{ env.TESTS_DIR }}/build/jacoco/**
             ${{ env.TESTS_DIR }}/build/reports/jacoco/**
@@ -1026,26 +1005,19 @@ jobs:
         run: npx playwright install --with-deps chromium
         working-directory: ${{ env.TESTS_DIR }}
       - name: Run tests (npm)
-        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
-        env:
-          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
-        run: |
-          eval "${ALLURECTL_RUN}"
-          run_with_allurectl npm test
+        if: >-
+          steps.slice.outputs.slice != 'backend' &&
+          (env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript')
+        run: npm test
         working-directory: ${{ env.TESTS_DIR }}
 
       # ── python (full suite; no tag pyramid yet) ───────────────────────────
       - *setup-python
       - *pip-install
       - name: Run Python tests (pytest)
-        if: env.TESTS_LANG == 'python'
-        env:
-          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
-        run: |
-          eval "${ALLURECTL_RUN}"
-          run_with_allurectl python -m pytest
+        if: steps.slice.outputs.slice != 'backend' && env.TESTS_LANG == 'python'
+        run: python -m pytest
         working-directory: ${{ env.TESTS_DIR }}
-      - *upload-allure-results
 
   # Quality axis (SonarQube) — hard gate before deploy (not build). Coverage reused via artifacts.
   # Quality Gate wait is native in each scanner (`sonar.qualitygate.wait=true`).
@@ -1103,13 +1075,14 @@ jobs:
         run: |
           eval "${WRITE_SONAR_SUMMARY}"
 
-  # Tests-module Sonar after both harness slices; coverage merged from harness job artifacts.
+  # Tests-module Sonar after full harness (umbrella tags). Backend-only slice
+  # has ConfigReader coverage only — skip rather than fail the tests-module gate.
   sonar-tests:
-    needs: [tests-harness-backend, tests-harness-frontend]
+    needs: [tests-harness]
     if: >-
       !cancelled() &&
-      needs.tests-harness-backend.result == 'success' &&
-      needs.tests-harness-frontend.result == 'success'
+      needs.tests-harness.result == 'success' &&
+      needs.tests-harness.outputs.slice != 'backend'
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
@@ -1126,26 +1099,19 @@ jobs:
       - *cache-gradle-cc
       - uses: actions/download-artifact@v8
         with:
-          name: coverage-harness-backend
-          path: harness-backend
-      - uses: actions/download-artifact@v8
-        with:
-          name: coverage-harness-frontend
-          path: harness-frontend
+          name: coverage-harness
+          path: harness
       - name: Sonar scan + gate (tests)
         working-directory: ${{ env.TESTS_DIR }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           set -euo pipefail
-          JACOCO_XML_PATHS="${GITHUB_WORKSPACE}/harness-backend/reports/jacoco/test/jacocoTestReport.xml,${GITHUB_WORKSPACE}/harness-frontend/reports/jacoco/test/jacocoTestReport.xml"
-          for xml in "${GITHUB_WORKSPACE}/harness-backend/reports/jacoco/test/jacocoTestReport.xml" \
-                     "${GITHUB_WORKSPACE}/harness-frontend/reports/jacoco/test/jacocoTestReport.xml"; do
-            if [[ ! -f "$xml" ]]; then
-              echo "ERROR: JaCoCo report missing: $xml" >&2
-              exit 1
-            fi
-          done
+          JACOCO_XML="${GITHUB_WORKSPACE}/harness/reports/jacoco/test/jacocoTestReport.xml"
+          if [[ ! -f "$JACOCO_XML" ]]; then
+            echo "ERROR: JaCoCo report missing: $JACOCO_XML" >&2
+            exit 1
+          fi
 
           ./gradlew compileTestJava --no-daemon
 
@@ -1154,12 +1120,12 @@ jobs:
             exit 1
           fi
 
-          echo "==> sonar scan (harness coverage artifacts) → ${SONAR_HOST_URL} (${SONAR_PROJECT_KEY})"
+          echo "==> sonar scan (harness coverage artifact) → ${SONAR_HOST_URL} (${SONAR_PROJECT_KEY})"
           ./gradlew sonar --no-daemon \
             -Dsonar.host.url="${SONAR_HOST_URL}" \
             -Dsonar.projectKey="${SONAR_PROJECT_KEY}" \
             -Dsonar.projectName="${SONAR_PROJECT_KEY}" \
-            -Dsonar.coverage.jacoco.xmlReportPaths="${JACOCO_XML_PATHS}" \
+            -Dsonar.coverage.jacoco.xmlReportPaths="${JACOCO_XML}" \
             -Dsonar.qualitygate.wait=true \
             -Dsonar.qualitygate.timeout="${SONAR_QUALITY_GATE_TIMEOUT}"
       - *write-sonar-summary
@@ -1653,8 +1619,7 @@ jobs:
     needs:
       - unit-tests
       - component-tests
-      - tests-harness-backend
-      - tests-harness-frontend
+      - tests-harness
       - ui-mock-tests
       - integration-tests
       - api-tests

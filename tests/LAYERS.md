@@ -61,18 +61,18 @@ with real Selenide/API calls and retagging — do not keep a parallel wiki check
 
 ## Harness (not a pyramid layer)
 
-Self-check of the **tests module helpers** before / alongside product layers — umbrella `@Tag("harness")`, split by lane:
+Self-check of the **tests module helpers** before / alongside product layers — umbrella `@Tag("harness")`, one CI job:
 
-| Slice | Tags | CI job | Gates |
-|-------|------|--------|-------|
-| backend | `harness` + `harness-backend` | `tests-harness-backend` | every PR + push (no deploy needed); feeds `sonar-tests` |
-| frontend | `harness` + `harness-frontend` | `tests-harness-frontend` | every PR + push (no deploy needed); feeds `sonar-tests` |
-| umbrella | `harness` | `sonar-tests` | after **both** harness jobs (PR + main); umbrella helpers + tests-module Sonar gate |
+| Slice | Tags | CI | Gates |
+|-------|------|----|-------|
+| all | `harness` | `tests-harness` | PR + push (unless backend-only); feeds `sonar-tests` |
+| backend-only | `harness-backend` | same job | push: backend paths and no frontend/tests; dispatch `deploy=backend` — `ConfigReader` only (no TokensCss / LayoutCss / LocalChromePin / HAR); **skips** `sonar-tests` |
+| frontend helpers | `harness` + `harness-frontend` | inside the all slice | CSS helpers, HAR, `LocalChromePin` |
 
 ```bash
 ./gradlew test -Denv=reference_ci -DincludeTags=harness-backend   # + JaCoCo on ConfigReader
 ./gradlew test -Denv=reference_ci -DincludeTags=harness-frontend  # + JaCoCo on CSS helpers
-./gradlew test -Denv=reference_ci -DincludeTags=harness           # full harness
+./gradlew test -Denv=reference_ci -DincludeTags=harness           # full harness (CI default)
 ```
 
 **Not** application code (that's `unit-tests` on `BACKEND_DIR` / `component-tests` on `FRONTEND_DIR`).
@@ -204,8 +204,7 @@ Paths SSOT: `backend/scripts/paths.sh`. Module naming: [NAMING.md](NAMING.md).
 |-----|--------------------|
 | `unit-tests` | **Application** (active backend — toolchain from `BACKEND_LANG`; excludes `@Tag("integration")`) |
 | `integration-tests` | **Application** (full Spring Boot + Testcontainers PostgreSQL in `BACKEND_DIR`) |
-| `tests-harness-backend` | **Test tooling (BE lane)** — `ConfigReader` |
-| `tests-harness-frontend` | **Test tooling (FE lane)** — CSS helpers, HAR helpers |
+| `tests-harness` | **Test tooling** — `ConfigReader` always; CSS/HAR/`LocalChromePin` unless backend-only slice |
 | `component-tests` | **Application** (active `FRONTEND_DIR` only — Vitest + coverage → `sonar-frontend` / `ui-mock-tests` → `build-frontend`) |
 
 Students: product unit layers (`unit-tests` / `component-tests`); harness = helper checks that higher layers depend on.
@@ -227,7 +226,8 @@ to `integration` and do not move deploy HTTP checks into `unit-tests` or backend
 
 The 100% line-coverage gate (`jacocoTestCoverageVerification`) is java-only and slices by
 `-DincludeTags` (`harness-backend` → `ConfigReader`; `harness-frontend` → `LayoutCss`/`TokensCss`;
-`harness` → all three). It reads `build/jacoco/test.exec`.
+`harness` → all three). `LocalChromePin` is tagged `harness-frontend` (skipped on backend-only CI)
+and is **not** in the JaCoCo class set. It reads `build/jacoco/test.exec`.
 
 ## Why `component` vs `e2e` (not vs integration)?
 
@@ -243,7 +243,7 @@ Integration is **in-process Spring + PostgreSQL**, no browser. Deployed HTTP che
 
 | Trigger | Jobs |
 |---------|------|
-| Pull request (blocks merge) | `unit-tests`, `integration-tests`, `component-tests`, `tests-harness-backend`, `tests-harness-frontend`, `ui-mock-tests`, `sonar-backend`, `sonar-tests`, `sonar-frontend` |
+| Pull request (blocks merge) | `unit-tests`, `integration-tests`, `component-tests`, `tests-harness`, `ui-mock-tests`, `sonar-backend`, `sonar-tests`, `sonar-frontend` |
 | Push to `main` | the PR set (`ui-mock-tests` only when frontend changed) + build/deploy lanes → `api-tests` (after `deploy-backend`) → `e2e-tests` (after `api-tests` + `deploy-frontend`; screenshot excluded) → `manual-tests` (skip unless dispatch) |
 | `workflow_dispatch` | per-layer booleans `run_integration` / `run_api` / `run_mock` / `run_e2e` / `run_screenshot` / `run_manual`; `update_mock_screenshots` / `update_e2e_screenshots` rewrite PNG in `ui-mock-tests` / `e2e-tests`; `include_tags` / `exclude_tags` overrides on e2e; `deploy=none\|backend\|frontend\|both`; TestOps service inputs `ALLURE_JOB_RUN_ID` / `ALLURE_USERNAME` (leave blank unless TestOps UI triggers) |
 
@@ -260,11 +260,11 @@ and against prod it belongs to a deliberate dispatch run (`ui-mock-tests` is the
 
 ## TestOps (live upload + selective rerun)
 
-`testops-context` opens one shared launch/job-run; layer jobs stream via workflow
+`testops-context` opens one shared launch/job-run; **pyramid** jobs stream via workflow
 env helper `ALLURECTL_RUN` → `run_with_allurectl` in
 [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) (`allurectl watch --job-run-child`).
-Missing `ALLURE_TOKEN` / `ALLURE_PROJECT_ID` disables live upload without failing tests — raw
-`allure-results` still publish.
+`tests-harness` does **not** upload (helpers, not product cases). Missing `ALLURE_TOKEN` /
+`ALLURE_PROJECT_ID` disables live upload without failing tests — raw `allure-results` still publish.
 
 | Mode | Selection | `ALLURE_KEEP_TESTPLAN` |
 |------|-----------|------------------------|
@@ -327,8 +327,7 @@ every run (PR + main):
   unit-tests → integration-tests
   unit-tests + integration-tests → sonar-backend
   component-tests → ui-mock-tests → sonar-frontend
-  tests-harness-backend ─┐
-  tests-harness-frontend ┴→ sonar-tests
+  tests-harness → sonar-tests (sonar-tests skipped when harness slice is backend-only)
   ui-mock-tests (needs component-tests + changes + testops; every PR; main when FE changed;
                  skipped mock does not skip sonar-frontend)
 
@@ -345,7 +344,9 @@ main only:
 `api-tests` gates on `deploy-backend` (not a join with frontend). `integration-tests` runs in `BACKEND_DIR` before
 build/deploy and does **not** wait on deploy.
 `sonar-tests` scans **testinfra helpers** (`-DincludeTags=harness`), not api/e2e results.
-It runs after both harness slices — on **PR** and **main**.
+It runs after `tests-harness` on **PR** and **main**, except the backend-only slice
+(push: backend paths only, or dispatch `deploy=backend`) — that job runs `harness-backend`
+only, so there is no full tests-module coverage to gate.
 `build-backend` / `build-frontend` do **not** `needs` Sonar. `sonar-frontend` waits on
 `ui-mock-tests` (success or skipped — backend-only main still scans). There is no
 `build-frontend` → `ui-mock-tests` edge (mock does not wait for the GHCR image) and no

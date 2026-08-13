@@ -72,7 +72,7 @@ Path constants: `backend/scripts/paths.sh`
 
 Canon: [tests/LAYERS.md](tests/LAYERS.md) · all jobs live in [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 
-Full CI graph (`needs` from `ci.yml`; `changes` is a real `needs` parent of build/deploy/mock/`api-tests` — path outputs only skip via `if:`):
+Full CI graph (`needs` from `ci.yml`; `changes` is a real `needs` parent of `tests-harness` / build / deploy / mock / `api-tests` — path outputs skip via `if:`):
 
 ```mermaid
 flowchart TB
@@ -81,8 +81,7 @@ flowchart TB
 
   TOC --> UNIT[unit-tests]
   TOC --> COMP[component-tests]
-  TOC --> HB[tests-harness-backend]
-  TOC --> HF[tests-harness-frontend]
+  CH --> H[tests-harness]
   TOC --> MOCK[ui-mock-tests]
   TOC --> INT[integration-tests]
 
@@ -96,8 +95,7 @@ flowchart TB
   INT --> SB
   COMP --> SF[sonar-frontend]
   COMP --> MOCK
-  HB --> ST[sonar-tests]
-  HF --> ST
+  H --> ST[sonar-tests]
 
   UNIT --> BB[build-backend]
   INT --> BB
@@ -119,24 +117,23 @@ flowchart TB
   E2E --> MAN[manual-tests<br/>dispatch]
   TOC --> MAN
 
-  UNIT & COMP & HB & HF & MOCK & INT & API & E2E & MAN --> PUB[publish-allure-report]
+  UNIT & COMP & H & MOCK & INT & API & E2E & MAN --> PUB[publish-allure-report]
   PUB --> NTF[send-allure-notifications]
 ```
 
 | Job | Where |
 |-----|-------|
 | `unit-tests` | `BACKEND_DIR` — command by `BACKEND_LANG` (gradle/JaCoCo, pytest, `go test`, or `npm test`); java excludes `@Tag("integration")` |
-| `tests-harness-backend` | `TESTS_DIR` — java: `-DincludeTags=harness-backend` + JaCoCo (`ConfigReader`); every PR + push (no deploy) |
-| `tests-harness-frontend` | `TESTS_DIR` — java: `-DincludeTags=harness-frontend` + JaCoCo (CSS/HAR helpers); every PR + push (no deploy) |
+| `tests-harness` | `TESTS_DIR` — java: `-DincludeTags=harness` + JaCoCo (helpers); backend-only (push backend paths / dispatch `deploy=backend`) → `-DincludeTags=harness-backend` (`ConfigReader`; skips TokensCss / LayoutCss / LocalChromePin). Not TestOps. |
 | `component-tests` | `FRONTEND_DIR` — `npm test -- --coverage` |
 | `integration-tests` | `BACKEND_DIR` — after `unit-tests` (java: `-DincludeTags=integration`); Spring Boot + real PG; **before** build/deploy; PR + main |
 | `api-tests` | `TESTS_DIR` — after `deploy-backend` (java: `-DincludeTags=api`); HTTP contract + deployed-stand facts |
 | `ui-mock-tests` | after `component-tests`; every PR; on `main` when frontend changed — mock flows + screenshot compare on the runner; gates `build-frontend`; dispatch `update_mock_screenshots` rewrites `screenshots/mock/` |
-| `sonar-tests` | after **both** harness jobs (PR + main); umbrella harness + tests-module Sonar gate |
+| `sonar-tests` | after `tests-harness` (PR + main; skipped on backend-only slice) |
 | `e2e-tests` | after `api-tests` + `deploy-frontend` — java: `-DincludeTags=e2e`; dispatch `run_screenshot` / `update_e2e_screenshots` are extra steps |
 | `manual-tests` | after `e2e-tests`; dispatch only — java: `-DincludeTags=manual` |
 
-`unit-tests`, `integration-tests`, `component-tests`, both harness jobs, and `ui-mock-tests` gate a pull request.
+`unit-tests`, `integration-tests`, `component-tests`, `tests-harness`, and `ui-mock-tests` gate a pull request.
 Post-deploy layers (`api` / `e2e`) run on push to `main` after the matching deploy lane
 (`api-tests` ← `deploy-backend`, `e2e-tests` ← `api-tests` + `deploy-frontend`), or via
 `workflow_dispatch` booleans. Stack defaults (`BACKEND` / `BACKEND_LANG` / `FRONTEND` /
@@ -209,7 +206,7 @@ Teaching CI — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
 | Event | Jobs |
 |-------|------|
-| pull request | `unit-tests` · `integration-tests` · `component-tests` · `tests-harness-backend` · `tests-harness-frontend` · `ui-mock-tests` · `sonar-backend` · `sonar-frontend` · `sonar-tests` |
+| pull request | `unit-tests` · `integration-tests` · `component-tests` · `tests-harness` · `ui-mock-tests` · `sonar-backend` · `sonar-frontend` · `sonar-tests` |
 | push to `main` | PR set (`ui-mock-tests` when frontend changed) → build/deploy lanes → `api-tests` (after backend) → `e2e-tests` (after api + frontend) → `manual-tests` (dispatch) |
 
 `build` runs `docker compose build` + `docker compose push`, so `docker-compose.yml` stays the only place describing how an image is built. Images go to GHCR as `ghcr.io/autotests-ai/reference-app-copy-<service>:<sha>`; the tag comes from `IMAGE_TAG` (defaults to `latest` locally).
@@ -221,7 +218,7 @@ Teaching CI — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 | `APP_DIR` | `/home/reference_app_copy/reference-app-copy` |
 | Deployed stacks | `env.BACKEND` + `env.FRONTEND` in `ci.yml` (defaults: java-spring + typescript-react) |
 
-Allure: `testops-context` + live `allurectl watch` on test jobs → `publish-allure-report` (Pages) →
+Allure: `testops-context` + live `allurectl watch` on pyramid jobs (not `tests-harness`) → `publish-allure-report` (Pages) →
 `send-allure-notifications` (all non-gating). TestOps selective rerun: dispatch with
 `ALLURE_JOB_RUN_ID` keeps the testplan — see [tests/LAYERS.md](tests/LAYERS.md)#testops-live-upload--selective-rerun.
 

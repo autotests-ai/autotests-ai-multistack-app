@@ -296,8 +296,9 @@ if (allureQualityGateHook && allureReportMode != 'none') {
 }
 
 // Coverage axis = harness helpers; product/page/UI classes are out.
-// Slice follows -DincludeTags: harness-backend → ConfigReader; harness-frontend → CSS helpers;
-// harness / unset → all three (local umbrella).
+// Slice follows -DincludeTags: harness-backend → ConfigReader; harness-frontend → CSS helpers
+// (LayoutCss, TokensCss; LocalChromePin is tagged frontend but not JaCoCo-gated);
+// harness / unset → ConfigReader + CSS helpers (local umbrella).
 def harnessCoverageIncludes = {
     def tags = (System.getProperty('includeTags') ?: '').split(',').collect { it.trim() }.findAll { it } as Set
     def backendOnly = tags.contains('harness-backend') && !tags.contains('harness-frontend') && !tags.contains('harness')
