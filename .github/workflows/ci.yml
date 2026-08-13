@@ -434,6 +434,63 @@ jobs:
           if-no-files-found: ignore
           retention-days: 1
 
+  integration-tests:
+    needs: [unit-tests, testops-context]
+    if: >-
+      always() && !cancelled() && needs.unit-tests.result == 'success' && (
+        github.event_name == 'pull_request' ||
+        (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+        (github.event_name == 'workflow_dispatch' && inputs.run_integration)
+      )
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      LAYER: integration
+      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
+      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
+      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - *setup-live-allurectl
+
+      # ── java / kotlin (Spring Boot + Testcontainers PostgreSQL) ───────────
+      - if: env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin'
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+      - if: env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin'
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+      - if: env.BACKEND_LANG == 'java'
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.BACKEND_DIR }}/.gradle/configuration-cache
+          key: gradle-cc-${{ env.BACKEND }}-integration-${{ hashFiles('backend/java/backend-java-spring/*.gradle*', 'backend/java/backend-java-spring/gradle/wrapper/gradle-wrapper.properties', 'backend/java/backend-java-spring/gradle.properties') }}-${{ github.sha }}
+          restore-keys: |
+            gradle-cc-${{ env.BACKEND }}-integration-
+      - name: Run integration tests (Gradle + Testcontainers)
+        if: env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin'
+        id: run-tests
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.BACKEND_DIR }}/build/allure-results
+        run: >-
+          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
+          ./gradlew test -DincludeTags=integration
+        working-directory: ${{ env.BACKEND_DIR }}
+      - name: Publish raw Allure results
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-results-integration
+          path: ${{ env.BACKEND_DIR }}/build/allure-results/**
+          if-no-files-found: ignore
+          retention-days: 1
+
   changes:
     runs-on: ubuntu-24.04
     outputs:
@@ -1191,7 +1248,6 @@ jobs:
           needs.changes.outputs.tests == 'true')) ||
         (github.event_name == 'workflow_dispatch' &&
          (inputs.deploy != 'none' ||
-          inputs.run_integration ||
           inputs.run_api ||
           inputs.run_e2e ||
           inputs.run_visual ||
@@ -1216,63 +1272,6 @@ jobs:
           curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${UI_URL}"
           echo "==> API ${API_HEALTH}"
           curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${API_HEALTH}"
-
-  integration-tests:
-    needs: [unit-tests, testops-context]
-    if: >-
-      always() && !cancelled() && needs.unit-tests.result == 'success' && (
-        github.event_name == 'pull_request' ||
-        (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-        (github.event_name == 'workflow_dispatch' && inputs.run_integration)
-      )
-    runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    env:
-      LAYER: integration
-      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
-      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
-      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      - *setup-live-allurectl
-
-      # ── java / kotlin (Spring Boot + Testcontainers PostgreSQL) ───────────
-      - if: env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin'
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: ${{ env.JAVA_VERSION }}
-      - if: env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin'
-        uses: gradle/actions/setup-gradle@v6
-        with:
-          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-      - if: env.BACKEND_LANG == 'java'
-        uses: actions/cache@v6
-        with:
-          path: ${{ env.BACKEND_DIR }}/.gradle/configuration-cache
-          key: gradle-cc-${{ env.BACKEND }}-integration-${{ hashFiles('backend/java/backend-java-spring/*.gradle*', 'backend/java/backend-java-spring/gradle/wrapper/gradle-wrapper.properties', 'backend/java/backend-java-spring/gradle.properties') }}-${{ github.sha }}
-          restore-keys: |
-            gradle-cc-${{ env.BACKEND }}-integration-
-      - name: Run integration tests (Gradle + Testcontainers)
-        if: env.BACKEND_LANG == 'java' || env.BACKEND_LANG == 'kotlin'
-        id: run-tests
-        env:
-          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.BACKEND_DIR }}/build/allure-results
-        run: >-
-          "$GITHUB_WORKSPACE/.github/scripts/run-with-allurectl.sh"
-          ./gradlew test -DincludeTags=integration
-        working-directory: ${{ env.BACKEND_DIR }}
-      - name: Publish raw Allure results
-        if: always()
-        continue-on-error: true
-        uses: actions/upload-artifact@v7
-        with:
-          name: allure-results-integration
-          path: ${{ env.BACKEND_DIR }}/build/allure-results/**
-          if-no-files-found: ignore
-          retention-days: 1
 
   api-tests:
     needs: [stand-ready, testops-context]
@@ -1437,7 +1436,8 @@ jobs:
             [ "${#TAGS[@]}" -gt 0 ] || TAGS=(e2e)
             TAGS_CSV="$(IFS=,; echo "${TAGS[*]}")"
             ARGS+=(-DincludeTags="${TAGS_CSV}")
-            [[ ",${TAGS_CSV}," == *",visual,"* ]] || DEFAULT_EXCLUDE=visual
+            DEFAULT_EXCLUDE=mock
+            [[ ",${TAGS_CSV}," == *",visual,"* ]] || DEFAULT_EXCLUDE=mock,visual
           fi
           if [ -n "${EXCLUDE_TAGS}" ]; then
             ARGS+=(-DexcludeTags="${EXCLUDE_TAGS}")
