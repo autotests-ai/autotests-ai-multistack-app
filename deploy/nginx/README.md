@@ -20,10 +20,15 @@ Outputs in `deploy/nginx/generated/`:
 | `autotests.ai-stack-routes.conf` | `location` blocks — include inside autotests.ai `server{}` |
 | `autotests.ai-stack-board.conf` | bare `/stack/` board + shared `/stack/js|css` — include **before** stack-routes |
 
-Apply on box3:
+Apply on box3 (retire vhost + drop the old `reference-app` proxy to `:8083`):
 
 ```bash
-sudo cp deploy/nginx/generated/reference-app-copy.autotests.ai.conf /etc/nginx/sites-available/
-cd /opt/autotests-ai-app && sudo bash deploy/nginx/sync-nginx.sh
+sudo cp deploy/nginx/generated/reference-app-copy.autotests.ai.conf \
+  /etc/nginx/sites-available/reference-app-copy.autotests.ai
+sudo ln -sfn /etc/nginx/sites-available/reference-app-copy.autotests.ai \
+  /etc/nginx/sites-enabled/reference-app-copy.autotests.ai
+sudo rm -f /etc/nginx/sites-enabled/reference-app
 sudo nginx -t && sudo systemctl reload nginx
 ```
+
+Certs: copy host → `live/reference-app-copy.autotests.ai/`; old host → `live/autotests.ai/` (SAN includes `reference-app.autotests.ai`).
