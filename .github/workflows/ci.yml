@@ -54,7 +54,7 @@ on:
         type: boolean
         default: false
       run_api:
-        description: "Run API contract tests against reference_prod"
+        description: "Run API contract tests against multistack_prod"
         type: boolean
         default: false
       run_mock:
@@ -70,7 +70,7 @@ on:
         type: boolean
         default: false
       run_manual:
-        description: "Run tests tagged manual against reference_prod"
+        description: "Run tests tagged manual against multistack_prod"
         type: boolean
         default: false
       include_tags:
@@ -147,7 +147,7 @@ env:
   # Launch env axes for TestOps filters (real values — not sandbox toy OS/VERSION).
   BROWSER: Chrome
   OS: Linux
-  ENDPOINT: reference_prod
+  ENDPOINT: multistack_prod
   VERSION: ${{ github.sha }}
   BRANCH: ${{ github.head_ref || github.ref_name }}
   SONAR_SCANNER_NPM_VERSION: "5.0.0"
