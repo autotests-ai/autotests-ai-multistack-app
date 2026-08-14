@@ -19,7 +19,7 @@ export const ALLURE_QUALITY_GATE_LABELS = {
 export const SONAR_QUALITY_GATE_SOURCE = {
   configFile: "docs/sonar/quality-gate-profile.json",
   profile: "qa-guru-canon",
-  projectKey: "reference-app-backend",
+  projectKey: "autotests-ai-multistack-app-backend-java-spring",
   hrefBase: "https://github.com/qa-guru/zero-design-system/blob/master/",
 };
 
@@ -28,12 +28,13 @@ export const SONAR_QUALITY_GATE_LABELS = {
   failed: { ru: "Sonar Quality Gate не пройден", en: "Sonar Quality Gate failed" },
 };
 
-/** Demo fixture until CI wires sonar-gate-wait into the report. */
+/** Fallback when CI has not attached allure/sonar-quality-gate.json. */
 export const SONAR_QUALITY_GATE_FIXTURE = {
   status: "OK",
-  project_key: "reference-app-backend",
+  project_key: "autotests-ai-multistack-app-backend-java-spring",
   analysis_id: "AXdemoPassedAnalysis",
-  dashboard_url: "https://sonar.qa.guru/dashboard?id=reference-app-backend",
+  dashboard_url:
+    "https://sonar.qa.guru/dashboard?id=autotests-ai-multistack-app-backend-java-spring",
   conditions: [
     {
       status: "OK",

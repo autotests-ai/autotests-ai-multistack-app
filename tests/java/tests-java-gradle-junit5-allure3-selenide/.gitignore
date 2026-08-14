@@ -12,6 +12,7 @@ app-path-local
 # Regen locally after changing scripts/gen-env-configs.py: python scripts/gen-env-configs.py
 
 allure-results/
+allure/sonar-quality-gate.json
 bin/
 node_modules/
 notifications/config.runtime.json

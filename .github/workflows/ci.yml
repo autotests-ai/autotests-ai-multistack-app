@@ -32,6 +32,7 @@ name: CI
 #   deploy-backend ← build-backend + sonar-backend
 #   deploy-frontend ← build-frontend + sonar-frontend
 #   api-tests ← deploy-backend (curl /api/health; no join with frontend)
+#   e2e-tests ← api-tests + deploy-frontend (curl live UI) → manual-tests
 #   publish-allure-report ← pyramid layers + sonar-backend (live Sonar QG JSON)
 # push main: trigger infers lanes from paths (tests/ ⇒ no app deploy).
 # dispatch `deploy=none|backend|frontend|tests|all`.
@@ -1083,6 +1084,16 @@ jobs:
         if: always()
         run: |
           eval "${WRITE_SONAR_SUMMARY}"
+      - name: Upload Sonar report-task
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: sonar-backend-report-task
+          path: |
+            ${{ env.BACKEND_DIR }}/build/sonar/report-task.txt
+            ${{ env.BACKEND_DIR }}/.scannerwork/report-task.txt
+          if-no-files-found: ignore
+          retention-days: 1
 
   # Tests-module Sonar after full harness. Backend-only is ConfigReader coverage
   # only — skip rather than fail the tests-module gate.
@@ -1709,6 +1720,7 @@ jobs:
       - e2e-tests
       - manual-tests
       - testops-context
+      - sonar-backend
     if: always() && !cancelled()
     continue-on-error: true
     runs-on: ubuntu-24.04
@@ -1871,6 +1883,37 @@ jobs:
           if [ -n "$LAUNCH_URL" ]; then
             echo "TESTOPS_LAUNCH_URL=${LAUNCH_URL}" >> "$GITHUB_ENV"
           fi
+
+      - name: Download Sonar backend report-task
+        id: sonar-report-task
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: sonar-backend-report-task
+          path: sonar-backend-report-task
+
+      - name: Attach live Sonar quality gate
+        if: steps.merged-results.outputs.has_results == 'true'
+        continue-on-error: true
+        working-directory: ${{ env.TESTS_DIR }}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}
+        run: |
+          set -euo pipefail
+          REPORT_TASK="$(find "${GITHUB_WORKSPACE}/sonar-backend-report-task" -name 'report-task.txt' -print -quit 2>/dev/null || true)"
+          if [[ -z "${REPORT_TASK}" || ! -f "${REPORT_TASK}" ]]; then
+            echo "No Sonar report-task — Allure panel keeps fixture"
+            exit 0
+          fi
+          if [[ -z "${SONAR_TOKEN:-}" ]]; then
+            echo "SONAR_TOKEN unset — Allure panel keeps fixture"
+            exit 0
+          fi
+          node scripts/dump-sonar-quality-gate.mjs \
+            --report-task "${REPORT_TASK}" \
+            --out allure/sonar-quality-gate.json \
+            --timeout "${SONAR_QUALITY_GATE_TIMEOUT}"
 
       - name: Allure quality gate + report
         if: always() && steps.merged-results.outputs.has_results == 'true'
