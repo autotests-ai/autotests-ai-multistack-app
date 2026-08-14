@@ -2,9 +2,9 @@ spring:
   application:
     name: reference-app-kotlin
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:reference_app_kotlin_spring}
-    username: ${DB_USER:reference}
-    password: ${DB_PASSWORD:reference}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:multistack_app_kotlin_spring}
+    username: ${DB_USER:multistack}
+    password: ${DB_PASSWORD:multistack}
   jpa:
     open-in-view: false
     hibernate:

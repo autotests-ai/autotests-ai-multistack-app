@@ -17,7 +17,7 @@ const (
 	// PostAuthRedirect is where the frontends navigate after login/register.
 	PostAuthRedirect = "/"
 
-	defaultDatabaseName = "reference_app_go_gin"
+	defaultDatabaseName = "multistack_app_go_gin"
 	defaultServerPort   = "8080"
 	defaultJWTSecret    = "reference-app-dev-secret-change-in-production-min-32-chars"
 	defaultExpirationMS = int64(86_400_000)
@@ -51,7 +51,7 @@ func DatabaseURL() string {
 	}
 	dsn := url.URL{
 		Scheme:   "postgres",
-		User:     url.UserPassword(env("DB_USER", "reference"), env("DB_PASSWORD", "reference")),
+		User:     url.UserPassword(env("DB_USER", "multistack"), env("DB_PASSWORD", "multistack")),
 		Host:     net.JoinHostPort(env("DB_HOST", "localhost"), env("DB_PORT", "5432")),
 		Path:     "/" + env("DB_NAME", defaultDatabaseName),
 		RawQuery: "sslmode=disable",

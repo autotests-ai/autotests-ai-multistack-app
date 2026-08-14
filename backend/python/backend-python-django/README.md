@@ -1,7 +1,7 @@
 # backend-python-django
 
 Python Django JSON API — same OpenAPI contract as `backend-java-spring`.  
-Postgres DB: `reference_app_python_django`.
+Postgres DB: `multistack_app_python_django`.
 
 **Status:** active.
 

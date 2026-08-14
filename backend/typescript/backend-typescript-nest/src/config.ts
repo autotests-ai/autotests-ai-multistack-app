@@ -1,5 +1,5 @@
 export const SERVICE_NAME = 'backend-typescript-nest';
-export const DEFAULT_DB_NAME = 'reference_app_typescript_nest';
+export const DEFAULT_DB_NAME = 'multistack_app_typescript_nest';
 export const POST_AUTH_REDIRECT = '/';
 
 export interface AppConfig {
@@ -20,8 +20,8 @@ export function databaseUrl(env: Env = process.env): string {
   const host = env.DB_HOST ?? 'localhost';
   const port = env.DB_PORT ?? '5432';
   const name = env.DB_NAME ?? DEFAULT_DB_NAME;
-  const user = env.DB_USER ?? 'reference';
-  const password = env.DB_PASSWORD ?? 'reference';
+  const user = env.DB_USER ?? 'multistack';
+  const password = env.DB_PASSWORD ?? 'multistack';
   return `postgresql://${user}:${password}@${host}:${port}/${name}`;
 }
 

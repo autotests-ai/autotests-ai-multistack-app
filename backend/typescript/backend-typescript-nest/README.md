@@ -1,7 +1,7 @@
 # backend-typescript-nest
 
 TypeScript [NestJS](https://nestjs.com/) JSON API on Node — same OpenAPI contract as `backend-java-spring`.  
-Postgres DB: `reference_app_typescript_nest`.
+Postgres DB: `multistack_app_typescript_nest`.
 
 **Status:** active.
 

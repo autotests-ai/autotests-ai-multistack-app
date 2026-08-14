@@ -1,7 +1,7 @@
 # backend-python-flask
 
 Python Flask JSON API — same OpenAPI contract as `backend-java-spring`
-(`/api/health`, items, auth/JWT). Postgres DB: `reference_app_python_flask`.
+(`/api/health`, items, auth/JWT). Postgres DB: `multistack_app_python_flask`.
 
 **Status:** active.
 

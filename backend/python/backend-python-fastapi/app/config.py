@@ -8,9 +8,9 @@ def database_url() -> str:
         return url
     host = os.environ.get("DB_HOST", "localhost")
     port = os.environ.get("DB_PORT", "5432")
-    name = os.environ.get("DB_NAME", "reference_app_python_fastapi")
-    user = os.environ.get("DB_USER", "reference")
-    password = os.environ.get("DB_PASSWORD", "reference")
+    name = os.environ.get("DB_NAME", "multistack_app_python_fastapi")
+    user = os.environ.get("DB_USER", "multistack")
+    password = os.environ.get("DB_PASSWORD", "multistack")
     return f"postgresql+psycopg://{user}:{password}@{host}:{port}/{name}"
 
 

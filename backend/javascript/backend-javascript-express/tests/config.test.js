@@ -34,7 +34,7 @@ describe('config', () => {
 
     expect(settings.serviceName).toBe('backend-javascript-express');
     expect(settings.databaseUrl).toBe(
-      'postgresql://reference:reference@localhost:5432/reference_app_javascript_express'
+      'postgresql://multistack:multistack@localhost:5432/multistack_app_javascript_express'
     );
     expect(settings.serverPort).toBe(8080);
     expect(settings.jwtSecret).toBe(

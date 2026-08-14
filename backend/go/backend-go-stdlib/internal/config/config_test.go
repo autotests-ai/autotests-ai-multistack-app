@@ -28,7 +28,7 @@ func TestLoadDefaults(t *testing.T) {
 	if cfg.ServerPort != "8080" {
 		t.Fatalf("ServerPort = %q, want 8080", cfg.ServerPort)
 	}
-	want := "postgres://reference:reference@localhost:5432/reference_app_go_stdlib?sslmode=disable"
+	want := "postgres://multistack:multistack@localhost:5432/multistack_app_go_stdlib?sslmode=disable"
 	if cfg.DatabaseURL != want {
 		t.Fatalf("DatabaseURL = %q, want %q", cfg.DatabaseURL, want)
 	}

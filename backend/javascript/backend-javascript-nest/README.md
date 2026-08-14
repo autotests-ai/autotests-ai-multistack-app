@@ -1,7 +1,7 @@
 # backend-javascript-nest
 
 JavaScript [NestJS](https://nestjs.com/) JSON API on Node — same OpenAPI contract as `backend-java-spring`.  
-Postgres DB: `reference_app_javascript_nest`.
+Postgres DB: `multistack_app_javascript_nest`.
 
 **Status:** active. Teaching twin of the usual TS Nest path.
 

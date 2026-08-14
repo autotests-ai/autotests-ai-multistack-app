@@ -1,7 +1,7 @@
 # backend-go-gin
 
 Go [Gin](https://github.com/gin-gonic/gin) JSON API — same OpenAPI contract as `backend-java-spring`.  
-Postgres DB: `reference_app_go_gin`.
+Postgres DB: `multistack_app_go_gin`.
 
 **Status:** active.
 
@@ -17,7 +17,7 @@ The PostgreSQL tests in `internal/store/postgres_integration_test.go` skip unles
 database is given:
 
 ```
-TEST_DATABASE_URL=postgres://reference:reference@localhost:5432/scratch?sslmode=disable go test ./...
+TEST_DATABASE_URL=postgres://multistack:multistack@localhost:5432/scratch?sslmode=disable go test ./...
 ```
 
 Why Gin (not Echo/Chi/Fiber): most common course/tutorial stack for REST + middleware; still thin over `net/http`.  

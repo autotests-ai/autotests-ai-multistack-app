@@ -1,7 +1,7 @@
 # backend-kotlin-spring
 
 Kotlin Spring Boot JSON API — same OpenAPI contract as `backend-java-spring`.  
-Postgres DB: `reference_app_kotlin_spring`.
+Postgres DB: `multistack_app_kotlin_spring`.
 
 **Status:** active.
 

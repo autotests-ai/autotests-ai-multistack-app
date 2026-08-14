@@ -1,7 +1,7 @@
 # backend-javascript-express
 
 JavaScript [Express](https://expressjs.com/) JSON API on Node — same OpenAPI contract as `backend-java-spring`.  
-Postgres DB: `reference_app_javascript_express`.
+Postgres DB: `multistack_app_javascript_express`.
 
 **Status:** active.
 

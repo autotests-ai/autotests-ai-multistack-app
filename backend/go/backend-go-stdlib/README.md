@@ -1,7 +1,7 @@
 # backend-go-stdlib
 
 Go JSON API on **stdlib only** (`net/http`, `http.ServeMux`) — same OpenAPI contract as `backend-java-spring`.  
-Postgres DB: `reference_app_go_stdlib`.
+Postgres DB: `multistack_app_go_stdlib`.
 
 **Status:** active.
 
@@ -17,7 +17,7 @@ The PostgreSQL tests in `internal/store/postgres_integration_test.go` skip unles
 database is given:
 
 ```
-TEST_DATABASE_URL=postgres://reference:reference@localhost:5432/scratch?sslmode=disable go test ./...
+TEST_DATABASE_URL=postgres://multistack:multistack@localhost:5432/scratch?sslmode=disable go test ./...
 ```
 
 Pair with [`backend-go-gin`](../backend-go-gin/): Gin = product-course ergonomics; stdlib = infra-style Go (Selenoid/GGR mental model). Do not rewrite Selenoid onto Gin — teach both here instead.

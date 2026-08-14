@@ -1,7 +1,7 @@
 # backend-python-fastapi
 
 Python FastAPI JSON API — same OpenAPI contract as `backend-java-spring`.  
-Postgres DB: `reference_app_python_fastapi`.
+Postgres DB: `multistack_app_python_fastapi`.
 
 **Status:** active.
 

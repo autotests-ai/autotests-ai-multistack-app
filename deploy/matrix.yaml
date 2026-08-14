@@ -12,11 +12,11 @@
 # Container-internal listen stays 8080 (backends) / 80 (frontends).
 # Path routing SSOT: deploy/nginx (host). Local: hit published ports directly.
 
-public_host: reference-app-copy.autotests.ai
+public_host: autotests.ai
 short_url_host: autotests.ai
 canonical_stack_host: autotests.ai
 canonical_stack_prefix: /stack
-domain_suffix: reference-app-copy.autotests.ai
+domain_suffix: autotests.ai
 
 # Shared build overlays (copied into each frontend image).
 ui_runtime: frontend/_shared/frontend-javascript-app
@@ -32,7 +32,7 @@ backends:
     image: autotests-ai-multistack-app-backend-java-spring:latest
     internal_port: 8080
     publish_port: 8800
-    db_name: reference_app_java_spring
+    db_name: multistack_app_java_spring
     health_service: backend-java-spring
 
   - id: backend-kotlin-spring
@@ -44,7 +44,7 @@ backends:
     image: autotests-ai-multistack-app-backend-kotlin-spring:latest
     internal_port: 8080
     publish_port: 8810
-    db_name: reference_app_kotlin_spring
+    db_name: multistack_app_kotlin_spring
     health_service: backend-kotlin-spring
 
   - id: backend-python-flask
@@ -56,7 +56,7 @@ backends:
     image: autotests-ai-multistack-app-backend-python-flask:latest
     internal_port: 8080
     publish_port: 8820
-    db_name: reference_app_python_flask
+    db_name: multistack_app_python_flask
     health_service: backend-python-flask
 
   - id: backend-python-fastapi
@@ -68,7 +68,7 @@ backends:
     image: autotests-ai-multistack-app-backend-python-fastapi:latest
     internal_port: 8080
     publish_port: 8821
-    db_name: reference_app_python_fastapi
+    db_name: multistack_app_python_fastapi
     health_service: backend-python-fastapi
 
   - id: backend-python-django
@@ -80,7 +80,7 @@ backends:
     image: autotests-ai-multistack-app-backend-python-django:latest
     internal_port: 8080
     publish_port: 8822
-    db_name: reference_app_python_django
+    db_name: multistack_app_python_django
     health_service: backend-python-django
 
   - id: backend-go-gin
@@ -92,7 +92,7 @@ backends:
     image: autotests-ai-multistack-app-backend-go-gin:latest
     internal_port: 8080
     publish_port: 8830
-    db_name: reference_app_go_gin
+    db_name: multistack_app_go_gin
     health_service: backend-go-gin
 
   - id: backend-go-stdlib
@@ -104,7 +104,7 @@ backends:
     image: autotests-ai-multistack-app-backend-go-stdlib:latest
     internal_port: 8080
     publish_port: 8831
-    db_name: reference_app_go_stdlib
+    db_name: multistack_app_go_stdlib
     health_service: backend-go-stdlib
 
   - id: backend-javascript-express
@@ -116,7 +116,7 @@ backends:
     image: autotests-ai-multistack-app-backend-javascript-express:latest
     internal_port: 8080
     publish_port: 8840
-    db_name: reference_app_javascript_express
+    db_name: multistack_app_javascript_express
     health_service: backend-javascript-express
 
   - id: backend-javascript-nest
@@ -128,7 +128,7 @@ backends:
     image: autotests-ai-multistack-app-backend-javascript-nest:latest
     internal_port: 8080
     publish_port: 8841
-    db_name: reference_app_javascript_nest
+    db_name: multistack_app_javascript_nest
     health_service: backend-javascript-nest
 
   - id: backend-typescript-express
@@ -140,7 +140,7 @@ backends:
     image: autotests-ai-multistack-app-backend-typescript-express:latest
     internal_port: 8080
     publish_port: 8850
-    db_name: reference_app_typescript_express
+    db_name: multistack_app_typescript_express
     health_service: backend-typescript-express
 
   - id: backend-typescript-nest
@@ -152,7 +152,7 @@ backends:
     image: autotests-ai-multistack-app-backend-typescript-nest:latest
     internal_port: 8080
     publish_port: 8851
-    db_name: reference_app_typescript_nest
+    db_name: multistack_app_typescript_nest
     health_service: backend-typescript-nest
 
 frontends:

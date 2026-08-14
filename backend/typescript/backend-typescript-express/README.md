@@ -1,7 +1,7 @@
 # backend-typescript-express
 
 TypeScript [Express](https://expressjs.com/) JSON API on Node — same OpenAPI contract as `backend-java-spring`.  
-Postgres DB: `reference_app_typescript_express`.
+Postgres DB: `multistack_app_typescript_express`.
 
 **Status:** active.
 

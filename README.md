@@ -194,7 +194,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:9800/
 | `backend-python-flask` | Flask JSON API (`:8820`) |
 | `backend-python-fastapi` | FastAPI JSON API (`:8821`) |
 | `backend-python-django` | Django JSON API (`:8822`) |
-| `postgres` | one instance, DB per backend (`reference_app_java_spring`, `reference_app_python_flask`, …) |
+| `postgres` | one instance, DB per backend (`multistack_app_java_spring`, `multistack_app_python_flask`, …) |
 
 ## Deploy
 
@@ -224,7 +224,7 @@ Allure: `testops-context` + live `allurectl watch` on pyramid jobs (not `tests-h
 
 | Name | Kind | Value |
 |------|------|-------|
-| `DEPLOY_SSH_KEY` | secret | **project-only** ed25519 for `autotests_ai_multistack@212.92.101.15` (local: `~/.ssh/reference_app_copy_deploy`; not shared with `selenoid` / sibling apps) |
+| `DEPLOY_SSH_KEY` | secret | **project-only** ed25519 for `autotests_ai_multistack@212.92.101.15` (local: `~/.ssh/autotests_ai_multistack_deploy`; not shared with `selenoid` / sibling apps) |
 | `DEPLOY_HOST` | variable | `212.92.101.15` — required, no fallback in the workflow |
 | `DEPLOY_USER` | variable | `autotests_ai_multistack` |
 | `DEPLOY_ENVIRONMENT` | variable | `multistack-production` (fallback in `ci.yml` if unset) |

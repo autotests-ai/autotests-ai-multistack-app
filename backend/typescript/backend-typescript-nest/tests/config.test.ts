@@ -7,7 +7,7 @@ describe('config', () => {
     expect(config.serviceName).toBe('backend-typescript-nest');
     expect(config.serverPort).toBe(8080);
     expect(config.databaseUrl).toBe(
-      `postgresql://reference:reference@localhost:5432/${DEFAULT_DB_NAME}`,
+      `postgresql://multistack:multistack@localhost:5432/${DEFAULT_DB_NAME}`,
     );
     expect(config.jwtSecret).toBe(
       'reference-app-dev-secret-change-in-production-min-32-chars',

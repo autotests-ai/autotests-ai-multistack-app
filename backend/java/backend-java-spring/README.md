@@ -1,7 +1,7 @@
 # backend-java-spring
 
 Spring Boot JSON API — **reference implementation** of the contract every other backend mirrors.
-Postgres DB: `reference_app_java_spring`.
+Postgres DB: `multistack_app_java_spring`.
 
 **Status:** active.
 

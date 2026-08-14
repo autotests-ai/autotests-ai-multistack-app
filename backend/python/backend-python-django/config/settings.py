@@ -70,9 +70,9 @@ def build_databases(
             "ENGINE": "django.db.backends.postgresql",
             "HOST": env.get("DB_HOST", "localhost"),
             "PORT": env.get("DB_PORT", "5432"),
-            "NAME": env.get("DB_NAME", "reference_app_python_django"),
-            "USER": env.get("DB_USER", "reference"),
-            "PASSWORD": env.get("DB_PASSWORD", "reference"),
+            "NAME": env.get("DB_NAME", "multistack_app_python_django"),
+            "USER": env.get("DB_USER", "multistack"),
+            "PASSWORD": env.get("DB_PASSWORD", "multistack"),
         }
     }
 
