@@ -454,23 +454,23 @@ export function StackPage() {
                 testsId={currentTests}
               />
             </Panel>
+            <Panel
+              title="Tests"
+              bodyClassName="stack-page__board-body"
+              className="stack-page__board stack-page__board--tests"
+              testId="stack-tests-board"
+            >
+              <TestsBoard
+                tests={summary.tests}
+                currentBackend={selection.backendId}
+                currentFrontend={selection.frontendId}
+                currentTests={currentTests}
+                backend={backend}
+                frontend={frontend}
+                hub={selection.hub}
+              />
+            </Panel>
           </div>
-          <Panel
-            title="Tests"
-            bodyClassName="stack-page__board-body"
-            className="stack-page__board stack-page__board--tests"
-            testId="stack-tests-board"
-          >
-            <TestsBoard
-              tests={summary.tests}
-              currentBackend={selection.backendId}
-              currentFrontend={selection.frontendId}
-              currentTests={currentTests}
-              backend={backend}
-              frontend={frontend}
-              hub={selection.hub}
-            />
-          </Panel>
         </>
       )}
     </main>

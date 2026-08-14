@@ -364,14 +364,13 @@ function moduleGh(modulePath?: string | null): string | null {
             </tbody>
           </table>
         </Panel>
-      </div>
 
-      <Panel
-        title="Tests"
-        body-class-name="stack-page__board-body"
-        class-name="stack-page__board stack-page__board--tests"
-        test-id="stack-tests-board"
-      >
+        <Panel
+          title="Tests"
+          body-class-name="stack-page__board-body"
+          class-name="stack-page__board stack-page__board--tests"
+          test-id="stack-tests-board"
+        >
         <table class="stack-page__table stack-page__table--tests">
           <thead>
             <tr>
@@ -563,7 +562,8 @@ function moduleGh(modulePath?: string | null): string | null {
             </tr>
           </tbody>
         </table>
-      </Panel>
+        </Panel>
+      </div>
     </template>
   </main>
 </template>

@@ -428,7 +428,6 @@ export function mountStackPage(root, data, pathname = window.location.pathname, 
           </table>
         </div>
       </section>
-    </div>
     <section class="panel panel--content stack-page__board stack-page__board--tests" data-testid="stack-tests-board">
       <div class="panel__bar">
         <div class="panel__dots" aria-hidden="true">
@@ -462,6 +461,7 @@ export function mountStackPage(root, data, pathname = window.location.pathname, 
         </table>
       </div>
     </section>
+    </div>
   `;
   bindHubRowSelect(root);
 }
