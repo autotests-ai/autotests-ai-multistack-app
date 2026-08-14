@@ -2066,7 +2066,7 @@ jobs:
           GH_PAGES_DEPLOYED: ${{ needs.publish-allure-report.outputs.gh_pages_deployed }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID || '-1004381150566' }}
-          TELEGRAM_TOPIC_ID: ${{ vars.TELEGRAM_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || vars.TELEGRAM_REFERENCE_APP_TOPIC_ID || secrets.TELEGRAM_REFERENCE_APP_TOPIC_ID || '3' }}
+          TELEGRAM_TOPIC_ID: ${{ vars.TELEGRAM_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || '3' }}
           NOTIFICATION_MODE: ${{ github.event_name != 'pull_request' && 'live' || 'dry-run' }}
         run: |
           set -euo pipefail
