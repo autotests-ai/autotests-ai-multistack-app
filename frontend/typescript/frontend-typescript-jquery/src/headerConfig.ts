@@ -48,6 +48,7 @@ export function buildHeaderConfig(current: HeaderNavId): HeaderConfig {
         active: current === 'register',
         testid: 'header-nav-register',
       },
+      { href: '/stack/', label: 'Stack', active: false, testid: 'header-nav-stack' },
     ],
     lang: { default: 'en' },
     theme: { default: 'dark' },

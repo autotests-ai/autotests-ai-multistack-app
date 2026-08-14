@@ -24,6 +24,9 @@ declare global {
 /** Nav route of the page doing the mounting. */
 export type HeaderRoute = '/' | '/login' | '/register';
 
+/** Stack matrix board — origin `/stack/`, not `/{pair}/stack`. */
+const STACK_INDEX_HREF = '/stack/';
+
 /**
  * Nav hrefs are mount-prefixed so design-system `header.js` matches the live
  * route. `active` is only the fallback highlight — header.js prefers the real
@@ -46,6 +49,7 @@ export function headerConfigFor(route: HeaderRoute): HeaderConfig {
         active: route === '/register',
         testid: 'header-nav-register',
       },
+      { href: STACK_INDEX_HREF, label: 'Stack', testid: 'header-nav-stack' },
     ],
     lang: { default: 'en' },
     theme: { default: 'dark' },

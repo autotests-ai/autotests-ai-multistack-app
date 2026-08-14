@@ -19,7 +19,7 @@ vi.mock('../../../../_shared/frontend-javascript-app/js/dom-utils.js', () => ({
   copyToClipboard: vi.fn(),
 }));
 
-const MOUNT = '/frontend-javascript-react';
+const MOUNT = '/stack/backend-java-spring/frontend-javascript-react';
 
 function navLinks() {
   return Array.from(document.querySelectorAll('[data-testid="header-nav"] a'));
@@ -57,8 +57,8 @@ async function mountAt(path) {
   window.headerConfig = structuredClone(headerConfig);
   await import(/* @vite-ignore */ HEADER_JS);
   await vi.waitFor(() => {
-    expect(navLinks().length).toBe(3);
-    expect(menuNavLinks().length).toBe(3);
+    expect(navLinks().length).toBe(4);
+    expect(menuNavLinks().length).toBe(4);
   });
 }
 
@@ -103,6 +103,12 @@ describe('canonical header.js — active nav follows the route', () => {
     await mountAt(`${MOUNT}/`);
     expect(activeTestids()).toEqual(['header-nav-home']);
     expect(ariaCurrentTestids()).toEqual(['header-nav-home']);
+  });
+
+  it('highlights Stack on the /stack/ board', async () => {
+    await mountAt('/stack/');
+    expect(activeTestids()).toEqual(['header-nav-stack']);
+    expect(ariaCurrentTestids()).toEqual(['header-nav-stack']);
   });
 
   it('re-syncs on SPA pushState (in-form Register → Login link)', async () => {
@@ -156,6 +162,7 @@ describe('canonical header.js — mobile burger menu', () => {
       'header-menu-nav-home',
       'header-menu-nav-login',
       'header-menu-nav-register',
+      'header-menu-nav-stack',
     ]);
     expect(document.querySelector('[data-testid="header-menu-search-input"]')).not.toBeNull();
     expect(document.querySelector('[data-testid="header-menu-github"]')).not.toBeNull();

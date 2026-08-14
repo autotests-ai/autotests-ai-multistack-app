@@ -82,11 +82,13 @@ describe('AppComponent', () => {
       'header-nav-home',
       'header-nav-login',
       'header-nav-register',
+      'header-nav-stack',
     ]);
     expect(window.headerConfig?.nav.map((item) => item.href)).toEqual([
       '/',
       '/login',
       '/register',
+      '/stack/',
     ]);
     expect(document.querySelectorAll('script[data-header-embed]')).toHaveLength(1);
   });

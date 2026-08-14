@@ -24,6 +24,7 @@ describe('headerConfigFor', () => {
       'header-nav-home',
       'header-nav-login',
       'header-nav-register',
+      'header-nav-stack',
     ]);
   });
 
@@ -43,16 +44,20 @@ describe('headerConfigFor', () => {
       '/',
       '/login',
       '/register',
+      '/stack/',
     ]);
   });
 
   it('prefixes nav hrefs with the product mount', async () => {
-    const header = await headerAt('/backend-java-spring/frontend-typescript-vanilla/login');
+    const header = await headerAt(
+      '/stack/backend-java-spring/frontend-typescript-vanilla/login',
+    );
 
     expect(header.headerConfigFor('/login').nav.map((item) => item.href)).toEqual([
-      '/backend-java-spring/frontend-typescript-vanilla/',
-      '/backend-java-spring/frontend-typescript-vanilla/login',
-      '/backend-java-spring/frontend-typescript-vanilla/register',
+      '/stack/backend-java-spring/frontend-typescript-vanilla/',
+      '/stack/backend-java-spring/frontend-typescript-vanilla/login',
+      '/stack/backend-java-spring/frontend-typescript-vanilla/register',
+      '/stack/',
     ]);
   });
 });
@@ -84,13 +89,13 @@ describe('mountHeader', () => {
   // The embed URL must carry the mount: header.js resolves its own template
   // relative to its script URL (`../templates/header.html`).
   it('embeds the runtime under the product mount', async () => {
-    const header = await headerAt('/backend-java-spring/frontend-typescript-vanilla/');
+    const header = await headerAt('/stack/backend-java-spring/frontend-typescript-vanilla/');
     document.body.innerHTML = '<div id="app-header"></div>';
 
     header.mountHeader('/');
 
     expect(document.querySelector('script[data-header-embed]')?.getAttribute('src')).toBe(
-      '/backend-java-spring/frontend-typescript-vanilla/js/header.js',
+      '/stack/backend-java-spring/frontend-typescript-vanilla/js/header.js',
     );
   });
 });

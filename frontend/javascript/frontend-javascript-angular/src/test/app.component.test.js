@@ -85,6 +85,7 @@ describe('AppComponent', () => {
         { href: '/', label: 'Home', testid: 'header-nav-home' },
         { href: '/login', label: 'Login', testid: 'header-nav-login' },
         { href: '/register', label: 'Register', testid: 'header-nav-register' },
+        { href: '/stack/', label: 'Stack', testid: 'header-nav-stack' },
       ],
       lang: { default: 'en' },
       theme: { default: 'dark' },
