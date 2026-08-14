@@ -67,7 +67,7 @@ pipeline {
             sh '''
               set -eu
               export SONAR_HOST_URL="${SONAR_HOST_URL:-https://sonar.qa.guru}"
-              export SONAR_PROJECT_KEY=reference-app-backend
+              export SONAR_PROJECT_KEY=autotests-ai-multistack-app-backend-java-spring
               export SONAR_REQUIRED="${SONAR_REQUIRED:-true}"
               bash scripts/ci-sonar-backend.sh
             '''
@@ -86,7 +86,7 @@ pipeline {
             sh '''
               set -eu
               export SONAR_HOST_URL="${SONAR_HOST_URL:-https://sonar.qa.guru}"
-              export SONAR_PROJECT_KEY=reference-app-tests
+              export SONAR_PROJECT_KEY=autotests-ai-multistack-app-tests-java-gradle-junit5-allure3-selenide
               export SONAR_REQUIRED="${SONAR_REQUIRED:-true}"
               bash scripts/ci-sonar-tests.sh
             '''
