@@ -213,7 +213,7 @@ Teaching CI — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
 | Setting | Value |
 |---------|-------|
-| `APP_DIR` | `/home/reference_app_copy/autotests-ai-multistack-app` |
+| `APP_DIR` | `/home/autotests_ai_multistack/autotests-ai-multistack-app` (`/home/reference_app_copy` → symlink) |
 | Deployed stacks | `env.BACKEND` + `env.FRONTEND` in `ci.yml` (defaults: java-spring + typescript-react) |
 
 Allure: `testops-context` + live `allurectl watch` on pyramid jobs (not `tests-harness`) → `publish-allure-report` (Pages) →
@@ -224,9 +224,10 @@ Allure: `testops-context` + live `allurectl watch` on pyramid jobs (not `tests-h
 
 | Name | Kind | Value |
 |------|------|-------|
-| `DEPLOY_SSH_KEY` | secret | **project-only** ed25519 for `reference_app_copy@212.92.101.15` (local: `~/.ssh/reference_app_copy_deploy`; not shared with `selenoid` / sibling apps) |
+| `DEPLOY_SSH_KEY` | secret | **project-only** ed25519 for `autotests_ai_multistack@212.92.101.15` (local: `~/.ssh/reference_app_copy_deploy`; not shared with `selenoid` / sibling apps) |
 | `DEPLOY_HOST` | variable | `212.92.101.15` — required, no fallback in the workflow |
-| `DEPLOY_USER` | variable | `reference_app_copy` |
+| `DEPLOY_USER` | variable | `autotests_ai_multistack` |
+| `DEPLOY_ENVIRONMENT` | variable | `multistack-production` (fallback in `ci.yml` if unset) |
 | `ALLURE_TOKEN` | secret | TestOps API token (live upload; optional — without it tests still run) |
 | `ALLURE_PROJECT_ID` | variable | TestOps project id |
 | `ALLURE_ENDPOINT` | variable | optional; default `https://allure.qa.guru` |

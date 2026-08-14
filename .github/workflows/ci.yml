@@ -275,7 +275,7 @@ env:
     UI_RUNTIME=frontend/_shared/frontend-javascript-app
   DEPLOY_SSH_SCRIPT: |
     set -euo pipefail
-    cd /home/reference_app_copy/autotests-ai-multistack-app
+    cd /home/autotests_ai_multistack/autotests-ai-multistack-app
     git fetch origin
     git checkout --force "$IMAGE_TAG"
     echo "$GHCR_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
@@ -1265,7 +1265,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment:
-      name: ${{ vars.DEPLOY_ENVIRONMENT || 'reference-production' }}
+      name: ${{ vars.DEPLOY_ENVIRONMENT || 'multistack-production' }}
       url: ${{ env.APP_URL }}
     # Shared deploy host: serialize git checkout with deploy-frontend (same checkout dir).
     concurrency:
@@ -1303,7 +1303,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment:
-      name: ${{ vars.DEPLOY_ENVIRONMENT || 'reference-production' }}
+      name: ${{ vars.DEPLOY_ENVIRONMENT || 'multistack-production' }}
       url: ${{ env.APP_URL }}
     # Independent of backend lane; shared host lock via concurrency (same checkout dir).
     concurrency:
