@@ -41,6 +41,7 @@ def driver(config: TestConfig) -> WebDriver:
             {
                 "enableVNC": config.enable_vnc,
                 "enableVideo": config.enable_video,
+                "enableHAR": config.enable_har,
                 "headless": config.headless,
                 "name": "reference-app-python",
             },
