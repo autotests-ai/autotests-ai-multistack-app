@@ -581,6 +581,9 @@ jobs:
         with:
           cache-read-only: ${{ env.GRADLE_CACHE_READ_ONLY == 'true' }}
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+        # GUH key is ${protocol}|${os}|${job-id}[…]. v6 has no cache-key-prefix input.
+        # Tests-module readers set GRADLE_BUILD_ACTION_CACHE_KEY_JOB: tests-harness
+        # (action env, not workflow-job-context) so restore prefers harness GUH.
       # hashFiles needs literal globs (format(env.*) is rejected at workflow parse).
       # Keep in sync when swapping BACKEND_DIR / TESTS_DIR in workflow env.
       - &cache-gradle-cc
@@ -793,6 +796,8 @@ jobs:
       ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
       SETUP_JVM_IF: "true"
       GRADLE_CACHE_READ_ONLY: "true"
+      # Share tests-module GUH with tests-harness (setup-gradle@v6 keys on github.job).
+      GRADLE_BUILD_ACTION_CACHE_KEY_JOB: tests-harness
       SETUP_BUILDX_IF: "true"
       # Build path. Do not name this DOCKER_CONTEXT — GHA injects job env into
       # every step; Docker CLI/buildx treat DOCKER_CONTEXT as a named context.
@@ -944,6 +949,7 @@ jobs:
 
   # Not a pyramid layer and not TestOps: JaCoCo + sonar-tests only.
   # Backend-only → ConfigReader. Frontend/tests/all → full harness (UI tests read ConfigReader).
+  # Writer of tests-module GUH; api/e2e/ui-mock/manual restore it via GRADLE_BUILD_ACTION_CACHE_KEY_JOB.
   tests-harness:
     needs: [trigger]
     if: ${{ !cancelled() }}
@@ -1424,6 +1430,8 @@ jobs:
       ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
       SETUP_JVM_IF: "true"
       GRADLE_CACHE_READ_ONLY: "true"
+      # Share tests-module GUH with tests-harness (setup-gradle@v6 keys on github.job).
+      GRADLE_BUILD_ACTION_CACHE_KEY_JOB: tests-harness
       SETUP_NODE_IF: "false"
       NODE_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/package-lock.json
       NPM_CI_IF: "false"
@@ -1523,6 +1531,8 @@ jobs:
       ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
       SETUP_JVM_IF: "true"
       GRADLE_CACHE_READ_ONLY: "true"
+      # Share tests-module GUH with tests-harness (setup-gradle@v6 keys on github.job).
+      GRADLE_BUILD_ACTION_CACHE_KEY_JOB: tests-harness
       SETUP_NODE_IF: "false"
       NODE_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/package-lock.json
       NPM_CI_IF: "false"
@@ -1681,6 +1691,8 @@ jobs:
       ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
       SETUP_JVM_IF: "true"
       GRADLE_CACHE_READ_ONLY: "true"
+      # Share tests-module GUH with tests-harness (setup-gradle@v6 keys on github.job).
+      GRADLE_BUILD_ACTION_CACHE_KEY_JOB: tests-harness
       ALLURE_RESULTS_ARTIFACT: allure-results-manual
       ALLURE_RESULTS_UPLOAD_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/build/allure-results/**
     steps:
