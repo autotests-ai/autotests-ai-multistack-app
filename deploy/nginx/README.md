@@ -18,7 +18,10 @@ Outputs in `deploy/nginx/generated/`:
 | `reference-app-copy.autotests.ai.conf` | Retire vhost (301 → autotests.ai/stack/…) |
 | `autotests.ai-stack-upstreams.conf` | `upstream` blocks — include at `http{}` in autotests.ai |
 | `autotests.ai-stack-routes.conf` | `location` blocks — include inside autotests.ai `server{}` |
-| `autotests.ai-stack-board.conf` | `/stack/` matrix board + shared `/stack/js|css` + `matrix.json` — include **before** stack-routes |
+| `autotests.ai-stack-board.conf` | `/stack/` matrix board + shared `/stack/js|css` + `matrix.json` + `/{pair}/stack` 404 — include **before** stack-routes |
+| `autotests.ai-server-stack.snippet.conf` | Wiring for autotests.ai `server{}`: legacy `/backend-` 301, then board, then routes |
+
+On box3 the live vhost **includes** generated board+routes (do not paste board locations into the vhost). APP_DIR: `/home/autotests_ai_multistack/autotests-ai-multistack-app`.
 
 Apply on box3 (retire vhost + drop the old `reference-app` proxy to `:8083`):
 
