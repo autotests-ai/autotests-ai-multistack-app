@@ -20,7 +20,6 @@
       "gridRows": 10,
       "allureQualityGatePath": "./build/reports/allure-report/allureReport/awesome/widgets/kit-panels/allureQualityGate.json",
       "sonarQualityGatePath": "fixtures/sonar-projectStatus-passed.json",
-      "testsTablePath": "fixtures/tests-table.json",
       "items": [
         { "id": "allureQualityGate", "type": "qualityGate", "x": 0, "y": 0, "w": 5, "h": 3 },
         { "id": "sonarQualityGate", "type": "qualityGate", "x": 5, "y": 0, "w": 5, "h": 3 },

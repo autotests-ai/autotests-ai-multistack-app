@@ -1718,7 +1718,7 @@ jobs:
       actions: read
     env:
       REPORT_ID: ${{ github.run_id }}
-      GH_PAGES_BASE: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+      GH_PAGES_BASE: ${{ vars.GH_PAGES_BASE || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
       ALLURE_LIVE_ENABLED: ${{ vars.ALLURE_PROJECT_ID != '' }}
       SETUP_NODE_IF: "true"
       NODE_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/package-lock.json
@@ -1885,6 +1885,12 @@ jobs:
             -o build/reports/allure-report/allureReport \
             --config allurerc.mjs
           REPORT_EXIT=$?
+          if [ "${REPORT_EXIT}" -eq 0 ]; then
+            node allure/tests-table-from-run.mjs \
+              --results build/allure-results \
+              --history history.jsonl \
+              --report build/reports/allure-report/allureReport
+          fi
           set -e
           exit "${REPORT_EXIT}"
 
@@ -1922,6 +1928,7 @@ jobs:
             cp "${ALLURE_REPORT_ROOT}/history.jsonl" pages/history.jsonl
           fi
           echo "${REPORT_ID}" > pages/latest-run-id.txt
+          printf 'reports.autotests.ai\n' > pages/CNAME
           touch pages/.nojekyll
 
       - name: Deploy Allure report to GitHub Pages
@@ -1940,6 +1947,7 @@ jobs:
           publish_dir: pages
           enable_jekyll: false
           keep_files: true
+          cname: reports.autotests.ai
 
       - name: Job summary
         if: always()
@@ -1972,7 +1980,7 @@ jobs:
       contents: read
       actions: read
     env:
-      GH_PAGES_BASE: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+      GH_PAGES_BASE: ${{ vars.GH_PAGES_BASE || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
       SETUP_NODE_IF: "true"
       NODE_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/package-lock.json
     steps:

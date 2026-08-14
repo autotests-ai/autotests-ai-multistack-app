@@ -17,8 +17,10 @@ cfg.base.allureFolder = process.env.ALLURE_FOLDER || cfg.base.allureFolder;
 cfg.base.allureResultsFolder =
   process.env.ALLURE_RESULTS_FOLDER || cfg.base.allureResultsFolder;
 if (cfg.base.chart && process.env.ALLURE_FOLDER) {
-  // Kit collage reads AQG JSON from the generated soft-fork report, not TESTS_DIR.
-  cfg.base.chart.allureQualityGatePath = `${process.env.ALLURE_FOLDER.replace(/\/$/, "")}/widgets/kit-panels/allureQualityGate.json`;
+  // Kit collage reads AQG / testsTable JSON from the generated soft-fork report.
+  const folder = process.env.ALLURE_FOLDER.replace(/\/$/, "");
+  cfg.base.chart.allureQualityGatePath = `${folder}/widgets/kit-panels/allureQualityGate.json`;
+  cfg.base.chart.testsTablePath = `${folder}/widgets/kit-panels/testsTable.json`;
 }
 cfg.base.links = {
   report: process.env.ALLURE_REPORT_URL || "",

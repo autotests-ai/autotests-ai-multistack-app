@@ -4,7 +4,7 @@
 import { panels } from "@qa-guru/allure-report-kit";
 
 import { TITLES } from "./constants.mjs";
-import { TESTS_TABLE_FIXTURE } from "./tests-table-fixture.mjs";
+import { loadTestsTableFromRun } from "./tests-table-from-run.mjs";
 
 /**
  * @returns {import("@qa-guru/allure-report-kit").KitCustomPanel[]}
@@ -16,7 +16,10 @@ export function buildTestsTablePanels() {
       title: TITLES.testsTable,
       layout: "2x2",
       dots: false,
-      data: TESTS_TABLE_FIXTURE,
+      data: loadTestsTableFromRun({
+        resultsDir: new URL("../build/allure-results", import.meta.url),
+        historyFile: new URL("../history.jsonl", import.meta.url),
+      }),
     }),
   ];
 }
