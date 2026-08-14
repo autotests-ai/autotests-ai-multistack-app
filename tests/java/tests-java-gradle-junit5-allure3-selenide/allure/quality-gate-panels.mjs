@@ -1,8 +1,7 @@
 /**
- * Lead Allure + Sonar quality-gate panels (kit e2e pattern).
+ * Lead Allure + Sonar quality-gate overrides for presets.fromLead.
  * Sonar uses SSOT fixture until CI attaches sonar-gate-wait JSON.
  */
-import { panels } from "@qa-guru/allure-report-kit";
 import { sonarProjectStatusToQualityGateOptions } from "@qa-guru/allure-report-kit/runtime";
 
 import {
@@ -15,12 +14,8 @@ import {
   TITLES,
 } from "./constants.mjs";
 
-/**
- * @param {{ layout?: string }} [options]
- * @returns {import("@qa-guru/allure-report-kit").KitCustomPanel[]}
- */
-export function buildQualityGatePanels({ layout = "2x1" } = {}) {
-  const sonarData = sonarProjectStatusToQualityGateOptions(SONAR_QUALITY_GATE_FIXTURE, {
+function buildSonarGateData() {
+  return sonarProjectStatusToQualityGateOptions(SONAR_QUALITY_GATE_FIXTURE, {
     lang: REPORT_LANGUAGE,
     profile: SONAR_QUALITY_GATE_SOURCE.profile,
     profileConditions: SONAR_QUALITY_GATE_PROFILE_CONDITIONS.map((row) => ({ ...row })),
@@ -28,21 +23,24 @@ export function buildQualityGatePanels({ layout = "2x1" } = {}) {
     labels: SONAR_QUALITY_GATE_LABELS,
     barTitle: TITLES.sonarQualityGate,
   });
+}
 
-  return [
-    panels.qualityGate({
-      id: "allureQualityGate",
+/**
+ * @param {{ layout?: string }} [options]
+ * @returns {NonNullable<import("@qa-guru/allure-report-kit").FromLeadOptions["gatePanels"]>}
+ */
+export function buildGatePanels({ layout = "2x1" } = {}) {
+  return {
+    allureQualityGate: {
       title: TITLES.qualityGate,
       layout,
       labels: QUALITY_GATE_LABELS,
-    }),
-    panels.custom({
-      id: "sonarQualityGate",
+    },
+    sonarQualityGate: {
       title: TITLES.sonarQualityGate,
-      kind: "qualityGate",
-      dots: false,
       layout,
-      data: sonarData,
-    }),
-  ];
+      dots: false,
+      data: buildSonarGateData(),
+    },
+  };
 }

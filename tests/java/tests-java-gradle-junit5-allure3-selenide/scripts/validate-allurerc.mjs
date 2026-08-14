@@ -2,7 +2,7 @@
 /**
  * Validate Allure ethalon / consumer allurerc.mjs:
  * - import succeeds
- * - lead preset at indices 0–5 (awesome + dashboard) — SSOT: allure/overview-preset.mjs
+ * - lead preset at indices 0–5 (awesome + dashboard) — kit SSOT: @qa-guru/allure-report-kit/presets/overview-preset; ethalon allure/overview-preset.mjs = re-export (titles/pyramidLayers)
  * - [0–1] quality gates, [2–5] overview charts
  *
  * Usage:
@@ -15,6 +15,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { presets } from "@qa-guru/allure-report-kit";
+import { OVERVIEW_PRESET as KIT_OVERVIEW_PRESET } from "@qa-guru/allure-report-kit/presets/overview-preset";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -43,11 +44,25 @@ async function loadOverviewPreset(configDir) {
   fail("allure/overview-preset.mjs with OVERVIEW_PRESET export not found");
 }
 
+function assertPresetDerivedFromKit(preset) {
+  for (const field of ["qualityGates", "tiles", "renderers"]) {
+    if (JSON.stringify(preset[field]) !== JSON.stringify(KIT_OVERVIEW_PRESET[field])) {
+      fail(
+        `OVERVIEW_PRESET.${field} must match kit SSOT (@qa-guru/allure-report-kit/presets/overview-preset) — override titles/pyramidLayers only`,
+      );
+    }
+  }
+}
+
 function assertLeadLayout(tiles, label, preset) {
   const gateCount = preset.qualityGates?.length ?? 0;
   const minLen = gateCount + preset.tiles.length;
   if (!Array.isArray(tiles) || tiles.length < minLen) {
     fail(`${label}: expected array with at least ${minLen} lead tiles`);
+  }
+  const leadIds = tiles.slice(0, gateCount).map((tile) => tile?.id);
+  if (new Set(leadIds).size !== leadIds.length) {
+    fail(`${label}: duplicate quality-gate panel ids: ${leadIds.join(", ")}`);
   }
   if (!presets.matchesLeadLayout?.(tiles, preset)) {
     fail(
@@ -78,6 +93,7 @@ async function main() {
 
   const config = await loadConfig(configPath);
   const preset = await loadOverviewPreset(path.dirname(configPath));
+  assertPresetDerivedFromKit(preset);
   const charts = config.plugins?.awesome?.options?.charts;
   const layout = config.plugins?.dashboard?.options?.layout;
 
