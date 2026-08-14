@@ -4,15 +4,15 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: postgres
-      POSTGRES_USER: reference
-      POSTGRES_PASSWORD: reference
+      POSTGRES_USER: multistack
+      POSTGRES_PASSWORD: multistack
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./deploy/postgres/init-databases.sh:/docker-entrypoint-initdb.d/01-init-databases.sh:ro
     networks:
       - autotests_ai_multistack_internal
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U reference -d postgres"]
+      test: ["CMD-SHELL", "pg_isready -U multistack -d postgres"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -21,8 +21,8 @@ services:
     image: postgres:16-alpine
     restart: "no"
     environment:
-      POSTGRES_USER: reference
-      POSTGRES_PASSWORD: reference
+      POSTGRES_USER: multistack
+      POSTGRES_PASSWORD: multistack
       PGHOST: postgres
     volumes:
       - ./deploy/postgres/ensure-databases.sh:/ensure-databases.sh:ro
@@ -47,9 +47,9 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: reference_app_java_spring
-      DB_USER: reference
-      DB_PASSWORD: reference
+      DB_NAME: multistack_app_java_spring
+      DB_USER: multistack
+      DB_PASSWORD: multistack
       SERVER_PORT: 8080
       JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
@@ -76,9 +76,9 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: reference_app_kotlin_spring
-      DB_USER: reference
-      DB_PASSWORD: reference
+      DB_NAME: multistack_app_kotlin_spring
+      DB_USER: multistack
+      DB_PASSWORD: multistack
       SERVER_PORT: 8080
       JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
@@ -105,9 +105,9 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: reference_app_python_flask
-      DB_USER: reference
-      DB_PASSWORD: reference
+      DB_NAME: multistack_app_python_flask
+      DB_USER: multistack
+      DB_PASSWORD: multistack
       SERVER_PORT: 8080
       JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
@@ -134,9 +134,9 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: reference_app_python_fastapi
-      DB_USER: reference
-      DB_PASSWORD: reference
+      DB_NAME: multistack_app_python_fastapi
+      DB_USER: multistack
+      DB_PASSWORD: multistack
       SERVER_PORT: 8080
       JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
@@ -163,9 +163,9 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: reference_app_python_django
-      DB_USER: reference
-      DB_PASSWORD: reference
+      DB_NAME: multistack_app_python_django
+      DB_USER: multistack
+      DB_PASSWORD: multistack
       SERVER_PORT: 8080
       JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
@@ -192,9 +192,9 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: reference_app_go_gin
-      DB_USER: reference
-      DB_PASSWORD: reference
+      DB_NAME: multistack_app_go_gin
+      DB_USER: multistack
+      DB_PASSWORD: multistack
       SERVER_PORT: 8080
       JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
@@ -221,9 +221,9 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: reference_app_go_stdlib
-      DB_USER: reference
-      DB_PASSWORD: reference
+      DB_NAME: multistack_app_go_stdlib
+      DB_USER: multistack
+      DB_PASSWORD: multistack
       SERVER_PORT: 8080
       JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
@@ -250,9 +250,9 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: reference_app_javascript_express
-      DB_USER: reference
-      DB_PASSWORD: reference
+      DB_NAME: multistack_app_javascript_express
+      DB_USER: multistack
+      DB_PASSWORD: multistack
       SERVER_PORT: 8080
       JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
@@ -279,9 +279,9 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: reference_app_javascript_nest
-      DB_USER: reference
-      DB_PASSWORD: reference
+      DB_NAME: multistack_app_javascript_nest
+      DB_USER: multistack
+      DB_PASSWORD: multistack
       SERVER_PORT: 8080
       JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
@@ -308,9 +308,9 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: reference_app_typescript_express
-      DB_USER: reference
-      DB_PASSWORD: reference
+      DB_NAME: multistack_app_typescript_express
+      DB_USER: multistack
+      DB_PASSWORD: multistack
       SERVER_PORT: 8080
       JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
@@ -337,9 +337,9 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: reference_app_typescript_nest
-      DB_USER: reference
-      DB_PASSWORD: reference
+      DB_NAME: multistack_app_typescript_nest
+      DB_USER: multistack
+      DB_PASSWORD: multistack
       SERVER_PORT: 8080
       JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
