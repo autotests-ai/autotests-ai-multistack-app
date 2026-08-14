@@ -117,12 +117,12 @@ env:
   BACKEND_LANG: java
   BACKEND_PORT: "8800"
   # Teaching module: component-tests + sonar + primary SHA image. Do not flip this
-  # to vanilla (no npm). Vue/Angular (JS+TS) are SHA-built and deployed on the same
-  # frontend lane via build-frontend-sidecars — keep that matrix in sync with
+  # to vanilla (no npm). Every other compose frontend is SHA-built/deployed on the
+  # same lane via build-frontend-sidecars — keep that matrix in sync with
   # FRONTEND_SIDECARS / deploy-frontend DEPLOY_COMPOSE_SERVICES.
   FRONTEND: frontend-typescript-react
   FRONTEND_DIR: frontend/typescript/frontend-typescript-react
-  FRONTEND_SIDECARS: frontend-typescript-vue frontend-typescript-angular frontend-javascript-vue frontend-javascript-angular
+  FRONTEND_SIDECARS: frontend-typescript-vue frontend-typescript-angular frontend-typescript-vanilla frontend-typescript-jquery frontend-javascript-vue frontend-javascript-angular frontend-javascript-vanilla frontend-javascript-jquery frontend-javascript-react
   # Teaching tests module — selenide today; flip TESTS/TESTS_DIR/TESTS_LANG together
   TESTS: tests-java-gradle-junit5-allure3-selenide
   TESTS_DIR: tests/java/tests-java-gradle-junit5-allure3-selenide
@@ -1259,7 +1259,7 @@ jobs:
       - name: Push frontend Docker image to GHCR
         run: docker compose push ${{ env.FRONTEND }}
 
-  # Sibling SPAs on the stand: SHA (+ :latest) without flipping FRONTEND / sonar.
+  # Sibling frontends on the stand: SHA (+ :latest) without flipping FRONTEND / sonar.
   # Parallel with teaching build; deploy-frontend waits for both.
   build-frontend-sidecars:
     name: sidecar ${{ matrix.service }}
@@ -1282,16 +1282,27 @@ jobs:
             dockerfile: frontend/typescript/frontend-typescript-vue/Dockerfile
           - service: frontend-typescript-angular
             dockerfile: frontend/typescript/frontend-typescript-angular/Dockerfile
+          - service: frontend-typescript-vanilla
+            dockerfile: frontend/typescript/frontend-typescript-vanilla/Dockerfile
+          - service: frontend-typescript-jquery
+            dockerfile: frontend/typescript/frontend-typescript-jquery/Dockerfile
           - service: frontend-javascript-vue
             dockerfile: frontend/javascript/frontend-javascript-vue/Dockerfile
           - service: frontend-javascript-angular
             dockerfile: frontend/javascript/frontend-javascript-angular/Dockerfile
+          - service: frontend-javascript-vanilla
+            dockerfile: frontend/javascript/frontend-javascript-vanilla/Dockerfile
+          - service: frontend-javascript-jquery
+            dockerfile: frontend/javascript/frontend-javascript-jquery/Dockerfile
+          - service: frontend-javascript-react
+            dockerfile: frontend/javascript/frontend-javascript-react/Dockerfile
     env:
       DOCKER_CACHE_SCOPE: autotests-ai-multistack-app-docker-${{ matrix.service }}
       DOCKER_BUILD_CONTEXT: .
       DOCKER_FILE: ${{ matrix.dockerfile }}
       DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/autotests-ai-multistack-app-${{ matrix.service }}:${{ github.sha }}
       DOCKER_BUILD_ARGS: |
+        REACT_UI=frontend/_shared/frontend-react-ui
         UI_RUNTIME=frontend/_shared/frontend-javascript-app
       DOCKER_OCI_LABELS: |
         org.opencontainers.image.title=autotests-ai-multistack-app-${{ matrix.service }}
@@ -1371,7 +1382,7 @@ jobs:
       packages: read
     env:
       DEPLOY_STEP_NAME: Deploy frontend to stand
-      DEPLOY_COMPOSE_SERVICES: frontend-typescript-react frontend-typescript-vue frontend-typescript-angular frontend-javascript-vue frontend-javascript-angular
+      DEPLOY_COMPOSE_SERVICES: frontend-typescript-react frontend-typescript-vue frontend-typescript-angular frontend-typescript-vanilla frontend-typescript-jquery frontend-javascript-vue frontend-javascript-angular frontend-javascript-vanilla frontend-javascript-jquery frontend-javascript-react
       DEPLOY_HEALTH_URL: ""
     steps:
       - *ssh-deploy
