@@ -6,9 +6,9 @@
     "node": ">=26"
   },
   "dependencies": {
-    "@qa-guru/allure-report-kit": "0.3.3",
-    "@qa-guru/allure-report-kit-awesome": "3.14.3-5",
-    "@qa-guru/allure-report-kit-dashboard": "3.14.3-5",
+    "@qa-guru/allure-report-kit": "0.3.4",
+    "@qa-guru/allure-report-kit-awesome": "3.14.3-6",
+    "@qa-guru/allure-report-kit-dashboard": "3.14.3-6",
     "allure": "3.14.3",
     "@qa-guru/allure-notifications": "6.2.2"
   }
