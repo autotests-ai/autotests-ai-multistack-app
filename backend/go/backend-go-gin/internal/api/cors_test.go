@@ -9,7 +9,7 @@ func TestCORSPreflight(t *testing.T) {
 	h := seededHarness(t)
 
 	recorder := h.do(t, http.MethodOptions, "/api/auth/login", "", map[string]string{
-		"Origin":                         "https://reference-app-copy.autotests.ai",
+		"Origin":                         "https://autotests.ai",
 		"Access-Control-Request-Method":  "POST",
 		"Access-Control-Request-Headers": "authorization,content-type",
 	})
@@ -40,7 +40,7 @@ func TestCORSOnSimpleRequest(t *testing.T) {
 	h := seededHarness(t)
 
 	recorder := h.do(t, http.MethodGet, "/api/health", "", map[string]string{
-		"Origin": "https://reference-app-copy.autotests.ai",
+		"Origin": "https://autotests.ai",
 	})
 
 	if recorder.Code != http.StatusOK {

@@ -1377,7 +1377,7 @@ jobs:
           ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
         run: |
           eval "${ALLURECTL_RUN}"
-          run_with_allurectl ./gradlew test -Denv=reference_prod -DincludeTags=api
+          run_with_allurectl ./gradlew test -Denv=multistack_prod -DincludeTags=api
         working-directory: ${{ env.TESTS_DIR }}
       # ── javascript / typescript (full suite) ──────────────────────────────
       - *setup-node
@@ -1478,7 +1478,7 @@ jobs:
         id: run-tests
         env:
           ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
-          RUN_ENV: reference_prod
+          RUN_ENV: multistack_prod
           INCLUDE_TAGS: ${{ inputs.include_tags }}
           EXCLUDE_TAGS: ${{ inputs.exclude_tags }}
           # Selenoid hub URL with credentials — config files commit only the creds-less URL.
@@ -1520,7 +1520,7 @@ jobs:
         id: run-screenshot-tests
         env:
           ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
-          RUN_ENV: reference_prod
+          RUN_ENV: multistack_prod
           SELENOID_REMOTE_URL: ${{ secrets.SELENOID_REMOTE_URL }}
         run: |
           eval "${ALLURECTL_RUN}"
@@ -1533,7 +1533,7 @@ jobs:
         id: update-screenshots
         env:
           ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
-          RUN_ENV: reference_prod
+          RUN_ENV: multistack_prod
           SELENOID_REMOTE_URL: ${{ secrets.SELENOID_REMOTE_URL }}
         run: |
           eval "${ALLURECTL_RUN}"
@@ -1622,7 +1622,7 @@ jobs:
         id: run-tests
         env:
           ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
-          RUN_ENV: reference_prod
+          RUN_ENV: multistack_prod
         run: |
           eval "${ALLURECTL_RUN}"
           run_with_allurectl ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=manual
