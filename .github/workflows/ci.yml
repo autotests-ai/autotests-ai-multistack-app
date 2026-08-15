@@ -9,9 +9,10 @@ name: CI
 # BACKEND / FRONTEND) when the teaching default changes; job ids stay layer names.
 #
 # Allure: testops-context opens one shared TestOps job-run; test jobs stream live and
-# publish raw results. publish-allure-report merges once for Pages/report (allure-report-kit
-# soft-fork + overview/QG lead), stops the job-run and hands one launch URL to
-# send-allure-notifications (kit collage profile; all non-gating).
+# publish raw results. allure-npm-lock is gating (package.json exact pins == lock;
+# students install with `npm ci`, not `npm install`). publish-allure-report merges once
+# for Pages/report (allure-report-kit soft-fork + overview/QG lead), stops the job-run
+# and hands one launch URL to send-allure-notifications (kit collage; non-gating).
 # TestOps UI rerun: workflow_dispatch + ALLURE_JOB_RUN_ID → ALLURE_KEEP_TESTPLAN=true.
 # Launch env axes: BROWSER / OS / ENDPOINT / VERSION(=sha) / BRANCH.
 # SSOT host: allure.qa.guru (legacy allure.autotests.cloud redirects).
@@ -33,6 +34,7 @@ name: CI
 #   deploy-frontend ← build-frontend + sonar-frontend
 #   api-tests ← deploy-backend (curl /api/health; no join with frontend)
 #   e2e-tests ← api-tests + deploy-frontend (curl live UI) → manual-tests
+#   allure-npm-lock (gating: tests package.json == package-lock.json)
 #   publish-allure-report ← pyramid layers + sonar-backend (live Sonar QG JSON)
 # push main: trigger infers lanes from paths (tests/ ⇒ no app deploy).
 # dispatch `deploy=none|backend|frontend|tests|all`.
@@ -657,6 +659,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: ${{ env.NODE_CACHE_DEPENDENCY_PATH }}
+      # Teaching: npm ci installs the lockfile tree. After bumping package.json
+      # pins, run `nvm use 26 && npm install --package-lock-only` and commit both.
       - &npm-ci
         name: Install npm dependencies
         if: env.NPM_CI_IF == 'true'
@@ -820,12 +824,12 @@ jobs:
       - *cache-allurectl
       - *setup-live-allurectl
 
-      # ── java (-Denv=reference_mock -DincludeTags=mock) ────────────────────
+      # ── java (-Denv=multistack_mock -DincludeTags=mock) ────────────────────
       # Read-only GUH (GRADLE_CACHE_READ_ONLY). No CC restore: entries pin
       # absolute GRADLE_USER_HOME (JaCoCo agent jars) from other runners.
       - *setup-java
       - *setup-gradle
-      # reference_mock has no remoteUrl: the stand lives on the runner's localhost, which a
+      # multistack_mock has no remoteUrl: the stand lives on the runner's localhost, which a
       # Selenoid browser could not reach, so the browser has to be local too.
       # setup-chrome only has an in-runner tool-cache; persist it like allurectl.
       # Path is $RUNNER_TOOL_CACHE/setup-chrome/{chrome,chromedriver}/<ver>/<arch>/.
@@ -881,7 +885,7 @@ jobs:
           CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
         run: |
           eval "${ALLURECTL_RUN}"
-          run_with_allurectl ./gradlew test -Denv=reference_mock -DincludeTags=mock
+          run_with_allurectl ./gradlew test -Denv=multistack_mock -DincludeTags=mock
         working-directory: ${{ env.TESTS_DIR }}
       - name: Stash mock Allure results
         if: always() && env.TESTS_LANG == 'java'
@@ -907,7 +911,7 @@ jobs:
           CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
         run: |
           eval "${ALLURECTL_RUN}"
-          run_with_allurectl ./gradlew test -Denv=reference_mock -DincludeTags=screenshot
+          run_with_allurectl ./gradlew test -Denv=multistack_mock -DincludeTags=screenshot
         working-directory: ${{ env.TESTS_DIR }}
       - name: Update screenshots
         if: >-
@@ -920,7 +924,7 @@ jobs:
           CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
         run: |
           eval "${ALLURECTL_RUN}"
-          run_with_allurectl ./gradlew test -Denv=reference_mock -DincludeTags=screenshot -DupdateScreenshots=true
+          run_with_allurectl ./gradlew test -Denv=multistack_mock -DincludeTags=screenshot -DupdateScreenshots=true
         working-directory: ${{ env.TESTS_DIR }}
       - name: Merge Allure results
         if: always() && env.TESTS_LANG == 'java'
@@ -1000,7 +1004,7 @@ jobs:
       - name: Run harness tests (Gradle)
         if: env.TESTS_LANG == 'java'
         id: run-tests
-        run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification -Denv=reference_ci -DincludeTags="${HARNESS_INCLUDE_TAGS}"
+        run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification -Denv=multistack_ci -DincludeTags="${HARNESS_INCLUDE_TAGS}"
         working-directory: ${{ env.TESTS_DIR }}
       - if: env.TESTS_LANG == 'java' && steps.run-tests.outcome == 'success'
         uses: actions/upload-artifact@v7
@@ -1719,6 +1723,22 @@ jobs:
           run_with_allurectl ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=manual
         working-directory: ${{ env.TESTS_DIR }}
       - *upload-allure-results
+
+  # Gating npm ci contract: exact pins in package.json must match package-lock.json.
+  # Independent of the pyramid so lock drift fails the workflow even when
+  # publish-allure-report stays non-gating observability.
+  allure-npm-lock:
+    name: allure-npm-lock
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - *checkout
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: package.json pins must match package-lock.json
+        working-directory: ${{ env.TESTS_DIR }}
+        run: node scripts/check-package-lock.mjs
 
   # Non-gating observability: one merged Allure report at the CI tip, then Telegram.
   publish-allure-report:
