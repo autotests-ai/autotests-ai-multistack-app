@@ -307,6 +307,17 @@ Dispatch is per-layer booleans (`run_integration`, `run_api`, `run_mock`, `run_e
 `run_screenshot`, `run_manual`) plus `update_mock_screenshots` / `update_e2e_screenshots` and `include_tags`/`exclude_tags` overrides.
 To add another layer, copy `manual-tests` and change the java `-D` flags.
 
+## CI cache (Gradle)
+
+CI-only. Writers save GUH + configuration cache (`GRADLE_CC_IF` + `*cache-gradle-cc`). Readers restore GUH **read-only** from `tests-harness` (`GRADLE_BUILD_ACTION_CACHE_KEY_JOB`) and **do not** restore CC. **Do not enable CC on `api-tests` / `e2e-tests`** (or `ui-mock-tests` / `manual-tests`) — CC pins absolute `GRADLE_USER_HOME` / JaCoCo paths from another runner.
+
+| | Jobs | GUH | CC |
+|--|------|-----|-----|
+| Writer, backend | `unit-tests`, `integration-tests`, `sonar-backend` | own `github.job` | yes (`backend/java/backend-java-spring`) |
+| Writer, kotlin twin | `sonar-backend-kotlin` | own `github.job` | yes (`backend/kotlin/backend-kotlin-spring`, key `backend-kotlin-spring-sonar`) |
+| Writer, tests | `tests-harness`, `sonar-tests` | own `github.job` | yes (tests module) |
+| Reader | `ui-mock-tests`, `api-tests`, `e2e-tests`, `manual-tests` | read-only from `tests-harness` | **no** |
+
 ## Test data and secrets
 
 - Register-flow tests (api / e2e) create `user_*` accounts and **delete them**
