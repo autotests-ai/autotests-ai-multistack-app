@@ -1,7 +1,7 @@
 {
   "base": {
     "project": "reference-app",
-    "environment": "reference_prod",
+    "environment": "multistack_prod",
     "comment": "cb870-compact-hero · pie hero + dynamics · freestyle JS",
     "language": "ru",
     "allureFolder": "allure-report/",

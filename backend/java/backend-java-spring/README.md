@@ -57,8 +57,8 @@ Seed: user `user1` / `password1`, plus 3 items from Flyway `V1__items.sql`.
 ## Layout
 
 ```
-dev.reference.app/
-  ReferenceApplication.java
+dev.multistack.app/
+  MultistackApplication.java
   config/ controller/ dto/ entity/ exception/ repository/ service/
 ```
 

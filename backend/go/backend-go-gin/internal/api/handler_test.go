@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"dev.reference/backend-go-gin/internal/api"
-	"dev.reference/backend-go-gin/internal/security"
-	"dev.reference/backend-go-gin/internal/store"
-	"dev.reference/backend-go-gin/internal/store/storetest"
+	"dev.multistack/backend-go-gin/internal/api"
+	"dev.multistack/backend-go-gin/internal/security"
+	"dev.multistack/backend-go-gin/internal/store"
+	"dev.multistack/backend-go-gin/internal/store/storetest"
 )
 
 const (

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"dev.reference/backend-go-gin/internal/store"
-	"dev.reference/backend-go-gin/internal/store/storetest"
+	"dev.multistack/backend-go-gin/internal/store"
+	"dev.multistack/backend-go-gin/internal/store/storetest"
 )
 
 func hashStub(password string) (string, error) { return "hash:" + password, nil }

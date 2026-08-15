@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"dev.reference/backend-go-gin/internal/security"
+	"dev.multistack/backend-go-gin/internal/security"
 )
 
 func TestHashPasswordRoundTrip(t *testing.T) {

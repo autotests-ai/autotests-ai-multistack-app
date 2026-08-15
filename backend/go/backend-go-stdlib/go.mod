@@ -1,4 +1,4 @@
-module dev.reference/backend-go-stdlib
+module dev.multistack/backend-go-stdlib
 
 go 1.25.0
 

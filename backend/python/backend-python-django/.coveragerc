@@ -1,4 +1,4 @@
-# Match Java's JaCoCo omit of ReferenceApplication: WSGI/ASGI entrypoints and
+# Match Java's JaCoCo omit of MultistackApplication: WSGI/ASGI entrypoints and
 # generated migrations are outside the contract surface.
 [run]
 branch = false

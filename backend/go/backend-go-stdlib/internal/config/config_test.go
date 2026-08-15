@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"dev.reference/backend-go-stdlib/internal/config"
+	"dev.multistack/backend-go-stdlib/internal/config"
 )
 
 func clearEnv(t *testing.T) {

@@ -31,11 +31,11 @@ sonar {
         property 'sonar.tests', 'src/test/java'
         property 'sonar.java.binaries', 'build/classes/java/main'
         property 'sonar.java.test.binaries', 'build/classes/java/test'
-        property 'sonar.exclusions', '**/ReferenceApplication.java'
+        property 'sonar.exclusions', '**/MultistackApplication.java'
     }
 }
 
-group = 'dev.reference'
+group = 'dev.multistack'
 version = '0.1.0'
 
 ext['slf4j.version'] = slf4jVersion
@@ -96,7 +96,7 @@ tasks.named('jacocoTestReport', JacocoReport) {
     }
     classDirectories.setFrom(files(classDirectories.files.collect {
         fileTree(dir: it, exclude: [
-                '**/ReferenceApplication.class',
+                '**/MultistackApplication.class',
         ])
     }))
 }

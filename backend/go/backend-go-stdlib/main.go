@@ -13,10 +13,10 @@ import (
 	"syscall"
 	"time"
 
-	"dev.reference/backend-go-stdlib/internal/api"
-	"dev.reference/backend-go-stdlib/internal/config"
-	"dev.reference/backend-go-stdlib/internal/security"
-	"dev.reference/backend-go-stdlib/internal/store"
+	"dev.multistack/backend-go-stdlib/internal/api"
+	"dev.multistack/backend-go-stdlib/internal/config"
+	"dev.multistack/backend-go-stdlib/internal/security"
+	"dev.multistack/backend-go-stdlib/internal/store"
 )
 
 // The schema travels inside the binary so the runtime image needs nothing but the binary.

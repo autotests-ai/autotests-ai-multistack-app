@@ -10,8 +10,8 @@ Run: `cd backend-java-spring && ./gradlew test`
 Package layout (canon, same as `stacks/java-spring` / `reference-app`):
 
 ```
-dev.reference.app/
-  ReferenceApplication.java
+dev.multistack.app/
+  MultistackApplication.java
   config/ controller/ dto/ entity/ exception/ repository/ service/
 ```
 

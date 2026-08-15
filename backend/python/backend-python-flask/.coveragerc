@@ -1,4 +1,4 @@
-# Match Java's JaCoCo omit of ReferenceApplication: entrypoint modules are not
+# Match Java's JaCoCo omit of MultistackApplication: entrypoint modules are not
 # part of the contract surface and are excluded from the 100% line gate.
 [run]
 branch = false

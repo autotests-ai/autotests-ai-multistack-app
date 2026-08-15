@@ -10,9 +10,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"dev.reference/backend-go-gin/internal/config"
-	"dev.reference/backend-go-gin/internal/security"
-	"dev.reference/backend-go-gin/internal/store"
+	"dev.multistack/backend-go-gin/internal/config"
+	"dev.multistack/backend-go-gin/internal/security"
+	"dev.multistack/backend-go-gin/internal/store"
 )
 
 // Error messages are part of the contract — do not reword.

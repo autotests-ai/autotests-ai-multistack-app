@@ -16,7 +16,7 @@ pipeline {
     choice(
       name: 'TARGET',
       choices: ['prod_pyramid', 'prod_api', 'prod_e2e', 'prod_visual', 'sonar_backend', 'sonar_tests'],
-      description: 'Pyramid slice (reference_prod + Selenoid) or sonar_backend / sonar_tests'
+      description: 'Pyramid slice (multistack_prod + Selenoid) or sonar_backend / sonar_tests'
     )
     string(name: 'TEST_CLASS', defaultValue: '', description: 'Optional FQCN / method for --tests')
     string(name: 'TEST_CASE_ID', defaultValue: '', description: 'Allure TestOps case id (launch name)')
@@ -47,8 +47,8 @@ pipeline {
         sh '''
           set -eu
           # Profiles are committed (Owner config/${env}.properties). Node/Allure/proxychains — in java-jdk21 agent image.
-          test -f tests/src/test/resources/config/reference_prod_api.properties
-          grep -q 'autotests.ai/stack' tests/src/test/resources/config/reference_prod_api.properties
+          test -f tests/src/test/resources/config/multistack_prod_api.properties
+          grep -q 'autotests.ai/stack' tests/src/test/resources/config/multistack_prod_api.properties
           command -v node >/dev/null
           command -v allure >/dev/null
           node --version
@@ -137,19 +137,19 @@ pipeline {
 
                 case "${TARGET}" in
                   prod_pyramid)
-                    run_one "prod api" testApi -Denv=reference_prod_api
-                    run_one "prod e2e smoke" testE2e -Denv=reference_prod_e2e \
+                    run_one "prod api" testApi -Denv=multistack_prod_api
+                    run_one "prod e2e smoke" testE2e -Denv=multistack_prod_e2e \
                       -Djunit.jupiter.execution.parallel.enabled=false
                     ;;
                   prod_api)
-                    run_one "prod api" testApi -Denv=reference_prod_api
+                    run_one "prod api" testApi -Denv=multistack_prod_api
                     ;;
                   prod_e2e)
-                    run_one "prod e2e smoke" testE2e -Denv=reference_prod_e2e \
+                    run_one "prod e2e smoke" testE2e -Denv=multistack_prod_e2e \
                       -Djunit.jupiter.execution.parallel.enabled=false
                     ;;
                   prod_visual)
-                    run_one "prod visual" testVisual -Denv=reference_prod_visual
+                    run_one "prod visual" testVisual -Denv=multistack_prod_visual
                     ;;
                   *)
                     echo "Unknown TARGET=${TARGET}" >&2

@@ -6,7 +6,7 @@
  *
  *        (\_/)
  *        ( •_•)
- *        / >./gradlew test -Denv=reference_ci -DincludeTags=e2e
+ *        / >./gradlew test -Denv=multistack_ci -DincludeTags=e2e
  *
  *              .-------.
  *             /  ✓ ✓ ✓  \
@@ -34,7 +34,7 @@ buildscript {
         jacksonVersion      = '2.18.2'
         ownerVersion        = '1.0.12'
         testParallelForks   = 1
-        defaultEnv          = 'reference_ci'
+        defaultEnv          = 'multistack_ci'
     }
 }
 

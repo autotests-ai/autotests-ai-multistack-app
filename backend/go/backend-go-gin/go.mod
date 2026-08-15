@@ -1,4 +1,4 @@
-module dev.reference/backend-go-gin
+module dev.multistack/backend-go-gin
 
 go 1.25.0
 

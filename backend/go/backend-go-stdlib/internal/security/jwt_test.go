@@ -7,7 +7,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 
-	"dev.reference/backend-go-stdlib/internal/security"
+	"dev.multistack/backend-go-stdlib/internal/security"
 )
 
 const testSecret = "reference-app-dev-secret-change-in-production-min-32-chars"

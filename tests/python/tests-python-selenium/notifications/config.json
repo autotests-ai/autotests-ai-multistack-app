@@ -1,7 +1,7 @@
 {
   "base": {
     "project": "reference-app",
-    "environment": "reference_prod",
+    "environment": "multistack_prod",
     "comment": "cb870-pyramid-mid · dynamics left · pyramid mid · freestyle Python",
     "allureFolder": "allure-report/",
     "allureResultsFolder": "allure-results/",

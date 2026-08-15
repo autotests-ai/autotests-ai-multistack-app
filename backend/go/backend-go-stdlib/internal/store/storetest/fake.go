@@ -6,7 +6,7 @@ import (
 	"context"
 	"slices"
 
-	"dev.reference/backend-go-stdlib/internal/store"
+	"dev.multistack/backend-go-stdlib/internal/store"
 )
 
 // Fake records rows in memory. Any of the *Err fields short-circuits the matching method,

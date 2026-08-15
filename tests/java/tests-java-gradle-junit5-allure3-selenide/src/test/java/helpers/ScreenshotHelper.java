@@ -121,7 +121,7 @@ public final class ScreenshotHelper {
 
     static String screenshotMode() {
         var env = System.getProperty("env", "").trim();
-        return "reference_mock".equals(env) ? "mock" : "e2e";
+        return "multistack_mock".equals(env) ? "mock" : "e2e";
     }
 
     static String screenshotOs() {

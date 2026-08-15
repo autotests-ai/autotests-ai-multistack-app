@@ -38,7 +38,7 @@ class WelcomePanelScreenshotTests extends TestBase {
     @DisplayName("Welcome panel matches screenshot")
     void welcomePanelMatchesScreenshot(int viewportWidth) {
         ViewportHelper.setViewport(viewportWidth, VIEWPORT_HEIGHT);
-        var expectedUser = "reference_mock".equals(System.getProperty("env", "").trim())
+        var expectedUser = "multistack_mock".equals(System.getProperty("env", "").trim())
                 ? "mock-user"
                 : "user1";
         loginPage.openPage()

@@ -572,7 +572,7 @@ services:
       - "${MOCK_GATEWAY_PORT:-9911}:80"
 
   # Same-origin / + /api/ with the REAL backend — the local stand for full e2e flows
-  # (-Denv=reference_ci). Twin of stand-gateway, but proxies backend-java-spring instead
+  # (-Denv=multistack_ci). Twin of stand-gateway, but proxies backend-java-spring instead
   # of WireMock; mirrors the prod path shape so the SPA reaches the API from :9821.
   stand-gateway-ci:
     image: nginx:1.27-alpine

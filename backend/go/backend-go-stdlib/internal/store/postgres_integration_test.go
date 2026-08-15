@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"dev.reference/backend-go-stdlib/internal/store"
+	"dev.multistack/backend-go-stdlib/internal/store"
 )
 
 // openPostgres skips unless TEST_DATABASE_URL points at a scratch database, so the

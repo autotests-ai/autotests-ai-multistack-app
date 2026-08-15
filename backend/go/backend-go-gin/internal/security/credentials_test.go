@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"dev.reference/backend-go-gin/internal/security"
+	"dev.multistack/backend-go-gin/internal/security"
 )
 
 // The contract reports every violating field in one message, joined with "; ".
