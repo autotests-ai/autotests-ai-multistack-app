@@ -1,4 +1,4 @@
-# reference-app — tests-js (Playwright)
+# Multistack — tests-js (Playwright)
 
 UI smoke in [RealWorldTests](https://github.com/KurenkoValentina/RealWorldTests) style: App facade, page objects, UserBuilder, `webApp` fixture, Allure via `allure-playwright`.
 
@@ -30,4 +30,4 @@ With `ATTACH_FULL=true` (or `PW_ENABLE_VIDEO=true`), video is recorded via Playw
 npm run allureG && npm run allureO
 ```
 
-Results: `allure-results/`. Jenkins freestyle: `reference-app-tests-freestyle-js-playwright`.
+Results: `allure-results/`. Jenkins freestyle: `autotests-ai-multistack-tests-freestyle-js-allure3`.

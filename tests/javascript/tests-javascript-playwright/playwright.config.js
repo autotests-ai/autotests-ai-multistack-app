@@ -28,7 +28,7 @@ function remoteConnectOptions() {
   const enableVnc =
     envBool('PW_ENABLE_VNC') || attachFull() ? 'true' : 'false';
   const options = {
-    name: process.env.PW_SESSION_NAME || 'reference-app-js',
+    name: process.env.PW_SESSION_NAME || 'autotests-ai-multistack-js',
     sessionTimeout: process.env.PW_SESSION_TIMEOUT || '5m',
     enableVNC: enableVnc,
     enableVideo,
@@ -38,7 +38,7 @@ function remoteConnectOptions() {
       process.env.PW_SCREEN_RESOLUTION || '1920x1080x24';
     const videoName =
       process.env.PW_VIDEO_NAME ||
-      `reference-app-js-${Date.now()}.mp4`;
+      `autotests-ai-multistack-js-${Date.now()}.mp4`;
     process.env.PW_VIDEO_NAME = videoName;
     options.videoName = videoName;
   }

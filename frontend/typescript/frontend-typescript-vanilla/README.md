@@ -1,6 +1,6 @@
 # frontend-typescript-vanilla
 
-Product UI — the same reference-app screens in **TypeScript with no framework**.
+Product UI — the same Multistack screens in **TypeScript with no framework**.
 
 A real multi-page app: `index.html`, `login.html` and `register.html` are three
 separate documents, there is no client-side router, and the DOM is driven by

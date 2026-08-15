@@ -54,7 +54,7 @@ describe('home', () => {
 
     await vi.waitFor(() => {
       expect($testId('health-status').text()).toBe(
-        '→ UP | service: reference-app | frontend: frontend-typescript-jquery',
+        '→ UP | service: backend-java-spring | frontend: frontend-typescript-jquery',
       );
     });
 

@@ -1,4 +1,4 @@
-# reference-app — tests-python-selenium (Selenium)
+# Multistack — tests-python-selenium (Selenium)
 
 UI smoke mirroring Java Selenide stack: fluent page objects, pytest + allure-pytest, `conftest` ≈ `TestBase`.
 
@@ -28,4 +28,4 @@ pytest
 allure serve allure-results
 ```
 
-Jenkins freestyle: `reference-app-tests-freestyle-python-selenium`.
+Jenkins freestyle: `autotests-ai-multistack-tests-freestyle-python-allure3`.

@@ -41,7 +41,7 @@ describe('home page', { tags: ['smoke'] }, () => {
 
     await waitFor(() =>
       expect(testId('health-status')).toHaveTextContent(
-        '→ UP | service: reference-app | frontend: frontend-typescript-vanilla',
+        '→ UP | service: backend-java-spring | frontend: frontend-typescript-vanilla',
       ),
     );
     await waitFor(() => expect(testId('item-row')).toHaveTextContent('Alpha'));

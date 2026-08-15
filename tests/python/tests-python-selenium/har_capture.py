@@ -150,7 +150,7 @@ def _to_har(log_entries: list[dict]) -> str:
 
     log = {
         "version": "1.2",
-        "creator": {"name": "reference-app har_capture", "version": "1"},
+        "creator": {"name": "autotests-ai-multistack-app har_capture", "version": "1"},
         "pages": [
             {
                 "startedDateTime": datetime.now(tz=timezone.utc).isoformat(),

@@ -11,7 +11,7 @@ describe('seedData', () => {
     expect(await store.listItems()).toEqual([
       { id: 1, name: 'Alpha', description: 'First seeded item from PostgreSQL' },
       { id: 2, name: 'Beta', description: 'Second seeded item for demo API' },
-      { id: 3, name: 'Gamma', description: 'Third item — reference-app bootstrap' },
+      { id: 3, name: 'Gamma', description: 'Third item — multistack bootstrap' },
     ]);
     expect(SEED_ITEMS).toHaveLength(3);
   });

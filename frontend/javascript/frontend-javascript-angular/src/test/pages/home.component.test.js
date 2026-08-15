@@ -46,7 +46,7 @@ function stubDefaultApis(overrides) {
       if (override) return Promise.resolve(override);
 
       if (url.includes('/api/health')) {
-        return Promise.resolve(jsonResponse({ status: 'UP', service: 'reference-app' }));
+        return Promise.resolve(jsonResponse({ status: 'UP', service: 'backend-java-spring' }));
       }
       if (url.includes('/api/items')) {
         return Promise.resolve(
@@ -90,14 +90,14 @@ describe('HomeComponent', () => {
 
     await waitFor(() =>
       expect(screen.getByTestId('health-status')).toHaveTextContent(
-        '→ UP | service: reference-app | frontend: frontend-javascript-angular',
+        '→ UP | service: backend-java-spring | frontend: frontend-javascript-angular',
       ),
     );
 
     expect(await screen.findByTestId('item-row')).toHaveTextContent('Alpha');
   });
 
-  it('renders the module copy in the Reference App panel', async () => {
+  it('renders the module copy in the Multistack panel', async () => {
     renderHome();
 
     expect(screen.getByTestId('reference-layout')).toHaveTextContent(

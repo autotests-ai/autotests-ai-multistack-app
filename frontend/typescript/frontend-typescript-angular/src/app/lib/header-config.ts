@@ -16,7 +16,7 @@ export interface HeaderConfig {
 }
 
 /**
- * Canonical header config for the reference-app SPA. Nav hrefs are mount-prefixed
+ * Canonical header config for the Multistack SPA. Nav hrefs are mount-prefixed
  * so design-system `header.js` matches the live route under
  * `/frontend-typescript-angular/`. Omit `active` — header.js derives it from location.
  * Stack is the origin board `/stack/`, not `/{pair}/stack`.

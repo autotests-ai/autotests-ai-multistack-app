@@ -26,7 +26,7 @@ func TestSeedFillsEmptyDatabase(t *testing.T) {
 			t.Fatalf("item %d = %+v, want %+v", i, fake.Items[i], item)
 		}
 	}
-	if want := "Third item — reference-app bootstrap"; fake.Items[2].Description != want {
+	if want := "Third item — multistack bootstrap"; fake.Items[2].Description != want {
 		t.Fatalf("third description = %q, want %q (em-dash)", fake.Items[2].Description, want)
 	}
 

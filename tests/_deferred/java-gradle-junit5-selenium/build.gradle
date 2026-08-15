@@ -1,5 +1,5 @@
 /*
- * reference-app — java/gradle-junit5-selenium (UI smoke sibling)
+ * autotests-ai-multistack-app — java/gradle-junit5-selenium (UI smoke sibling)
  * Java · Gradle · Selenium 4 · JUnit 5 · Allure
  * Canon remains ../../tests (Selenide pyramid ≡ gradle-junit5-selenide).
  */

@@ -1,6 +1,6 @@
 # frontend-javascript-jquery
 
-Product UI — the same reference-app screens as
+Product UI — the same Multistack screens as
 [`frontend-javascript-vanilla`](../frontend-javascript-vanilla/), written in
 **JavaScript + jQuery 4**.
 

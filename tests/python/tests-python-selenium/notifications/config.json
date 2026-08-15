@@ -1,6 +1,6 @@
 {
   "base": {
-    "project": "reference-app",
+    "project": "autotests-ai-multistack-app",
     "environment": "multistack_prod",
     "comment": "cb870-pyramid-mid · dynamics left · pyramid mid · freestyle Python",
     "allureFolder": "allure-report/",

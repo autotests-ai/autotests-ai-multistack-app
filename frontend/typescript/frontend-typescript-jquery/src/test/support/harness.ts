@@ -73,7 +73,7 @@ export function stubApis(overrides?: FetchOverride): void {
       }
 
       if (url.includes('/api/health')) {
-        return Promise.resolve(jsonResponse({ status: 'UP', service: 'reference-app' }));
+        return Promise.resolve(jsonResponse({ status: 'UP', service: 'backend-java-spring' }));
       }
       if (url.includes('/api/items')) {
         return Promise.resolve(

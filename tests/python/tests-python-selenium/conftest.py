@@ -43,7 +43,7 @@ def driver(config: TestConfig) -> WebDriver:
                 "enableVideo": config.enable_video,
                 "enableHAR": config.enable_har,
                 "headless": config.headless,
-                "name": "reference-app-python",
+                "name": "autotests-ai-multistack-python",
             },
         )
         drv: WebDriver = webdriver.Remote(

@@ -24,7 +24,7 @@ function stubDefaultApis(overrides) {
       if (override) return Promise.resolve(override);
 
       if (url.includes('/api/health')) {
-        return Promise.resolve(jsonResponse({ status: 'UP', service: 'reference-app' }));
+        return Promise.resolve(jsonResponse({ status: 'UP', service: 'backend-java-spring' }));
       }
       if (url.includes('/api/items')) {
         return Promise.resolve(
@@ -82,7 +82,7 @@ describe('home page', () => {
 
     await waitFor(() =>
       expect(screen.getByTestId('health-status')).toHaveTextContent(
-        '→ UP | service: reference-app | frontend: frontend-javascript-jquery',
+        '→ UP | service: backend-java-spring | frontend: frontend-javascript-jquery',
       ),
     );
 

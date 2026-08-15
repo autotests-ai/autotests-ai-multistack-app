@@ -1,5 +1,5 @@
-// reference-app Tests — Jenkins (jenkins.qa.guru)
-// Mirrors .github/workflows/reference_github-pyramid.yml prod slices.
+// Multistack Tests — Jenkins (jenkins.qa.guru)
+// Mirrors .github/workflows/multistack_github-pyramid.yml prod slices.
 // Allure 3 via allure-jenkins-plugin · TestOps via allure-jenkins (withAllureUpload) · Jira site global (jira.qa.guru).
 // Confluence: taxonomy / TZ in space REF — not a Jenkins step (Application Link ↔ Jira).
 
@@ -102,15 +102,15 @@ pipeline {
       steps {
         script {
           def launchName = params.TEST_CASE_ID?.trim()
-            ? "TestOps #${params.TEST_CASE_ID} — reference-app #${env.BUILD_NUMBER}"
-            : "Jenkins ${params.TARGET} — reference-app #${env.BUILD_NUMBER}"
+            ? "TestOps #${params.TEST_CASE_ID} — autotests-ai-multistack-app #${env.BUILD_NUMBER}"
+            : "Jenkins ${params.TARGET} — autotests-ai-multistack-app #${env.BUILD_NUMBER}"
           catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
             // Upload streams while tests write allure-results (plugin requires wrapper around the run)
             withAllureUpload(
               serverId: env.ALLURE_SERVER_ID,
               projectId: env.ALLURE_PROJECT_ID,
               name: launchName,
-              tags: "jenkins,reference-app,${params.TARGET}",
+              tags: "jenkins,autotests-ai-multistack-app,${params.TARGET}",
               results: [[path: 'tests/build/allure-results']],
               silent: true
             ) {
@@ -280,7 +280,7 @@ pipeline {
               node <<'JS'
 const fs = require("fs");
 const cfg = JSON.parse(fs.readFileSync("notifications/config.json", "utf8"));
-cfg.base.project = `Reference App Jenkins #${process.env.BUILD_NUMBER}`;
+cfg.base.project = `autotests-ai-multistack-app Jenkins #${process.env.BUILD_NUMBER}`;
 cfg.base.links = {
   report: process.env.REPORT_URL,
   dashboard: process.env.DASHBOARD_URL,

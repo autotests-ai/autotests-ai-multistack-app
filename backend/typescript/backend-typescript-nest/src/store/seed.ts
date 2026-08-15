@@ -5,7 +5,7 @@ import type { Store } from './store';
 export const SEED_ITEMS: ReadonlyArray<readonly [string, string]> = [
   ['Alpha', 'First seeded item from PostgreSQL'],
   ['Beta', 'Second seeded item for demo API'],
-  ['Gamma', 'Third item — reference-app bootstrap'],
+  ['Gamma', 'Third item — multistack bootstrap'],
 ];
 
 export const SEED_USERNAME = 'user1';

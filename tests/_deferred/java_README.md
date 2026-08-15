@@ -1,4 +1,4 @@
-# Java test stacks (reference-app)
+# Java test stacks (Multistack)
 
 Layout mirrors qa-guru-refs: **language first**, then `{build}-{framework}-{driver}`.
 

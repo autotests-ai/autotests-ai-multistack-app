@@ -9,7 +9,7 @@ from app.models import Item, User
 SEED_ITEMS = (
     ("Alpha", "First seeded item from PostgreSQL"),
     ("Beta", "Second seeded item for demo API"),
-    ("Gamma", "Third item — reference-app bootstrap"),
+    ("Gamma", "Third item — multistack bootstrap"),
 )
 
 SEED_USERNAME = "user1"

@@ -64,9 +64,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: null,
       manifest: {
-        name: 'Reference App',
-        short_name: 'Reference',
-        description: 'Reference application — TypeScript React SPA',
+        name: 'Multistack',
+        short_name: 'Multistack',
+        description: 'autotests-ai-multistack-app — TypeScript React SPA',
         start_url: mountBase,
         scope: mountBase,
         display: 'standalone',

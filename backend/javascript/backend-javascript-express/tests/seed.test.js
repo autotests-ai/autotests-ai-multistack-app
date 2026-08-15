@@ -17,7 +17,7 @@ describe('seedData', () => {
       {
         id: 3,
         name: 'Gamma',
-        description: 'Third item — reference-app bootstrap',
+        description: 'Third item — multistack bootstrap',
       },
     ]);
 

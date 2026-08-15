@@ -1,6 +1,6 @@
 {
   "base": {
-    "project": "Reference App (local smoke)",
+    "project": "autotests-ai-multistack-app (local smoke)",
     "environment": "prod",
     "comment": "Collage preview 5.0.2 free CB-870 @ TG post 1024×1280",
     "language": "ru",
@@ -25,9 +25,9 @@
       "pyramidFallback": "suites"
     },
     "links": {
-      "report": "https://autotests-ai.github.io/reference-app/reports/latest/awesome/index.html",
-      "dashboard": "https://autotests-ai.github.io/reference-app/reports/latest/dashboard/index.html",
-      "build": "https://github.com/autotests-ai/reference-app/actions/runs/29138466145"
+      "report": "https://reports.autotests.ai/reports/latest/awesome/index.html",
+      "dashboard": "https://reports.autotests.ai/reports/latest/dashboard/index.html",
+      "build": "https://github.com/autotests-ai/autotests-ai-multistack-app/actions"
     }
   },
   "telegram": {

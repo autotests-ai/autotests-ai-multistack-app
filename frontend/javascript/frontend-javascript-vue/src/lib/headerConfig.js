@@ -4,7 +4,7 @@ import { appPath } from './appBase';
 export const STACK_INDEX_HREF = '/stack/';
 
 /**
- * Canonical header config for the reference-app SPA. Nav hrefs are mount-prefixed
+ * Canonical header config for the Multistack SPA. Nav hrefs are mount-prefixed
  * so design-system `header.js` matches the live route under
  * `/frontend-javascript-vue/`. Omit `active` — header.js derives it from location.
  */

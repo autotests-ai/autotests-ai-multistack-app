@@ -21,7 +21,7 @@ class HomeTests extends TestBase {
     void pageLoadFetchesItems() {
         homePage.openPage()
                 .shouldShowLayout()
-                .shouldShowHealthText("service: reference-app")
+                .shouldShowHealthText("service: backend-java-spring")
                 .shouldShowItemText("Alpha");
     }
 }

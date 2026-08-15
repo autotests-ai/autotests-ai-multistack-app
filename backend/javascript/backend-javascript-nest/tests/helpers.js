@@ -18,7 +18,7 @@ const SETTINGS = {
 const SEEDED_ITEMS = [
   { name: 'Alpha', description: 'First seeded item from PostgreSQL' },
   { name: 'Beta', description: 'Second seeded item for demo API' },
-  { name: 'Gamma', description: 'Third item — reference-app bootstrap' },
+  { name: 'Gamma', description: 'Third item — multistack bootstrap' },
 ];
 
 async function buildApp({ items = SEEDED_ITEMS, users = ['user1'] } = {}) {

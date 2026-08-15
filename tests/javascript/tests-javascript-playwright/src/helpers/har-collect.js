@@ -125,7 +125,7 @@ function createHarCollector() {
       JSON.stringify({
         log: {
           version: '1.2',
-          creator: { name: 'reference-app har-collect', version: '1' },
+          creator: { name: 'autotests-ai-multistack-app har-collect', version: '1' },
           pages: [
             {
               startedDateTime: new Date().toISOString(),

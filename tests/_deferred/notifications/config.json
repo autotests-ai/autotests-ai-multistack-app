@@ -1,6 +1,6 @@
 {
   "base": {
-    "project": "Reference App",
+    "project": "autotests-ai-multistack-app",
     "environment": "CI",
     "comment": "",
     "language": "ru",

@@ -1,6 +1,6 @@
 spring:
   application:
-    name: reference-app-kotlin
+    name: backend-kotlin-spring
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:multistack_app_kotlin_spring}
     username: ${DB_USER:multistack}

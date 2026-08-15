@@ -27,7 +27,7 @@ declare global {
 const HEADER_SCRIPT_PATH = '/js/header.js';
 
 /**
- * Canonical header config for the reference-app pages. Nav hrefs are mount-prefixed
+ * Canonical header config for the Multistack pages. Nav hrefs are mount-prefixed
  * so design-system `header.js` matches the live document under
  * `/{backend}/frontend-typescript-jquery/`.
  */

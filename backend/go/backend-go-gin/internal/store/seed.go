@@ -16,7 +16,7 @@ const (
 var SeedItems = []Item{
 	{Name: "Alpha", Description: "First seeded item from PostgreSQL"},
 	{Name: "Beta", Description: "Second seeded item for demo API"},
-	{Name: "Gamma", Description: "Third item — reference-app bootstrap"},
+	{Name: "Gamma", Description: "Third item — multistack bootstrap"},
 }
 
 // Seed is idempotent: items are only written into an empty table and the demo user only

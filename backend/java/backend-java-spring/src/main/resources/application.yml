@@ -1,6 +1,6 @@
 spring:
   application:
-    name: reference-app
+    name: backend-java-spring
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:multistack_app_java_spring}
     username: ${DB_USER:multistack}
