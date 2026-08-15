@@ -20,13 +20,13 @@ name: CI
 # Sideways FE: component (jsdom) — only the active FRONTEND (same teaching knob as deploy).
 # Screenshot (@Tag screenshot): compare in ui-mock-tests (every PR) and e2e-tests (dispatch);
 # rewrite is a step in those jobs (update_mock_screenshots / update_e2e_screenshots), not a CD job.
-# CD on main: three lanes (backend · frontend · tests). `trigger` maps
+# CD: push main → production; push develop → stage. `trigger` maps
 # push paths / dispatch `deploy` onto the same flags. Sonar gates deploy, not build.
-# Deploy of either lane moves the shared **prod** checkout dir to the new SHA.
-# Stage twin (same images): deploy-backend-stage / deploy-frontend-stage — own APP_DIR,
+# Prod deploy moves the **prod** checkout dir to the new SHA.
+# Stage twin: deploy-backend-stage / deploy-frontend-stage — own APP_DIR,
 # compose project autotests-ai-multistack-app-stage, ports +10000 (deploy/stage.env).
-# Skip until vars.STAGE_APP_DIR is set. dispatch deploy_target=production|stage|both.
-# api-tests / e2e-tests stay on prod APP_URL.
+# Stage CD only on push develop (or dispatch deploy_target=stage|both). Skip until
+# vars.STAGE_APP_DIR is set. api-tests / e2e-tests stay on prod APP_URL (main only).
 # Roots: unit-tests · component-tests · tests-harness · testops-context
 #   integration-tests ← unit-tests (backend Spring+PG, pre-build; PR + main)
 #   sonar-backend ← unit-tests + integration-tests
@@ -35,22 +35,22 @@ name: CI
 #   ui-mock-tests ← component-tests (jsdom first; mock compose on the runner)
 #   sonar-frontend ← component-tests + ui-mock-tests (mock skipped ⇒ sonar still runs)
 #   build-backend ← unit-tests + integration-tests · build-frontend ← ui-mock-tests
-#   deploy-backend ← build-backend + sonar-backend
+#   deploy-backend ← build-backend + sonar-backend (push main / dispatch production)
 #   deploy-frontend ← build-frontend + sonar-frontend
-#   deploy-backend-stage / deploy-frontend-stage ← same gates; skip until vars.STAGE_APP_DIR
+#   deploy-backend-stage / deploy-frontend-stage ← same gates; push develop; skip until vars.STAGE_APP_DIR
 #   api-tests ← deploy-backend (curl /api/health; no join with frontend)
 #   e2e-tests ← api-tests + deploy-frontend (curl live UI) → manual-tests
 #   allure-npm-lock (gating: tests package.json == package-lock.json)
 #   publish-allure-report ← pyramid layers + sonar-backend (gating generate)
-# push main: trigger infers lanes from paths (tests/ ⇒ no app deploy).
-# dispatch `deploy=none|backend|frontend|tests|all`.
-# PR: no deploy; ui-mock-tests after component-tests (mock compose profile).
+# push main|develop: trigger infers lanes from paths (tests/ ⇒ no app deploy).
+# dispatch `deploy=none|backend|frontend|tests|all` + `deploy_target=production|stage|both`.
+# PR (main|develop): no deploy; ui-mock-tests after component-tests (mock compose profile).
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, develop]
   push:
-    branches: [main]
+    branches: [main, develop]
   workflow_dispatch:
     inputs:
       deploy:
@@ -59,7 +59,7 @@ on:
         options: [none, backend, frontend, tests, all]
         default: none
       deploy_target:
-        description: "CD host: production · stage · both. Push main tries both (stage no-ops until vars.STAGE_APP_DIR). api/e2e always hit production."
+        description: "CD host: production (main) · stage (develop) · both (dispatch only). Push main→prod, push develop→stage. api/e2e always hit production (main)."
         type: choice
         options: [production, stage, both]
         default: production
@@ -510,8 +510,10 @@ jobs:
       backend: ${{ steps.set.outputs.backend }}
       frontend: ${{ steps.set.outputs.frontend }}
       tests: ${{ steps.set.outputs.tests }}
+      cd_production: ${{ steps.set.outputs.cd_production }}
+      cd_stage: ${{ steps.set.outputs.cd_stage }}
     steps:
-      - if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      - if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
         uses: actions/checkout@v7
         with:
           persist-credentials: false
@@ -521,6 +523,7 @@ jobs:
         env:
           BEFORE: ${{ github.event.before }}
           DEPLOY: ${{ github.event.inputs.deploy || '' }}
+          DEPLOY_TARGET: ${{ github.event.inputs.deploy_target || '' }}
         run: |
           set -euo pipefail
           backend=false
@@ -535,7 +538,7 @@ jobs:
               none|'') ;;
               *) echo "unknown deploy=${DEPLOY}" >&2; exit 1 ;;
             esac
-          elif [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+          elif [ "${GITHUB_EVENT_NAME}" = "push" ] && { [ "${GITHUB_REF}" = "refs/heads/main" ] || [ "${GITHUB_REF}" = "refs/heads/develop" ]; }; then
             if [ -z "${BEFORE:-}" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] \
               || ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
               backend=true
@@ -550,8 +553,26 @@ jobs:
               if match "^(tests/|${SHARED})"; then tests=true; fi
             fi
           fi
-          printf 'backend=%s\nfrontend=%s\ntests=%s\n' "$backend" "$frontend" "$tests" >> "$GITHUB_OUTPUT"
-          echo "trigger backend=${backend} frontend=${frontend} tests=${tests}"
+          cd_production=false
+          cd_stage=false
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            case "${DEPLOY_TARGET}" in
+              stage) cd_stage=true ;;
+              both) cd_production=true; cd_stage=true ;;
+              production|'') cd_production=true ;;
+              *) echo "unknown deploy_target=${DEPLOY_TARGET}" >&2; exit 1 ;;
+            esac
+            if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+              cd_production=false
+            fi
+          elif [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+            cd_production=true
+          elif [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/develop" ]; then
+            cd_stage=true
+          fi
+          printf 'backend=%s\nfrontend=%s\ntests=%s\ncd_production=%s\ncd_stage=%s\n' \
+            "$backend" "$frontend" "$tests" "$cd_production" "$cd_stage" >> "$GITHUB_OUTPUT"
+          echo "trigger backend=${backend} frontend=${frontend} tests=${tests} cd_production=${cd_production} cd_stage=${cd_stage}"
 
   # Keep the backend root first: GitHub has no explicit graph coordinates and uses
   # declaration order as a layout hint for otherwise independent jobs.
@@ -710,7 +731,7 @@ jobs:
     if: >-
       always() && !cancelled() && needs.unit-tests.result == 'success' && (
         github.event_name == 'pull_request' ||
-        (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+        (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')) ||
         (github.event_name == 'workflow_dispatch' && inputs.run_integration)
       )
     runs-on: ubuntu-24.04
@@ -1278,7 +1299,7 @@ jobs:
       !cancelled() &&
       needs.unit-tests.result == 'success' &&
       (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped') &&
-      github.ref == 'refs/heads/main' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') &&
       needs.trigger.outputs.backend == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -1316,7 +1337,7 @@ jobs:
     if: >-
       !cancelled() &&
       needs.ui-mock-tests.result == 'success' &&
-      github.ref == 'refs/heads/main' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') &&
       needs.trigger.outputs.frontend == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -1353,7 +1374,7 @@ jobs:
     needs: [trigger]
     if: >-
       !cancelled() &&
-      github.ref == 'refs/heads/main' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') &&
       needs.trigger.outputs.frontend == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -1406,17 +1427,21 @@ jobs:
         run: |
           set -euo pipefail
           docker compose push ${{ matrix.service }}
+          if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+            echo "skip :latest (only main retags latest)"
+            exit 0
+          fi
           img="ghcr.io/${{ github.repository_owner }}/autotests-ai-multistack-app-${{ matrix.service }}"
           docker tag "${img}:${IMAGE_TAG}" "${img}:latest"
           docker push "${img}:latest"
 
   deploy-backend:
-    needs: [build-backend, sonar-backend]
+    needs: [build-backend, sonar-backend, trigger]
     if: >-
       !cancelled() &&
       needs.build-backend.result == 'success' &&
       needs.sonar-backend.result == 'success' &&
-      (github.event_name != 'workflow_dispatch' || inputs.deploy_target != 'stage')
+      needs.trigger.outputs.cd_production == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment:
@@ -1453,13 +1478,13 @@ jobs:
 
   # FE deploy after teaching build + sonar + sidecar SHA images.
   deploy-frontend:
-    needs: [build-frontend, build-frontend-sidecars, sonar-frontend]
+    needs: [build-frontend, build-frontend-sidecars, sonar-frontend, trigger]
     if: >-
       !cancelled() &&
       needs.build-frontend.result == 'success' &&
       needs.build-frontend-sidecars.result == 'success' &&
       needs.sonar-frontend.result == 'success' &&
-      (github.event_name != 'workflow_dispatch' || inputs.deploy_target != 'stage')
+      needs.trigger.outputs.cd_production == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment:
@@ -1482,16 +1507,16 @@ jobs:
     steps:
       - *ssh-deploy
 
-  # Stage twin — same SHA images, own checkout + compose project + ports +10000.
-  # No-ops until repo var STAGE_APP_DIR is set (окно 04). api/e2e stay on prod.
+  # Stage twin — push develop (or dispatch deploy_target=stage|both). Own checkout.
+  # No-ops until repo var STAGE_APP_DIR is set (окно 04). api/e2e stay on prod/main.
   deploy-backend-stage:
-    needs: [build-backend, sonar-backend]
+    needs: [build-backend, sonar-backend, trigger]
     if: >-
       !cancelled() &&
       needs.build-backend.result == 'success' &&
       needs.sonar-backend.result == 'success' &&
       vars.STAGE_APP_DIR != '' &&
-      (github.event_name != 'workflow_dispatch' || inputs.deploy_target != 'production')
+      needs.trigger.outputs.cd_stage == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment:
@@ -1514,14 +1539,14 @@ jobs:
       - *ssh-deploy
 
   deploy-frontend-stage:
-    needs: [build-frontend, build-frontend-sidecars, sonar-frontend]
+    needs: [build-frontend, build-frontend-sidecars, sonar-frontend, trigger]
     if: >-
       !cancelled() &&
       needs.build-frontend.result == 'success' &&
       needs.build-frontend-sidecars.result == 'success' &&
       needs.sonar-frontend.result == 'success' &&
       vars.STAGE_APP_DIR != '' &&
-      (github.event_name != 'workflow_dispatch' || inputs.deploy_target != 'production')
+      needs.trigger.outputs.cd_stage == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment:
@@ -1548,7 +1573,8 @@ jobs:
   api-tests:
     needs: [deploy-backend, trigger, testops-context]
     if: >-
-      always() && !cancelled() && (
+      always() && !cancelled() &&
+      needs.trigger.outputs.cd_production == 'true' && (
         (needs.trigger.outputs.backend == 'true' &&
          needs.deploy-backend.result == 'success') ||
         (needs.trigger.outputs.tests == 'true' &&
@@ -1637,7 +1663,8 @@ jobs:
   e2e-tests:
     needs: [api-tests, deploy-frontend, trigger, testops-context]
     if: >-
-      always() && !cancelled() && (
+      always() && !cancelled() &&
+      needs.trigger.outputs.cd_production == 'true' && (
         (needs.deploy-frontend.result == 'success' ||
          needs.deploy-frontend.result == 'skipped') && (
           (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
