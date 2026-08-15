@@ -283,8 +283,9 @@ if (allureAgentMode == 'inspect' && allureReportMode != 'none') {
 if (allureReportMode == 'none') {
     tasks.named('test', Test).configure {
         systemProperties.remove('allure.results.directory')
+        def allureResultsToDelete = layout.buildDirectory.dir('allure-results')
         doLast {
-            delete layout.buildDirectory.dir('allure-results')
+            allureResultsToDelete.get().asFile.deleteDir()
         }
     }
 }
