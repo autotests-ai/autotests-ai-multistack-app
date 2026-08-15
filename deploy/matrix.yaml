@@ -2,6 +2,8 @@
 # Reference data for docs and deploy/services-status-server.py. CI does not read this file.
 # URL: https://autotests.ai/stack/{backend}/{frontend}/
 #      https://autotests.ai/stack/{backend}/api/
+# Stage: https://stage.autotests.ai/stack/…  (ports +10000, compose project *-stage)
+# First path segment → API upstream; second → per-frontend container upstream.
 # First path segment → API upstream; second → per-frontend container upstream.
 #
 # Port canon (local publish = prod host upstream; same numbers):

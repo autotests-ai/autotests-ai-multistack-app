@@ -22,7 +22,11 @@ name: CI
 # rewrite is a step in those jobs (update_mock_screenshots / update_e2e_screenshots), not a CD job.
 # CD on main: three lanes (backend · frontend · tests). `trigger` maps
 # push paths / dispatch `deploy` onto the same flags. Sonar gates deploy, not build.
-# Deploy of either lane moves the shared host checkout dir to the new SHA.
+# Deploy of either lane moves the shared **prod** checkout dir to the new SHA.
+# Stage twin (same images): deploy-backend-stage / deploy-frontend-stage — own APP_DIR,
+# compose project autotests-ai-multistack-app-stage, ports +10000 (deploy/stage.env).
+# Skip until vars.STAGE_APP_DIR is set. dispatch deploy_target=production|stage|both.
+# api-tests / e2e-tests stay on prod APP_URL.
 # Roots: unit-tests · component-tests · tests-harness · testops-context
 #   integration-tests ← unit-tests (backend Spring+PG, pre-build; PR + main)
 #   sonar-backend ← unit-tests + integration-tests
@@ -33,6 +37,7 @@ name: CI
 #   build-backend ← unit-tests + integration-tests · build-frontend ← ui-mock-tests
 #   deploy-backend ← build-backend + sonar-backend
 #   deploy-frontend ← build-frontend + sonar-frontend
+#   deploy-backend-stage / deploy-frontend-stage ← same gates; skip until vars.STAGE_APP_DIR
 #   api-tests ← deploy-backend (curl /api/health; no join with frontend)
 #   e2e-tests ← api-tests + deploy-frontend (curl live UI) → manual-tests
 #   allure-npm-lock (gating: tests package.json == package-lock.json)
@@ -53,6 +58,11 @@ on:
         type: choice
         options: [none, backend, frontend, tests, all]
         default: none
+      deploy_target:
+        description: "CD host: production · stage · both. Push main tries both (stage no-ops until vars.STAGE_APP_DIR). api/e2e always hit production."
+        type: choice
+        options: [production, stage, both]
+        default: production
       run_integration:
         description: "Run backend Spring+PG integration tests (pre-deploy)"
         type: boolean
@@ -163,6 +173,7 @@ env:
   PUBLIC_HOST: autotests.ai
   STACK_MOUNT: stack
   APP_URL: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+  STAGE_APP_URL: https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/
   # Playwright → UI_URL; pytest → BASE_URL (same stand URL)
   UI_URL: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
   BASE_URL: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
@@ -282,12 +293,20 @@ env:
     UI_RUNTIME=frontend/_shared/frontend-javascript-app
   DEPLOY_SSH_SCRIPT: |
     set -euo pipefail
-    cd /home/autotests_ai_multistack/autotests-ai-multistack-app
+    APP_DIR="${DEPLOY_APP_DIR:-/home/autotests_ai_multistack/autotests-ai-multistack-app}"
+    cd "$APP_DIR"
     git fetch origin
     git checkout --force "$IMAGE_TAG"
     echo "$GHCR_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-    docker compose pull ${DEPLOY_COMPOSE_SERVICES}
-    docker compose up -d --remove-orphans ${DEPLOY_COMPOSE_SERVICES}
+    COMPOSE="docker compose"
+    if [ -n "${DEPLOY_COMPOSE_PROJECT:-}" ]; then
+      COMPOSE="$COMPOSE --project-name ${DEPLOY_COMPOSE_PROJECT}"
+    fi
+    if [ -n "${DEPLOY_COMPOSE_ENV_FILE:-}" ]; then
+      COMPOSE="$COMPOSE --env-file ${DEPLOY_COMPOSE_ENV_FILE}"
+    fi
+    $COMPOSE pull ${DEPLOY_COMPOSE_SERVICES}
+    $COMPOSE up -d --remove-orphans ${DEPLOY_COMPOSE_SERVICES}
     if [ -n "${DEPLOY_HEALTH_URL:-}" ]; then
       curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${DEPLOY_HEALTH_URL}"
     fi
@@ -1396,7 +1415,8 @@ jobs:
     if: >-
       !cancelled() &&
       needs.build-backend.result == 'success' &&
-      needs.sonar-backend.result == 'success'
+      needs.sonar-backend.result == 'success' &&
+      (github.event_name != 'workflow_dispatch' || inputs.deploy_target != 'stage')
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment:
@@ -1412,6 +1432,9 @@ jobs:
       packages: read
     env:
       DEPLOY_STEP_NAME: Deploy backend to stand
+      DEPLOY_APP_DIR: /home/autotests_ai_multistack/autotests-ai-multistack-app
+      DEPLOY_COMPOSE_PROJECT: autotests-ai-multistack-app
+      DEPLOY_COMPOSE_ENV_FILE: ""
       DEPLOY_COMPOSE_SERVICES: postgres postgres-ensure-dbs backend-java-spring
       DEPLOY_HEALTH_URL: http://127.0.0.1:8800/api/health
     steps:
@@ -1425,7 +1448,7 @@ jobs:
           username: ${{ vars.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           command_timeout: 15m
-          envs: IMAGE_TAG,GHCR_TOKEN,DEPLOY_COMPOSE_SERVICES,DEPLOY_HEALTH_URL
+          envs: IMAGE_TAG,GHCR_TOKEN,DEPLOY_COMPOSE_SERVICES,DEPLOY_HEALTH_URL,DEPLOY_APP_DIR,DEPLOY_COMPOSE_PROJECT,DEPLOY_COMPOSE_ENV_FILE
           script: ${{ env.DEPLOY_SSH_SCRIPT }}
 
   # FE deploy after teaching build + sonar + sidecar SHA images.
@@ -1435,7 +1458,8 @@ jobs:
       !cancelled() &&
       needs.build-frontend.result == 'success' &&
       needs.build-frontend-sidecars.result == 'success' &&
-      needs.sonar-frontend.result == 'success'
+      needs.sonar-frontend.result == 'success' &&
+      (github.event_name != 'workflow_dispatch' || inputs.deploy_target != 'stage')
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment:
@@ -1450,6 +1474,70 @@ jobs:
       packages: read
     env:
       DEPLOY_STEP_NAME: Deploy frontend to stand
+      DEPLOY_APP_DIR: /home/autotests_ai_multistack/autotests-ai-multistack-app
+      DEPLOY_COMPOSE_PROJECT: autotests-ai-multistack-app
+      DEPLOY_COMPOSE_ENV_FILE: ""
+      DEPLOY_COMPOSE_SERVICES: frontend-typescript-react frontend-typescript-vue frontend-typescript-angular frontend-typescript-vanilla frontend-typescript-jquery frontend-javascript-vue frontend-javascript-angular frontend-javascript-vanilla frontend-javascript-jquery frontend-javascript-react
+      DEPLOY_HEALTH_URL: ""
+    steps:
+      - *ssh-deploy
+
+  # Stage twin — same SHA images, own checkout + compose project + ports +10000.
+  # No-ops until repo var STAGE_APP_DIR is set (окно 04). api/e2e stay on prod.
+  deploy-backend-stage:
+    needs: [build-backend, sonar-backend]
+    if: >-
+      !cancelled() &&
+      needs.build-backend.result == 'success' &&
+      needs.sonar-backend.result == 'success' &&
+      vars.STAGE_APP_DIR != '' &&
+      (github.event_name != 'workflow_dispatch' || inputs.deploy_target != 'production')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: multistack-stage
+      url: ${{ env.STAGE_APP_URL }}
+    concurrency:
+      group: deploy-autotests-ai-multistack-app-stage
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+    env:
+      DEPLOY_STEP_NAME: Deploy backend to stage
+      DEPLOY_APP_DIR: ${{ vars.STAGE_APP_DIR }}
+      DEPLOY_COMPOSE_PROJECT: autotests-ai-multistack-app-stage
+      DEPLOY_COMPOSE_ENV_FILE: deploy/stage.env
+      DEPLOY_COMPOSE_SERVICES: postgres postgres-ensure-dbs backend-java-spring
+      DEPLOY_HEALTH_URL: http://127.0.0.1:18800/api/health
+    steps:
+      - *ssh-deploy
+
+  deploy-frontend-stage:
+    needs: [build-frontend, build-frontend-sidecars, sonar-frontend]
+    if: >-
+      !cancelled() &&
+      needs.build-frontend.result == 'success' &&
+      needs.build-frontend-sidecars.result == 'success' &&
+      needs.sonar-frontend.result == 'success' &&
+      vars.STAGE_APP_DIR != '' &&
+      (github.event_name != 'workflow_dispatch' || inputs.deploy_target != 'production')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment:
+      name: multistack-stage
+      url: ${{ env.STAGE_APP_URL }}
+    concurrency:
+      group: deploy-autotests-ai-multistack-app-stage
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+    env:
+      DEPLOY_STEP_NAME: Deploy frontend to stage
+      DEPLOY_APP_DIR: ${{ vars.STAGE_APP_DIR }}
+      DEPLOY_COMPOSE_PROJECT: autotests-ai-multistack-app-stage
+      DEPLOY_COMPOSE_ENV_FILE: deploy/stage.env
       DEPLOY_COMPOSE_SERVICES: frontend-typescript-react frontend-typescript-vue frontend-typescript-angular frontend-typescript-vanilla frontend-typescript-jquery frontend-javascript-vue frontend-javascript-angular frontend-javascript-vanilla frontend-javascript-jquery frontend-javascript-react
       DEPLOY_HEALTH_URL: ""
     steps:

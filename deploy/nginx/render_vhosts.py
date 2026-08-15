@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 """Render nginx vhosts / stack location fragments from deploy/matrix.yaml.
 
-Outputs:
-  deploy/nginx/generated/{public_host}.conf       — retire host → 301 autotests.ai/stack/…
-  deploy/nginx/generated/autotests.ai-stack.conf  — proxy fragment for autotests.ai vhost
+Outputs (wipe + rewrite generated/*.conf):
+  {public_host}.conf — retire host → 301 autotests.ai/stack/…
+  autotests.ai-stack-{upstreams,routes,board}.conf
+  stage.autotests.ai-stack-{upstreams,routes,board}.conf — +10000 ports, stage_ upstreams
 """
 
 from __future__ import annotations
@@ -16,6 +17,9 @@ from pathlib import Path
 
 STACK_PREFIX = "/stack"
 CANONICAL_HOST = "autotests.ai"
+STAGE_HOST = "stage.autotests.ai"
+STAGE_PORT_OFFSET = 10000
+STAGE_UPSTREAM_PREFIX = "stage_"
 
 
 def _load_with_pyyaml(text: str) -> dict:
@@ -102,15 +106,30 @@ def public_host(matrix: dict) -> str:
     return str(host)
 
 
-def render_backend_upstreams(backends: list[dict]) -> str:
+def _us(service_id: str, prefix: str = "", suffix: str = "") -> str:
+    return f"{prefix}{service_id.replace('-', '_')}{suffix}"
+
+
+def _with_port_offset(entries: list[dict], offset: int) -> list[dict]:
+    if not offset:
+        return entries
+    out: list[dict] = []
+    for entry in entries:
+        copy = dict(entry)
+        copy["publish_port"] = int(entry["publish_port"]) + offset
+        out.append(copy)
+    return out
+
+
+def render_backend_upstreams(backends: list[dict], us_prefix: str = "") -> str:
     blocks: list[str] = []
     for backend in backends:
-        bid_us = backend["id"].replace("-", "_")
+        name = _us(backend["id"], us_prefix, "_api")
         port = backend["publish_port"]
         blocks.append(
             "\n".join(
                 [
-                    f"upstream {bid_us}_api {{",
+                    f"upstream {name} {{",
                     f"    server 127.0.0.1:{port};",
                     "    keepalive 8;",
                     "}",
@@ -120,15 +139,15 @@ def render_backend_upstreams(backends: list[dict]) -> str:
     return "\n\n".join(blocks) + ("\n" if blocks else "")
 
 
-def render_frontend_upstreams(frontends: list[dict]) -> str:
+def render_frontend_upstreams(frontends: list[dict], us_prefix: str = "") -> str:
     blocks: list[str] = []
     for frontend in frontends:
-        fid_us = frontend["id"].replace("-", "_")
+        name = _us(frontend["id"], us_prefix)
         port = frontend["publish_port"]
         blocks.append(
             "\n".join(
                 [
-                    f"upstream {fid_us} {{",
+                    f"upstream {name} {{",
                     f"    server 127.0.0.1:{port};",
                     "    keepalive 8;",
                     "}",
@@ -138,11 +157,11 @@ def render_frontend_upstreams(frontends: list[dict]) -> str:
     return "\n\n".join(blocks) + ("\n" if blocks else "")
 
 
-def render_api_locations(backends: list[dict]) -> str:
+def render_api_locations(backends: list[dict], us_prefix: str = "") -> str:
     chunks: list[str] = []
     for backend in backends:
         bid = backend["id"]
-        bid_us = bid.replace("-", "_")
+        name = _us(bid, us_prefix, "_api")
         api_path = f"{STACK_PREFIX}/{bid}/api"
         chunks.append(
             "\n".join(
@@ -156,7 +175,7 @@ def render_api_locations(backends: list[dict]) -> str:
                     "        proxy_set_header X-Real-IP $remote_addr;",
                     "        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;",
                     "        proxy_set_header X-Forwarded-Proto $scheme;",
-                    f"        proxy_pass http://{bid_us}_api/api/;",
+                    f"        proxy_pass http://{name}/api/;",
                     "    }",
                     "",
                 ]
@@ -165,13 +184,13 @@ def render_api_locations(backends: list[dict]) -> str:
     return "\n".join(chunks)
 
 
-def render_frontend_locations(frontends: list[dict]) -> str:
+def render_frontend_locations(frontends: list[dict], us_prefix: str = "") -> str:
     """Strip /stack/{backend}/{frontend} → / for per-frontend containers at docroot."""
     chunks: list[str] = []
     prefix = re.escape(STACK_PREFIX)
     for frontend in frontends:
         fid = frontend["id"]
-        fid_us = fid.replace("-", "_")
+        name = _us(fid, us_prefix)
         chunks.append(
             "\n".join(
                 [
@@ -182,7 +201,7 @@ def render_frontend_locations(frontends: list[dict]) -> str:
                     "        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;",
                     "        proxy_set_header X-Forwarded-Proto $scheme;",
                     "        rewrite ^ / break;",
-                    f"        proxy_pass http://{fid_us};",
+                    f"        proxy_pass http://{name};",
                     "    }",
                     f"    location ~ ^{prefix}/backend-[^/]+/{fid}/(.+)$ {{",
                     "        proxy_http_version 1.1;",
@@ -191,7 +210,7 @@ def render_frontend_locations(frontends: list[dict]) -> str:
                     "        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;",
                     "        proxy_set_header X-Forwarded-Proto $scheme;",
                     f"        rewrite ^{prefix}/backend-[^/]+/{fid}/(.+)$ /$1 break;",
-                    f"        proxy_pass http://{fid_us};",
+                    f"        proxy_pass http://{name};",
                     "    }",
                     "",
                 ]
@@ -200,12 +219,19 @@ def render_frontend_locations(frontends: list[dict]) -> str:
     return "\n".join(chunks)
 
 
-def render_from_template(template: str, backends: list[dict], frontends: list[dict], **extra: str) -> str:
+def render_from_template(
+    template: str,
+    backends: list[dict],
+    frontends: list[dict],
+    us_prefix: str = "",
+    **extra: str,
+) -> str:
     conf = (
-        template.replace("__BACKEND_UPSTREAMS__", render_backend_upstreams(backends))
-        .replace("__FRONTEND_UPSTREAMS__", render_frontend_upstreams(frontends))
-        .replace("__BACKEND_API_LOCATIONS__", render_api_locations(backends))
-        .replace("__FRONTEND_LOCATIONS__", render_frontend_locations(frontends))
+        template.replace("__BACKEND_UPSTREAMS__", render_backend_upstreams(backends, us_prefix))
+        .replace("__FRONTEND_UPSTREAMS__", render_frontend_upstreams(frontends, us_prefix))
+        .replace("__BACKEND_API_LOCATIONS__", render_api_locations(backends, us_prefix))
+        .replace("__FRONTEND_LOCATIONS__", render_frontend_locations(frontends, us_prefix))
+        .replace("__BOARD_UPSTREAM__", extra.get("board_upstream", _us("frontend-typescript-react", us_prefix)))
     )
     if "public_host" in extra:
         conf = conf.replace("__PUBLIC_HOST__", extra["public_host"])
@@ -259,7 +285,6 @@ def main() -> int:
         print("No frontends matched statuses", want_fe, file=sys.stderr)
         return 1
 
-    host = public_host(matrix)
     retire_tpl = (repo / "deploy" / "nginx" / "vhost.template.conf").read_text(encoding="utf-8")
     stack_tpl = (repo / "deploy" / "nginx" / "stack-locations.template.conf").read_text(
         encoding="utf-8"
@@ -268,30 +293,49 @@ def main() -> int:
         encoding="utf-8"
     )
 
-    retire_conf = render_from_template(retire_tpl, backends, frontends, public_host=host)
+    board_tpl = (repo / "deploy" / "nginx" / "stack-board.template.conf").read_text(
+        encoding="utf-8"
+    )
+    retire_host = "reference-app-copy.autotests.ai"
+    retire_conf = render_from_template(
+        retire_tpl, backends, frontends, public_host=retire_host
+    )
     stack_upstreams = render_from_template(stack_tpl, backends, frontends)
     stack_routes = render_from_template(routes_tpl, backends, frontends)
+    stack_board = render_from_template(board_tpl, backends, frontends)
+
+    stage_backends = _with_port_offset(backends, STAGE_PORT_OFFSET)
+    stage_frontends = _with_port_offset(frontends, STAGE_PORT_OFFSET)
+    stage_upstreams = render_from_template(
+        stack_tpl, stage_backends, stage_frontends, us_prefix=STAGE_UPSTREAM_PREFIX
+    )
+    stage_routes = render_from_template(
+        routes_tpl, stage_backends, stage_frontends, us_prefix=STAGE_UPSTREAM_PREFIX
+    )
+    stage_board = render_from_template(
+        board_tpl, stage_backends, stage_frontends, us_prefix=STAGE_UPSTREAM_PREFIX
+    )
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
     for old in args.out_dir.glob("*.conf"):
         old.unlink()
 
-    retire_out = args.out_dir / f"{host}.conf"
-    stack_up_out = args.out_dir / f"{CANONICAL_HOST}-stack-upstreams.conf"
-    stack_rt_out = args.out_dir / f"{CANONICAL_HOST}-stack-routes.conf"
-    board_tpl = (repo / "deploy" / "nginx" / "stack-board.template.conf").read_text(
-        encoding="utf-8"
+    def _write(name: str, text: str) -> None:
+        path = args.out_dir / name
+        path.write_text(text, encoding="utf-8")
+        print(f"wrote {path}")
+
+    _write(f"{retire_host}.conf", retire_conf)
+    _write(f"{CANONICAL_HOST}-stack-upstreams.conf", stack_upstreams)
+    _write(f"{CANONICAL_HOST}-stack-routes.conf", stack_routes)
+    _write(f"{CANONICAL_HOST}-stack-board.conf", stack_board)
+    _write(f"{STAGE_HOST}-stack-upstreams.conf", stage_upstreams)
+    _write(f"{STAGE_HOST}-stack-routes.conf", stage_routes)
+    _write(f"{STAGE_HOST}-stack-board.conf", stage_board)
+    print(
+        f"OK: retire + prod/stage stack fragments "
+        f"({len(backends)} be, {len(frontends)} fe, stage +{STAGE_PORT_OFFSET})"
     )
-    board_out = args.out_dir / f"{CANONICAL_HOST}-stack-board.conf"
-    retire_out.write_text(retire_conf, encoding="utf-8")
-    stack_up_out.write_text(stack_upstreams, encoding="utf-8")
-    stack_rt_out.write_text(stack_routes, encoding="utf-8")
-    board_out.write_text(board_tpl, encoding="utf-8")
-    print(f"wrote {retire_out}")
-    print(f"wrote {stack_up_out}")
-    print(f"wrote {stack_rt_out}")
-    print(f"wrote {board_out}")
-    print(f"OK: retire vhost + stack upstreams/routes ({len(backends)} be, {len(frontends)} fe)")
     return 0
 
 
