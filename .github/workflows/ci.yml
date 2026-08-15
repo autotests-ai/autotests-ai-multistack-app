@@ -10,9 +10,9 @@ name: CI
 #
 # Allure: testops-context opens one shared TestOps job-run; test jobs stream live and
 # publish raw results. allure-npm-lock is gating (package.json exact pins == lock;
-# students install with `npm ci`, not `npm install`). publish-allure-report merges once
-# for Pages/report (allure-report-kit soft-fork + overview/QG lead), stops the job-run
-# and hands one launch URL to send-allure-notifications (kit collage; non-gating).
+# students install with `npm ci`, not `npm install`). publish-allure-report is gating
+# (npm ci + generate). Pages / TestOps / Telegram stay step-level continue-on-error.
+# send-allure-notifications is non-gating (kit collage).
 # TestOps UI rerun: workflow_dispatch + ALLURE_JOB_RUN_ID → ALLURE_KEEP_TESTPLAN=true.
 # Launch env axes: BROWSER / OS / ENDPOINT / VERSION(=sha) / BRANCH.
 # SSOT host: allure.qa.guru (legacy allure.autotests.cloud redirects).
@@ -35,7 +35,7 @@ name: CI
 #   api-tests ← deploy-backend (curl /api/health; no join with frontend)
 #   e2e-tests ← api-tests + deploy-frontend (curl live UI) → manual-tests
 #   allure-npm-lock (gating: tests package.json == package-lock.json)
-#   publish-allure-report ← pyramid layers + sonar-backend (live Sonar QG JSON)
+#   publish-allure-report ← pyramid layers + sonar-backend (gating generate)
 # push main: trigger infers lanes from paths (tests/ ⇒ no app deploy).
 # dispatch `deploy=none|backend|frontend|tests|all`.
 # PR: no deploy; ui-mock-tests after component-tests (mock compose profile).
@@ -1725,8 +1725,8 @@ jobs:
       - *upload-allure-results
 
   # Gating npm ci contract: exact pins in package.json must match package-lock.json.
-  # Independent of the pyramid so lock drift fails the workflow even when
-  # publish-allure-report stays non-gating observability.
+  # Independent of the pyramid so lock drift fails the workflow without waiting
+  # for publish-allure-report.
   allure-npm-lock:
     name: allure-npm-lock
     runs-on: ubuntu-24.04
@@ -1740,7 +1740,7 @@ jobs:
         working-directory: ${{ env.TESTS_DIR }}
         run: node scripts/check-package-lock.mjs
 
-  # Non-gating observability: one merged Allure report at the CI tip, then Telegram.
+  # Gating: npm ci + Allure generate. Pages / TestOps / Telegram stay step-soft.
   publish-allure-report:
     name: publish-allure-report
     needs:
@@ -1754,7 +1754,6 @@ jobs:
       - testops-context
       - sonar-backend
     if: always() && !cancelled()
-    continue-on-error: true
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -1950,7 +1949,6 @@ jobs:
       - name: Allure quality gate + report
         if: always() && steps.merged-results.outputs.has_results == 'true'
         id: allure-report
-        continue-on-error: true
         working-directory: ${{ env.TESTS_DIR }}
         run: |
           set +e

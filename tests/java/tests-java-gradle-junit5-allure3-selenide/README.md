@@ -43,7 +43,7 @@ Do **not** set `SCREENSHOT_OS=linux` on a Mac.
 
 ## Allure CLI pins
 
-Exact versions live in `package.json`; the install tree is `package-lock.json`. CI runs `npm ci` (job `allure-npm-lock` checks they match). After changing pins:
+Exact versions live in `package.json`; the install tree is `package-lock.json`. CI runs `npm ci` (job `allure-npm-lock` checks they match; `publish-allure-report` is gating on generate). After changing pins:
 
 ```bash
 nvm use 26 && npm install --package-lock-only
