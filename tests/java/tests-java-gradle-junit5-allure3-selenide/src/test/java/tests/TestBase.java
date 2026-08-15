@@ -130,10 +130,11 @@ public class TestBase extends AllureMeta {
         if (config.logToConsole() && config.selenideLogToConsole()) {
             selenideReport.start();
         }
+        boolean reusedSession = WebDriverRunner.hasWebDriverStarted();
         if (!config.skipBlankOpen()) {
             ensureBrowserSession();
         }
-        if (!config.closeBrowserAfterEach() && WebDriverRunner.hasWebDriverStarted()) {
+        if (!config.closeBrowserAfterEach() && reusedSession) {
             BrowserSessionHelper.resetPageState();
         }
     }

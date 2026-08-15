@@ -15,7 +15,7 @@ public final class BrowserSessionHelper {
 
     @Step("Reset browser page state")
     public static void resetPageState() {
-        if (!WebDriverRunner.hasWebDriverStarted()) {
+        if (!WebDriverRunner.hasWebDriverStarted() || !currentUrlAllowsWebStorage()) {
             return;
         }
         switchToDefaultContent();
@@ -23,6 +23,15 @@ public final class BrowserSessionHelper {
         clearSessionStorage();
         clearCookies();
         ViewportHelper.resetViewport();
+    }
+
+    private static boolean currentUrlAllowsWebStorage() {
+        try {
+            var url = WebDriverRunner.url();
+            return url != null && (url.startsWith("http://") || url.startsWith("https://"));
+        } catch (RuntimeException ignored) {
+            return false;
+        }
     }
 
     @Step("Switch to default content")
