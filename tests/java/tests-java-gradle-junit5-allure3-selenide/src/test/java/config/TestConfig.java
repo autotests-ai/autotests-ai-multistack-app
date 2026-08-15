@@ -94,6 +94,10 @@ public interface TestConfig extends Config {
     @DefaultValue("true")
     boolean closeBrowserAfterAll();
 
+    @Key("skipBlankOpen")
+    @DefaultValue("false")
+    boolean skipBlankOpen();
+
     @Key("enableHar")
     @DefaultValue("false")
     boolean enableHar();
