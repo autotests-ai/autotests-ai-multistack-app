@@ -25,4 +25,4 @@ Outputs in `deploy/nginx/generated/`:
 
 On box3 the live vhost **includes** generated board+routes (do not paste board locations into the vhost). APP_DIR: `/home/autotests_ai_multistack/autotests-ai-multistack-app`.
 
-Do **not** enable `reference-app*.autotests.ai` sites — those hosts are gone, not 301.
+Retired product FQDNs stay disabled (do not re-enable leftover `sites-enabled` names).

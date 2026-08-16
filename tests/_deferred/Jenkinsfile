@@ -250,7 +250,7 @@ pipeline {
           withCredentials([
             string(credentialsId: 'telegram-monitoring-bot-token', variable: 'TELEGRAM_BOT_TOKEN'),
             string(credentialsId: 'telegram-monitoring-chat-id', variable: 'TELEGRAM_CHAT_ID'),
-            string(credentialsId: 'telegram-reference-app-topic-id', variable: 'TELEGRAM_TOPIC_ID')
+            string(credentialsId: 'telegram-multistack-app-topic-id', variable: 'TELEGRAM_TOPIC_ID')
           ]) {
             sh '''
               set -eu
