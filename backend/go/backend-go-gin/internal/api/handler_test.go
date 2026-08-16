@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	testSecret   = "reference-app-dev-secret-change-in-production-min-32-chars"
+	testSecret   = "multistack-dev-secret-change-in-production-min-32-chars"
 	testUser     = "user1"
 	testPassword = "password1"
 )

@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName("JwtService")
 class JwtServiceTest extends UnitTestBase {
 
-    private static final String SECRET = "reference-app-dev-secret-change-in-production-min-32-chars";
+    private static final String SECRET = "multistack-dev-secret-change-in-production-min-32-chars";
 
     private JwtService jwtService;
 

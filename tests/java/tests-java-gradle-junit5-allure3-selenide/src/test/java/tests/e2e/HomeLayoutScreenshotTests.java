@@ -35,14 +35,14 @@ class HomeLayoutScreenshotTests extends TestBase {
     void openHome() {
         ViewportHelper.setViewport(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
         open("/");
-        $("[data-testid='reference-layout']").shouldBe(visible);
+        $("[data-testid='multistack-layout']").shouldBe(visible);
         $("[data-testid='health-status']").shouldBe(visible);
     }
 
     @Test
     @DisplayName("Home layout matches screenshot at 1280px")
     void homeLayoutMatchesScreenshot() {
-        var layout = $("[data-testid='reference-layout']").shouldBe(visible);
+        var layout = $("[data-testid='multistack-layout']").shouldBe(visible);
         ScreenshotHelper.captureAndCompare(
                 layout,
                 "home-layout",

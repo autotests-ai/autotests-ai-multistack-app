@@ -22,7 +22,7 @@ const HEADER_JS = resolve(RUNTIME_DIR, 'js/header.js');
 const MOUNT = '/frontend-javascript-angular';
 
 const REFERENCE_HEADER_CONFIG = {
-  brand: { href: `${MOUNT}/`, label: 'Reference' },
+  brand: { href: `${MOUNT}/`, label: 'Multistack' },
   nav: [
     { href: `${MOUNT}/`, label: 'Home', active: false, testid: 'header-nav-home' },
     { href: `${MOUNT}/login`, label: 'Login', active: false, testid: 'header-nav-login' },

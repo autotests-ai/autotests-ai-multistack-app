@@ -28,7 +28,7 @@ function config() {
     serverPort: Number(env('SERVER_PORT', '8080')),
     jwtSecret: env(
       'JWT_SECRET',
-      'reference-app-dev-secret-change-in-production-min-32-chars'
+      'multistack-dev-secret-change-in-production-min-32-chars'
     ),
     jwtExpirationMs: Number(env('JWT_EXPIRATION_MS', '86400000')),
     postAuthRedirect: '/',

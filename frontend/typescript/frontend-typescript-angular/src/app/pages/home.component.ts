@@ -13,10 +13,10 @@ type ItemsStatus = 'loading' | 'empty' | 'loaded' | 'error';
   imports: [PanelComponent],
   template: `
     <main
-      class="page-shell page-shell--below-header grid reference-app"
-      data-testid="reference-layout"
+      class="page-shell page-shell--below-header grid multistack"
+      data-testid="multistack-layout"
     >
-      <div appPanel [panelTitle]="'Reference App'">
+      <div appPanel [panelTitle]="'Multistack'">
         <p class="text text--muted">
           TypeScript Angular SPA — items loaded from <code>/api/items</code>.
         </p>
@@ -25,7 +25,7 @@ type ItemsStatus = 'loading' | 'empty' | 'loaded' | 'error';
       <div
         appPanel
         [panelTitle]="'Session'"
-        [bodyClassName]="'reference-app__welcome-body'"
+        [bodyClassName]="'multistack__welcome-body'"
         data-testid="welcome-panel"
         [hidden]="welcome() === null"
       >
@@ -54,7 +54,7 @@ type ItemsStatus = 'loading' | 'empty' | 'loaded' | 'error';
         <p
           [class]="
             healthError()
-              ? 'text text--sm text--muted reference-app__error'
+              ? 'text text--sm text--muted multistack__error'
               : 'text text--sm text--muted'
           "
           data-testid="health-status"
@@ -77,7 +77,7 @@ type ItemsStatus = 'loading' | 'empty' | 'loaded' | 'error';
           }
           @case ('error') {
             <div appPanel [panelTitle]="'Items'">
-              <p class="reference-app__error">✗ items: {{ itemsError() }}</p>
+              <p class="multistack__error">✗ items: {{ itemsError() }}</p>
             </div>
           }
           @default {

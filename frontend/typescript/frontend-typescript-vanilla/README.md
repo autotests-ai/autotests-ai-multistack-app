@@ -23,7 +23,7 @@ Local compose publish: `:9810`. Dev/preview: `:9810`.
 
 | Page | Module | Key testids |
 |------|--------|-------------|
-| `index.html` | `src/home.ts` | `reference-layout`, `health-panel`/`health-status`, `items-list`/`item-row`, `welcome-panel`/`welcome-message`, `logout-button`, `delete-account-button` |
+| `index.html` | `src/home.ts` | `multistack-layout`, `health-panel`/`health-status`, `items-list`/`item-row`, `welcome-panel`/`welcome-message`, `logout-button`, `delete-account-button` |
 | `login.html` | `src/login.ts` | `login-panel`, `login-form`, `login-input`, `password-input`, `submit-button`, `error-message`, `register-link`, `login-form-title` |
 | `register.html` | `src/register.ts` | `register-panel`, `register-form`, `confirm-password-input`, `submit-button`, `login-link`, `register-form-title` |
 | header | `src/header.ts` | `header-nav-home`, `header-nav-login`, `header-nav-register` |

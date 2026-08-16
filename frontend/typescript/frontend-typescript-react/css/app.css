@@ -5,11 +5,11 @@ body {
 }
 
 /* Shell: page-shell + page-shell--below-header on <main>; narrow max-width only */
-.reference-app {
+.multistack {
   max-width: 960px;
 }
 
-.reference-app__welcome-body {
+.multistack__welcome-body {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -17,6 +17,6 @@ body {
   text-align: center;
 }
 
-.reference-app__error {
+.multistack__error {
   color: var(--color-danger);
 }

@@ -37,7 +37,7 @@ describe('home page', { tags: ['smoke'] }, () => {
   it('renders the reference layout with health and items from the API', async () => {
     await renderHome();
 
-    expect(testId('reference-layout')).toBeInTheDocument();
+    expect(testId('multistack-layout')).toBeInTheDocument();
 
     await waitFor(() =>
       expect(testId('health-status')).toHaveTextContent(
@@ -155,7 +155,7 @@ describe('home page', { tags: ['smoke'] }, () => {
     await renderHome();
 
     await waitFor(() => expect(testId('health-status')).toHaveTextContent('✗ health: HTTP 500'));
-    expect(testId('health-status')).toHaveClass('reference-app__error');
+    expect(testId('health-status')).toHaveClass('multistack__error');
   });
 
   it('shows the items error state when the items API fails', async () => {

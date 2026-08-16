@@ -22,7 +22,7 @@ Local compose publish / dev / preview port: `:9814`. (Host `/` is empty.)
 
 | Document | URL | Key testids |
 |----------|-----|-------------|
-| `index.html` | `/` | `reference-layout`, `health-panel`/`health-status`, `items-list`/`item-row`, `welcome-panel`/`welcome-message`, `logout-button`, `delete-account-button` |
+| `index.html` | `/` | `multistack-layout`, `health-panel`/`health-status`, `items-list`/`item-row`, `welcome-panel`/`welcome-message`, `logout-button`, `delete-account-button` |
 | `login.html` | `/login` | `login-panel`, `login-form`, `login-input`, `password-input`, `submit-button`, `error-message`, `register-link`, `login-form-title` |
 | `register.html` | `/register` | `register-panel`, `register-form`, `confirm-password-input`, `submit-button`, `login-link`, `register-form-title` |
 

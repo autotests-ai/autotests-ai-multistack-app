@@ -34,7 +34,7 @@ const STACK_INDEX_HREF = '/stack/';
  */
 export function headerConfigFor(route: HeaderRoute): HeaderConfig {
   return {
-    brand: { href: appPath('/'), label: 'Reference' },
+    brand: { href: appPath('/'), label: 'Multistack' },
     nav: [
       { href: appPath('/'), label: 'Home', active: route === '/', testid: 'header-nav-home' },
       {

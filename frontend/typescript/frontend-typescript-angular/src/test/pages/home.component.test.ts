@@ -91,7 +91,7 @@ describe('HomePage', () => {
   it('renders the reference layout with health and items from the API', async () => {
     await renderHome();
 
-    expect(screen.getByTestId('reference-layout')).toBeInTheDocument();
+    expect(screen.getByTestId('multistack-layout')).toBeInTheDocument();
 
     await waitFor(() =>
       expect(screen.getByTestId('health-status')).toHaveTextContent(
@@ -130,7 +130,7 @@ describe('HomePage', () => {
     expect(screen.getByTestId('welcome-panel')).toHaveClass('panel', 'panel--content');
     expect(screen.getByTestId('welcome-message').parentElement).toHaveClass(
       'panel__body',
-      'reference-app__welcome-body',
+      'multistack__welcome-body',
     );
     expect(screen.getByTestId('logout-button')).toHaveClass('btn', 'btn--primary');
     expect(screen.getByTestId('delete-account-button')).toHaveClass('btn', 'btn--danger');

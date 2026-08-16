@@ -19,7 +19,7 @@ const (
 
 	defaultDatabaseName = "multistack_app_go_gin"
 	defaultServerPort   = "8080"
-	defaultJWTSecret    = "reference-app-dev-secret-change-in-production-min-32-chars"
+	defaultJWTSecret    = "multistack-dev-secret-change-in-production-min-32-chars"
 	defaultExpirationMS = int64(86_400_000)
 )
 

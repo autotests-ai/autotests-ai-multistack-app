@@ -13,7 +13,7 @@ Local compose publish: `:9800`.
 
 | Page | Key testids |
 |------|-------------|
-| `index.html` | `reference-layout`, health/items panels, `welcome-panel` with `logout-button` + `delete-account-button` |
+| `index.html` | `multistack-layout`, health/items panels, `welcome-panel` with `logout-button` + `delete-account-button` |
 | `login.html` | `login-panel`, form controls, `register-link` |
 | `register.html` | `register-panel`, confirm password, `login-link` |
 | `/stack/` | shared stack boards (`stack-page.css`) |

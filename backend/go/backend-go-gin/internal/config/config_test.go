@@ -32,7 +32,7 @@ func TestLoadDefaults(t *testing.T) {
 	if cfg.DatabaseURL != want {
 		t.Fatalf("DatabaseURL = %q, want %q", cfg.DatabaseURL, want)
 	}
-	if cfg.JWTSecret != "reference-app-dev-secret-change-in-production-min-32-chars" {
+	if cfg.JWTSecret != "multistack-dev-secret-change-in-production-min-32-chars" {
 		t.Fatalf("JWTSecret = %q", cfg.JWTSecret)
 	}
 	if cfg.JWTExpiration != 24*time.Hour {

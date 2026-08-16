@@ -9,7 +9,7 @@ export const STACK_INDEX_HREF = '/stack/';
  * `/frontend-javascript-react/`. Omit `active` — header.js derives it from location.
  */
 export const headerConfig = {
-  brand: { href: appPath('/'), label: 'Reference' },
+  brand: { href: appPath('/'), label: 'Multistack' },
   nav: [
     { href: appPath('/'), label: 'Home', testid: 'header-nav-home' },
     { href: appPath('/login'), label: 'Login', testid: 'header-nav-login' },

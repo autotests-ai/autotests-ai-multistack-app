@@ -78,7 +78,7 @@ describe('mountHeader', () => {
     mountHeader('/login');
     mountHeader('/login');
 
-    expect(window.headerConfig?.brand).toEqual({ href: '/', label: 'Reference' });
+    expect(window.headerConfig?.brand).toEqual({ href: '/', label: 'Multistack' });
 
     const embeds = document.querySelectorAll<HTMLScriptElement>('script[data-header-embed]');
     expect(embeds).toHaveLength(1);

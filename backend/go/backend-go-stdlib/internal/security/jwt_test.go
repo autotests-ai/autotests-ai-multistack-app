@@ -10,7 +10,7 @@ import (
 	"dev.multistack/backend-go-stdlib/internal/security"
 )
 
-const testSecret = "reference-app-dev-secret-change-in-production-min-32-chars"
+const testSecret = "multistack-dev-secret-change-in-production-min-32-chars"
 
 func TestTokenRoundTrip(t *testing.T) {
 	tokens := security.NewTokenService(testSecret, time.Hour)

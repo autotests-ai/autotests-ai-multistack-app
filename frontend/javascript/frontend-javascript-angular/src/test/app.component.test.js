@@ -56,7 +56,7 @@ describe('AppComponent', () => {
 
     expect(screen.getByTestId('app-header-mount')).toBeInTheDocument();
     expect(screen.getByTestId('app-header-mount')).toHaveAttribute('id', 'app-header');
-    expect(screen.getByTestId('reference-layout')).toBeInTheDocument();
+    expect(screen.getByTestId('multistack-layout')).toBeInTheDocument();
     await waitFor(() =>
       expect(screen.getByTestId('items-list')).toHaveTextContent('No items found.'),
     );
@@ -80,7 +80,7 @@ describe('AppComponent', () => {
     await renderApp('/');
 
     expect(window.headerConfig).toEqual({
-      brand: { href: '/', label: 'Reference' },
+      brand: { href: '/', label: 'Multistack' },
       nav: [
         { href: '/', label: 'Home', testid: 'header-nav-home' },
         { href: '/login', label: 'Login', testid: 'header-nav-login' },

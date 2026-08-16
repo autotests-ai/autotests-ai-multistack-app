@@ -31,7 +31,7 @@ export function loadConfig(env: Env = process.env): AppConfig {
     serverPort: Number(env.SERVER_PORT ?? '8080'),
     databaseUrl: databaseUrl(env),
     jwtSecret:
-      env.JWT_SECRET ?? 'reference-app-dev-secret-change-in-production-min-32-chars',
+      env.JWT_SECRET ?? 'multistack-dev-secret-change-in-production-min-32-chars',
     jwtExpirationMs: Number(env.JWT_EXPIRATION_MS ?? '86400000'),
   };
 }

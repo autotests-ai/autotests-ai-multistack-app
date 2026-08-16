@@ -87,10 +87,10 @@ async function handleDeleteAccount(): Promise<void> {
 
 <template>
   <main
-    class="page-shell page-shell--below-header grid reference-app"
-    data-testid="reference-layout"
+    class="page-shell page-shell--below-header grid multistack"
+    data-testid="multistack-layout"
   >
-    <Panel title="Reference App">
+    <Panel title="Multistack">
       <p class="text text--muted">
         TypeScript Vue SPA — items loaded from <code>/api/items</code>.
       </p>
@@ -100,7 +100,7 @@ async function handleDeleteAccount(): Promise<void> {
       title="Session"
       test-id="welcome-panel"
       :hidden="welcome === null"
-      body-class-name="reference-app__welcome-body"
+      body-class-name="multistack__welcome-body"
     >
       <p id="welcome-message" class="text" data-testid="welcome-message">
         {{ welcome }}
@@ -122,7 +122,7 @@ async function handleDeleteAccount(): Promise<void> {
       <p
         :class="
           health.error
-            ? 'text text--sm text--muted reference-app__error'
+            ? 'text text--sm text--muted multistack__error'
             : 'text text--sm text--muted'
         "
         data-testid="health-status"
@@ -139,7 +139,7 @@ async function handleDeleteAccount(): Promise<void> {
         <p class="text text--muted">No items found.</p>
       </Panel>
       <Panel v-else-if="items.status === 'error'" title="Items">
-        <p class="reference-app__error">✗ items: {{ items.message }}</p>
+        <p class="multistack__error">✗ items: {{ items.message }}</p>
       </Panel>
       <template v-else-if="items.status === 'loaded'">
         <Panel v-for="item in items.items" :key="item.id" :title="item.name" test-id="item-row">

@@ -76,7 +76,7 @@ async function loadHealth($healthStatus: JQuery<HTMLElement>): Promise<void> {
     const payload = (await response.json()) as HealthResponse;
     $healthStatus.text(`→ ${payload.status} | service: ${payload.service} | frontend: ${UI_MOUNT}`);
   } catch (error) {
-    $healthStatus.text(`✗ health: ${(error as Error).message}`).addClass('reference-app__error');
+    $healthStatus.text(`✗ health: ${(error as Error).message}`).addClass('multistack__error');
   }
 }
 
@@ -90,7 +90,7 @@ async function loadItems($itemsList: JQuery<HTMLElement>): Promise<void> {
     renderItems($itemsList, payload.items ?? []);
   } catch (error) {
     const message = `✗ items: ${(error as Error).message}`;
-    $itemsList.empty().append(contentPanel('Items', paragraph('reference-app__error', message)));
+    $itemsList.empty().append(contentPanel('Items', paragraph('multistack__error', message)));
   }
 }
 

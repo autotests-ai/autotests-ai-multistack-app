@@ -77,7 +77,7 @@ describe('home page', () => {
   it('renders the reference layout with health and items from the API', async () => {
     await renderHome();
 
-    expect(screen.getByTestId('reference-layout')).toBeInTheDocument();
+    expect(screen.getByTestId('multistack-layout')).toBeInTheDocument();
     expect(screen.getByTestId('health-panel')).toBeInTheDocument();
 
     await waitFor(() =>
@@ -202,7 +202,7 @@ describe('home page', () => {
     await waitFor(() =>
       expect(screen.getByTestId('health-status')).toHaveTextContent('✗ health: HTTP 500'),
     );
-    expect(screen.getByTestId('health-status')).toHaveClass('reference-app__error');
+    expect(screen.getByTestId('health-status')).toHaveClass('multistack__error');
   });
 
   it('shows items error state when items API fails', async () => {

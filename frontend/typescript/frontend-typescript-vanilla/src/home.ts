@@ -65,7 +65,7 @@ async function loadHealth(): Promise<void> {
     healthStatus.textContent = `→ ${payload.status} | service: ${payload.service} | frontend: ${UI_MOUNT}`;
   } catch (error) {
     healthStatus.textContent = `✗ health: ${errorMessage(error)}`;
-    healthStatus.classList.add('reference-app__error');
+    healthStatus.classList.add('multistack__error');
   }
 }
 
@@ -79,7 +79,7 @@ async function loadItems(): Promise<void> {
   } catch (error) {
     itemsList.innerHTML = renderContentPanel(
       'Items',
-      `<p class="reference-app__error">✗ items: ${errorMessage(error)}</p>`,
+      `<p class="multistack__error">✗ items: ${errorMessage(error)}</p>`,
     );
   }
 }

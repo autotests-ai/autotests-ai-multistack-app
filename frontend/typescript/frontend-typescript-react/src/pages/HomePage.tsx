@@ -83,10 +83,10 @@ export function HomePage() {
 
   return (
     <main
-      className="page-shell page-shell--below-header grid reference-app"
-      data-testid="reference-layout"
+      className="page-shell page-shell--below-header grid multistack"
+      data-testid="multistack-layout"
     >
-      <Panel title="Reference App">
+      <Panel title="Multistack">
         <p className="text text--muted">
           TypeScript React SPA — items loaded from <code>/api/items</code>.
         </p>
@@ -96,7 +96,7 @@ export function HomePage() {
         title="Session"
         testId="welcome-panel"
         hidden={welcome === null}
-        bodyClassName="reference-app__welcome-body"
+        bodyClassName="multistack__welcome-body"
       >
         <p id="welcome-message" className="text" data-testid="welcome-message">
           {welcome}
@@ -123,7 +123,7 @@ export function HomePage() {
         <p
           className={
             health.error
-              ? 'text text--sm text--muted reference-app__error'
+              ? 'text text--sm text--muted multistack__error'
               : 'text text--sm text--muted'
           }
           data-testid="health-status"
@@ -145,7 +145,7 @@ export function HomePage() {
         )}
         {items.status === 'error' && (
           <Panel title="Items">
-            <p className="reference-app__error">✗ items: {items.message}</p>
+            <p className="multistack__error">✗ items: {items.message}</p>
           </Panel>
         )}
         {items.status === 'loaded' &&

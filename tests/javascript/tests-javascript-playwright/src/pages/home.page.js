@@ -4,7 +4,7 @@ exports.HomePage = class HomePage {
    */
   constructor(page) {
     this.page = page;
-    this.layout = page.getByTestId('reference-layout');
+    this.layout = page.getByTestId('multistack-layout');
     this.healthStatus = page.getByTestId('health-status');
     this.itemsList = page.getByTestId('items-list');
     this.welcomeMessage = page.getByTestId('welcome-message');

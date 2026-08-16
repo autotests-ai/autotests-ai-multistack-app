@@ -24,7 +24,7 @@ export interface HeaderConfig {
 export const STACK_INDEX_HREF = '/stack/';
 
 export const headerConfig: HeaderConfig = {
-  brand: { href: appPath('/'), label: 'Reference' },
+  brand: { href: appPath('/'), label: 'Multistack' },
   nav: [
     { href: appPath('/'), label: 'Home', testid: 'header-nav-home' },
     { href: appPath('/login'), label: 'Login', testid: 'header-nav-login' },

@@ -10,7 +10,7 @@ describe('config', () => {
       `postgresql://multistack:multistack@localhost:5432/${DEFAULT_DB_NAME}`,
     );
     expect(config.jwtSecret).toBe(
-      'reference-app-dev-secret-change-in-production-min-32-chars',
+      'multistack-dev-secret-change-in-production-min-32-chars',
     );
     expect(config.jwtExpirationMs).toBe(86_400_000);
   });

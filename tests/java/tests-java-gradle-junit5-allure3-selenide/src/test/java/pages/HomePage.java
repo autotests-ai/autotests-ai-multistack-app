@@ -21,7 +21,7 @@ public class HomePage {
             "var m=location.pathname.match(/\\/(backend-[^/]+)\\//);"
                     + "return m ? 'authToken:' + m[1] : 'authToken';";
 
-    private final SelenideElement layout = $("[data-testid='reference-layout']");
+    private final SelenideElement layout = $("[data-testid='multistack-layout']");
     private final SelenideElement healthStatus = $("[data-testid='health-status']");
     private final SelenideElement itemsList = $("[data-testid='items-list']");
     private final SelenideElement welcomeMessage = $("[data-testid='welcome-message']");

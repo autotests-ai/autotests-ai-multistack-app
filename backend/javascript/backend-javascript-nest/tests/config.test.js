@@ -38,7 +38,7 @@ describe('config', () => {
     );
     expect(settings.serverPort).toBe(8080);
     expect(settings.jwtSecret).toBe(
-      'reference-app-dev-secret-change-in-production-min-32-chars'
+      'multistack-dev-secret-change-in-production-min-32-chars'
     );
     expect(settings.jwtExpirationMs).toBe(86400000);
     expect(settings.postAuthRedirect).toBe('/');

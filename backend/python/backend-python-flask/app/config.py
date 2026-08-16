@@ -19,7 +19,7 @@ class Config:
     SQLALCHEMY_DATABASE_URI = database_url()
     JWT_SECRET = os.environ.get(
         "JWT_SECRET",
-        "reference-app-dev-secret-change-in-production-min-32-chars",
+        "multistack-dev-secret-change-in-production-min-32-chars",
     )
     JWT_EXPIRATION_MS = int(os.environ.get("JWT_EXPIRATION_MS", "86400000"))
     POST_AUTH_REDIRECT = "/"

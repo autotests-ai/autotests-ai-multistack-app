@@ -80,7 +80,7 @@ describe('HomePage', () => {
   it('renders the reference layout with health and items from the API', async () => {
     await renderHome();
 
-    expect(screen.getByTestId('reference-layout')).toBeInTheDocument();
+    expect(screen.getByTestId('multistack-layout')).toBeInTheDocument();
 
     await waitFor(() =>
       expect(screen.getByTestId('health-status')).toHaveTextContent(

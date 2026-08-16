@@ -63,7 +63,7 @@ $(function () {
         `→ ${payload.status} | service: ${payload.service} | frontend: ${window.UI_MOUNT}`
       );
     } catch (error) {
-      $healthStatus.text(`✗ health: ${error.message}`).addClass("reference-app__error");
+      $healthStatus.text(`✗ health: ${error.message}`).addClass("multistack__error");
     }
   }
 
@@ -79,7 +79,7 @@ $(function () {
       $itemsList.html(
         renderContentPanel(
           "Items",
-          `<p class="reference-app__error">✗ items: ${error.message}</p>`
+          `<p class="multistack__error">✗ items: ${error.message}</p>`
         )
       );
     }

@@ -49,7 +49,7 @@ describe('home', () => {
   it('renders the reference layout with health and items from the API', async () => {
     await renderHome();
 
-    expect($testId('reference-layout')).toHaveLength(1);
+    expect($testId('multistack-layout')).toHaveLength(1);
     expect($testId('health-panel')).toHaveLength(1);
 
     await vi.waitFor(() => {
@@ -84,7 +84,7 @@ describe('home', () => {
     await renderHome();
 
     await vi.waitFor(() => {
-      expect($testId('items-list').find('.reference-app__error').text()).toBe('✗ items: HTTP 500');
+      expect($testId('items-list').find('.multistack__error').text()).toBe('✗ items: HTTP 500');
     });
   });
 
@@ -96,7 +96,7 @@ describe('home', () => {
     await vi.waitFor(() => {
       expect($testId('health-status').text()).toBe('✗ health: HTTP 503');
     });
-    expect($testId('health-status').hasClass('reference-app__error')).toBe(true);
+    expect($testId('health-status').hasClass('multistack__error')).toBe(true);
   });
 
   it('keeps the session panel hidden without a session token', async () => {

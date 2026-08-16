@@ -50,7 +50,7 @@ Dockerfile deletes `package.json`, `package-lock.json`, `node_modules/`,
 
 | Page | Key testids |
 |------|-------------|
-| `index.html` | `reference-layout`, `health-panel` / `health-status`, `items-list` / `item-row`, `welcome-panel` |
+| `index.html` | `multistack-layout`, `health-panel` / `health-status`, `items-list` / `item-row`, `welcome-panel` |
 | `login.html` | `login-panel`, `login-form`, `login-input`, `password-input`, `error-message`, `register-link` |
 | `register.html` | `register-panel`, `confirm-password-input`, `error-message`, `login-link` |
 

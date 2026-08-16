@@ -19,7 +19,7 @@ Prod URL: `https://autotests.ai/stack/{backend}/frontend-javascript-angular/`
 
 | Route | Screen | Key testids |
 |-------|--------|-------------|
-| `/` | `HomeComponent` | `reference-layout`, `health-panel`/`health-status`, `items-list`/`item-row`, `welcome-panel`/`welcome-message`, `logout-button`, `delete-account-button` |
+| `/` | `HomeComponent` | `multistack-layout`, `health-panel`/`health-status`, `items-list`/`item-row`, `welcome-panel`/`welcome-message`, `logout-button`, `delete-account-button` |
 | `/login` | `LoginComponent` | `login-panel`, `login-form`, `login-input`, `password-input`, `submit-button`, `error-message`, `register-link`, `login-form-title` |
 | `/register` | `RegisterComponent` | `register-panel`, `register-form`, `confirm-password-input`, `submit-button`, `login-link`, `register-form-title` |
 

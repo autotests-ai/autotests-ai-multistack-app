@@ -7,7 +7,7 @@ from pages.base import BasePage
 
 
 class HomePage(BasePage):
-    LAYOUT = (By.CSS_SELECTOR, "[data-testid='reference-layout']")
+    LAYOUT = (By.CSS_SELECTOR, "[data-testid='multistack-layout']")
     HEALTH = (By.CSS_SELECTOR, "[data-testid='health-status']")
     ITEMS = (By.CSS_SELECTOR, "[data-testid='items-list']")
     WELCOME = (By.CSS_SELECTOR, "[data-testid='welcome-message']")

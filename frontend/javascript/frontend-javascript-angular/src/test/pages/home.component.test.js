@@ -86,7 +86,7 @@ describe('HomeComponent', () => {
   it('renders the reference layout with health and items from the API', async () => {
     renderHome();
 
-    expect(screen.getByTestId('reference-layout')).toBeInTheDocument();
+    expect(screen.getByTestId('multistack-layout')).toBeInTheDocument();
 
     await waitFor(() =>
       expect(screen.getByTestId('health-status')).toHaveTextContent(
@@ -100,7 +100,7 @@ describe('HomeComponent', () => {
   it('renders the module copy in the Multistack panel', async () => {
     renderHome();
 
-    expect(screen.getByTestId('reference-layout')).toHaveTextContent(
+    expect(screen.getByTestId('multistack-layout')).toHaveTextContent(
       'JavaScript Angular SPA — items loaded from /api/items.',
     );
   });
@@ -134,7 +134,7 @@ describe('HomeComponent', () => {
     await waitFor(() =>
       expect(screen.getByTestId('health-status')).toHaveTextContent('✗ health: HTTP 503'),
     );
-    expect(screen.getByTestId('health-status')).toHaveClass('reference-app__error');
+    expect(screen.getByTestId('health-status')).toHaveClass('multistack__error');
   });
 
   it('keeps the welcome panel hidden without a session token', async () => {

@@ -33,7 +33,7 @@ const HEADER_SCRIPT_PATH = '/js/header.js';
  */
 export function buildHeaderConfig(current: HeaderNavId): HeaderConfig {
   return {
-    brand: { href: appPath('/'), label: 'Reference' },
+    brand: { href: appPath('/'), label: 'Multistack' },
     nav: [
       { href: appPath('/'), label: 'Home', active: current === 'home', testid: 'header-nav-home' },
       {

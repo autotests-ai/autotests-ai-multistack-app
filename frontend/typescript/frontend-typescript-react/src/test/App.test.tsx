@@ -47,7 +47,7 @@ describe('App', { tags: ['smoke'] }, () => {
     renderApp('/');
 
     expect(screen.getByTestId('app-header-mount')).toBeInTheDocument();
-    expect(screen.getByTestId('reference-layout')).toBeInTheDocument();
+    expect(screen.getByTestId('multistack-layout')).toBeInTheDocument();
     await waitFor(() =>
       expect(screen.getByTestId('items-list')).toHaveTextContent('No items found.'),
     );

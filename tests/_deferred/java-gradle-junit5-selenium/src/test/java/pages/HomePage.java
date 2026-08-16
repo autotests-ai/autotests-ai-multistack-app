@@ -7,7 +7,7 @@ import org.openqa.selenium.WebDriver;
 
 public class HomePage extends BasePage {
 
-    private static final By LAYOUT = By.cssSelector("[data-testid='reference-layout']");
+    private static final By LAYOUT = By.cssSelector("[data-testid='multistack-layout']");
     private static final By HEALTH = By.cssSelector("[data-testid='health-status']");
     private static final By ITEMS = By.cssSelector("[data-testid='items-list']");
     private static final By WELCOME = By.cssSelector("[data-testid='welcome-message']");

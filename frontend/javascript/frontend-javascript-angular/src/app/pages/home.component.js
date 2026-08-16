@@ -18,10 +18,10 @@ import { DELETE_ACCOUNT_CONFIRM } from '../lib/messages.js';
   imports: [ButtonComponent, PanelComponent],
   template: `
     <main
-      class="page-shell page-shell--below-header grid reference-app"
-      data-testid="reference-layout"
+      class="page-shell page-shell--below-header grid multistack"
+      data-testid="multistack-layout"
     >
-      <app-panel [title]="'Reference App'">
+      <app-panel [title]="'Multistack'">
         <p class="text text--muted">
           JavaScript Angular SPA — items loaded from <code>/api/items</code>.
         </p>
@@ -29,7 +29,7 @@ import { DELETE_ACCOUNT_CONFIRM } from '../lib/messages.js';
 
       <app-panel
         [title]="'Session'"
-        [bodyClassName]="'reference-app__welcome-body'"
+        [bodyClassName]="'multistack__welcome-body'"
         [hidden]="welcome() === null"
         data-testid="welcome-panel"
       >
@@ -59,7 +59,7 @@ import { DELETE_ACCOUNT_CONFIRM } from '../lib/messages.js';
       <app-panel [title]="'Health'" data-testid="health-panel">
         <p
           class="text text--sm text--muted"
-          [class.reference-app__error]="health().error"
+          [class.multistack__error]="health().error"
           data-testid="health-status"
         >
           {{ health().text }}
@@ -78,7 +78,7 @@ import { DELETE_ACCOUNT_CONFIRM } from '../lib/messages.js';
           </app-panel>
         } @else if (state.status === 'error') {
           <app-panel [title]="'Items'">
-            <p class="reference-app__error">✗ items: {{ state.message }}</p>
+            <p class="multistack__error">✗ items: {{ state.message }}</p>
           </app-panel>
         } @else {
           @for (item of state.items; track item.id) {
