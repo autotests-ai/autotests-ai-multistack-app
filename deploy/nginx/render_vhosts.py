@@ -2,7 +2,6 @@
 """Render nginx vhosts / stack location fragments from deploy/matrix.yaml.
 
 Outputs (wipe + rewrite generated/*.conf):
-  {public_host}.conf — retire host → 301 autotests.ai/stack/…
   autotests.ai-stack-{upstreams,routes,board}.conf
   stage.autotests.ai-stack-{upstreams,routes,board}.conf — +10000 ports, stage_ upstreams
 """
@@ -285,7 +284,6 @@ def main() -> int:
         print("No frontends matched statuses", want_fe, file=sys.stderr)
         return 1
 
-    retire_tpl = (repo / "deploy" / "nginx" / "vhost.template.conf").read_text(encoding="utf-8")
     stack_tpl = (repo / "deploy" / "nginx" / "stack-locations.template.conf").read_text(
         encoding="utf-8"
     )
@@ -295,10 +293,6 @@ def main() -> int:
 
     board_tpl = (repo / "deploy" / "nginx" / "stack-board.template.conf").read_text(
         encoding="utf-8"
-    )
-    retire_host = "reference-app-copy.autotests.ai"
-    retire_conf = render_from_template(
-        retire_tpl, backends, frontends, public_host=retire_host
     )
     stack_upstreams = render_from_template(stack_tpl, backends, frontends)
     stack_routes = render_from_template(routes_tpl, backends, frontends)
@@ -325,7 +319,6 @@ def main() -> int:
         path.write_text(text, encoding="utf-8")
         print(f"wrote {path}")
 
-    _write(f"{retire_host}.conf", retire_conf)
     _write(f"{CANONICAL_HOST}-stack-upstreams.conf", stack_upstreams)
     _write(f"{CANONICAL_HOST}-stack-routes.conf", stack_routes)
     _write(f"{CANONICAL_HOST}-stack-board.conf", stack_board)
@@ -333,7 +326,7 @@ def main() -> int:
     _write(f"{STAGE_HOST}-stack-routes.conf", stage_routes)
     _write(f"{STAGE_HOST}-stack-board.conf", stage_board)
     print(
-        f"OK: retire + prod/stage stack fragments "
+        f"OK: prod/stage stack fragments "
         f"({len(backends)} be, {len(frontends)} fe, stage +{STAGE_PORT_OFFSET})"
     )
     return 0
