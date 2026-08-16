@@ -314,7 +314,6 @@ CI-only. Writers save GUH + configuration cache (`GRADLE_CC_IF` + `*cache-gradle
 | | Jobs | GUH | CC |
 |--|------|-----|-----|
 | Writer, backend | `unit-tests`, `integration-tests`, `sonar-backend` | own `github.job` | yes (`backend/java/backend-java-spring`) |
-| Writer, kotlin twin | `sonar-backend-kotlin` | own `github.job` | yes (`backend/kotlin/backend-kotlin-spring`, key `backend-kotlin-spring-sonar`) |
 | Writer, tests | `tests-harness`, `sonar-tests` | own `github.job` | yes (tests module) |
 | Reader | `ui-mock-tests`, `api-tests`, `e2e-tests`, `manual-tests` | read-only from `tests-harness` | **no** |
 
