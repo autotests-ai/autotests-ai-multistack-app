@@ -213,7 +213,7 @@ Teaching CI — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
 | Setting | Value |
 |---------|-------|
-| `APP_DIR` | `/home/autotests_ai_multistack/autotests-ai-multistack-app` (`/home/reference_app_copy` → symlink) |
+| `APP_DIR` | `/home/autotests_ai_multistack/autotests-ai-multistack-app` |
 | Deployed stacks | `env.BACKEND` + `env.FRONTEND` in `ci.yml` (defaults: java-spring + typescript-react) |
 
 Allure: `testops-context` + live `allurectl watch` on pyramid jobs (not `tests-harness`) → `publish-allure-report` (Pages) →
