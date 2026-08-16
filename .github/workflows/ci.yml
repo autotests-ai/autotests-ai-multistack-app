@@ -2148,6 +2148,7 @@ jobs:
         env:
           ALLURE_REPORT_ROOT: ${{ env.ALLURE_REPORT_DIR }}
           ALLURE_AWESOME: ${{ env.ALLURE_AWESOME_DIR }}
+          ALLURE_RESULTS: ${{ env.ALLURE_RESULTS_DIR }}
         run: |
           if [ ! -f "${ALLURE_AWESOME}/index.html" ]; then
             echo "No ${ALLURE_AWESOME}/index.html — skip GitHub Pages"
@@ -2165,6 +2166,10 @@ jobs:
           echo "${REPORT_ID}" > pages/latest-run-id.txt
           printf 'reports.autotests.ai\n' > pages/CNAME
           touch pages/.nojekyll
+          mkdir -p pages/readme
+          bash .github/scripts/generate-readme-badge.sh \
+            "${ALLURE_RESULTS}" pages/readme main "#${{ github.run_number }}" \
+            "" "Multistack" "Java 21 · Spring Boot · Allure 3" ""
 
       - name: Deploy Allure report to GitHub Pages
         id: gh-pages-deploy
