@@ -9,7 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 /**
- * Seeds the demo account the reference frontends and test suites log in with.
+ * Seeds the demo account the demo frontends and test suites log in with.
  * Credentials come from configuration ({@code app.seed.*}); leaving either value
  * blank disables seeding, which is how a real deployment opts out.
  */

@@ -1,6 +1,6 @@
 # backend-java-spring
 
-Spring Boot JSON API — **reference implementation** of the contract every other backend mirrors.
+Spring Boot JSON API — **canonical implementation** of the contract every other backend mirrors.
 Postgres DB: `multistack_app_java_spring`.
 
 **Status:** active.
@@ -14,7 +14,7 @@ Tests: `src/test/java/` — plain units, `@WebMvcTest` slices (suite label `slic
 persistence slice (`@DataJpaTest` + Testcontainers PostgreSQL: Flyway migrations, seed,
 unique constraint against the real database — **requires a running Docker daemon**, same
 as docker-compose for the app itself).
-Classical **integration** is `src/test/java/dev/reference/app/integration/` +
+Classical **integration** is `src/test/java/dev/multistack/app/integration/` +
 `IntegrationTestBase` (`@SpringBootTest` + Testcontainers PG) — CI job `integration-tests`
 (after `unit-tests`, before build/deploy). `TestRestTemplate` on `RANDOM_PORT` talks to that
 in-process context; it is **not** the `api` layer (RestAssured in `tests/api/` after `deploy-backend`).
