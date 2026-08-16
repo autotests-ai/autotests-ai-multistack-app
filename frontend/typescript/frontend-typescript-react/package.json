@@ -11,6 +11,7 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "test": "NODE_OPTIONS=--no-experimental-webstorage ALLURE_LABEL_epic=autotests-ai-multistack-app ALLURE_LABEL_layer=component ALLURE_LABEL_scope=frontend-typescript-react ALLURE_LABEL_framework=react_testing_library vitest run",
+    "test:coverage": "npm test -- --coverage",
     "test:smoke": "npm test -- --tagsFilter smoke",
     "test:watch": "vitest"
   },

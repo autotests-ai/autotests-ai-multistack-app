@@ -81,11 +81,12 @@ npm run dev        # Vite on :9811 — conflicts with compose publish of the sam
 npm run build      # → dist/ (packed by this module's Dockerfile)
 npm run typecheck  # tsc --noEmit
 npm run lint       # Biome check (src + configs)
-npm test           # Vitest + RTL (src/test/)
-npm run test:smoke # only suites tagged `smoke` (Vitest 4 --tagsFilter)
+npm test             # Vitest + RTL (src/test/)
+npm run test:coverage # same run + v8 coverage → coverage/ (lcov + HTML)
+npm run test:smoke   # only suites tagged `smoke` (Vitest 4 --tagsFilter)
 ```
 
-Coverage tool lock (RTL / jsdom): [`COVERAGE.md`](COVERAGE.md) — `@vitest/coverage-v8`; Playwright / Selenide e2e = **N/A** for the % gate. Collector script `test:coverage` is C1.
+Coverage (RTL / jsdom): [`COVERAGE.md`](COVERAGE.md) — `@vitest/coverage-v8`; `npm run test:coverage` writes `coverage/lcov.info` and `coverage/index.html`. Playwright / Selenide e2e = **N/A** for the % gate.
 
 `smoke` is declared in `vitest.config.ts` (`test.tags`) and applied to the `App` suite —
 the shell mounts and every route resolves. Vitest 4 runs with `strictTags` on, so a tag the

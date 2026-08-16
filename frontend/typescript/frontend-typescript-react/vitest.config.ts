@@ -41,7 +41,7 @@ export default defineConfig({
     reporters: ['default', new AllureReporter({ resultsDir: 'allure-results' })],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'lcov'],
+      reporter: ['text', 'lcov', 'html'],
       reportsDirectory: './coverage',
       include: ['src/**/*.{ts,tsx}'],
       // main.tsx / styles.ts are bootstrap (createRoot, CSS imports) — nothing to assert in jsdom.
