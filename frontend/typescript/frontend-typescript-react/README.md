@@ -85,6 +85,8 @@ npm test           # Vitest + RTL (src/test/)
 npm run test:smoke # only suites tagged `smoke` (Vitest 4 --tagsFilter)
 ```
 
+Coverage tool lock (RTL / jsdom): [`COVERAGE.md`](COVERAGE.md) — `@vitest/coverage-v8`; Playwright / Selenide e2e = **N/A** for the % gate. Collector script `test:coverage` is C1.
+
 `smoke` is declared in `vitest.config.ts` (`test.tags`) and applied to the `App` suite —
 the shell mounts and every route resolves. Vitest 4 runs with `strictTags` on, so a tag the
 config does not declare fails the run instead of quietly matching nothing.
