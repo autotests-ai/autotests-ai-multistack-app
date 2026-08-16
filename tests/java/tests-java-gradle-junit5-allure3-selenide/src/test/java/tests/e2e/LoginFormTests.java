@@ -21,7 +21,7 @@ class LoginFormTests extends TestBase {
 
     @Test
     @AllureId("46592")
-    @Issue("REF-2")
+    @Issue("MUL-2")
     @Tag("e2e")
     @Tag("mock")
     @DisplayName("Login form fields and submit are visible")
