@@ -1,0 +1,228 @@
+# Catalog CD — nine SPA sidecars (not the teaching FRONTEND).
+#
+# SSOT: this file.
+# Live copy (same name): autotests-ai-multistack-app/.github/workflows/catalog_github.yml
+# Do not fold into teaching ci.yml (one FRONTEND knob, sonar, e2e).
+# Do not copy over takeaway ci.yml (that is singlestack_github.yml).
+#
+# Runtime ports / nginx: clone deploy/matrix.yaml + docker-compose.yml.
+# Generate cells: hub matrix.yaml (not this workflow).
+#
+# Pins: tests/_tests-meta/.github/_ethalon/gha-actions.yaml
+
+name: Catalog
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "frontend/javascript/**"
+      - "frontend/typescript/frontend-typescript-angular/**"
+      - "frontend/typescript/frontend-typescript-vue/**"
+      - "frontend/typescript/frontend-typescript-vanilla/**"
+      - "frontend/typescript/frontend-typescript-jquery/**"
+      - "frontend/_shared/**"
+      - "docker-compose.yml"
+      - ".github/workflows/catalog_github.yml"
+  workflow_dispatch:
+    inputs:
+      deploy_target:
+        description: "CD host: stage · production (main only) · both (main: stage then prod)"
+        type: choice
+        options: [stage, production, both]
+        default: both
+
+concurrency:
+  group: catalog-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+env:
+  IMAGE_TAG: ${{ github.sha }}
+  # deploy/matrix.yaml frontends minus teaching frontend-typescript-react.
+  # Literal in workflow env — GitHub rejects ${{ env.* }} inside jobs.<id>.env.
+  DEPLOY_COMPOSE_SERVICES: >-
+    frontend-javascript-vanilla
+    frontend-javascript-react
+    frontend-javascript-angular
+    frontend-javascript-vue
+    frontend-javascript-jquery
+    frontend-typescript-vanilla
+    frontend-typescript-angular
+    frontend-typescript-vue
+    frontend-typescript-jquery
+  DOCKER_BUILD_ARGS: |
+    REACT_UI=frontend/_shared/frontend-react-ui
+    UI_RUNTIME=frontend/_shared/frontend-javascript-app
+  DEPLOY_SSH_SCRIPT: |
+    set -euo pipefail
+    APP_DIR="${DEPLOY_APP_DIR:-/home/autotests_ai_multistack/autotests-ai-multistack-app}"
+    cd "$APP_DIR"
+    git fetch origin
+    git checkout --force "$IMAGE_TAG"
+    echo "$GHCR_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+    COMPOSE="docker compose"
+    if [ -n "${DEPLOY_COMPOSE_PROJECT:-}" ]; then
+      COMPOSE="$COMPOSE --project-name ${DEPLOY_COMPOSE_PROJECT}"
+    fi
+    if [ -n "${DEPLOY_COMPOSE_ENV_FILE:-}" ]; then
+      COMPOSE="$COMPOSE --env-file ${DEPLOY_COMPOSE_ENV_FILE}"
+    fi
+    $COMPOSE pull ${DEPLOY_COMPOSE_SERVICES}
+    $COMPOSE up -d --remove-orphans ${DEPLOY_COMPOSE_SERVICES}
+    docker logout ghcr.io
+
+jobs:
+  build:
+    name: catalog ${{ matrix.service }}
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: frontend-javascript-vanilla
+            dockerfile: frontend/javascript/frontend-javascript-vanilla/Dockerfile
+          - service: frontend-javascript-react
+            dockerfile: frontend/javascript/frontend-javascript-react/Dockerfile
+          - service: frontend-javascript-angular
+            dockerfile: frontend/javascript/frontend-javascript-angular/Dockerfile
+          - service: frontend-javascript-vue
+            dockerfile: frontend/javascript/frontend-javascript-vue/Dockerfile
+          - service: frontend-javascript-jquery
+            dockerfile: frontend/javascript/frontend-javascript-jquery/Dockerfile
+          - service: frontend-typescript-vanilla
+            dockerfile: frontend/typescript/frontend-typescript-vanilla/Dockerfile
+          - service: frontend-typescript-angular
+            dockerfile: frontend/typescript/frontend-typescript-angular/Dockerfile
+          - service: frontend-typescript-vue
+            dockerfile: frontend/typescript/frontend-typescript-vue/Dockerfile
+          - service: frontend-typescript-jquery
+            dockerfile: frontend/typescript/frontend-typescript-jquery/Dockerfile
+    env:
+      DOCKER_CACHE_SCOPE: autotests-ai-multistack-app-docker-${{ matrix.service }}
+      DOCKER_BUILD_CONTEXT: .
+      DOCKER_FILE: ${{ matrix.dockerfile }}
+      DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/autotests-ai-multistack-app-${{ matrix.service }}:${{ github.sha }}
+      DOCKER_OCI_LABELS: |
+        org.opencontainers.image.title=autotests-ai-multistack-app-${{ matrix.service }}
+        org.opencontainers.image.description=autotests-ai-multistack-app · ${{ matrix.service }}
+        org.opencontainers.image.source=https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url=https://autotests.ai/stack/backend-java-spring/${{ matrix.service }}/
+        org.opencontainers.image.vendor=autotests-ai
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/build-push-action@v7
+        with:
+          context: ${{ env.DOCKER_BUILD_CONTEXT }}
+          file: ${{ env.DOCKER_FILE }}
+          tags: ${{ env.DOCKER_TAGS }}
+          build-args: ${{ env.DOCKER_BUILD_ARGS }}
+          labels: ${{ env.DOCKER_OCI_LABELS }}
+          load: true
+          cache-from: type=gha,scope=${{ env.DOCKER_CACHE_SCOPE }}
+          cache-to: type=gha,mode=max,scope=${{ env.DOCKER_CACHE_SCOPE }}
+      - name: Push catalog image to GHCR
+        run: |
+          set -euo pipefail
+          docker compose push ${{ matrix.service }}
+          if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+            echo "skip :latest (only main retags latest)"
+            exit 0
+          fi
+          img="ghcr.io/${{ github.repository_owner }}/autotests-ai-multistack-app-${{ matrix.service }}"
+          docker tag "${img}:${IMAGE_TAG}" "${img}:latest"
+          docker push "${img}:latest"
+
+  deploy-stage:
+    needs: build
+    if: >-
+      always() && !cancelled() &&
+      needs.build.result == 'success' &&
+      vars.STAGE_APP_DIR != '' &&
+      (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main') &&
+      (github.event_name != 'workflow_dispatch' ||
+       inputs.deploy_target == 'stage' ||
+       inputs.deploy_target == 'both')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: multistack-stage
+      url: https://stage.autotests.ai/stack/
+    concurrency:
+      group: deploy-autotests-ai-multistack-app-stage
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+    env:
+      DEPLOY_STEP_NAME: Deploy catalog frontends to stage
+      DEPLOY_APP_DIR: ${{ vars.STAGE_APP_DIR }}
+      DEPLOY_COMPOSE_PROJECT: autotests-ai-multistack-app-stage
+      DEPLOY_COMPOSE_ENV_FILE: deploy/stage.env
+    steps:
+      - name: ${{ env.DEPLOY_STEP_NAME }}
+        uses: appleboy/ssh-action@v1.2.5
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          host: ${{ vars.DEPLOY_HOST }}
+          username: ${{ vars.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          command_timeout: 15m
+          envs: IMAGE_TAG,GHCR_TOKEN,DEPLOY_COMPOSE_SERVICES,DEPLOY_APP_DIR,DEPLOY_COMPOSE_PROJECT,DEPLOY_COMPOSE_ENV_FILE
+          script: ${{ env.DEPLOY_SSH_SCRIPT }}
+
+  deploy-prod:
+    needs: [build, deploy-stage]
+    if: >-
+      always() && !cancelled() &&
+      needs.build.result == 'success' &&
+      github.ref == 'refs/heads/main' &&
+      (needs.deploy-stage.result == 'success' ||
+       needs.deploy-stage.result == 'skipped') &&
+      (github.event_name != 'workflow_dispatch' ||
+       inputs.deploy_target == 'production' ||
+       inputs.deploy_target == 'both')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: ${{ vars.DEPLOY_ENVIRONMENT || 'multistack-production' }}
+      url: https://autotests.ai/stack/
+    concurrency:
+      group: deploy-autotests-ai-multistack-app
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+    env:
+      DEPLOY_STEP_NAME: Deploy catalog frontends to production
+      DEPLOY_APP_DIR: /home/autotests_ai_multistack/autotests-ai-multistack-app
+      DEPLOY_COMPOSE_PROJECT: autotests-ai-multistack-app
+      DEPLOY_COMPOSE_ENV_FILE: ""
+    steps:
+      - name: ${{ env.DEPLOY_STEP_NAME }}
+        uses: appleboy/ssh-action@v1.2.5
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          host: ${{ vars.DEPLOY_HOST }}
+          username: ${{ vars.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          command_timeout: 15m
+          envs: IMAGE_TAG,GHCR_TOKEN,DEPLOY_COMPOSE_SERVICES,DEPLOY_APP_DIR,DEPLOY_COMPOSE_PROJECT,DEPLOY_COMPOSE_ENV_FILE
+          script: ${{ env.DEPLOY_SSH_SCRIPT }}

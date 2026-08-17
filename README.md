@@ -208,9 +208,19 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:9800/
 
 ## Deploy
 
+### Three catalogs (do not mix)
+
+| Catalog | SSOT | What it is |
+|---------|------|------------|
+| **Teaching** | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) `env.BACKEND` / `FRONTEND` / `TESTS` | One cell. Pyramid, Sonar, e2e. CD only `frontend-typescript-react`. |
+| **Runtime** | [`deploy/matrix.yaml`](deploy/matrix.yaml) + [`docker-compose.yml`](docker-compose.yml) + host nginx | Ports and path routing `/stack/{backend}/{frontend}/`. Not a CI cartesian. |
+| **Generate** | hub [`matrix.yaml`](../matrix.yaml) `cells` | Student emit. Not live CD. |
+
+Catalog SPA CD (angular / vue / the other seven, **not** teaching React) is etalon [`catalog_github.yml`](../ethalon/.github/_ethalon/catalog_github.yml) → this repo [`.github/workflows/catalog_github.yml`](.github/workflows/catalog_github.yml). Same filename. Do not paste those nine services into teaching `DEPLOY_COMPOSE_SERVICES`.
+
 **Production URL:** https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/  
 **Stage URL:** https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/  
-**CD:** push `develop` → stage only · push `main` → stage, then production (same run).  
+**CD:** teaching `ci.yml` — push `develop` → stage only · push `main` → stage, then production (same run). Catalog workflow — same hosts, nine sidecar images, no sonar/e2e.  
 `main` cancels in-flight `develop` CI (`preempt-develop-cd`); a new `develop` run aborts if `main` is queued or running (`yield-to-main-cd`). Latest `develop` cancels older `develop`. A second `main` queues (does not abort a promotion).
 
 Teaching CI — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
@@ -229,7 +239,7 @@ Teaching CI — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 |---------|-------|
 | `APP_DIR` | `/home/autotests_ai_multistack/autotests-ai-multistack-app` (production, `main`) |
 | `STAGE_APP_DIR` | `/home/autotests_ai_multistack/autotests-ai-multistack-app-stage` (stage: `develop` WIP and `main` promotion) |
-| Deployed stacks | `env.BACKEND` + `env.FRONTEND` in `ci.yml` (defaults: java-spring + typescript-react) |
+| Deployed stacks | Teaching: `env.BACKEND` + `env.FRONTEND` in `ci.yml` (java-spring + typescript-react). Catalog: nine sidecars in `catalog_github.yml`. |
 
 Allure: `trigger` opens the shared TestOps job-run; live `allurectl watch` on pyramid jobs (not `tests-harness`) → `publish-allure-report`
 (gating generate; soft Telegram kit collage after upload) → `publish-allure-pages` (non-gating). TestOps selective rerun: dispatch with
