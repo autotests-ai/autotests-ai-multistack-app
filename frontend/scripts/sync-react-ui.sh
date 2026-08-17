@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Refresh vendored @zero-design-system/react sources into frontend/_shared/frontend-react-ui.
-# Run from monorepo (or nested repo when packages/react-ui is reachable via MONOREPO_ROOT).
+# Run from monorepo (or nested repo when projects/design-system-home/react-ui is reachable via MONOREPO_ROOT).
 set -euo pipefail
 
 # shellcheck source=../../backend/scripts/paths.sh
 source "$(cd "$(dirname "$0")/../.." && pwd)/backend/scripts/paths.sh"
 
-SRC="$MONOREPO_ROOT/packages/react-ui/src"
+SRC="$MONOREPO_ROOT/projects/design-system-home/react-ui/src"
 DEST="$REPO_ROOT/frontend/_shared/frontend-react-ui"
 
 if [[ ! -d "$SRC" ]]; then
@@ -37,11 +37,11 @@ EOF
 cat > "$DEST/README.md" <<'EOF'
 # frontend-react-ui
 
-Vendored copy of monorepo `packages/react-ui/src` for standalone Docker/GHA builds of
+Vendored copy of monorepo `projects/design-system-home/react-ui/src` for standalone Docker/GHA builds of
 `autotests-ai-multistack-app` (no monorepo checkout on the build host).
 
 **Deliberately test-stripped:** the sync excludes `*.test.tsx` / `test/`. Component quality
-is guaranteed upstream in monorepo `packages/react-ui` (its own Vitest+RTL suite); this copy
+is guaranteed upstream in monorepo `projects/design-system-home/react-ui` (its own Vitest+RTL suite); this copy
 is a build artifact, not a source of truth — do not edit by hand, re-run the sync instead.
 
 Refresh from monorepo root:

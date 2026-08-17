@@ -103,7 +103,7 @@ touching `localStorage` fails on `Cannot read properties of undefined`.
 ## Toolchain pin
 
 Vite **6.3.x** / `@vitejs/plugin-react` **4.6.x** / Vitest **3.2.x** / jsdom **26.x** —
-aligned with monorepo `packages/react-ui` and `docs/rag/config/react-toolchain.md`
+aligned with monorepo `projects/design-system-home/react-ui` and `docs/rag/config/react-toolchain.md`
 (Node 26 + TypeScript 7.0.2). Major bumps (Vite 8 / Vitest 4) stay a coordinated
 monorepo change, not a solo product bump.
 
