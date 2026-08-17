@@ -5,7 +5,7 @@ set -euo pipefail
 # shellcheck source=../../backend/scripts/paths.sh
 source "$(cd "$(dirname "$0")/../.." && pwd)/backend/scripts/paths.sh"
 export MONOREPO_ROOT UI="${UI:-design-system-embed}" SCREENS="${SCREENS:-}"
-MANIFEST="${MANIFEST:-$MONOREPO_ROOT/stacks/_contract/ui.manifest.yaml}"
+MANIFEST="${MANIFEST:-$MONOREPO_ROOT/projects/autotests-ai-multistack-home/ethalon/_contract/ui.manifest.yaml}"
 
 FRONTEND="$FRONTEND_JS_EMBED"
 DS="$MONOREPO_ROOT/projects/design-system-home/design-system"
@@ -44,7 +44,7 @@ catalog = data.get("screens", {})
 
 for sid in screens:
     if sid not in catalog:
-        raise SystemExit(f"STOP: unknown screen {sid!r} — see stacks/_contract/ui.manifest.yaml")
+        raise SystemExit(f"STOP: unknown screen {sid!r} — see projects/autotests-ai-multistack-home/ethalon/_contract/ui.manifest.yaml")
     entry = catalog[sid]
     src = os.path.join(monorepo, entry["canon"])
     dest = os.path.join(project, entry["dest"])
