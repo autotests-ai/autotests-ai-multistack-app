@@ -55,9 +55,9 @@
     }
   },
   "consumers": [
-    "stacks/java-spring/tests/allure/pyramid-layer-colors.mjs",
+    "projects/autotests-ai-multistack-home/ethalon/tests/java/tests-java-gradle-junit5-allure3-selenide/allure/pyramid-layer-colors.mjs",
     "examples/java-spring/tests/allure/pyramid-layer-colors.mjs",
-    "generators/ethalon/tests-java/_ethalon/allure/pyramid-layer-colors.mjs",
+    "projects/autotests-ai-multistack-home/ethalon/tests/_tests-meta/_ethalon/allure/pyramid-layer-colors.mjs",
     "packages/react-ui/src/styles/tokens.css",
     "projects/allure-notifications-home/allure-notifications/allure-notifications-api/src/main/java/guru/qa/allure/notifications/chart/PyramidLayerColors.java",
     "projects/allure-notifications-home/allure-notifications/packages/pyramid/src/palette.ts",

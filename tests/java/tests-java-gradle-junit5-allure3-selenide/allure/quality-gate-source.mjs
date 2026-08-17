@@ -8,7 +8,7 @@ export const ALLURE_QUALITY_GATE_SOURCE = {
   rulesFile: "allure/quality-gate.mjs",
   knownIssuesFile: "./known.json",
   hrefBase:
-    "https://github.com/qa-guru/zero-design-system/blob/master/stacks/java-spring/tests/",
+    "https://github.com/qa-guru/zero-design-system/blob/master/projects/autotests-ai-multistack-home/ethalon/tests/java/tests-java-gradle-junit5-allure3-selenide/",
 };
 
 export const ALLURE_QUALITY_GATE_LABELS = {

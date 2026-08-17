@@ -7,7 +7,7 @@
 Unit tests: `src/test/java/` (same module).  
 Run: `cd backend-java-spring && ./gradlew test`
 
-Package layout (canon, same as leftover `stacks/java-spring`):
+Package layout (canon, same as ethalon `backend/java/backend-java-spring`):
 
 ```
 dev.multistack.app/

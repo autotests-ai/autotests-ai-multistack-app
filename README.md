@@ -240,4 +240,4 @@ GHCR packages are **public** (same as this repo), so image versions are not bill
 
 ## Related
 
-- Generator template: monorepo `stacks/java-spring/`
+- Generator source: monorepo `projects/autotests-ai-multistack-home/ethalon/`
