@@ -1,6 +1,5 @@
 import { defineConfig, type Plugin } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import vueDevTools from 'vite-plugin-vue-devtools';
 import { VitePWA } from 'vite-plugin-pwa';
 import { resolve } from 'node:path';
 
@@ -66,10 +65,6 @@ export default defineConfig({
       // Catalog nginx image is a Vite production build; keep Vue DevTools hooks.
       features: { prodDevtools: true },
     }),
-    // Overlay for `vite` / `vite preview` only (`apply: serve`). Nginx catalog
-    // uses prodDevtools + the browser extension. Before VitePWA / pinMountAssets
-    // (HTML transforms) — https://devtools.vuejs.org/help/troubleshooting
-    ...(!process.env.VITEST ? vueDevTools() : []),
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: null,
