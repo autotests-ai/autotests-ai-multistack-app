@@ -365,9 +365,10 @@ develop (via `trigger.cd_stage` only — no prod):
   e2e-tests-stage ← api-tests-stage + deploy-frontend-stage; full e2e exclude mock,screenshot
 ```
 
-Push/dispatch on `main` and `develop` share workflow concurrency `ci-cd-stands`
-(`cancel-in-progress: false`). One stage host: they queue, they do not interleave.
-PRs stay `ci-pr-<ref>` and may cancel in progress.
+Push/dispatch: `main` preempts `develop` (`preempt-develop-cd` cancels those runs;
+`yield-to-main-cd` aborts a new develop run if main is queued or running). Latest
+`develop` cancels older `develop`. A second `main` queues (`ci-cd-main`, no
+cancel-in-progress). PRs stay `ci-pr-<ref>` and may cancel in progress.
 
 `api-tests` gates on `deploy-backend` (not a join with frontend). `api-tests-stage` is the same vs `deploy-backend-stage`. `integration-tests` runs in `BACKEND_DIR` before
 build/deploy and does **not** wait on deploy.

@@ -30,6 +30,9 @@ name: CI
 # Stage CD: push develop | push main | dispatch stage|both|production-from-main.
 # Skip until vars.STAGE_APP_DIR is set. Live tests: stage = full api/e2e;
 # prod = @Tag("prod") after stage e2e is green.
+# Stage mutex: main preempts develop (cancel), develop yields if main is queued
+# or running. Not one shared cancel-in-progress group — that would let develop
+# cancel a prod promotion.
 # Roots: unit-tests · component-tests · tests-harness · testops-context
 #   integration-tests ← unit-tests (backend Spring+PG, pre-build; PR + main)
 #   sonar-backend ← unit-tests + integration-tests
@@ -120,11 +123,11 @@ on:
         default: ""
 
 concurrency:
-  # PRs stay per-ref (cancel stale). Push/dispatch on main|develop share one
-  # group so they cannot interleave on the single stage host (checkout + tests).
-  # Job-level deploy-*-stage lock only serializes SSH, not the e2e window.
-  group: ${{ github.event_name == 'pull_request' && format('ci-pr-{0}', github.ref) || (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && 'ci-cd-stands' || format('ci-{0}', github.ref) }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  # PRs: per-ref, cancel stale. main vs develop cannot share cancel-in-progress
+  # (a new develop would abort a prod promotion). Separate groups; jobs
+  # preempt-develop-cd / yield-to-main-cd enforce main priority on the stage host.
+  group: ${{ github.event_name == 'pull_request' && format('ci-pr-{0}', github.ref) || github.ref == 'refs/heads/main' && 'ci-cd-main' || github.ref == 'refs/heads/develop' && 'ci-cd-develop' || format('ci-{0}', github.ref) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/develop' }}
 
 permissions:
   actions: read
@@ -587,6 +590,56 @@ jobs:
           printf 'backend=%s\nfrontend=%s\ntests=%s\ncd_production=%s\ncd_stage=%s\n' \
             "$backend" "$frontend" "$tests" "$cd_production" "$cd_stage" >> "$GITHUB_OUTPUT"
           echo "trigger backend=${backend} frontend=${frontend} tests=${tests} cd_production=${cd_production} cd_stage=${cd_stage}"
+
+  # Main owns the stage host: cancel develop CI so promotion is not tested
+  # against a WIP checkout. Does not `needs` deploy — runs in parallel with build.
+  preempt-develop-cd:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    permissions:
+      actions: write
+    steps:
+      - name: Cancel develop CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ids=""
+          for status in in_progress queued pending waiting; do
+            ids="$ids $(gh run list --repo "$GITHUB_REPOSITORY" --workflow CI --branch develop --status "$status" --limit 20 --json databaseId --jq '.[].databaseId')"
+          done
+          for id in $ids; do
+            echo "preempt develop run $id"
+            gh run cancel "$id" --repo "$GITHUB_REPOSITORY" || true
+          done
+
+  # Develop must not start (or continue) if main already claimed the stage.
+  yield-to-main-cd:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    permissions:
+      actions: write
+    steps:
+      - name: Abort this run when main CD is queued or running
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          main_busy() {
+            for status in in_progress queued pending waiting; do
+              count="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow CI --branch main --status "$status" --limit 5 --json databaseId --jq 'length')"
+              if [ "$count" != "0" ]; then
+                return 0
+              fi
+            done
+            return 1
+          }
+          if main_busy || { sleep 3; main_busy; }; then
+            echo "main CD owns the stage — cancelling this develop run"
+            gh run cancel "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" || true
+          fi
 
   # Keep the backend root first: GitHub has no explicit graph coordinates and uses
   # declaration order as a layout hint for otherwise independent jobs.
@@ -1480,13 +1533,15 @@ jobs:
   # Stage twin — push develop (WIP) or push main / dispatch production|both (promotion).
   # Own checkout. Skip until repo var STAGE_APP_DIR is set.
   deploy-backend-stage:
-    needs: [build-backend, sonar-backend, trigger]
+    needs: [build-backend, sonar-backend, trigger, preempt-develop-cd, yield-to-main-cd]
     if: >-
-      !cancelled() &&
+      always() && !cancelled() &&
       needs.build-backend.result == 'success' &&
       needs.sonar-backend.result == 'success' &&
       vars.STAGE_APP_DIR != '' &&
-      needs.trigger.outputs.cd_stage == 'true'
+      needs.trigger.outputs.cd_stage == 'true' &&
+      (needs.preempt-develop-cd.result == 'success' || needs.preempt-develop-cd.result == 'skipped') &&
+      (needs.yield-to-main-cd.result == 'success' || needs.yield-to-main-cd.result == 'skipped')
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment:
@@ -1509,14 +1564,16 @@ jobs:
       - *ssh-deploy
 
   deploy-frontend-stage:
-    needs: [build-frontend, build-frontend-sidecars, sonar-frontend, trigger]
+    needs: [build-frontend, build-frontend-sidecars, sonar-frontend, trigger, preempt-develop-cd, yield-to-main-cd]
     if: >-
-      !cancelled() &&
+      always() && !cancelled() &&
       needs.build-frontend.result == 'success' &&
       needs.build-frontend-sidecars.result == 'success' &&
       needs.sonar-frontend.result == 'success' &&
       vars.STAGE_APP_DIR != '' &&
-      needs.trigger.outputs.cd_stage == 'true'
+      needs.trigger.outputs.cd_stage == 'true' &&
+      (needs.preempt-develop-cd.result == 'success' || needs.preempt-develop-cd.result == 'skipped') &&
+      (needs.yield-to-main-cd.result == 'success' || needs.yield-to-main-cd.result == 'skipped')
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment:
