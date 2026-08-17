@@ -25,6 +25,12 @@ export interface VncWindowLabels {
   paste: string;
   /** Destructive: DELETE session / kill container. */
   kill: string;
+  /** Panel name in the bar. */
+  title: string;
+  /** Locked screen — watch only. */
+  view: string;
+  /** Unlocked screen — interactive. */
+  control: string;
 }
 
 /** Remote desktop pixels — drives flexible screen `aspect-ratio` via `--vnc-aspect`. */
@@ -42,6 +48,9 @@ const defaultLabels: VncWindowLabels = {
   copy: 'Copy from Selenoid',
   paste: 'Paste to Selenoid',
   kill: 'Kill container',
+  title: 'VNC window',
+  view: 'view',
+  control: 'control',
 };
 
 export interface VncWindowProps {
@@ -78,6 +87,7 @@ export interface VncWindowProps {
   labels?: Partial<VncWindowLabels>;
   className?: string;
   'data-testid'?: string;
+  titleTestId?: string;
 }
 
 /**
@@ -102,9 +112,11 @@ export function VncWindow({
   labels,
   className,
   'data-testid': dataTestId = 'vnc-window',
+  titleTestId = 'vnc-window-title',
 }: VncWindowProps) {
   const l = { ...defaultLabels, ...labels };
-  const external = state === 'connected' ? '' : `VNC ${state}`;
+  const titleText =
+    state === 'connected' ? `${l.title} (${unlocked ? l.control : l.view})` : l.title;
   const aspectStyle =
     screenSize && screenSize.width > 0 && screenSize.height > 0
       ? ({
@@ -146,11 +158,18 @@ export function VncWindow({
         style={aspectStyle}
         data-state={state}
         data-testid={dataTestId}
+        role="region"
+        aria-label={titleText}
       >
         <div className="panel__bar">
           <div className="vnc-window__controls">
             {backControl}
             <ConnectionStatus state={state} />
+            {state !== 'connected' ? (
+              <span className="vnc-window__status-label" aria-hidden="true">
+                {state}
+              </span>
+            ) : null}
             <WindowControl
               tone="info"
               sessionControl
@@ -170,6 +189,9 @@ export function VncWindow({
               {fullscreen ? <IconChevronDown /> : <IconChevronUp />}
             </WindowControl>
           </div>
+          <span className="panel__title vnc-window__title" data-testid={titleTestId}>
+            {titleText}
+          </span>
           <div className="vnc-window__actions">
             {killControl}
             <WindowControl tone="neutral" aria-label={l.copy} title={l.copy} onClick={onCopy}>
@@ -185,9 +207,6 @@ export function VncWindow({
             {children}
           </div>
         </div>
-      </div>
-      <div className="vnc-window__external-status" role="status" aria-live="polite">
-        {external}
       </div>
     </div>
   );

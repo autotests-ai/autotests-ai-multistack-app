@@ -1,6 +1,15 @@
 # frontend-javascript-app
 
-Lean design-system runtime used by the vanilla product UI (header + form CSS).
+**Vendor** lean design-system runtime snapshot — not etalon.
 
-Overlay copied into each frontend nginx image at build
-(see module `Dockerfile` under `frontend/**` and root `docker-compose.yml`).
+SSOT is `projects/design-system-home/design-system/` (`css/`, `js/`, `templates/`).
+Do not edit this tree by hand; refresh from the ethalon or live clone root:
+
+```bash
+bash frontend/scripts/sync-ds-runtime.sh
+```
+
+Product overlay (not copied from design-system): `css/stack-page.css`,
+`js/app-base.js`, `js/stack-matrix.js`, `stack/`.
+
+Packed into each frontend nginx image as `UI_RUNTIME` (module `Dockerfile`).

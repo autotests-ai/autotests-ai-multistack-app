@@ -4,6 +4,32 @@ import { Input } from './Input';
 
 export type PlaqueFieldLabelVariant = 'param' | 'caption';
 
+/** Configurator param ids with credential-style browser autofill tokens. */
+const PARAM_AUTOCOMPLETE: Partial<Record<string, string>> = {
+  authUser: 'username',
+  authPass: 'current-password',
+};
+
+function resolveAutoComplete(
+  autoComplete: string | undefined,
+  paramId: string | undefined,
+  labelVariant: PlaqueFieldLabelVariant,
+): string | undefined {
+  if (autoComplete !== undefined) {
+    return autoComplete;
+  }
+  if (!paramId) {
+    return undefined;
+  }
+  if (PARAM_AUTOCOMPLETE[paramId]) {
+    return PARAM_AUTOCOMPLETE[paramId];
+  }
+  if (labelVariant === 'param') {
+    return 'off';
+  }
+  return undefined;
+}
+
 export interface PlaqueFieldProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, 'className'> {
   label: string;
@@ -34,6 +60,7 @@ export function PlaqueField({
   labelVariant = 'caption',
   id,
   name,
+  autoComplete,
   ...inputProps
 }: PlaqueFieldProps) {
   const labelClass =
@@ -42,6 +69,11 @@ export function PlaqueField({
   // then configurator paramId (Capabilities / remote-hub).
   const controlId = id ?? paramId;
   const controlName = name ?? paramId ?? id;
+  const resolvedAutoComplete = resolveAutoComplete(
+    autoComplete,
+    paramId,
+    labelVariant,
+  );
 
   return (
     <label
@@ -62,6 +94,7 @@ export function PlaqueField({
         {...inputProps}
         id={controlId}
         name={controlName}
+        autoComplete={resolvedAutoComplete}
       />
     </label>
   );

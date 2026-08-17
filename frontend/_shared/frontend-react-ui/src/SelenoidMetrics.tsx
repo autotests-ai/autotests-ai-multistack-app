@@ -12,6 +12,10 @@ export interface SelenoidMetricsProps
   warmReady: number;
   /** Configured warm-pool size. */
   warmTotal: number;
+  /** Ready hot-pool slots (shown as `ready / total`). Missing data → `0 / 0`, slot stays visible. */
+  hotReady?: number;
+  /** Configured hot-pool size. */
+  hotTotal?: number;
   quotaUsed: number;
   quotaPending: number;
   quotaTotal: number;
@@ -25,6 +29,8 @@ export function SelenoidMetrics({
   queued,
   warmReady,
   warmTotal,
+  hotReady = 0,
+  hotTotal = 0,
   quotaUsed,
   quotaPending,
   quotaTotal,
@@ -61,6 +67,15 @@ export function SelenoidMetrics({
           {warmReady}
           <span className="selenoid-metrics__quota-sep"> / </span>
           {warmTotal}
+        </span>
+      </div>
+      <span className="plaque-divider" aria-hidden="true" />
+      <div className="selenoid-metrics__item" data-testid="selenoid-metrics-hot">
+        <span className="selenoid-metrics__label">Hot</span>
+        <span className="selenoid-metrics__value">
+          {hotReady}
+          <span className="selenoid-metrics__quota-sep"> / </span>
+          {hotTotal}
         </span>
       </div>
       <span className="plaque-divider" aria-hidden="true" />

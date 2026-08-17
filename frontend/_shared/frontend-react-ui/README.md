@@ -1,13 +1,14 @@
 # frontend-react-ui
 
-Vendored copy of monorepo `projects/design-system-home/react-ui/src` for standalone Docker/GHA builds of
-`autotests-ai-multistack-app` (no monorepo checkout on the build host).
+**Vendor** copy of monorepo `projects/design-system-home/react-ui/src` — not etalon.
+TSX/.ts wrappers only (no `src/styles`). Primitive CSS is the javascript-app snapshot
+(`sync-ds-runtime.sh`); the product imports it from `src/styles.ts`, not a package barrel.
 
-**Deliberately test-stripped:** the sync excludes `*.test.tsx` / `test/`. Component quality
-is guaranteed upstream in monorepo `projects/design-system-home/react-ui` (its own Vitest+RTL suite); this copy
-is a build artifact, not a source of truth — do not edit by hand, re-run the sync instead.
+**Deliberately test-stripped:** the sync excludes `*.test.tsx` / `test/` / `styles/`.
+Component quality is guaranteed upstream in `projects/design-system-home/react-ui`;
+this copy is a build artifact — do not edit by hand, re-run the sync instead.
 
-Refresh from monorepo root:
+Refresh from the ethalon or live clone root:
 
 ```bash
 bash frontend/scripts/sync-react-ui.sh

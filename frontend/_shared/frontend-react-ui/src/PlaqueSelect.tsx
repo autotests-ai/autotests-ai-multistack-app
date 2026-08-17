@@ -79,6 +79,7 @@ export function PlaqueSelect({
         onChange={handleChange}
         id={controlId}
         name={controlName}
+        autoComplete={paramId ? 'off' : undefined}
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

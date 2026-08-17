@@ -1,9 +1,8 @@
 @import url("tokens.css");
 @import url("plaque-divider.css");
-/* Bare urls so Vite inlines these; `?v=` stays as runtime /assets/* fetches → MIME errors. */
-@import url("plaque-field-seg.css");
-@import url("plaque-field-seg-layout.css");
-@import url("plaque-number.css");
+@import url("plaque-field-seg.css?v=segfloat2");
+@import url("plaque-field-seg-layout.css?v=segfloat2");
+@import url("plaque-number.css?v=numcols1");
 
 /* Plaque field — compact label+control shell (autotests-builder, forms) */
 
