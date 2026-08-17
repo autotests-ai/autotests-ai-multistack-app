@@ -54,7 +54,7 @@ or TestOps-only drafts outside git:
 - Package: `…/tests/manual/` (e.g. `ExploratoryManualTests`)
 - Markers: `@Layer("manual")` · `@Tag("manual")` · `@Manual` (`ALLURE_MANUAL=true` for TestOps)
 - Body: Allure `step("…")` checklist lines — human executes; CI can still upload the stub launch
-- Run: `./gradlew test -Denv=multistack_prod -DincludeTags=manual` · job `manual-tests` (dispatch)
+- Run: `./gradlew test -Denv=prod -DincludeTags=manual` · job `manual-tests` (dispatch)
 
 Same repo, same review/PR flow as automated layers. Promote a stub to e2e by replacing steps
 with real Selenide/API calls and retagging — do not keep a parallel wiki checklist.
@@ -70,9 +70,9 @@ Self-check of the **tests module helpers** before / alongside product layers —
 | frontend helpers | `harness` + `harness-frontend` | inside the all slice | CSS/HAR/`LocalChromePin` — frontend lane runs the **full** harness because UI tests read `ConfigReader` |
 
 ```bash
-./gradlew test -Denv=multistack_ci -DincludeTags=harness-backend   # + JaCoCo on ConfigReader
-./gradlew test -Denv=multistack_ci -DincludeTags=harness-frontend  # + JaCoCo on CSS helpers
-./gradlew test -Denv=multistack_ci -DincludeTags=harness           # full harness (CI default)
+./gradlew test -Denv=ci -DincludeTags=harness-backend   # + JaCoCo on ConfigReader
+./gradlew test -Denv=ci -DincludeTags=harness-frontend  # + JaCoCo on CSS helpers
+./gradlew test -Denv=ci -DincludeTags=harness           # full harness (CI default)
 ```
 
 **Not** application code (that's `unit-tests` on `BACKEND_DIR` / `component-tests` on `FRONTEND_DIR`).
@@ -82,10 +82,10 @@ Self-check of the **tests module helpers** before / alongside product layers —
 Screenshot tests are **two stages**, not a pyramid layer. Same Selenide classes (`@Layer("e2e")` + `@Tag("screenshot")`); `-Denv` picks the PNG tree.
 
 ```
-src/test/resources/screenshots/{mock|e2e}/{linux|macos|windows}/{chrome-148}/{area}/{viewport}.png
+src/test/resources/screenshots/{mock|stage|prod}/{linux|macos|windows}/{chrome-148}/{area}/{viewport}.png
 ```
 
-`multistack_mock` → `mock/`; anything else (ci/prod) → `e2e/`. Third segment is `{browser}-{major}`: `SCREENSHOT_BROWSER` (default `chrome`) plus major from `chrome-for-testing.properties` (same CFT pin as CI `CHROME_FOR_TESTING_VERSION`). Patch (`148.0.7778.178`), headless, and CFT vs Selenoid are **not** path segments — CFT vs Selenoid is mock vs e2e. Different browsers are sibling folders (`chrome-148/` next to a future `firefox-140/`); this job reads only its folder.
+`mock` → `mock/`; `stage` → `stage/`; `prod` and `ci` → `prod/`. Third segment is `{browser}-{major}`: `SCREENSHOT_BROWSER` (default `chrome`) plus major from `chrome-for-testing.properties` (same CFT pin as CI `CHROME_FOR_TESTING_VERSION`). Patch (`148.0.7778.178`), headless, and CFT vs Selenoid are **not** path segments. Different browsers are sibling folders (`chrome-148/` next to a future `firefox-140/`); this job reads only its folder.
 
 `SCREENSHOT_OS` overrides the OS folder (`darwin` → `macos`, `linux` → `linux`, `win32` → `windows`). CI SSOT is `mock/linux/chrome-148` plus the CFT pin. **Do not** set `SCREENSHOT_OS=linux` on a Mac — that would write Linux-canon PNGs from macOS Chrome. On Mac omit `SCREENSHOT_OS` (writes `macos`) or set `SCREENSHOT_OS=macos`.
 
@@ -97,8 +97,8 @@ CI jobs `ui-mock-tests` and `e2e-tests` set `SCREENSHOT_OS=linux` and `SCREENSHO
 | Screenshot vs stub UI | `@Tag("screenshot")` | same job, compare step: `-DincludeTags=screenshot` (every PR; not Playwright) |
 | Refresh mock screenshots | `@Tag("screenshot")` + `-DupdateScreenshots=true` | same job, step `Update screenshots` — dispatch `update_mock_screenshots` writes `mock/linux/chrome-148` (skips compare) |
 | Flow | `@Tag("e2e")` exclude `screenshot,mock` | job `e2e-tests` (`e2e&prod` on prod) / `e2e-tests-stage` (full `e2e` on stage); default push does **not** run screenshot via Selenoid |
-| Screenshot vs live UI | `@Tag("screenshot")` | job `e2e-tests`, compare step — dispatch `run_screenshot` compares `e2e/linux/chrome-148` |
-| Refresh e2e screenshots | `@Tag("screenshot")` + `-DupdateScreenshots=true` | job `e2e-tests`, step `Update screenshots` — dispatch `update_e2e_screenshots` writes `e2e/linux/chrome-148` (skips compare; independent of mock rewrite) |
+| Screenshot vs live UI | `@Tag("screenshot")` | job `e2e-tests`, compare step — dispatch `run_screenshot` compares `prod/linux/chrome-148` |
+| Refresh prod screenshots | `@Tag("screenshot")` + `-DupdateScreenshots=true` | job `e2e-tests`, step `Update screenshots` — dispatch `update_e2e_screenshots` writes `prod/linux/chrome-148` (skips compare; independent of mock rewrite) |
 
 Gradle `includeTags=a,b` is **OR** in this module — keep mock flows and screenshot compare as two steps so they fail separately.
 AND is one token with no comma: `api&prod`, `e2e&prod` (JUnit tag expression). Do not write `api,prod`.
@@ -106,17 +106,17 @@ AND is one token with no comma: `api&prod`, `e2e&prod` (JUnit tag expression). D
 Local mock screenshot refresh (Linux / CI writes `mock/linux/chrome-148`; on Mac do **not** force `SCREENSHOT_OS=linux`):
 
 ```bash
-SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=multistack_mock -DincludeTags=screenshot -DupdateScreenshots=true -Dheadless=true
+SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=mock -DincludeTags=screenshot -DupdateScreenshots=true -Dheadless=true
 ```
 
-Local e2e screenshot refresh (compose ci stand, or `multistack_prod` + Selenoid):
+Local e2e screenshot refresh (compose ci stand, or `prod` + Selenoid):
 
 ```bash
-SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=multistack_ci -DincludeTags=screenshot -DupdateScreenshots=true
+SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=ci -DincludeTags=screenshot -DupdateScreenshots=true
 ```
 
 **Mock stand** — browser checks that need controlled `/api/*` JSON, not a live backend.
-Stand = `-Denv=multistack_mock`; slice = `-DincludeTags=mock`.
+Stand = `-Denv=mock`; slice = `-DincludeTags=mock`.
 
 The SPA is served at document root and resolves API to `/api`; the frontend container nginx
 has no `/api` route, so a **stand-gateway** (compose profile `mock`, port **9911**) proxies
@@ -137,7 +137,7 @@ mappings; they do not call admin.
 
 ```bash
 docker compose --profile mock up -d stand-gateway   # :9911 + api-mock + react frontend
-./gradlew test -Denv=multistack_mock -DincludeTags=mock
+./gradlew test -Denv=mock -DincludeTags=mock
 ```
 
 Stand registry id: `mock-gateway` (`python scripts/stands/ensure.py mock-gateway` from monorepo root).
@@ -151,24 +151,24 @@ When `TESTS_LANG=java`, a layer is a **tag filter**, a stand is **`-Denv`**. The
 task — `test`:
 
 ```bash
-./gradlew test -Denv=multistack_ci   -DincludeTags=harness-backend
-./gradlew test -Denv=multistack_ci   -DincludeTags=harness-frontend
-./gradlew test -Denv=multistack_ci   -DincludeTags=harness
-./gradlew test -Denv=multistack_mock -DincludeTags=mock
-./gradlew test -Denv=multistack_mock -DincludeTags=screenshot
-./gradlew test -Denv=multistack_stage -DincludeTags=api
-./gradlew test -Denv=multistack_stage -DincludeTags=e2e -DexcludeTags=screenshot,mock
-./gradlew test -Denv=multistack_prod "-DincludeTags=api&prod"
-./gradlew test -Denv=multistack_prod "-DincludeTags=e2e&prod" -DexcludeTags=screenshot,mock
-./gradlew test -Denv=multistack_prod -DincludeTags=screenshot
+./gradlew test -Denv=ci   -DincludeTags=harness-backend
+./gradlew test -Denv=ci   -DincludeTags=harness-frontend
+./gradlew test -Denv=ci   -DincludeTags=harness
+./gradlew test -Denv=mock -DincludeTags=mock
+./gradlew test -Denv=mock -DincludeTags=screenshot
+./gradlew test -Denv=stage -DincludeTags=api
+./gradlew test -Denv=stage -DincludeTags=e2e -DexcludeTags=screenshot,mock
+./gradlew test -Denv=prod "-DincludeTags=api&prod"
+./gradlew test -Denv=prod "-DincludeTags=e2e&prod" -DexcludeTags=screenshot,mock
+./gradlew test -Denv=prod -DincludeTags=screenshot
 ```
 
 | Stand (`-Denv`) | Where it points |
 |-----------------|-----------------|
-| `multistack_ci` | the compose stack on this machine — UI + real `/api` same origin via `stand-gateway-ci` `:9821`, direct API `:8800` (`docker compose up -d` first) |
-| `multistack_mock` | mock profile — UI + stub API same origin `:9911` (`docker compose --profile mock up -d stand-gateway` first) |
-| `multistack_stage` | [stage.autotests.ai/stack/backend-java-spring](https://stage.autotests.ai/stack/backend-java-spring), browsers from the Selenoid hub; CI full `api` / `e2e` |
-| `multistack_prod` | [autotests.ai/stack/backend-java-spring](https://autotests.ai/stack/backend-java-spring), browsers from the Selenoid hub; CI only `@Tag("prod")` |
+| `ci` | the compose stack on this machine — UI + real `/api` same origin via `stand-gateway-ci` `:9821`, direct API `:8800` (`docker compose up -d` first) |
+| `mock` | mock profile — UI + stub API same origin `:9911` (`docker compose --profile mock up -d stand-gateway` first) |
+| `stage` | [stage.autotests.ai/stack/backend-java-spring](https://stage.autotests.ai/stack/backend-java-spring), browsers from the Selenoid hub; CI full `api` / `e2e` |
+| `prod` | [autotests.ai/stack/backend-java-spring](https://autotests.ai/stack/backend-java-spring), browsers from the Selenoid hub; CI only `@Tag("prod")` |
 
 Anything else — `headless`, `enableHar`, `enableVideo`, `updateScreenshots`, `allureReportMode` — is a
 per-run `-D<key>=<value>`. Available keys: `src/test/resources/config/default.properties`.
@@ -285,7 +285,7 @@ Report environment). Written once after each test job by `ALLURE_WRITE_ENVIRONME
 |-----|-------|
 | `BROWSER` | `Chrome` |
 | `OS` | `Linux` |
-| `ENDPOINT` | `multistack_prod` (workflow default); stage jobs set `multistack_stage` |
+| `ENDPOINT` | `prod` (workflow default); stage jobs set `stage` |
 | `VERSION` | `github.sha` of the run |
 | `BRANCH` | `github.head_ref` or `github.ref_name` |
 
@@ -330,7 +330,7 @@ CI-only. Writers save GUH + configuration cache (`GRADLE_CC_IF` + `*cache-gradle
   runs register against [stage.autotests.ai](https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/).
   The lifecycle round-trip also documents stateless logout: the JWT
   survives `logout` and dies with the account.
-- `multistack_prod.properties` / `multistack_stage.properties` commit the **creds-less** hub URL. CI passes the real one via
+- `prod.properties` / `stage.properties` commit the **creds-less** hub URL. CI passes the real one via
   the `SELENOID_REMOTE_URL` secret (`-DremoteUrl=…` in `e2e-tests` / `e2e-tests-stage`);
   locally export it the same way when you need the shared hub.
 

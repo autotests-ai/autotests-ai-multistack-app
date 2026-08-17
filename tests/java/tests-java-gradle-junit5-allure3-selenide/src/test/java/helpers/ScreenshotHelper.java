@@ -119,9 +119,21 @@ public final class ScreenshotHelper {
         return dir.replace('\\', '/').replaceAll("/+$", "");
     }
 
-    static String screenshotMode() {
-        var env = System.getProperty("env", "").trim();
-        return "multistack_mock".equals(env) ? "mock" : "e2e";
+    public static String screenshotMode() {
+        return screenshotMode(System.getProperty("env", ""));
+    }
+
+    /** Folder next to {@code mock/}: {@code stage/} or {@code prod/}. Local compose ({@code ci}) uses {@code prod/}. */
+    public static String screenshotMode(String env) {
+        var key = env == null ? "" : env.trim();
+        return switch (key) {
+            case "mock" -> "mock";
+            case "stage" -> "stage";
+            case "prod", "ci", "" -> "prod";
+            default -> throw new IllegalStateException(
+                    "screenshot folder: unknown env '" + key
+                            + "' (use mock, stage, prod, or ci)");
+        };
     }
 
     static String screenshotOs() {

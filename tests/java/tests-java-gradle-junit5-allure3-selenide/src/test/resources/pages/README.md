@@ -11,4 +11,4 @@ Post-auth state (welcome message, logout) lives on `HomePage` at `/`.
 
 ## Stands
 
-`multistack_ci.properties`: `baseUrl=http://localhost:9821/` (stand-gateway-ci) · `multistack_prod.properties`: the deployed host.
+`ci.properties`: `baseUrl=http://localhost:9821/` (stand-gateway-ci) · `prod.properties`: the deployed host.

@@ -19,7 +19,7 @@ class HomeTests extends TestBase {
 
     @Test
     @Tag("e2e")
-    @Tag("prod")
+    @Tag("smoke")
     @DisplayName("Page load fetches health and items from API")
     void pageLoadFetchesItems() {
         homePage.openPage()

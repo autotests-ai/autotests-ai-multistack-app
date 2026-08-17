@@ -6,7 +6,7 @@
  *
  *        (\_/)
  *        ( •_•)
- *        / >./gradlew test -Denv=multistack_ci -DincludeTags=e2e
+ *        / >./gradlew test -Denv=ci -DincludeTags=e2e
  *
  *              .-------.
  *             /  ✓ ✓ ✓  \
@@ -34,7 +34,7 @@ buildscript {
         jacksonVersion      = '2.18.2'
         ownerVersion        = '1.0.12'
         testParallelForks   = 1
-        defaultEnv          = 'multistack_ci'
+        defaultEnv          = 'ci'
     }
 }
 
@@ -153,17 +153,13 @@ def jacocoEnabledForCurrentRun = {
 
 // Layers that never touch the app through a browser — nothing to health-check.
 def browserlessTags = ['harness', 'harness-backend', 'harness-frontend', 'api', 'integration'] as Set
-def browserLayerTags = ['e2e', 'mock', 'screenshot', 'manual'] as Set
 
 def shouldSkipHealthCheck = {
     if (System.getProperty('skipHealthCheck', 'false') == 'true') {
         return true
     }
     def includeTags = System.getProperty('includeTags', '').split(',').collect { it.trim() }.findAll { it }
-    return !includeTags.isEmpty() && includeTags.every { token ->
-        def parts = token.split('&').collect { it.trim() }.findAll { it }
-        parts.any { browserlessTags.contains(it) } && parts.every { !browserLayerTags.contains(it) }
-    }
+    return !includeTags.isEmpty() && includeTags.every { browserlessTags.contains(it) }
 }
 
 // Resolve project files while configuring the task. The execution action then captures only
@@ -205,7 +201,6 @@ test {
         enabled = jacocoEnabledForCurrentRun()
     }
     useJUnitPlatform {
-        // CSV = OR. AND is one token (no comma): api&prod, e2e&prod.
         def includeTagsProp = System.getProperty('includeTags')
         if (includeTagsProp) {
             includeTags(*(includeTagsProp.split(',')*.trim()))

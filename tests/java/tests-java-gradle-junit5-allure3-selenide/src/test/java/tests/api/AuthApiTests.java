@@ -34,7 +34,7 @@ class AuthApiTests extends ApiTestBase {
 
     @Test
     @Tag("api")
-    @Tag("prod")
+    @Tag("smoke")
     @DisplayName("POST /api/auth/login returns the auth contract for a seeded user")
     void loginWithValidCredentials() {
         given(jsonSpec)

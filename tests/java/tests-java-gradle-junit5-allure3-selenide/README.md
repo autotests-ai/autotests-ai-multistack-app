@@ -20,32 +20,29 @@ One task `test`; the layer is a tag filter, the stand is `-Denv` ([../../LAYERS.
 
 | Layer | Command | Notes |
 |-------|---------|--------|
-| harness (all) | `./gradlew test -Denv=multistack_ci -DincludeTags=harness` | umbrella — all `testinfra/` · CI job `tests-harness` (feeds `sonar-tests`) |
-| harness-backend | `./gradlew test -Denv=multistack_ci -DincludeTags=harness-backend` | `ConfigReader` · backend-only lane |
-| harness-frontend | `./gradlew test -Denv=multistack_ci -DincludeTags=harness-frontend` | CSS + HAR + `LocalChromePin` · inside full `tests-harness` (frontend lane included) |
-| api | `./gradlew test -Denv=multistack_ci -DincludeTags=api` | local compose (`multistack_ci`); **CI** `api-tests` uses `-Denv=multistack_prod "-DincludeTags=api&prod"`; `api-tests-stage` uses `-Denv=multistack_stage -DincludeTags=api` |
-| mock | `./gradlew test -Denv=multistack_mock -DincludeTags=mock` | stub API mount checks · CI `ui-mock-tests` step 1 |
-| screenshot mock | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=multistack_mock -DincludeTags=screenshot` | PNG compare `screenshots/mock/linux/chrome-148/` · CI `ui-mock-tests` compare step |
-| e2e | `./gradlew test -Denv=multistack_ci -DincludeTags=e2e -DexcludeTags=screenshot,mock` | flow; screenshot is a second stage, not a pyramid layer. CI prod: `e2e&prod`; CI stage: full `e2e` |
-| screenshot mock refresh | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=multistack_mock -DincludeTags=screenshot -DupdateScreenshots=true` | writes `screenshots/mock/linux/chrome-148/` · CI `ui-mock-tests` step `Update screenshots` (`update_mock_screenshots`) |
-| screenshot e2e refresh | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=multistack_prod -DincludeTags=screenshot -DupdateScreenshots=true` | writes `screenshots/e2e/linux/chrome-148/` · CI `e2e-tests` step `Update screenshots` (`update_e2e_screenshots`) |
-| manual | `./gradlew test -Denv=multistack_ci -DincludeTags=manual` | **in code** — `@Manual` + Allure steps · `tests/manual/` (not a wiki checklist) |
+| harness (all) | `./gradlew test -Denv=ci -DincludeTags=harness` | umbrella — all `testinfra/` · CI job `tests-harness` (feeds `sonar-tests`) |
+| harness-backend | `./gradlew test -Denv=ci -DincludeTags=harness-backend` | `ConfigReader` · backend-only lane |
+| harness-frontend | `./gradlew test -Denv=ci -DincludeTags=harness-frontend` | CSS + HAR + `LocalChromePin` · inside full `tests-harness` (frontend lane included) |
+| api | `./gradlew test -Denv=ci -DincludeTags=api` | local compose; CI job `api-tests` |
+| api smoke | `./gradlew test -Denv=prod -DincludeTags='api & smoke'` | prod subset (health, seed, login); CI job `api-tests-prod` |
+| mock | `./gradlew test -Denv=mock -DincludeTags=mock` | stub API mount checks · CI `ui-mock-tests` step 1 |
+| screenshot mock | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=mock -DincludeTags=screenshot` | PNG compare `screenshots/mock/linux/chrome-148/` · CI `ui-mock-tests` compare step |
+| e2e | `./gradlew test -Denv=ci -DincludeTags=e2e -DexcludeTags=screenshot,mock` | flow; screenshot is a second stage, not a pyramid layer |
+| e2e smoke | `./gradlew test -Denv=prod -DincludeTags='e2e & smoke' -DexcludeTags=screenshot,mock` | prod subset (login + home); CI job `e2e-tests-prod` (Selenoid) |
+| screenshot mock refresh | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=mock -DincludeTags=screenshot -DupdateScreenshots=true` | writes `screenshots/mock/linux/chrome-148/` · CI `ui-mock-tests` step `Update screenshots` (`update_mock_screenshots`) |
+| screenshot stage refresh | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=stage -DincludeTags=screenshot -DupdateScreenshots=true` | writes `screenshots/stage/linux/chrome-148/` |
+| screenshot prod refresh | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=prod -DincludeTags=screenshot -DupdateScreenshots=true` | writes `screenshots/prod/linux/chrome-148/` · CI `e2e-tests` step `Update screenshots` (`update_e2e_screenshots`) |
+| manual | `./gradlew test -Denv=ci -DincludeTags=manual` | **in code** — `@Manual` + Allure steps · `tests/manual/` (not a wiki checklist) |
 
-Swap `-Denv=multistack_prod` / `multistack_stage` to run the same filter against a deployed stack via Selenoid.
-CI: push `develop` → stage + full `api` / `e2e`. Push `main` → that SHA to stage (full layer), then prod + `@Tag("prod")`.
-Local api/e2e against compose stay on `multistack_ci`.
-
-| Stand (`-Denv`) | CI jobs | Filter |
-|-----------------|---------|--------|
-| `multistack_stage` | `api-tests-stage` / `e2e-tests-stage` (push `develop`; also push `main` before prod) | full `api` / `e2e` (`excludeTags=mock,screenshot`) |
-| `multistack_prod` | `api-tests` / `e2e-tests` (push `main`, after stage e2e) | `api&prod` / `e2e&prod` (AND token, not CSV) · e2e still `excludeTags=mock,screenshot` |
-
-`@Tag("prod")` is an environment slice (seeded GET + login), **not** `@Layer` and **not** `@Tag("smoke")`.
+Pipeline jobs `api-tests` / `e2e-tests` stay on `ci` (full layer). After deploy,
+`api-tests-prod` / `e2e-tests-prod` run `@Tag("smoke")` against `prod`. Same
+filters locally: swap `-Denv`. Combined smoke (api+e2e): `-DincludeTags=smoke`.
 Stands live in `src/test/resources/config/`; every other key is a `-D` override on top of
 `default.properties`.
 
-Screenshot PNG path: `screenshots/{mock|e2e}/{linux|macos|windows}/{chrome-148}/{area}/{viewport}.png`.
-CI SSOT is `mock/linux/chrome-148` plus the CFT pin in `chrome-for-testing.properties`.
+Screenshot PNG path: `screenshots/{mock|stage|prod}/{linux|macos|windows}/{chrome-148}/{area}/{viewport}.png`.
+`ci` reads `prod/` (same linux SSOT as the prod stand).
+CI SSOT is `{mock|stage|prod}/linux/chrome-148` plus the CFT pin in `chrome-for-testing.properties`.
 Other browsers are sibling folders (`firefox-140/` would not be read by this job).
 Do **not** set `SCREENSHOT_OS=linux` on a Mac.
 

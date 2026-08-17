@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { withKit, theme, renderers } from "@qa-guru/allure-report-kit";
@@ -12,7 +13,11 @@ import {
 import { buildDashboardLayout } from "./dashboard-layout.mjs";
 import { qualityGateRules } from "./quality-gate.mjs";
 
-const ALLURE_LOGO = fileURLToPath(new URL("./allure3-logo.svg", import.meta.url));
+// Allure 3 writes `logo` into <img src> as-is and does not copy the file into
+// the report. A filesystem path 404s on GitHub Pages; embed as data URI.
+const ALLURE_LOGO = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
+  readFileSync(fileURLToPath(new URL("./allure3-logo.svg", import.meta.url)), "utf8"),
+)}`;
 
 /**
  * Build Allure 3 config from ethalon modules.

@@ -16,8 +16,9 @@ name: CI
 # SSOT host: allure.qa.guru (legacy allure.autotests.cloud redirects).
 # Pyramid layers (classical): unit · integration (no UI) · api · e2e · manual
 # Sideways FE: component (jsdom) — only the active FRONTEND (same teaching knob as deploy).
-# Screenshot (@Tag screenshot): compare in ui-mock-tests (every PR) and e2e-tests (dispatch);
-# rewrite is a step in those jobs (update_mock_screenshots / update_e2e_screenshots), not a CD job.
+# Screenshot (@Tag screenshot): compare in ui-mock-tests (every PR) and e2e-tests-stage (stage CD).
+# Prod e2e-tests screenshot is dispatch run_screenshot.
+# rewrite: update_mock_screenshots / update_stage_screenshots / update_e2e_screenshots, not a CD job.
 # CD: push develop → stage only (WIP). Push main → same SHA to stage, then prod
 # (prod jobs `needs` e2e-tests-stage). `trigger` maps push paths / dispatch `deploy`
 # onto the same flags. Sonar gates deploy, not build.
@@ -39,9 +40,10 @@ name: CI
 #   build-backend ← unit-tests + integration-tests · build-frontend ← ui-mock-tests
 #   deploy-backend-stage / deploy-frontend-stage ← same gates; cd_stage; skip until vars.STAGE_APP_DIR
 #   api-tests-stage / e2e-tests-stage ← deploy-*-stage; full api / e2e vs STAGE_APP_URL
+#     (e2e-tests-stage also compares screenshots/stage/)
 #   deploy-backend ← build-backend + sonar-backend + e2e-tests-stage (cd_production)
 #   deploy-frontend ← build-frontend + sonar-frontend + e2e-tests-stage
-#   api-tests ← deploy-backend; -Denv=multistack_prod -DincludeTags=api&prod
+#   api-tests ← deploy-backend; -Denv=prod -DincludeTags=api&prod
 #   e2e-tests ← api-tests + deploy-frontend; includeTags=e2e&prod excludeTags=mock,screenshot
 #   publish-allure-report ← pyramid layers + sonar-backend (gating generate; soft Telegram + Pages)
 # push main|develop: trigger infers lanes from paths (tests/ ⇒ no app deploy).
@@ -78,15 +80,15 @@ on:
         type: boolean
         default: false
       run_e2e:
-        description: "Run E2E tests (prod: e2e&prod; stage/develop: full e2e; screenshot excluded unless run_screenshot=true)"
+        description: "Run E2E tests (prod: e2e&prod; stage/develop: full e2e). Stage screenshot compare is always on."
         type: boolean
         default: false
       run_screenshot:
-        description: "e2e-tests: compare screenshot PNGs (Selenoid)"
+        description: "e2e-tests (prod): compare screenshot PNGs (Selenoid)"
         type: boolean
         default: false
       run_manual:
-        description: "Run tests tagged manual against multistack_prod"
+        description: "Run tests tagged manual against prod"
         type: boolean
         default: false
       include_tags:
@@ -102,7 +104,11 @@ on:
         type: boolean
         default: false
       update_e2e_screenshots:
-        description: "e2e-tests: rewrite e2e screenshot PNGs (skips compare)"
+        description: "e2e-tests: rewrite prod screenshot PNGs (skips compare)"
+        type: boolean
+        default: false
+      update_stage_screenshots:
+        description: "e2e-tests-stage: rewrite stage screenshot PNGs (skips compare)"
         type: boolean
         default: false
       ALLURE_JOB_RUN_ID:
@@ -167,7 +173,7 @@ env:
   # Launch env axes for TestOps filters (real values — not sandbox toy OS/VERSION).
   BROWSER: Chrome
   OS: Linux
-  ENDPOINT: multistack_prod
+  ENDPOINT: prod
   VERSION: ${{ github.sha }}
   BRANCH: ${{ github.head_ref || github.ref_name }}
   SONAR_SCANNER_NPM_VERSION: "5.0.0"
@@ -924,12 +930,12 @@ jobs:
       - *cache-allurectl
       - *setup-live-allurectl
 
-      # ── java (-Denv=multistack_mock -DincludeTags=mock) ────────────────────
+      # ── java (-Denv=mock -DincludeTags=mock) ────────────────────
       # Read-only GUH (GRADLE_CACHE_READ_ONLY). No CC restore: entries pin
       # absolute GRADLE_USER_HOME (JaCoCo agent jars) from other runners.
       - *setup-java
       - *setup-gradle
-      # multistack_mock has no remoteUrl: the stand lives on the runner's localhost, which a
+      # mock has no remoteUrl: the stand lives on the runner's localhost, which a
       # Selenoid browser could not reach, so the browser has to be local too.
       # setup-chrome only has an in-runner tool-cache; persist it like allurectl.
       # Path is $RUNNER_TOOL_CACHE/setup-chrome/{chrome,chromedriver}/<ver>/<arch>/.
@@ -985,7 +991,7 @@ jobs:
           CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
         run: |
           eval "${ALLURECTL_RUN}"
-          run_with_allurectl ./gradlew test -Denv=multistack_mock -DincludeTags=mock
+          run_with_allurectl ./gradlew test -Denv=mock -DincludeTags=mock
         working-directory: ${{ env.TESTS_DIR }}
       - name: Stash mock Allure results
         if: always() && env.TESTS_LANG == 'java'
@@ -1011,7 +1017,7 @@ jobs:
           CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
         run: |
           eval "${ALLURECTL_RUN}"
-          run_with_allurectl ./gradlew test -Denv=multistack_mock -DincludeTags=screenshot
+          run_with_allurectl ./gradlew test -Denv=mock -DincludeTags=screenshot
         working-directory: ${{ env.TESTS_DIR }}
       - name: Update screenshots
         if: >-
@@ -1024,7 +1030,7 @@ jobs:
           CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
         run: |
           eval "${ALLURECTL_RUN}"
-          run_with_allurectl ./gradlew test -Denv=multistack_mock -DincludeTags=screenshot -DupdateScreenshots=true
+          run_with_allurectl ./gradlew test -Denv=mock -DincludeTags=screenshot -DupdateScreenshots=true
         working-directory: ${{ env.TESTS_DIR }}
       - name: Merge Allure results
         if: always() && env.TESTS_LANG == 'java'
@@ -1104,7 +1110,7 @@ jobs:
       - name: Run harness tests (Gradle)
         if: env.TESTS_LANG == 'java'
         id: run-tests
-        run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification -Denv=multistack_ci -DincludeTags="${HARNESS_INCLUDE_TAGS}"
+        run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification -Denv=ci -DincludeTags="${HARNESS_INCLUDE_TAGS}"
         working-directory: ${{ env.TESTS_DIR }}
       - if: env.TESTS_LANG == 'java' && steps.run-tests.outcome == 'success'
         uses: actions/upload-artifact@v7
@@ -1578,7 +1584,7 @@ jobs:
           ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
         run: |
           eval "${ALLURECTL_RUN}"
-          run_with_allurectl ./gradlew test -Denv=multistack_prod "-DincludeTags=api&prod"
+          run_with_allurectl ./gradlew test -Denv=prod "-DincludeTags=api&prod"
         working-directory: ${{ env.TESTS_DIR }}
       # ── javascript / typescript (full suite) ──────────────────────────────
       - *setup-node
@@ -1682,7 +1688,7 @@ jobs:
         id: run-tests
         env:
           ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
-          RUN_ENV: multistack_prod
+          RUN_ENV: prod
           INCLUDE_TAGS: ${{ inputs.include_tags }}
           EXCLUDE_TAGS: ${{ inputs.exclude_tags }}
           # Selenoid hub URL with credentials — config files commit only the creds-less URL.
@@ -1724,7 +1730,7 @@ jobs:
         id: run-screenshot-tests
         env:
           ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
-          RUN_ENV: multistack_prod
+          RUN_ENV: prod
           SELENOID_REMOTE_URL: ${{ secrets.SELENOID_REMOTE_URL }}
         run: |
           eval "${ALLURECTL_RUN}"
@@ -1737,7 +1743,7 @@ jobs:
         id: update-screenshots
         env:
           ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
-          RUN_ENV: multistack_prod
+          RUN_ENV: prod
           SELENOID_REMOTE_URL: ${{ secrets.SELENOID_REMOTE_URL }}
         run: |
           eval "${ALLURECTL_RUN}"
@@ -1810,7 +1816,7 @@ jobs:
     timeout-minutes: 20
     env:
       LAYER: api
-      ENDPOINT: multistack_stage
+      ENDPOINT: stage
       PUBLIC_HOST: stage.autotests.ai
       APP_URL: https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/
       UI_URL: https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/
@@ -1852,7 +1858,7 @@ jobs:
           ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
         run: |
           eval "${ALLURECTL_RUN}"
-          run_with_allurectl ./gradlew test -Denv=multistack_stage -DincludeTags=api
+          run_with_allurectl ./gradlew test -Denv=stage -DincludeTags=api
         working-directory: ${{ env.TESTS_DIR }}
       - *setup-node
       - *npm-ci
@@ -1878,7 +1884,7 @@ jobs:
         working-directory: ${{ env.TESTS_DIR }}
       - *upload-allure-results
 
-  # Stage twin of e2e-tests — full e2e vs STAGE_APP_URL; exclude mock,screenshot.
+  # Stage twin of e2e-tests — full e2e vs STAGE_APP_URL, then screenshot compare.
   e2e-tests-stage:
     needs: [api-tests-stage, deploy-frontend-stage, trigger, testops-context]
     if: >-
@@ -1897,6 +1903,8 @@ jobs:
             needs.api-tests-stage.result == 'skipped')) ||
           (github.event_name == 'workflow_dispatch' &&
            (inputs.run_e2e ||
+            inputs.run_screenshot ||
+            inputs.update_stage_screenshots ||
             inputs.include_tags != '' ||
             inputs.exclude_tags != '') &&
            (needs.api-tests-stage.result == 'success' || needs.api-tests-stage.result == 'skipped') &&
@@ -1905,10 +1913,10 @@ jobs:
         )
       )
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 40
     env:
       LAYER: e2e
-      ENDPOINT: multistack_stage
+      ENDPOINT: stage
       PUBLIC_HOST: stage.autotests.ai
       APP_URL: https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/
       UI_URL: https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/
@@ -1954,7 +1962,7 @@ jobs:
         id: run-tests
         env:
           ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
-          RUN_ENV: multistack_stage
+          RUN_ENV: stage
           INCLUDE_TAGS: ${{ inputs.include_tags }}
           EXCLUDE_TAGS: ${{ inputs.exclude_tags }}
           SELENOID_REMOTE_URL: ${{ secrets.SELENOID_REMOTE_URL }}
@@ -1977,6 +1985,60 @@ jobs:
           eval "${ALLURECTL_RUN}"
           run_with_allurectl ./gradlew test "${ARGS[@]}"
         working-directory: ${{ env.TESTS_DIR }}
+      - name: Stash e2e Allure results
+        if: always() && env.TESTS_LANG == 'java'
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          STASH="${{ env.TESTS_DIR }}/build/allure-results-e2e-stage-stash"
+          SRC="${{ env.TESTS_DIR }}/build/allure-results"
+          mkdir -p "$STASH"
+          if [ -d "$SRC" ]; then cp -R "$SRC/." "$STASH/"; fi
+      - name: Run screenshot stage compare (Gradle)
+        if: >-
+          always() && !cancelled() && env.TESTS_LANG == 'java' &&
+          (github.event_name != 'workflow_dispatch' || inputs.update_stage_screenshots != true)
+        id: run-screenshot-tests
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+          RUN_ENV: stage
+          SELENOID_REMOTE_URL: ${{ secrets.SELENOID_REMOTE_URL }}
+        run: |
+          eval "${ALLURECTL_RUN}"
+          run_with_allurectl ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=screenshot -DexcludeTags=mock ${SELENOID_REMOTE_URL:+"-DremoteUrl=$SELENOID_REMOTE_URL"}
+        working-directory: ${{ env.TESTS_DIR }}
+      - name: Update screenshots
+        if: >-
+          always() && !cancelled() && env.TESTS_LANG == 'java' &&
+          github.event_name == 'workflow_dispatch' && inputs.update_stage_screenshots
+        id: update-screenshots
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+          RUN_ENV: stage
+          SELENOID_REMOTE_URL: ${{ secrets.SELENOID_REMOTE_URL }}
+        run: |
+          eval "${ALLURECTL_RUN}"
+          run_with_allurectl ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=screenshot -DupdateScreenshots=true ${SELENOID_REMOTE_URL:+"-DremoteUrl=$SELENOID_REMOTE_URL"}
+        working-directory: ${{ env.TESTS_DIR }}
+      - name: Merge Allure results
+        if: always() && env.TESTS_LANG == 'java'
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          STASH="${{ env.TESTS_DIR }}/build/allure-results-e2e-stage-stash"
+          DEST="${{ env.TESTS_DIR }}/build/allure-results"
+          mkdir -p "$DEST"
+          if [ -d "$STASH" ]; then cp -R "$STASH/." "$DEST/"; fi
+      - name: Publish stage screenshot PNGs
+        if: >-
+          always() && env.TESTS_LANG == 'java' &&
+          github.event_name == 'workflow_dispatch' && inputs.update_stage_screenshots
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: stage-screenshot-pngs
+          path: ${{ env.TESTS_DIR }}/src/test/resources/screenshots/
+          if-no-files-found: ignore
       - *setup-node
       - *npm-ci
       - *cache-playwright-browsers
@@ -2040,7 +2102,7 @@ jobs:
         id: run-tests
         env:
           ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
-          RUN_ENV: multistack_prod
+          RUN_ENV: prod
         run: |
           eval "${ALLURECTL_RUN}"
           run_with_allurectl ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=manual
