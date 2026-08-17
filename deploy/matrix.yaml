@@ -16,7 +16,8 @@
 
 public_host: autotests.ai
 # Header Stage/Prod: https://{public_host} and https://stage.{public_host}
-# Runtime twin: frontend/_shared/env-hosts.ts · js/env-hosts.js
+# Runtime: frontend/_shared/frontend-javascript-app/js/env-hosts.js
+#          (python frontend/scripts/sync-stack-matrix.py)
 short_url_host: autotests.ai
 canonical_stack_host: autotests.ai
 canonical_stack_prefix: /stack

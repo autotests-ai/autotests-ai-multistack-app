@@ -85,7 +85,8 @@ bash frontend/scripts/sync-ds-runtime.sh
 ```
 
 Product overlay (not copied from design-system): `css/stack-page.css`,
-`js/app-base.js`, `js/stack-matrix.js`, `js/env-hosts.js`, `stack/`.
+`js/app-base.js`, `js/stack-matrix.js`, `js/env-hosts.js` (from
+`sync-stack-matrix.py`), `stack/`.
 
 Packed into each frontend nginx image as `UI_RUNTIME` (module `Dockerfile`).
 EOF

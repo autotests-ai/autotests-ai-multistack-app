@@ -1,6 +1,11 @@
 import type { HeaderConfig } from '@zero-design-system/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { envNavItems, PROD_ORIGIN, PUBLIC_HOST, STAGE_ORIGIN } from '../../../../_shared/env-hosts';
+import {
+  envNavItems,
+  PROD_ORIGIN,
+  PUBLIC_HOST,
+  STAGE_ORIGIN,
+} from '../../../../_shared/frontend-javascript-app/js/env-hosts.js';
 
 // Canonical design-system header from lean runtime (committed; works in
 // standalone checkout without monorepo design-system symlink).
