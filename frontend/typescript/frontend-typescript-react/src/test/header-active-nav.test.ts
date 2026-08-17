@@ -1,4 +1,6 @@
+import type { HeaderConfig } from '@zero-design-system/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { envNavItems, PROD_ORIGIN, PUBLIC_HOST, STAGE_ORIGIN } from '../../../../_shared/env-hosts';
 
 // Canonical design-system header from lean runtime (committed; works in
 // standalone checkout without monorepo design-system symlink).
@@ -21,10 +23,7 @@ vi.mock('../../../../_shared/frontend-javascript-app/js/dom-utils.js', () => ({
 
 const MOUNT = '/frontend-typescript-react';
 
-const STAGE_ORIGIN = 'https://stage.autotests.ai';
-const PROD_ORIGIN = 'https://autotests.ai';
-
-const REFERENCE_HEADER_CONFIG = {
+const REFERENCE_HEADER_CONFIG: HeaderConfig = {
   brand: { href: `${MOUNT}/`, label: 'Multistack' },
   nav: [
     { href: `${MOUNT}/`, label: 'Home', active: false, testid: 'header-nav-home' },
@@ -41,18 +40,7 @@ const REFERENCE_HEADER_CONFIG = {
       active: false,
       testid: 'header-nav-stack',
     },
-    {
-      href: `${STAGE_ORIGIN}/`,
-      label: 'Stage',
-      testid: 'header-nav-stage',
-      match: 'host' as const,
-    },
-    {
-      href: `${PROD_ORIGIN}/`,
-      label: 'Prod',
-      testid: 'header-nav-prod',
-      match: 'host' as const,
-    },
+    ...envNavItems(),
   ],
   lang: { default: 'en' as const },
   theme: { default: 'dark' as const },
@@ -245,6 +233,17 @@ describe('canonical header.js — mobile burger menu', () => {
   });
 });
 
+describe('env-hosts — matrix public_host', () => {
+  it('derives Stage/Prod origins from public_host', () => {
+    expect(PROD_ORIGIN).toBe(`https://${PUBLIC_HOST}`);
+    expect(STAGE_ORIGIN).toBe(`https://stage.${PUBLIC_HOST}`);
+    expect(envNavItems().map((item) => item.testid)).toEqual([
+      'header-nav-stage',
+      'header-nav-prod',
+    ]);
+  });
+});
+
 describe('canonical header.js — host-match env switchers', () => {
   beforeEach(() => {
     window.history.replaceState({}, '', `${MOUNT}/`);
@@ -275,7 +274,7 @@ describe('canonical header.js — host-match env switchers', () => {
 
     const config = structuredClone(REFERENCE_HEADER_CONFIG);
     config.nav = [
-      ...config.nav.filter((item) => item.match !== 'host'),
+      ...(config.nav ?? []).filter((item) => item.match !== 'host'),
       {
         href: `${window.location.origin}/`,
         label: 'Here',

@@ -19,7 +19,10 @@
 <body>
   <div id="app-header"></div>
   <script src="/stack/js/app-base.js"></script>
-  <script>
+  <script type="module">
+    import { envNavItems } from '/stack/js/env-hosts.js';
+
+    const appPath = window.appPath;
     window.headerConfig = {
       brand: { href: appPath('/'), label: 'Multistack' },
       nav: [
@@ -27,14 +30,14 @@
         { href: appPath('/login'), label: 'Login', testid: 'header-nav-login' },
         { href: appPath('/register'), label: 'Register', testid: 'header-nav-register' },
         { href: '/stack/', label: 'Stack', active: true, testid: 'header-nav-stack' },
-        { href: 'https://stage.autotests.ai/', label: 'Stage', testid: 'header-nav-stage', match: 'host' },
-        { href: 'https://autotests.ai/', label: 'Prod', testid: 'header-nav-prod', match: 'host' },
+        ...envNavItems(),
       ],
       lang: { default: 'en' },
       theme: { default: 'dark' },
     };
+
+    await import('/stack/js/header.js');
   </script>
-  <script type="module" src="/stack/js/header.js"></script>
 
   <main class="page-shell page-shell--below-header stack-page" data-testid="stack-page">
     <div class="stack-page__error" id="stack-err" hidden></div>
