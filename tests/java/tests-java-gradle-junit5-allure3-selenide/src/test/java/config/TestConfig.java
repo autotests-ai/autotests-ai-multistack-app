@@ -42,6 +42,14 @@ public interface TestConfig extends Config {
     @DefaultValue("false")
     boolean enableAllureSelenideListener();
 
+    @Key("enableAllureRestAssuredListener")
+    @DefaultValue("false")
+    boolean enableAllureRestAssuredListener();
+
+    @Key("allureRestAssuredListenerStyle")
+    @DefaultValue("default")
+    String allureRestAssuredListenerStyle();
+
     @Key("baseUrl")
     @DefaultValue("")
     String baseUrl();

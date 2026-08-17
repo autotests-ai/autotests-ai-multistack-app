@@ -1,9 +1,9 @@
 package api;
 
+import allure.AllureRestAssuredFilters;
 import tests.AllureMeta;
 import config.ConfigReader;
 import config.TestConfig;
-import io.qameta.allure.restassured.AllureRestAssured;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
@@ -30,9 +30,6 @@ public class ApiTestBase extends AllureMeta {
                 .setContentType(ContentType.JSON)
                 .build();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
-        // Report attachments follow the report mode, not console logging — separate concerns.
-        if (!"none".equals(config.allureReportMode()) && RestAssured.filters().isEmpty()) {
-            RestAssured.filters(new AllureRestAssured());
-        }
+        AllureRestAssuredFilters.apply(config);
     }
 }

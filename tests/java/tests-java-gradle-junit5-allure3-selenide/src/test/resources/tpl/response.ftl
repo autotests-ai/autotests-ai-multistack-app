@@ -3,38 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <style>
-:root{--l:#008000;--v:#c7254e;--k:#0066cc}
 *{box-sizing:border-box}
-body{font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:12px;color:#333}
-h4{margin:16px 0 8px;font-size:13px;color:#666}
-pre{margin:0;white-space:pre-wrap;word-break:break-all}
-code{font-family:ui-monospace,monospace;font-size:13px;background:#f5f5f5;padding:2px 6px;border-radius:4px}
-pre code{display:block;padding:10px;background:#f5f5f5;border-radius:4px;border:1px solid #e0e0e0}
-.hl-status,.hl-header-name{color:var(--l);font-weight:600}
-.hl-url,.hl-json-string,.hl-header-value{color:var(--v)}
-.hl-json-key{color:var(--k)}
+html,body{margin:0;padding:0;height:auto;overflow:visible}
+body{font:13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:4px 6px}
+h4{margin:8px 0 4px;font-size:12px;opacity:.7}
+pre{margin:0;white-space:pre-wrap;word-break:break-all;overflow:visible;background:transparent}
+code{font-family:ui-monospace,monospace;font-size:13px;background:transparent;color:inherit}
+pre code{display:block;padding:0;overflow:visible}
+.hl-status,.hl-header-name{color:#0d9488;font-weight:600}
+.hl-url,.hl-json-string,.hl-header-value{color:#db2777}
+.hl-json-key{color:#0284c7}
 </style>
 </head>
-<body>
-<div><h4>Status code</h4><pre><code><span class="hl-status"><#if data.responseCode??>${data.responseCode}<#else>Unknown</#if></span></code></pre></div>
+<body style="margin:0;padding:4px 6px;overflow:visible;height:auto;background:transparent">
+<div><h4 style="margin:8px 0 4px;font-size:12px;opacity:.7">Status code</h4><pre style="margin:0;overflow:visible;background:transparent"><code style="display:block;padding:0;background:transparent;color:inherit;font-family:ui-monospace,monospace;font-size:13px;overflow:visible"><span class="hl-status" style="color:#0d9488;font-weight:600"><#if data.responseCode??>${data.responseCode}<#else>Unknown</#if></span></code></pre></div>
 <#if data.url??>
-<div><pre><code><span class="hl-url">${data.url}</span></code></pre></div>
+<div><pre style="margin:0;overflow:visible;background:transparent"><code style="display:block;padding:0;background:transparent;color:inherit;font-family:ui-monospace,monospace;font-size:13px;overflow:visible"><span class="hl-url" style="color:#db2777">${data.url}</span></code></pre></div>
 </#if>
 <#if (data.headers)?has_content>
-<h4>Headers</h4>
-<#list data.headers as name, value>
-<div><pre><code><span class="hl-header-name">${name}</span>: <span class="hl-header-value">${value}</span></code></pre></div>
-</#list>
+<h4 style="margin:8px 0 4px;font-size:12px;opacity:.7">Headers</h4>
+<div><pre style="margin:0;overflow:visible;background:transparent"><code style="display:block;padding:0;background:transparent;color:inherit;font-family:ui-monospace,monospace;font-size:13px;white-space:pre-wrap;overflow:visible"><#list data.headers as name, value><span class="hl-header-name" style="color:#0d9488;font-weight:600">${name}</span>: <span class="hl-header-value" style="color:#db2777">${value}</span>
+</#list></code></pre></div>
 </#if>
 <#if data.body??>
-<h4>Body</h4>
-<div><pre><code class="hl-json">${data.body}</code></pre></div>
+<h4 style="margin:8px 0 4px;font-size:12px;opacity:.7">Body</h4>
+<div><pre style="margin:0;overflow:visible;background:transparent"><code class="hl-json" style="display:block;padding:0;background:transparent;color:inherit;font-family:ui-monospace,monospace;font-size:13px;white-space:pre-wrap;overflow:visible">${data.body}</code></pre></div>
 </#if>
 <#if (data.cookies)?has_content>
-<h4>Cookies</h4>
-<#list data.cookies as name, value>
-<div><pre><code><span class="hl-header-name">${name}</span>: <span class="hl-header-value">${value}</span></code></pre></div>
-</#list>
+<h4 style="margin:8px 0 4px;font-size:12px;opacity:.7">Cookies</h4>
+<div><pre style="margin:0;overflow:visible;background:transparent"><code style="display:block;padding:0;background:transparent;color:inherit;font-family:ui-monospace,monospace;font-size:13px;white-space:pre-wrap;overflow:visible"><#list data.cookies as name, value><span class="hl-header-name" style="color:#0d9488;font-weight:600">${name}</span>: <span class="hl-header-value" style="color:#db2777">${value}</span>
+</#list></code></pre></div>
 </#if>
 <script>
 (function(){
@@ -46,7 +44,7 @@ function json(el){
       s=i++;
       while(i<t.length){if(t[i]==='\\')i+=2;else if(t[i]==='"'){i++;break;}else i++}
       j=i;while(j<t.length&&/\s/.test(t[j]))j++;
-      h+='<span class="hl-'+(t[j]===':'?'json-key':'json-string')+'">'+e(t.slice(s,i))+'</span>';
+      h+='<span class="hl-'+(t[j]===':'?'json-key':'json-string')+'" style="color:'+(t[j]===':'?'#0284c7':'#db2777')+'">'+e(t.slice(s,i))+'</span>';
       i--;
     }else h+=e(t[i]);
   el.innerHTML=h;
