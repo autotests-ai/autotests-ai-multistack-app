@@ -141,13 +141,11 @@ env:
   # java|kotlin|python|go|javascript|typescript — unit-tests setup/run follows this
   BACKEND_LANG: java
   BACKEND_PORT: "8800"
-  # Teaching module: component-tests + sonar + primary SHA image. Do not flip this
-  # to vanilla (no npm). Every other compose frontend is SHA-built/deployed on the
-  # same lane via build-frontend-sidecars — keep that matrix in sync with
-  # FRONTEND_SIDECARS / deploy-frontend DEPLOY_COMPOSE_SERVICES.
+  # Teaching module: component-tests + sonar + the only SHA image this workflow
+  # builds and deploys. Sibling compose frontends stay in docker-compose.yml for
+  # the catalog; they are not a CI matrix (students see one FRONTEND knob).
   FRONTEND: frontend-typescript-react
   FRONTEND_DIR: frontend/typescript/frontend-typescript-react
-  FRONTEND_SIDECARS: frontend-typescript-vue frontend-typescript-angular frontend-typescript-vanilla frontend-typescript-jquery frontend-javascript-vue frontend-javascript-angular frontend-javascript-vanilla frontend-javascript-jquery frontend-javascript-react
   # Teaching tests module — selenide today; flip TESTS/TESTS_DIR/TESTS_LANG together
   TESTS: tests-java-gradle-junit5-allure3-selenide
   TESTS_DIR: tests/java/tests-java-gradle-junit5-allure3-selenide
@@ -1388,74 +1386,6 @@ jobs:
       - name: Push frontend Docker image to GHCR
         run: docker compose push ${{ env.FRONTEND }}
 
-  # Sibling frontends on the stand: SHA (+ :latest) without flipping FRONTEND / sonar.
-  # Parallel with teaching build; deploy-frontend waits for both.
-  build-frontend-sidecars:
-    name: sidecar ${{ matrix.service }}
-    needs: [trigger]
-    if: >-
-      !cancelled() &&
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') &&
-      needs.trigger.outputs.frontend == 'true'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    permissions:
-      contents: read
-      packages: write
-      actions: write
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - service: frontend-typescript-vue
-            dockerfile: frontend/typescript/frontend-typescript-vue/Dockerfile
-          - service: frontend-typescript-angular
-            dockerfile: frontend/typescript/frontend-typescript-angular/Dockerfile
-          - service: frontend-typescript-vanilla
-            dockerfile: frontend/typescript/frontend-typescript-vanilla/Dockerfile
-          - service: frontend-typescript-jquery
-            dockerfile: frontend/typescript/frontend-typescript-jquery/Dockerfile
-          - service: frontend-javascript-vue
-            dockerfile: frontend/javascript/frontend-javascript-vue/Dockerfile
-          - service: frontend-javascript-angular
-            dockerfile: frontend/javascript/frontend-javascript-angular/Dockerfile
-          - service: frontend-javascript-vanilla
-            dockerfile: frontend/javascript/frontend-javascript-vanilla/Dockerfile
-          - service: frontend-javascript-jquery
-            dockerfile: frontend/javascript/frontend-javascript-jquery/Dockerfile
-          - service: frontend-javascript-react
-            dockerfile: frontend/javascript/frontend-javascript-react/Dockerfile
-    env:
-      DOCKER_CACHE_SCOPE: autotests-ai-multistack-app-docker-${{ matrix.service }}
-      DOCKER_BUILD_CONTEXT: .
-      DOCKER_FILE: ${{ matrix.dockerfile }}
-      DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/autotests-ai-multistack-app-${{ matrix.service }}:${{ github.sha }}
-      DOCKER_BUILD_ARGS: |
-        REACT_UI=frontend/_shared/frontend-react-ui
-        UI_RUNTIME=frontend/_shared/frontend-javascript-app
-      DOCKER_OCI_LABELS: |
-        org.opencontainers.image.title=autotests-ai-multistack-app-${{ matrix.service }}
-        org.opencontainers.image.description=autotests-ai-multistack-app · ${{ matrix.service }}
-        org.opencontainers.image.source=https://github.com/autotests-ai/autotests-ai-multistack-app
-        org.opencontainers.image.url=https://autotests.ai/stack/backend-java-spring/${{ matrix.service }}/
-        org.opencontainers.image.vendor=autotests-ai
-    steps:
-      - *checkout
-      - *docker-login-ghcr
-      - *setup-docker-buildx
-      - *docker-build-push
-      - name: Push sidecar image to GHCR
-        run: |
-          set -euo pipefail
-          docker compose push ${{ matrix.service }}
-          if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
-            echo "skip :latest (only main retags latest)"
-            exit 0
-          fi
-          img="ghcr.io/${{ github.repository_owner }}/autotests-ai-multistack-app-${{ matrix.service }}"
-          docker tag "${img}:${IMAGE_TAG}" "${img}:latest"
-          docker push "${img}:latest"
-
   deploy-backend:
     needs: [build-backend, sonar-backend, trigger, e2e-tests-stage]
     if: >-
@@ -1498,13 +1428,12 @@ jobs:
           envs: IMAGE_TAG,GHCR_TOKEN,DEPLOY_COMPOSE_SERVICES,DEPLOY_HEALTH_URL,DEPLOY_APP_DIR,DEPLOY_COMPOSE_PROJECT,DEPLOY_COMPOSE_ENV_FILE
           script: ${{ env.DEPLOY_SSH_SCRIPT }}
 
-  # FE deploy after teaching build + sonar + sidecar SHA images.
+  # FE deploy after teaching build + sonar. One FRONTEND — no sibling matrix.
   deploy-frontend:
-    needs: [build-frontend, build-frontend-sidecars, sonar-frontend, trigger, e2e-tests-stage]
+    needs: [build-frontend, sonar-frontend, trigger, e2e-tests-stage]
     if: >-
       !cancelled() &&
       needs.build-frontend.result == 'success' &&
-      needs.build-frontend-sidecars.result == 'success' &&
       needs.sonar-frontend.result == 'success' &&
       needs.trigger.outputs.cd_production == 'true' &&
       needs.e2e-tests-stage.result == 'success'
@@ -1525,7 +1454,7 @@ jobs:
       DEPLOY_APP_DIR: /home/autotests_ai_multistack/autotests-ai-multistack-app
       DEPLOY_COMPOSE_PROJECT: autotests-ai-multistack-app
       DEPLOY_COMPOSE_ENV_FILE: ""
-      DEPLOY_COMPOSE_SERVICES: frontend-typescript-react frontend-typescript-vue frontend-typescript-angular frontend-typescript-vanilla frontend-typescript-jquery frontend-javascript-vue frontend-javascript-angular frontend-javascript-vanilla frontend-javascript-jquery frontend-javascript-react
+      DEPLOY_COMPOSE_SERVICES: frontend-typescript-react
       DEPLOY_HEALTH_URL: ""
     steps:
       - *ssh-deploy
@@ -1564,11 +1493,10 @@ jobs:
       - *ssh-deploy
 
   deploy-frontend-stage:
-    needs: [build-frontend, build-frontend-sidecars, sonar-frontend, trigger, preempt-develop-cd, yield-to-main-cd]
+    needs: [build-frontend, sonar-frontend, trigger, preempt-develop-cd, yield-to-main-cd]
     if: >-
       always() && !cancelled() &&
       needs.build-frontend.result == 'success' &&
-      needs.build-frontend-sidecars.result == 'success' &&
       needs.sonar-frontend.result == 'success' &&
       vars.STAGE_APP_DIR != '' &&
       needs.trigger.outputs.cd_stage == 'true' &&
@@ -1590,7 +1518,7 @@ jobs:
       DEPLOY_APP_DIR: ${{ vars.STAGE_APP_DIR }}
       DEPLOY_COMPOSE_PROJECT: autotests-ai-multistack-app-stage
       DEPLOY_COMPOSE_ENV_FILE: deploy/stage.env
-      DEPLOY_COMPOSE_SERVICES: frontend-typescript-react frontend-typescript-vue frontend-typescript-angular frontend-typescript-vanilla frontend-typescript-jquery frontend-javascript-vue frontend-javascript-angular frontend-javascript-vanilla frontend-javascript-jquery frontend-javascript-react
+      DEPLOY_COMPOSE_SERVICES: frontend-typescript-react
       DEPLOY_HEALTH_URL: ""
     steps:
       - *ssh-deploy
