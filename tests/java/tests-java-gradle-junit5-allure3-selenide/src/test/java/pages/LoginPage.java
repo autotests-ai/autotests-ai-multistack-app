@@ -29,9 +29,10 @@ public class LoginPage {
 
     @Step("Fill and submit form")
     public HomePage fillAndSubmitForm(String username, String password) {
-        typeUsername(username);
-        typePassword(password);
-        return submit();
+        shouldShowLoginForm();
+        ReactInput.fillAndSubmitLogin(username, password);
+        BrowserUrl.shouldBeAtAppRoot();
+        return new HomePage();
     }
 
     @Step("Type username: {username}")

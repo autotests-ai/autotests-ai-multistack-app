@@ -3,6 +3,7 @@ package pages;
 import config.ConfigReader;
 
 import static com.codeborne.selenide.Selenide.Wait;
+import static com.codeborne.selenide.Selenide.executeJavaScript;
 import static pages.PageTimeouts.PAGE_READY;
 
 /**
@@ -19,7 +20,17 @@ final class BrowserUrl {
         String expected = ConfigReader.resolveWebBaseUrl();
         Wait().withTimeout(PAGE_READY).until(driver -> {
             String current = driver.getCurrentUrl().replaceAll("/+$", "");
-            return current.equals(expected);
+            if (current.equals(expected)) {
+                return true;
+            }
+            Object err = executeJavaScript(
+                    "const n = document.querySelector('[data-testid=\"error-message\"]');"
+                            + "return n ? n.textContent : '';");
+            String message = err == null ? "" : err.toString().trim();
+            if (!message.isEmpty()) {
+                throw new AssertionError("login stayed at " + current + "; error=" + message);
+            }
+            return false;
         });
     }
 }
