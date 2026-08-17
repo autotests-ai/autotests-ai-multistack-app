@@ -51,9 +51,6 @@ java {
     }
 }
 
-def sonarHarnessScopeExclusions =
-        '**/*Test.java,**/*Tests.java,**/pages/**,**/api/**,**/annotations/**,**/allure/**,**/extensions/**,**/tests/**,**/helpers/BrowserSessionHelper.java,**/helpers/HarCapture.java,**/helpers/HarViewerHtml.java,**/helpers/LocalChromePin.java,**/helpers/ScreenshotHelper.java,**/helpers/ViewportHelper.java,**/config/TestConfig.java'
-
 sonar {
     properties {
         property 'sonar.projectKey', System.getenv('SONAR_PROJECT_KEY') ?: 'autotests-ai-multistack-app-tests-java-gradle-junit5-allure3-selenide'
@@ -65,9 +62,9 @@ sonar {
         property 'sonar.java.binaries', 'build/classes/java/test'
         property 'sonar.coverage.jacoco.xmlReportPaths',
                 "${layout.buildDirectory.get()}/reports/jacoco/test/jacocoTestReport.xml"
-        // Harness axis only — pages/api/pyramid slices are exercised elsewhere, not Sonar-gated.
-        property 'sonar.exclusions', sonarHarnessScopeExclusions
-        property 'sonar.coverage.exclusions', sonarHarnessScopeExclusions
+        // Same allow-list as JaCoCo harness (ConfigReader + CSS helpers). A deny-list
+        // of other helpers lets new page/Allure classes fail Coverage on New Code.
+        property 'sonar.inclusions', '**/config/ConfigReader.java,**/helpers/LayoutCss.java,**/helpers/TokensCss.java'
     }
 }
 
