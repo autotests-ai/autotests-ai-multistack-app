@@ -13,7 +13,7 @@ name: CI
 # students install with `npm ci`, not `npm install`). allure-report-warmup is gating
 # (npm ci, parallel with pyramid). publish-allure-report is gating (generate after e2e).
 # Pages / TestOps / Telegram stay step-level continue-on-error.
-# send-allure-notifications is non-gating (kit collage).
+# Telegram kit collage is a soft step in publish-allure-report (after generate + upload).
 # TestOps UI rerun: workflow_dispatch + ALLURE_JOB_RUN_ID → ALLURE_KEEP_TESTPLAN=true.
 # Launch env axes: BROWSER / OS / ENDPOINT / VERSION(=sha) / BRANCH.
 # SSOT host: allure.qa.guru (legacy allure.autotests.cloud redirects).
@@ -48,8 +48,8 @@ name: CI
 #   e2e-tests ← api-tests + deploy-frontend; includeTags=e2e&prod excludeTags=mock,screenshot
 #   allure-npm-lock (gating: tests package.json == package-lock.json)
 #   allure-report-warmup ← allure-npm-lock (gating npm ci; history; parallel with e2e)
-#   publish-allure-report ← pyramid layers + sonar-backend + warmup (gating generate) → publish-allure-pages (soft)
-#   send-allure-notifications ← publish-allure-report (не ждать pages)
+#   publish-allure-report ← pyramid layers + sonar-backend + warmup (gating generate; soft Telegram after upload)
+#     → publish-allure-pages (soft)
 # push main|develop: trigger infers lanes from paths (tests/ ⇒ no app deploy).
 # dispatch `deploy=none|backend|frontend|tests|all` + `deploy_target=production|stage|both`.
 # PR (main|develop): no deploy; ui-mock-tests after component-tests (mock compose profile).
@@ -2194,7 +2194,8 @@ jobs:
           retention-days: 1
 
   # Gating Allure generate after e2e results. npm ci stays gating in warmup
-  # (fallback here on cache miss). Pages are a follow-up soft job.
+  # (fallback here on cache miss). Telegram is a soft step after the report
+  # artifact exists. Pages are a follow-up soft job.
   publish-allure-report:
     name: publish-allure-report
     needs:
@@ -2212,7 +2213,7 @@ jobs:
       - allure-report-warmup
     if: always() && !cancelled()
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 17
     permissions:
       contents: read
       actions: read
@@ -2437,6 +2438,45 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+      - name: Send Allure Telegram notification
+        if: always() && steps.allure-report.outcome == 'success'
+        continue-on-error: true
+        timeout-minutes: 2
+        working-directory: ${{ env.TESTS_DIR }}
+        env:
+          NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} CI #${{ github.run_number }}"
+          BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TESTOPS_LAUNCH_URL: ${{ steps.resolve-testops-url.outputs.launch_url }}
+          ALLURE_FOLDER: ${{ github.workspace }}/${{ env.ALLURE_AWESOME_DIR }}
+          ALLURE_RESULTS_FOLDER: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID || '-1004381150566' }}
+          TELEGRAM_TOPIC_ID: ${{ vars.TELEGRAM_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || '3' }}
+          NOTIFICATION_MODE: ${{ github.event_name != 'pull_request' && 'live' || 'dry-run' }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TELEGRAM_BOT_TOKEN:-}" ]; then
+            echo "No Telegram token — skip notification"
+            exit 0
+          fi
+          if [ ! -f "${ALLURE_FOLDER}/summary.json" ]; then
+            echo "No ${ALLURE_FOLDER}/summary.json — skip Telegram"
+            exit 0
+          fi
+          # Pages deploy is a follow-up job — do not claim GH Pages URLs yet.
+          export ALLURE_REPORT_URL=""
+          export ALLURE_DASHBOARD_URL=""
+          node scripts/render-notifications-config.mjs
+          if [ "${NOTIFICATION_MODE}" = "live" ]; then
+            MODE_FLAG="--live"
+          else
+            MODE_FLAG="--dry-run"
+          fi
+          npx --no-install allure-notifications send \
+            --config notifications/config.runtime.json \
+            "${MODE_FLAG}" \
+            --out collage.png
+
       - name: Job summary
         if: always()
         env:
@@ -2568,81 +2608,3 @@ jobs:
               echo "- GitHub Pages not deployed"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
-
-  send-allure-notifications:
-    name: send-allure-notifications
-    needs: publish-allure-report
-    if: always() && !cancelled() && needs.publish-allure-report.result != 'skipped'
-    continue-on-error: true
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      actions: read
-    env:
-      SETUP_NODE_IF: "true"
-      NODE_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/package-lock.json
-    steps:
-      - *checkout
-
-      - name: Download merged Allure report
-        id: report
-        continue-on-error: true
-        uses: actions/download-artifact@v8
-        with:
-          name: allure-report-ci
-          path: allure-report
-
-      - name: Download merged raw Allure results
-        if: steps.report.outcome == 'success'
-        continue-on-error: true
-        uses: actions/download-artifact@v8
-        with:
-          pattern: allure-results-*
-          path: ${{ env.ALLURE_RESULTS_DIR }}
-          merge-multiple: true
-
-      - *setup-node
-
-      - name: Install pinned Allure notification CLI
-        if: steps.report.outcome == 'success'
-        run: npm ci
-        working-directory: ${{ env.TESTS_DIR }}
-
-      - name: Send Allure Telegram notification
-        if: always() && steps.report.outcome == 'success'
-        continue-on-error: true
-        working-directory: ${{ env.TESTS_DIR }}
-        env:
-          NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} CI #${{ github.run_number }}"
-          BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          TESTOPS_LAUNCH_URL: ${{ needs.publish-allure-report.outputs.testops_launch_url }}
-          ALLURE_FOLDER: ${{ github.workspace }}/allure-report/awesome
-          ALLURE_RESULTS_FOLDER: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID || '-1004381150566' }}
-          TELEGRAM_TOPIC_ID: ${{ vars.TELEGRAM_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || '3' }}
-          NOTIFICATION_MODE: ${{ github.event_name != 'pull_request' && 'live' || 'dry-run' }}
-        run: |
-          set -euo pipefail
-          if [ -z "${TELEGRAM_BOT_TOKEN:-}" ]; then
-            echo "No Telegram token — skip notification"
-            exit 0
-          fi
-          if [ ! -f "${ALLURE_FOLDER}/summary.json" ]; then
-            echo "No ${ALLURE_FOLDER}/summary.json — skip Telegram"
-            exit 0
-          fi
-          # Pages may still be deploying — do not claim GH Pages URLs from a parallel job.
-          export ALLURE_REPORT_URL=""
-          export ALLURE_DASHBOARD_URL=""
-          node scripts/render-notifications-config.mjs
-          if [ "${NOTIFICATION_MODE}" = "live" ]; then
-            MODE_FLAG="--live"
-          else
-            MODE_FLAG="--dry-run"
-          fi
-          npx --no-install allure-notifications send \
-            --config notifications/config.runtime.json \
-            "${MODE_FLAG}" \
-            --out collage.png

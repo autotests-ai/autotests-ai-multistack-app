@@ -133,7 +133,7 @@ flowchart TB
   TOC --> MAN
 
   UNIT & COMP & MOCK & INT & API & E2E & APIS & E2ES & MAN --> PUB[publish-allure-report]
-  PUB --> NTF[send-allure-notifications]
+  PUB --> PAGES[publish-allure-pages]
 ```
 
 | Job | Where |
@@ -237,8 +237,8 @@ Teaching CI — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 | `STAGE_APP_DIR` | `/home/autotests_ai_multistack/autotests-ai-multistack-app-stage` (stage: `develop` WIP and `main` promotion) |
 | Deployed stacks | `env.BACKEND` + `env.FRONTEND` in `ci.yml` (defaults: java-spring + typescript-react) |
 
-Allure: `testops-context` + live `allurectl watch` on pyramid jobs (not `tests-harness`) → `publish-allure-report` (Pages) →
-`send-allure-notifications` (all non-gating). TestOps selective rerun: dispatch with
+Allure: `testops-context` + live `allurectl watch` on pyramid jobs (not `tests-harness`) → `publish-allure-report`
+(gating generate; soft Telegram kit collage after upload) → `publish-allure-pages` (non-gating). TestOps selective rerun: dispatch with
 `ALLURE_JOB_RUN_ID` keeps the testplan — see [tests/LAYERS.md](tests/LAYERS.md)#testops-live-upload--selective-rerun.
 
 ### GitHub secrets & variables
