@@ -17,7 +17,7 @@ Outputs in `deploy/nginx/generated/`:
 |------|------|
 | `autotests.ai-stack-upstreams.conf` | `upstream` blocks — include at `http{}` in autotests.ai |
 | `autotests.ai-stack-routes.conf` | `location` blocks — include inside autotests.ai `server{}` |
-| `autotests.ai-stack-board.conf` | `/stack/` matrix board + shared `/stack/js|css` + `matrix.json` + `/{pair}/stack` 404 — include **before** stack-routes |
+| `autotests.ai-stack-board.conf` | `/stack/` matrix board + shared `/stack/js|css|templates` + `matrix.json` + `/{pair}/stack` 404 — include **before** stack-routes |
 | `stage.autotests.ai-stack-upstreams.conf` | stage `upstream` (`stage_*`, ports +10000) — include at `http{}` in stage vhost |
 | `stage.autotests.ai-stack-routes.conf` | stage `location` — include inside stage `server{}` |
 | `stage.autotests.ai-stack-board.conf` | stage `/stack/` board (`stage_frontend_typescript_react`) |
