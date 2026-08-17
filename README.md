@@ -90,6 +90,8 @@ flowchart TB
   TRG --> BF
   TRG --> API
   TRG --> E2E
+  TRG --> APIS
+  TRG --> E2ES
 
   UNIT --> INT
   UNIT --> SB[sonar-backend]
@@ -104,9 +106,13 @@ flowchart TB
 
   BB --> DB[deploy-backend]
   SB --> DB
+  BB --> DBS[deploy-backend-stage]
+  SB --> DBS
 
   BF --> DF[deploy-frontend]
   SF --> DF
+  BF --> DFS[deploy-frontend-stage]
+  SF --> DFS
 
   DB --> API[api-tests]
   TOC --> API
@@ -115,10 +121,16 @@ flowchart TB
   DF --> E2E
   TOC --> E2E
 
+  DBS --> APIS[api-tests-stage]
+  TOC --> APIS
+  APIS --> E2ES[e2e-tests-stage]
+  DFS --> E2ES
+  TOC --> E2ES
+
   E2E --> MAN[manual-tests<br/>dispatch]
   TOC --> MAN
 
-  UNIT & COMP & MOCK & INT & API & E2E & MAN --> PUB[publish-allure-report]
+  UNIT & COMP & MOCK & INT & API & E2E & APIS & E2ES & MAN --> PUB[publish-allure-report]
   PUB --> NTF[send-allure-notifications]
 ```
 
@@ -128,14 +140,16 @@ flowchart TB
 | `tests-harness` | `TESTS_DIR` — full `harness` except backend-only → `harness-backend` (`ConfigReader`). Not TestOps. |
 | `component-tests` | `FRONTEND_DIR` — `npm test -- --coverage` |
 | `integration-tests` | `BACKEND_DIR` — after `unit-tests` (java: `-DincludeTags=integration`); Spring Boot + real PG; **before** build/deploy; PR + main |
-| `api-tests` | `TESTS_DIR` — after backend deploy, or tests-lane vs live stand (`-DincludeTags=api`) |
+| `api-tests` | `TESTS_DIR` — after backend deploy, or tests-lane vs live prod (`-DincludeTags=api&prod`) |
+| `api-tests-stage` | `TESTS_DIR` — after stage backend deploy, or tests-lane vs live stage (full `-DincludeTags=api`) |
 | `ui-mock-tests` | after `component-tests`; every PR; frontend lane on main; dispatch `run_mock` / `update_mock_screenshots` |
 | `sonar-tests` | after `tests-harness` (skipped on backend-only lane) |
-| `e2e-tests` | after `api-tests` + `deploy-frontend` — java: `-DincludeTags=e2e`; dispatch `run_screenshot` / `update_e2e_screenshots` are extra steps |
+| `e2e-tests` | after `api-tests` + `deploy-frontend` — java: `-DincludeTags=e2e&prod`; dispatch `run_screenshot` / `update_e2e_screenshots` are extra steps |
+| `e2e-tests-stage` | after `api-tests-stage` + `deploy-frontend-stage` — full `-DincludeTags=e2e` `excludeTags=mock,screenshot` |
 | `manual-tests` | after `e2e-tests`; dispatch only — java: `-DincludeTags=manual` |
 
 `unit-tests`, `integration-tests`, `component-tests`, `tests-harness`, and `ui-mock-tests` gate a pull request.
-Post-deploy layers (`api` / `e2e`) follow `trigger` lanes: backend deploy, frontend deploy, or tests-lane against the live stand. Dispatch `deploy=none|backend|frontend|tests|all` is the same contract; push infers from `backend/` · `frontend/` · `tests/`.
+Post-deploy layers follow `trigger` lanes: backend deploy, frontend deploy, or tests-lane against the live stand. Push `main` → `@Tag("prod")` on prod; push `develop` → full api/e2e on stage. Dispatch `deploy=none|backend|frontend|tests|all` is the same contract; push infers from `backend/` · `frontend/` · `tests/`.
 
 ## Ports (local = prod host upstream)
 
@@ -207,8 +221,8 @@ Teaching CI — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 | Event | Jobs |
 |-------|------|
 | pull request | `unit-tests` · `integration-tests` · `component-tests` · `tests-harness` · `ui-mock-tests` · `sonar-backend` · `sonar-frontend` · `sonar-tests` |
-| push to `main` | PR set + lanes from paths (`tests/` ⇒ api/e2e vs live stand, no image deploy) · CD production |
-| push to `develop` | same pyramid + CD stage only (`vars.STAGE_APP_DIR`) |
+| push to `main` | PR set + lanes from paths (`tests/` ⇒ `@Tag("prod")` api/e2e vs live prod, no image deploy) · CD production |
+| push to `develop` | same pyramid + CD stage only (`vars.STAGE_APP_DIR`) + full api/e2e vs stage |
 
 `build` runs `docker compose build` + `docker compose push`, so `docker-compose.yml` stays the only place describing how an image is built. Images go to GHCR as `ghcr.io/autotests-ai/autotests-ai-multistack-app-<service>:<sha>`; the tag comes from `IMAGE_TAG` (defaults to `latest` locally).
 

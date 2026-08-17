@@ -27,7 +27,7 @@ name: CI
 # Stage twin: deploy-backend-stage / deploy-frontend-stage — own APP_DIR,
 # compose project autotests-ai-multistack-app-stage, ports +10000 (deploy/stage.env).
 # Stage CD only on push develop (or dispatch deploy_target=stage|both). Skip until
-# vars.STAGE_APP_DIR is set. api-tests / e2e-tests stay on prod APP_URL (main only).
+# vars.STAGE_APP_DIR is set. Live tests: main → @Tag("prod") on prod; develop → full api/e2e on stage.
 # Roots: unit-tests · component-tests · tests-harness · testops-context
 #   integration-tests ← unit-tests (backend Spring+PG, pre-build; PR + main)
 #   sonar-backend ← unit-tests + integration-tests
@@ -38,8 +38,9 @@ name: CI
 #   deploy-backend ← build-backend + sonar-backend (push main / dispatch production)
 #   deploy-frontend ← build-frontend + sonar-frontend
 #   deploy-backend-stage / deploy-frontend-stage ← same gates; push develop; skip until vars.STAGE_APP_DIR
-#   api-tests ← deploy-backend (curl /api/health; no join with frontend)
-#   e2e-tests ← api-tests + deploy-frontend (curl live UI) → manual-tests
+#   api-tests ← deploy-backend; -Denv=multistack_prod -DincludeTags=api&prod
+#   e2e-tests ← api-tests + deploy-frontend; includeTags=e2e&prod excludeTags=mock,screenshot
+#   api-tests-stage / e2e-tests-stage ← deploy-*-stage; full api / e2e vs STAGE_APP_URL
 #   allure-npm-lock (gating: tests package.json == package-lock.json)
 #   allure-report-warmup ← allure-npm-lock (gating npm ci; history; parallel with e2e)
 #   publish-allure-report ← pyramid layers + sonar-backend + warmup (gating generate) → publish-allure-pages (soft)
@@ -61,7 +62,7 @@ on:
         options: [none, backend, frontend, tests, all]
         default: none
       deploy_target:
-        description: "CD host: production (main) · stage (develop) · both (dispatch only). Push main→prod, push develop→stage. api/e2e always hit production (main)."
+        description: "CD host: production (main) · stage (develop) · both (dispatch only). Push main→prod + @Tag prod; push develop→stage + full api/e2e."
         type: choice
         options: [production, stage, both]
         default: production
@@ -70,7 +71,7 @@ on:
         type: boolean
         default: false
       run_api:
-        description: "Run API contract tests against multistack_prod"
+        description: "Run API tests (prod: api&prod; stage/develop: full api layer)"
         type: boolean
         default: false
       run_mock:
@@ -78,7 +79,7 @@ on:
         type: boolean
         default: false
       run_e2e:
-        description: "Run regular E2E tests (screenshot excluded unless run_screenshot=true)"
+        description: "Run E2E tests (prod: e2e&prod; stage/develop: full e2e; screenshot excluded unless run_screenshot=true)"
         type: boolean
         default: false
       run_screenshot:
@@ -1464,7 +1465,7 @@ jobs:
       - *ssh-deploy
 
   # Stage twin — push develop (or dispatch deploy_target=stage|both). Own checkout.
-  # No-ops until repo var STAGE_APP_DIR is set (окно 04). api/e2e stay on prod/main.
+  # Skip until repo var STAGE_APP_DIR is set. Live tests: api-tests-stage / e2e-tests-stage.
   deploy-backend-stage:
     needs: [build-backend, sonar-backend, trigger]
     if: >-
@@ -1585,7 +1586,7 @@ jobs:
           ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
         run: |
           eval "${ALLURECTL_RUN}"
-          run_with_allurectl ./gradlew test -Denv=multistack_prod -DincludeTags=api
+          run_with_allurectl ./gradlew test -Denv=multistack_prod "-DincludeTags=api&prod"
         working-directory: ${{ env.TESTS_DIR }}
       # ── javascript / typescript (full suite) ──────────────────────────────
       - *setup-node
@@ -1703,7 +1704,7 @@ jobs:
           if [ -n "${INCLUDE_TAGS}" ]; then
             ARGS+=(-DincludeTags="${INCLUDE_TAGS}")
           else
-            ARGS+=(-DincludeTags=e2e)
+            ARGS+=("-DincludeTags=e2e&prod")
           fi
           if [ -n "${EXCLUDE_TAGS}" ]; then
             ARGS+=(-DexcludeTags="${EXCLUDE_TAGS}")
@@ -1784,6 +1785,217 @@ jobs:
         working-directory: ${{ env.TESTS_DIR }}
 
       # ── python (full suite; no tag pyramid yet) ───────────────────────────
+      - *setup-python
+      - *pip-install
+      - name: Run Python tests (pytest)
+        if: env.TESTS_LANG == 'python'
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+        run: |
+          eval "${ALLURECTL_RUN}"
+          run_with_allurectl python -m pytest
+        working-directory: ${{ env.TESTS_DIR }}
+      - *upload-allure-results
+
+  # Stage twin of api-tests — full api layer vs STAGE_APP_URL (push develop / deploy_target=stage).
+  api-tests-stage:
+    needs: [deploy-backend-stage, trigger, testops-context]
+    if: >-
+      always() && !cancelled() &&
+      needs.trigger.outputs.cd_stage == 'true' && (
+        (needs.trigger.outputs.backend == 'true' &&
+         needs.deploy-backend-stage.result == 'success') ||
+        (needs.trigger.outputs.tests == 'true' &&
+         (needs.deploy-backend-stage.result == 'success' ||
+          needs.deploy-backend-stage.result == 'skipped')) ||
+        (github.event_name == 'workflow_dispatch' && inputs.run_api &&
+         (needs.deploy-backend-stage.result == 'success' ||
+          needs.deploy-backend-stage.result == 'skipped') &&
+         (needs.trigger.outputs.backend != 'true' ||
+          needs.deploy-backend-stage.result == 'success'))
+      )
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      LAYER: api
+      ENDPOINT: multistack_stage
+      PUBLIC_HOST: stage.autotests.ai
+      APP_URL: https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+      UI_URL: https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+      BASE_URL: https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
+      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
+      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
+      SETUP_JVM_IF: "true"
+      GRADLE_CACHE_READ_ONLY: "true"
+      GRADLE_BUILD_ACTION_CACHE_KEY_JOB: tests-harness
+      SETUP_NODE_IF: "false"
+      NODE_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/package-lock.json
+      NPM_CI_IF: "false"
+      NPM_WORKDIR: tests/java/tests-java-gradle-junit5-allure3-selenide
+      PLAYWRIGHT_IF: "false"
+      SETUP_PYTHON_IF: "false"
+      PYTHON_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/requirements.txt
+      PYTHON_WORKDIR: tests/java/tests-java-gradle-junit5-allure3-selenide
+      ALLURE_RESULTS_ARTIFACT: allure-results-api-stage
+      ALLURE_RESULTS_UPLOAD_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/build/allure-results/**
+    steps:
+      - name: Wait for live API
+        env:
+          API_HEALTH: https://stage.autotests.ai/stack/backend-java-spring/api/health
+        run: |
+          set -euo pipefail
+          echo "==> API ${API_HEALTH}"
+          curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${API_HEALTH}"
+      - *checkout
+      - *cache-allurectl
+      - *setup-live-allurectl
+
+      - *setup-java
+      - *setup-gradle
+      - name: Run API tests (Gradle)
+        if: env.TESTS_LANG == 'java'
+        id: run-tests
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+        run: |
+          eval "${ALLURECTL_RUN}"
+          run_with_allurectl ./gradlew test -Denv=multistack_stage -DincludeTags=api
+        working-directory: ${{ env.TESTS_DIR }}
+      - *setup-node
+      - *npm-ci
+      - *cache-playwright-browsers
+      - *install-playwright
+      - name: Run tests (npm)
+        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+        run: |
+          eval "${ALLURECTL_RUN}"
+          run_with_allurectl npm test
+        working-directory: ${{ env.TESTS_DIR }}
+      - *setup-python
+      - *pip-install
+      - name: Run Python tests (pytest)
+        if: env.TESTS_LANG == 'python'
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+        run: |
+          eval "${ALLURECTL_RUN}"
+          run_with_allurectl python -m pytest
+        working-directory: ${{ env.TESTS_DIR }}
+      - *upload-allure-results
+
+  # Stage twin of e2e-tests — full e2e vs STAGE_APP_URL; exclude mock,screenshot.
+  e2e-tests-stage:
+    needs: [api-tests-stage, deploy-frontend-stage, trigger, testops-context]
+    if: >-
+      always() && !cancelled() &&
+      needs.trigger.outputs.cd_stage == 'true' && (
+        (needs.deploy-frontend-stage.result == 'success' ||
+         needs.deploy-frontend-stage.result == 'skipped') && (
+          (github.event_name == 'push' && github.ref == 'refs/heads/develop' &&
+           (needs.api-tests-stage.result == 'success' ||
+            (needs.api-tests-stage.result == 'skipped' &&
+             needs.deploy-frontend-stage.result == 'success'))) ||
+          (needs.trigger.outputs.tests == 'true' &&
+           github.event_name == 'workflow_dispatch' &&
+           (needs.api-tests-stage.result == 'success' ||
+            needs.api-tests-stage.result == 'skipped')) ||
+          (github.event_name == 'workflow_dispatch' &&
+           (inputs.run_e2e ||
+            inputs.include_tags != '' ||
+            inputs.exclude_tags != '') &&
+           (needs.api-tests-stage.result == 'success' || needs.api-tests-stage.result == 'skipped') &&
+           (needs.trigger.outputs.frontend != 'true' ||
+            needs.deploy-frontend-stage.result == 'success'))
+        )
+      )
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      LAYER: e2e
+      ENDPOINT: multistack_stage
+      PUBLIC_HOST: stage.autotests.ai
+      APP_URL: https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+      UI_URL: https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+      BASE_URL: https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+      SCREENSHOT_OS: linux
+      SCREENSHOT_BROWSER: chrome
+      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
+      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
+      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
+      SETUP_JVM_IF: "true"
+      GRADLE_CACHE_READ_ONLY: "true"
+      GRADLE_BUILD_ACTION_CACHE_KEY_JOB: tests-harness
+      SETUP_NODE_IF: "false"
+      NODE_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/package-lock.json
+      NPM_CI_IF: "false"
+      NPM_WORKDIR: tests/java/tests-java-gradle-junit5-allure3-selenide
+      PLAYWRIGHT_IF: "false"
+      SETUP_PYTHON_IF: "false"
+      PYTHON_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/requirements.txt
+      PYTHON_WORKDIR: tests/java/tests-java-gradle-junit5-allure3-selenide
+      ALLURE_RESULTS_ARTIFACT: allure-results-e2e-stage
+      ALLURE_RESULTS_UPLOAD_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/build/allure-results/**
+    steps:
+      - name: Wait for live UI
+        run: |
+          set -euo pipefail
+          echo "==> UI ${UI_URL}"
+          curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${UI_URL}"
+      - *checkout
+      - *cache-allurectl
+      - *setup-live-allurectl
+
+      - *setup-java
+      - *setup-gradle
+      - name: Run e2e tests (Gradle with tag filters)
+        if: >-
+          env.TESTS_LANG == 'java' && (
+            github.event_name == 'push' ||
+            inputs.run_e2e ||
+            inputs.include_tags != '' ||
+            inputs.exclude_tags != ''
+          )
+        id: run-tests
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+          RUN_ENV: multistack_stage
+          INCLUDE_TAGS: ${{ inputs.include_tags }}
+          EXCLUDE_TAGS: ${{ inputs.exclude_tags }}
+          SELENOID_REMOTE_URL: ${{ secrets.SELENOID_REMOTE_URL }}
+        run: |
+          set -euo pipefail
+          ARGS=(-Denv="$RUN_ENV")
+          if [ -n "${SELENOID_REMOTE_URL:-}" ]; then
+            ARGS+=(-DremoteUrl="${SELENOID_REMOTE_URL}")
+          fi
+          if [ -n "${INCLUDE_TAGS}" ]; then
+            ARGS+=(-DincludeTags="${INCLUDE_TAGS}")
+          else
+            ARGS+=(-DincludeTags=e2e)
+          fi
+          if [ -n "${EXCLUDE_TAGS}" ]; then
+            ARGS+=(-DexcludeTags="${EXCLUDE_TAGS}")
+          else
+            ARGS+=(-DexcludeTags=mock,screenshot)
+          fi
+          eval "${ALLURECTL_RUN}"
+          run_with_allurectl ./gradlew test "${ARGS[@]}"
+        working-directory: ${{ env.TESTS_DIR }}
+      - *setup-node
+      - *npm-ci
+      - *cache-playwright-browsers
+      - *install-playwright
+      - name: Run tests (npm)
+        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
+        env:
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+        run: |
+          eval "${ALLURECTL_RUN}"
+          run_with_allurectl npm test
+        working-directory: ${{ env.TESTS_DIR }}
       - *setup-python
       - *pip-install
       - name: Run Python tests (pytest)
@@ -1921,6 +2133,8 @@ jobs:
       - integration-tests
       - api-tests
       - e2e-tests
+      - api-tests-stage
+      - e2e-tests-stage
       - manual-tests
       - testops-context
       - sonar-backend
