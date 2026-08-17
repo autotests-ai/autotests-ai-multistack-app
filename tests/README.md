@@ -21,9 +21,9 @@ tests/
 
 | Kind | Job id | Where |
 |------|--------|-------|
-| Product unit | `unit-tests` | `backend/java/backend-java-spring/src/test/` |
+| Product unit | `backend-unit-tests` | `backend/java/backend-java-spring/src/test/` |
 | Harness | `tests-harness` | `…/tests/testinfra/` · `@Tag("harness")`; backend-only lane → `harness-backend` (`ConfigReader`) |
-| RTL | `component-tests` | `frontend/typescript/frontend-typescript-react/src/test/` |
+| RTL | `frontend-unit-tests` | `frontend/typescript/frontend-typescript-react/src/test/` |
 | integration / api / e2e / manual | `integration-tests` · `api-tests` / `api-tests-stage` · `ui-mock-tests` · `e2e-tests` / `e2e-tests-stage` / `manual-tests` | `backend/java/…/integration/` · `tests/api/` · `tests/e2e/` · manual stubs **in code** (`tests/manual/`) |
 
 CI: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).

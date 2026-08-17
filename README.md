@@ -78,8 +78,8 @@ Full CI graph (`needs` from `ci.yml`). `trigger` is the same contract as dispatc
 flowchart TB
   TRG[trigger]
 
-  TRG --> UNIT[unit-tests]
-  TRG --> COMP[component-tests]
+  TRG --> UNIT[backend-unit-tests]
+  TRG --> COMP[frontend-unit-tests]
   TRG --> H[tests-harness]
   TRG --> MOCK[ui-mock-tests]
   TRG --> INT[integration-tests]
@@ -132,19 +132,19 @@ flowchart TB
 
 | Job | Where |
 |-----|-------|
-| `unit-tests` | `BACKEND_DIR` — command by `BACKEND_LANG` (gradle/JaCoCo, pytest, `go test`, or `npm test`); java excludes `@Tag("integration")` |
+| `backend-unit-tests` | `BACKEND_DIR` — command by `BACKEND_LANG` (gradle/JaCoCo, pytest, `go test`, or `npm test`); java excludes `@Tag("integration")` |
 | `tests-harness` | `TESTS_DIR` — full `harness` except backend-only → `harness-backend` (`ConfigReader`). Not TestOps. |
-| `component-tests` | `FRONTEND_DIR` — `npm test -- --coverage` |
-| `integration-tests` | `BACKEND_DIR` — after `unit-tests` (java: `-DincludeTags=integration`); Spring Boot + real PG; **before** build/deploy; PR + main |
+| `frontend-unit-tests` | `FRONTEND_DIR` — `npm test -- --coverage` |
+| `integration-tests` | `BACKEND_DIR` — after `backend-unit-tests` (java: `-DincludeTags=integration`); Spring Boot + real PG; **before** build/deploy; PR + main |
 | `api-tests` | `TESTS_DIR` — after backend deploy, or tests-lane vs live prod (`-DincludeTags=api&prod`) |
 | `api-tests-stage` | `TESTS_DIR` — after stage backend deploy, or tests-lane vs live stage (full `-DincludeTags=api`) |
-| `ui-mock-tests` | after `component-tests`; every PR; frontend lane on main; dispatch `run_mock` / `update_mock_screenshots` |
+| `ui-mock-tests` | after `frontend-unit-tests`; every PR; frontend lane on main; dispatch `run_mock` / `update_mock_screenshots` |
 | `sonar-tests` | after `tests-harness` (skipped on backend-only lane) |
 | `e2e-tests` | after `api-tests` + `deploy-frontend` — java: `-DincludeTags=e2e&prod`; dispatch `run_screenshot` / `update_e2e_screenshots` are extra steps |
 | `e2e-tests-stage` | after `api-tests-stage` + `deploy-frontend-stage` — full `-DincludeTags=e2e` `excludeTags=mock,screenshot` |
 | `manual-tests` | after `e2e-tests`; dispatch only — java: `-DincludeTags=manual` |
 
-`unit-tests`, `integration-tests`, `component-tests`, `tests-harness`, and `ui-mock-tests` gate a pull request.
+`backend-unit-tests`, `integration-tests`, `frontend-unit-tests`, `tests-harness`, and `ui-mock-tests` gate a pull request.
 Post-deploy layers follow `trigger` lanes: backend deploy, frontend deploy, or tests-lane against the live stand. Push `develop` → stage only (full api/e2e). Push `main` → same SHA to stage, then prod (`@Tag("prod")`) after stage e2e. Dispatch `deploy=none|backend|frontend|tests|all` is the same contract; push infers from `backend/` · `frontend/` · `tests/`.
 
 ## Ports (local = prod host upstream)
@@ -217,7 +217,7 @@ Teaching CI — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
 | Event | Jobs |
 |-------|------|
-| pull request | `unit-tests` · `integration-tests` · `component-tests` · `tests-harness` · `ui-mock-tests` · `sonar-backend` · `sonar-frontend` · `sonar-tests` |
+| pull request | `backend-unit-tests` · `integration-tests` · `frontend-unit-tests` · `tests-harness` · `ui-mock-tests` · `sonar-backend` · `sonar-frontend` · `sonar-tests` |
 | push to `develop` | PR set + lanes from paths · CD stage only (`vars.STAGE_APP_DIR`) · full api/e2e vs stage |
 | push to `main` | same pyramid · CD stage of this SHA · full api/e2e vs stage · then CD production · `@Tag("prod")` vs prod |
 

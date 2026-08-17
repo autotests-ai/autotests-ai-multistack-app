@@ -75,7 +75,7 @@ Self-check of the **tests module helpers** before / alongside product layers —
 ./gradlew test -Denv=ci -DincludeTags=harness           # full harness (CI default)
 ```
 
-**Not** application code (that's `unit-tests` on `BACKEND_DIR` / `component-tests` on `FRONTEND_DIR`).
+**Not** application code (that's `backend-unit-tests` on `BACKEND_DIR` / `frontend-unit-tests` on `FRONTEND_DIR`).
 
 ## Mock and screenshot (inside e2e, not layers)
 
@@ -181,8 +181,8 @@ suite (`npm test` / `pytest` with `UI_URL` / `BASE_URL`) — no Gradle tag slice
 | Layer | Zone | Where | Selector | Run |
 |-------|------|-------|----------|-----|
 | unit | backend | active `BACKEND_DIR` (default `backend/java/backend-java-spring/`) | java: `-DexcludeTags=integration` (no `@Tag("unit")` job filter; plain + Spring slices) | by `BACKEND_LANG`: gradle+JaCoCo · `pytest` · `go test` · `npm test` — see [backend/README.md](../backend/README.md) |
-| component | frontend | active `FRONTEND_DIR` only (default `frontend/typescript/frontend-typescript-react/`) — siblings not CI-gated | Vitest + coverage | `npm test -- --coverage` via `component-tests` |
-| integration | backend | `backend/java/backend-java-spring/src/test/java/dev/reference/app/integration/` (`ApplicationWiringIntegrationTest`, `AuthLifecycleIntegrationTest`) | `@Tag("integration")` | `./gradlew test -DincludeTags=integration` in `BACKEND_DIR` via `integration-tests` (after `unit-tests`, **before** build/deploy; PR + main) |
+| component | frontend | active `FRONTEND_DIR` only (default `frontend/typescript/frontend-typescript-react/`) — siblings not CI-gated | Vitest + coverage | `npm test -- --coverage` via `frontend-unit-tests` |
+| integration | backend | `backend/java/backend-java-spring/src/test/java/dev/reference/app/integration/` (`ApplicationWiringIntegrationTest`, `AuthLifecycleIntegrationTest`) | `@Tag("integration")` | `./gradlew test -DincludeTags=integration` in `BACKEND_DIR` via `integration-tests` (after `backend-unit-tests`, **before** build/deploy; PR + main) |
 | api | tests | `…/tests/api/` (`AuthApiTests`, `ReferenceApiTests`, `BackendWiringApiTests`, `SeedDataApiTests`, `AuthRoundTripApiTests`) — HTTP contract + deployed-stand facts | `@Tag("api")` (+ optional `@Tag("prod")`) | java → `-DincludeTags=api` via `api-tests-stage` (after `deploy-backend-stage`); prod job `api-tests` uses `api&prod` after `deploy-backend`; retarget any backend with `-DapiBaseUrl` / `-DapiHealthService` |
 | e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `screenshot` / `mock` / `prod`) | `ui-mock-tests` (mock flows + screenshot mock PNG); `e2e-tests-stage` (full e2e after `api-tests-stage` + `deploy-frontend-stage`); `e2e-tests` (`e2e&prod` after `api-tests` + `deploy-frontend`; screenshot excluded on default push) |
 | manual | tests | `…/tests/manual/` **in code** | `@Tag("manual")` + `@Manual` | java → `-DincludeTags=manual` via `manual-tests` (after `e2e-tests`, dispatch) |
@@ -192,7 +192,7 @@ suite (`npm test` / `pytest` with `UI_URL` / `BASE_URL`) — no Gradle tag slice
 | Role | Module | Why |
 |------|--------|-----|
 | UX / product code (no Vitest) | `frontend-javascript-vanilla` | Teaching SPA without a framework runner — Session markup, auth wiring, copy |
-| Vitest / component + deploy | `frontend-typescript-react` | CI `FRONTEND` default (`:9811`); `component-tests` / sonar / build / deploy follow this knob |
+| Vitest / component + deploy | `frontend-typescript-react` | CI `FRONTEND` default (`:9811`); `frontend-unit-tests` / sonar / build / deploy follow this knob |
 
 `frontend-javascript-react` is the JS twin — keep contract parity locally; CI does **not** matrix sibling frontends. Flip `FRONTEND` / `FRONTEND_DIR` together when the teaching default changes.  
 Do **not** add Vitest to vanilla; do **not** set `FRONTEND` to vanilla (no npm runner).
@@ -206,16 +206,16 @@ Paths SSOT: `backend/scripts/paths.sh`. Module naming: [NAMING.md](NAMING.md).
 
 | Job | Product under test |
 |-----|--------------------|
-| `unit-tests` | **Application** (active backend — toolchain from `BACKEND_LANG`; excludes `@Tag("integration")`) |
+| `backend-unit-tests` | **Application** (active backend — toolchain from `BACKEND_LANG`; excludes `@Tag("integration")`) |
 | `integration-tests` | **Application** (full Spring Boot + Testcontainers PostgreSQL in `BACKEND_DIR`) |
 | `tests-harness` | **Test tooling** — full helpers except backend-only (`ConfigReader`); frontend keeps ConfigReader because UI tests read it |
-| `component-tests` | **Application** (active `FRONTEND_DIR` only — Vitest + coverage → `sonar-frontend` / `ui-mock-tests` → `build-frontend`) |
+| `frontend-unit-tests` | **Application** (active `FRONTEND_DIR` only — Vitest + coverage → `sonar-frontend` / `ui-mock-tests` → `build-frontend`) |
 
-Students: product unit layers (`unit-tests` / `component-tests`); harness = helper checks that higher layers depend on.
+Students: product unit layers (`backend-unit-tests` / `frontend-unit-tests`); harness = helper checks that higher layers depend on.
 
-**Slices (java Spring, inside `unit-tests` — not the classical integration layer).**  
+**Slices (java Spring, inside `backend-unit-tests` — not the classical integration layer).**  
 After the integration/api split, “slice” means a *partial Spring context* in the backend
-module, still `layer=unit` / job `unit-tests`. Allure `suite=slice` (`SliceTestBase`)
+module, still `layer=unit` / job `backend-unit-tests`. Allure `suite=slice` (`SliceTestBase`)
 separates them from one-class-in-isolation units in the report. Slices are **not** a
 sixth pyramid layer; we do **not** promote them to `@Tag("integration")`.
 
@@ -226,7 +226,7 @@ sixth pyramid layer; we do **not** promote them to `@Tag("integration")`.
 
 Classical **integration** (`backend/…/integration/`, job `integration-tests`) runs the full
 Spring context against real PostgreSQL **before** build/deploy. Do not rename Spring slices
-to `integration` and do not move deploy HTTP checks into `unit-tests` or backend integration.
+to `integration` and do not move deploy HTTP checks into `backend-unit-tests` or backend integration.
 
 The 100% line-coverage gate (`jacocoTestCoverageVerification`) is java-only and slices by
 `-DincludeTags` (`harness-backend` → `ConfigReader`; `harness-frontend` → `LayoutCss`/`TokensCss`;
@@ -247,7 +247,7 @@ Integration is **in-process Spring + PostgreSQL**, no browser. Deployed HTTP che
 
 | Trigger | Jobs |
 |---------|------|
-| Pull request (blocks merge) | `unit-tests`, `integration-tests`, `component-tests`, `tests-harness`, `ui-mock-tests`, `sonar-backend`, `sonar-tests`, `sonar-frontend` |
+| Pull request (blocks merge) | `backend-unit-tests`, `integration-tests`, `frontend-unit-tests`, `tests-harness`, `ui-mock-tests`, `sonar-backend`, `sonar-tests`, `sonar-frontend` |
 | Push to `main` | PR set + `trigger` lanes → CD stage of this SHA → full api/e2e vs stage → CD production → `api-tests` / `e2e-tests` with `@Tag("prod")` |
 | Push to `develop` | PR set + `trigger` lanes → CD stage only → `api-tests-stage` / `e2e-tests-stage` (full `api` / `e2e`, `excludeTags=mock,screenshot`) vs [stage.autotests.ai/stack/…](https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/) |
 | `workflow_dispatch` | `deploy=none\|backend\|frontend\|tests\|all` + `deploy_target=production\|stage\|both`; per-layer booleans `run_integration` / `run_api` / `run_mock` / `run_e2e` / `run_screenshot` / `run_manual`; screenshot rewrite flags; TestOps `ALLURE_JOB_RUN_ID` / `ALLURE_USERNAME` |
@@ -318,7 +318,7 @@ CI-only. Writers save GUH + configuration cache (`GRADLE_CC_IF` + `*cache-gradle
 
 | | Jobs | GUH | CC |
 |--|------|-----|-----|
-| Writer, backend | `unit-tests`, `integration-tests`, `sonar-backend` | own `github.job` | yes (`backend/java/backend-java-spring`) |
+| Writer, backend | `backend-unit-tests`, `integration-tests`, `sonar-backend` | own `github.job` | yes (`backend/java/backend-java-spring`) |
 | Writer, tests | `tests-harness`, `sonar-tests` | own `github.job` | yes (tests module) |
 | Reader | `ui-mock-tests`, `api-tests`, `e2e-tests`, `api-tests-stage`, `e2e-tests-stage`, `manual-tests` | read-only from `tests-harness` | **no** |
 
@@ -337,15 +337,15 @@ CI-only. Writers save GUH + configuration cache (`GRADLE_CC_IF` + `*cache-gradle
 ## CD graph
 
 Matches [`ci.yml`](../.github/workflows/ci.yml) `needs` (Sonar ×3 gates **deploy**, not build;
-FE lane: `component-tests` → `ui-mock-tests` → `sonar-frontend`; mock also gates `build-frontend`):
+FE lane: `frontend-unit-tests` → `ui-mock-tests` → `sonar-frontend`; mock also gates `build-frontend`):
 
 ```
 every run (PR + main):
-  unit-tests → integration-tests
-  unit-tests + integration-tests → sonar-backend
-  component-tests → ui-mock-tests → sonar-frontend
+  backend-unit-tests → integration-tests
+  backend-unit-tests + integration-tests → sonar-backend
+  frontend-unit-tests → ui-mock-tests → sonar-frontend
   tests-harness → sonar-tests (sonar-tests skipped on backend-only lane)
-  ui-mock-tests (needs component-tests + trigger + testops; every PR; frontend lane on main)
+  ui-mock-tests (needs frontend-unit-tests + trigger; every PR; frontend lane on main)
 
 main (via `trigger.cd_stage` then `cd_production`):
   same builds (main|develop)

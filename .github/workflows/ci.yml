@@ -33,13 +33,13 @@ name: CI
 # Stage mutex: main preempts develop (cancel), develop yields if main is queued
 # or running. Not one shared cancel-in-progress group — that would let develop
 # cancel a prod promotion.
-# Roots: trigger → unit-tests · component-tests · tests-harness
-#   integration-tests ← unit-tests (backend Spring+PG, pre-build; PR + main)
-#   sonar-backend ← unit-tests + integration-tests
+# Roots: trigger → backend-unit-tests · frontend-unit-tests · tests-harness
+#   integration-tests ← backend-unit-tests (backend Spring+PG, pre-build; PR + main)
+#   sonar-backend ← backend-unit-tests + integration-tests
 #   sonar-tests ← tests-harness (skipped on backend-only lane)
-#   ui-mock-tests ← component-tests (jsdom first; mock compose on the runner)
-#   sonar-frontend ← component-tests + ui-mock-tests (mock skipped ⇒ sonar still runs)
-#   build-backend ← unit-tests + integration-tests · build-frontend ← ui-mock-tests
+#   ui-mock-tests ← frontend-unit-tests (jsdom first; mock compose on the runner)
+#   sonar-frontend ← frontend-unit-tests + ui-mock-tests (mock skipped ⇒ sonar still runs)
+#   build-backend ← backend-unit-tests + integration-tests · build-frontend ← ui-mock-tests
 #   deploy-backend-stage / deploy-frontend-stage ← same gates; cd_stage; skip until vars.STAGE_APP_DIR
 #   api-tests-stage / e2e-tests-stage ← deploy-*-stage; full api / e2e vs STAGE_APP_URL
 #     (e2e-tests-stage also compares screenshots/stage/)
@@ -50,7 +50,7 @@ name: CI
 #   publish-allure-report ← pyramid layers + sonar-backend (gating generate; soft Telegram + Pages)
 # push main|develop: trigger infers lanes from paths (tests/ ⇒ no app deploy).
 # dispatch `deploy=none|backend|frontend|tests|all` + `deploy_target=production|stage|both`.
-# PR (main|develop): no deploy; ui-mock-tests after component-tests (mock compose profile).
+# PR (main|develop): no deploy; ui-mock-tests after frontend-unit-tests (mock compose profile).
 
 on:
   pull_request:
@@ -140,10 +140,10 @@ env:
   # ── Active stack defaults (change here only) ─────────────────────────────
   BACKEND: backend-java-spring
   BACKEND_DIR: backend/java/backend-java-spring
-  # java|kotlin|python|go|javascript|typescript — unit-tests setup/run follows this
+  # java|kotlin|python|go|javascript|typescript — backend-unit-tests setup/run follows this
   BACKEND_LANG: java
   BACKEND_PORT: "8800"
-  # Teaching module: component-tests + sonar + the only SHA image this workflow
+  # Teaching module: frontend-unit-tests + sonar + the only SHA image this workflow
   # builds and deploys. Sibling compose frontends stay in docker-compose.yml for
   # the catalog; they are not a CI matrix (students see one FRONTEND knob).
   FRONTEND: frontend-typescript-react
@@ -328,7 +328,7 @@ jobs:
   # rebuild the app; PR is none (no CD). Not a pyramid job.
   # Shared TestOps job-run lives here too (soft: missing creds / outage disable
   # live upload without blocking tests) so the graph is one root:
-  # trigger → unit-tests (backend) / component-tests (frontend) / tests-harness.
+  # trigger → backend-unit-tests (backend) / frontend-unit-tests (frontend) / tests-harness.
   trigger:
     runs-on: ubuntu-24.04
     timeout-minutes: 2
@@ -634,7 +634,7 @@ jobs:
 
   # Keep the backend root first: GitHub has no explicit graph coordinates and uses
   # declaration order as a layout hint for otherwise independent jobs.
-  unit-tests:
+  backend-unit-tests:
     needs: trigger
     if: always() && !cancelled()
     runs-on: ubuntu-24.04
@@ -785,9 +785,9 @@ jobs:
           retention-days: 1
 
   integration-tests:
-    needs: [unit-tests, trigger]
+    needs: [backend-unit-tests, trigger]
     if: >-
-      always() && !cancelled() && needs.unit-tests.result == 'success' && (
+      always() && !cancelled() && needs.backend-unit-tests.result == 'success' && (
         github.event_name == 'pull_request' ||
         (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')) ||
         (github.event_name == 'workflow_dispatch' && inputs.run_integration)
@@ -828,7 +828,7 @@ jobs:
   # Same teaching knob as deploy/sonar: only FRONTEND_DIR. Sibling frontends are not gated.
   # Coverage always on (this job is the deploy default). lint/typecheck --if-present for JS.
   # Do not point FRONTEND at frontend-javascript-vanilla (no npm/Vitest — browser layers only).
-  component-tests:
+  frontend-unit-tests:
     needs: trigger
     if: always() && !cancelled()
     runs-on: ubuntu-24.04
@@ -874,10 +874,10 @@ jobs:
 
   # Stub API on runner (compose --profile mock); after jsdom, before FE image push.
   ui-mock-tests:
-    needs: [trigger, component-tests]
+    needs: [trigger, frontend-unit-tests]
     if: >-
       always() && !cancelled() &&
-      needs.component-tests.result == 'success' && (
+      needs.frontend-unit-tests.result == 'success' && (
         github.event_name == 'pull_request' ||
         needs.trigger.outputs.frontend == 'true' ||
         (github.event_name == 'workflow_dispatch' &&
@@ -1141,10 +1141,10 @@ jobs:
   # Quality axis (SonarQube) — hard gate before deploy (not build). Coverage reused via artifacts.
   # Quality Gate wait is native in each scanner (`sonar.qualitygate.wait=true`).
   sonar-backend:
-    needs: [unit-tests, integration-tests]
+    needs: [backend-unit-tests, integration-tests]
     if: >-
       !cancelled() &&
-      needs.unit-tests.result == 'success' &&
+      needs.backend-unit-tests.result == 'success' &&
       (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped')
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -1171,7 +1171,7 @@ jobs:
         run: |
           set -euo pipefail
           if [[ ! -f build/reports/jacoco/test/jacocoTestReport.xml ]]; then
-            echo "ERROR: JaCoCo report missing — unit-tests artifact incomplete" >&2
+            echo "ERROR: JaCoCo report missing — backend-unit-tests artifact incomplete" >&2
             exit 1
           fi
 
@@ -1260,10 +1260,10 @@ jobs:
       - *write-sonar-summary
 
   sonar-frontend:
-    needs: [component-tests, ui-mock-tests]
+    needs: [frontend-unit-tests, ui-mock-tests]
     if: >-
       !cancelled() &&
-      needs.component-tests.result == 'success' &&
+      needs.frontend-unit-tests.result == 'success' &&
       (needs.ui-mock-tests.result == 'success' || needs.ui-mock-tests.result == 'skipped')
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -1286,7 +1286,7 @@ jobs:
         run: |
           set -euo pipefail
           if [[ ! -d coverage ]] || [ -z "$(ls -A coverage 2>/dev/null || true)" ]; then
-            echo "ERROR: coverage artifact missing — component-tests incomplete" >&2
+            echo "ERROR: coverage artifact missing — frontend-unit-tests incomplete" >&2
             exit 1
           fi
           npm ci
@@ -1306,10 +1306,10 @@ jobs:
       - *write-sonar-summary
 
   build-backend:
-    needs: [unit-tests, integration-tests, trigger]
+    needs: [backend-unit-tests, integration-tests, trigger]
     if: >-
       !cancelled() &&
-      needs.unit-tests.result == 'success' &&
+      needs.backend-unit-tests.result == 'success' &&
       (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped') &&
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') &&
       needs.trigger.outputs.backend == 'true'
@@ -2111,8 +2111,8 @@ jobs:
   publish-allure-report:
     name: publish-allure-report
     needs:
-      - unit-tests
-      - component-tests
+      - backend-unit-tests
+      - frontend-unit-tests
       - ui-mock-tests
       - integration-tests
       - api-tests
