@@ -32,13 +32,13 @@ One task `test`; the layer is a tag filter, the stand is `-Denv` ([../../LAYERS.
 | manual | `./gradlew test -Denv=multistack_ci -DincludeTags=manual` | **in code** — `@Manual` + Allure steps · `tests/manual/` (not a wiki checklist) |
 
 Swap `-Denv=multistack_prod` / `multistack_stage` to run the same filter against a deployed stack via Selenoid.
-CI: push `main` → prod + `@Tag("prod")`; push `develop` → stage + full `api` / `e2e`.
+CI: push `develop` → stage + full `api` / `e2e`. Push `main` → that SHA to stage (full layer), then prod + `@Tag("prod")`.
 Local api/e2e against compose stay on `multistack_ci`.
 
 | Stand (`-Denv`) | CI jobs | Filter |
 |-----------------|---------|--------|
-| `multistack_stage` | `api-tests-stage` / `e2e-tests-stage` (push `develop`) | full `api` / `e2e` (`excludeTags=mock,screenshot`) |
-| `multistack_prod` | `api-tests` / `e2e-tests` (push `main`) | `api&prod` / `e2e&prod` (AND token, not CSV) · e2e still `excludeTags=mock,screenshot` |
+| `multistack_stage` | `api-tests-stage` / `e2e-tests-stage` (push `develop`; also push `main` before prod) | full `api` / `e2e` (`excludeTags=mock,screenshot`) |
+| `multistack_prod` | `api-tests` / `e2e-tests` (push `main`, after stage e2e) | `api&prod` / `e2e&prod` (AND token, not CSV) · e2e still `excludeTags=mock,screenshot` |
 
 `@Tag("prod")` is an environment slice (seeded GET + login), **not** `@Layer` and **not** `@Tag("smoke")`.
 Stands live in `src/test/resources/config/`; every other key is a `-D` override on top of

@@ -126,6 +126,8 @@ flowchart TB
   APIS --> E2ES[e2e-tests-stage]
   DFS --> E2ES
   TOC --> E2ES
+  E2ES --> DB
+  E2ES --> DF
 
   E2E --> MAN[manual-tests<br/>dispatch]
   TOC --> MAN
@@ -149,7 +151,7 @@ flowchart TB
 | `manual-tests` | after `e2e-tests`; dispatch only — java: `-DincludeTags=manual` |
 
 `unit-tests`, `integration-tests`, `component-tests`, `tests-harness`, and `ui-mock-tests` gate a pull request.
-Post-deploy layers follow `trigger` lanes: backend deploy, frontend deploy, or tests-lane against the live stand. Push `main` → `@Tag("prod")` on prod; push `develop` → full api/e2e on stage. Dispatch `deploy=none|backend|frontend|tests|all` is the same contract; push infers from `backend/` · `frontend/` · `tests/`.
+Post-deploy layers follow `trigger` lanes: backend deploy, frontend deploy, or tests-lane against the live stand. Push `develop` → stage only (full api/e2e). Push `main` → same SHA to stage, then prod (`@Tag("prod")`) after stage e2e. Dispatch `deploy=none|backend|frontend|tests|all` is the same contract; push infers from `backend/` · `frontend/` · `tests/`.
 
 ## Ports (local = prod host upstream)
 
@@ -214,15 +216,15 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:9800/
 
 **Production URL:** https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/  
 **Stage URL:** https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/  
-**CD:** push `develop` → stage · push `main` → production
+**CD:** push `develop` → stage only · push `main` → stage, then production (same run)
 
 Teaching CI — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
 | Event | Jobs |
 |-------|------|
 | pull request | `unit-tests` · `integration-tests` · `component-tests` · `tests-harness` · `ui-mock-tests` · `sonar-backend` · `sonar-frontend` · `sonar-tests` |
-| push to `main` | PR set + lanes from paths (`tests/` ⇒ `@Tag("prod")` api/e2e vs live prod, no image deploy) · CD production |
-| push to `develop` | same pyramid + CD stage only (`vars.STAGE_APP_DIR`) + full api/e2e vs stage |
+| push to `develop` | PR set + lanes from paths · CD stage only (`vars.STAGE_APP_DIR`) · full api/e2e vs stage |
+| push to `main` | same pyramid · CD stage of this SHA · full api/e2e vs stage · then CD production · `@Tag("prod")` vs prod |
 
 `build` runs `docker compose build` + `docker compose push`, so `docker-compose.yml` stays the only place describing how an image is built. Images go to GHCR as `ghcr.io/autotests-ai/autotests-ai-multistack-app-<service>:<sha>`; the tag comes from `IMAGE_TAG` (defaults to `latest` locally).
 
@@ -231,7 +233,7 @@ Teaching CI — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 | Setting | Value |
 |---------|-------|
 | `APP_DIR` | `/home/autotests_ai_multistack/autotests-ai-multistack-app` (production, `main`) |
-| `STAGE_APP_DIR` | `/home/autotests_ai_multistack/autotests-ai-multistack-app-stage` (stage, `develop`) |
+| `STAGE_APP_DIR` | `/home/autotests_ai_multistack/autotests-ai-multistack-app-stage` (stage: `develop` WIP and `main` promotion) |
 | Deployed stacks | `env.BACKEND` + `env.FRONTEND` in `ci.yml` (defaults: java-spring + typescript-react) |
 
 Allure: `testops-context` + live `allurectl watch` on pyramid jobs (not `tests-harness`) → `publish-allure-report` (Pages) →

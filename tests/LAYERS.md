@@ -248,8 +248,8 @@ Integration is **in-process Spring + PostgreSQL**, no browser. Deployed HTTP che
 | Trigger | Jobs |
 |---------|------|
 | Pull request (blocks merge) | `unit-tests`, `integration-tests`, `component-tests`, `tests-harness`, `ui-mock-tests`, `sonar-backend`, `sonar-tests`, `sonar-frontend` |
-| Push to `main` | PR set + `trigger` lanes from paths → CD production and/or `api-tests` / `e2e-tests` with `@Tag("prod")` vs live prod |
-| Push to `develop` | PR set + `trigger` lanes → CD stage and/or `api-tests-stage` / `e2e-tests-stage` (full `api` / `e2e`, `excludeTags=mock,screenshot`) vs [stage.autotests.ai/stack/…](https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/) |
+| Push to `main` | PR set + `trigger` lanes → CD stage of this SHA → full api/e2e vs stage → CD production → `api-tests` / `e2e-tests` with `@Tag("prod")` |
+| Push to `develop` | PR set + `trigger` lanes → CD stage only → `api-tests-stage` / `e2e-tests-stage` (full `api` / `e2e`, `excludeTags=mock,screenshot`) vs [stage.autotests.ai/stack/…](https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/) |
 | `workflow_dispatch` | `deploy=none\|backend\|frontend\|tests\|all` + `deploy_target=production\|stage\|both`; per-layer booleans `run_integration` / `run_api` / `run_mock` / `run_e2e` / `run_screenshot` / `run_manual`; screenshot rewrite flags; TestOps `ALLURE_JOB_RUN_ID` / `ALLURE_USERNAME` |
 
 Active stack and prod URL are workflow `env` defaults in [`ci.yml`](../.github/workflows/ci.yml)
@@ -261,7 +261,7 @@ Deploy jobs share concurrency group `deploy-autotests-ai-multistack-app` (one ch
 Frontend deploy does **not** wait on backend success.
 
 Nothing runs on a schedule. Full e2e has no PR job: a GitHub runner has no compose stack.
-Against **prod** (push `main`) CI runs only `@Tag("prod")`. Full api/e2e run on **stage** (push `develop`). `ui-mock-tests` is the automatic UI gate on PR.
+Against **prod** CI runs only `@Tag("prod")`, and only after stage e2e in the same `main` run. Full api/e2e run on **stage** (push `develop` WIP, and again on push `main` before prod). `ui-mock-tests` is the automatic UI gate on PR.
 
 ## TestOps (live upload + selective rerun)
 
@@ -347,16 +347,18 @@ every run (PR + main):
   tests-harness → sonar-tests (sonar-tests skipped on backend-only lane)
   ui-mock-tests (needs component-tests + trigger + testops; every PR; frontend lane on main)
 
-main only (via `trigger.cd_production`):
-  build-backend ← unit-tests + integration-tests + trigger.backend
-  build-frontend ← ui-mock-tests + trigger.frontend
-  deploy-backend ← build-backend + sonar-backend
-  deploy-frontend ← build-frontend + sonar-frontend
+main (via `trigger.cd_stage` then `cd_production`):
+  same builds (main|develop)
+  deploy-backend-stage / deploy-frontend-stage ← STAGE_APP_DIR
+  api-tests-stage ← deploy-backend-stage; full includeTags=api vs stage
+  e2e-tests-stage ← api-tests-stage + deploy-frontend-stage; full e2e exclude mock,screenshot
+  deploy-backend ← build-backend + sonar-backend + e2e-tests-stage
+  deploy-frontend ← build-frontend + sonar-frontend + e2e-tests-stage
   api-tests ← deploy-backend (or tests-lane vs live stand); includeTags=api&prod
   e2e-tests ← api-tests + deploy-frontend; includeTags=e2e&prod excludeTags=mock,screenshot
   manual-tests: dispatch (needs e2e-tests + testops)
 
-develop (via `trigger.cd_stage`):
+develop (via `trigger.cd_stage` only — no prod):
   same builds (main|develop)
   deploy-backend-stage / deploy-frontend-stage ← STAGE_APP_DIR
   api-tests-stage ← deploy-backend-stage; full includeTags=api vs stage
