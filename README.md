@@ -198,14 +198,17 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:9800/
 
 ## Deploy
 
-**Production URL:** https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+**Production URL:** https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/  
+**Stage URL:** https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/  
+**CD:** push `develop` → stage · push `main` → production
 
 Teaching CI — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
 | Event | Jobs |
 |-------|------|
 | pull request | `unit-tests` · `integration-tests` · `component-tests` · `tests-harness` · `ui-mock-tests` · `sonar-backend` · `sonar-frontend` · `sonar-tests` |
-| push to `main` | PR set + lanes from paths (`tests/` ⇒ api/e2e vs live stand, no image deploy) |
+| push to `main` | PR set + lanes from paths (`tests/` ⇒ api/e2e vs live stand, no image deploy) · CD production |
+| push to `develop` | same pyramid + CD stage only (`vars.STAGE_APP_DIR`) |
 
 `build` runs `docker compose build` + `docker compose push`, so `docker-compose.yml` stays the only place describing how an image is built. Images go to GHCR as `ghcr.io/autotests-ai/autotests-ai-multistack-app-<service>:<sha>`; the tag comes from `IMAGE_TAG` (defaults to `latest` locally).
 
@@ -213,7 +216,8 @@ Teaching CI — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
 | Setting | Value |
 |---------|-------|
-| `APP_DIR` | `/home/autotests_ai_multistack/autotests-ai-multistack-app` |
+| `APP_DIR` | `/home/autotests_ai_multistack/autotests-ai-multistack-app` (production, `main`) |
+| `STAGE_APP_DIR` | `/home/autotests_ai_multistack/autotests-ai-multistack-app-stage` (stage, `develop`) |
 | Deployed stacks | `env.BACKEND` + `env.FRONTEND` in `ci.yml` (defaults: java-spring + typescript-react) |
 
 Allure: `testops-context` + live `allurectl watch` on pyramid jobs (not `tests-harness`) → `publish-allure-report` (Pages) →
@@ -228,6 +232,7 @@ Allure: `testops-context` + live `allurectl watch` on pyramid jobs (not `tests-h
 | `DEPLOY_HOST` | variable | `212.92.101.15` — required, no fallback in the workflow |
 | `DEPLOY_USER` | variable | `autotests_ai_multistack` |
 | `DEPLOY_ENVIRONMENT` | variable | `multistack-production` (fallback in `ci.yml` if unset) |
+| `STAGE_APP_DIR` | variable | `/home/autotests_ai_multistack/autotests-ai-multistack-app-stage` — empty ⇒ stage CD skip |
 | `ALLURE_TOKEN` | secret | TestOps API token (live upload; optional — without it tests still run) |
 | `ALLURE_PROJECT_ID` | variable | TestOps project id |
 | `ALLURE_ENDPOINT` | variable | optional; default `https://allure.qa.guru` |
