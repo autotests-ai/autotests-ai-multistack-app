@@ -1,0 +1,1 @@
+{"id":"98e4ff8afd7e60b01667528ae0a31921","fullName":"frontend-typescript-angular:src/test/lib/auth.test.ts#resolveAuthErrorMessage falls back when the error carries nothing usable","name":"falls back when the error carries nothing usable","status":"passed","testResultsByEnv":{"default":"b90b87bda3880d8751b4f853598632ee"}}

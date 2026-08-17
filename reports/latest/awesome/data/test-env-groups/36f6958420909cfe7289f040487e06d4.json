@@ -1,0 +1,1 @@
+{"id":"36f6958420909cfe7289f040487e06d4","fullName":"frontend-typescript-vanilla:src/test/pages/register.test.ts#register page falls back to the registration failed copy when the API sends no message","name":"falls back to the registration failed copy when the API sends no message","status":"passed","testResultsByEnv":{"default":"f30357af359865824da64e0ce3c0e9c5"}}

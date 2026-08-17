@@ -1,0 +1,1 @@
+{"id":"9d29fb84ea4821d9fb00fe955355f66b","fullName":"dev.reference.app.controller.AuthControllerTest.deleteAccountReturnsNoContent","name":"DELETE /api/auth/me removes the authenticated account with 204","status":"passed","testResultsByEnv":{"default":"36e75c7691fd5ebdfbba321ed59a9e29"}}

@@ -1,0 +1,1 @@
+{"id":"8cb5616a86edfb68c504ddee3a1bc581","fullName":"frontend-javascript-vue:src/test/lib/auth.test.js#session teardown deleteAccount clears the stored token when the API rejects the call","name":"deleteAccount clears the stored token when the API rejects the call","status":"passed","testResultsByEnv":{"default":"7d28d6cff89e03f32533c2c54f657664"}}

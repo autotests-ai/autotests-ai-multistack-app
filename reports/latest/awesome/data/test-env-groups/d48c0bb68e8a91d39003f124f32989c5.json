@@ -1,0 +1,1 @@
+{"id":"d48c0bb68e8a91d39003f124f32989c5","fullName":"dev.reference.app.controller.ApiControllerTest.itemsReturnsList","name":"GET /api/items returns items from service","status":"passed","testResultsByEnv":{"default":"9dc23275c7330ad4947c592833cb666f"}}

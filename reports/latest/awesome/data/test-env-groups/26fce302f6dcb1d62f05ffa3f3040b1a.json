@@ -1,0 +1,1 @@
+{"id":"26fce302f6dcb1d62f05ffa3f3040b1a","fullName":"dev.reference.app.service.AuthServiceTest.deleteAccountUnknownUser","name":"deleteAccount rejects a user that no longer exists","status":"passed","testResultsByEnv":{"default":"8d3c62139367a7421f9e42e8616411e7"}}

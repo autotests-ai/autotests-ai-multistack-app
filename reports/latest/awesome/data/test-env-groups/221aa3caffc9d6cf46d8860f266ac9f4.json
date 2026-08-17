@@ -1,0 +1,1 @@
+{"id":"221aa3caffc9d6cf46d8860f266ac9f4","fullName":"dev.reference.app.service.AuthServiceTest.registerCreatesUser","name":"register saves user and returns auth response","status":"passed","testResultsByEnv":{"default":"0f06e2be054b4a46135c237c24dfa2ee"}}

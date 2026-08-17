@@ -1,0 +1,1 @@
+{"id":"b058d57f1c42dc4c012fed3a237c08a2","fullName":"dev.reference.app.controller.AuthControllerTest.loginReturnsOk","name":"POST /api/auth/login returns 200","status":"passed","testResultsByEnv":{"default":"487fd06b6124b42f5461a731f47c1586"}}

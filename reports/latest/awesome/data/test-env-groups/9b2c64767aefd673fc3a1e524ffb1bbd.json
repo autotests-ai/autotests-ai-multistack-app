@@ -1,0 +1,1 @@
+{"id":"9b2c64767aefd673fc3a1e524ffb1bbd","fullName":"frontend-typescript-vanilla:src/test/lib/auth.test.ts#network failures logout posts to the logout endpoint with the bearer token","name":"logout posts to the logout endpoint with the bearer token","status":"passed","testResultsByEnv":{"default":"107154655100767e5283ea57d6b0752c"}}

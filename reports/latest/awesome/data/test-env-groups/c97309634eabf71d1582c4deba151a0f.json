@@ -1,0 +1,1 @@
+{"id":"c97309634eabf71d1582c4deba151a0f","fullName":"frontend-javascript-jquery:src/test/auth.test.js#deleteAccount sends DELETE /auth/me with the bearer token and clears the session","name":"sends DELETE /auth/me with the bearer token and clears the session","status":"passed","testResultsByEnv":{"default":"ebfa4db55aa91e8b28dde1031cd64e37"}}

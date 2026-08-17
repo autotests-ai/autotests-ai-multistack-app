@@ -1,0 +1,1 @@
+{"id":"3df526c31c874b939fa8259c15094aeb","fullName":"frontend-typescript-vanilla:src/test/pages/login.test.ts#login page redirects home when a session token is already stored","name":"redirects home when a session token is already stored","status":"passed","testResultsByEnv":{"default":"458a5594d4526b35c225b1add5b36958"}}

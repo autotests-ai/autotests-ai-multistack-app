@@ -1,0 +1,1 @@
+{"id":"175dc3e43e82453715486601ec52b0fe","fullName":"frontend-typescript-angular:src/test/pages/register.component.test.ts#RegisterPage redirects an already signed-in visitor to home","name":"redirects an already signed-in visitor to home","status":"passed","testResultsByEnv":{"default":"28840edb4dab58f527abe4372445fc0c"}}

@@ -1,0 +1,1 @@
+{"id":"1a7cf52627ad956f2c60baeeae5bec76","fullName":"frontend-typescript-vue:src/test/lib/auth.test.ts#session teardown deleteAccount never calls the logout endpoint","name":"deleteAccount never calls the logout endpoint","status":"passed","testResultsByEnv":{"default":"878dbbda530bed723e8b8048f7e2dbcb"}}

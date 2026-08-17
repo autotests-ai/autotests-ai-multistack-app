@@ -1,0 +1,1 @@
+{"id":"7743ababbc85be8bef776e76e6c7efdd","fullName":"dev.reference.app.integration.ApplicationWiringIntegrationTest.itemsAreWiredToPostgreSQL","name":"GET /api/items — catalogue is served from PostgreSQL with Flyway seed","status":"passed","testResultsByEnv":{"default":"17a44f2ddc824c189fcc2192a1017a6c"}}

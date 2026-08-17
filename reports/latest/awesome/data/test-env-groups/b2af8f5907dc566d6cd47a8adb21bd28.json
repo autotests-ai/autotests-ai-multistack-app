@@ -1,0 +1,1 @@
+{"id":"b2af8f5907dc566d6cd47a8adb21bd28","fullName":"frontend-typescript-vanilla:src/test/pages/login.test.ts#login page rejects empty credentials without calling the API","name":"rejects empty credentials without calling the API","status":"passed","testResultsByEnv":{"default":"5e95ffe0cc2e6d39059b3c2a645af22f"}}

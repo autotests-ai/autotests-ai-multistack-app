@@ -1,0 +1,1 @@
+{"id":"448609caceb279a4a5c430f6d26d69c0","fullName":"frontend-javascript-jquery:src/test/auth.test.js#deleteAccount skips the request when there is no session","name":"skips the request when there is no session","status":"passed","testResultsByEnv":{"default":"dbcb01b8707e0efa6fdbc4190b0a9552"}}

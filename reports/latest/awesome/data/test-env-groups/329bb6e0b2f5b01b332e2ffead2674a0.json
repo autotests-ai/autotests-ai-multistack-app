@@ -1,0 +1,1 @@
+{"id":"329bb6e0b2f5b01b332e2ffead2674a0","fullName":"frontend-javascript-vue:src/test/pwa/registerServiceWorker.test.js#registerServiceWorker registers /sw.js immediately via DS primitive in production","name":"registers /sw.js immediately via DS primitive in production","status":"passed","testResultsByEnv":{"default":"b04d073aa62ea012592fd3651847507b"}}

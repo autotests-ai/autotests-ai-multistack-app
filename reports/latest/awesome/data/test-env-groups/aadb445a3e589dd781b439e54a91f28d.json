@@ -1,0 +1,1 @@
+{"id":"aadb445a3e589dd781b439e54a91f28d","fullName":"frontend-javascript-vue:src/test/lib/auth.test.js#session teardown logout sends POST /auth/logout with the bearer token","name":"logout sends POST /auth/logout with the bearer token","status":"passed","testResultsByEnv":{"default":"ee1b5d2146842e8cacf46d2cd4e03a76"}}

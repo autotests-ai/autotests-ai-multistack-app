@@ -1,0 +1,1 @@
+{"id":"265da61848a2c384b57f4a1454ce233b","fullName":"frontend-javascript-react:src/test/lib/auth.test.js#deleteAccount clears the stored token when the API rejects the call","name":"clears the stored token when the API rejects the call","status":"passed","testResultsByEnv":{"default":"7f2a1c844df7d09b17ee096313a443ef"}}

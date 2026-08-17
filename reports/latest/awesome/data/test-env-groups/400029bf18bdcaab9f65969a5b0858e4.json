@@ -1,0 +1,1 @@
+{"id":"400029bf18bdcaab9f65969a5b0858e4","fullName":"frontend-typescript-vanilla:src/test/pages/login.test.ts#login page shows the exact password-required error when password is empty","name":"shows the exact password-required error when password is empty","status":"passed","testResultsByEnv":{"default":"cc080e0a267e0eb9ec288be4f0f9daea"}}

@@ -1,0 +1,1 @@
+{"id":"05c7ab2fd235c4549c5d434ea0363d09","fullName":"frontend-typescript-vanilla:src/test/lib/auth.test.ts#deleteAccount never calls the logout endpoint — this is account deletion","name":"never calls the logout endpoint — this is account deletion","status":"passed","testResultsByEnv":{"default":"0fff135b28b6ee4c04e7caec14949809"}}

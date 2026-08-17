@@ -1,0 +1,1 @@
+{"id":"d4ec9faeab629b36585b5d2b2369c248","fullName":"frontend-typescript-react:src/test/pages/RegisterPage.test.tsx#RegisterPage redirects home when a session token is already present","name":"redirects home when a session token is already present","status":"passed","testResultsByEnv":{"default":"7f9809c6a7215a6a4b5574ed02155db9"}}

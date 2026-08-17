@@ -1,0 +1,1 @@
+{"id":"7bf762df8a538de7573f034b6e4460d2","fullName":"dev.reference.app.config.CorsConfigTest.sameHostUsesServerName","name":"sameHost falls back to server name when Host header is absent","status":"passed","testResultsByEnv":{"default":"b8cb930181e6cd59030cd241c44d2d42"}}

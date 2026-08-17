@@ -1,0 +1,1 @@
+{"id":"bbcc3ccc07bff2b9a46f1bb4a2f3b586","fullName":"frontend-javascript-jquery:src/test/auth.test.js#fetchProfile refuses to call the API without a token","name":"refuses to call the API without a token","status":"passed","testResultsByEnv":{"default":"7f8f6c253eea554d46bb8b883089d0e4"}}

@@ -1,0 +1,1 @@
+{"id":"d3980231eebf682363a141335d2034da","fullName":"frontend-javascript-jquery:src/test/register.test.js#register page redirects home when a session token is already stored","name":"redirects home when a session token is already stored","status":"passed","testResultsByEnv":{"default":"776fb180a7463c43e580bf072333e9ef"}}

@@ -1,0 +1,1 @@
+{"id":"467fa3ef7832aa28e3a1994cc9c84abb","fullName":"frontend-typescript-angular:src/test/lib/auth.test.ts#session teardown deleteAccount never calls the logout endpoint","name":"deleteAccount never calls the logout endpoint","status":"passed","testResultsByEnv":{"default":"c95031aba6e14ecbc302b64c8b8c255d"}}

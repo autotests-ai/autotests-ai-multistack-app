@@ -1,0 +1,1 @@
+{"id":"500813a88169976fe7b1dc90472dcba8","fullName":"frontend-javascript-jquery:src/test/auth.test.js#network failures logout posts the bearer token and clears the session","name":"logout posts the bearer token and clears the session","status":"passed","testResultsByEnv":{"default":"f2253721e0fab9850912d2db0f8ca78d"}}

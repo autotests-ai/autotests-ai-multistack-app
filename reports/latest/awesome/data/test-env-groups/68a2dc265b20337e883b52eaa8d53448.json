@@ -1,0 +1,1 @@
+{"id":"68a2dc265b20337e883b52eaa8d53448","fullName":"dev.reference.app.service.AuthServiceTest.deleteAccountRemovesUser","name":"deleteAccount removes the authenticated user","status":"passed","testResultsByEnv":{"default":"316a2355e9e0112fa535c8f08a41670a"}}

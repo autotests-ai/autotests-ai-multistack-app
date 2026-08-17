@@ -1,0 +1,1 @@
+{"id":"73e583b1ce9f3df32559d4bc514fea37","fullName":"frontend-javascript-jquery:src/test/auth.test.js#window.ReferenceAuth keys the token by backend only when a backend prefix is mounted","name":"keys the token by backend only when a backend prefix is mounted","status":"passed","testResultsByEnv":{"default":"5d3161e18b5d19812490717ca2e5c085"}}

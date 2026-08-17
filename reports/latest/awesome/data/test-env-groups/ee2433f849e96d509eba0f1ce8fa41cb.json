@@ -1,0 +1,1 @@
+{"id":"ee2433f849e96d509eba0f1ce8fa41cb","fullName":"dev.reference.app.config.SecurityChainTest.meWithExpiredToken","name":"GET /api/auth/me with an expired token returns 401","status":"passed","testResultsByEnv":{"default":"f87282016cd70361c811487e6d4aa98c"}}

@@ -1,0 +1,1 @@
+{"id":"5006d37f58bc5406c8063363341badb8","fullName":"frontend-typescript-vue:src/test/lib/auth.test.ts#session teardown deleteAccount skips the request when there is no session","name":"deleteAccount skips the request when there is no session","status":"passed","testResultsByEnv":{"default":"5f20e459ddb5ed3e575b580f851ccacf"}}

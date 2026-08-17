@@ -1,0 +1,1 @@
+{"id":"a60fa0f8b49457dd04cf4d1e9d57a7f2","fullName":"dev.reference.app.controller.AuthControllerTest.meRequiresAuthentication","name":"GET /api/auth/me without token returns 401","status":"passed","testResultsByEnv":{"default":"2b76958eb580ff2a8ca8d28fccef6753"}}

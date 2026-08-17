@@ -1,0 +1,1 @@
+{"id":"2486798e6fab99281fb4c63beab04dfb","fullName":"dev.reference.app.controller.AuthControllerTest.registerRejectsShortPassword","name":"POST /api/auth/register rejects short password with 400 and a field message","status":"passed","testResultsByEnv":{"default":"fc6b548b21334f00867e0a5614adc7af"}}

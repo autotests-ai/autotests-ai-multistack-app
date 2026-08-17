@@ -1,0 +1,1 @@
+{"id":"a75369ce72e149e9af1f1e3897c44774","fullName":"frontend-javascript-jquery:src/test/auth.test.js#deleteAccount never calls the logout endpoint","name":"never calls the logout endpoint","status":"passed","testResultsByEnv":{"default":"5b5788864d1f13f565aa0aa8c2f1dcda"}}

@@ -1,0 +1,1 @@
+{"id":"670f76c91ccc06fa3e262d7a4d0b407d","fullName":"frontend-javascript-angular:src/test/pages/register.component.test.js#RegisterComponent redirects an already signed-in visitor to home","name":"redirects an already signed-in visitor to home","status":"passed","testResultsByEnv":{"default":"7dd3fdadbb8fed985aaa0545e6e4e482"}}

@@ -1,0 +1,1 @@
+{"id":"35be90a5f3f9db7f65f25a2ee206b8c5","fullName":"frontend-javascript-react:src/test/lib/auth.test.js#network failures logout sends POST /auth/logout with the bearer token","name":"logout sends POST /auth/logout with the bearer token","status":"passed","testResultsByEnv":{"default":"3e0edfd12d0c18f1622e5cf11b65f7b6"}}

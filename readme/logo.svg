@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120" role="img" aria-label="Multistack logo">
+  <title>Multistack</title>
+  <defs>
+    <linearGradient id="logo-bg" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0b4f6c"/>
+      <stop offset="1" stop-color="#008a56"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#logo-bg)"/>
+  <text x="60" y="70" text-anchor="middle" fill="#ffffff" font-family="ui-sans-serif,system-ui,sans-serif" font-size="15" font-weight="700">Multistack</text>
+</svg>

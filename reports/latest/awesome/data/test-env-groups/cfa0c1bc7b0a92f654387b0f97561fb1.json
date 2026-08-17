@@ -1,0 +1,1 @@
+{"id":"cfa0c1bc7b0a92f654387b0f97561fb1","fullName":"dev.reference.app.config.CorsConfigTest.corsForRequestIgnoresForeignOrigin","name":"corsForRequest does not admit a foreign origin from another host","status":"passed","testResultsByEnv":{"default":"8662ce73f89292433330dc259d75f4cd"}}

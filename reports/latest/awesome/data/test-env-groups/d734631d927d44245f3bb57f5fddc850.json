@@ -1,0 +1,1 @@
+{"id":"d734631d927d44245f3bb57f5fddc850","fullName":"dev.reference.app.integration.AuthLifecycleIntegrationTest.accountLifecycleRoundTrip","name":"register → login → me → logout (stateless: token survives) → delete → me is 401","status":"passed","testResultsByEnv":{"default":"d20e6b6fc9d6b03794c0567d01280b5f"}}

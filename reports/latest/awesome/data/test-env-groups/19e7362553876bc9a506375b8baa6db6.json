@@ -1,0 +1,1 @@
+{"id":"19e7362553876bc9a506375b8baa6db6","fullName":"frontend-javascript-jquery:src/test/home.test.js#home page cancelling the confirm keeps the session and sends no delete request","name":"cancelling the confirm keeps the session and sends no delete request","status":"passed","testResultsByEnv":{"default":"90f6c2ab04e045d933374b267d853143"}}

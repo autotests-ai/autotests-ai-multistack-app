@@ -1,0 +1,1 @@
+{"id":"449e02512dcca131576255efc2c3cbb1","fullName":"tests.testinfra.LayoutCssTest.gridColumnCountParsesGridTemplateColumns","name":"gridColumnCount parses grid-template-columns [1] repeat(3, minmax(0, 1fr)), 3","status":"passed","testResultsByEnv":{"default":"ee729676db1f5c0ab3fd13994810696c"}}

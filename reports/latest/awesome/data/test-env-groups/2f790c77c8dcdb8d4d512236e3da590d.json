@@ -1,0 +1,1 @@
+{"id":"2f790c77c8dcdb8d4d512236e3da590d","fullName":"frontend-typescript-jquery:src/test/appBase.test.ts#appBase — mount precedence mounts at the document root when the path carries no mount at all","name":"mounts at the document root when the path carries no mount at all","status":"passed","testResultsByEnv":{"default":"0cb49a79f2410edc54fb14618f9156c7"}}
