@@ -2070,7 +2070,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     permissions:
-      contents: ${{ github.event_name != 'pull_request' && 'write' || 'read' }}
+      contents: write
       actions: read
     env:
       REPORT_ID: ${{ github.run_id }}
