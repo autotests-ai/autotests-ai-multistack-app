@@ -1,1 +1,0 @@
-{"id":"8bd56b34000e4ba7c781f788303400d2","fullName":"tests.api.ReferenceApiTests.itemsMatchContract","name":"GET /api/items matches the items contract (typed rows, named source)","status":"passed","testResultsByEnv":{"default":"2df3ee006d7dd3d6ba4d9585b0f90efc"}}
