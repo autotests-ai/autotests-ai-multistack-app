@@ -2592,7 +2592,9 @@ jobs:
           publish_branch: gh-pages
           publish_dir: pages
           enable_jekyll: false
-          keep_files: true
+          # One run's report only. keep_files: true left 98 Allure trees (~12GB)
+          # and GitHub's pages-build-deployment then failed (artifact > 1GB).
+          keep_files: false
           cname: reports.autotests.ai
 
       - name: Job summary
