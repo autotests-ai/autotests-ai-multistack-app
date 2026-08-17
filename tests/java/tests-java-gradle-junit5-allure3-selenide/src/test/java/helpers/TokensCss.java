@@ -39,7 +39,7 @@ public final class TokensCss {
         );
     }
 
-    static Path firstExisting(Path... candidates) {
+    public static Path firstExisting(Path... candidates) {
         Path fallback = candidates[candidates.length - 1].normalize().toAbsolutePath();
         for (var candidate : candidates) {
             var abs = candidate.normalize().toAbsolutePath();

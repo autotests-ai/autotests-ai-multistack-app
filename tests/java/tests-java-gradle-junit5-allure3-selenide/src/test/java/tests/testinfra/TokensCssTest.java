@@ -51,6 +51,27 @@ class TokensCssTest extends AllureMeta {
     }
 
     @Test
+    @DisplayName("firstExisting returns the first path that exists")
+    void firstExistingReturnsFirstHit(@TempDir Path temp) throws Exception {
+        var missing = temp.resolve("missing.css");
+        var hit = temp.resolve("hit.css");
+        var later = temp.resolve("later.css");
+        Files.writeString(hit, ":root { --x: 1px; }");
+        Files.writeString(later, ":root { --y: 2px; }");
+
+        assertEquals(hit, TokensCss.firstExisting(missing, hit, later));
+    }
+
+    @Test
+    @DisplayName("firstExisting returns the last path when none exist")
+    void firstExistingReturnsLastWhenNoneExist(@TempDir Path temp) {
+        var missing = temp.resolve("missing.css");
+        var fallback = temp.resolve("fallback.css");
+
+        assertEquals(fallback, TokensCss.firstExisting(missing, fallback));
+    }
+
+    @Test
     @DisplayName("resolveTokensCssPath prefers frontend candidate")
     void resolveTokensCssPathPrefersFrontendCandidate(@TempDir Path temp) throws Exception {
         var frontend = temp.resolve("tokens.css");
