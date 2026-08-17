@@ -1,0 +1,47 @@
+name: Deploy GitHub Pages
+
+# Live Pages retry/bootstrap (SSOT: upload-pages-artifact@v5 + deploy-pages@v5).
+# CI still pushes gh-pages via peaceiris (history + backup). Automatic live
+# deploy is the deploy-github-pages job in ci.yml. Dispatch this workflow to
+# republish the current gh-pages tree without re-running the pyramid.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: deploy-github-pages
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: gh-pages
+          path: site
+
+      - name: Root redirect to latest Allure
+        run: |
+          set -euo pipefail
+          if [ ! -f site/index.html ] && [ -f site/reports/latest/awesome/index.html ]; then
+            printf '%s\n' '<!DOCTYPE html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=reports/latest/awesome/index.html"><link rel="canonical" href="reports/latest/awesome/index.html"><title>Allure</title>' > site/index.html
+          fi
+          rm -rf site/.git
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+      - id: deployment
+        uses: actions/deploy-pages@v5

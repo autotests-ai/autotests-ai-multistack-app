@@ -10,7 +10,9 @@ name: CI
 #
 # Allure: testops-context opens one shared TestOps job-run; test jobs stream live and
 # publish raw results. publish-allure-report is gating (lock pins, npm ci, generate).
-# Pages is a soft step in that job (push only). TestOps / Telegram stay soft too.
+# Pages: that job pushes gh-pages (soft); live deploy is deploy-github-pages
+# (upload-pages-artifact@v5 + deploy-pages@v5). Retry without the pyramid:
+# workflow_dispatch .github/workflows/pages.yml. TestOps / Telegram stay soft too.
 # TestOps UI rerun: workflow_dispatch + ALLURE_JOB_RUN_ID → ALLURE_KEEP_TESTPLAN=true.
 # Launch env axes: BROWSER / OS / ENDPOINT / VERSION(=sha) / BRANCH.
 # SSOT host: allure.qa.guru (legacy allure.autotests.cloud redirects).
@@ -2113,7 +2115,8 @@ jobs:
   # Independent of the pyramid so lock drift fails the workflow without waiting
   # for publish-allure-report.
   # Gating Allure generate after e2e. Lock pins + npm ci live here (not extra
-  # graph boxes). Pages / Telegram are soft steps after generate.
+  # graph boxes). Pages push + Telegram are soft after generate; live Pages
+  # deploy is the following job (deploy-pages@v5).
   publish-allure-report:
     name: publish-allure-report
     needs:
@@ -2134,6 +2137,7 @@ jobs:
     permissions:
       contents: write
       actions: read
+      pages: write
     env:
       REPORT_ID: ${{ github.run_id }}
       GH_PAGES_BASE: ${{ vars.GH_PAGES_BASE || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
@@ -2144,6 +2148,7 @@ jobs:
       NPM_WORKDIR: tests/java/tests-java-gradle-junit5-allure3-selenide
     outputs:
       testops_launch_url: ${{ steps.resolve-testops-url.outputs.launch_url }}
+      pages_artifact: ${{ steps.pages-artifact.outcome }}
     steps:
       - *checkout
 
@@ -2396,12 +2401,26 @@ jobs:
           echo "${REPORT_ID}" > pages/latest-run-id.txt
           printf 'reports.autotests.ai\n' > pages/CNAME
           touch pages/.nojekyll
+          printf '%s\n' '<!DOCTYPE html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=reports/latest/awesome/index.html"><link rel="canonical" href="reports/latest/awesome/index.html"><title>Allure</title>' > pages/index.html
           mkdir -p pages/readme
           bash .github/scripts/generate-readme-badge.sh \
             "${ALLURE_RESULTS}" pages/readme main "#${{ github.run_number }}" \
             "" "Multistack" "Java 21 · Spring Boot · Allure 3" ""
 
-      - name: Deploy Allure report to GitHub Pages
+      - name: Upload GitHub Pages artifact
+        id: pages-artifact
+        if: >-
+          always() &&
+          github.event_name != 'pull_request' &&
+          steps.allure-report.outcome == 'success' &&
+          steps.pages-prepare.outcome == 'success' &&
+          hashFiles('pages/reports/**/awesome/index.html') != ''
+        continue-on-error: true
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: pages
+
+      - name: Backup Allure report on gh-pages
         id: gh-pages-deploy
         if: >-
           always() &&
@@ -2416,8 +2435,9 @@ jobs:
           publish_branch: gh-pages
           publish_dir: pages
           enable_jekyll: false
-          # One run's report only. keep_files: true left 98 Allure trees (~12GB)
-          # and GitHub's pages-build-deployment then failed (artifact > 1GB).
+          # Branch backup only (history.jsonl + one run). Live site is
+          # deploy-github-pages / pages.yml. keep_files: true bloated the
+          # branch (~12GB) when it was also the Pages source.
           keep_files: false
           cname: reports.autotests.ai
 
@@ -2488,3 +2508,29 @@ jobs:
               echo "- [Allure TestOps launch](${TESTOPS_LAUNCH_URL})"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # Live GitHub Pages. Soft: a 503 must not fail generate. Retry: pages.yml.
+  deploy-github-pages:
+    name: deploy-github-pages
+    needs: publish-allure-report
+    if: >-
+      always() && !cancelled() &&
+      github.event_name != 'pull_request' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') &&
+      needs.publish-allure-report.outputs.pages_artifact == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v5
