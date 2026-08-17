@@ -24,6 +24,8 @@ export interface HeaderNavItem {
   label: string;
   active?: boolean;
   testid?: string;
+  /** `host` — env switcher: keep current path, highlight by hostname. Default `path`. */
+  match?: 'path' | 'host';
 }
 
 export interface HeaderLangConfig {
