@@ -216,7 +216,8 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:9800/
 
 **Production URL:** https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/  
 **Stage URL:** https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/  
-**CD:** push `develop` → stage only · push `main` → stage, then production (same run)
+**CD:** push `develop` → stage only · push `main` → stage, then production (same run).  
+`main` and `develop` pushes share workflow concurrency `ci-cd-stands` (queue, do not cancel) so they cannot overwrite each other on stage mid-run.
 
 Teaching CI — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 

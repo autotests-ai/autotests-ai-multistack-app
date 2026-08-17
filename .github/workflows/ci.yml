@@ -120,7 +120,10 @@ on:
         default: ""
 
 concurrency:
-  group: ci-${{ github.ref }}
+  # PRs stay per-ref (cancel stale). Push/dispatch on main|develop share one
+  # group so they cannot interleave on the single stage host (checkout + tests).
+  # Job-level deploy-*-stage lock only serializes SSH, not the e2e window.
+  group: ${{ github.event_name == 'pull_request' && format('ci-pr-{0}', github.ref) || (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && 'ci-cd-stands' || format('ci-{0}', github.ref) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
