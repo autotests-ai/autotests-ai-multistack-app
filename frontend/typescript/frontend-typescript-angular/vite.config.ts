@@ -44,14 +44,28 @@ function pinMountAssets(): Plugin {
   };
 }
 
+/**
+ * Analog's production optimizer defines `ngDevMode: false` and strips
+ * `ɵsetClassDebugInfo`, so Angular DevTools treats the nginx image as prod.
+ * Drop that plugin and keep `ngDevMode` so the catalog (stage/prod) is inspectable.
+ */
+function analogForDevTools(): Plugin[] {
+  return angular({ tsconfig: resolve(__dirname, 'tsconfig.json') }).filter(
+    (plugin) => plugin.name !== '@analogjs/vite-plugin-angular-optimizer',
+  );
+}
+
 export default defineConfig({
   root: resolve(__dirname),
   base: mountBase,
   server: { port: 9812, strictPort: true },
   preview: { port: 9812, strictPort: true },
+  define: {
+    ngDevMode: 'true',
+  },
   // Single tsconfig for app + tests, so point the Angular compiler at it
   // (the plugin otherwise looks for the CLI's tsconfig.app.json).
-  plugins: [angular({ tsconfig: resolve(__dirname, 'tsconfig.json') }), pinMountAssets()],
+  plugins: [...analogForDevTools(), pinMountAssets()],
   build: {
     outDir: 'dist',
     emptyOutDir: true,

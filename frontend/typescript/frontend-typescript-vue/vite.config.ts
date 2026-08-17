@@ -61,7 +61,10 @@ export default defineConfig({
   server: { port: 9813, strictPort: true },
   preview: { port: 9813, strictPort: true },
   plugins: [
-    vue(),
+    vue({
+      // Catalog nginx image is a Vite production build; keep Vue DevTools hooks.
+      features: { prodDevtools: true },
+    }),
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: null,

@@ -51,6 +51,10 @@ function pinMountAssets() {
 export default defineConfig({
   root: moduleDir,
   base: mountBase,
+  // Keep Angular DevTools on the nginx image (catalog stage/prod).
+  define: {
+    ngDevMode: 'true',
+  },
   server: {
     port: 9802,
     strictPort: true,
