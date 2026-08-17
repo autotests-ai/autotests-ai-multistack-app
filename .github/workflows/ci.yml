@@ -43,6 +43,7 @@ name: CI
 #   allure-npm-lock (gating: tests package.json == package-lock.json)
 #   allure-report-warmup ← allure-npm-lock (gating npm ci; history; parallel with e2e)
 #   publish-allure-report ← pyramid layers + sonar-backend + warmup (gating generate) → publish-allure-pages (soft)
+#   send-allure-notifications ← publish-allure-report (не ждать pages)
 # push main|develop: trigger infers lanes from paths (tests/ ⇒ no app deploy).
 # dispatch `deploy=none|backend|frontend|tests|all` + `deploy_target=production|stage|both`.
 # PR (main|develop): no deploy; ui-mock-tests after component-tests (mock compose profile).
@@ -2285,9 +2286,7 @@ jobs:
 
   send-allure-notifications:
     name: send-allure-notifications
-    needs:
-      - publish-allure-report
-      - publish-allure-pages
+    needs: publish-allure-report
     if: always() && !cancelled() && needs.publish-allure-report.result != 'skipped'
     continue-on-error: true
     runs-on: ubuntu-24.04
@@ -2296,7 +2295,6 @@ jobs:
       contents: read
       actions: read
     env:
-      GH_PAGES_BASE: ${{ vars.GH_PAGES_BASE || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
       SETUP_NODE_IF: "true"
       NODE_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/package-lock.json
     steps:
@@ -2336,7 +2334,6 @@ jobs:
           TESTOPS_LAUNCH_URL: ${{ needs.publish-allure-report.outputs.testops_launch_url }}
           ALLURE_FOLDER: ${{ github.workspace }}/allure-report/awesome
           ALLURE_RESULTS_FOLDER: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
-          GH_PAGES_DEPLOYED: ${{ needs.publish-allure-pages.outputs.gh_pages_deployed }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID || '-1004381150566' }}
           TELEGRAM_TOPIC_ID: ${{ vars.TELEGRAM_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || '3' }}
@@ -2351,13 +2348,9 @@ jobs:
             echo "No ${ALLURE_FOLDER}/summary.json — skip Telegram"
             exit 0
           fi
-          if [ "${GH_PAGES_DEPLOYED}" = "true" ]; then
-            export ALLURE_REPORT_URL="${GH_PAGES_BASE}/reports/latest/awesome/index.html"
-            export ALLURE_DASHBOARD_URL="${GH_PAGES_BASE}/reports/latest/dashboard/index.html"
-          else
-            export ALLURE_REPORT_URL=""
-            export ALLURE_DASHBOARD_URL=""
-          fi
+          # Pages may still be deploying — do not claim GH Pages URLs from a parallel job.
+          export ALLURE_REPORT_URL=""
+          export ALLURE_DASHBOARD_URL=""
           node scripts/render-notifications-config.mjs
           if [ "${NOTIFICATION_MODE}" = "live" ]; then
             MODE_FLAG="--live"
