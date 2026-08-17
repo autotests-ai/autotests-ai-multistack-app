@@ -1,1 +1,0 @@
-{"id":"babf7ae55e90b851add193c5924b8d27","fullName":"frontend-javascript-angular:src/test/lib/auth.test.js#session teardown logout sends POST /auth/logout with the bearer token","name":"logout sends POST /auth/logout with the bearer token","status":"passed","testResultsByEnv":{"default":"b39168cf3adeedb325a6763f99e81f4d"}}

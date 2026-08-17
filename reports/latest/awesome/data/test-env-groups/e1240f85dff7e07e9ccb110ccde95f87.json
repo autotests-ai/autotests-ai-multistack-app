@@ -1,1 +1,0 @@
-{"id":"e1240f85dff7e07e9ccb110ccde95f87","fullName":"dev.reference.app.service.ItemServiceTest.listItemsReturnsEmptyWhenNoRows","name":"listItems returns empty list when repository is empty","status":"passed","testResultsByEnv":{"default":"1c3140fcfcfd43091049bcd237f27fcf"}}

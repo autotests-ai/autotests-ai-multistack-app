@@ -1,1 +1,0 @@
-{"id":"fa6ac4930225eeb63513b980059f6718","fullName":"frontend-typescript-angular:src/test/lib/auth.test.ts#session teardown deleteAccount clears the stored token when the network call fails","name":"deleteAccount clears the stored token when the network call fails","status":"passed","testResultsByEnv":{"default":"1bca66b5279ba6dc177342fb7d0fd70b"}}

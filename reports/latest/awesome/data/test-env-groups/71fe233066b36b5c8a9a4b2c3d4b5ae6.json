@@ -1,1 +1,0 @@
-{"id":"71fe233066b36b5c8a9a4b2c3d4b5ae6","fullName":"frontend-typescript-vue:src/test/lib/auth.test.ts#session teardown deleteAccount sends DELETE /auth/me with the bearer token and clears the session","name":"deleteAccount sends DELETE /auth/me with the bearer token and clears the session","status":"passed","testResultsByEnv":{"default":"e2b897f19091c1353ab86eb04f970dd2"}}

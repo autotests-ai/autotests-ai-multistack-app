@@ -1,1 +1,0 @@
-{"id":"8bd980ff19c82f256c24d2d64fb73371","fullName":"dev.reference.app.controller.AuthControllerTest.logoutReturnsNoContent","name":"POST /api/auth/logout returns 204","status":"passed","testResultsByEnv":{"default":"52e64f4b566e5c21146955d79cb05dd5"}}

@@ -1,1 +1,0 @@
-{"id":"5c1fea6e28e2a549662a36f9a6b459ce","fullName":"dev.reference.app.config.SecurityChainTest.meWithRealBearerToken","name":"GET /api/auth/me with a real bearer token passes the filter chain","status":"passed","testResultsByEnv":{"default":"d236950916cce72b93d3b9b03b4252dd"}}

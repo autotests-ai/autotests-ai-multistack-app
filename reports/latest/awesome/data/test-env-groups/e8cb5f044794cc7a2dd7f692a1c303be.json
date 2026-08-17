@@ -1,1 +1,0 @@
-{"id":"e8cb5f044794cc7a2dd7f692a1c303be","fullName":"frontend-typescript-vanilla:src/test/pages/home.test.ts#home page cancelling the confirm keeps the session and sends no delete request","name":"cancelling the confirm keeps the session and sends no delete request","status":"passed","testResultsByEnv":{"default":"34b54f21246632d5b372efaa265abee8"}}

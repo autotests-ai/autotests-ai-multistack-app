@@ -1,1 +1,0 @@
-{"id":"a97e2c61eae28742ba51846dfecf61f5","fullName":"frontend-javascript-vue:src/test/lib/auth.test.js#fetchProfile refuses to call the API without a token","name":"refuses to call the API without a token","status":"passed","testResultsByEnv":{"default":"da18eef7b5471e0190b8e448a9872b6c"}}

@@ -1,1 +1,0 @@
-{"id":"0aeea08e01613d54578f6f1e062376ce","fullName":"frontend-typescript-vanilla:src/test/pages/login.test.ts#login page falls back to the mount root when the API sends no redirectUrl","name":"falls back to the mount root when the API sends no redirectUrl","status":"passed","testResultsByEnv":{"default":"fdf0ac4ea0d46b81d346fba5a6a007df"}}

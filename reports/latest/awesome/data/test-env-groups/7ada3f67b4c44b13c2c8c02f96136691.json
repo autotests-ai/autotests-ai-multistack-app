@@ -1,1 +1,0 @@
-{"id":"7ada3f67b4c44b13c2c8c02f96136691","fullName":"dev.reference.app.controller.ApiControllerTest.healthReturnsOk","name":"GET /api/health returns ok","status":"passed","testResultsByEnv":{"default":"7d15ac8899133cec2564ad027fd794ec"}}

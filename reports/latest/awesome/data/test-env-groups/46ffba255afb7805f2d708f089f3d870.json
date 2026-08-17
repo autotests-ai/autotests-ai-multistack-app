@@ -1,1 +1,0 @@
-{"id":"46ffba255afb7805f2d708f089f3d870","fullName":"frontend-javascript-angular:src/test/lib/auth.test.js#session teardown deleteAccount skips the request when there is no session","name":"deleteAccount skips the request when there is no session","status":"passed","testResultsByEnv":{"default":"2bbaaf216f2cbdc82d2da90c91fb1950"}}

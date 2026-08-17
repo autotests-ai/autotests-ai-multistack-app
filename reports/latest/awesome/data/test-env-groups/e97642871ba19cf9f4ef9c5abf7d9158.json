@@ -1,1 +1,0 @@
-{"id":"e97642871ba19cf9f4ef9c5abf7d9158","fullName":"dev.reference.app.controller.AuthControllerTest.loginRejectsBlankCredentials","name":"POST /api/auth/login rejects blank credentials with 400 joining both field errors","status":"passed","testResultsByEnv":{"default":"a6274a1fd27fd265623c069ca7e5a088"}}

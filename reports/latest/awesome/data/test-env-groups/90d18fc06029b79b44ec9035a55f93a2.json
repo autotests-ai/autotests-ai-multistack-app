@@ -1,1 +1,0 @@
-{"id":"90d18fc06029b79b44ec9035a55f93a2","fullName":"frontend-javascript-react:src/test/pwa/registerServiceWorker.test.js#registerServiceWorker skips registration when serviceWorker is unavailable","name":"skips registration when serviceWorker is unavailable","status":"passed","testResultsByEnv":{"default":"861946505f4969844df1fce948735457"}}

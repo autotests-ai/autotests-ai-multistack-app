@@ -1,1 +1,0 @@
-{"id":"270812b5466a319fbb942bd126b93285","fullName":"dev.reference.app.config.SecurityChainTest.corsPreflightAllowsConfiguredOrigin","name":"CORS preflight for /api/items answers the configured dev origin","status":"passed","testResultsByEnv":{"default":"9da721e3052cfe343eb74c66ee675ab2"}}

@@ -1,1 +1,0 @@
-{"id":"08f6642be216926700bfb570476bb17c","fullName":"tests.integration.BackendWiringIntegrationTests.itemsAreWiredToPostgreSQL","name":"GET /api/items — catalogue is served from PostgreSQL, not a stub or fallback","status":"passed","testResultsByEnv":{"default":"d927a7fb18fcdd8637cbe100f1e8e074"}}

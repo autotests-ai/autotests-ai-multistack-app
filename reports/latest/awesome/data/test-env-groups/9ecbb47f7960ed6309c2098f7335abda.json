@@ -1,1 +1,0 @@
-{"id":"9ecbb47f7960ed6309c2098f7335abda","fullName":"dev.reference.app.repository.FlywayMigrationTest.insertAssignsIdentityId","name":"insert into the migrated schema assigns an identity id","status":"passed","testResultsByEnv":{"default":"64fc0e8b5acacad523148ab33268289e"}}

@@ -1,1 +1,0 @@
-{"id":"f962cf37e1cdc399ab55a31fa867925d","fullName":"dev.reference.app.service.JwtServiceTest.tokenRoundtrip","name":"createToken and extractUsername roundtrip","status":"passed","testResultsByEnv":{"default":"02a3e0f6ee7d76b240101075fd4152b4"}}

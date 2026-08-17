@@ -1,1 +1,0 @@
-{"id":"48c8596bedc87f1458d845bfad863b66","fullName":"dev.reference.app.config.SecurityChainTest.unmappedApiPathWithTokenIsNotFound","name":"unmapped /api/** path with a valid token is 404, not 401","status":"passed","testResultsByEnv":{"default":"3c4844980f56ce81e54e115869bef87f"}}

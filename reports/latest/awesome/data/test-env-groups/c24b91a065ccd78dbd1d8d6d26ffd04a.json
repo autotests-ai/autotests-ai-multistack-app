@@ -1,1 +1,0 @@
-{"id":"c24b91a065ccd78dbd1d8d6d26ffd04a","fullName":"frontend-typescript-jquery:src/test/home.test.ts#home deletes the account, clears the session and lands on /login","name":"deletes the account, clears the session and lands on /login","status":"passed","testResultsByEnv":{"default":"b7cdb74698b4310e7cba3aa4120d30a3"}}

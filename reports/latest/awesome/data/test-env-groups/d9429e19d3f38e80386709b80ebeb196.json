@@ -1,1 +1,0 @@
-{"id":"d9429e19d3f38e80386709b80ebeb196","fullName":"frontend-typescript-angular:src/test/lib/auth.test.ts#session teardown deleteAccount clears the stored token when the API rejects the call","name":"deleteAccount clears the stored token when the API rejects the call","status":"passed","testResultsByEnv":{"default":"d298972afc3dc1a7b9290cf1e61b1dd8"}}

@@ -1,1 +1,0 @@
-{"id":"5d8a1864bf66d8439e569b2f1fb3cc82","fullName":"frontend-typescript-vue:src/test/pwa/registerServiceWorker.test.ts#registerServiceWorker skips registration when serviceWorker is unavailable","name":"skips registration when serviceWorker is unavailable","status":"passed","testResultsByEnv":{"default":"6ede601e0f0f99b1476db1c775c7813a"}}

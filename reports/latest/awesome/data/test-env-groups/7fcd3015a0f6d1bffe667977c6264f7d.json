@@ -1,1 +1,0 @@
-{"id":"7fcd3015a0f6d1bffe667977c6264f7d","fullName":"frontend-javascript-react:src/test/lib/auth.test.js#deleteAccount clears the stored token when the network call fails","name":"clears the stored token when the network call fails","status":"passed","testResultsByEnv":{"default":"28819940490fb757982ad744be4f4500"}}

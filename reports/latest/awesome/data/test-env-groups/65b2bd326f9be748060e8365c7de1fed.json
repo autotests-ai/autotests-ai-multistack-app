@@ -1,1 +1,0 @@
-{"id":"65b2bd326f9be748060e8365c7de1fed","fullName":"dev.reference.app.config.SecurityChainTest.unmappedApiPathRequiresAuthentication","name":"unmapped /api/** path requires authentication (catch-all)","status":"passed","testResultsByEnv":{"default":"b3db8b86a20d53f2897c2528b7679bf1"}}

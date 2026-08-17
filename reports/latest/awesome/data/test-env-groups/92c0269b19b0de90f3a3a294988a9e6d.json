@@ -1,1 +1,0 @@
-{"id":"92c0269b19b0de90f3a3a294988a9e6d","fullName":"frontend-typescript-vanilla:src/test/lib/appBase.test.ts#authTokenStorageKey scopes the key by backend so sessions do not leak across backends","name":"scopes the key by backend so sessions do not leak across backends","status":"passed","testResultsByEnv":{"default":"86a059ad7063ed8c628c49446c851166"}}

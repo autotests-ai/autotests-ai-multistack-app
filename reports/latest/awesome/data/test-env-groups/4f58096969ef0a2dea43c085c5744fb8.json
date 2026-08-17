@@ -1,1 +1,0 @@
-{"id":"4f58096969ef0a2dea43c085c5744fb8","fullName":"frontend-typescript-vue:src/test/lib/auth.test.ts#session teardown deleteAccount clears the stored token when the network call fails","name":"deleteAccount clears the stored token when the network call fails","status":"passed","testResultsByEnv":{"default":"bf7a7a80b33c0faf5a8563cf549156d4"}}

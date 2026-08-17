@@ -1,1 +1,0 @@
-{"id":"0eb7c269f5048ea56d94d196882d9563","fullName":"dev.reference.app.config.SecurityChainTest.meWithTamperedToken","name":"GET /api/auth/me with a tampered token returns 401","status":"passed","testResultsByEnv":{"default":"80a080b6324458793bd11dab688817b6"}}

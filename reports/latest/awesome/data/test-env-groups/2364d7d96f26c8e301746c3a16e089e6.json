@@ -1,1 +1,0 @@
-{"id":"2364d7d96f26c8e301746c3a16e089e6","fullName":"frontend-typescript-jquery:src/test/auth.test.ts#network failures logout clears the stored token even when the API call fails","name":"logout clears the stored token even when the API call fails","status":"passed","testResultsByEnv":{"default":"3b15efeaad4dcddce9ee91f1d1aa269e"}}

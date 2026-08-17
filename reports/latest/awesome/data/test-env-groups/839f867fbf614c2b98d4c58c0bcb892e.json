@@ -1,1 +1,0 @@
-{"id":"839f867fbf614c2b98d4c58c0bcb892e","fullName":"dev.reference.app.config.UserSeederTest.skipsSeedingWhenCredentialsMissing","name":"skips seeding when credentials are not configured username=\"\" password=\"\"","status":"passed","testResultsByEnv":{"default":"b0b6c1faa928e34e899485e7c2bf73f9"}}

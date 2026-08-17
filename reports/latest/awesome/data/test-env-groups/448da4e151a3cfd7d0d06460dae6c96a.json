@@ -1,1 +1,0 @@
-{"id":"448da4e151a3cfd7d0d06460dae6c96a","fullName":"frontend-typescript-vue:src/test/pages/LoginPage.test.ts#LoginPage redirects an already signed-in visitor to home","name":"redirects an already signed-in visitor to home","status":"passed","testResultsByEnv":{"default":"c90f0493d3f6c83c9ad8ce43773e862a"}}

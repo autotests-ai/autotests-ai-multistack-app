@@ -1,1 +1,0 @@
-{"id":"31b78b5a0ae6d139383ec948b03195a1","fullName":"frontend-typescript-vanilla:src/test/lib/auth.test.ts#deleteAccount sends DELETE /auth/me with the bearer token and clears the session","name":"sends DELETE /auth/me with the bearer token and clears the session","status":"passed","testResultsByEnv":{"default":"1b970170f922cab4e38207f249eb0604"}}

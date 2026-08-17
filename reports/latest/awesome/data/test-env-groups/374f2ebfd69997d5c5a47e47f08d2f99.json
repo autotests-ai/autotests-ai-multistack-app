@@ -1,1 +1,0 @@
-{"id":"374f2ebfd69997d5c5a47e47f08d2f99","fullName":"dev.reference.app.controller.AuthControllerTest.meReturnsProfile","name":"GET /api/auth/me returns profile for authenticated user","status":"passed","testResultsByEnv":{"default":"b204fa79622eaef50ee73d670d0983a3"}}

@@ -1,1 +1,0 @@
-{"id":"5e8204f77771012ba2994a6729241865","fullName":"frontend-typescript-vanilla:src/test/lib/auth.test.ts#network failures resolveAuthErrorMessage prefers the API message and falls back last","name":"resolveAuthErrorMessage prefers the API message and falls back last","status":"passed","testResultsByEnv":{"default":"c7171362dd06a2654d52196530a2a24b"}}

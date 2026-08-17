@@ -1,1 +1,0 @@
-{"id":"b30833bcec25eb80295e9878c64c3b35","fullName":"frontend-javascript-angular:src/test/lib/auth.test.js#session teardown deleteAccount sends DELETE /auth/me with the bearer token and clears the session","name":"deleteAccount sends DELETE /auth/me with the bearer token and clears the session","status":"passed","testResultsByEnv":{"default":"2b5a8fb6e07f86dd2bc1827328b78d77"}}

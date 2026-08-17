@@ -1,1 +1,0 @@
-{"id":"44cee572ac7f5d5c40d6ef6264c336cd","fullName":"dev.reference.app.config.CorsConfigTest.corsForRequestSkipsNonApiPaths","name":"corsForRequest ignores non-API paths and null requests","status":"passed","testResultsByEnv":{"default":"b26ec0e21126563c8a04b19f6655a88f"}}

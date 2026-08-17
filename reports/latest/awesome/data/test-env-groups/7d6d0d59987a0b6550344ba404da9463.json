@@ -1,1 +1,0 @@
-{"id":"7d6d0d59987a0b6550344ba404da9463","fullName":"tests.testinfra.ConfigReaderTest.resolveApiBaseUrlFailsWhenBothEmpty","name":"resolveApiBaseUrl fails fast when apiBaseUrl and hubUrl are empty","status":"passed","testResultsByEnv":{"default":"26532dfdf2c2e74db6b2808ae6562673"}}

@@ -1,1 +1,0 @@
-{"id":"3ebf986221c0bfbaeb74c58f0c6eb343","fullName":"dev.reference.app.config.CorsConfigTest.sameHostRejectsInvalidOrigin","name":"sameHost rejects malformed and host-less origins","status":"passed","testResultsByEnv":{"default":"60eff3faa58193e1513aa269a3b38863"}}
