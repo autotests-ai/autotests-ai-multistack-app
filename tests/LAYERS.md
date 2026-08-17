@@ -265,7 +265,7 @@ Against **prod** CI runs only `@Tag("prod")`, and only after stage e2e in the sa
 
 ## TestOps (live upload + selective rerun)
 
-`testops-context` opens one shared launch/job-run; **pyramid** jobs stream via workflow
+`trigger` opens one shared TestOps launch/job-run (same job as lane flags); **pyramid** jobs stream via workflow
 env helper `ALLURECTL_RUN` → `run_with_allurectl` in
 [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) (`allurectl watch --job-run-child`).
 `tests-harness` does **not** upload (helpers, not product cases). Missing `ALLURE_TOKEN` /

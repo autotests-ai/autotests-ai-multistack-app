@@ -8,7 +8,7 @@ name: CI
 # names and RUN_LABEL are derived from them. Swap TESTS / TESTS_DIR / TESTS_LANG (or
 # BACKEND / FRONTEND) when the teaching default changes; job ids stay layer names.
 #
-# Allure: testops-context opens one shared TestOps job-run; test jobs stream live and
+# Allure: trigger opens one shared TestOps job-run (soft); test jobs stream live and
 # publish raw results. publish-allure-report is gating (lock pins, npm ci, generate).
 # Pages: that job pushes gh-pages (soft); live deploy is deploy-github-pages
 # (upload-pages-artifact@v5 + deploy-pages@v5). Retry without the pyramid:
@@ -33,7 +33,7 @@ name: CI
 # Stage mutex: main preempts develop (cancel), develop yields if main is queued
 # or running. Not one shared cancel-in-progress group — that would let develop
 # cancel a prod promotion.
-# Roots: unit-tests · component-tests · tests-harness · testops-context
+# Roots: trigger → unit-tests · component-tests · tests-harness
 #   integration-tests ← unit-tests (backend Spring+PG, pre-build; PR + main)
 #   sonar-backend ← unit-tests + integration-tests
 #   sonar-tests ← tests-harness (skipped on backend-only lane)
@@ -324,22 +324,92 @@ env:
     docker logout ghcr.io
 
 jobs:
-  # Create/adopt one TestOps job-run before tests fan out. This job is deliberately
-  # non-gating: missing credentials, fork PRs or a TestOps outage disable live upload
-  # without preventing the test jobs from running and publishing raw artifacts.
-  testops-context:
-    name: testops-context
+  # Same flags as dispatch `deploy`. Push infers from paths so tests/ does not
+  # rebuild the app; PR is none (no CD). Not a pyramid job.
+  # Shared TestOps job-run lives here too (soft: missing creds / outage disable
+  # live upload without blocking tests) so the graph is one root:
+  # trigger → unit-tests (backend) / component-tests (frontend) / tests-harness.
+  trigger:
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
-    permissions:
-      actions: read
-      contents: read
+    timeout-minutes: 2
     outputs:
+      backend: ${{ steps.set.outputs.backend }}
+      frontend: ${{ steps.set.outputs.frontend }}
+      tests: ${{ steps.set.outputs.tests }}
+      cd_production: ${{ steps.set.outputs.cd_production }}
+      cd_stage: ${{ steps.set.outputs.cd_stage }}
       enabled: ${{ steps.context.outputs.enabled }}
       launch_id: ${{ steps.context.outputs.launch_id }}
       job_run_id: ${{ steps.context.outputs.job_run_id }}
       launch_url: ${{ steps.context.outputs.launch_url }}
     steps:
+      - if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Resolve lanes
+        id: set
+        env:
+          BEFORE: ${{ github.event.before }}
+          DEPLOY: ${{ github.event.inputs.deploy || '' }}
+          DEPLOY_TARGET: ${{ github.event.inputs.deploy_target || '' }}
+        run: |
+          set -euo pipefail
+          backend=false
+          frontend=false
+          tests=false
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            case "${DEPLOY}" in
+              backend) backend=true ;;
+              frontend) frontend=true ;;
+              tests) tests=true ;;
+              all) backend=true; frontend=true; tests=true ;;
+              none|'') ;;
+              *) echo "unknown deploy=${DEPLOY}" >&2; exit 1 ;;
+            esac
+          elif [ "${GITHUB_EVENT_NAME}" = "push" ] && { [ "${GITHUB_REF}" = "refs/heads/main" ] || [ "${GITHUB_REF}" = "refs/heads/develop" ]; }; then
+            if [ -z "${BEFORE:-}" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] \
+              || ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+              backend=true
+              frontend=true
+              tests=true
+            else
+              CHANGED="$(git diff --name-only "$BEFORE" "$GITHUB_SHA")"
+              match() { printf '%s\n' "$CHANGED" | grep -qE "$1"; }
+              SHARED='deploy/|docker-compose|\.github/workflows/ci\.yml'
+              if match "^(backend/|${SHARED})"; then backend=true; fi
+              if match "^(frontend/|${SHARED})"; then frontend=true; fi
+              if match "^(tests/|${SHARED})"; then tests=true; fi
+            fi
+          fi
+          cd_production=false
+          cd_stage=false
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            case "${DEPLOY_TARGET}" in
+              stage) cd_stage=true ;;
+              both|production|'')
+                cd_production=true
+                cd_stage=true
+                ;;
+              *) echo "unknown deploy_target=${DEPLOY_TARGET}" >&2; exit 1 ;;
+            esac
+            if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+              cd_production=false
+              if [ "${DEPLOY_TARGET}" = "production" ] || [ -z "${DEPLOY_TARGET}" ]; then
+                cd_stage=false
+              fi
+            fi
+          elif [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+            cd_production=true
+            cd_stage=true
+          elif [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/develop" ]; then
+            cd_stage=true
+          fi
+          printf 'backend=%s\nfrontend=%s\ntests=%s\ncd_production=%s\ncd_stage=%s\n' \
+            "$backend" "$frontend" "$tests" "$cd_production" "$cd_stage" >> "$GITHUB_OUTPUT"
+          echo "trigger backend=${backend} frontend=${frontend} tests=${tests} cd_production=${cd_production} cd_stage=${cd_stage}"
+
       - name: Check TestOps configuration
         id: configured
         env:
@@ -512,85 +582,6 @@ jobs:
           echo "job_run_id=${ALLURE_JOB_RUN_ID}" >> "$GITHUB_OUTPUT"
           echo "launch_url=${LAUNCH_URL}" >> "$GITHUB_OUTPUT"
 
-  # Same flags as dispatch `deploy`. Push infers from paths so tests/ does not
-  # rebuild the app; PR is none (no CD). Not a pyramid job.
-  trigger:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 1
-    outputs:
-      backend: ${{ steps.set.outputs.backend }}
-      frontend: ${{ steps.set.outputs.frontend }}
-      tests: ${{ steps.set.outputs.tests }}
-      cd_production: ${{ steps.set.outputs.cd_production }}
-      cd_stage: ${{ steps.set.outputs.cd_stage }}
-    steps:
-      - if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
-        uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-          fetch-depth: 0
-      - name: Resolve lanes
-        id: set
-        env:
-          BEFORE: ${{ github.event.before }}
-          DEPLOY: ${{ github.event.inputs.deploy || '' }}
-          DEPLOY_TARGET: ${{ github.event.inputs.deploy_target || '' }}
-        run: |
-          set -euo pipefail
-          backend=false
-          frontend=false
-          tests=false
-          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
-            case "${DEPLOY}" in
-              backend) backend=true ;;
-              frontend) frontend=true ;;
-              tests) tests=true ;;
-              all) backend=true; frontend=true; tests=true ;;
-              none|'') ;;
-              *) echo "unknown deploy=${DEPLOY}" >&2; exit 1 ;;
-            esac
-          elif [ "${GITHUB_EVENT_NAME}" = "push" ] && { [ "${GITHUB_REF}" = "refs/heads/main" ] || [ "${GITHUB_REF}" = "refs/heads/develop" ]; }; then
-            if [ -z "${BEFORE:-}" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] \
-              || ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
-              backend=true
-              frontend=true
-              tests=true
-            else
-              CHANGED="$(git diff --name-only "$BEFORE" "$GITHUB_SHA")"
-              match() { printf '%s\n' "$CHANGED" | grep -qE "$1"; }
-              SHARED='deploy/|docker-compose|\.github/workflows/ci\.yml'
-              if match "^(backend/|${SHARED})"; then backend=true; fi
-              if match "^(frontend/|${SHARED})"; then frontend=true; fi
-              if match "^(tests/|${SHARED})"; then tests=true; fi
-            fi
-          fi
-          cd_production=false
-          cd_stage=false
-          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
-            case "${DEPLOY_TARGET}" in
-              stage) cd_stage=true ;;
-              both|production|'')
-                cd_production=true
-                cd_stage=true
-                ;;
-              *) echo "unknown deploy_target=${DEPLOY_TARGET}" >&2; exit 1 ;;
-            esac
-            if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
-              cd_production=false
-              if [ "${DEPLOY_TARGET}" = "production" ] || [ -z "${DEPLOY_TARGET}" ]; then
-                cd_stage=false
-              fi
-            fi
-          elif [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/main" ]; then
-            cd_production=true
-            cd_stage=true
-          elif [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/develop" ]; then
-            cd_stage=true
-          fi
-          printf 'backend=%s\nfrontend=%s\ntests=%s\ncd_production=%s\ncd_stage=%s\n' \
-            "$backend" "$frontend" "$tests" "$cd_production" "$cd_stage" >> "$GITHUB_OUTPUT"
-          echo "trigger backend=${backend} frontend=${frontend} tests=${tests} cd_production=${cd_production} cd_stage=${cd_stage}"
-
   # Main owns the stage host: cancel develop CI so promotion is not tested
   # against a WIP checkout. Does not `needs` deploy — runs in parallel with build.
   preempt-develop-cd:
@@ -644,15 +635,15 @@ jobs:
   # Keep the backend root first: GitHub has no explicit graph coordinates and uses
   # declaration order as a layout hint for otherwise independent jobs.
   unit-tests:
-    needs: testops-context
+    needs: trigger
     if: always() && !cancelled()
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       LAYER: unit
-      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
-      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
-      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
+      ALLURE_LIVE_ENABLED: ${{ needs.trigger.outputs.enabled }}
+      ALLURE_LAUNCH_ID: ${{ needs.trigger.outputs.launch_id }}
+      ALLURE_JOB_RUN_ID: ${{ needs.trigger.outputs.job_run_id }}
       SETUP_JVM_IF: "true"
       GRADLE_CC_IF: "true"
       GRADLE_CC_MODULE: backend/java/backend-java-spring
@@ -794,7 +785,7 @@ jobs:
           retention-days: 1
 
   integration-tests:
-    needs: [unit-tests, testops-context]
+    needs: [unit-tests, trigger]
     if: >-
       always() && !cancelled() && needs.unit-tests.result == 'success' && (
         github.event_name == 'pull_request' ||
@@ -805,9 +796,9 @@ jobs:
     timeout-minutes: 25
     env:
       LAYER: integration
-      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
-      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
-      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
+      ALLURE_LIVE_ENABLED: ${{ needs.trigger.outputs.enabled }}
+      ALLURE_LAUNCH_ID: ${{ needs.trigger.outputs.launch_id }}
+      ALLURE_JOB_RUN_ID: ${{ needs.trigger.outputs.job_run_id }}
       SETUP_JVM_IF: "true"
       GRADLE_CC_IF: "true"
       GRADLE_CC_MODULE: backend/java/backend-java-spring
@@ -838,15 +829,15 @@ jobs:
   # Coverage always on (this job is the deploy default). lint/typecheck --if-present for JS.
   # Do not point FRONTEND at frontend-javascript-vanilla (no npm/Vitest — browser layers only).
   component-tests:
-    needs: testops-context
+    needs: trigger
     if: always() && !cancelled()
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       LAYER: component
-      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
-      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
-      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
+      ALLURE_LIVE_ENABLED: ${{ needs.trigger.outputs.enabled }}
+      ALLURE_LAUNCH_ID: ${{ needs.trigger.outputs.launch_id }}
+      ALLURE_JOB_RUN_ID: ${{ needs.trigger.outputs.job_run_id }}
       SETUP_NODE_IF: "true"
       NODE_CACHE_DEPENDENCY_PATH: frontend/typescript/frontend-typescript-react/package-lock.json
       NPM_CI_IF: "true"
@@ -883,7 +874,7 @@ jobs:
 
   # Stub API on runner (compose --profile mock); after jsdom, before FE image push.
   ui-mock-tests:
-    needs: [trigger, testops-context, component-tests]
+    needs: [trigger, component-tests]
     if: >-
       always() && !cancelled() &&
       needs.component-tests.result == 'success' && (
@@ -903,9 +894,9 @@ jobs:
       SCREENSHOT_BROWSER: chrome
       # Stable GHA BuildKit scope — hashFiles is not allowed in job env; layers are content-addressed.
       DOCKER_CACHE_SCOPE: autotests-ai-multistack-app-docker-mock-stand-gateway
-      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
-      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
-      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
+      ALLURE_LIVE_ENABLED: ${{ needs.trigger.outputs.enabled }}
+      ALLURE_LAUNCH_ID: ${{ needs.trigger.outputs.launch_id }}
+      ALLURE_JOB_RUN_ID: ${{ needs.trigger.outputs.job_run_id }}
       SETUP_JVM_IF: "true"
       GRADLE_CACHE_READ_ONLY: "true"
       # Share tests-module GUH with tests-harness (setup-gradle@v6 keys on github.job).
@@ -1528,7 +1519,7 @@ jobs:
   # Rest Assured against deployed backend — starts as soon as that lane finishes (FE may
   # still be deploying). Dispatch can run api without a backend deploy this run.
   api-tests:
-    needs: [deploy-backend, trigger, testops-context]
+    needs: [deploy-backend, trigger]
     if: >-
       always() && !cancelled() &&
       needs.trigger.outputs.cd_production == 'true' && (
@@ -1547,9 +1538,9 @@ jobs:
     timeout-minutes: 20
     env:
       LAYER: api
-      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
-      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
-      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
+      ALLURE_LIVE_ENABLED: ${{ needs.trigger.outputs.enabled }}
+      ALLURE_LAUNCH_ID: ${{ needs.trigger.outputs.launch_id }}
+      ALLURE_JOB_RUN_ID: ${{ needs.trigger.outputs.job_run_id }}
       SETUP_JVM_IF: "true"
       GRADLE_CACHE_READ_ONLY: "true"
       # Share tests-module GUH with tests-harness (setup-gradle@v6 keys on github.job).
@@ -1618,7 +1609,7 @@ jobs:
   # After API layer; also wait for frontend deploy (skipped = keep live UI).
   # Frontend-only push skips api-tests and still runs e2e.
   e2e-tests:
-    needs: [api-tests, deploy-frontend, trigger, testops-context]
+    needs: [api-tests, deploy-frontend, trigger]
     if: >-
       always() && !cancelled() &&
       needs.trigger.outputs.cd_production == 'true' && (
@@ -1649,9 +1640,9 @@ jobs:
       LAYER: e2e
       SCREENSHOT_OS: linux
       SCREENSHOT_BROWSER: chrome
-      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
-      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
-      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
+      ALLURE_LIVE_ENABLED: ${{ needs.trigger.outputs.enabled }}
+      ALLURE_LAUNCH_ID: ${{ needs.trigger.outputs.launch_id }}
+      ALLURE_JOB_RUN_ID: ${{ needs.trigger.outputs.job_run_id }}
       SETUP_JVM_IF: "true"
       GRADLE_CACHE_READ_ONLY: "true"
       # Share tests-module GUH with tests-harness (setup-gradle@v6 keys on github.job).
@@ -1799,7 +1790,7 @@ jobs:
 
   # Stage twin of api-tests — full api layer vs STAGE_APP_URL (push develop / deploy_target=stage).
   api-tests-stage:
-    needs: [deploy-backend-stage, trigger, testops-context]
+    needs: [deploy-backend-stage, trigger]
     if: >-
       always() && !cancelled() &&
       needs.trigger.outputs.cd_stage == 'true' && (
@@ -1823,9 +1814,9 @@ jobs:
       APP_URL: https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/
       UI_URL: https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/
       BASE_URL: https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/
-      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
-      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
-      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
+      ALLURE_LIVE_ENABLED: ${{ needs.trigger.outputs.enabled }}
+      ALLURE_LAUNCH_ID: ${{ needs.trigger.outputs.launch_id }}
+      ALLURE_JOB_RUN_ID: ${{ needs.trigger.outputs.job_run_id }}
       SETUP_JVM_IF: "true"
       GRADLE_CACHE_READ_ONLY: "true"
       GRADLE_BUILD_ACTION_CACHE_KEY_JOB: tests-harness
@@ -1888,7 +1879,7 @@ jobs:
 
   # Stage twin of e2e-tests — full e2e vs STAGE_APP_URL, then screenshot compare.
   e2e-tests-stage:
-    needs: [api-tests-stage, deploy-frontend-stage, trigger, testops-context]
+    needs: [api-tests-stage, deploy-frontend-stage, trigger]
     if: >-
       always() && !cancelled() &&
       needs.trigger.outputs.cd_stage == 'true' && (
@@ -1925,9 +1916,9 @@ jobs:
       BASE_URL: https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/
       SCREENSHOT_OS: linux
       SCREENSHOT_BROWSER: chrome
-      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
-      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
-      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
+      ALLURE_LIVE_ENABLED: ${{ needs.trigger.outputs.enabled }}
+      ALLURE_LAUNCH_ID: ${{ needs.trigger.outputs.launch_id }}
+      ALLURE_JOB_RUN_ID: ${{ needs.trigger.outputs.job_run_id }}
       SETUP_JVM_IF: "true"
       GRADLE_CACHE_READ_ONLY: "true"
       GRADLE_BUILD_ACTION_CACHE_KEY_JOB: tests-harness
@@ -2067,7 +2058,7 @@ jobs:
 
   # Main-chain tip after e2e; manual execution is explicit.
   manual-tests:
-    needs: [e2e-tests, testops-context]
+    needs: [e2e-tests, trigger]
     if: >-
       always() && !cancelled() &&
       github.event_name == 'workflow_dispatch' &&
@@ -2077,9 +2068,9 @@ jobs:
     timeout-minutes: 30
     env:
       LAYER: manual
-      ALLURE_LIVE_ENABLED: ${{ needs.testops-context.outputs.enabled }}
-      ALLURE_LAUNCH_ID: ${{ needs.testops-context.outputs.launch_id }}
-      ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
+      ALLURE_LIVE_ENABLED: ${{ needs.trigger.outputs.enabled }}
+      ALLURE_LAUNCH_ID: ${{ needs.trigger.outputs.launch_id }}
+      ALLURE_JOB_RUN_ID: ${{ needs.trigger.outputs.job_run_id }}
       SETUP_JVM_IF: "true"
       GRADLE_CACHE_READ_ONLY: "true"
       # Share tests-module GUH with tests-harness (setup-gradle@v6 keys on github.job).
@@ -2129,7 +2120,7 @@ jobs:
       - api-tests-stage
       - e2e-tests-stage
       - manual-tests
-      - testops-context
+      - trigger
       - sonar-backend
     if: always() && !cancelled()
     runs-on: ubuntu-24.04
@@ -2243,7 +2234,7 @@ jobs:
       - name: Fallback upload merged results to Allure TestOps
         if: >-
           always() &&
-          needs.testops-context.outputs.enabled != 'true' &&
+          needs.trigger.outputs.enabled != 'true' &&
           steps.merged-results.outputs.has_results == 'true' &&
           env.ALLURE_PROJECT_ID != ''
         continue-on-error: true
@@ -2286,11 +2277,11 @@ jobs:
       - name: Stop shared TestOps job-run
         if: >-
           always() &&
-          needs.testops-context.outputs.job_run_id != '' &&
+          needs.trigger.outputs.job_run_id != '' &&
           steps.setup-allurectl.outcome == 'success'
         continue-on-error: true
         env:
-          ALLURE_JOB_RUN_ID: ${{ needs.testops-context.outputs.job_run_id }}
+          ALLURE_JOB_RUN_ID: ${{ needs.trigger.outputs.job_run_id }}
         run: |
           set -euo pipefail
           allurectl --http-timeout 30s job-run stop \
@@ -2301,7 +2292,7 @@ jobs:
         id: resolve-testops-url
         if: always()
         env:
-          LIVE_LAUNCH_URL: ${{ needs.testops-context.outputs.launch_url }}
+          LIVE_LAUNCH_URL: ${{ needs.trigger.outputs.launch_url }}
           FALLBACK_LAUNCH_URL: ${{ steps.testops-upload.outputs.launch_url }}
         run: |
           LAUNCH_URL="${LIVE_LAUNCH_URL:-${FALLBACK_LAUNCH_URL:-}}"

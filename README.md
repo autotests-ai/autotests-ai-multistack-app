@@ -77,21 +77,20 @@ Full CI graph (`needs` from `ci.yml`). `trigger` is the same contract as dispatc
 ```mermaid
 flowchart TB
   TRG[trigger]
-  TOC[testops-context]
 
-  TOC --> UNIT[unit-tests]
-  TOC --> COMP[component-tests]
+  TRG --> UNIT[unit-tests]
+  TRG --> COMP[component-tests]
   TRG --> H[tests-harness]
-  TOC --> MOCK[ui-mock-tests]
-  TOC --> INT[integration-tests]
-
-  TRG --> MOCK
+  TRG --> MOCK[ui-mock-tests]
+  TRG --> INT[integration-tests]
   TRG --> BB
   TRG --> BF
   TRG --> API
   TRG --> E2E
   TRG --> APIS
   TRG --> E2ES
+  TRG --> MAN
+  TRG --> PUB
 
   UNIT --> INT
   UNIT --> SB[sonar-backend]
@@ -115,22 +114,17 @@ flowchart TB
   SF --> DFS
 
   DB --> API[api-tests]
-  TOC --> API
 
   API --> E2E[e2e-tests]
   DF --> E2E
-  TOC --> E2E
 
   DBS --> APIS[api-tests-stage]
-  TOC --> APIS
   APIS --> E2ES[e2e-tests-stage]
   DFS --> E2ES
-  TOC --> E2ES
   E2ES --> DB
   E2ES --> DF
 
   E2E --> MAN[manual-tests<br/>dispatch]
-  TOC --> MAN
 
   UNIT & COMP & MOCK & INT & API & E2E & APIS & E2ES & MAN --> PUB[publish-allure-report]
   PUB --> PAGES[publish-allure-pages]
@@ -237,7 +231,7 @@ Teaching CI — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 | `STAGE_APP_DIR` | `/home/autotests_ai_multistack/autotests-ai-multistack-app-stage` (stage: `develop` WIP and `main` promotion) |
 | Deployed stacks | `env.BACKEND` + `env.FRONTEND` in `ci.yml` (defaults: java-spring + typescript-react) |
 
-Allure: `testops-context` + live `allurectl watch` on pyramid jobs (not `tests-harness`) → `publish-allure-report`
+Allure: `trigger` opens the shared TestOps job-run; live `allurectl watch` on pyramid jobs (not `tests-harness`) → `publish-allure-report`
 (gating generate; soft Telegram kit collage after upload) → `publish-allure-pages` (non-gating). TestOps selective rerun: dispatch with
 `ALLURE_JOB_RUN_ID` keeps the testplan — see [tests/LAYERS.md](tests/LAYERS.md)#testops-live-upload--selective-rerun.
 
