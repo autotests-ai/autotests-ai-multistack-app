@@ -10,8 +10,9 @@ name: CI
 #
 # Allure: testops-context opens one shared TestOps job-run; test jobs stream live and
 # publish raw results. allure-npm-lock is gating (package.json exact pins == lock;
-# students install with `npm ci`, not `npm install`). publish-allure-report is gating
-# (npm ci + generate). Pages / TestOps / Telegram stay step-level continue-on-error.
+# students install with `npm ci`, not `npm install`). allure-report-warmup is gating
+# (npm ci, parallel with pyramid). publish-allure-report is gating (generate after e2e).
+# Pages / TestOps / Telegram stay step-level continue-on-error.
 # send-allure-notifications is non-gating (kit collage).
 # TestOps UI rerun: workflow_dispatch + ALLURE_JOB_RUN_ID → ALLURE_KEEP_TESTPLAN=true.
 # Launch env axes: BROWSER / OS / ENDPOINT / VERSION(=sha) / BRANCH.
@@ -40,7 +41,8 @@ name: CI
 #   api-tests ← deploy-backend (curl /api/health; no join with frontend)
 #   e2e-tests ← api-tests + deploy-frontend (curl live UI) → manual-tests
 #   allure-npm-lock (gating: tests package.json == package-lock.json)
-#   publish-allure-report ← pyramid layers + sonar-backend (gating generate)
+#   allure-report-warmup ← allure-npm-lock (gating npm ci; history; parallel with e2e)
+#   publish-allure-report ← pyramid layers + sonar-backend + warmup (gating generate) → publish-allure-pages (soft)
 # push main|develop: trigger infers lanes from paths (tests/ ⇒ no app deploy).
 # dispatch `deploy=none|backend|frontend|tests|all` + `deploy_target=production|stage|both`.
 # PR (main|develop): no deploy; ui-mock-tests after component-tests (mock compose profile).
@@ -188,7 +190,7 @@ env:
   # Step templates: YAML anchors at first use (&checkout, &setup-java, &setup-gradle,
   # &cache-gradle-cc, &cache-allurectl, &cache-playwright-browsers,
   # &cache-chrome-for-testing, &setup-python, &pip-install, &setup-node, &npm-ci,
-  # &install-playwright, &upload-allure-results, &write-sonar-summary,
+  # &cache-allure-nm, &install-playwright, &upload-allure-results, &write-sonar-summary,
   # &docker-login-ghcr, &setup-docker-buildx, &docker-build-push, &ssh-deploy).
   # Job env supplies if-knobs / paths / artifact names as LITERALS — GitHub rejects
   # ${{ env.* }} inside jobs.<id>.env (Unrecognized named-value: 'env'). Keep in sync
@@ -1855,37 +1857,23 @@ jobs:
         working-directory: ${{ env.TESTS_DIR }}
         run: node scripts/check-package-lock.mjs
 
-  # Gating: npm ci + Allure generate. Pages / TestOps / Telegram stay step-soft.
-  publish-allure-report:
-    name: publish-allure-report
-    needs:
-      - unit-tests
-      - component-tests
-      - ui-mock-tests
-      - integration-tests
-      - api-tests
-      - e2e-tests
-      - manual-tests
-      - testops-context
-      - sonar-backend
-    if: always() && !cancelled()
+  # Gating npm ci (and Allure history) in parallel with pyramid / e2e. Publish
+  # reuses node_modules via cache@v6 when that restore is shorter than npm ci
+  # (npm cache hit still leaves a 5s unpack; node_modules restore is ~1s).
+  allure-report-warmup:
+    name: allure-report-warmup
+    needs: [allure-npm-lock, testops-context]
+    if: always() && !cancelled() && needs.allure-npm-lock.result == 'success'
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 10
     permissions:
-      contents: write
+      contents: read
       actions: read
     env:
-      REPORT_ID: ${{ github.run_id }}
-      GH_PAGES_BASE: ${{ vars.GH_PAGES_BASE || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
-      ALLURE_LIVE_ENABLED: ${{ vars.ALLURE_PROJECT_ID != '' }}
       SETUP_NODE_IF: "true"
       NODE_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/package-lock.json
       NPM_CI_IF: "true"
       NPM_WORKDIR: tests/java/tests-java-gradle-junit5-allure3-selenide
-    outputs:
-      testops_launch_url: ${{ steps.resolve-testops-url.outputs.launch_url }}
-      report_generated: ${{ steps.allure-report.outcome == 'success' }}
-      gh_pages_deployed: ${{ steps.gh-pages-deploy.outcome == 'success' }}
     steps:
       - *checkout
 
@@ -1899,6 +1887,77 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - *setup-node
+
+      - &cache-allure-nm
+        name: Cache Allure npm node_modules
+        id: cache-allure-nm
+        continue-on-error: true
+        uses: actions/cache@v6
+        with:
+          path: tests/java/tests-java-gradle-junit5-allure3-selenide/node_modules
+          key: allure-nm-${{ runner.os }}-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/package-lock.json') }}
+
+      - *npm-ci
+
+      - name: Upload Allure history for publish
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-publish-history
+          path: gh-pages/history.jsonl
+          if-no-files-found: ignore
+          retention-days: 1
+
+  # Gating Allure generate after e2e results. npm ci stays gating in warmup
+  # (fallback here on cache miss). Pages are a follow-up soft job.
+  publish-allure-report:
+    name: publish-allure-report
+    needs:
+      - unit-tests
+      - component-tests
+      - ui-mock-tests
+      - integration-tests
+      - api-tests
+      - e2e-tests
+      - manual-tests
+      - testops-context
+      - sonar-backend
+      - allure-report-warmup
+    if: always() && !cancelled()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+    env:
+      REPORT_ID: ${{ github.run_id }}
+      GH_PAGES_BASE: ${{ vars.GH_PAGES_BASE || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
+      ALLURE_LIVE_ENABLED: ${{ vars.ALLURE_PROJECT_ID != '' }}
+      SETUP_NODE_IF: "true"
+      NODE_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/package-lock.json
+      NPM_CI_IF: "true"
+      NPM_WORKDIR: tests/java/tests-java-gradle-junit5-allure3-selenide
+    outputs:
+      testops_launch_url: ${{ steps.resolve-testops-url.outputs.launch_url }}
+      report_generated: ${{ steps.allure-report.outcome == 'success' }}
+    steps:
+      - *checkout
+
+      - name: Download Allure history
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: allure-publish-history
+          path: gh-pages
+
+      - *setup-node
+
+      - *cache-allure-nm
+
+      - name: Skip npm ci when warmup node_modules cache hits
+        if: needs.allure-report-warmup.result == 'success' && steps.cache-allure-nm.outcome == 'success' && steps.cache-allure-nm.outputs.cache-hit == 'true'
+        run: echo "NPM_CI_IF=false" >> "$GITHUB_ENV"
 
       - *npm-ci
 
@@ -2092,12 +2151,81 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+      - name: Job summary
+        if: always()
+        env:
+          ALLURE_AWESOME: ${{ env.ALLURE_AWESOME_DIR }}
+        run: |
+          {
+            echo "## publish-allure-report"
+            echo ""
+            echo "- [GitHub Actions run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+            if [ -f "${ALLURE_AWESOME}/index.html" ]; then
+              echo "- Allure report artifact: allure-report-ci (Pages job deploys)"
+            fi
+            if [ -n "${TESTOPS_LAUNCH_URL:-}" ]; then
+              echo "- [Allure TestOps launch](${TESTOPS_LAUNCH_URL})"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # Soft Pages deploy — must not gate generate. Runs after the report artifact exists.
+  publish-allure-pages:
+    name: publish-allure-pages
+    needs: publish-allure-report
+    if: >-
+      always() && !cancelled() &&
+      github.event_name != 'pull_request' &&
+      needs.publish-allure-report.result != 'skipped' &&
+      needs.publish-allure-report.outputs.report_generated == 'true'
+    continue-on-error: true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    env:
+      REPORT_ID: ${{ github.run_id }}
+      GH_PAGES_BASE: ${{ vars.GH_PAGES_BASE || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
+    outputs:
+      gh_pages_deployed: ${{ steps.gh-pages-deploy.outcome == 'success' }}
+    steps:
+      - *checkout
+
+      - name: Download merged Allure report
+        id: report
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: allure-report-ci
+          path: ${{ env.ALLURE_REPORT_DIR }}
+
+      - name: Download merged raw Allure results
+        if: steps.report.outcome == 'success'
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          pattern: allure-results-*
+          path: ${{ env.ALLURE_RESULTS_DIR }}
+          merge-multiple: true
+
+      - name: Download Allure history
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: allure-publish-history
+          path: gh-pages
+
+      - name: Restore Allure history
+        if: steps.report.outcome == 'success'
+        run: |
+          if [ -f gh-pages/history.jsonl ]; then
+            cp gh-pages/history.jsonl "${{ env.TESTS_DIR }}/history.jsonl"
+          fi
+
       - name: Prepare GitHub Pages
         id: pages-prepare
-        if: >-
-          always() &&
-          github.event_name != 'pull_request' &&
-          steps.allure-report.outcome == 'success'
+        if: always() && steps.report.outcome == 'success'
+        continue-on-error: true
         env:
           ALLURE_REPORT_ROOT: ${{ env.ALLURE_REPORT_DIR }}
           ALLURE_AWESOME: ${{ env.ALLURE_AWESOME_DIR }}
@@ -2128,8 +2256,7 @@ jobs:
         id: gh-pages-deploy
         if: >-
           always() &&
-          github.event_name != 'pull_request' &&
-          steps.allure-report.outcome == 'success' &&
+          steps.report.outcome == 'success' &&
           steps.pages-prepare.outcome == 'success' &&
           hashFiles('pages/reports/**/awesome/index.html') != ''
         continue-on-error: true
@@ -2144,27 +2271,23 @@ jobs:
 
       - name: Job summary
         if: always()
-        env:
-          ALLURE_AWESOME: ${{ env.ALLURE_AWESOME_DIR }}
         run: |
           {
-            echo "## publish-allure-report"
+            echo "## publish-allure-pages"
             echo ""
-            echo "- [GitHub Actions run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
             if [ "${{ steps.gh-pages-deploy.outcome }}" = "success" ]; then
               echo "- [Allure report](${GH_PAGES_BASE}/reports/latest/awesome/index.html)"
               echo "- [Allure dashboard](${GH_PAGES_BASE}/reports/latest/dashboard/index.html)"
-            elif [ -f "${ALLURE_AWESOME}/index.html" ]; then
-              echo "- Allure report artifact: uploaded (GitHub Pages not deployed)"
-            fi
-            if [ -n "${TESTOPS_LAUNCH_URL:-}" ]; then
-              echo "- [Allure TestOps launch](${TESTOPS_LAUNCH_URL})"
+            else
+              echo "- GitHub Pages not deployed"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
   send-allure-notifications:
     name: send-allure-notifications
-    needs: publish-allure-report
+    needs:
+      - publish-allure-report
+      - publish-allure-pages
     if: always() && !cancelled() && needs.publish-allure-report.result != 'skipped'
     continue-on-error: true
     runs-on: ubuntu-24.04
@@ -2213,7 +2336,7 @@ jobs:
           TESTOPS_LAUNCH_URL: ${{ needs.publish-allure-report.outputs.testops_launch_url }}
           ALLURE_FOLDER: ${{ github.workspace }}/allure-report/awesome
           ALLURE_RESULTS_FOLDER: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
-          GH_PAGES_DEPLOYED: ${{ needs.publish-allure-report.outputs.gh_pages_deployed }}
+          GH_PAGES_DEPLOYED: ${{ needs.publish-allure-pages.outputs.gh_pages_deployed }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID || '-1004381150566' }}
           TELEGRAM_TOPIC_ID: ${{ vars.TELEGRAM_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || '3' }}
