@@ -18,15 +18,37 @@ public final class TokensCss {
     }
 
     public static Path defaultTokensPath() {
-        // cwd = tests/java/tests-java-gradle-junit5-allure3-selenide
-        return resolveTokensCssPath(
+        // cwd = tests module root (ethalon nested vs takeaway flat vendor/)
+        return firstExisting(
                 Path.of("..", "..", "..", "frontend", "_shared", "frontend-javascript-app",
-                        "css", "tokens.css").normalize().toAbsolutePath(),
+                        "css", "tokens.css"),
+                Path.of("frontend", "_shared", "frontend-javascript-app",
+                        "css", "tokens.css"),
+                Path.of("..", "frontend-typescript-react", "vendor", "frontend-javascript-app",
+                        "css", "tokens.css"),
+                Path.of("frontend-typescript-react", "vendor", "frontend-javascript-app",
+                        "css", "tokens.css"),
                 Path.of("..", "..", "..", "backend", "java", "backend-java-spring",
+                        "src", "main", "resources", "static", "css", "tokens.css"),
+                Path.of("backend", "java", "backend-java-spring",
+                        "src", "main", "resources", "static", "css", "tokens.css"),
+                Path.of("..", "backend-java-spring",
+                        "src", "main", "resources", "static", "css", "tokens.css"),
+                Path.of("backend-java-spring",
                         "src", "main", "resources", "static", "css", "tokens.css")
-                        .normalize()
-                        .toAbsolutePath()
         );
+    }
+
+    static Path firstExisting(Path... candidates) {
+        Path fallback = candidates[candidates.length - 1].normalize().toAbsolutePath();
+        for (var candidate : candidates) {
+            var abs = candidate.normalize().toAbsolutePath();
+            if (Files.exists(abs)) {
+                return abs;
+            }
+            fallback = abs;
+        }
+        return fallback;
     }
 
     public static Path resolveTokensCssPath(Path frontendCandidate, Path backendCandidate) {
