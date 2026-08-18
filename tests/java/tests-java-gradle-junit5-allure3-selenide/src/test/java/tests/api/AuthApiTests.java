@@ -247,7 +247,6 @@ class AuthApiTests extends ApiTestBase {
 
     @Test
     @Tag("api")
-    @Tag("destructive")
     @DisplayName("DELETE /api/auth/me removes the account: repeated login is rejected")
     void deleteRemovesAccount() {
         String username = "user_" + java.util.UUID.randomUUID().toString().substring(0, 8);

@@ -30,7 +30,6 @@ class AuthRoundTripApiTests extends ApiTestBase {
      */
     @Test
     @Tag("api")
-    @Tag("destructive")
     @DisplayName("register → login → me → logout (stateless: token survives) → delete → me is 401")
     void accountLifecycleRoundTrip() {
         String username = "api_" + java.util.UUID.randomUUID().toString().substring(0, 8);
