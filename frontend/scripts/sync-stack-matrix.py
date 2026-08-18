@@ -1,12 +1,14 @@
 #!/usr/bin/env python
-"""Sync deploy/matrix.yaml → stack/matrix.json + js/env-hosts.js.
+"""Sync deploy/matrix.yaml (ports) + hub tests.modules → stack/matrix.json + js/env-hosts.js.
 
 `public_host` in the YAML is the Stage/Prod header SSOT (`stage.{public_host}`).
+Tests axis is hub `matrix.yaml` `tests.modules` — not clone deploy/matrix.yaml.
 """
 from __future__ import annotations
 
 import importlib.util
 import json
+import sys
 from pathlib import Path
 
 SCRIPTS = Path(__file__).resolve().parent
@@ -102,6 +104,41 @@ def load_matrix(path: Path, status_server: Path) -> dict:
     return mod._load_yaml_lite(path)
 
 
+def resolve_hub_matrix() -> Path | None:
+    """Hub generate catalog: sibling matrix.yaml next to ethalon/ or the live clone."""
+    for candidate in (
+        ROOT.parent / "matrix.yaml",
+        ROOT.parent.parent / "autotests-ai-multistack-home" / "matrix.yaml",
+    ):
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def tests_from_hub(previous: list) -> list:
+    hub = resolve_hub_matrix()
+    if hub is None:
+        return previous
+    try:
+        import yaml  # type: ignore
+    except ImportError:
+        print("WARN: PyYAML missing — keeping previous tests in matrix.json", file=sys.stderr)
+        return previous
+    data = yaml.safe_load(hub.read_text(encoding="utf-8")) or {}
+    modules = (data.get("tests") or {}).get("modules") or []
+    return [
+        {
+            "id": t["id"],
+            "status": t.get("status", "active"),
+            "language": t.get("language"),
+            "module": t.get("module"),
+            "layers": list(t.get("layers") or []),
+        }
+        for t in modules
+        if t.get("id")
+    ]
+
+
 def public_host_of(data: dict, yaml_path: Path) -> str:
     host = str(data.get("public_host") or data.get("canonical_stack_host") or "").strip()
     if host:
@@ -117,6 +154,13 @@ def main() -> int:
     matrix_path, status_server = resolve_matrix()
     data = load_matrix(matrix_path, status_server)
     public_host = public_host_of(data, matrix_path)
+    previous_tests: list = []
+    if OUT_JSON.is_file():
+        try:
+            previous_tests = list(json.loads(OUT_JSON.read_text(encoding="utf-8")).get("tests") or [])
+        except json.JSONDecodeError:
+            previous_tests = []
+    tests = tests_from_hub(previous_tests)
 
     payload = {
         "public_host": public_host,
@@ -138,16 +182,7 @@ def main() -> int:
             }
             for f in data.get("frontends", [])
         ],
-        "tests": [
-            {
-                "id": t["id"],
-                "status": t.get("status", "active"),
-                "language": t.get("language"),
-                "module": t.get("module"),
-                "layers": list(t.get("layers") or []),
-            }
-            for t in data.get("tests", [])
-        ],
+        "tests": tests,
     }
     OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
     OUT_JSON.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
