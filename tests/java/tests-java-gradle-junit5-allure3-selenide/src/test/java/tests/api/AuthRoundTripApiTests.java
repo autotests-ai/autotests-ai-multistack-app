@@ -4,6 +4,7 @@ import annotations.Layer;
 import api.ApiTestBase;
 import api.model.LoginRequest;
 import api.model.RegisterRequest;
+import helpers.DataFaker;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -32,7 +33,7 @@ class AuthRoundTripApiTests extends ApiTestBase {
     @Tag("api")
     @DisplayName("register → login → me → logout (stateless: token survives) → delete → me is 401")
     void accountLifecycleRoundTrip() {
-        String username = "api_" + java.util.UUID.randomUUID().toString().substring(0, 8);
+        String username = DataFaker.username();
         String password = "password123";
 
         given(jsonSpec)

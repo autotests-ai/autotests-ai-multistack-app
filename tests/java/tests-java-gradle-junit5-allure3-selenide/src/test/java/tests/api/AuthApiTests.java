@@ -5,6 +5,7 @@ import api.ApiTestBase;
 import api.AuthApiClient;
 import api.model.LoginRequest;
 import api.model.RegisterRequest;
+import helpers.DataFaker;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -67,7 +68,7 @@ class AuthApiTests extends ApiTestBase {
     @DisplayName("POST /api/auth/login answers an unknown user with the same 401 (no enumeration)")
     void loginWithUnknownUsername() {
         given(jsonSpec)
-                .body(new LoginRequest("ghost_" + java.util.UUID.randomUUID().toString().substring(0, 8), "password123"))
+                .body(new LoginRequest(DataFaker.username(), "password123"))
                 .when()
                 .post("/api/auth/login")
                 .then()
@@ -125,7 +126,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("api")
     @DisplayName("POST /api/auth/register creates a user, returns the auth contract, and cleans up")
     void registerNewUser() {
-        String username = "user_" + java.util.UUID.randomUUID().toString().substring(0, 8);
+        String username = DataFaker.username();
 
         String token = given(jsonSpec)
                 .body(new RegisterRequest(username, "password123"))
@@ -249,7 +250,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("api")
     @DisplayName("DELETE /api/auth/me removes the account: repeated login is rejected")
     void deleteRemovesAccount() {
-        String username = "user_" + java.util.UUID.randomUUID().toString().substring(0, 8);
+        String username = DataFaker.username();
         String token = AuthApiClient.register(username, "password123");
 
         AuthApiClient.deleteAccount(token);

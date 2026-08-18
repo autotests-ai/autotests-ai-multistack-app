@@ -2,21 +2,16 @@
 
 Gradle · JUnit 5 · Allure 3 · Selenide · Rest Assured.
 
-Canonical Java automation module for autotests-ai-multistack-app ([`ci.yml`](../../../.github/workflows/ci.yml)).
+Canonical Java automation module ([`singlestack_github.yml`](../../_tests-meta/.github/_ethalon/singlestack_github.yml) → takeaway `.github/workflows/ci.yml`).
 
 **Not** backend unit tests → `backend/java/backend-java-spring/src/test/java/`.  
 **Not** RTL → `frontend/typescript/frontend-typescript-react/src/test/`.
 
-## Siblings (other languages)
-
-| Path | Stack |
-|------|-------|
-| [`../../javascript/tests-javascript-playwright/`](../../javascript/tests-javascript-playwright/) | Playwright |
-| [`../../python/tests-python-selenium/`](../../python/tests-python-selenium/) | pytest · Selenium |
+Other language stacks live in the matrix catalog, not this ethalon tree: [MATRIX-CATALOG.md](../../../../../../docs/testing/MATRIX-CATALOG.md).
 
 ## Layers
 
-One task `test`; the layer is a tag filter, the stand is `-Denv` ([../../LAYERS.md](../../LAYERS.md)).
+One task `test`; the layer is a tag filter, the stand is `-Denv` ([pyramid-map.yaml](../../../_contract/pyramid-map.yaml)).
 
 | Layer | Command | Notes |
 |-------|---------|--------|
@@ -56,5 +51,3 @@ node scripts/check-package-lock.mjs
 ```
 
 Commit both files. Do not use `latest`.
-
-Naming matrix for other Java stacks: [../../NAMING.md](../../NAMING.md).

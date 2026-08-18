@@ -3,6 +3,7 @@ package tests.e2e;
 import tests.TestBase;
 import annotations.Layer;
 import api.AuthApiClient;
+import helpers.DataFaker;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -45,7 +46,7 @@ class RegisterTests extends TestBase {
     @Tag("positive")
     @DisplayName("New user can register and land on home")
     void shouldRegisterNewUser() {
-        registeredUsername = "user_" + java.util.UUID.randomUUID().toString().substring(0, 8);
+        registeredUsername = DataFaker.username();
 
         registerPage.openPage()
                 .fillAndSubmitForm(registeredUsername, REGISTER_PASSWORD, REGISTER_PASSWORD)

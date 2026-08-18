@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
 
 /**
  * Marks a test as manual for Allure TestOps ({@code ALLURE_MANUAL=true}).
- * Canon: manual cases live in code under {@code tests/manual/} (see tests/LAYERS.md).
+ * Canon: manual cases live in code under {@code tests/manual/} (see ethalon/_contract/pyramid-map.yaml).
  * Pattern: allure-framework/allure-demo.
  */
 @Documented

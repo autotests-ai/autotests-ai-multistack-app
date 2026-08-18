@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import static io.qameta.allure.Allure.step;
 
 /**
- * Manual cases stored in code (canon — see tests/LAYERS.md).
+ * Manual cases stored in code (canon — see ethalon/_contract/pyramid-map.yaml).
  * Checklist steps for humans; {@link annotations.Manual} marks them for TestOps.
  */
 @Layer("manual")

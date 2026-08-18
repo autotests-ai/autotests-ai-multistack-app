@@ -33,6 +33,7 @@ buildscript {
         restAssuredVersion  = '5.5.7'
         jacksonVersion      = '2.18.2'
         ownerVersion        = '1.0.12'
+        datafakerVersion    = '2.4.4'
         testParallelForks   = 1
         defaultEnv          = 'ci'
     }
@@ -106,6 +107,7 @@ dependencies {
             "io.rest-assured:rest-assured:${restAssuredVersion}",
             "io.rest-assured:json-schema-validator:${restAssuredVersion}",
             "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}",
+            "net.datafaker:datafaker:${datafakerVersion}",
             'io.qameta.allure:allure-rest-assured')
     testRuntimeOnly (
             'org.junit.platform:junit-platform-launcher',
