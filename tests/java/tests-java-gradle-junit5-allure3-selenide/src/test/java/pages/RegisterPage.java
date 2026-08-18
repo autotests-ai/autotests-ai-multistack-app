@@ -12,12 +12,12 @@ import static pages.PageTimeouts.PAGE_READY;
 
 public class RegisterPage {
 
-    private final SelenideElement loginInput = $("[data-testid='login-input']");
-    private final SelenideElement passwordInput = $("[data-testid='password-input']");
+    private final SelenideElement loginInput = $("[data-testid='register-login-input']");
+    private final SelenideElement passwordInput = $("[data-testid='register-password-input']");
     private final SelenideElement confirmPasswordInput = $("[data-testid='confirm-password-input']");
-    private final SelenideElement submitButton = $("[data-testid='submit-button']");
+    private final SelenideElement submitButton = $("[data-testid='register-submit-button']");
     private final SelenideElement formTitle = $("[data-testid='register-form-title']");
-    private final SelenideElement errorMessage = $("[data-testid='error-message']");
+    private final SelenideElement errorMessage = $("[data-testid='register-error-message']");
 
     @Step("Open register page")
     public RegisterPage openPage() {

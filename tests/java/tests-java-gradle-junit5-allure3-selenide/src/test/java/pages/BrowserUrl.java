@@ -24,7 +24,7 @@ final class BrowserUrl {
                 return true;
             }
             Object err = executeJavaScript(
-                    "const n = document.querySelector('[data-testid=\"error-message\"]');"
+                    "const n = document.querySelector('[data-testid=\"error-message\"], [data-testid=\"register-error-message\"]');"
                             + "return n ? n.textContent : '';");
             String message = err == null ? "" : err.toString().trim();
             if (!message.isEmpty()) {

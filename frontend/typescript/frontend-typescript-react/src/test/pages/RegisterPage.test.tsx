@@ -37,10 +37,10 @@ describe('RegisterPage', () => {
 
     expect(screen.getByTestId('register-panel')).toBeInTheDocument();
     expect(screen.getByTestId('register-form-title')).toHaveTextContent('Register');
-    expect(screen.getByTestId('login-input')).toBeInTheDocument();
-    expect(screen.getByTestId('password-input')).toBeInTheDocument();
+    expect(screen.getByTestId('register-login-input')).toBeInTheDocument();
+    expect(screen.getByTestId('register-password-input')).toBeInTheDocument();
     expect(screen.getByTestId('confirm-password-input')).toBeInTheDocument();
-    expect(screen.getByTestId('submit-button')).toHaveTextContent('Register');
+    expect(screen.getByTestId('register-submit-button')).toHaveTextContent('Register');
     expect(screen.getByTestId('login-link')).toBeInTheDocument();
   });
 
@@ -55,12 +55,12 @@ describe('RegisterPage', () => {
     const user = userEvent.setup();
     renderRegister();
 
-    await user.type(screen.getByTestId('login-input'), 'ab');
-    await user.type(screen.getByTestId('password-input'), 'password123');
+    await user.type(screen.getByTestId('register-login-input'), 'ab');
+    await user.type(screen.getByTestId('register-password-input'), 'password123');
     await user.type(screen.getByTestId('confirm-password-input'), 'password123');
-    await user.click(screen.getByTestId('submit-button'));
+    await user.click(screen.getByTestId('register-submit-button'));
 
-    expect(screen.getByTestId('error-message')).toHaveTextContent(
+    expect(screen.getByTestId('register-error-message')).toHaveTextContent(
       'Login must be at least 3 characters',
     );
   });
@@ -69,12 +69,12 @@ describe('RegisterPage', () => {
     const user = userEvent.setup();
     renderRegister();
 
-    await user.type(screen.getByTestId('login-input'), 'newuser');
-    await user.type(screen.getByTestId('password-input'), 'password123');
+    await user.type(screen.getByTestId('register-login-input'), 'newuser');
+    await user.type(screen.getByTestId('register-password-input'), 'password123');
     await user.type(screen.getByTestId('confirm-password-input'), 'password124');
-    await user.click(screen.getByTestId('submit-button'));
+    await user.click(screen.getByTestId('register-submit-button'));
 
-    expect(screen.getByTestId('error-message')).toHaveTextContent('Passwords do not match');
+    expect(screen.getByTestId('register-error-message')).toHaveTextContent('Passwords do not match');
   });
 
   it('stores session and navigates home on successful register', async () => {
@@ -89,10 +89,10 @@ describe('RegisterPage', () => {
     );
 
     renderRegister();
-    await user.type(screen.getByTestId('login-input'), 'newuser');
-    await user.type(screen.getByTestId('password-input'), 'password123');
+    await user.type(screen.getByTestId('register-login-input'), 'newuser');
+    await user.type(screen.getByTestId('register-password-input'), 'password123');
     await user.type(screen.getByTestId('confirm-password-input'), 'password123');
-    await user.click(screen.getByTestId('submit-button'));
+    await user.click(screen.getByTestId('register-submit-button'));
 
     expect(await screen.findByTestId('home-landed')).toBeInTheDocument();
     expect(localStorage.getItem('authToken')).toBe('tok-reg');
@@ -106,13 +106,13 @@ describe('RegisterPage', () => {
     );
 
     renderRegister();
-    await user.type(screen.getByTestId('login-input'), 'user1');
-    await user.type(screen.getByTestId('password-input'), 'password123');
+    await user.type(screen.getByTestId('register-login-input'), 'user1');
+    await user.type(screen.getByTestId('register-password-input'), 'password123');
     await user.type(screen.getByTestId('confirm-password-input'), 'password123');
-    await user.click(screen.getByTestId('submit-button'));
+    await user.click(screen.getByTestId('register-submit-button'));
 
     await waitFor(() =>
-      expect(screen.getByTestId('error-message')).toHaveTextContent('Username already taken'),
+      expect(screen.getByTestId('register-error-message')).toHaveTextContent('Username already taken'),
     );
     expect(localStorage.getItem('authToken')).toBeNull();
   });

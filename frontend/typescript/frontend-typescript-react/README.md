@@ -34,7 +34,7 @@ uses them yet.
 |-------|--------|-------------|
 | `/` | `HomePage` | `multistack-layout`, `health-panel`/`health-status`, `items-list`/`item-row`, `welcome-panel`/`welcome-message`, `logout-button`, `delete-account-button` |
 | `/login` | `LoginPage` | `login-panel`, `login-form`, `login-input`, `password-input`, `submit-button`, `error-message`, `register-link`, `login-form-title` |
-| `/register` | `RegisterPage` | `register-panel`, `register-form`, `confirm-password-input`, `submit-button`, `login-link`, `register-form-title` |
+| `/register` | `RegisterPage` | `register-panel`, `register-form`, `register-login-input`, `register-password-input`, `confirm-password-input`, `register-submit-button`, `register-error-message`, `login-link`, `register-form-title` |
 
 (Router basename strips the mount; header/`appPath` use absolute mount-prefixed paths.)
 

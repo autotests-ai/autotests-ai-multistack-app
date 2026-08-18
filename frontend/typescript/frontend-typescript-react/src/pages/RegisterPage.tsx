@@ -77,21 +77,21 @@ export function RegisterPage() {
           <div className="plaque-field-list">
             <PlaqueField
               label="Login"
-              id="login-input"
+              id="register-login-input"
               name="username"
               type="text"
               autoComplete="username"
-              data-testid="login-input"
+              data-testid="register-login-input"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />
             <PlaqueField
               label="Password"
-              id="password-input"
+              id="register-password-input"
               name="password"
               type="password"
               autoComplete="new-password"
-              data-testid="password-input"
+              data-testid="register-password-input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -108,21 +108,21 @@ export function RegisterPage() {
           </div>
 
           <p
-            id="error-message"
+            id="register-error-message"
             className="auth-error"
             aria-live="polite"
-            data-testid="error-message"
+            data-testid="register-error-message"
           >
             {error}
           </p>
 
           <div className="auth-form__actions">
             <Button
-              id="submit-button"
+              id="register-submit-button"
               type="submit"
               variant="primary"
               block
-              data-testid="submit-button"
+              data-testid="register-submit-button"
               disabled={submitting}
             >
               Register

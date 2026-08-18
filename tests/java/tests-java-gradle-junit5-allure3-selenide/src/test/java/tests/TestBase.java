@@ -79,11 +79,6 @@ public class TestBase extends AllureMeta {
             Configuration.browserCapabilities = capabilities;
         } else if ("chrome".equals(config.browser())) {
             LocalChromePin.apply(config.browserVersion());
-        } else {
-            Configuration.browserVersion = config.browserVersion();
-        }
-
-        if (config.remoteUrl().isBlank()) {
             ChromeOptions chrome = new ChromeOptions();
             if (config.headless()) {
                 chrome.addArguments("--disable-gpu", "--no-sandbox", "--disable-dev-shm-usage");
@@ -94,6 +89,8 @@ public class TestBase extends AllureMeta {
             if (config.headless() || captureHar) {
                 Configuration.browserCapabilities = chrome;
             }
+        } else {
+            Configuration.browserVersion = config.browserVersion();
         }
 
         if (AllureSelenideListeners.isGloballyEnabled(config)) {
