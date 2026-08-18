@@ -66,6 +66,11 @@ public interface TestConfig extends Config {
     @DefaultValue("backend-java-spring")
     String apiHealthService();
 
+    /** Display name in the home welcome panel after seed login. Mock stand stubs {@code mock-user}. */
+    @Key("welcomeUsername")
+    @DefaultValue("user1")
+    String welcomeUsername();
+
     @Key("hubUrl")
     @DefaultValue("http://127.0.0.1:4444/")
     String hubUrl();

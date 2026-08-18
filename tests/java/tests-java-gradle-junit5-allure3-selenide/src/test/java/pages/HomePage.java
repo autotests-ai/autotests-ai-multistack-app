@@ -79,6 +79,23 @@ public class HomePage {
         return this;
     }
 
+    @Step("Verify home layout and health are mounted")
+    public HomePage shouldShowLayoutAndHealth() {
+        layout.shouldBe(visible, PAGE_READY);
+        healthStatus.shouldBe(visible);
+        return this;
+    }
+
+    @Step("Home layout panel is visible")
+    public SelenideElement layoutPanel() {
+        return layout.shouldBe(visible, PAGE_READY);
+    }
+
+    @Step("Welcome panel is visible")
+    public SelenideElement welcomePanelElement() {
+        return welcomePanel.shouldBe(visible, PAGE_READY);
+    }
+
     @Step("Verify embedded header is mounted")
     public HomePage shouldShowEmbeddedHeader() {
         header.shouldBe(visible, PAGE_READY);

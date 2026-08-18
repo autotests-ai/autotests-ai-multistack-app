@@ -1,5 +1,8 @@
-package helpers;
+package tests.testinfra;
 
+import annotations.Layer;
+import helpers.AllureHtmlPreview;
+import helpers.AllureHttpHtml;
 import io.qameta.allure.attachment.http.HttpRequestAttachment;
 import io.qameta.allure.attachment.http.HttpResponseAttachment;
 import java.nio.file.Files;
@@ -11,7 +14,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Tag("unit")
+@Layer("harness")
+@Tag("harness")
+@Tag("harness-backend")
 class AllureHttpHtmlTest {
 
     private static final Path GALLERY = Path.of("build/http-attachment-preview");

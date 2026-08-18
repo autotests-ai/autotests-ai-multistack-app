@@ -15,6 +15,7 @@ import static pages.PageTimeouts.PAGE_READY;
 public class LoginPage {
 
     private final SelenideElement embeddedHeader = $("[data-testid='header']");
+    private final SelenideElement loginForm = $("[data-testid='login-form']");
     private final SelenideElement loginInput = $("[data-testid='login-input']");
     private final SelenideElement passwordInput = $("[data-testid='password-input']");
     private final SelenideElement submitButton = $("[data-testid='submit-button']");
@@ -78,6 +79,11 @@ public class LoginPage {
         passwordInput.shouldBe(visible);
         submitButton.shouldBe(visible);
         return this;
+    }
+
+    @Step("Login form panel is visible")
+    public SelenideElement loginFormPanel() {
+        return loginForm.shouldBe(visible, PAGE_READY);
     }
 
     @Step("Verify form title message: {message}")

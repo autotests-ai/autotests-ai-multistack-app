@@ -15,7 +15,7 @@ import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInC
 import static org.hamcrest.Matchers.equalTo;
 
 /**
- * HTTP contract of the reference endpoints: shapes and types, not deployment facts.
+ * HTTP contract of {@code /api/health} and {@code /api/items}: shapes and types, not deployment facts.
  * Which service answers and where the data physically lives is asserted by
  * {@code BackendWiringApiTests} and {@code SeedDataApiTests}.
  */
@@ -23,8 +23,8 @@ import static org.hamcrest.Matchers.equalTo;
 @Epic("Home")
 @Feature("Health and items")
 @Severity(SeverityLevel.NORMAL)
-@DisplayName("Reference API")
-class ReferenceApiTests extends ApiTestBase {
+@DisplayName("Health and items API")
+class HealthItemsApiTests extends ApiTestBase {
 
     @Test
     @Tag("api")

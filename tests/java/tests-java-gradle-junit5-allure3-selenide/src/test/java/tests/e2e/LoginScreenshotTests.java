@@ -17,13 +17,9 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.time.Duration;
-
-import static com.codeborne.selenide.Condition.visible;
-import static com.codeborne.selenide.Selenide.$;
-
 @Layer("e2e")
 @Severity(SeverityLevel.MINOR)
+@Tag("e2e")
 @Tag("screenshot")
 @Epic("Authentication")
 @Feature("Login form")
@@ -42,9 +38,8 @@ class LoginScreenshotTests extends TestBase {
         ViewportHelper.setViewport(viewportWidth, VIEWPORT_HEIGHT);
         loginPage.openPage();
 
-        var panel = $("[data-testid='login-form']").shouldBe(visible, Duration.ofSeconds(10));
         ScreenshotHelper.captureAndCompare(
-                panel,
+                loginPage.loginFormPanel(),
                 "login",
                 viewportWidth,
                 "login-" + viewportWidth);

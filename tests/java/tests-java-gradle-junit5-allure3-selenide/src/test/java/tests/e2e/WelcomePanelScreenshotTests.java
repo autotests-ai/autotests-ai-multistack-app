@@ -17,11 +17,9 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import static com.codeborne.selenide.Condition.visible;
-import static com.codeborne.selenide.Selenide.$;
-
 @Layer("e2e")
 @Severity(SeverityLevel.MINOR)
+@Tag("e2e")
 @Tag("screenshot")
 @Epic("Authentication")
 @Feature("Welcome panel")
@@ -38,16 +36,12 @@ class WelcomePanelScreenshotTests extends TestBase {
     @DisplayName("Welcome panel matches screenshot")
     void welcomePanelMatchesScreenshot(int viewportWidth) {
         ViewportHelper.setViewport(viewportWidth, VIEWPORT_HEIGHT);
-        var expectedUser = "mock".equals(System.getProperty("env", "").trim())
-                ? "mock-user"
-                : "user1";
-        loginPage.openPage()
+        var home = loginPage.openPage()
                 .fillAndSubmitForm("user1", "password1")
-                .shouldHaveWelcomeMessage("Welcome, " + expectedUser + "!");
+                .shouldHaveWelcomeMessage("Welcome, " + config.welcomeUsername() + "!");
 
-        var welcomePanel = $("[data-testid='welcome-panel']").shouldBe(visible);
         ScreenshotHelper.captureAndCompare(
-                welcomePanel,
+                home.welcomePanelElement(),
                 "welcome-panel",
                 viewportWidth,
                 "welcome-panel-" + viewportWidth);

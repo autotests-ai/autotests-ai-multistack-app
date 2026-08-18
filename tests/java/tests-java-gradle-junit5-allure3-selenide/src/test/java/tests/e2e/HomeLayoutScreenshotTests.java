@@ -15,12 +15,9 @@ import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import tests.TestBase;
 
-import static com.codeborne.selenide.Condition.visible;
-import static com.codeborne.selenide.Selenide.$;
-import static com.codeborne.selenide.Selenide.open;
-
 @Layer("e2e")
 @Severity(SeverityLevel.MINOR)
+@Tag("e2e")
 @Tag("screenshot")
 @Epic("Home")
 @Feature("Home layout")
@@ -34,17 +31,14 @@ class HomeLayoutScreenshotTests extends TestBase {
     @BeforeEach
     void openHome() {
         ViewportHelper.setViewport(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
-        open("/");
-        $("[data-testid='multistack-layout']").shouldBe(visible);
-        $("[data-testid='health-status']").shouldBe(visible);
+        homePage.openPage().shouldShowLayoutAndHealth();
     }
 
     @Test
     @DisplayName("Home layout matches screenshot at 1280px")
     void homeLayoutMatchesScreenshot() {
-        var layout = $("[data-testid='multistack-layout']").shouldBe(visible);
         ScreenshotHelper.captureAndCompare(
-                layout,
+                homePage.layoutPanel(),
                 "home-layout",
                 VIEWPORT_WIDTH,
                 "home-layout-" + VIEWPORT_WIDTH);

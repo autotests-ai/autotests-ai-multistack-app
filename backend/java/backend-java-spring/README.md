@@ -16,7 +16,7 @@ unique constraint against the real database — **requires a running Docker daem
 as docker-compose for the app itself).
 Classical **integration** is `src/test/java/dev/multistack/app/integration/` +
 `IntegrationTestBase` (`@SpringBootTest` + Testcontainers PG) — CI job `integration-tests`
-(after `backend-unit-tests`, before build/deploy). `TestRestTemplate` on `RANDOM_PORT` talks to that
+(after `unit-tests`, before build/deploy). `TestRestTemplate` on `RANDOM_PORT` talks to that
 in-process context; it is **not** the `api` layer (RestAssured in `tests/api/` after `deploy-backend`).
 Run: `./gradlew check` (JaCoCo gate: 100% line **and** 100% branch coverage — earned by
 behavioral tests; entity plumbing is executed by the persistence slice, not by reflection).

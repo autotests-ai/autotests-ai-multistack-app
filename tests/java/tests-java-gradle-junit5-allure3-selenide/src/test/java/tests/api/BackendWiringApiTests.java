@@ -15,7 +15,7 @@ import static org.hamcrest.Matchers.equalTo;
 
 /**
  * Deployed-stand facts about the active backend module and its PostgreSQL wiring.
- * Response shapes/types are the api layer's job ({@code ReferenceApiTests}).
+ * Response shapes/types are the api layer's job ({@code HealthItemsApiTests}).
  */
 @Layer("api")
 @Epic("Wired backend")
