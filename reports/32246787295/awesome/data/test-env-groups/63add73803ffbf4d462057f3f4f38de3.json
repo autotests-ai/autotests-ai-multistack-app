@@ -1,1 +1,0 @@
-{"id":"63add73803ffbf4d462057f3f4f38de3","fullName":"dev.multistack.app.repository.FlywayMigrationTest.insertAssignsIdentityId","name":"insert into the migrated schema assigns an identity id","status":"passed","testResultsByEnv":{"default":"f56305d2b102e3bd86a92e215607b138"}}
