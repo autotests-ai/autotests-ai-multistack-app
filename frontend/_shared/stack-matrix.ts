@@ -58,7 +58,7 @@ export interface TestsModule {
 }
 
 export interface StackMatrix {
-  /** deploy/matrix.yaml `public_host` — Stage/Prod header origins. */
+  /** deploy/matrix.yaml `public_host` — Stage/Prod header fallback on loopback. */
   public_host?: string;
   backends: BackendModule[];
   frontends: FrontendModule[];

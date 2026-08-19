@@ -2,6 +2,8 @@ import type { HeaderConfig } from '@zero-design-system/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   envNavItems,
+  envOrigins,
+  productHost,
   PROD_ORIGIN,
   PUBLIC_HOST,
   STAGE_ORIGIN,
@@ -245,6 +247,23 @@ describe('env-hosts — matrix public_host', () => {
     expect(envNavItems().map((item) => item.testid)).toEqual([
       'header-nav-stage',
       'header-nav-prod',
+    ]);
+  });
+
+  it('keeps matrix hosts on loopback and follows the current product otherwise', () => {
+    expect(productHost('localhost')).toBe(PUBLIC_HOST);
+    expect(productHost('127.0.0.1')).toBe(PUBLIC_HOST);
+    expect(productHost('autotests.ai')).toBe('autotests.ai');
+    expect(productHost('stage.autotests.ai')).toBe('autotests.ai');
+    expect(productHost('ai-first.autotests.ai')).toBe('ai-first.autotests.ai');
+    expect(productHost('stage.ai-first.autotests.ai')).toBe('ai-first.autotests.ai');
+    expect(envOrigins('ai-first.autotests.ai')).toEqual({
+      prod: 'https://ai-first.autotests.ai',
+      stage: 'https://stage.ai-first.autotests.ai',
+    });
+    expect(envNavItems('ai-first.autotests.ai').map((item) => item.href)).toEqual([
+      'https://stage.ai-first.autotests.ai/',
+      'https://ai-first.autotests.ai/',
     ]);
   });
 });
