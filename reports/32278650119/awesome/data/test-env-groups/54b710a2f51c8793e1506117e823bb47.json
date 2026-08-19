@@ -1,1 +1,0 @@
-{"id":"54b710a2f51c8793e1506117e823bb47","fullName":"tests.e2e.RegisterTests.shouldShowErrorWhenUsernameIsTaken","name":"Duplicate username shows readable error","status":"passed","testResultsByEnv":{"default":"7b97879bdbc78d2128991925425b6219"}}
