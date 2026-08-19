@@ -1,1 +1,0 @@
-{"id":"3296b5f3ab11827a4eb73a98780e7450","fullName":"dev.multistack.app.controller.AuthControllerTest.registerRejectsShortPassword","name":"POST /api/auth/register rejects short password with 400 and a field message","status":"passed","testResultsByEnv":{"default":"2698cc76371c206fc74c7f3f3b0bb2f4"}}
