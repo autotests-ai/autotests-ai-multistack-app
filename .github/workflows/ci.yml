@@ -37,15 +37,15 @@ name: CI
 #   integration-tests ← backend-unit-tests (backend Spring+PG, pre-build; PR + main)
 #   sonar-backend ← backend-unit-tests + integration-tests
 #   sonar-tests ← tests-harness (skipped on backend-only lane)
-#   ui-mock-tests ← frontend-unit-tests (jsdom first; mock compose on the runner)
+#   ui-mock-tests ← frontend-unit-tests + tests-harness (jsdom first; mock compose on the runner)
 #   sonar-frontend ← frontend-unit-tests + ui-mock-tests (mock skipped ⇒ sonar still runs)
 #   build-backend ← backend-unit-tests + integration-tests · build-frontend ← ui-mock-tests
 #   deploy-backend-stage / deploy-frontend-stage ← same gates; cd_stage; skip until vars.STAGE_APP_DIR
-#   api-tests-stage / e2e-tests-stage ← deploy-*-stage; full api / e2e vs STAGE_APP_URL
+#   api-tests-stage / e2e-tests-stage ← deploy-*-stage + tests-harness; full api / e2e vs STAGE_APP_URL
 #     (e2e-tests-stage also compares screenshots/stage/)
 #   deploy-backend ← build-backend + sonar-backend + e2e-tests-stage (cd_production)
 #   deploy-frontend ← build-frontend + sonar-frontend + e2e-tests-stage
-#   api-tests ← deploy-backend; -Denv=prod -DincludeTags=api&prod
+#   api-tests ← deploy-backend + tests-harness; -Denv=prod -DincludeTags=api&prod
 #   e2e-tests ← api-tests + deploy-frontend; includeTags=e2e&prod excludeTags=mock,screenshot
 #   publish-allure-report ← pyramid layers + sonar-backend (gating generate; soft Telegram + Pages)
 # push main|develop: trigger infers lanes from paths (tests/ ⇒ no app deploy).
@@ -872,12 +872,102 @@ jobs:
           if-no-files-found: error
       - *upload-allure-results
 
-  # Stub API on runner (compose --profile mock); after jsdom, before FE image push.
+  # Not a pyramid layer: JaCoCo + sonar-tests, and a gate for TESTS_DIR jobs
+  # (ui-mock / api; e2e follows api). Backend-only → ConfigReader.
+  # Frontend/tests/all → full harness (UI tests read ConfigReader).
+  # Writer of tests-module GUH; api/e2e/ui-mock/manual restore it via GRADLE_BUILD_ACTION_CACHE_KEY_JOB.
+  tests-harness:
+    needs: [trigger]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      slice: ${{ steps.slice.outputs.slice }}
+    env:
+      LAYER: harness
+      SETUP_JVM_IF: "true"
+      GRADLE_CC_IF: "true"
+      GRADLE_CC_MODULE: tests/java/tests-java-gradle-junit5-allure3-selenide
+      GRADLE_CC_KEY_PREFIX: tests-java-gradle-junit5-allure3-selenide-${{ github.job }}
+      SETUP_NODE_IF: "false"
+      NODE_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/package-lock.json
+      NPM_CI_IF: "false"
+      NPM_WORKDIR: tests/java/tests-java-gradle-junit5-allure3-selenide
+      PLAYWRIGHT_IF: "false"
+      SETUP_PYTHON_IF: "false"
+      PYTHON_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/requirements.txt
+      PYTHON_WORKDIR: tests/java/tests-java-gradle-junit5-allure3-selenide
+    steps:
+      - *checkout
+      - name: Select harness slice
+        id: slice
+        env:
+          LANE_BACKEND: ${{ needs.trigger.outputs.backend }}
+          LANE_FRONTEND: ${{ needs.trigger.outputs.frontend }}
+          LANE_TESTS: ${{ needs.trigger.outputs.tests }}
+        run: |
+          set -euo pipefail
+          slice=all
+          tags=harness
+          if [ "$LANE_BACKEND" = "true" ] && [ "$LANE_FRONTEND" != "true" ] && [ "$LANE_TESTS" != "true" ]; then
+            slice=backend
+            tags=harness-backend
+          fi
+          echo "slice=${slice}" >> "$GITHUB_OUTPUT"
+          echo "HARNESS_INCLUDE_TAGS=${tags}" >> "$GITHUB_ENV"
+          echo "Harness slice=${slice} includeTags=${tags}"
+
+      # ── java (Gradle tags + JaCoCo gate) ──────────────────────────────────
+      - *setup-java
+      - *setup-gradle
+      - *cache-gradle-cc
+      # Coverage gate reads build/jacoco/test.exec, so it is only meaningful with this filter.
+      # Not streamed to TestOps (helpers, not product cases).
+      - name: Run harness tests (Gradle)
+        if: env.TESTS_LANG == 'java'
+        id: run-tests
+        run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification -Denv=ci -DincludeTags="${HARNESS_INCLUDE_TAGS}"
+        working-directory: ${{ env.TESTS_DIR }}
+      - if: env.TESTS_LANG == 'java' && steps.run-tests.outcome == 'success'
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-harness
+          path: |
+            ${{ env.TESTS_DIR }}/build/jacoco/**
+            ${{ env.TESTS_DIR }}/build/reports/jacoco/**
+            ${{ env.TESTS_DIR }}/build/classes/**
+          if-no-files-found: error
+      # ── javascript / typescript (full suite; no tag pyramid yet) ──────────
+      - *setup-node
+      - *npm-ci
+      - *cache-playwright-browsers
+      - &install-playwright
+        name: Install Playwright Chromium
+        if: env.PLAYWRIGHT_IF == 'true'
+        run: npx playwright install --with-deps chromium
+        working-directory: ${{ env.TESTS_DIR }}
+      - name: Run tests (npm)
+        if: >-
+          steps.slice.outputs.slice != 'backend' &&
+          (env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript')
+        run: npm test
+        working-directory: ${{ env.TESTS_DIR }}
+
+      # ── python (full suite; no tag pyramid yet) ───────────────────────────
+      - *setup-python
+      - *pip-install
+      - name: Run Python tests (pytest)
+        if: steps.slice.outputs.slice != 'backend' && env.TESTS_LANG == 'python'
+        run: python -m pytest
+        working-directory: ${{ env.TESTS_DIR }}
+
+  # Stub API on runner (compose --profile mock); after jsdom + harness, before FE image push.
   ui-mock-tests:
-    needs: [trigger, frontend-unit-tests]
+    needs: [trigger, frontend-unit-tests, tests-harness]
     if: >-
       always() && !cancelled() &&
-      needs.frontend-unit-tests.result == 'success' && (
+      needs.frontend-unit-tests.result == 'success' &&
+      needs.tests-harness.result == 'success' && (
         github.event_name == 'pull_request' ||
         needs.trigger.outputs.frontend == 'true' ||
         (github.event_name == 'workflow_dispatch' &&
@@ -1049,94 +1139,6 @@ jobs:
           name: mock-screenshot-pngs
           path: ${{ env.TESTS_DIR }}/src/test/resources/screenshots/
           if-no-files-found: ignore
-
-  # Not a pyramid layer and not TestOps: JaCoCo + sonar-tests only.
-  # Backend-only → ConfigReader. Frontend/tests/all → full harness (UI tests read ConfigReader).
-  # Writer of tests-module GUH; api/e2e/ui-mock/manual restore it via GRADLE_BUILD_ACTION_CACHE_KEY_JOB.
-  tests-harness:
-    needs: [trigger]
-    if: ${{ !cancelled() }}
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    outputs:
-      slice: ${{ steps.slice.outputs.slice }}
-    env:
-      LAYER: harness
-      SETUP_JVM_IF: "true"
-      GRADLE_CC_IF: "true"
-      GRADLE_CC_MODULE: tests/java/tests-java-gradle-junit5-allure3-selenide
-      GRADLE_CC_KEY_PREFIX: tests-java-gradle-junit5-allure3-selenide-${{ github.job }}
-      SETUP_NODE_IF: "false"
-      NODE_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/package-lock.json
-      NPM_CI_IF: "false"
-      NPM_WORKDIR: tests/java/tests-java-gradle-junit5-allure3-selenide
-      PLAYWRIGHT_IF: "false"
-      SETUP_PYTHON_IF: "false"
-      PYTHON_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/requirements.txt
-      PYTHON_WORKDIR: tests/java/tests-java-gradle-junit5-allure3-selenide
-    steps:
-      - *checkout
-      - name: Select harness slice
-        id: slice
-        env:
-          LANE_BACKEND: ${{ needs.trigger.outputs.backend }}
-          LANE_FRONTEND: ${{ needs.trigger.outputs.frontend }}
-          LANE_TESTS: ${{ needs.trigger.outputs.tests }}
-        run: |
-          set -euo pipefail
-          slice=all
-          tags=harness
-          if [ "$LANE_BACKEND" = "true" ] && [ "$LANE_FRONTEND" != "true" ] && [ "$LANE_TESTS" != "true" ]; then
-            slice=backend
-            tags=harness-backend
-          fi
-          echo "slice=${slice}" >> "$GITHUB_OUTPUT"
-          echo "HARNESS_INCLUDE_TAGS=${tags}" >> "$GITHUB_ENV"
-          echo "Harness slice=${slice} includeTags=${tags}"
-
-      # ── java (Gradle tags + JaCoCo gate) ──────────────────────────────────
-      - *setup-java
-      - *setup-gradle
-      - *cache-gradle-cc
-      # Coverage gate reads build/jacoco/test.exec, so it is only meaningful with this filter.
-      # Not streamed to TestOps (helpers, not product cases).
-      - name: Run harness tests (Gradle)
-        if: env.TESTS_LANG == 'java'
-        id: run-tests
-        run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification -Denv=ci -DincludeTags="${HARNESS_INCLUDE_TAGS}"
-        working-directory: ${{ env.TESTS_DIR }}
-      - if: env.TESTS_LANG == 'java' && steps.run-tests.outcome == 'success'
-        uses: actions/upload-artifact@v7
-        with:
-          name: coverage-harness
-          path: |
-            ${{ env.TESTS_DIR }}/build/jacoco/**
-            ${{ env.TESTS_DIR }}/build/reports/jacoco/**
-            ${{ env.TESTS_DIR }}/build/classes/**
-          if-no-files-found: error
-      # ── javascript / typescript (full suite; no tag pyramid yet) ──────────
-      - *setup-node
-      - *npm-ci
-      - *cache-playwright-browsers
-      - &install-playwright
-        name: Install Playwright Chromium
-        if: env.PLAYWRIGHT_IF == 'true'
-        run: npx playwright install --with-deps chromium
-        working-directory: ${{ env.TESTS_DIR }}
-      - name: Run tests (npm)
-        if: >-
-          steps.slice.outputs.slice != 'backend' &&
-          (env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript')
-        run: npm test
-        working-directory: ${{ env.TESTS_DIR }}
-
-      # ── python (full suite; no tag pyramid yet) ───────────────────────────
-      - *setup-python
-      - *pip-install
-      - name: Run Python tests (pytest)
-        if: steps.slice.outputs.slice != 'backend' && env.TESTS_LANG == 'python'
-        run: python -m pytest
-        working-directory: ${{ env.TESTS_DIR }}
 
   # Quality axis (SonarQube) — hard gate before deploy (not build). Coverage reused via artifacts.
   # Quality Gate wait is native in each scanner (`sonar.qualitygate.wait=true`).
@@ -1519,9 +1521,10 @@ jobs:
   # Rest Assured against deployed backend — starts as soon as that lane finishes (FE may
   # still be deploying). Dispatch can run api without a backend deploy this run.
   api-tests:
-    needs: [deploy-backend, trigger]
+    needs: [deploy-backend, trigger, tests-harness]
     if: >-
       always() && !cancelled() &&
+      needs.tests-harness.result == 'success' &&
       needs.trigger.outputs.cd_production == 'true' && (
         (needs.trigger.outputs.backend == 'true' &&
          needs.deploy-backend.result == 'success') ||
@@ -1790,9 +1793,10 @@ jobs:
 
   # Stage twin of api-tests — full api layer vs STAGE_APP_URL (push develop / deploy_target=stage).
   api-tests-stage:
-    needs: [deploy-backend-stage, trigger]
+    needs: [deploy-backend-stage, trigger, tests-harness]
     if: >-
       always() && !cancelled() &&
+      needs.tests-harness.result == 'success' &&
       needs.trigger.outputs.cd_stage == 'true' && (
         (needs.trigger.outputs.backend == 'true' &&
          needs.deploy-backend-stage.result == 'success') ||

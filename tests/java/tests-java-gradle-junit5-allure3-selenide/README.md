@@ -15,7 +15,7 @@ One task `test`; the layer is a tag filter, the stand is `-Denv` ([pyramid-map.y
 
 | Layer | Command | Notes |
 |-------|---------|--------|
-| harness (all) | `./gradlew test -Denv=ci -DincludeTags=harness` | umbrella — all `testinfra/` · CI job `tests-harness` (feeds `sonar-tests`) |
+| harness (all) | `./gradlew test -Denv=ci -DincludeTags=harness` | umbrella — all `testinfra/` · CI job `tests-harness` (feeds `sonar-tests`; gates `ui-mock-tests` / `api-tests`) |
 | harness-backend | `./gradlew test -Denv=ci -DincludeTags=harness-backend` | `ConfigReader` · `AllureHttpHtml` · backend-only lane |
 | harness-frontend | `./gradlew test -Denv=ci -DincludeTags=harness-frontend` | CSS + HAR + `LocalChromePin` · inside full `tests-harness` (frontend lane included) |
 | api | `./gradlew test -Denv=ci -DincludeTags=api` | local compose; CI job `api-tests` |
