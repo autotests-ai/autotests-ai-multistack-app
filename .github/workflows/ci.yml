@@ -28,8 +28,8 @@ name: CI
 # Stage twin: deploy-backend-stage / deploy-frontend-stage — own APP_DIR,
 # compose project autotests-ai-multistack-app-stage, ports +10000 (deploy/stage.env).
 # Stage CD: push develop | push main | dispatch stage|both|production-from-main.
-# Skip until vars.STAGE_APP_DIR is set. Live tests: stage = full api/e2e;
-# prod = @Tag("prod") after stage e2e is green.
+# Skip until vars.STAGE_APP_DIR is set. Live tests: full api/e2e vs stage
+# and vs prod (after stage e2e). Stand is -Denv=; layer is @Tag api/e2e.
 # Stage mutex: main preempts develop (cancel), develop yields if main is queued
 # or running. Not one shared cancel-in-progress group — that would let develop
 # cancel a prod promotion.
@@ -45,8 +45,8 @@ name: CI
 #     (e2e-tests-stage also compares screenshots/stage/)
 #   deploy-backend ← build-backend + sonar-backend + e2e-tests-stage (cd_production)
 #   deploy-frontend ← build-frontend + sonar-frontend + e2e-tests-stage
-#   api-tests ← deploy-backend + tests-harness; -Denv=prod -DincludeTags=api&prod
-#   e2e-tests ← api-tests + deploy-frontend + tests-harness; includeTags=e2e&prod excludeTags=mock,screenshot
+#   api-tests ← deploy-backend + tests-harness; -Denv=prod -DincludeTags=api
+#   e2e-tests ← api-tests + deploy-frontend + tests-harness; -Denv=prod -DincludeTags=e2e excludeTags=mock,screenshot
 #   publish-allure-report ← pyramid layers + sonar-backend (gating generate; soft Telegram + Pages)
 # push main|develop: trigger infers lanes from paths (tests/ ⇒ no app deploy).
 # dispatch `deploy=none|backend|frontend|tests|all` + `deploy_target=production|stage|both`.
@@ -74,7 +74,7 @@ on:
         type: boolean
         default: false
       run_api:
-        description: "Run API tests (prod: api&prod; stage/develop: full api layer)"
+        description: "Run API tests (prod: -Denv=prod -DincludeTags=api; stage: -Denv=stage -DincludeTags=api)"
         type: boolean
         default: false
       run_mock:
@@ -82,7 +82,7 @@ on:
         type: boolean
         default: false
       run_e2e:
-        description: "Run E2E tests (prod: e2e&prod; stage/develop: full e2e). Stage screenshot compare is always on."
+        description: "Run E2E tests (prod: -Denv=prod -DincludeTags=e2e; stage: -Denv=stage). Stage screenshot compare is always on."
         type: boolean
         default: false
       run_screenshot:
@@ -1580,7 +1580,7 @@ jobs:
           ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
         run: |
           eval "${ALLURECTL_RUN}"
-          run_with_allurectl ./gradlew test -Denv=prod "-DincludeTags=api&prod"
+          run_with_allurectl ./gradlew test -Denv=prod -DincludeTags=api
         working-directory: ${{ env.TESTS_DIR }}
       # ── javascript / typescript (full suite) ──────────────────────────────
       - *setup-node
@@ -1699,7 +1699,7 @@ jobs:
           if [ -n "${INCLUDE_TAGS}" ]; then
             ARGS+=(-DincludeTags="${INCLUDE_TAGS}")
           else
-            ARGS+=("-DincludeTags=e2e&prod")
+            ARGS+=(-DincludeTags=e2e)
           fi
           if [ -n "${EXCLUDE_TAGS}" ]; then
             ARGS+=(-DexcludeTags="${EXCLUDE_TAGS}")
