@@ -45,7 +45,8 @@ export default defineConfig({
       reportsDirectory: './coverage',
       include: ['src/**/*.{ts,tsx}'],
       // main.tsx / styles.ts are bootstrap (createRoot, CSS imports) — nothing to assert in jsdom.
-      exclude: ['src/test/**', 'src/**/*.d.ts', 'src/main.tsx', 'src/styles.ts'],
+      // vendor/ is the in-tree DS alias (ethalon keeps the same kit outside this package).
+      exclude: ['src/test/**', 'src/**/*.d.ts', 'src/main.tsx', 'src/styles.ts', 'vendor/**'],
       // Regression floor, not a target: raise when coverage grows, never lower silently.
       thresholds: {
         lines: 92,
