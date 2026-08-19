@@ -46,7 +46,7 @@ name: CI
 #   deploy-backend ← build-backend + sonar-backend + e2e-tests-stage (cd_production)
 #   deploy-frontend ← build-frontend + sonar-frontend + e2e-tests-stage
 #   api-tests ← deploy-backend + tests-harness; -Denv=prod -DincludeTags=api&prod
-#   e2e-tests ← api-tests + deploy-frontend; includeTags=e2e&prod excludeTags=mock,screenshot
+#   e2e-tests ← api-tests + deploy-frontend + tests-harness; includeTags=e2e&prod excludeTags=mock,screenshot
 #   publish-allure-report ← pyramid layers + sonar-backend (gating generate; soft Telegram + Pages)
 # push main|develop: trigger infers lanes from paths (tests/ ⇒ no app deploy).
 # dispatch `deploy=none|backend|frontend|tests|all` + `deploy_target=production|stage|both`.
@@ -873,7 +873,7 @@ jobs:
       - *upload-allure-results
 
   # Not a pyramid layer: JaCoCo + sonar-tests, and a gate for TESTS_DIR jobs
-  # (ui-mock / api; e2e follows api). Backend-only → ConfigReader.
+  # (ui-mock / api / e2e). Backend-only → ConfigReader.
   # Frontend/tests/all → full harness (UI tests read ConfigReader).
   # Writer of tests-module GUH; api/e2e/ui-mock/manual restore it via GRADLE_BUILD_ACTION_CACHE_KEY_JOB.
   tests-harness:
@@ -1612,9 +1612,10 @@ jobs:
   # After API layer; also wait for frontend deploy (skipped = keep live UI).
   # Frontend-only push skips api-tests and still runs e2e.
   e2e-tests:
-    needs: [api-tests, deploy-frontend, trigger]
+    needs: [api-tests, deploy-frontend, trigger, tests-harness]
     if: >-
       always() && !cancelled() &&
+      needs.tests-harness.result == 'success' &&
       needs.trigger.outputs.cd_production == 'true' && (
         (needs.deploy-frontend.result == 'success' ||
          needs.deploy-frontend.result == 'skipped') && (
@@ -1883,9 +1884,10 @@ jobs:
 
   # Stage twin of e2e-tests — full e2e vs STAGE_APP_URL, then screenshot compare.
   e2e-tests-stage:
-    needs: [api-tests-stage, deploy-frontend-stage, trigger]
+    needs: [api-tests-stage, deploy-frontend-stage, trigger, tests-harness]
     if: >-
       always() && !cancelled() &&
+      needs.tests-harness.result == 'success' &&
       needs.trigger.outputs.cd_stage == 'true' && (
         (needs.deploy-frontend-stage.result == 'success' ||
          needs.deploy-frontend-stage.result == 'skipped') && (
