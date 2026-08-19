@@ -160,8 +160,9 @@ function hrefToPathname(href) {
 }
 
 /**
- * Env switcher (`match: 'host'`): keep the current path on the item's origin
- * and highlight by hostname, without participating in exclusive page-nav active.
+ * Env switcher (`match: 'host'`): keep the configured env home (origin + `/`),
+ * highlight by hostname, without participating in exclusive page-nav active.
+ * Do not copy the current path — Stage/Prod are stand roots, not page twins.
  * @param {HTMLAnchorElement} link
  */
 function syncHostMatchLink(link) {
@@ -171,10 +172,6 @@ function syncHostMatchLink(link) {
   } catch {
     return;
   }
-  url.pathname = window.location.pathname;
-  url.search = window.location.search;
-  url.hash = '';
-  link.href = url.toString();
   const isCurrentHost = url.hostname === window.location.hostname;
   link.classList.toggle('is-active', isCurrentHost);
   if (isCurrentHost) {
@@ -188,8 +185,8 @@ function syncHostMatchLink(link) {
  * Recompute is-active / aria-current on the rendered nav from the current URL.
  * Exactly one path-matched link is ever marked `aria-current="page"`. Falls back
  * to the config-declared active item (data-header-active) only when no nav href
- * matches the current route. Host-match items (env switchers) are rewritten to
- * the live path and highlighted separately. Syncs inline nav and mobile menu.
+ * matches the current route. Host-match items (env switchers) keep their
+ * configured origin and are highlighted separately. Syncs inline nav and mobile menu.
  * @param {ParentNode} root
  */
 function syncActiveNav(root) {

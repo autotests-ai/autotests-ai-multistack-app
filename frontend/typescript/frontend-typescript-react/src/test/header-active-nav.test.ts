@@ -279,7 +279,7 @@ describe('canonical header.js — host-match env switchers', () => {
     document.body.innerHTML = '';
   });
 
-  it('rewrites Stage/Prod hrefs to the current path without stealing page active', async () => {
+  it('keeps Stage/Prod on env homes without stealing page active', async () => {
     await mountAt(`${MOUNT}/login`);
 
     expect(activeTestids()).toEqual(['header-nav-login']);
@@ -287,8 +287,8 @@ describe('canonical header.js — host-match env switchers', () => {
 
     const stage = document.querySelector<HTMLAnchorElement>('[data-testid="header-nav-stage"]');
     const prod = document.querySelector<HTMLAnchorElement>('[data-testid="header-nav-prod"]');
-    expect(stage?.getAttribute('href')).toBe(`${STAGE_ORIGIN}${MOUNT}/login`);
-    expect(prod?.getAttribute('href')).toBe(`${PROD_ORIGIN}${MOUNT}/login`);
+    expect(stage?.getAttribute('href')).toBe(`${STAGE_ORIGIN}/`);
+    expect(prod?.getAttribute('href')).toBe(`${PROD_ORIGIN}/`);
     expect(stage?.classList.contains('is-active')).toBe(false);
     expect(prod?.classList.contains('is-active')).toBe(false);
   });
@@ -320,13 +320,13 @@ describe('canonical header.js — host-match env switchers', () => {
     expect(activeTestids()).toEqual(['header-nav-home', 'header-nav-here']);
   });
 
-  it('updates host-match hrefs on SPA pushState', async () => {
+  it('keeps Stage/Prod on env homes after SPA pushState', async () => {
     await mountAt(`${MOUNT}/`);
     window.history.pushState({}, '', `${MOUNT}/register`);
 
     await vi.waitFor(() => {
       const stage = document.querySelector<HTMLAnchorElement>('[data-testid="header-nav-stage"]');
-      expect(stage?.getAttribute('href')).toBe(`${STAGE_ORIGIN}${MOUNT}/register`);
+      expect(stage?.getAttribute('href')).toBe(`${STAGE_ORIGIN}/`);
     });
     expect(activeTestids()).toEqual(['header-nav-register']);
   });
