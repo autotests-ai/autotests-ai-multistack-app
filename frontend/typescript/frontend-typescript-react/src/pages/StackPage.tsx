@@ -424,54 +424,52 @@ export function StackPage() {
       )}
 
       {summary && (
-        <>
-          <div className="stack-page__boards">
-            <Panel
-              title="Backend"
-              bodyClassName="stack-page__board-body"
-              className="stack-page__board"
-            >
-              <ModuleRows
-                kind="backend"
-                items={summary.backends}
-                currentBackend={selection.backendId}
-                currentFrontend={selection.frontendId}
-                hub={selection.hub}
-                testsId={currentTests}
-              />
-            </Panel>
-            <Panel
-              title="Frontend"
-              bodyClassName="stack-page__board-body"
-              className="stack-page__board"
-            >
-              <ModuleRows
-                kind="frontend"
-                items={summary.frontends}
-                currentBackend={selection.backendId}
-                currentFrontend={selection.frontendId}
-                hub={selection.hub}
-                testsId={currentTests}
-              />
-            </Panel>
-            <Panel
-              title="Tests"
-              bodyClassName="stack-page__board-body"
-              className="stack-page__board stack-page__board--tests"
-              testId="stack-tests-board"
-            >
-              <TestsBoard
-                tests={summary.tests}
-                currentBackend={selection.backendId}
-                currentFrontend={selection.frontendId}
-                currentTests={currentTests}
-                backend={backend}
-                frontend={frontend}
-                hub={selection.hub}
-              />
-            </Panel>
-          </div>
-        </>
+        <div className="stack-page__boards">
+          <Panel
+            title="Backend"
+            bodyClassName="stack-page__board-body"
+            className="stack-page__board"
+          >
+            <ModuleRows
+              kind="backend"
+              items={summary.backends}
+              currentBackend={selection.backendId}
+              currentFrontend={selection.frontendId}
+              hub={selection.hub}
+              testsId={currentTests}
+            />
+          </Panel>
+          <Panel
+            title="Frontend"
+            bodyClassName="stack-page__board-body"
+            className="stack-page__board"
+          >
+            <ModuleRows
+              kind="frontend"
+              items={summary.frontends}
+              currentBackend={selection.backendId}
+              currentFrontend={selection.frontendId}
+              hub={selection.hub}
+              testsId={currentTests}
+            />
+          </Panel>
+          <Panel
+            title="Tests"
+            bodyClassName="stack-page__board-body"
+            className="stack-page__board stack-page__board--tests"
+            testId="stack-tests-board"
+          >
+            <TestsBoard
+              tests={summary.tests}
+              currentBackend={selection.backendId}
+              currentFrontend={selection.frontendId}
+              currentTests={currentTests}
+              backend={backend}
+              frontend={frontend}
+              hub={selection.hub}
+            />
+          </Panel>
+        </div>
       )}
     </main>
   );

@@ -74,7 +74,9 @@ describe('RegisterPage', () => {
     await user.type(screen.getByTestId('confirm-password-input'), 'password124');
     await user.click(screen.getByTestId('register-submit-button'));
 
-    expect(screen.getByTestId('register-error-message')).toHaveTextContent('Passwords do not match');
+    expect(screen.getByTestId('register-error-message')).toHaveTextContent(
+      'Passwords do not match',
+    );
   });
 
   it('stores session and navigates home on successful register', async () => {
@@ -112,7 +114,9 @@ describe('RegisterPage', () => {
     await user.click(screen.getByTestId('register-submit-button'));
 
     await waitFor(() =>
-      expect(screen.getByTestId('register-error-message')).toHaveTextContent('Username already taken'),
+      expect(screen.getByTestId('register-error-message')).toHaveTextContent(
+        'Username already taken',
+      ),
     );
     expect(localStorage.getItem('authToken')).toBeNull();
   });

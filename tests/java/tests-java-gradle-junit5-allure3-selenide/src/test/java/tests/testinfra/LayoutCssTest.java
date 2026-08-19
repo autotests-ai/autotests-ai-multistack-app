@@ -39,7 +39,10 @@ class LayoutCssTest extends AllureMeta {
                 Arguments.of("603px 603px", 2),
                 Arguments.of("1fr", 1),
                 Arguments.of("316px", 1),
-                Arguments.of("none", 0)
+                Arguments.of("none", 0),
+                Arguments.of(null, 0),
+                Arguments.of("", 0),
+                Arguments.of("   ", 0)
         );
     }
 }

@@ -2,6 +2,7 @@ package helpers;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -19,24 +20,20 @@ public final class TokensCss {
 
     public static Path defaultTokensPath() {
         // cwd = tests module root (ethalon nested vs takeaway flat vendor/)
-        return firstExisting(
-                Path.of("..", "..", "..", "frontend", "_shared", "frontend-javascript-app",
-                        "css", "tokens.css"),
-                Path.of("frontend", "_shared", "frontend-javascript-app",
-                        "css", "tokens.css"),
-                Path.of("..", "frontend-typescript-react", "vendor", "frontend-javascript-app",
-                        "css", "tokens.css"),
-                Path.of("frontend-typescript-react", "vendor", "frontend-javascript-app",
-                        "css", "tokens.css"),
-                Path.of("..", "..", "..", "backend", "java", "backend-java-spring",
-                        "src", "main", "resources", "static", "css", "tokens.css"),
-                Path.of("backend", "java", "backend-java-spring",
-                        "src", "main", "resources", "static", "css", "tokens.css"),
-                Path.of("..", "backend-java-spring",
-                        "src", "main", "resources", "static", "css", "tokens.css"),
-                Path.of("backend-java-spring",
-                        "src", "main", "resources", "static", "css", "tokens.css")
-        );
+        return firstExisting(tokensCssCandidates());
+    }
+
+    private static Path[] tokensCssCandidates() {
+        return new Path[] {
+                frontendTokens("..", "..", "..", "frontend", "_shared", "frontend-javascript-app"),
+                frontendTokens("frontend", "_shared", "frontend-javascript-app"),
+                frontendTokens("..", "frontend-typescript-react", "vendor", "frontend-javascript-app"),
+                frontendTokens("frontend-typescript-react", "vendor", "frontend-javascript-app"),
+                backendTokens("..", "..", "..", "backend", "java", "backend-java-spring"),
+                backendTokens("backend", "java", "backend-java-spring"),
+                backendTokens("..", "backend-java-spring"),
+                backendTokens("backend-java-spring"),
+        };
     }
 
     public static Path firstExisting(Path... candidates) {
@@ -70,5 +67,19 @@ public final class TokensCss {
             tokens.put(tokenMatcher.group(1), tokenMatcher.group(2).trim());
         }
         return tokens;
+    }
+
+    private static Path frontendTokens(String... moduleRoot) {
+        return join(moduleRoot, "css", "tokens.css");
+    }
+
+    private static Path backendTokens(String... moduleRoot) {
+        return join(moduleRoot, "src", "main", "resources", "static", "css", "tokens.css");
+    }
+
+    private static Path join(String[] prefix, String... suffix) {
+        var parts = Arrays.copyOf(prefix, prefix.length + suffix.length);
+        System.arraycopy(suffix, 0, parts, prefix.length, suffix.length);
+        return Path.of(parts[0], Arrays.copyOfRange(parts, 1, parts.length));
     }
 }

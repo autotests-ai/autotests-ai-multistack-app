@@ -51,6 +51,12 @@ class TokensCssTest extends AllureMeta {
     }
 
     @Test
+    @DisplayName("defaultTokensPath resolves an existing tokens.css")
+    void defaultTokensPathResolvesExistingFile() {
+        assertTrue(Files.exists(TokensCss.defaultTokensPath()));
+    }
+
+    @Test
     @DisplayName("firstExisting returns the first path that exists")
     void firstExistingReturnsFirstHit(@TempDir Path temp) throws Exception {
         var missing = temp.resolve("missing.css");
