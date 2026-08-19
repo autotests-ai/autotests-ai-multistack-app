@@ -1,1 +1,0 @@
-{"id":"a023c3f1b1051ccc34ad4c60c244b462","fullName":"frontend-typescript-react:src/test/lib/auth.test.ts#fetchProfile refuses to call the API without a token","name":"refuses to call the API without a token","status":"passed","testResultsByEnv":{"default":"ce52a1b46822ba2bce8a0d20b28bad5c"}}

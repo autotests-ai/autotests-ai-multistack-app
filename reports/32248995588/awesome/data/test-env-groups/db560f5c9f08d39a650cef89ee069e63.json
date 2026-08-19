@@ -1,1 +1,0 @@
-{"id":"db560f5c9f08d39a650cef89ee069e63","fullName":"dev.multistack.app.config.SecurityChainTest.meWithExpiredToken","name":"GET /api/auth/me with an expired token returns 401","status":"passed","testResultsByEnv":{"default":"f7faeaea93a208bf5ffe7ce83120e29d"}}
