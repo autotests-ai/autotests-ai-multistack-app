@@ -14,7 +14,8 @@ autotests-ai-multistack-app/
   backend/           # server by language → stack
   tests/             # automation — see tests/LAYERS.md
   deploy/            # matrix, host nginx
-  .github/workflows/ # ci.yml — single workflow
+  .github/workflows/ # ci.yml — orchestrator (job graph)
+  {backend,frontend,tests}/.github/actions/  # family adapters → module actions
 ```
 
 ### Naming convention
@@ -132,7 +133,7 @@ flowchart TB
 
 | Job | Where |
 |-----|-------|
-| `backend-unit-tests` | `BACKEND_DIR` — command by `BACKEND_LANG` (gradle/JaCoCo, pytest, `go test`, or `npm test`); java excludes `@Tag("integration")` |
+| `backend-unit-tests` | `BACKEND_DIR` — `./backend/.github/actions/unit` (java: gradle+JaCoCo; excludes `@Tag("integration")`) |
 | `tests-harness` | `TESTS_DIR` — full `harness` except backend-only → `harness-backend` (`ConfigReader`). Not TestOps. |
 | `frontend-unit-tests` | `FRONTEND_DIR` — `npm test -- --coverage` |
 | `integration-tests` | `BACKEND_DIR` — after `backend-unit-tests` (java: `-DincludeTags=integration`); Spring Boot + real PG; **before** build/deploy; PR + main |

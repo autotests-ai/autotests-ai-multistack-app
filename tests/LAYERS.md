@@ -181,7 +181,7 @@ suite (`npm test` / `pytest` with `UI_URL` / `BASE_URL`) — no Gradle tag slice
 
 | Layer | Zone | Where | Selector | Run |
 |-------|------|-------|----------|-----|
-| unit | backend | active `BACKEND_DIR` (default `backend/java/backend-java-spring/`) | java: `-DexcludeTags=integration` (no `@Tag("unit")` job filter; plain + Spring slices) | by `BACKEND_LANG`: gradle+JaCoCo · `pytest` · `go test` · `npm test` — see [backend/README.md](../backend/README.md) |
+| unit | backend | active `BACKEND_DIR` (default `backend/java/backend-java-spring/`) | java: `-DexcludeTags=integration` (no `@Tag("unit")` job filter; plain + Spring slices) | `./backend/.github/actions/unit` → `./gradlew test jacocoTestReport …` |
 | component | frontend | active `FRONTEND_DIR` only (default `frontend/typescript/frontend-typescript-react/`) — siblings not CI-gated | Vitest + coverage | `npm test -- --coverage` via `frontend-unit-tests` |
 | integration | backend | `backend/java/backend-java-spring/src/test/java/dev/reference/app/integration/` (`ApplicationWiringIntegrationTest`, `AuthLifecycleIntegrationTest`) | `@Tag("integration")` | `./gradlew test -DincludeTags=integration` in `BACKEND_DIR` via `integration-tests` (after `backend-unit-tests`, **before** build/deploy; PR + main) |
 | api | tests | `…/tests/api/` (`AuthApiTests`, `ReferenceApiTests`, `BackendWiringApiTests`, `SeedDataApiTests`, `AuthRoundTripApiTests`) — HTTP contract + deployed-stand facts | `@Tag("api")` | java → `-DincludeTags=api` via `api-tests-stage` (`-Denv=stage`) and `api-tests` (`-Denv=prod`); retarget any backend with `-DapiBaseUrl` / `-DapiHealthService` |
@@ -207,7 +207,7 @@ Paths SSOT: `backend/scripts/paths.sh`. Module naming: [NAMING.md](NAMING.md).
 
 | Job | Product under test |
 |-----|--------------------|
-| `backend-unit-tests` | **Application** (active backend — toolchain from `BACKEND_LANG`; excludes `@Tag("integration")`) |
+| `backend-unit-tests` | **Application** (active `BACKEND_DIR` via `./backend/.github/actions/unit`; excludes `@Tag("integration")`) |
 | `integration-tests` | **Application** (full Spring Boot + Testcontainers PostgreSQL in `BACKEND_DIR`) |
 | `tests-harness` | **Test tooling** — full helpers except backend-only (`ConfigReader`); frontend keeps ConfigReader because UI tests read it |
 | `frontend-unit-tests` | **Application** (active `FRONTEND_DIR` only — Vitest + coverage → `sonar-frontend` / `ui-mock-tests` → `build-frontend`) |
@@ -254,7 +254,8 @@ Integration is **in-process Spring + PostgreSQL**, no browser. Deployed HTTP che
 | `workflow_dispatch` | `deploy=none\|backend\|frontend\|tests\|all` + `deploy_target=production\|stage\|both`; per-layer booleans `run_integration` / `run_api` / `run_mock` / `run_e2e` / `run_screenshot` / `run_manual`; screenshot rewrite flags; TestOps `ALLURE_JOB_RUN_ID` / `ALLURE_USERNAME` |
 
 Active stack and prod URL are workflow `env` defaults in [`ci.yml`](../.github/workflows/ci.yml)
-(`BACKEND`, `BACKEND_LANG`, `FRONTEND`, `TESTS`, `TESTS_LANG`) — change once, jobs reuse them.
+(`BACKEND_DIR`, `FRONTEND_DIR`, `TESTS_DIR`) — change once; family adapters `uses:` the
+matching module (GitHub does not interpolate `uses:`).
 Job ids are layers or languages, not tools (`e2e-tests`, not `selenide-tests`; `javascript-tests`,
 not `playwright-tests`).
 
@@ -266,7 +267,7 @@ Against **prod** CI runs the same layer tags as stage (`api` / `e2e`), with `-De
 
 ## TestOps (live upload + selective rerun)
 
-`trigger` opens one shared TestOps launch/job-run (same job as lane flags); **pyramid** jobs stream via workflow
+`trigger` opens one shared TestOps launch/job-run (same job as lane flags); **layer** jobs stream via workflow
 env helper `ALLURECTL_RUN` → `run_with_allurectl` in
 [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) (`allurectl watch --job-run-child`).
 `tests-harness` does **not** upload (helpers, not product cases). Missing `ALLURE_TOKEN` /
@@ -305,17 +306,19 @@ They read env vars, not `-Denv`: Playwright takes `UI_URL`, pytest takes `BASE_U
 
 ## Where the commands live
 
-Every job in [`ci.yml`](../.github/workflows/ci.yml) is checkout, language setup (from `TESTS_LANG`
-or `BACKEND_LANG`), one `./gradlew test …` / `npm test` / `pytest`. No composite actions, no
-wrapper scripts — the command a student runs locally is the command CI runs.
+[`ci.yml`](../.github/workflows/ci.yml) is the orchestrator: same job ids, `needs` / `if` /
+dispatch. Each layer job is checkout plus `uses: ./backend|frontend|tests/.github/actions/<verb>`
+with `module_dir: ${{ env.BACKEND_DIR }}` (or `FRONTEND_DIR` / `TESTS_DIR`). The command a
+student runs locally (`./gradlew test …` / `npm test`) lives **inside the module action**,
+not in the workflow.
 
 Dispatch is per-layer booleans (`run_integration`, `run_api`, `run_mock`, `run_e2e`,
 `run_screenshot`, `run_manual`) plus `update_mock_screenshots` / `update_e2e_screenshots` and `include_tags`/`exclude_tags` overrides.
-To add another layer, copy `manual-tests` and change the java `-D` flags.
+To add another layer, copy `manual-tests` in `ci.yml` and the matching tests module action.
 
 ## CI cache (Gradle)
 
-CI-only. Writers save GUH + configuration cache (`GRADLE_CC_IF` + `*cache-gradle-cc`). Readers restore GUH **read-only** from `tests-harness` (`GRADLE_BUILD_ACTION_CACHE_KEY_JOB`) and **do not** restore CC. **Do not enable CC on `api-tests` / `e2e-tests` / `api-tests-stage` / `e2e-tests-stage`** (or `ui-mock-tests` / `manual-tests`) — CC pins absolute `GRADLE_USER_HOME` / JaCoCo paths from another runner.
+CI-only. Writers save GUH + configuration cache **inside the module action**. Readers restore GUH **read-only** from `tests-harness` (`GRADLE_BUILD_ACTION_CACHE_KEY_JOB`) and **do not** restore CC. **Do not enable CC on `api-tests` / `e2e-tests` / `api-tests-stage` / `e2e-tests-stage`** (or `ui-mock-tests` / `manual-tests`) — CC pins absolute `GRADLE_USER_HOME` / JaCoCo paths from another runner.
 
 | | Jobs | GUH | CC |
 |--|------|-----|-----|

@@ -1,0 +1,11 @@
+name: build
+description: Dispatch build to the active module (module_dir).
+inputs:
+  module_dir:
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: ./backend/java/backend-java-spring/.github/actions/build
+      with:
+        module_dir: ${{ inputs.module_dir }}

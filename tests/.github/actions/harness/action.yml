@@ -1,0 +1,28 @@
+name: harness
+description: Dispatch harness to the active module (module_dir).
+inputs:
+  module_dir:
+    required: true
+  backend_lane:
+    required: false
+    default: 'false'
+  frontend_lane:
+    required: false
+    default: 'false'
+  tests_lane:
+    required: false
+    default: 'false'
+outputs:
+  slice:
+    description: all or backend
+    value: ${{ steps.module.outputs.slice }}
+runs:
+  using: composite
+  steps:
+    - id: module
+      uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/harness
+      with:
+        module_dir: ${{ inputs.module_dir }}
+        backend_lane: ${{ inputs.backend_lane }}
+        frontend_lane: ${{ inputs.frontend_lane }}
+        tests_lane: ${{ inputs.tests_lane }}

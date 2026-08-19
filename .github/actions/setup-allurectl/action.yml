@@ -1,0 +1,48 @@
+name: setup-allurectl
+description: Cache and install pinned allurectl when live TestOps is enabled.
+runs:
+  using: composite
+  steps:
+    - name: Cache allurectl binary
+      if: always() && env.ALLURE_LIVE_ENABLED == 'true'
+      id: cache-allurectl
+      continue-on-error: true
+      timeout-minutes: 1
+      uses: actions/cache@v6
+      with:
+        path: ${{ runner.temp }}/allurectl-bin
+        key: allurectl-${{ runner.os }}-${{ runner.arch }}-${{ env.ALLURECTL_VERSION }}
+    - name: Install pinned allurectl for live upload
+      if: always() && env.ALLURE_LIVE_ENABLED == 'true'
+      id: setup-allurectl
+      continue-on-error: true
+      timeout-minutes: 1
+      shell: bash
+      run: |
+        set -euo pipefail
+        DEST="${RUNNER_TEMP}/allurectl-bin"
+        BIN="${DEST}/allurectl"
+        mkdir -p "$DEST"
+        bin_ok() { [[ -x "$BIN" ]] && "$BIN" --version >/dev/null 2>&1; }
+        if bin_ok; then
+          echo "allurectl ${ALLURECTL_VERSION} restored from cache (${BIN})"
+        else
+          rm -f "$BIN"
+          case "${RUNNER_OS}" in Linux) os=linux ;; macOS) os=darwin ;; *)
+            echo "unsupported RUNNER_OS=${RUNNER_OS}" >&2; exit 1 ;; esac
+          case "${RUNNER_ARCH}" in X64) arch=amd64 ;; ARM64) arch=arm64 ;; *)
+            echo "unsupported RUNNER_ARCH=${RUNNER_ARCH}" >&2; exit 1 ;; esac
+          url="https://github.com/allure-framework/allurectl/releases/download/${ALLURECTL_VERSION}/allurectl_${os}_${arch}"
+          echo "Downloading ${url}"
+          curl -fsSL --connect-timeout 10 --max-time 45 -o "$BIN" "$url"
+          chmod +x "$BIN"
+          bin_ok || { echo "downloaded allurectl is not executable" >&2; exit 1; }
+          "$BIN" --version
+        fi
+        echo "$DEST" >> "$GITHUB_PATH"
+        if [[ -n "${ALLURE_TOKEN:-}" ]]; then
+          echo "ALLURE_TOKEN=${ALLURE_TOKEN}" >> "$GITHUB_ENV"
+        fi
+        if [[ -z "${ALLURE_JOB_UID:-}" ]]; then
+          echo "ALLURE_JOB_UID=${GITHUB_REPOSITORY}/actions/workflows/ci.yml" >> "$GITHUB_ENV"
+        fi

@@ -1,0 +1,31 @@
+name: build
+description: Docker image + GHCR push for this frontend module.
+inputs:
+  module_dir:
+    required: true
+runs:
+  using: composite
+  steps:
+    - id: id
+      shell: bash
+      run: echo "service=$(basename "${{ inputs.module_dir }}")" >> "$GITHUB_OUTPUT"
+    - uses: docker/login-action@v4
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ env.GITHUB_TOKEN }}
+    - uses: docker/setup-buildx-action@v4
+    - uses: docker/build-push-action@v7
+      with:
+        context: .
+        file: ${{ inputs.module_dir }}/Dockerfile
+        tags: ghcr.io/${{ github.repository_owner }}/autotests-ai-multistack-app-${{ steps.id.outputs.service }}:${{ github.sha }}
+        build-args: |
+          REACT_UI=frontend/_shared/frontend-react-ui
+          UI_RUNTIME=frontend/_shared/frontend-javascript-app
+        load: true
+        cache-from: type=gha,scope=autotests-ai-multistack-app-docker-${{ steps.id.outputs.service }}
+        cache-to: type=gha,mode=max,scope=autotests-ai-multistack-app-docker-${{ steps.id.outputs.service }}
+    - name: Push frontend Docker image to GHCR
+      shell: bash
+      run: docker compose push ${{ steps.id.outputs.service }}

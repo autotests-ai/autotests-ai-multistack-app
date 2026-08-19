@@ -1,0 +1,19 @@
+name: mock
+description: Dispatch mock to the active module (module_dir).
+inputs:
+  module_dir:
+    required: true
+  frontend_dir:
+    required: false
+    default: ''
+  update_screenshots:
+    required: false
+    default: 'false'
+runs:
+  using: composite
+  steps:
+    - uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/mock
+      with:
+        module_dir: ${{ inputs.module_dir }}
+        frontend_dir: ${{ inputs.frontend_dir }}
+        update_screenshots: ${{ inputs.update_screenshots }}

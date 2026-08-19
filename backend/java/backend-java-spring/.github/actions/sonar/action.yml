@@ -1,0 +1,63 @@
+name: sonar
+description: Sonar scan + quality gate for this backend module.
+inputs:
+  module_dir:
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-java@v5
+      with:
+        distribution: temurin
+        java-version: ${{ env.JAVA_VERSION }}
+    - uses: gradle/actions/setup-gradle@v6
+      with:
+        cache-encryption-key: ${{ env.GRADLE_ENCRYPTION_KEY }}
+    - uses: actions/cache@v6
+      with:
+        path: ${{ inputs.module_dir }}/.gradle/configuration-cache
+        key: gradle-cc-backend-sonar-${{ hashFiles('backend/java/backend-java-spring/*.gradle*', 'backend/java/backend-java-spring/gradle/wrapper/gradle-wrapper.properties', 'backend/java/backend-java-spring/gradle.properties') }}-${{ github.sha }}
+        restore-keys: |
+          gradle-cc-backend-sonar-
+    - uses: actions/download-artifact@v8
+      with:
+        name: coverage-backend
+        path: ${{ inputs.module_dir }}/build
+    - name: Sonar scan + gate (backend)
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+      run: |
+        set -euo pipefail
+        if [[ ! -f build/reports/jacoco/test/jacocoTestReport.xml ]]; then
+          echo "ERROR: JaCoCo report missing — backend-unit-tests artifact incomplete" >&2
+          exit 1
+        fi
+        if [[ -z "${SONAR_TOKEN:-}" ]]; then
+          echo "ERROR: SONAR_TOKEN unset" >&2
+          exit 1
+        fi
+        KEY="${SONAR_PROJECT_KEY:-autotests-ai-multistack-app-$(basename "${{ inputs.module_dir }}")}"
+        echo "==> sonar scan (coverage artifact) → ${SONAR_HOST_URL} (${KEY})"
+        ./gradlew sonar --no-daemon \
+          -Dsonar.host.url="${SONAR_HOST_URL}" \
+          -Dsonar.projectKey="${KEY}" \
+          -Dsonar.projectName="${KEY}" \
+          -Dsonar.qualitygate.wait=true \
+          -Dsonar.qualitygate.timeout="${SONAR_QUALITY_GATE_TIMEOUT}"
+    - name: Write Sonar summary
+      if: always()
+      shell: bash
+      run: |
+        eval "${WRITE_SONAR_SUMMARY}"
+    - name: Upload Sonar report-task
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: sonar-backend-report-task
+        path: |
+          ${{ inputs.module_dir }}/build/sonar/report-task.txt
+          ${{ inputs.module_dir }}/.scannerwork/report-task.txt
+        if-no-files-found: ignore
+        retention-days: 1

@@ -1,0 +1,46 @@
+name: sonar
+description: Sonar scan + quality gate for this frontend module.
+inputs:
+  module_dir:
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v6
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: npm
+        cache-dependency-path: ${{ inputs.module_dir }}/package-lock.json
+    - uses: actions/download-artifact@v8
+      with:
+        name: coverage-frontend
+        path: ${{ inputs.module_dir }}/coverage
+    - name: Sonar scan + gate (frontend)
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+      run: |
+        set -euo pipefail
+        if [[ ! -d coverage ]] || [ -z "$(ls -A coverage 2>/dev/null || true)" ]; then
+          echo "ERROR: coverage artifact missing — frontend-unit-tests incomplete" >&2
+          exit 1
+        fi
+        npm ci
+        if [[ -z "${SONAR_TOKEN:-}" ]]; then
+          echo "ERROR: SONAR_TOKEN unset" >&2
+          exit 1
+        fi
+        KEY="${SONAR_PROJECT_KEY:-autotests-ai-multistack-app-$(basename "${{ inputs.module_dir }}")}"
+        echo "==> sonar scan (coverage artifact) → ${SONAR_HOST_URL} (${KEY})"
+        npx --yes "@sonar/scan@${SONAR_SCANNER_NPM_VERSION}" \
+          -Dsonar.host.url="${SONAR_HOST_URL}" \
+          -Dsonar.projectKey="${KEY}" \
+          -Dsonar.projectName="${KEY}" \
+          -Dsonar.qualitygate.wait=true \
+          -Dsonar.qualitygate.timeout="${SONAR_QUALITY_GATE_TIMEOUT}"
+    - name: Write Sonar summary
+      if: always()
+      shell: bash
+      run: |
+        eval "${WRITE_SONAR_SUMMARY}"

@@ -1,0 +1,148 @@
+name: e2e
+description: Browser layer against a live stand.
+inputs:
+  module_dir:
+    required: true
+  stand:
+    required: true
+  include_tags:
+    default: ""
+  exclude_tags:
+    default: ""
+  run_e2e:
+    default: "false"
+  run_screenshot:
+    default: "false"
+  update_screenshots:
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - name: Wait for live UI
+      shell: bash
+      run: |
+        set -euo pipefail
+        echo "==> UI ${UI_URL}"
+        curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${UI_URL}"
+    - uses: ./.github/actions/setup-allurectl
+    - uses: actions/setup-java@v5
+      with:
+        distribution: temurin
+        java-version: ${{ env.JAVA_VERSION }}
+    - uses: gradle/actions/setup-gradle@v6
+      with:
+        cache-read-only: true
+        cache-encryption-key: ${{ env.GRADLE_ENCRYPTION_KEY }}
+      env:
+        GRADLE_BUILD_ACTION_CACHE_KEY_JOB: tests-harness
+    - name: Run e2e tests (Gradle with tag filters)
+      if: >-
+        github.event_name == 'push' ||
+        inputs.run_e2e == 'true' ||
+        inputs.include_tags != '' ||
+        inputs.exclude_tags != '' ||
+        github.event_name != 'workflow_dispatch'
+      id: run-tests
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/build/allure-results
+        RUN_ENV: ${{ inputs.stand }}
+        INCLUDE_TAGS: ${{ inputs.include_tags }}
+        EXCLUDE_TAGS: ${{ inputs.exclude_tags }}
+        SELENOID_REMOTE_URL: ${{ env.SELENOID_REMOTE_URL }}
+      run: |
+        set -euo pipefail
+        ARGS=(-Denv="$RUN_ENV")
+        if [ -n "${SELENOID_REMOTE_URL:-}" ]; then
+          ARGS+=(-DremoteUrl="${SELENOID_REMOTE_URL}")
+        fi
+        if [ -n "${INCLUDE_TAGS}" ]; then
+          ARGS+=(-DincludeTags="${INCLUDE_TAGS}")
+        else
+          ARGS+=(-DincludeTags=e2e)
+        fi
+        if [ -n "${EXCLUDE_TAGS}" ]; then
+          ARGS+=(-DexcludeTags="${EXCLUDE_TAGS}")
+        else
+          ARGS+=(-DexcludeTags=mock,screenshot)
+        fi
+        eval "${ALLURECTL_RUN}"
+        run_with_allurectl ./gradlew test "${ARGS[@]}"
+    - name: Stash e2e Allure results
+      if: always()
+      continue-on-error: true
+      shell: bash
+      run: |
+        set -euo pipefail
+        STASH="${{ inputs.module_dir }}/build/allure-results-e2e-stash"
+        SRC="${{ inputs.module_dir }}/build/allure-results"
+        mkdir -p "$STASH"
+        if [ -d "$SRC" ]; then cp -R "$SRC/." "$STASH/"; fi
+    - name: Run screenshot compare (Gradle)
+      if: >-
+        always() && !cancelled() &&
+        (inputs.run_screenshot == 'true' || inputs.stand == 'stage') &&
+        inputs.update_screenshots != 'true'
+      id: run-screenshot-tests
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/build/allure-results
+        RUN_ENV: ${{ inputs.stand }}
+        SELENOID_REMOTE_URL: ${{ env.SELENOID_REMOTE_URL }}
+        SCREENSHOT_OS: linux
+        SCREENSHOT_BROWSER: chrome
+      run: |
+        set -euo pipefail
+        ARGS=(-Denv="$RUN_ENV" -DincludeTags=screenshot)
+        if [ -n "${SELENOID_REMOTE_URL:-}" ]; then
+          ARGS+=(-DremoteUrl="${SELENOID_REMOTE_URL}")
+        fi
+        eval "${ALLURECTL_RUN}"
+        run_with_allurectl ./gradlew test "${ARGS[@]}"
+    - name: Update screenshots
+      if: always() && !cancelled() && inputs.update_screenshots == 'true'
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/build/allure-results
+        RUN_ENV: ${{ inputs.stand }}
+        SELENOID_REMOTE_URL: ${{ env.SELENOID_REMOTE_URL }}
+        SCREENSHOT_OS: linux
+        SCREENSHOT_BROWSER: chrome
+      run: |
+        set -euo pipefail
+        ARGS=(-Denv="$RUN_ENV" -DincludeTags=screenshot -DupdateScreenshots=true)
+        if [ -n "${SELENOID_REMOTE_URL:-}" ]; then
+          ARGS+=(-DremoteUrl="${SELENOID_REMOTE_URL}")
+        fi
+        eval "${ALLURECTL_RUN}"
+        run_with_allurectl ./gradlew test "${ARGS[@]}"
+    - name: Merge Allure results
+      if: always()
+      continue-on-error: true
+      shell: bash
+      run: |
+        set -euo pipefail
+        STASH="${{ inputs.module_dir }}/build/allure-results-e2e-stash"
+        DEST="${{ inputs.module_dir }}/build/allure-results"
+        mkdir -p "$DEST"
+        if [ -d "$STASH" ]; then cp -R "$STASH/." "$DEST/"; fi
+    - name: Publish screenshot PNGs
+      if: always() && inputs.update_screenshots == 'true'
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ inputs.stand }}-screenshot-pngs
+        path: ${{ inputs.module_dir }}/src/test/resources/screenshots/
+        if-no-files-found: ignore
+    - name: Publish raw Allure results
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: allure-results-e2e${{ inputs.stand == 'stage' && '-stage' || '' }}
+        path: ${{ inputs.module_dir }}/build/allure-results/**
+        if-no-files-found: ignore
+        retention-days: 1

@@ -1,0 +1,34 @@
+name: e2e
+description: Dispatch e2e to the active module (module_dir).
+inputs:
+  module_dir:
+    required: true
+  stand:
+    required: true
+  include_tags:
+    required: false
+    default: ''
+  exclude_tags:
+    required: false
+    default: ''
+  run_e2e:
+    required: false
+    default: 'false'
+  run_screenshot:
+    required: false
+    default: 'false'
+  update_screenshots:
+    required: false
+    default: 'false'
+runs:
+  using: composite
+  steps:
+    - uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/e2e
+      with:
+        module_dir: ${{ inputs.module_dir }}
+        stand: ${{ inputs.stand }}
+        include_tags: ${{ inputs.include_tags }}
+        exclude_tags: ${{ inputs.exclude_tags }}
+        run_e2e: ${{ inputs.run_e2e }}
+        run_screenshot: ${{ inputs.run_screenshot }}
+        update_screenshots: ${{ inputs.update_screenshots }}
