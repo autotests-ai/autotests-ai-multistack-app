@@ -21,13 +21,13 @@
       "allureQualityGatePath": "./build/reports/allure-report/allureReport/awesome/widgets/kit-panels/allureQualityGate.json",
       "sonarQualityGatePath": "fixtures/sonar-projectStatus-passed.json",
       "items": [
-        { "id": "allureQualityGate", "type": "qualityGate", "x": 0, "y": 0, "w": 5, "h": 3 },
-        { "id": "sonarQualityGate", "type": "qualityGate", "x": 5, "y": 0, "w": 5, "h": 3 },
-        { "type": "currentStatus", "x": 0, "y": 3, "w": 3, "h": 3 },
-        { "type": "statusDynamics", "x": 3, "y": 3, "w": 4, "h": 3 },
-        { "id": "testsTable", "type": "testsTable", "x": 7, "y": 3, "w": 3, "h": 4 },
-        { "type": "testingPyramid", "x": 0, "y": 6, "w": 3, "h": 3 },
-        { "type": "durations", "x": 3, "y": 6, "w": 4, "h": 4, "groupBy": "layer" }
+        { "id": "allureQualityGate", "type": "qualityGate", "x": 0, "y": 0, "w": 5, "h": 2 },
+        { "id": "sonarQualityGate", "type": "qualityGate", "x": 5, "y": 0, "w": 5, "h": 2 },
+        { "type": "currentStatus", "x": 0, "y": 2, "w": 5, "h": 3 },
+        { "type": "statusDynamics", "x": 5, "y": 2, "w": 5, "h": 3 },
+        { "type": "testingPyramid", "x": 0, "y": 5, "w": 5, "h": 2 },
+        { "type": "durations", "x": 5, "y": 5, "w": 5, "h": 2, "groupBy": "layer" },
+        { "id": "testsTable", "type": "testsTable", "x": 0, "y": 7, "w": 10, "h": 3 }
       ],
       "pyramidFallback": "suites"
     },
