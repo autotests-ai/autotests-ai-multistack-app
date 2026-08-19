@@ -12,9 +12,6 @@ function stubApis() {
     'fetch',
     vi.fn((input: RequestInfo | URL) => {
       const url = String(input);
-      if (url.includes('matrix.json')) {
-        return Promise.resolve(jsonResponse({ backends: [], frontends: [], tests: [] }));
-      }
       if (url.includes('/api/health')) {
         return Promise.resolve(jsonResponse({ status: 'UP', service: 'backend-java-spring' }));
       }

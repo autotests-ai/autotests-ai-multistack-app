@@ -1,8 +1,8 @@
 /**
- * Stack matrix helpers — shared by React / Vue product pages.
+ * Stack matrix URL helpers for the `/stack/` sidecar (not a product SPA route).
  * Data SSOT: frontend/_shared/frontend-javascript-app/stack/matrix.json
  *   ← python frontend/scripts/sync-stack-matrix.py ← deploy/matrix.yaml
- * Logic mirror: frontend/_shared/frontend-javascript-app/js/stack-matrix.js
+ * Runtime: frontend/_shared/frontend-javascript-app/js/stack-matrix.js
  */
 
 /** Canonical URL prefix — https://autotests.ai/stack/{backend}/{frontend}/ */
