@@ -1,1 +1,0 @@
-{"id":"b8f2131f4687bf56c5f575b034d93f42","fullName":"tests.api.HealthItemsApiTests.healthMatchesContract","name":"GET /api/health matches the health contract and reports ok","status":"passed","testResultsByEnv":{"default":"4f1566aa59a6c86f1a30491cb1dd2023"}}
