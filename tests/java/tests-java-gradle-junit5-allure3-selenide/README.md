@@ -19,18 +19,18 @@ One task `test`; the layer is a tag filter, the stand is `-Denv` ([pyramid-map.y
 | harness-backend | `./gradlew test -Denv=ci -DincludeTags=harness-backend` | `ConfigReader` · `AllureHttpHtml` · backend-only lane |
 | harness-frontend | `./gradlew test -Denv=ci -DincludeTags=harness-frontend` | CSS + HAR + `LocalChromePin` · inside full `tests-harness` (frontend lane included) |
 | api | `./gradlew test -Denv=ci -DincludeTags=api` | local compose; CI job `api-tests` |
-| api smoke | `./gradlew test -Denv=prod -DincludeTags='api & smoke'` | prod subset (health, seed, login); CI job `api-tests-prod` |
+| api smoke | `./gradlew test -Denv=prod -DincludeTags='api & smoke'` | prod subset (health, seed, login); CI job `api-tests` |
 | mock | `./gradlew test -Denv=mock -DincludeTags=mock` | stub API mount checks · CI `ui-mock-tests` step 1 |
 | screenshot mock | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=mock -DincludeTags=screenshot` | PNG compare `screenshots/mock/linux/chrome-148/` · CI `ui-mock-tests` compare step |
 | e2e | `./gradlew test -Denv=ci -DincludeTags=e2e -DexcludeTags=screenshot,mock` | flow; screenshot is a second stage, not a pyramid layer |
-| e2e smoke | `./gradlew test -Denv=prod -DincludeTags='e2e & smoke' -DexcludeTags=screenshot,mock` | prod subset (login + home); CI job `e2e-tests-prod` (Selenoid) |
+| e2e smoke | `./gradlew test -Denv=prod -DincludeTags='e2e & smoke' -DexcludeTags=screenshot,mock` | prod subset (login + home); CI job `e2e-tests` (Selenoid) |
 | screenshot mock refresh | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=mock -DincludeTags=screenshot -DupdateScreenshots=true` | writes `screenshots/mock/linux/chrome-148/` · CI `ui-mock-tests` step `Update screenshots` (`update_mock_screenshots`) |
 | screenshot stage refresh | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=stage -DincludeTags=screenshot -DupdateScreenshots=true` | writes `screenshots/stage/linux/chrome-148/` · CI `e2e-tests-stage` step `Update screenshots` (`update_stage_screenshots`) |
 | screenshot prod refresh | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=prod -DincludeTags=screenshot -DupdateScreenshots=true` | writes `screenshots/prod/linux/chrome-148/` · CI `e2e-tests` step `Update screenshots` (`update_e2e_screenshots`) |
 | manual | `./gradlew test -Denv=ci -DincludeTags=manual` | **in code** — `@Manual` + Allure steps · `tests/manual/` (not a wiki checklist) |
 
-Pipeline jobs `api-tests` / `e2e-tests` stay on `ci` (full layer). After deploy,
-`api-tests-prod` / `e2e-tests-prod` run `@Tag("smoke")` against `prod`. Same
+CI `api-tests` / `e2e-tests` run against prod after deploy (`-Denv=prod`; jobs `needs` `tests-harness`).  
+Pipeline `-Denv=ci` is local. Stage: `api-tests-stage` / `e2e-tests-stage`. Same
 filters locally: swap `-Denv`. Combined smoke (api+e2e): `-DincludeTags=smoke`.
 Stands live in `src/test/resources/config/`; every other key is a `-D` override on top of
 `default.properties`.
