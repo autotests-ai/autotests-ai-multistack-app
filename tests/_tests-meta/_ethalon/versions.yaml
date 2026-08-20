@@ -1,0 +1,22 @@
+# Shared Java stack versions (SSOT) — backend + tests-java family
+#
+# Bump versions here first, then propagate into each consumer's
+# `buildscript { ext { … } }` (same shape as tests-java ethалон):
+# - backend: javaVersion, springBootVersion, springDependencyManagementVersion, slf4jVersion
+#   → plugins "${…}"; ext['slf4j.version'] = slf4jVersion; toolchain of(javaVersion)
+# - tests: javaVersion, junitVersion, slf4jVersion (+ tests-only pins below)
+# - wrappers: gradle/wrapper/gradle-wrapper.properties
+# - CI: JAVA_VERSION
+#
+# Skill `sync-gradle-ethalon` (shared keys); rule `java-stack-versions`.
+# Do not ad-hoc bump a single consumer when the pin is listed below.
+
+| Key | Value | `ext` name | Notes |
+|-----|-------|------------|-------|
+| `java` | `21` | `javaVersion` | toolchain + CI `JAVA_VERSION` |
+| `gradle` | `9.6.0` | — (wrapper only) | `gradle-*-bin.zip` |
+| `junit` | `5.11.4` | `junitVersion` | tests pin; backend via Boot starter-test (must match) |
+| `slf4j` | `2.0.17` | `slf4jVersion` | tests `slf4j-simple`; backend → `ext['slf4j.version']` |
+| `spring-boot` | `3.4.1` | `springBootVersion` | backend plugin |
+| `spring-dependency-management` | `1.1.7` | `springDependencyManagementVersion` | backend plugin |
+| `datafaker` | `2.4.4` | `datafakerVersion` | tests pin (`net.datafaker`) |

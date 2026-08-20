@@ -1,0 +1,7 @@
+# Inbox: переименования steps/inputs/env из consumer workflows (правило 6).
+# Формат блока — см. skill sync-github-workflows-ethalon.
+#
+# Пример:
+# ## /absolute/path/to/consumer/.github/workflows/<name>.yml
+# #- old_input_name
+# new_input_name: description here

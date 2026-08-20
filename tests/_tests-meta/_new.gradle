@@ -1,0 +1,9 @@
+# Inbox: блоки из consumer build.gradle, которых ещё нет в _ethalon/build.gradle.
+# Формат блока — см. skill sync-gradle-ethalon (правило 5).
+#
+# Пример:
+# ## /absolute/path/to/consumer/tests/build.gradle
+# tasks.register('newTaskFromConsumer') {
+#     group = 'verification'
+#     description = 'Example'
+# }

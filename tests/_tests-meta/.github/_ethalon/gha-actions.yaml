@@ -1,0 +1,31 @@
+# Pinned GitHub Actions (SSOT) — Java GHA family (`_tests-meta`)
+#
+# Bump versions here first, then propagate to all `_ethalon/*.yml` and consumer
+# `.github/workflows/` (skill sync-github-workflows-ethalon, rule 9; rule `gha-actions`).
+# greedy-token mirrors this table in `.github/_ethalon/gha-actions.yaml`.
+#
+# setup-node — yarn/npx only (selenoid-ui frontend, Allure CLI publish, visual).
+# Product Go unit uses native go test -json → cmd/gotest2allure (no Node).
+# Canonical Node pin: node-version 26 (everywhere setup-node is used). Forbidden: 20 / 22 / 24.
+
+| Key | Action | Notes |
+|-----|--------|-------|
+| `checkout` | `actions/checkout@v7` | |
+| `setup-java` | `actions/setup-java@v5` | |
+| `setup-go` | `actions/setup-go@v6` | |
+| `setup-node` | `actions/setup-node@v6` | `node-version: 26` — sole pin |
+| `setup-python` | `actions/setup-python@v6` | |
+| `setup-gradle` | `gradle/actions/setup-gradle@v6` | owns `~/.gradle`: no `cache: gradle` on `setup-java` in the same job |
+| `upload-artifact` | `actions/upload-artifact@v7` | |
+| `download-artifact` | `actions/download-artifact@v8` | upload v7 / download v8 |
+| `upload-pages-artifact` | `actions/upload-pages-artifact@v5` | Node 26 |
+| `deploy-pages` | `actions/deploy-pages@v5` | Node 26; separate job |
+| `gh-pages-backup` | `peaceiris/actions-gh-pages@v4` | `keep_files: true` (retain `reports/<run-id>/`); live deploy via deploy-pages |
+| `cache` | `actions/cache@v6` | |
+| `setup-chrome` | `browser-actions/setup-chrome@v2.1.2` | Exact Chrome build is supplied via `chrome-version` |
+| `setup-allurectl` | `allure-framework/setup-allurectl@v1` | |
+| `appleboy-ssh` | `appleboy/ssh-action@v1.2.5` | deploy SSH |
+| `docker-login` | `docker/login-action@v4` | GHCR push/pull (autotests-ai-multistack-app CD) |
+| `docker-setup-buildx` | `docker/setup-buildx-action@v4` | BuildKit builder (CD + mock stand) |
+| `docker-build-push` | `docker/build-push-action@v7` | image build + GHA layer cache; `load: true` then `docker compose push` |
+| `pypi-publish` | `pypa/gh-action-pypi-publish@release/v1` | greedy-token publish |

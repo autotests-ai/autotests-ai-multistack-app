@@ -1,0 +1,4 @@
+node_modules/
+notifications/config.runtime.json
+allure/sonar-quality-gate.json
+history.jsonl

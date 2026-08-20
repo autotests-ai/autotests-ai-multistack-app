@@ -1,0 +1,7 @@
+# Inbox: шаги / inputs / env из consumer .github/workflows/*.yml, которых ещё нет в _ethalon/.
+# Формат блока — см. skill sync-github-workflows-ethalon (правило 5).
+#
+# Пример:
+# ## /absolute/path/to/consumer/.github/workflows/<name>.yml
+# - name: New step from consumer
+#   run: echo example

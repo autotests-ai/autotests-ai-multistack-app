@@ -1,0 +1,8 @@
+# Inbox: переименования task/dep/property из consumer build.gradle.
+# Формат блока — см. skill sync-gradle-ethalon (правило 6).
+# После переноса в _ethalon — удалить блок из этого файла.
+#
+# Пример:
+# ## /absolute/path/to/consumer/tests/build.gradle
+# #- oldTaskName
+# newTaskName

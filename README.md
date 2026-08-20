@@ -1,6 +1,6 @@
 # autotests-ai-multistack-app
 
-Teaching product — **3-folder layout**, orchestrated CI/CD (block 1). Hub module SSOT is monorepo `ethalon/`; this repo is the public stand — ports in **[deploy/matrix.yaml](deploy/matrix.yaml)**.
+Teaching product — **3-folder layout**, orchestrated CI/CD. This repo is the **only** module SSOT. Ports: **[deploy/matrix.yaml](deploy/matrix.yaml)**. Contract: [`_contract/`](_contract/). Tests kit: [`tests/_tests-meta/`](tests/_tests-meta/).
 
 GitHub: **[github.com/autotests-ai/autotests-ai-multistack-app](https://github.com/autotests-ai/autotests-ai-multistack-app)** · monorepo: `projects/autotests-ai-multistack-home/autotests-ai-multistack-app/`
 
@@ -267,4 +267,4 @@ GHCR packages are **public** (same as this repo), so image versions are not bill
 
 ## Related
 
-- Generator source: monorepo `projects/autotests-ai-multistack-home/ethalon/`
+- Generator source: monorepo `projects/autotests-ai-multistack-home/autotests-ai-multistack-app/`

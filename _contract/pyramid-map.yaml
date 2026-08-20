@@ -1,0 +1,72 @@
+# Where each pyramid layer lives per stack.
+# SSOT for generate-full-stack folder layout + living ethalon hub.
+#
+# Do not confuse:
+#   component     = React Testing Library + Vitest in the SPA (CI job component-tests)
+#   integration   = backend src/test with @Tag("integration") (Spring + Testcontainers)
+#   api           = Rest Assured against a running stand (tests/.../tests/api)
+#   contracts     = OpenAPI SSOT + openapi-diff
+
+default:
+  unit: backend/src/test
+  integration: backend/src/test
+  component: null  # RTL when SPA present — never tests/component
+  e2e: tests/e2e
+  manual: tests/e2e  # @Manual on method, same tree as e2e
+
+stacks:
+  java-spring:
+    unit: backend/java/backend-java-spring/src/test/java
+    unit_tests_helpers: tests/java/tests-java-gradle-junit5-allure3-selenide/src/test/java/helpers  # *Test + config.*Test via testUnit
+    integration: backend/java/backend-java-spring/src/test
+    component: frontend/typescript/frontend-typescript-react/src  # Vitest + RTL; CI job component-tests
+    e2e: tests/java/tests-java-gradle-junit5-allure3-selenide/src/test/java/tests
+    testRunner: gradle
+    browser: selenide
+    frontendTestRunner: vitest
+
+  python-fastapi:
+    unit: backend/tests/unit
+    integration: tests/integration
+    e2e: tests/e2e
+    testRunner: pytest
+    browser: playwright
+    component: null  # phase 2
+
+  node-nest:
+    unit: backend/src/**/*.spec.ts
+    integration: tests/integration
+    e2e: tests/e2e
+    testRunner: jest
+    browser: playwright
+    component: null
+
+layers:
+  unit:
+    description: Pure logic, no HTTP, no browser (backend + optional tests helpers)
+    required: true
+    living_canon: projects/autotests-ai-multistack-home/autotests-ai-multistack-app/backend/java/backend-java-spring/src/test
+  integration:
+    description: Spring Boot + Testcontainers in backend src/test (@Tag integration)
+    required: true
+    living_canon: projects/autotests-ai-multistack-home/autotests-ai-multistack-app/backend/java/backend-java-spring/src/test
+    contract_ssot: projects/autotests-ai-multistack-home/autotests-ai-multistack-app/_contract/openapi.yaml
+  component:
+    description: SPA component tests — React Testing Library + Vitest (jsdom); CI job component-tests
+    required: false
+    living_canon: projects/autotests-ai-multistack-home/autotests-ai-multistack-app/frontend/typescript/frontend-typescript-react
+    allure_labels:
+      layer: component
+      scope: react
+      framework: react-testing-library
+  e2e:
+    description: Browser flows, page objects
+    required: true
+  manual:
+    description: Exploratory, @Manual tag
+    required: false
+  contracts_openapi:
+    description: Spec lint / drift — OpenAPI SSOT + openapi-diff script
+    required: false
+    living_canon: projects/autotests-ai-multistack-home/autotests-ai-multistack-app/_contract/openapi.yaml
+    gate: scripts/openapi-diff.py

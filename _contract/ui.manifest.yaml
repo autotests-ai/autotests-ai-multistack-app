@@ -1,0 +1,6 @@
+# Design-system path for render (shared across stacks).
+# HTML screens catalog is gone — the living UI is the SPA.
+# generators/render/wire-ui.sh STOPs if SCREENS is set.
+
+designSystem:
+  path: projects/design-system-home/design-system
