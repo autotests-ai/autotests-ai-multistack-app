@@ -7,7 +7,6 @@ runs:
       if: always() && env.ALLURE_LIVE_ENABLED == 'true'
       id: cache-allurectl
       continue-on-error: true
-      timeout-minutes: 1
       uses: actions/cache@v6
       with:
         path: ${{ runner.temp }}/allurectl-bin
@@ -16,7 +15,6 @@ runs:
       if: always() && env.ALLURE_LIVE_ENABLED == 'true'
       id: setup-allurectl
       continue-on-error: true
-      timeout-minutes: 1
       shell: bash
       run: |
         set -euo pipefail

@@ -768,7 +768,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
-      SONAR_PROJECT_KEY: ${{ vars.SONAR_BACKEND_PROJECT_KEY || format('{0}-backend-{1}-{2}', env.APP_SLUG, env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
+      SONAR_PROJECT_KEY: ${{ vars.SONAR_BACKEND_PROJECT_KEY || 'autotests-ai-multistack-app-backend-java-spring' }}
       CHECKOUT_FETCH_DEPTH: "0"
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
@@ -792,7 +792,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
-      SONAR_PROJECT_KEY: ${{ vars.SONAR_TESTS_PROJECT_KEY || format('{0}-tests-{1}-{2}-{3}-{4}-{5}', env.APP_SLUG, env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) }}
+      SONAR_PROJECT_KEY: ${{ vars.SONAR_TESTS_PROJECT_KEY || 'autotests-ai-multistack-app-tests-java-gradle-junit5-allure3-selenide' }}
       CHECKOUT_FETCH_DEPTH: "0"
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
@@ -814,7 +814,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
-      SONAR_PROJECT_KEY: ${{ vars.SONAR_FRONTEND_PROJECT_KEY || format('{0}-frontend-{1}-{2}', env.APP_SLUG, env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
+      SONAR_PROJECT_KEY: ${{ vars.SONAR_FRONTEND_PROJECT_KEY || 'autotests-ai-multistack-app-frontend-typescript-react' }}
       CHECKOUT_FETCH_DEPTH: "0"
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
@@ -1057,17 +1057,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJson(needs.catalog-matrix.outputs.include) }}
+        include: ${{ fromJson(needs.catalog-matrix.outputs.include || '[{"service":"none","dockerfile":"Dockerfile"}]') }}
     env:
-      DOCKER_CACHE_SCOPE: ${{ env.APP_SLUG }}-docker-${{ matrix.service }}
+      DOCKER_CACHE_SCOPE: autotests-ai-multistack-app-docker-${{ matrix.service }}
       DOCKER_BUILD_CONTEXT: .
       DOCKER_FILE: ${{ matrix.dockerfile }}
-      DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/${{ env.APP_SLUG }}-${{ matrix.service }}:${{ github.sha }}
+      DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/autotests-ai-multistack-app-${{ matrix.service }}:${{ github.sha }}
       DOCKER_OCI_LABELS: |
-        org.opencontainers.image.title=${{ env.APP_SLUG }}-${{ matrix.service }}
-        org.opencontainers.image.description=${{ env.APP_SLUG }} · ${{ matrix.service }}
+        org.opencontainers.image.title=autotests-ai-multistack-app-${{ matrix.service }}
+        org.opencontainers.image.description=autotests-ai-multistack-app · ${{ matrix.service }}
         org.opencontainers.image.source=https://github.com/${{ github.repository }}
-        org.opencontainers.image.url=${{ format('https://{0}/{1}/backend-{2}-{3}/{4}/', env.PUBLIC_HOST, env.STACK_MOUNT, env.BACKEND_LANG, env.BACKEND_FRAMEWORK, matrix.service) }}
+        org.opencontainers.image.url=https://autotests.ai/stack/backend-java-spring/${{ matrix.service }}/
         org.opencontainers.image.vendor=autotests-ai
     steps:
       - uses: actions/checkout@v7
