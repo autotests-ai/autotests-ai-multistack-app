@@ -19,6 +19,6 @@ PYTEST_INTEGRATION=1 python -m pytest -m integration --no-cov
 ```
 
 Coverage gate: 100% line (`pytest-cov` / coverage.py — JaCoCo analog). CI:
-`.github/workflows/backend_python_github.yml`.
+`.github/workflows/ci.yml` (`BACKEND_LANG: python`, `BACKEND_FRAMEWORK: flask`).
 
 Shared UI (one `web` image): `/frontend-typescript-react/`, `/frontend-javascript-vanilla/`, …

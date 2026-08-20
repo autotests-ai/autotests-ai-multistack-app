@@ -5,7 +5,7 @@ name: CI
 # with `module_dir` from stack knobs (format). Commands a
 # student types locally live inside the module action, not in this file.
 #
-# One workflow for clone and children. No catalog_github.yml / singlestack_github.yml.
+# One workflow for clone and children. No *_github.yml siblings.
 # Catalog SPA sidecars (non-teaching frontends): jobs catalog-* in this file
 # (`deploy=catalog|all` or sidecar path change). Skip when deploy/matrix.yaml is absent.
 #
@@ -13,7 +13,8 @@ name: CI
 # FRONTEND_LANG / FRONTEND_FRAMEWORK, TESTS_LANG / BUILDER / FRAMEWORK / REPORT / UI_LIBRARY.
 # Family adapters under
 # backend|frontend|tests/.github/actions/ statically `uses:` the default module
-# (GitHub does not interpolate `uses:`). Flip `uses:` with the knobs.
+# (GitHub does not interpolate `uses:`). Adapter dispatches on BACKEND_LANG
+# (java → java-spring module actions, python → backend/python/.github/actions).
 #
 # Allure: trigger opens one shared TestOps job-run (soft); test jobs stream live and
 # publish raw results. publish-allure-report is gating (lock pins, npm ci, generate).
@@ -43,7 +44,6 @@ name: CI
 # Roots: trigger → backend-unit-tests · frontend-unit-tests · tests-harness
 #   integration-tests ← backend-unit-tests (backend module, pre-build; PR + main)
 #   sonar-backend ← backend-unit-tests + integration-tests
-# Sibling Python backends: backend_python_github.yml (pytest · Testcontainers · coverage.py)
 #   sonar-tests ← tests-harness (skipped on backend-only lane)
 #   ui-mock-tests ← frontend-unit-tests + tests-harness (jsdom first; mock compose on the runner)
 #   sonar-frontend ← frontend-unit-tests + ui-mock-tests (mock skipped ⇒ sonar still runs)

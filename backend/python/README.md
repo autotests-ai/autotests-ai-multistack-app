@@ -10,5 +10,6 @@ Same JSON contract as `backend-java-spring`. Routing SSOT: [`deploy/matrix.yaml`
 
 CI verbs match the default Java stack: unit (pytest + coverage.py 100% line) ·
 integration (Testcontainers `postgres:16-alpine`) · Sonar (`coverage.xml`).
-Workflow: [`.github/workflows/backend_python_github.yml`](../../.github/workflows/backend_python_github.yml).
-Teaching `ci.yml` stays on `backend-java-spring`.
+Same orchestrator: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) with
+`BACKEND_LANG: python` and `BACKEND_FRAMEWORK: flask` / `fastapi` / `django`.
+Actions: [`backend/python/.github/actions/`](.github/actions/).
