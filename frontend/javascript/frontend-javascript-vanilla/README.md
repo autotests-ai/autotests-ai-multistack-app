@@ -16,7 +16,6 @@ Local compose publish: `:9800`.
 | `index.html` | `multistack-layout`, health/items panels, `welcome-panel` with `logout-button` + `delete-account-button` |
 | `login.html` | `login-panel`, form controls, `register-link` |
 | `register.html` | `register-panel`, confirm password, `login-link` |
-| `/stack/` | shared stack boards (`stack-page.css`) |
 
 Login and register both redirect home when `authToken` is already present.
 

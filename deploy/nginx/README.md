@@ -1,6 +1,6 @@
 # Host nginx (prod)
 
-**Canonical URLs:** [autotests.ai/stack/](https://autotests.ai/stack/) (matrix board) · [autotests.ai/stack/backend-java-spring/frontend-typescript-react/](https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/) (app) · `/stack/{backend}/api/`.
+**Canonical URLs:** [autotests.ai/stack/](https://autotests.ai/stack/) (matrix board — sources in `projects/autotests-ai-home/stack-matrix/overlay/`; nginx still proxies to teaching FE until landing takes it) · [autotests.ai/stack/backend-java-spring/frontend-typescript-react/](https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/) (app) · `/stack/{backend}/api/`.
 
 **Stage:** [stage.autotests.ai/stack/](https://stage.autotests.ai/stack/) — те же paths, порты `publish_port+10000`, upstream prefix `stage_`. Vhost: `stage.autotests.ai.vhost.conf` (не generated). Includes из **prod** APP_DIR `generated/stage.autotests.ai-stack-*.conf`.
 

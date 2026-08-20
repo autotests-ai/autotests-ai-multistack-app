@@ -9,8 +9,10 @@ Do not edit this tree by hand; refresh from the ethalon or live clone root:
 bash frontend/scripts/sync-ds-runtime.sh
 ```
 
-Product overlay (not copied from design-system): `css/stack-page.css`,
-`js/app-base.js`, `js/stack-matrix.js`, `js/env-hosts.js` (from
-`sync-stack-matrix.py`), `stack/`.
+Product overlay (not copied from design-system): `js/app-base.js`,
+`js/env-hosts.js` (from `sync-stack-matrix.py`).
+
+The `/stack/` board is not in this snapshot — inbox
+`projects/autotests-ai-home/stack-matrix/overlay/`.
 
 Packed into each frontend nginx image as `UI_RUNTIME` (module `Dockerfile`).

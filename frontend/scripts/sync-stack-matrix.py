@@ -1,9 +1,10 @@
 #!/usr/bin/env python
-"""Sync deploy/matrix.yaml (ports) + hub tests.modules → stack/matrix.json + js/env-hosts.js.
+"""Sync deploy/matrix.yaml (ports) + hub tests.modules → env-hosts.js + inbox matrix.json.
 
 `public_host` in the YAML is the loopback Stage/Prod fallback (`stage.{public_host}`).
 On a public host, envNavItems follows the current product hostname.
 Tests axis is hub `matrix.yaml` `tests.modules` — not clone deploy/matrix.yaml.
+Board JSON: projects/autotests-ai-home/stack-matrix/overlay/stack/matrix.json
 """
 from __future__ import annotations
 
@@ -32,14 +33,6 @@ def resolve_matrix() -> tuple[Path, Path]:
     )
 
 
-OUT_JSON = (
-    ROOT
-    / "frontend"
-    / "_shared"
-    / "frontend-javascript-app"
-    / "stack"
-    / "matrix.json"
-)
 OUT_HOSTS = (
     ROOT
     / "frontend"
@@ -56,6 +49,15 @@ FANOUT_DS = (
     / "frontend-typescript-react"
     / "vendor"
     / "ds"
+)
+# Board JSON inbox (sibling of autotests-ai-app). Clone ROOT.parent.parent = projects/.
+INBOX_JSON = (
+    ROOT.parent.parent
+    / "autotests-ai-home"
+    / "stack-matrix"
+    / "overlay"
+    / "stack"
+    / "matrix.json"
 )
 
 ENV_HOSTS_JS = r"""/**
@@ -204,9 +206,9 @@ def main() -> int:
     data = load_matrix(matrix_path, status_server)
     public_host = public_host_of(data, matrix_path)
     previous_tests: list = []
-    if OUT_JSON.is_file():
+    if INBOX_JSON.is_file():
         try:
-            previous_tests = list(json.loads(OUT_JSON.read_text(encoding="utf-8")).get("tests") or [])
+            previous_tests = list(json.loads(INBOX_JSON.read_text(encoding="utf-8")).get("tests") or [])
         except json.JSONDecodeError:
             previous_tests = []
     tests = tests_from_hub(previous_tests)
@@ -233,27 +235,28 @@ def main() -> int:
         ],
         "tests": tests,
     }
-    OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
-    OUT_JSON.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    inbox_ok = INBOX_JSON.parents[2].name == "stack-matrix"
+    if inbox_ok:
+        INBOX_JSON.parent.mkdir(parents=True, exist_ok=True)
+        INBOX_JSON.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     OUT_HOSTS.write_text(
         ENV_HOSTS_JS.replace("__PUBLIC_HOST__", repr(public_host)),
         encoding="utf-8",
     )
     OUT_HOSTS_DTS.write_text(ENV_HOSTS_DTS, encoding="utf-8")
+    json_note = str(INBOX_JSON) if inbox_ok else "inbox matrix.json skipped"
     print(
-        f"wrote {OUT_JSON.relative_to(ROOT)} + {OUT_HOSTS.relative_to(ROOT)} "
+        f"wrote {json_note} + {OUT_HOSTS.relative_to(ROOT)} "
         f"(public_host={public_host} · {len(payload['backends'])} be · "
         f"{len(payload['frontends'])} fe · {len(payload['tests'])} tests)"
     )
     if FANOUT_DS.is_dir():
-        dest_json = FANOUT_DS / "stack" / "matrix.json"
         dest_hosts = FANOUT_DS / "js" / "env-hosts.js"
         dest_dts = dest_hosts.with_suffix(".d.ts")
-        dest_json.parent.mkdir(parents=True, exist_ok=True)
-        dest_json.write_text(OUT_JSON.read_text(encoding="utf-8"), encoding="utf-8")
+        dest_hosts.parent.mkdir(parents=True, exist_ok=True)
         dest_hosts.write_text(OUT_HOSTS.read_text(encoding="utf-8"), encoding="utf-8")
         dest_dts.write_text(OUT_HOSTS_DTS.read_text(encoding="utf-8"), encoding="utf-8")
-        print(f"fan-out {FANOUT_DS.relative_to(ROOT)}")
+        print(f"fan-out {FANOUT_DS.relative_to(ROOT)} (env-hosts only)")
     return 0
 
 
