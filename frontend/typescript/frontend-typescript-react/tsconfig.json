@@ -23,7 +23,7 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "paths": {
-      "@zero-design-system/react": ["../../_shared/frontend-react-ui/src/index.ts"],
+      "@zero-design-system/react": ["./vendor/react-ui/src/index.ts"],
       "react": ["./node_modules/@types/react/index.d.ts"],
       "react/jsx-runtime": ["./node_modules/@types/react/jsx-runtime.d.ts"],
       "react/jsx-dev-runtime": ["./node_modules/@types/react/jsx-dev-runtime.d.ts"]

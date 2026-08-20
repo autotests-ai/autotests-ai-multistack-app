@@ -68,4 +68,9 @@ bash frontend/scripts/sync-react-ui.sh
 Consumed via Vite alias `@zero-design-system/react` → `src/index.ts`.
 EOF
 
+FANOUT_REACT="$REPO_ROOT/frontend/typescript/frontend-typescript-react/vendor/react-ui"
+mkdir -p "$FANOUT_REACT"
+rsync -a --delete "$DEST/" "$FANOUT_REACT/"
+
 echo "sync-react-ui: $SRC → $DEST/src"
+echo "sync-react-ui fan-out: $FANOUT_REACT"

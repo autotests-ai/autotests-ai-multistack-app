@@ -478,11 +478,7 @@ services:
         org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
         org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
         org.opencontainers.image.vendor: autotests-ai
-      context: .
-      dockerfile: frontend/typescript/frontend-typescript-react/Dockerfile
-      args:
-        UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
-        REACT_UI: ${REACT_UI:-frontend/_shared/frontend-react-ui}
+      context: ./frontend/typescript/frontend-typescript-react
     restart: unless-stopped
     networks:
       - autotests_ai_multistack_internal

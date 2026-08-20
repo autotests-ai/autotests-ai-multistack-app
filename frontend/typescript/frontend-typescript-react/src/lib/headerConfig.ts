@@ -1,5 +1,5 @@
 import type { HeaderConfig } from '@zero-design-system/react';
-import { envNavItems } from '../../../../_shared/frontend-javascript-app/js/env-hosts.js';
+import { envNavItems } from '../../vendor/ds/js/env-hosts.js';
 import { appPath } from './appBase';
 
 /** Stack matrix board — origin `/stack/`, not `/{pair}/stack`. */

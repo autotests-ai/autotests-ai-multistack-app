@@ -7,14 +7,14 @@ import {
   PUBLIC_HOST,
   productHost,
   STAGE_ORIGIN,
-} from '../../../../_shared/frontend-javascript-app/js/env-hosts.js';
+} from '../../vendor/ds/js/env-hosts.js';
 
 // Canonical design-system header from lean runtime (committed; works in
 // standalone checkout without monorepo design-system symlink).
 const { HEADER_JS, TEMPLATE_HTML } = vi.hoisted(() => {
   const { readFileSync: read } = require('node:fs') as typeof import('node:fs');
   const { resolve: res } = require('node:path') as typeof import('node:path');
-  const runtime = res(__dirname, '../../../../_shared/frontend-javascript-app');
+  const runtime = res(__dirname, '../../vendor/ds');
   return {
     HEADER_JS: res(runtime, 'js/header.js'),
     TEMPLATE_HTML: read(res(runtime, 'templates/header.html'), 'utf8'),
@@ -22,7 +22,7 @@ const { HEADER_JS, TEMPLATE_HTML } = vi.hoisted(() => {
 });
 
 // String literal required — vi.mock is hoisted.
-vi.mock('../../../../_shared/frontend-javascript-app/js/dom-utils.js', () => ({
+vi.mock('../../vendor/ds/js/dom-utils.js', () => ({
   fetchTemplateText: vi.fn(async () => TEMPLATE_HTML),
   escapeHtml: (v: string) => v,
   copyToClipboard: vi.fn(),

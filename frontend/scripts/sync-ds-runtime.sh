@@ -91,4 +91,9 @@ Product overlay (not copied from design-system): `css/stack-page.css`,
 Packed into each frontend nginx image as `UI_RUNTIME` (module `Dockerfile`).
 EOF
 
+FANOUT_DS="$REPO_ROOT/frontend/typescript/frontend-typescript-react/vendor/ds"
+mkdir -p "$FANOUT_DS"
+rsync -a --delete "$DEST/" "$FANOUT_DS/"
+
 echo "sync-ds-runtime: $DS → $DEST"
+echo "sync-ds-runtime fan-out: $FANOUT_DS"
