@@ -1,0 +1,64 @@
+name: download-artifact
+description: >-
+  Download this run's artifacts via gh CLI. Replaces actions/download-artifact
+  so logs are not polluted by unzip-stream new Buffer() (DEP0005).
+inputs:
+  name:
+    required: false
+    default: ""
+  pattern:
+    required: false
+    default: ""
+  path:
+    required: false
+    default: "."
+  merge-multiple:
+    required: false
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - name: Download artifact
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        ARTIFACT_NAME: ${{ inputs.name }}
+        ARTIFACT_PATTERN: ${{ inputs.pattern }}
+        DEST: ${{ inputs.path }}
+        MERGE_MULTIPLE: ${{ inputs.merge-multiple }}
+      run: |
+        set -euo pipefail
+        if [[ -z "${ARTIFACT_NAME}" && -z "${ARTIFACT_PATTERN}" ]]; then
+          echo "download-artifact: set name or pattern" >&2
+          exit 1
+        fi
+        if [[ -n "${ARTIFACT_NAME}" && -n "${ARTIFACT_PATTERN}" ]]; then
+          echo "download-artifact: name and pattern are mutually exclusive" >&2
+          exit 1
+        fi
+        mkdir -p "${DEST}"
+        TMP="$(mktemp -d "${RUNNER_TEMP}/gh-artifact.XXXXXX")"
+        cleanup() { rm -rf "${TMP}"; }
+        trap cleanup EXIT
+        args=(run download "${GITHUB_RUN_ID}" --repo "${GITHUB_REPOSITORY}" --dir "${TMP}")
+        if [[ -n "${ARTIFACT_NAME}" ]]; then
+          args+=(--name "${ARTIFACT_NAME}")
+        else
+          args+=(--pattern "${ARTIFACT_PATTERN}")
+        fi
+        gh "${args[@]}"
+        # gh extracts each artifact into TMP/<artifact-name>/.
+        # actions/download-artifact: one name → files in path/; merge-multiple → flatten.
+        flatten=false
+        if [[ -n "${ARTIFACT_NAME}" || "${MERGE_MULTIPLE}" == "true" ]]; then
+          flatten=true
+        fi
+        shopt -s nullglob dotglob
+        if [[ "${flatten}" == "true" ]]; then
+          for dir in "${TMP}"/*; do
+            [[ -d "${dir}" ]] || continue
+            cp -a "${dir}"/. "${DEST}/"
+          done
+        else
+          cp -a "${TMP}"/. "${DEST}/"
+        fi

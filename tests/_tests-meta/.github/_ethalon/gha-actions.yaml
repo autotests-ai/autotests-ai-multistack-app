@@ -17,7 +17,7 @@
 | `setup-python` | `actions/setup-python@v6` | |
 | `setup-gradle` | `gradle/actions/setup-gradle@v6` | owns `~/.gradle`: no `cache: gradle` on `setup-java` in the same job |
 | `upload-artifact` | `actions/upload-artifact@v7` | |
-| `download-artifact` | `actions/download-artifact@v8` | upload v7 / download v8 |
+| `download-artifact` | `./.github/actions/download-artifact` | gh CLI; not `actions/download-artifact@v8` (unzip-stream `Buffer()` / DEP0005) |
 | `upload-pages-artifact` | `actions/upload-pages-artifact@v5` | Node 26 |
 | `deploy-pages` | `actions/deploy-pages@v5` | Node 26; separate job |
 | `gh-pages-backup` | `peaceiris/actions-gh-pages@v4` | `keep_files: true` (retain `reports/<run-id>/`); live deploy via deploy-pages |

@@ -19,7 +19,7 @@ runs:
         key: gradle-cc-backend-sonar-${{ hashFiles('backend/java/backend-java-spring/*.gradle*', 'backend/java/backend-java-spring/gradle/wrapper/gradle-wrapper.properties', 'backend/java/backend-java-spring/gradle.properties') }}-${{ github.sha }}
         restore-keys: |
           gradle-cc-backend-sonar-
-    - uses: actions/download-artifact@v8
+    - uses: ./.github/actions/download-artifact
       with:
         name: coverage-backend
         path: ${{ inputs.module_dir }}/build

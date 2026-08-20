@@ -1492,7 +1492,7 @@ jobs:
       - name: Download merged raw Allure results
         id: results
         continue-on-error: true
-        uses: actions/download-artifact@v8
+        uses: ./.github/actions/download-artifact
         with:
           pattern: allure-results-*
           path: ${{ env.TESTS_DIR }}/build/allure-results
@@ -1620,7 +1620,7 @@ jobs:
       - name: Download Sonar backend report-task
         id: sonar-report-task
         continue-on-error: true
-        uses: actions/download-artifact@v8
+        uses: ./.github/actions/download-artifact
         with:
           name: sonar-backend-report-task
           path: sonar-backend-report-task

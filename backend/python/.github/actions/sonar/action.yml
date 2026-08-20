@@ -15,7 +15,7 @@ runs:
     - uses: actions/setup-node@v6
       with:
         node-version: ${{ env.NODE_VERSION }}
-    - uses: actions/download-artifact@v8
+    - uses: ./.github/actions/download-artifact
       with:
         name: ${{ inputs.coverage_artifact }}
         path: ${{ inputs.module_dir }}

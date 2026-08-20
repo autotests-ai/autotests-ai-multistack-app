@@ -11,7 +11,7 @@ runs:
         node-version: ${{ env.NODE_VERSION }}
         cache: npm
         cache-dependency-path: ${{ inputs.module_dir }}/package-lock.json
-    - uses: actions/download-artifact@v8
+    - uses: ./.github/actions/download-artifact
       with:
         name: coverage-frontend
         path: ${{ inputs.module_dir }}/coverage
