@@ -1,1 +1,0 @@
-{"id":"3cdd447519a8c7950aae84dc091f2b85","fullName":"dev.multistack.app.controller.NoteControllerTest.patchWrongMediaType","name":"PATCH /api/note with application/json returns 415 and Accept-Patch","status":"passed","testResultsByEnv":{"default":"2a01f8a03d4264505f2efe690b722a89"}}

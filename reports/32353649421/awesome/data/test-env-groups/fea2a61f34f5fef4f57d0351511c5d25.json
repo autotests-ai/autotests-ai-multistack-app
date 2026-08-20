@@ -1,1 +1,0 @@
-{"id":"fea2a61f34f5fef4f57d0351511c5d25","fullName":"dev.multistack.app.controller.NoteControllerTest.putWrongMediaType","name":"PUT /api/note with a non-JSON type returns 415","status":"passed","testResultsByEnv":{"default":"caf18a93ceb1a23ad13123a18c994e4a"}}

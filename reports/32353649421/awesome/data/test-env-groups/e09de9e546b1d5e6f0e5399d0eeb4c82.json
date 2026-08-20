@@ -1,1 +1,0 @@
-{"id":"e09de9e546b1d5e6f0e5399d0eeb4c82","fullName":"dev.multistack.app.service.AuthServiceTest.deleteAccountRemovesUser","name":"deleteAccount removes the authenticated user","status":"passed","testResultsByEnv":{"default":"5ff0c2ac2f9a60f07f5eb8c3924e4c35"}}

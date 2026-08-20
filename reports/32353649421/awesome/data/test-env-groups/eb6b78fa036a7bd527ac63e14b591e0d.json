@@ -1,1 +1,0 @@
-{"id":"eb6b78fa036a7bd527ac63e14b591e0d","fullName":"dev.multistack.app.integration.NoteLifecycleIntegrationTest.putRequiresAuthentication","name":"PUT /api/note without a token is 401","status":"passed","testResultsByEnv":{"default":"f7f9d6e0ac0fb5e9af640e41c24bb615"}}

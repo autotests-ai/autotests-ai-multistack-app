@@ -1,1 +1,0 @@
-{"id":"a2114ffa17b019f4fd8394819c64c3d1","fullName":"dev.multistack.app.service.NoteServiceTest.putUnknownUser","name":"put rejects a username that no longer exists","status":"passed","testResultsByEnv":{"default":"c639a0d50a55199a52600775701534c3"}}
