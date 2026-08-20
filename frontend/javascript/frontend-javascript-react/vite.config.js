@@ -74,8 +74,8 @@ export default defineConfig({
         start_url: mountBase,
         scope: mountBase,
         display: 'standalone',
-        theme_color: '#2c2a26',
-        background_color: '#2c2a26',
+        theme_color: '#151414',
+        background_color: '#151414',
         icons: [
           { src: 'icons/pwa-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icons/pwa-512.png', sizes: '512x512', type: 'image/png' },
