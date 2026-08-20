@@ -172,9 +172,30 @@ def test_build_databases_sqlite_file():
     assert databases["default"]["NAME"] == "tmp/test.db"
 
 
-def test_build_databases_rejects_non_sqlite_url():
+def test_build_databases_postgres_url():
+    databases = build_databases(
+        {"DATABASE_URL": "postgresql://u:p@db.example:6543/demo"}
+    )
+    assert databases["default"]["ENGINE"] == "django.db.backends.postgresql"
+    assert databases["default"]["HOST"] == "db.example"
+    assert databases["default"]["PORT"] == "6543"
+    assert databases["default"]["NAME"] == "demo"
+    assert databases["default"]["USER"] == "u"
+    assert databases["default"]["PASSWORD"] == "p"
+    assert databases["default"]["TEST"]["NAME"] == "demo"
+
+
+def test_build_databases_sqlalchemy_postgres_url():
+    databases = build_databases(
+        {"DATABASE_URL": "postgresql+psycopg://u:p@db.example:6543/demo"}
+    )
+    assert databases["default"]["ENGINE"] == "django.db.backends.postgresql"
+    assert databases["default"]["NAME"] == "demo"
+
+
+def test_build_databases_rejects_non_postgres_url():
     with pytest.raises(RuntimeError, match="Unsupported DATABASE_URL"):
-        build_databases({"DATABASE_URL": "postgresql://localhost/db"})
+        build_databases({"DATABASE_URL": "mysql://localhost/db"})
 
 
 def test_build_databases_pytest_fallback():

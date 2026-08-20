@@ -1,5 +1,6 @@
 [run]
 branch = false
+relative_files = true
 
 [report]
 precision = 0

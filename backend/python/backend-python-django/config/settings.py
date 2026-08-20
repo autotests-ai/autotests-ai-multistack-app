@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -36,6 +37,42 @@ _RUNNING_PYTEST = (
 )
 
 
+def _database_from_url(url: str) -> dict:
+    if url.startswith("sqlite"):
+        name = url.removeprefix("sqlite:///")
+        return {
+            "default": {
+                "ENGINE": "django.db.backends.sqlite3",
+                "NAME": name if name else ":memory:",
+            }
+        }
+    normalized = url
+    for prefix in (
+        "postgresql+psycopg://",
+        "postgresql+psycopg2://",
+        "postgres://",
+        "postgresql://",
+    ):
+        if normalized.startswith(prefix):
+            normalized = "postgresql://" + normalized[len(prefix) :]
+            break
+    else:
+        raise RuntimeError(f"Unsupported DATABASE_URL: {url}")
+    parsed = urlparse(normalized)
+    name = unquote(parsed.path.lstrip("/"))
+    config = {
+        "ENGINE": "django.db.backends.postgresql",
+        "HOST": parsed.hostname or "localhost",
+        "PORT": str(parsed.port or 5432),
+        "NAME": name,
+        "USER": unquote(parsed.username or ""),
+        "PASSWORD": unquote(parsed.password or ""),
+        # Integration: Testcontainers DB is already empty — reuse it as the test DB.
+        "TEST": {"NAME": name},
+    }
+    return {"default": config}
+
+
 def build_databases(
     environ: dict | None = None,
     *,
@@ -49,15 +86,7 @@ def build_databases(
     env = environ if environ is not None else os.environ
     under_pytest = _RUNNING_PYTEST if running_pytest is None else running_pytest
     if database_url := env.get("DATABASE_URL"):
-        if database_url.startswith("sqlite"):
-            name = database_url.removeprefix("sqlite:///")
-            return {
-                "default": {
-                    "ENGINE": "django.db.backends.sqlite3",
-                    "NAME": name if name else ":memory:",
-                }
-            }
-        raise RuntimeError(f"Unsupported DATABASE_URL: {database_url}")
+        return _database_from_url(database_url)
     if under_pytest:
         return {
             "default": {

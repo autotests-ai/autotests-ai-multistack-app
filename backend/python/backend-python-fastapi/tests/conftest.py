@@ -5,16 +5,32 @@ import os
 import pytest
 from fastapi.testclient import TestClient
 
-os.environ["DATABASE_URL"] = "sqlite:///:memory:"
-os.environ["JWT_SECRET"] = "test-secret-key-at-least-32-characters-long"
+os.environ.setdefault("JWT_SECRET", "test-secret-key-at-least-32-characters-long")
 
-from app.db import apply_schema  # noqa: E402
-from app.main import create_app  # noqa: E402
-from app.seed import seed_data  # noqa: E402
+_pg = None
+if os.environ.get("PYTEST_INTEGRATION") == "1":
+    from testcontainers.postgres import PostgresContainer
+
+    _pg = PostgresContainer("postgres:16-alpine", driver="psycopg")
+    _pg.start()
+    os.environ["DATABASE_URL"] = _pg.get_connection_url()
+else:
+    os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
+
+
+def pytest_unconfigure(config):
+    global _pg
+    if _pg is not None:
+        _pg.stop()
+        _pg = None
 
 
 @pytest.fixture()
 def client():
+    from app.db import apply_schema
+    from app.main import create_app
+    from app.seed import seed_data
+
     apply_schema()
     seed_data()
     app = create_app(init_db=False)

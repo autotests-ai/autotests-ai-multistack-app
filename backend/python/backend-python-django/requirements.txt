@@ -6,3 +6,5 @@ gunicorn==23.0.0
 pytest==8.4.1
 pytest-django==4.11.1
 pytest-cov==6.2.1
+allure-pytest==2.15.0
+testcontainers==4.10.0

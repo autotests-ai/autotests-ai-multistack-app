@@ -1,0 +1,52 @@
+name: unit
+description: pytest + coverage.py (JaCoCo analog) for a Python backend module.
+inputs:
+  module_dir:
+    required: true
+  coverage_artifact:
+    required: false
+    default: coverage-backend
+  allure_artifact:
+    required: false
+    default: allure-results-unit
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/setup-allurectl
+    - uses: actions/setup-python@v6
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: pip
+        cache-dependency-path: ${{ inputs.module_dir }}/requirements.txt
+    - name: Install Python dependencies
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      run: python -m pip install -r requirements.txt
+    - name: Unit tests (pytest + coverage.py)
+      id: run-tests
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/allure-results
+      run: |
+        eval "${ALLURECTL_RUN:-true}"
+        if declare -F run_with_allurectl >/dev/null; then
+          run_with_allurectl python -m pytest -m "not integration" --alluredir="${ALLURE_RESULTS}"
+        else
+          python -m pytest -m "not integration" --alluredir="${ALLURE_RESULTS}"
+        fi
+    - if: steps.run-tests.outcome == 'success'
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ inputs.coverage_artifact }}
+        path: ${{ inputs.module_dir }}/coverage.xml
+        if-no-files-found: error
+    - name: Publish raw Allure results
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ inputs.allure_artifact }}
+        path: ${{ inputs.module_dir }}/allure-results/**
+        if-no-files-found: ignore
+        retention-days: 1

@@ -2,6 +2,7 @@
 # part of the contract surface and are excluded from the 100% line gate.
 [run]
 branch = false
+relative_files = true
 omit =
     wsgi.py
 

@@ -5,3 +5,6 @@
 
 GitHub does not interpolate `uses:`. Adapter `uses:` must match that path
 (today `./backend/java/backend-java-spring/.github/actions/<verb>`).
+
+Python twins: `./backend/python/.github/actions/<verb>` — run by
+`.github/workflows/backend_python_github.yml`, not this teaching adapter.

@@ -1,0 +1,52 @@
+from __future__ import annotations
+
+import json
+
+import pytest
+
+pytestmark = [pytest.mark.django_db, pytest.mark.integration]
+
+
+@pytest.fixture(autouse=True)
+def _require_postgres():
+    from django.db import connection
+
+    if connection.vendor != "postgresql":
+        pytest.skip("set PYTEST_INTEGRATION=1 (Testcontainers PostgreSQL)")
+
+
+def test_health_against_postgres(client):
+    response = client.get("/api/health")
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+
+
+def test_items_come_from_postgres(client):
+    response = client.get("/api/items")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["source"] == "postgresql"
+    assert len(body["items"]) == 3
+    assert body["items"][0]["name"] == "Alpha"
+
+
+def test_register_login_me_against_postgres(client):
+    register = client.post(
+        "/api/auth/register",
+        data=json.dumps({"username": "pguser", "password": "password123"}),
+        content_type="application/json",
+    )
+    assert register.status_code == 201
+    token = register.json()["token"]
+
+    me = client.get("/api/auth/me", HTTP_AUTHORIZATION=f"Bearer {token}")
+    assert me.status_code == 200
+    assert me.json() == {"username": "pguser"}
+
+    login = client.post(
+        "/api/auth/login",
+        data=json.dumps({"username": "pguser", "password": "password123"}),
+        content_type="application/json",
+    )
+    assert login.status_code == 200
+    assert login.json()["username"] == "pguser"

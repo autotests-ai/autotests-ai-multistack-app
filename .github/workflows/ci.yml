@@ -39,6 +39,7 @@ name: CI
 # Roots: trigger → backend-unit-tests · frontend-unit-tests · tests-harness
 #   integration-tests ← backend-unit-tests (backend Spring+PG, pre-build; PR + main)
 #   sonar-backend ← backend-unit-tests + integration-tests
+# Sibling Python backends: backend_python_github.yml (pytest · Testcontainers · coverage.py)
 #   sonar-tests ← tests-harness (skipped on backend-only lane)
 #   ui-mock-tests ← frontend-unit-tests + tests-harness (jsdom first; mock compose on the runner)
 #   sonar-frontend ← frontend-unit-tests + ui-mock-tests (mock skipped ⇒ sonar still runs)

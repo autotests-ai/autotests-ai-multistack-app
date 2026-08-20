@@ -2,6 +2,7 @@
 # generated migrations are outside the contract surface.
 [run]
 branch = false
+relative_files = true
 omit =
     config/wsgi.py
     manage.py
