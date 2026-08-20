@@ -1,5 +1,5 @@
 name: integration
-description: Jest tests matching integration for a JavaScript backend module.
+description: Jest + Testcontainers PostgreSQL for a JavaScript backend module.
 inputs:
   module_dir:
     required: true
@@ -27,9 +27,9 @@ runs:
       run: |
         eval "${ALLURECTL_RUN:-true}"
         if declare -F run_with_allurectl >/dev/null; then
-          run_with_allurectl npm test -- --testPathPatterns=integration --passWithNoTests --coverage=false
+          run_with_allurectl npm test -- --testPathPatterns=integration --coverage=false
         else
-          npm test -- --testPathPatterns=integration --passWithNoTests --coverage=false
+          npm test -- --testPathPatterns=integration --coverage=false
         fi
     - name: Publish raw Allure results
       if: always()
