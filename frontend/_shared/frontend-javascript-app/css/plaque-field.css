@@ -184,6 +184,35 @@ input.plaque-field__control {
 }
 
 /*
+ * Multiline control (note body, comments). Shell grows with rows; label and
+ * divider stay on the first line. Value is left-aligned — not a param id.
+ */
+.plaque-field:has(> textarea.plaque-field__control) {
+  height: auto;
+  align-items: flex-start;
+  overflow: visible;
+}
+
+.plaque-field:has(> textarea.plaque-field__control) > :is(.plaque-field__label, .plaque-field__text) {
+  align-self: flex-start;
+  padding-top: var(--space-2);
+}
+
+.plaque-field:has(> textarea.plaque-field__control) > .plaque-divider {
+  align-self: flex-start;
+  margin-top: var(--space-2);
+}
+
+textarea.plaque-field__control {
+  padding: var(--space-2) var(--plaque-select-trail) var(--space-2) 0;
+  min-height: calc(var(--control-height-md) * 2);
+  text-align: left;
+  line-height: 1.5;
+  resize: vertical;
+  field-sizing: content;
+}
+
+/*
  * Select chevron — rendered on the plaque shell, NOT the <select> background.
  * As an absolutely positioned ::after it is anchored to the shell's border-box
  * right edge (offset by --plaque-chevron-edge), so its distance from the visible
@@ -226,8 +255,21 @@ input.plaque-field__control {
   line-height: 1.35;
 }
 
+.plaque-field > textarea.plaque-field__control.textarea {
+  min-width: 0;
+  min-height: calc(var(--control-height-md) * 2);
+  padding: var(--space-2) var(--plaque-select-trail) var(--space-2) 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
 .plaque-field > .plaque-field__control.input:focus-visible,
-.plaque-field > select.plaque-field__control.input:focus-visible {
+.plaque-field > select.plaque-field__control.input:focus-visible,
+.plaque-field > textarea.plaque-field__control:focus-visible {
   outline: none;
 }
 
@@ -367,8 +409,8 @@ input.plaque-field__control {
   min-width: 0;
 }
 
-.plaque-field--divided.plaque-field--stretch > :is(select.plaque-field__control, input.plaque-field__control, .input.plaque-field__control),
-.plaque-field-grid .plaque-field--divided > :is(select.plaque-field__control, input.plaque-field__control) {
+.plaque-field--divided.plaque-field--stretch > :is(select.plaque-field__control, input.plaque-field__control, textarea.plaque-field__control, .input.plaque-field__control),
+.plaque-field-grid .plaque-field--divided > :is(select.plaque-field__control, input.plaque-field__control, textarea.plaque-field__control) {
   justify-self: stretch;
   width: 100%;
 }

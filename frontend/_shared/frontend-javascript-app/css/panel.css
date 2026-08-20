@@ -19,6 +19,12 @@
   background: var(--panel-bg);
 }
 
+/* Author `display` beats UA `[hidden]` — flex/grid would keep the panel in layout.
+   `!important` also wins later `.panel.panel--foot-rail { display: grid }`. */
+.panel[hidden] {
+  display: none !important;
+}
+
 .panel--terminal {
   --panel-bg: #1a1917;
   --panel-border: rgba(255, 255, 255, 0.08);
@@ -76,7 +82,8 @@
 /* Chrome in bar (actions, meta, format tabs) — taller band for 28px hit targets. */
 .panel__bar:has(> .panel__actions),
 .panel__bar:has(> .panel__bar-end),
-.panel__bar:has(> .panel__trail > .tabs) {
+.panel__bar:has(> .panel__trail > .tabs),
+.panel--bar-chrome > .panel__bar {
   flex-basis: var(--panel-bar-height-chrome);
   height: var(--panel-bar-height-chrome);
   min-height: var(--panel-bar-height-chrome);
@@ -449,4 +456,23 @@
   flex-wrap: wrap;
   width: 100%;
   max-width: 100%;
+}
+
+/* Fills nearest positioned ancestor (session viewport). Pair: VNC `.vnc-window-frame--fullscreen`. */
+.panel-host--fullscreen {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.panel-host--fullscreen > .panel {
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
 }

@@ -52,4 +52,11 @@ public abstract class IntegrationTestBase {
         headers.setBearerAuth(token);
         return new HttpEntity<>(body, headers);
     }
+
+    protected HttpEntity<String> mergePatchBearerEntity(String json, String token) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("application/merge-patch+json"));
+        headers.setBearerAuth(token);
+        return new HttpEntity<>(json, headers);
+    }
 }

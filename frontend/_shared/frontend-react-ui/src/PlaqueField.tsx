@@ -1,8 +1,10 @@
-import type { InputHTMLAttributes } from 'react';
+import type { ChangeEventHandler, InputHTMLAttributes, TextareaHTMLAttributes } from 'react';
 import { cn } from './cn';
 import { Input } from './Input';
+import { Textarea } from './Textarea';
 
 export type PlaqueFieldLabelVariant = 'param' | 'caption';
+export type PlaqueFieldControlElement = HTMLInputElement | HTMLTextAreaElement;
 
 /** Configurator param ids with credential-style browser autofill tokens. */
 const PARAM_AUTOCOMPLETE: Partial<Record<string, string>> = {
@@ -30,8 +32,7 @@ function resolveAutoComplete(
   return undefined;
 }
 
-export interface PlaqueFieldProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, 'className'> {
+type PlaqueFieldShared = {
   label: string;
   className?: string;
   divided?: boolean;
@@ -43,12 +44,21 @@ export interface PlaqueFieldProps
    * `caption` → `.plaque-field__text` (auth human captions: Login / Password).
    */
   labelVariant?: PlaqueFieldLabelVariant;
-}
+  onChange?: ChangeEventHandler<PlaqueFieldControlElement>;
+};
+
+export type PlaqueFieldProps = PlaqueFieldShared &
+  Omit<InputHTMLAttributes<HTMLInputElement>, 'className' | 'onChange'> &
+  Pick<TextareaHTMLAttributes<HTMLTextAreaElement>, 'rows'> & {
+    /** `textarea` control — note body / comments. Default is single-line `input`. */
+    multiline?: boolean;
+  };
 
 /**
- * Divided plaque with a text `input` control. Canon:
+ * Divided plaque with a text `input` or `textarea` control. Canon:
  * - param id + input → `templates/plaque-field.html` `plaque-field-text`
  * - human caption + input → `plaque-field-caption-input`
+ * - human caption + textarea → `plaque-field-textarea`
  * Thin wrapper — label / divider / control slots stay SSOT in `plaque-field.css`.
  */
 export function PlaqueField({
@@ -61,6 +71,10 @@ export function PlaqueField({
   id,
   name,
   autoComplete,
+  multiline = false,
+  rows = 3,
+  onChange,
+  type,
   ...inputProps
 }: PlaqueFieldProps) {
   const labelClass =
@@ -89,13 +103,27 @@ export function PlaqueField({
         {label}
       </span>
       {divided ? <span className="plaque-divider" aria-hidden="true" /> : null}
-      <Input
-        className="plaque-field__control"
-        {...inputProps}
-        id={controlId}
-        name={controlName}
-        autoComplete={resolvedAutoComplete}
-      />
+      {multiline ? (
+        <Textarea
+          className="plaque-field__control"
+          {...(inputProps as TextareaHTMLAttributes<HTMLTextAreaElement>)}
+          id={controlId}
+          name={controlName}
+          rows={rows}
+          autoComplete={resolvedAutoComplete}
+          onChange={onChange}
+        />
+      ) : (
+        <Input
+          className="plaque-field__control"
+          {...inputProps}
+          type={type}
+          id={controlId}
+          name={controlName}
+          autoComplete={resolvedAutoComplete}
+          onChange={onChange as ChangeEventHandler<HTMLInputElement> | undefined}
+        />
+      )}
     </label>
   );
 }

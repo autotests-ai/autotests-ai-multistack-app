@@ -3,6 +3,7 @@
 import '../../../_shared/frontend-javascript-app/css/tokens.css';
 import '../../../_shared/frontend-javascript-app/css/link.css';
 import '../../../_shared/frontend-javascript-app/css/input.css';
+import '../../../_shared/frontend-javascript-app/css/textarea.css';
 import '../../../_shared/frontend-javascript-app/css/icon.css';
 import '../../../_shared/frontend-javascript-app/css/icon-btn.css';
 import '../../../_shared/frontend-javascript-app/css/lang-toggle.css';

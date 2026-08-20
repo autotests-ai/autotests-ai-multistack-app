@@ -22,3 +22,9 @@ export const REGISTER_MESSAGES: AuthMessages = {
 };
 
 export const DELETE_ACCOUNT_CONFIRM = 'Delete this account? This cannot be undone.';
+
+export const NOTE_MESSAGES = {
+  errorTextRequired: 'Text is required',
+  errorSaveFailed: 'Could not save the note',
+  errorDeleteFailed: 'Could not delete the note',
+};

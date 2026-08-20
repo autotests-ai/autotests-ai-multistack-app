@@ -32,10 +32,16 @@ export { Button } from './Button';
 export type { ButtonProps, ButtonVariant } from './Button';
 export { Input } from './Input';
 export type { InputProps } from './Input';
+export { Textarea } from './Textarea';
+export type { TextareaProps } from './Textarea';
 export { Panel } from './Panel';
 export type { PanelProps, PanelVariant, PanelTone, PanelAction } from './Panel';
 export { PlaqueField } from './PlaqueField';
-export type { PlaqueFieldProps, PlaqueFieldLabelVariant } from './PlaqueField';
+export type {
+  PlaqueFieldProps,
+  PlaqueFieldLabelVariant,
+  PlaqueFieldControlElement,
+} from './PlaqueField';
 export { PlaqueSelect } from './PlaqueSelect';
 export type { PlaqueSelectProps, PlaqueSelectOption } from './PlaqueSelect';
 export { PlaqueFieldSeg } from './PlaqueFieldSeg';
