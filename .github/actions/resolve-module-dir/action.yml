@@ -1,0 +1,37 @@
+name: resolve-module-dir
+description: >-
+  Nested clone path, or flattened takeaway leaf (basename) when the nested
+  tree is absent. Empty input stays empty.
+inputs:
+  module_dir:
+    required: false
+    default: ""
+outputs:
+  dir:
+    description: Existing directory to pass through as module_dir
+    value: ${{ steps.resolve.outputs.dir }}
+runs:
+  using: composite
+  steps:
+    - id: resolve
+      shell: bash
+      env:
+        MODULE_DIR: ${{ inputs.module_dir }}
+      run: |
+        set -euo pipefail
+        nested="${MODULE_DIR}"
+        if [ -z "${nested}" ]; then
+          echo "dir=" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        if [ -d "${nested}" ]; then
+          echo "dir=${nested}" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        leaf="$(basename "${nested}")"
+        if [ -d "${leaf}" ]; then
+          echo "dir=${leaf}" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        echo "STOP: module missing at ${nested} and ${leaf}" >&2
+        exit 1

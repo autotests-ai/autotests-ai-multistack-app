@@ -1,0 +1,50 @@
+name: unit
+description: Vitest + coverage for this frontend module.
+inputs:
+  module_dir:
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/setup-allurectl
+    - uses: actions/setup-node@v6
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: npm
+        cache-dependency-path: ${{ inputs.module_dir }}/package-lock.json
+    - name: Install npm dependencies
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      run: npm ci
+    - name: Lint frontend
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      run: npm run lint --if-present
+    - name: Typecheck frontend
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      run: npm run typecheck --if-present
+    - name: Run component tests (Vitest + coverage)
+      id: run-tests
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/allure-results
+      run: |
+        eval "${ALLURECTL_RUN}"
+        run_with_allurectl npm test -- --coverage
+    - if: steps.run-tests.outcome == 'success'
+      uses: actions/upload-artifact@v7
+      with:
+        name: coverage-frontend
+        path: ${{ inputs.module_dir }}/coverage/
+        if-no-files-found: error
+    - name: Publish raw Allure results
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: allure-results-component
+        path: ${{ inputs.module_dir }}/allure-results/**
+        if-no-files-found: ignore
+        retention-days: 1

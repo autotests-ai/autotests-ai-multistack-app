@@ -19,10 +19,14 @@ outputs:
 runs:
   using: composite
   steps:
+    - id: dir
+      uses: ./.github/actions/resolve-module-dir
+      with:
+        module_dir: ${{ inputs.module_dir }}
     - id: module
       uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/harness
       with:
-        module_dir: ${{ inputs.module_dir }}
+        module_dir: ${{ steps.dir.outputs.dir }}
         backend_lane: ${{ inputs.backend_lane }}
         frontend_lane: ${{ inputs.frontend_lane }}
         tests_lane: ${{ inputs.tests_lane }}

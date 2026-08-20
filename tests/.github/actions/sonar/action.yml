@@ -6,6 +6,10 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/sonar
+    - id: dir
+      uses: ./.github/actions/resolve-module-dir
       with:
         module_dir: ${{ inputs.module_dir }}
+    - uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/sonar
+      with:
+        module_dir: ${{ steps.dir.outputs.dir }}

@@ -11,10 +11,11 @@ name: CI
 #
 # Active stack knobs live in `env:` once: BACKEND_LANG / BACKEND_FRAMEWORK,
 # FRONTEND_LANG / FRONTEND_FRAMEWORK, TESTS_LANG / BUILDER / FRAMEWORK / REPORT / UI_LIBRARY.
-# Family adapters under
-# backend|frontend|tests/.github/actions/ statically `uses:` the default module
-# (GitHub does not interpolate `uses:`). Adapter dispatches on BACKEND_LANG
-# (java → java-spring module actions, python → backend/python/.github/actions).
+# Family adapters under backend|frontend|tests/.github/actions/ statically
+# `uses:` the language family (GitHub does not interpolate `uses:`).
+# BACKEND_LANG: java → java-spring module actions, python → backend/python/.github/actions.
+# FRONTEND_LANG: typescript → frontend/typescript/.github/actions,
+# javascript → frontend/javascript/.github/actions.
 #
 # Allure: trigger opens one shared TestOps job-run (soft); test jobs stream live and
 # publish raw results. publish-allure-report is gating (lock pins, npm ci, generate).
@@ -150,8 +151,8 @@ env:
   IMAGE_TAG: ${{ github.sha }}
   # ── Active stack defaults (change here only) ─────────────────────────────
   # Path = {zone}/{lang}/{zone}-{lang}-…. Workflow env cannot nest env.*;
-  # jobs pass module_dir via format() below. Family adapter `uses:` is static —
-  # flip it with these knobs (GitHub does not interpolate uses:).
+  # jobs pass module_dir via format() below. Family adapters dispatch on
+  # BACKEND_LANG / FRONTEND_LANG (GitHub does not interpolate uses:).
   BACKEND_LANG: java
   BACKEND_FRAMEWORK: spring
   BACKEND_PORT: "8800"

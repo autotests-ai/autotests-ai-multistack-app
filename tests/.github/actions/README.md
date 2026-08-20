@@ -5,3 +5,4 @@
 
 GitHub does not interpolate `uses:`. Adapter `uses:` must match that path
 (today `./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/<verb>`).
+`resolve-module-dir` maps the nested `format()` path to the flattened takeaway leaf.

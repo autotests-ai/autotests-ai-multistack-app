@@ -6,14 +6,18 @@ inputs:
 runs:
   using: composite
   steps:
+    - id: dir
+      uses: ./.github/actions/resolve-module-dir
+      with:
+        module_dir: ${{ inputs.module_dir }}
     - if: env.BACKEND_LANG == 'java'
       uses: ./backend/java/backend-java-spring/.github/actions/integration
       with:
-        module_dir: ${{ inputs.module_dir }}
+        module_dir: ${{ steps.dir.outputs.dir }}
     - if: env.BACKEND_LANG == 'python'
       uses: ./backend/python/.github/actions/integration
       with:
-        module_dir: ${{ inputs.module_dir }}
+        module_dir: ${{ steps.dir.outputs.dir }}
     - if: env.BACKEND_LANG != 'java' && env.BACKEND_LANG != 'python'
       shell: bash
       run: |

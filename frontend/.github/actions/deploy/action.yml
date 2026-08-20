@@ -1,5 +1,5 @@
 name: deploy
-description: Dispatch deploy to the active module (module_dir).
+description: Dispatch deploy to the active frontend language family (module_dir).
 inputs:
   module_dir:
     required: true
@@ -8,7 +8,22 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: ./frontend/typescript/frontend-typescript-react/.github/actions/deploy
+    - id: dir
+      uses: ./.github/actions/resolve-module-dir
       with:
         module_dir: ${{ inputs.module_dir }}
+    - if: env.FRONTEND_LANG == 'typescript'
+      uses: ./frontend/typescript/.github/actions/deploy
+      with:
+        module_dir: ${{ steps.dir.outputs.dir }}
         stand: ${{ inputs.stand }}
+    - if: env.FRONTEND_LANG == 'javascript'
+      uses: ./frontend/javascript/.github/actions/deploy
+      with:
+        module_dir: ${{ steps.dir.outputs.dir }}
+        stand: ${{ inputs.stand }}
+    - if: env.FRONTEND_LANG != 'typescript' && env.FRONTEND_LANG != 'javascript'
+      shell: bash
+      run: |
+        echo "STOP: no deploy action for FRONTEND_LANG=${FRONTEND_LANG:-unset}" >&2
+        exit 1
