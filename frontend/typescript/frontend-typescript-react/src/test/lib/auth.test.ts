@@ -7,6 +7,7 @@ import {
   getToken,
   login,
   logout,
+  register,
   resolveAuthErrorMessage,
   saveSession,
   validateCredentials,
@@ -93,6 +94,16 @@ describe('network failures', () => {
     expect(localStorage.getItem(AUTH_TOKEN_KEY)).toBeNull();
   });
 
+  it('logout is a no-op when there is no session', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    await logout();
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(getToken()).toBeNull();
+  });
+
   it('logout sends POST /auth/logout with the bearer token', async () => {
     saveSession('token-123');
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 204 });
@@ -116,6 +127,56 @@ describe('network failures', () => {
     expect(getToken()).toBeNull();
     getItem.mockRestore();
   });
+
+  it('saveSession swallows a disabled localStorage', () => {
+    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('quota');
+    });
+
+    expect(() => saveSession('tok')).not.toThrow();
+    setItem.mockRestore();
+  });
+
+  it('login throws Request failed when the error body has no message', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        json: async () => ({}),
+      }),
+    );
+
+    await expect(login('user1', 'password1')).rejects.toThrow('Request failed');
+  });
+
+  it('login returns the API payload on success', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ token: 'tok-1', username: 'user1' }),
+      }),
+    );
+
+    await expect(login('user1', 'password1')).resolves.toEqual({
+      token: 'tok-1',
+      username: 'user1',
+    });
+  });
+
+  it('login treats a failed JSON body as an empty object', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        json: async () => {
+          throw new Error('not json');
+        },
+      }),
+    );
+
+    await expect(login('user1', 'password1')).rejects.toThrow('Request failed');
+  });
 });
 
 describe('fetchProfile', () => {
@@ -123,8 +184,46 @@ describe('fetchProfile', () => {
     localStorage.clear();
   });
 
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it('refuses to call the API without a token', () => {
     expect(() => fetchProfile()).toThrow('Missing auth token');
+  });
+
+  it('fetches /auth/me with the bearer token', async () => {
+    saveSession('token-123');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ username: 'user1' }),
+      }),
+    );
+
+    await expect(fetchProfile()).resolves.toEqual({ username: 'user1' });
+  });
+});
+
+describe('register', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('posts credentials to /auth/register', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ token: 'tok-reg', username: 'newuser' }),
+      }),
+    );
+
+    await expect(register('newuser', 'password1')).resolves.toEqual({
+      token: 'tok-reg',
+      username: 'newuser',
+    });
   });
 });
 

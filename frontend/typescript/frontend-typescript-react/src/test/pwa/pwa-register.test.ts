@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { registerServiceWorker } from '../../pwa/pwa-register.js';
+import {
+  DEFAULT_SW_URL,
+  PWA_ICON_PATHS,
+  PWA_SW_CONTRACT,
+  registerServiceWorker,
+} from '../../pwa/pwa-register.js';
 
 describe('pwa-register controllerchange reload', () => {
   afterEach(() => {
@@ -24,6 +29,7 @@ describe('pwa-register controllerchange reload', () => {
       },
       reload,
       register,
+      addEventListener,
     };
   }
 
@@ -47,5 +53,96 @@ describe('pwa-register controllerchange reload', () => {
     sw.emit('controllerchange');
     sw.emit('controllerchange');
     expect(sw.reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('exports the PWA contract constants', () => {
+    expect(DEFAULT_SW_URL).toBe('/sw.js');
+    expect(PWA_ICON_PATHS).toContain('icons/pwa-192.png');
+    expect(PWA_SW_CONTRACT.registerType).toBe('autoUpdate');
+  });
+
+  it('no-ops when serviceWorker is missing', () => {
+    vi.stubGlobal('navigator', {});
+    expect(() => registerServiceWorker()).not.toThrow();
+  });
+
+  it('does not listen for controllerchange when reload is disabled', () => {
+    const sw = stubSw(null);
+    registerServiceWorker({ reloadOnControllerChange: false, swUrl: '/sw.js' });
+    expect(sw.addEventListener).not.toHaveBeenCalled();
+    expect(sw.register).toHaveBeenCalledWith('/sw.js');
+  });
+
+  it('calls onRegistered after a successful register', async () => {
+    const onRegistered = vi.fn();
+    stubSw(null);
+    registerServiceWorker({ swUrl: '/sw.js', onRegistered });
+    await Promise.resolve();
+    expect(onRegistered).toHaveBeenCalled();
+  });
+
+  it('swallows a failed update() on the registration', async () => {
+    const onRegistered = vi.fn();
+    const update = vi.fn().mockRejectedValue(new Error('update failed'));
+    const register = vi.fn().mockResolvedValue({ update });
+    vi.stubGlobal('navigator', {
+      serviceWorker: { controller: null, register, addEventListener: vi.fn() },
+    });
+    registerServiceWorker({ swUrl: '/sw.js', onRegistered });
+    await vi.waitFor(() => {
+      expect(onRegistered).toHaveBeenCalled();
+    });
+    expect(update).toHaveBeenCalled();
+  });
+
+  it('warns when register rejects without onRegisterError', async () => {
+    const register = vi.fn().mockRejectedValue(new Error('fail'));
+    vi.stubGlobal('navigator', {
+      serviceWorker: { controller: null, register, addEventListener: vi.fn() },
+    });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    registerServiceWorker({ swUrl: '/sw.js' });
+    await vi.waitFor(() => {
+      expect(warn).toHaveBeenCalled();
+    });
+  });
+
+  it('skips update() when the registration has none', async () => {
+    const onRegistered = vi.fn();
+    const register = vi.fn().mockResolvedValue({});
+    vi.stubGlobal('navigator', {
+      serviceWorker: { controller: null, register, addEventListener: vi.fn() },
+    });
+    registerServiceWorker({ swUrl: '/sw.js', onRegistered });
+    await Promise.resolve();
+    expect(onRegistered).toHaveBeenCalled();
+  });
+
+  it('calls onRegisterError when register rejects', async () => {
+    const onRegisterError = vi.fn();
+    const register = vi.fn().mockRejectedValue(new Error('fail'));
+    vi.stubGlobal('navigator', {
+      serviceWorker: { controller: null, register, addEventListener: vi.fn() },
+    });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    registerServiceWorker({ swUrl: '/sw.js', onRegisterError });
+    await vi.waitFor(() => {
+      expect(onRegisterError).toHaveBeenCalled();
+    });
+    expect(warn).toHaveBeenCalled();
+  });
+
+  it('defers register until load when immediate is false', () => {
+    const sw = stubSw(null);
+    const loadHandlers: Array<() => void> = [];
+    vi.spyOn(window, 'addEventListener').mockImplementation((type, handler) => {
+      if (type === 'load') {
+        loadHandlers.push(handler as () => void);
+      }
+    });
+    registerServiceWorker({ immediate: false, swUrl: '/sw.js' });
+    expect(sw.register).not.toHaveBeenCalled();
+    loadHandlers[0]?.();
+    expect(sw.register).toHaveBeenCalledWith('/sw.js');
   });
 });

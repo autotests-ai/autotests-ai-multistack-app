@@ -73,5 +73,10 @@ describe('appBase — mount precedence', () => {
     );
     expect(apiUrl('api/health')).toBe('/stack/backend-java-spring/api/health');
     expect(apiUrl('/api')).toBe('/stack/backend-java-spring/api');
+    expect(apiUrl('')).toBe('/stack/backend-java-spring/api');
+    expect(appPath('')).toBe('/stack/backend-java-spring/frontend-typescript-react/');
+    expect(appPath(null as unknown as string)).toBe(
+      '/stack/backend-java-spring/frontend-typescript-react/',
+    );
   });
 });

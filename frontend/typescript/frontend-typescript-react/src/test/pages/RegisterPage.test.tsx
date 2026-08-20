@@ -79,6 +79,25 @@ describe('RegisterPage', () => {
     );
   });
 
+  it('navigates to / when register succeeds without redirectUrl', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve(jsonResponse({ token: 'tok-reg', username: 'newuser' }, true, 201)),
+      ),
+    );
+
+    renderRegister();
+    await user.type(screen.getByTestId('register-login-input'), 'newuser');
+    await user.type(screen.getByTestId('register-password-input'), 'password123');
+    await user.type(screen.getByTestId('confirm-password-input'), 'password123');
+    await user.click(screen.getByTestId('register-submit-button'));
+
+    expect(await screen.findByTestId('home-landed')).toBeInTheDocument();
+    expect(localStorage.getItem('authToken')).toBe('tok-reg');
+  });
+
   it('stores session and navigates home on successful register', async () => {
     const user = userEvent.setup();
     vi.stubGlobal(

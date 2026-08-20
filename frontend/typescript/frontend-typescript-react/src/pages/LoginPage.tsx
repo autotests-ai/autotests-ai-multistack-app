@@ -42,7 +42,7 @@ export function LoginPage() {
       navigate(response.redirectUrl || '/');
     } catch (err) {
       setError(
-        resolveAuthErrorMessage(err, LOGIN_MESSAGES, LOGIN_MESSAGES.errorWrongCredentials ?? ''),
+        resolveAuthErrorMessage(err, LOGIN_MESSAGES, LOGIN_MESSAGES.errorWrongCredentials!),
       );
     } finally {
       setSubmitting(false);

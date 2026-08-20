@@ -5,16 +5,14 @@ import react from '@vitejs/plugin-react';
 import AllureReporter from 'allure-vitest/reporter';
 import { defineConfig } from 'vite';
 
-const reactUiSrc = resolve(__dirname, '../../_shared/frontend-react-ui/src/index.ts');
-const sharedRoot = resolve(__dirname, '../../_shared');
+const reactUiSrc = resolve(__dirname, 'vendor/react-ui/src/index.ts');
 
 export default defineConfig({
   base: './',
   plugins: [react()],
   resolve: {
-    // The library alias points outside this package, so its `react` import would
-    // otherwise resolve against a copy hoisted higher in the tree — two Reacts in
-    // one render tree, which fails as "Invalid hook call".
+    // vendor/react-ui imports `react` by name — keep this package's copy so the
+    // alias does not pick up a second React higher in the tree ("Invalid hook call").
     dedupe: ['react', 'react-dom'],
     alias: {
       '@zero-design-system/react': reactUiSrc,
@@ -22,7 +20,7 @@ export default defineConfig({
   },
   server: {
     fs: {
-      allow: [__dirname, sharedRoot],
+      allow: [__dirname],
     },
   },
   test: {
@@ -43,16 +41,16 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'lcov', 'html'],
       reportsDirectory: './coverage',
-      include: ['src/**/*.{ts,tsx}'],
-      // main.tsx / styles.ts are bootstrap (createRoot, CSS imports) — nothing to assert in jsdom.
+      include: ['src/**/*.{ts,tsx}', 'src/pwa/pwa-register.js'],
+      // main.tsx / styles.ts are bootstrap (createRoot, CSS imports) — same omit as
+      // Java MultistackApplication. Nothing to assert in jsdom.
       // vendor/ is the in-tree DS alias (ethalon keeps the same kit outside this package).
       exclude: ['src/test/**', 'src/**/*.d.ts', 'src/main.tsx', 'src/styles.ts', 'vendor/**'],
-      // Regression floor, not a target: raise when coverage grows, never lower silently.
       thresholds: {
-        lines: 92,
-        statements: 92,
-        branches: 82,
-        functions: 95,
+        lines: 100,
+        statements: 100,
+        branches: 100,
+        functions: 100,
       },
     },
   },

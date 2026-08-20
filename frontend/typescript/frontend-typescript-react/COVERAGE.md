@@ -4,7 +4,7 @@
 
 | Scope | Tool | Line gate | Command |
 |--------|------|-----------|---------|
-| `src/` RTL (excl. `src/test/**`, `src/main.tsx`, `src/styles.ts`) | **`@vitest/coverage-v8`** | thresholds in `vitest.config.ts` | `npm run test:coverage` |
+| `src/` RTL (excl. `src/test/**`, `src/main.tsx`, `src/styles.ts`) | **`@vitest/coverage-v8`** | **100%** lines in `vitest.config.ts` | `npm run test:coverage` |
 | Playwright / Selenide e2e → this SPA | — | **N/A** | — |
 
 Not this module: c8, Istanbul provider, Codecov, Cobertura, `stacks/` leftover frontend.

@@ -38,7 +38,7 @@ export function RegisterPage() {
       return;
     }
     if (trimmedPassword !== trimmedConfirm) {
-      setError(REGISTER_MESSAGES.errorPasswordMismatch ?? '');
+      setError(REGISTER_MESSAGES.errorPasswordMismatch!);
       return;
     }
 
@@ -52,7 +52,7 @@ export function RegisterPage() {
         resolveAuthErrorMessage(
           err,
           REGISTER_MESSAGES,
-          REGISTER_MESSAGES.errorRegistrationFailed ?? '',
+          REGISTER_MESSAGES.errorRegistrationFailed!,
         ),
       );
     } finally {

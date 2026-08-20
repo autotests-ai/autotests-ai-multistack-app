@@ -143,6 +143,64 @@ describe('HomePage', () => {
     expect(localStorage.getItem('authToken')).toBe('stale-token');
   });
 
+  it('does not apply health error after unmount', async () => {
+    let rejectHealth!: (reason?: unknown) => void;
+    const healthPromise = new Promise<Response>((_resolve, reject) => {
+      rejectHealth = reject;
+    });
+    stubDefaultApis((url) => {
+      if (url.includes('/api/health')) {
+        return healthPromise;
+      }
+      return null;
+    });
+
+    const { unmount } = renderHome();
+    await waitFor(() => expect(screen.getByTestId('item-row')).toBeInTheDocument());
+    unmount();
+    rejectHealth(new Error('aborted'));
+    await Promise.resolve();
+  });
+
+  it('does not apply items error after unmount', async () => {
+    let rejectItems!: (reason?: unknown) => void;
+    const itemsPromise = new Promise<Response>((_resolve, reject) => {
+      rejectItems = reject;
+    });
+    stubDefaultApis((url) => {
+      if (url.includes('/api/items')) {
+        return itemsPromise;
+      }
+      return null;
+    });
+
+    const { unmount } = renderHome();
+    await waitFor(() => expect(screen.getByTestId('health-status')).toBeInTheDocument());
+    unmount();
+    rejectItems(new Error('aborted'));
+    await Promise.resolve();
+  });
+
+  it('does not set welcome after unmount when profile resolves', async () => {
+    localStorage.setItem('authToken', 'valid-token');
+    let resolveProfile!: (value: Response) => void;
+    const profilePromise = new Promise<Response>((resolve) => {
+      resolveProfile = resolve;
+    });
+    stubDefaultApis((url) => {
+      if (url.includes('/api/auth/me')) {
+        return profilePromise;
+      }
+      return null;
+    });
+
+    const { unmount } = renderHome();
+    await waitFor(() => expect(screen.getByTestId('item-row')).toBeInTheDocument());
+    unmount();
+    resolveProfile(jsonResponse({ username: 'user1' }));
+    await Promise.resolve();
+  });
+
   it('logs out and navigates to login', async () => {
     const user = userEvent.setup();
     localStorage.setItem('authToken', 'valid-token');
@@ -241,6 +299,39 @@ describe('HomePage', () => {
     await waitFor(() =>
       expect(screen.getByTestId('items-list')).toHaveTextContent('✗ items: HTTP 500'),
     );
+  });
+
+  it('treats a missing items array as empty', async () => {
+    stubDefaultApis((url) => {
+      if (url.includes('/api/items')) {
+        return jsonResponse({});
+      }
+      return null;
+    });
+
+    renderHome();
+
+    await waitFor(() =>
+      expect(screen.getByTestId('items-list')).toHaveTextContent('No items found.'),
+    );
+  });
+
+  it('does not update health after unmount', async () => {
+    let resolveHealth!: (value: Response) => void;
+    const healthPromise = new Promise<Response>((resolve) => {
+      resolveHealth = resolve;
+    });
+    stubDefaultApis((url) => {
+      if (url.includes('/api/health')) {
+        return healthPromise;
+      }
+      return null;
+    });
+
+    const { unmount } = renderHome();
+    unmount();
+    resolveHealth(jsonResponse({ status: 'UP', service: 'backend-java-spring' }));
+    await Promise.resolve();
   });
 
   it('shows empty items state when API returns no rows', async () => {

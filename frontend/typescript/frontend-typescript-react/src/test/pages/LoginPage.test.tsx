@@ -76,6 +76,22 @@ describe('LoginPage', () => {
     );
   });
 
+  it('navigates to / when login succeeds without redirectUrl', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.resolve(jsonResponse({ token: 'tok-1', username: 'user1' }))),
+    );
+
+    renderLogin();
+    await user.type(screen.getByTestId('login-input'), 'user1');
+    await user.type(screen.getByTestId('password-input'), 'password1');
+    await user.click(screen.getByTestId('submit-button'));
+
+    expect(await screen.findByTestId('home-landed')).toBeInTheDocument();
+    expect(localStorage.getItem('authToken')).toBe('tok-1');
+  });
+
   it('stores session and navigates home on successful login', async () => {
     const user = userEvent.setup();
     vi.stubGlobal(

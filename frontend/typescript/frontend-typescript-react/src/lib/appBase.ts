@@ -37,7 +37,7 @@ function resolveFromPathname(pathname: string) {
   };
 }
 
-const resolved = resolveFromPathname(typeof window !== 'undefined' ? window.location.pathname : '');
+const resolved = resolveFromPathname(window.location.pathname);
 
 /** Router basename — trailing slash omitted. */
 export const APP_BASE = resolved.appBase;
@@ -71,7 +71,7 @@ export function appPath(path: string = '/'): string {
 /** Build API URL: `apiUrl('/health')` → `/{backend}/api/health`. */
 export function apiUrl(path: string): string {
   let p = path == null || path === '' ? '' : String(path);
-  if (!p.startsWith('/')) {
+  if (p !== '' && !p.startsWith('/')) {
     p = `/${p}`;
   }
   if (p.startsWith('/api/')) {
