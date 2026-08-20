@@ -155,10 +155,7 @@ env:
   TESTS_DIR: tests/java/tests-java-gradle-junit5-allure3-selenide
   TESTS_LANG: java
   APP_SLUG: autotests-ai-multistack-app
-  # ── Allure paths (literals — keep in sync with TESTS_DIR above) ───────────
-  ALLURE_RESULTS_DIR: tests/java/tests-java-gradle-junit5-allure3-selenide/build/allure-results
-  ALLURE_REPORT_DIR: tests/java/tests-java-gradle-junit5-allure3-selenide/build/reports/allure-report/allureReport
-  ALLURE_AWESOME_DIR: tests/java/tests-java-gradle-junit5-allure3-selenide/build/reports/allure-report/allureReport/awesome
+  # Allure dirs: ${{ env.TESTS_DIR }}/build/… in steps (workflow env cannot nest env.*).
   JAVA_VERSION: "21"
   NODE_VERSION: "26"
   PYTHON_VERSION: "3.12"
@@ -1264,10 +1261,7 @@ jobs:
       REPORT_ID: ${{ github.run_id }}
       GH_PAGES_BASE: ${{ vars.GH_PAGES_BASE || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
       ALLURE_LIVE_ENABLED: ${{ vars.ALLURE_PROJECT_ID != '' }}
-      SETUP_NODE_IF: "true"
-      NODE_CACHE_DEPENDENCY_PATH: tests/java/tests-java-gradle-junit5-allure3-selenide/package-lock.json
       NPM_CI_IF: "true"
-      NPM_WORKDIR: tests/java/tests-java-gradle-junit5-allure3-selenide
     outputs:
       testops_launch_url: ${{ steps.resolve-testops-url.outputs.launch_url }}
       pages_artifact: ${{ steps.pages-artifact.outcome }}
@@ -1281,7 +1275,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-          cache-dependency-path: ${{ env.NODE_CACHE_DEPENDENCY_PATH }}
+          cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
 
       - name: package.json pins must match package-lock.json
         working-directory: ${{ env.TESTS_DIR }}
@@ -1302,8 +1296,8 @@ jobs:
         continue-on-error: true
         uses: actions/cache@v6
         with:
-          path: tests/java/tests-java-gradle-junit5-allure3-selenide/node_modules
-          key: allure-nm-${{ runner.os }}-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/package-lock.json') }}
+          path: ${{ env.TESTS_DIR }}/node_modules
+          key: allure-nm-${{ runner.os }}-${{ hashFiles(format('{0}/package-lock.json', env.TESTS_DIR)) }}
 
       - name: Skip npm ci on node_modules cache hit
         if: steps.cache-allure-nm.outcome == 'success' && steps.cache-allure-nm.outputs.cache-hit == 'true'
@@ -1312,7 +1306,7 @@ jobs:
       - name: Install npm dependencies
         if: env.NPM_CI_IF == 'true'
         run: npm ci
-        working-directory: ${{ env.NPM_WORKDIR }}
+        working-directory: ${{ env.TESTS_DIR }}
 
       - name: Download merged raw Allure results
         id: results
@@ -1320,14 +1314,14 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           pattern: allure-results-*
-          path: ${{ env.ALLURE_RESULTS_DIR }}
+          path: ${{ env.TESTS_DIR }}/build/allure-results
           merge-multiple: true
 
       - name: Verify merged Allure results
         id: merged-results
         if: steps.results.outcome == 'success'
         env:
-          ALLURE_RESULTS: ${{ env.ALLURE_RESULTS_DIR }}
+          ALLURE_RESULTS: ${{ env.TESTS_DIR }}/build/allure-results
         run: |
           if [ -n "$(find "${ALLURE_RESULTS}" -type f 2>/dev/null | head -1)" ]; then
             echo "has_results=true" >> "$GITHUB_OUTPUT"
@@ -1340,7 +1334,7 @@ jobs:
       - name: Write launch environment axes
         if: steps.merged-results.outputs.has_results == 'true'
         env:
-          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.TESTS_DIR }}/build/allure-results
         run: |
           eval "${ALLURE_WRITE_ENVIRONMENT}"
           write_allure_environment
@@ -1360,7 +1354,7 @@ jobs:
       - name: Write executor.json
         if: steps.merged-results.outputs.has_results == 'true'
         env:
-          ALLURE_RESULTS: ${{ env.ALLURE_RESULTS_DIR }}
+          ALLURE_RESULTS: ${{ env.TESTS_DIR }}/build/allure-results
         run: |
           mkdir -p "${ALLURE_RESULTS}"
           cat > "${ALLURE_RESULTS}/executor.json" <<EOF
@@ -1500,7 +1494,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: allure-report-ci
-          path: ${{ env.ALLURE_REPORT_DIR }}/
+          path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
           if-no-files-found: ignore
           retention-days: 14
 
@@ -1513,9 +1507,9 @@ jobs:
           steps.allure-report.outcome == 'success'
         continue-on-error: true
         env:
-          ALLURE_REPORT_ROOT: ${{ env.ALLURE_REPORT_DIR }}
-          ALLURE_AWESOME: ${{ env.ALLURE_AWESOME_DIR }}
-          ALLURE_RESULTS: ${{ env.ALLURE_RESULTS_DIR }}
+          ALLURE_REPORT_ROOT: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport
+          ALLURE_AWESOME: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/awesome
+          ALLURE_RESULTS: ${{ env.TESTS_DIR }}/build/allure-results
         run: |
           if [ ! -f "${ALLURE_AWESOME}/index.html" ]; then
             echo "No ${ALLURE_AWESOME}/index.html — skip GitHub Pages"
@@ -1582,8 +1576,8 @@ jobs:
           NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} CI #${{ github.run_number }}"
           BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           TESTOPS_LAUNCH_URL: ${{ steps.resolve-testops-url.outputs.launch_url }}
-          ALLURE_FOLDER: ${{ github.workspace }}/${{ env.ALLURE_AWESOME_DIR }}
-          ALLURE_RESULTS_FOLDER: ${{ github.workspace }}/${{ env.ALLURE_RESULTS_DIR }}
+          ALLURE_FOLDER: ${{ github.workspace }}/${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/awesome
+          ALLURE_RESULTS_FOLDER: ${{ github.workspace }}/${{ env.TESTS_DIR }}/build/allure-results
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID || '-1004381150566' }}
           TELEGRAM_TOPIC_ID: ${{ vars.TELEGRAM_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || '3' }}
@@ -1620,7 +1614,7 @@ jobs:
       - name: Job summary
         if: always()
         env:
-          ALLURE_AWESOME: ${{ env.ALLURE_AWESOME_DIR }}
+          ALLURE_AWESOME: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/awesome
           PAGES_OUTCOME: ${{ steps.gh-pages-deploy.outcome }}
         run: |
           {
