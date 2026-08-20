@@ -1,0 +1,50 @@
+{
+  "include": [
+    {
+      "service": "frontend-javascript-vanilla",
+      "dockerfile": "frontend/javascript/frontend-javascript-vanilla/Dockerfile",
+      "context": "frontend/javascript/frontend-javascript-vanilla"
+    },
+    {
+      "service": "frontend-javascript-react",
+      "dockerfile": "frontend/javascript/frontend-javascript-react/Dockerfile",
+      "context": "frontend/javascript/frontend-javascript-react"
+    },
+    {
+      "service": "frontend-javascript-angular",
+      "dockerfile": "frontend/javascript/frontend-javascript-angular/Dockerfile",
+      "context": "frontend/javascript/frontend-javascript-angular"
+    },
+    {
+      "service": "frontend-javascript-vue",
+      "dockerfile": "frontend/javascript/frontend-javascript-vue/Dockerfile",
+      "context": "frontend/javascript/frontend-javascript-vue"
+    },
+    {
+      "service": "frontend-javascript-jquery",
+      "dockerfile": "frontend/javascript/frontend-javascript-jquery/Dockerfile",
+      "context": "frontend/javascript/frontend-javascript-jquery"
+    },
+    {
+      "service": "frontend-typescript-vanilla",
+      "dockerfile": "frontend/typescript/frontend-typescript-vanilla/Dockerfile",
+      "context": "frontend/typescript/frontend-typescript-vanilla"
+    },
+    {
+      "service": "frontend-typescript-angular",
+      "dockerfile": "frontend/typescript/frontend-typescript-angular/Dockerfile",
+      "context": "frontend/typescript/frontend-typescript-angular"
+    },
+    {
+      "service": "frontend-typescript-vue",
+      "dockerfile": "frontend/typescript/frontend-typescript-vue/Dockerfile",
+      "context": "frontend/typescript/frontend-typescript-vue"
+    },
+    {
+      "service": "frontend-typescript-jquery",
+      "dockerfile": "frontend/typescript/frontend-typescript-jquery/Dockerfile",
+      "context": "frontend/typescript/frontend-typescript-jquery"
+    }
+  ],
+  "services": "frontend-javascript-vanilla frontend-javascript-react frontend-javascript-angular frontend-javascript-vue frontend-javascript-jquery frontend-typescript-vanilla frontend-typescript-angular frontend-typescript-vue frontend-typescript-jquery"
+}

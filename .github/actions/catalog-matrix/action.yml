@@ -1,0 +1,33 @@
+name: catalog-matrix
+description: >-
+  Read committed deploy/catalog-matrix.json for catalog-build strategy.matrix.
+  Regenerated locally via frontend/scripts/catalog-cd-matrix.py --write.
+outputs:
+  include:
+    description: JSON array of {service, dockerfile, context}
+    value: ${{ steps.read.outputs.include }}
+  services:
+    description: Space-separated compose service names
+    value: ${{ steps.read.outputs.services }}
+runs:
+  using: composite
+  steps:
+    - id: read
+      shell: bash
+      run: |
+        set -euo pipefail
+        FILE=deploy/catalog-matrix.json
+        if [ ! -f "$FILE" ]; then
+          echo 'include=[{"service":"none","dockerfile":"Dockerfile","context":"."}]' >> "$GITHUB_OUTPUT"
+          echo "services=" >> "$GITHUB_OUTPUT"
+          echo "catalog skipped (no deploy/catalog-matrix.json)"
+          exit 0
+        fi
+        include="$(jq -c '.include' "$FILE")"
+        services="$(jq -r '.services // empty' "$FILE")"
+        if [ -z "$include" ] || [ "$include" = "null" ]; then
+          echo "STOP: $FILE missing .include" >&2
+          exit 1
+        fi
+        echo "include=${include}" >> "$GITHUB_OUTPUT"
+        echo "services=${services}" >> "$GITHUB_OUTPUT"

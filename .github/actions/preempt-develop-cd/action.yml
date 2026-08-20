@@ -1,0 +1,19 @@
+name: preempt-develop-cd
+description: Main owns the stage host — cancel develop CI so promotion is not tested against a WIP checkout.
+runs:
+  using: composite
+  steps:
+    - name: Cancel develop CI
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+        ids=""
+        for status in in_progress queued pending waiting; do
+          ids="$ids $(gh run list --repo "$GITHUB_REPOSITORY" --workflow CI --branch develop --status "$status" --limit 20 --json databaseId --jq '.[].databaseId')"
+        done
+        for id in $ids; do
+          echo "preempt develop run $id"
+          gh run cancel "$id" --repo "$GITHUB_REPOSITORY" || true
+        done

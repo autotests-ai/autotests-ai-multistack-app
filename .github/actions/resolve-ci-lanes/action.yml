@@ -1,0 +1,88 @@
+name: resolve-ci-lanes
+description: >-
+  Same flags as dispatch deploy. Push infers from paths so tests/ does not
+  rebuild the app; PR is none (no CD).
+outputs:
+  backend:
+    value: ${{ steps.set.outputs.backend }}
+  frontend:
+    value: ${{ steps.set.outputs.frontend }}
+  tests:
+    value: ${{ steps.set.outputs.tests }}
+  catalog:
+    value: ${{ steps.set.outputs.catalog }}
+  cd_production:
+    value: ${{ steps.set.outputs.cd_production }}
+  cd_stage:
+    value: ${{ steps.set.outputs.cd_stage }}
+runs:
+  using: composite
+  steps:
+    - name: Resolve lanes
+      id: set
+      shell: bash
+      env:
+        BEFORE: ${{ env.BEFORE }}
+        DEPLOY: ${{ env.DEPLOY }}
+        DEPLOY_TARGET: ${{ env.DEPLOY_TARGET }}
+      run: |
+        set -euo pipefail
+        backend=false
+        frontend=false
+        tests=false
+        catalog=false
+        if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+          case "${DEPLOY}" in
+            backend) backend=true ;;
+            frontend) frontend=true ;;
+            tests) tests=true ;;
+            catalog) catalog=true ;;
+            all) backend=true; frontend=true; tests=true; catalog=true ;;
+            none|'') ;;
+            *) echo "unknown deploy=${DEPLOY}" >&2; exit 1 ;;
+          esac
+        elif [ "${GITHUB_EVENT_NAME}" = "push" ] && { [ "${GITHUB_REF}" = "refs/heads/main" ] || [ "${GITHUB_REF}" = "refs/heads/develop" ]; }; then
+          if [ -z "${BEFORE:-}" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] \
+            || ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+            backend=true
+            frontend=true
+            tests=true
+            catalog=true
+          else
+            CHANGED="$(git diff --name-only "$BEFORE" "$GITHUB_SHA")"
+            match() { printf '%s\n' "$CHANGED" | grep -qE "$1"; }
+            SHARED='deploy/|docker-compose|\.github/'
+            if match "^(backend/|${SHARED})"; then backend=true; fi
+            if match "^(frontend/|${SHARED})"; then frontend=true; fi
+            if match "^(tests/|${SHARED})"; then tests=true; fi
+            if match "^(frontend/javascript/|frontend/typescript/frontend-typescript-(angular|vue|vanilla|jquery)/|frontend/_shared/|frontend/scripts/catalog-cd-matrix|deploy/matrix.yaml|deploy/catalog-matrix.json|docker-compose)"; then
+              catalog=true
+            fi
+          fi
+        fi
+        cd_production=false
+        cd_stage=false
+        if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+          case "${DEPLOY_TARGET}" in
+            stage) cd_stage=true ;;
+            both|production|'')
+              cd_production=true
+              cd_stage=true
+              ;;
+            *) echo "unknown deploy_target=${DEPLOY_TARGET}" >&2; exit 1 ;;
+          esac
+          if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+            cd_production=false
+            if [ "${DEPLOY_TARGET}" = "production" ] || [ -z "${DEPLOY_TARGET}" ]; then
+              cd_stage=false
+            fi
+          fi
+        elif [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+          cd_production=true
+          cd_stage=true
+        elif [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/develop" ]; then
+          cd_stage=true
+        fi
+        printf 'backend=%s\nfrontend=%s\ntests=%s\ncatalog=%s\ncd_production=%s\ncd_stage=%s\n' \
+          "$backend" "$frontend" "$tests" "$catalog" "$cd_production" "$cd_stage" >> "$GITHUB_OUTPUT"
+        echo "trigger backend=${backend} frontend=${frontend} tests=${tests} catalog=${catalog} cd_production=${cd_production} cd_stage=${cd_stage}"

@@ -1,0 +1,391 @@
+name: publish-allure-report
+description: >-
+  Gating Allure generate after layer jobs. Pages push + Telegram are soft;
+  live Pages deploy stays a separate job (deploy-pages@v5).
+inputs:
+  tests_dir:
+    required: true
+outputs:
+  launch_url:
+    value: ${{ steps.resolve-testops-url.outputs.launch_url }}
+  pages_artifact:
+    value: ${{ steps.pages-artifact.outcome }}
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v6
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: npm
+        cache-dependency-path: ${{ inputs.tests_dir }}/package-lock.json
+
+    - name: package.json pins must match package-lock.json
+      shell: bash
+      working-directory: ${{ inputs.tests_dir }}
+      run: node scripts/check-package-lock.mjs
+
+    - name: Load Allure history
+      continue-on-error: true
+      uses: actions/checkout@v7
+      with:
+        ref: gh-pages
+        path: gh-pages
+        sparse-checkout: history.jsonl
+        sparse-checkout-cone-mode: false
+
+    - name: Cache Allure npm node_modules
+      id: cache-allure-nm
+      continue-on-error: true
+      uses: actions/cache@v6
+      with:
+        path: ${{ inputs.tests_dir }}/node_modules
+        key: allure-nm-${{ runner.os }}-${{ hashFiles(format('{0}/package-lock.json', inputs.tests_dir)) }}
+
+    - name: Skip npm ci on node_modules cache hit
+      if: steps.cache-allure-nm.outcome == 'success' && steps.cache-allure-nm.outputs.cache-hit == 'true'
+      shell: bash
+      run: echo "NPM_CI_IF=false" >> "$GITHUB_ENV"
+
+    - name: Install npm dependencies
+      if: env.NPM_CI_IF == 'true'
+      shell: bash
+      run: npm ci
+      working-directory: ${{ inputs.tests_dir }}
+
+    - name: Download merged raw Allure results
+      id: results
+      continue-on-error: true
+      uses: ./.github/actions/download-artifact
+      with:
+        pattern: allure-results-*
+        path: ${{ inputs.tests_dir }}/build/allure-results
+        merge-multiple: true
+
+    - name: Verify merged Allure results
+      id: merged-results
+      if: steps.results.outcome == 'success'
+      shell: bash
+      env:
+        ALLURE_RESULTS: ${{ inputs.tests_dir }}/build/allure-results
+      run: |
+        if [ -n "$(find "${ALLURE_RESULTS}" -type f 2>/dev/null | head -1)" ]; then
+          echo "has_results=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "has_results=false" >> "$GITHUB_OUTPUT"
+          echo "No merged Allure results — skip publish"
+        fi
+
+    - name: Write launch environment axes
+      if: steps.merged-results.outputs.has_results == 'true'
+      shell: bash
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.tests_dir }}/build/allure-results
+      run: |
+        eval "${ALLURE_WRITE_ENVIRONMENT}"
+        write_allure_environment
+
+    - name: Restore Allure history
+      if: steps.merged-results.outputs.has_results == 'true'
+      shell: bash
+      env:
+        TESTS_DIR: ${{ inputs.tests_dir }}
+      run: |
+        if [ -f gh-pages/history.jsonl ]; then
+          cp gh-pages/history.jsonl "${TESTS_DIR}/history.jsonl"
+        elif [ -f "${TESTS_DIR}/history.jsonl" ]; then
+          echo "Using checked-in history.jsonl"
+        fi
+
+    - uses: ./.github/actions/setup-allurectl
+      id: setup-allurectl
+      env:
+        ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
+
+    - name: Write executor.json
+      if: steps.merged-results.outputs.has_results == 'true'
+      shell: bash
+      env:
+        ALLURE_RESULTS: ${{ inputs.tests_dir }}/build/allure-results
+      run: |
+        mkdir -p "${ALLURE_RESULTS}"
+        cat > "${ALLURE_RESULTS}/executor.json" <<EOF
+        {
+          "reportName": "Run #${{ github.run_number }}",
+          "buildOrder": ${{ github.run_number }},
+          "reportUrl": "${GH_PAGES_BASE}/reports/${REPORT_ID}/awesome/index.html",
+          "buildUrl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        }
+        EOF
+
+    - name: Fallback upload merged results to Allure TestOps
+      if: >-
+        always() &&
+        env.TRIGGER_ENABLED != 'true' &&
+        steps.merged-results.outputs.has_results == 'true' &&
+        env.ALLURE_PROJECT_ID != ''
+      continue-on-error: true
+      id: testops-upload
+      working-directory: ${{ inputs.tests_dir }}
+      shell: bash
+      env:
+        ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
+        ALLURE_LAUNCH_NAME: "${{ env.APP_SLUG }} CI — ${{ env.RUN_LABEL }}"
+      run: |
+        set +e
+        set -uo pipefail
+        if [ -z "${ALLURE_TOKEN:-}" ]; then
+          echo "No ALLURE_TOKEN — skip TestOps upload"
+          exit 0
+        fi
+        if ! command -v allurectl >/dev/null 2>&1; then
+          echo "allurectl not available — skip TestOps upload"
+          exit 0
+        fi
+        allurectl upload "build/allure-results" \
+          --endpoint "${ALLURE_ENDPOINT}" \
+          --token "${ALLURE_TOKEN}" \
+          --project-id "${ALLURE_PROJECT_ID}" \
+          --launch-name "${ALLURE_LAUNCH_NAME}" 2>&1 | tee allurectl-upload.log
+        UPLOAD_EXIT=${PIPESTATUS[0]}
+        if [ "$UPLOAD_EXIT" -eq 0 ]; then
+          LAUNCH_URL=$(grep -Eo 'https://[^ ]+/launch/[0-9]+' allurectl-upload.log | head -1 || true)
+          if [ -z "$LAUNCH_URL" ] && allurectl job-run env >/tmp/allure-env 2>/dev/null; then
+            # shellcheck disable=SC1091
+            source /tmp/allure-env
+            LAUNCH_URL="${ALLURE_LAUNCH_URL:-}"
+          fi
+          if [ -n "$LAUNCH_URL" ]; then
+            echo "launch_url=${LAUNCH_URL}" >> "$GITHUB_OUTPUT"
+            echo "TESTOPS_LAUNCH_URL=${LAUNCH_URL}" >> "$GITHUB_ENV"
+          fi
+        fi
+        exit 0
+
+    - name: Stop shared TestOps job-run
+      if: >-
+        always() &&
+        env.TRIGGER_JOB_RUN_ID != '' &&
+        steps.setup-allurectl.outcome == 'success'
+      continue-on-error: true
+      shell: bash
+      env:
+        ALLURE_JOB_RUN_ID: ${{ env.TRIGGER_JOB_RUN_ID }}
+      run: |
+        set -euo pipefail
+        allurectl --http-timeout 30s job-run stop \
+          --project-id "$ALLURE_PROJECT_ID" \
+          --job-run-id "$ALLURE_JOB_RUN_ID"
+
+    - name: Resolve TestOps launch URL
+      id: resolve-testops-url
+      if: always()
+      shell: bash
+      env:
+        LIVE_LAUNCH_URL: ${{ env.TRIGGER_LAUNCH_URL }}
+        FALLBACK_LAUNCH_URL: ${{ steps.testops-upload.outputs.launch_url }}
+      run: |
+        LAUNCH_URL="${LIVE_LAUNCH_URL:-${FALLBACK_LAUNCH_URL:-}}"
+        echo "launch_url=${LAUNCH_URL}" >> "$GITHUB_OUTPUT"
+        if [ -n "$LAUNCH_URL" ]; then
+          echo "TESTOPS_LAUNCH_URL=${LAUNCH_URL}" >> "$GITHUB_ENV"
+        fi
+
+    - name: Download Sonar backend report-task
+      id: sonar-report-task
+      continue-on-error: true
+      uses: ./.github/actions/download-artifact
+      with:
+        name: sonar-backend-report-task
+        path: sonar-backend-report-task
+
+    - name: Attach live Sonar quality gate
+      if: steps.merged-results.outputs.has_results == 'true'
+      continue-on-error: true
+      working-directory: ${{ inputs.tests_dir }}
+      shell: bash
+      env:
+        SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+        SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}
+      run: |
+        set -euo pipefail
+        REPORT_TASK="$(find "${GITHUB_WORKSPACE}/sonar-backend-report-task" -name 'report-task.txt' -print -quit 2>/dev/null || true)"
+        if [[ -z "${REPORT_TASK}" || ! -f "${REPORT_TASK}" ]]; then
+          echo "No Sonar report-task — Allure panel keeps fixture"
+          exit 0
+        fi
+        if [[ -z "${SONAR_TOKEN:-}" ]]; then
+          echo "SONAR_TOKEN unset — Allure panel keeps fixture"
+          exit 0
+        fi
+        node scripts/dump-sonar-quality-gate.mjs \
+          --report-task "${REPORT_TASK}" \
+          --out allure/sonar-quality-gate.json \
+          --timeout "${SONAR_QUALITY_GATE_TIMEOUT}"
+
+    - name: Allure quality gate + report
+      if: always() && steps.merged-results.outputs.has_results == 'true'
+      id: allure-report
+      working-directory: ${{ inputs.tests_dir }}
+      shell: bash
+      run: |
+        set +e
+        npx --no-install allure quality-gate build/allure-results --config allurerc.mjs
+        echo "QUALITY_GATE_EXIT=$?" >> "$GITHUB_ENV"
+        npx --no-install allure generate build/allure-results \
+          -o build/reports/allure-report/allureReport \
+          --config allurerc.mjs
+        REPORT_EXIT=$?
+        if [ "${REPORT_EXIT}" -eq 0 ]; then
+          node allure/tests-table-from-run.mjs \
+            --results build/allure-results \
+            --history history.jsonl \
+            --report build/reports/allure-report/allureReport
+          node allure/attach-ci-jobs-quality-gate.mjs \
+            --report build/reports/allure-report/allureReport
+        fi
+        set -e
+        exit "${REPORT_EXIT}"
+
+    - name: Publish merged Allure report artifact
+      if: always() && steps.allure-report.outcome == 'success'
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: allure-report-ci
+        path: ${{ inputs.tests_dir }}/build/reports/allure-report/allureReport/
+        if-no-files-found: ignore
+        retention-days: 14
+
+    - name: Prepare GitHub Pages
+      id: pages-prepare
+      if: >-
+        always() &&
+        github.event_name != 'pull_request' &&
+        steps.allure-report.outcome == 'success'
+      continue-on-error: true
+      shell: bash
+      env:
+        TESTS_DIR: ${{ inputs.tests_dir }}
+        ALLURE_REPORT_ROOT: ${{ inputs.tests_dir }}/build/reports/allure-report/allureReport
+        ALLURE_AWESOME: ${{ inputs.tests_dir }}/build/reports/allure-report/allureReport/awesome
+        ALLURE_RESULTS: ${{ inputs.tests_dir }}/build/allure-results
+      run: |
+        if [ ! -f "${ALLURE_AWESOME}/index.html" ]; then
+          echo "No ${ALLURE_AWESOME}/index.html — skip GitHub Pages"
+          exit 0
+        fi
+        mkdir -p pages/reports/${REPORT_ID}
+        cp -r "${ALLURE_REPORT_ROOT}/." "pages/reports/${REPORT_ID}/"
+        rm -rf pages/reports/latest
+        cp -r "pages/reports/${REPORT_ID}" pages/reports/latest
+        if [ -f "${TESTS_DIR}/history.jsonl" ]; then
+          cp "${TESTS_DIR}/history.jsonl" pages/history.jsonl
+        elif [ -f "${ALLURE_REPORT_ROOT}/history.jsonl" ]; then
+          cp "${ALLURE_REPORT_ROOT}/history.jsonl" pages/history.jsonl
+        fi
+        echo "${REPORT_ID}" > pages/latest-run-id.txt
+        printf 'reports.autotests.ai\n' > pages/CNAME
+        touch pages/.nojekyll
+        printf '%s\n' '<!DOCTYPE html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=reports/latest/awesome/index.html"><link rel="canonical" href="reports/latest/awesome/index.html"><title>Allure</title>' > pages/index.html
+        mkdir -p pages/readme
+        bash .github/scripts/generate-readme-badge.sh \
+          "${ALLURE_RESULTS}" pages/readme main "#${{ github.run_number }}" \
+          "" "Multistack" "Java 21 · Spring Boot · Allure 3" ""
+
+    - name: Upload GitHub Pages artifact
+      id: pages-artifact
+      if: >-
+        always() &&
+        github.event_name != 'pull_request' &&
+        steps.allure-report.outcome == 'success' &&
+        steps.pages-prepare.outcome == 'success' &&
+        hashFiles('pages/reports/**/awesome/index.html') != ''
+      continue-on-error: true
+      uses: actions/upload-pages-artifact@v5
+      with:
+        path: pages
+
+    - name: Backup Allure report on gh-pages
+      id: gh-pages-deploy
+      if: >-
+        always() &&
+        github.event_name != 'pull_request' &&
+        steps.allure-report.outcome == 'success' &&
+        steps.pages-prepare.outcome == 'success' &&
+        hashFiles('pages/reports/**/awesome/index.html') != ''
+      continue-on-error: true
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ env.GITHUB_TOKEN }}
+        publish_branch: gh-pages
+        publish_dir: pages
+        enable_jekyll: false
+        keep_files: false
+        cname: reports.autotests.ai
+
+    - name: Send Allure Telegram notification
+      if: always() && steps.allure-report.outcome == 'success'
+      continue-on-error: true
+      timeout-minutes: 2
+      working-directory: ${{ inputs.tests_dir }}
+      shell: bash
+      env:
+        NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} CI #${{ github.run_number }}"
+        BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        TESTOPS_LAUNCH_URL: ${{ steps.resolve-testops-url.outputs.launch_url }}
+        ALLURE_FOLDER: ${{ github.workspace }}/${{ inputs.tests_dir }}/build/reports/allure-report/allureReport/awesome
+        ALLURE_RESULTS_FOLDER: ${{ github.workspace }}/${{ inputs.tests_dir }}/build/allure-results
+        NOTIFICATION_MODE: ${{ github.event_name != 'pull_request' && 'live' || 'dry-run' }}
+        PAGES_OUTCOME: ${{ steps.gh-pages-deploy.outcome }}
+      run: |
+        set -euo pipefail
+        if [ -z "${TELEGRAM_BOT_TOKEN:-}" ]; then
+          echo "No Telegram token — skip notification"
+          exit 0
+        fi
+        if [ ! -f "${ALLURE_FOLDER}/summary.json" ]; then
+          echo "No ${ALLURE_FOLDER}/summary.json — skip Telegram"
+          exit 0
+        fi
+        if [ "${PAGES_OUTCOME}" = "success" ]; then
+          export ALLURE_REPORT_URL="${GH_PAGES_BASE}/reports/${REPORT_ID}/awesome/index.html"
+          export ALLURE_DASHBOARD_URL="${GH_PAGES_BASE}/reports/${REPORT_ID}/dashboard/index.html"
+        else
+          export ALLURE_REPORT_URL=""
+          export ALLURE_DASHBOARD_URL=""
+        fi
+        node scripts/render-notifications-config.mjs
+        if [ "${NOTIFICATION_MODE}" = "live" ]; then
+          MODE_FLAG="--live"
+        else
+          MODE_FLAG="--dry-run"
+        fi
+        npx --no-install allure-notifications send \
+          --config notifications/config.runtime.json \
+          "${MODE_FLAG}" \
+          --out collage.png
+
+    - name: Job summary
+      if: always()
+      shell: bash
+      env:
+        ALLURE_AWESOME: ${{ inputs.tests_dir }}/build/reports/allure-report/allureReport/awesome
+        PAGES_OUTCOME: ${{ steps.gh-pages-deploy.outcome }}
+      run: |
+        {
+          echo "## publish-allure-report"
+          echo ""
+          echo "- [GitHub Actions run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+          if [ -f "${ALLURE_AWESOME}/index.html" ]; then
+            echo "- Allure report artifact: allure-report-ci"
+          fi
+          if [ "${PAGES_OUTCOME}" = "success" ]; then
+            echo "- [Allure report](${GH_PAGES_BASE}/reports/latest/awesome/index.html)"
+            echo "- [Allure dashboard](${GH_PAGES_BASE}/reports/latest/dashboard/index.html)"
+          elif [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "- GitHub Pages not deployed"
+          fi
+          if [ -n "${TESTOPS_LAUNCH_URL:-}" ]; then
+            echo "- [Allure TestOps launch](${TESTOPS_LAUNCH_URL})"
+          fi
+        } >> "$GITHUB_STEP_SUMMARY"

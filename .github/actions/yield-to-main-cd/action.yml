@@ -1,0 +1,24 @@
+name: yield-to-main-cd
+description: Develop must not start (or continue) if main already claimed the stage.
+runs:
+  using: composite
+  steps:
+    - name: Abort this run when main CD is queued or running
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+        main_busy() {
+          for status in in_progress queued pending waiting; do
+            count="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow CI --branch main --status "$status" --limit 5 --json databaseId --jq 'length')"
+            if [ "$count" != "0" ]; then
+              return 0
+            fi
+          done
+          return 1
+        }
+        if main_busy || { sleep 3; main_busy; }; then
+          echo "main CD owns the stage — cancelling this develop run"
+          gh run cancel "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" || true
+        fi

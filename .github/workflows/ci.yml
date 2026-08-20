@@ -7,7 +7,9 @@ name: CI
 #
 # One workflow for clone and children. No *_github.yml siblings.
 # Catalog SPA sidecars (non-teaching frontends): jobs catalog-* in this file
-# (`deploy=catalog|all` or sidecar path change). Skip when deploy/matrix.yaml is absent.
+# (`deploy=catalog|all` or sidecar path change). Matrix from deploy/catalog-matrix.json
+# (composite + fromJSON). Skip when that file is absent. Regenerator is local
+# `python frontend/scripts/catalog-cd-matrix.py --write`, not a runner step.
 #
 # Active stack knobs live in `env:` once: BACKEND_LANG / BACKEND_FRAMEWORK,
 # FRONTEND_LANG / FRONTEND_FRAMEWORK, TESTS_LANG / BUILDER / FRAMEWORK / REPORT / UI_LIBRARY.
@@ -51,7 +53,7 @@ name: CI
 #   sonar-frontend ← frontend-unit-tests + ui-mock-tests (mock skipped ⇒ sonar still runs)
 #   build-backend ← backend-unit-tests + integration-tests · build-frontend ← ui-mock-tests
 #   deploy-backend-stage / deploy-frontend-stage ← same gates; cd_stage; skip until vars.STAGE_APP_DIR
-#   catalog-matrix / catalog-build / catalog-deploy-* ← sidecar SPA; skip without deploy/matrix.yaml
+#   catalog-matrix / catalog-build / catalog-deploy-* ← sidecar SPA; skip without deploy/catalog-matrix.json
   #   api-tests-stage / e2e-tests-stage ← deploy-*-stage + tests-harness; full api / e2e vs stage stand
 #     (e2e-tests-stage also compares screenshots/stage/)
 #   deploy-backend ← build-backend + sonar-backend + e2e-tests-stage (cd_production)
@@ -201,9 +203,8 @@ env:
   ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}
   ALLURE_PROJECT_ID: ${{ vars.ALLURE_PROJECT_ID }}
 
-  # ── Inline CI helpers (no .github/scripts — logic lives in workflow env) ─
-  # YAML anchors left on trigger for allurectl + Playwright cache (publish reuses
-  # *cache-allurectl / *setup-live-allurectl). Layer commands live in module actions.
+  # ── Inline CI helpers (module actions eval these; do not move to composites) ─
+  # allurectl install: .github/actions/setup-allurectl. Layer commands live in module actions.
   ALLURE_WRITE_ENVIRONMENT: |
     write_allure_environment() {
       if [[ -z "${ALLURE_RESULTS:-}" ]]; then
@@ -346,246 +347,27 @@ jobs:
           fetch-depth: 0
       - name: Resolve lanes
         id: set
+        uses: ./.github/actions/resolve-ci-lanes
         env:
           BEFORE: ${{ github.event.before }}
           DEPLOY: ${{ github.event.inputs.deploy || '' }}
           DEPLOY_TARGET: ${{ github.event.inputs.deploy_target || '' }}
-        run: |
-          set -euo pipefail
-          backend=false
-          frontend=false
-          tests=false
-          catalog=false
-          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
-            case "${DEPLOY}" in
-              backend) backend=true ;;
-              frontend) frontend=true ;;
-              tests) tests=true ;;
-              catalog) catalog=true ;;
-              all) backend=true; frontend=true; tests=true; catalog=true ;;
-              none|'') ;;
-              *) echo "unknown deploy=${DEPLOY}" >&2; exit 1 ;;
-            esac
-          elif [ "${GITHUB_EVENT_NAME}" = "push" ] && { [ "${GITHUB_REF}" = "refs/heads/main" ] || [ "${GITHUB_REF}" = "refs/heads/develop" ]; }; then
-            if [ -z "${BEFORE:-}" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] \
-              || ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
-              backend=true
-              frontend=true
-              tests=true
-              catalog=true
-            else
-              CHANGED="$(git diff --name-only "$BEFORE" "$GITHUB_SHA")"
-              match() { printf '%s\n' "$CHANGED" | grep -qE "$1"; }
-              SHARED='deploy/|docker-compose|\.github/'
-              if match "^(backend/|${SHARED})"; then backend=true; fi
-              if match "^(frontend/|${SHARED})"; then frontend=true; fi
-              if match "^(tests/|${SHARED})"; then tests=true; fi
-              if match "^(frontend/javascript/|frontend/typescript/frontend-typescript-(angular|vue|vanilla|jquery)/|frontend/_shared/|frontend/scripts/catalog-cd-matrix|deploy/matrix.yaml|docker-compose)"; then
-                catalog=true
-              fi
-            fi
-          fi
-          cd_production=false
-          cd_stage=false
-          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
-            case "${DEPLOY_TARGET}" in
-              stage) cd_stage=true ;;
-              both|production|'')
-                cd_production=true
-                cd_stage=true
-                ;;
-              *) echo "unknown deploy_target=${DEPLOY_TARGET}" >&2; exit 1 ;;
-            esac
-            if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
-              cd_production=false
-              if [ "${DEPLOY_TARGET}" = "production" ] || [ -z "${DEPLOY_TARGET}" ]; then
-                cd_stage=false
-              fi
-            fi
-          elif [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/main" ]; then
-            cd_production=true
-            cd_stage=true
-          elif [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/develop" ]; then
-            cd_stage=true
-          fi
-          printf 'backend=%s\nfrontend=%s\ntests=%s\ncatalog=%s\ncd_production=%s\ncd_stage=%s\n' \
-            "$backend" "$frontend" "$tests" "$catalog" "$cd_production" "$cd_stage" >> "$GITHUB_OUTPUT"
-          echo "trigger backend=${backend} frontend=${frontend} tests=${tests} catalog=${catalog} cd_production=${cd_production} cd_stage=${cd_stage}"
-
-      - name: Check TestOps configuration
-        id: configured
-        env:
-          ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
-        run: |
-          if [ -n "${ALLURE_TOKEN:-}" ] && [ -n "${ALLURE_PROJECT_ID:-}" ]; then
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-            echo "ALLURE_LIVE_ENABLED=true" >> "$GITHUB_ENV"
-          else
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "TestOps credentials unavailable — live upload disabled"
-          fi
-
-      # Binary only (not token / launch). setup-allurectl@v1 stores under
-      # $RUNNER_TOOL_CACHE/allurectl/<ver>/<goarch>/ + sibling `.complete` and
-      # always hits GitHub API, so we pin the release into $RUNNER_TEMP/allurectl-bin.
-      - &cache-allurectl
-        name: Cache allurectl binary
-        if: always() && env.ALLURE_LIVE_ENABLED == 'true'
-        id: cache-allurectl
-        continue-on-error: true
-        timeout-minutes: 1
-        uses: actions/cache@v6
-        with:
-          path: ${{ runner.temp }}/allurectl-bin
-          key: allurectl-${{ runner.os }}-${{ runner.arch }}-${{ env.ALLURECTL_VERSION }}
-
-      - &setup-live-allurectl
-        name: Install pinned allurectl for live upload
-        if: always() && env.ALLURE_LIVE_ENABLED == 'true'
-        id: setup-allurectl
-        continue-on-error: true
-        timeout-minutes: 1
-        env:
-          ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
-        run: |
-          set -euo pipefail
-          DEST="${RUNNER_TEMP}/allurectl-bin"
-          BIN="${DEST}/allurectl"
-          mkdir -p "$DEST"
-          bin_ok() { [[ -x "$BIN" ]] && "$BIN" --version >/dev/null 2>&1; }
-          if bin_ok; then
-            echo "allurectl ${ALLURECTL_VERSION} restored from cache (${BIN})"
-          else
-            rm -f "$BIN"
-            case "${RUNNER_OS}" in Linux) os=linux ;; macOS) os=darwin ;; *)
-              echo "unsupported RUNNER_OS=${RUNNER_OS}" >&2; exit 1 ;; esac
-            case "${RUNNER_ARCH}" in X64) arch=amd64 ;; ARM64) arch=arm64 ;; *)
-              echo "unsupported RUNNER_ARCH=${RUNNER_ARCH}" >&2; exit 1 ;; esac
-            url="https://github.com/allure-framework/allurectl/releases/download/${ALLURECTL_VERSION}/allurectl_${os}_${arch}"
-            echo "Downloading ${url}"
-            curl -fsSL --connect-timeout 10 --max-time 45 -o "$BIN" "$url"
-            chmod +x "$BIN"
-            bin_ok || { echo "downloaded allurectl is not executable" >&2; exit 1; }
-            "$BIN" --version
-          fi
-          echo "$DEST" >> "$GITHUB_PATH"
-          if [[ -n "${ALLURE_TOKEN:-}" ]]; then
-            echo "ALLURE_TOKEN=${ALLURE_TOKEN}" >> "$GITHUB_ENV"
-          fi
-          if [[ -z "${ALLURE_JOB_UID:-}" ]]; then
-            echo "ALLURE_JOB_UID=${GITHUB_REPOSITORY}/actions/workflows/ci.yml" >> "$GITHUB_ENV"
-          fi
-
-      - &cache-playwright-browsers
-        name: Cache Playwright browsers
+      - name: Cache Playwright browsers
         if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
         uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
-          # hashFiles: tests/** covers the active module lockfile.
           key: playwright-${{ runner.os }}-${{ hashFiles('tests/**/package-lock.json') }}
           restore-keys: |
             playwright-${{ runner.os }}-
-
       - name: Create or adopt shared TestOps context
         id: context
         if: always()
+        uses: ./.github/actions/open-testops-context
         env:
+          ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
           ALLURE_LAUNCH_NAME: "${{ env.APP_SLUG }} CI — ${{ env.RUN_LABEL }}"
-        run: |
-          set +e
-          set -uo pipefail
 
-          emit_disabled() {
-            local cleanup_job_run_id="${1:-}"
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "launch_id=" >> "$GITHUB_OUTPUT"
-            echo "job_run_id=${cleanup_job_run_id}" >> "$GITHUB_OUTPUT"
-            echo "launch_url=" >> "$GITHUB_OUTPUT"
-          }
-
-          if [ "${{ steps.configured.outputs.enabled }}" != "true" ] ||
-             [ "${{ steps.setup-allurectl.outcome }}" != "success" ] ||
-             ! command -v allurectl >/dev/null 2>&1; then
-            emit_disabled
-            exit 0
-          fi
-
-          JOB_RUN_ID="${ALLURE_JOB_RUN_ID:-}"
-          START_OUT=""
-          if [ -z "$JOB_RUN_ID" ]; then
-            JOB_RUN_BRANCH="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
-            START_OUT="$(
-              allurectl --http-timeout 10s job-run start \
-                --project-id "$ALLURE_PROJECT_ID" \
-                --ci-type github \
-                --ci-endpoint "$GITHUB_SERVER_URL" \
-                --job-name "$GITHUB_WORKFLOW" \
-                --job-uid "$ALLURE_JOB_UID" \
-                --job-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/workflows/ci.yml" \
-                --job-run-name "#$GITHUB_RUN_NUMBER.$GITHUB_RUN_ATTEMPT" \
-                --job-run-uid "$ALLURE_JOB_RUN_UID" \
-                --job-run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
-                --job-run-branch "$JOB_RUN_BRANCH" \
-                --launch-name "$ALLURE_LAUNCH_NAME"
-            )"
-            START_EXIT=$?
-            if [ "$START_EXIT" -ne 0 ]; then
-              echo "Unable to create TestOps job-run — live upload disabled"
-              emit_disabled
-              exit 0
-            fi
-          fi
-
-          resolve_job_run_env() {
-            allurectl --http-timeout 10s job-run env \
-              --project-id "$ALLURE_PROJECT_ID" \
-              "$@"
-          }
-
-          if [ -n "$JOB_RUN_ID" ]; then
-            JOB_ENV="$(resolve_job_run_env --job-run-id "$JOB_RUN_ID")"
-          else
-            JOB_ENV="$(resolve_job_run_env --job-run-uid "$ALLURE_JOB_RUN_UID")"
-          fi
-          ENV_EXIT=$?
-          if [ "$ENV_EXIT" -ne 0 ] && [ -n "$START_OUT" ]; then
-            JOB_RUN_ID="$(
-              printf '%s' "$START_OUT" \
-                | grep -Eo 'Jobrun\[[0-9]+\]' \
-                | head -1 \
-                | sed -E 's/Jobrun\[([0-9]+)\]/\1/'
-            )"
-            if [ -n "$JOB_RUN_ID" ]; then
-              JOB_ENV="$(resolve_job_run_env --job-run-id "$JOB_RUN_ID")"
-              ENV_EXIT=$?
-            fi
-          fi
-          if [ "$ENV_EXIT" -ne 0 ]; then
-            echo "Unable to resolve TestOps job-run context — live upload disabled"
-            emit_disabled "${JOB_RUN_ID:-}"
-            exit 0
-          fi
-
-          # `job-run env` is the official shell-assignment handoff contract.
-          # Export it locally, then expose only non-secret numeric IDs and URL.
-          # shellcheck disable=SC2046
-          export $(printf '%s\n' "$JOB_ENV")
-          if ! [[ "${ALLURE_JOB_RUN_ID:-}" =~ ^[0-9]+$ ]] ||
-             ! [[ "${ALLURE_LAUNCH_ID:-}" =~ ^[0-9]+$ ]]; then
-            echo "Invalid TestOps context IDs — live upload disabled"
-            emit_disabled "$JOB_RUN_ID"
-            exit 0
-          fi
-
-          LAUNCH_URL="${ALLURE_LAUNCH_URL:-${ALLURE_ENDPOINT%/}/launch/${ALLURE_LAUNCH_ID}}"
-          echo "enabled=true" >> "$GITHUB_OUTPUT"
-          echo "launch_id=${ALLURE_LAUNCH_ID}" >> "$GITHUB_OUTPUT"
-          echo "job_run_id=${ALLURE_JOB_RUN_ID}" >> "$GITHUB_OUTPUT"
-          echo "launch_url=${LAUNCH_URL}" >> "$GITHUB_OUTPUT"
-
-  # Main owns the stage host: cancel develop CI so promotion is not tested
-  # against a WIP checkout. Does not `needs` deploy — runs in parallel with build.
   preempt-develop-cd:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
@@ -593,19 +375,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - name: Cancel develop CI
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          ids=""
-          for status in in_progress queued pending waiting; do
-            ids="$ids $(gh run list --repo "$GITHUB_REPOSITORY" --workflow CI --branch develop --status "$status" --limit 20 --json databaseId --jq '.[].databaseId')"
-          done
-          for id in $ids; do
-            echo "preempt develop run $id"
-            gh run cancel "$id" --repo "$GITHUB_REPOSITORY" || true
-          done
+      - uses: ./.github/actions/preempt-develop-cd
 
   # Develop must not start (or continue) if main already claimed the stage.
   yield-to-main-cd:
@@ -615,24 +385,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - name: Abort this run when main CD is queued or running
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          main_busy() {
-            for status in in_progress queued pending waiting; do
-              count="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow CI --branch main --status "$status" --limit 5 --json databaseId --jq 'length')"
-              if [ "$count" != "0" ]; then
-                return 0
-              fi
-            done
-            return 1
-          }
-          if main_busy || { sleep 3; main_busy; }; then
-            echo "main CD owns the stage — cancelling this develop run"
-            gh run cancel "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" || true
-          fi
+      - uses: ./.github/actions/yield-to-main-cd
 
   # Keep the backend root first: GitHub has no explicit graph coordinates and uses
   # declaration order as a layout hint for otherwise independent jobs.
@@ -1047,7 +800,7 @@ jobs:
       needs.trigger.outputs.catalog == 'true' &&
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 2
     outputs:
       include: ${{ steps.matrix.outputs.include }}
       services: ${{ steps.matrix.outputs.services }}
@@ -1055,17 +808,8 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - name: Catalog SPA matrix
-        id: matrix
-        run: |
-          set -euo pipefail
-          if [ ! -f deploy/matrix.yaml ] || [ ! -f frontend/scripts/catalog-cd-matrix.py ]; then
-            echo 'include=[{"service":"none","dockerfile":"Dockerfile","context":"."}]' >> "$GITHUB_OUTPUT"
-            echo "services=" >> "$GITHUB_OUTPUT"
-            echo "catalog skipped (no deploy/matrix.yaml)"
-            exit 0
-          fi
-          python frontend/scripts/catalog-cd-matrix.py >> "$GITHUB_OUTPUT"
+      - id: matrix
+        uses: ./.github/actions/catalog-matrix
 
   catalog-build:
     name: catalog ${{ matrix.service }}
@@ -1110,17 +854,9 @@ jobs:
           load: true
           cache-from: type=gha,scope=${{ env.DOCKER_CACHE_SCOPE }}
           cache-to: type=gha,mode=max,scope=${{ env.DOCKER_CACHE_SCOPE }}
-      - name: Push catalog image to GHCR
-        run: |
-          set -euo pipefail
-          docker compose push ${{ matrix.service }}
-          if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
-            echo "skip :latest (only main retags latest)"
-            exit 0
-          fi
-          img="ghcr.io/${{ github.repository_owner }}/${APP_SLUG}-${{ matrix.service }}"
-          docker tag "${img}:${IMAGE_TAG}" "${img}:latest"
-          docker push "${img}:latest"
+      - uses: ./.github/actions/catalog-push
+        with:
+          service: ${{ matrix.service }}
 
   catalog-deploy-stage:
     needs: [catalog-matrix, catalog-build, trigger, preempt-develop-cd, yield-to-main-cd]
@@ -1442,386 +1178,29 @@ jobs:
       GH_PAGES_BASE: ${{ vars.GH_PAGES_BASE || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
       ALLURE_LIVE_ENABLED: ${{ vars.ALLURE_PROJECT_ID != '' }}
       NPM_CI_IF: "true"
+      ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID || '-1004381150566' }}
+      TELEGRAM_TOPIC_ID: ${{ vars.TELEGRAM_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || '3' }}
     outputs:
-      testops_launch_url: ${{ steps.resolve-testops-url.outputs.launch_url }}
-      pages_artifact: ${{ steps.pages-artifact.outcome }}
+      testops_launch_url: ${{ steps.publish.outputs.launch_url }}
+      pages_artifact: ${{ steps.publish.outputs.pages_artifact }}
     steps:
-      - name: Resolve tests module dir
-        run: |
-          set -euo pipefail
-          echo "TESTS_DIR=tests/${TESTS_LANG}/tests-${TESTS_LANG}-${TESTS_BUILDER}-${TESTS_FRAMEWORK}-${TESTS_REPORT}-${TESTS_UI_LIBRARY}" >> "$GITHUB_ENV"
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
-
-      - uses: actions/setup-node@v6
+      - id: publish
+        uses: ./.github/actions/publish-allure-report
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: ${{ env.TESTS_DIR }}/package-lock.json
-
-      - name: package.json pins must match package-lock.json
-        working-directory: ${{ env.TESTS_DIR }}
-        run: node scripts/check-package-lock.mjs
-
-      - name: Load Allure history
-        continue-on-error: true
-        uses: actions/checkout@v7
-        with:
-          ref: gh-pages
-          path: gh-pages
-          sparse-checkout: history.jsonl
-          sparse-checkout-cone-mode: false
-
-      - &cache-allure-nm
-        name: Cache Allure npm node_modules
-        id: cache-allure-nm
-        continue-on-error: true
-        uses: actions/cache@v6
-        with:
-          path: ${{ env.TESTS_DIR }}/node_modules
-          key: allure-nm-${{ runner.os }}-${{ hashFiles(format('{0}/package-lock.json', env.TESTS_DIR)) }}
-
-      - name: Skip npm ci on node_modules cache hit
-        if: steps.cache-allure-nm.outcome == 'success' && steps.cache-allure-nm.outputs.cache-hit == 'true'
-        run: echo "NPM_CI_IF=false" >> "$GITHUB_ENV"
-
-      - name: Install npm dependencies
-        if: env.NPM_CI_IF == 'true'
-        run: npm ci
-        working-directory: ${{ env.TESTS_DIR }}
-
-      - name: Download merged raw Allure results
-        id: results
-        continue-on-error: true
-        uses: ./.github/actions/download-artifact
-        with:
-          pattern: allure-results-*
-          path: ${{ env.TESTS_DIR }}/build/allure-results
-          merge-multiple: true
-
-      - name: Verify merged Allure results
-        id: merged-results
-        if: steps.results.outcome == 'success'
-        env:
-          ALLURE_RESULTS: ${{ env.TESTS_DIR }}/build/allure-results
-        run: |
-          if [ -n "$(find "${ALLURE_RESULTS}" -type f 2>/dev/null | head -1)" ]; then
-            echo "has_results=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "has_results=false" >> "$GITHUB_OUTPUT"
-            echo "No merged Allure results — skip publish"
-          fi
-
-      # Canonical environment.properties after merge (one file for Pages / fallback upload).
-      - name: Write launch environment axes
-        if: steps.merged-results.outputs.has_results == 'true'
-        env:
-          ALLURE_RESULTS: ${{ github.workspace }}/${{ env.TESTS_DIR }}/build/allure-results
-        run: |
-          eval "${ALLURE_WRITE_ENVIRONMENT}"
-          write_allure_environment
-
-      - name: Restore Allure history
-        if: steps.merged-results.outputs.has_results == 'true'
-        run: |
-          if [ -f gh-pages/history.jsonl ]; then
-            cp gh-pages/history.jsonl "${{ env.TESTS_DIR }}/history.jsonl"
-          elif [ -f "${{ env.TESTS_DIR }}/history.jsonl" ]; then
-            echo "Using checked-in history.jsonl"
-          fi
-
-      - *cache-allurectl
-      - *setup-live-allurectl
-
-      - name: Write executor.json
-        if: steps.merged-results.outputs.has_results == 'true'
-        env:
-          ALLURE_RESULTS: ${{ env.TESTS_DIR }}/build/allure-results
-        run: |
-          mkdir -p "${ALLURE_RESULTS}"
-          cat > "${ALLURE_RESULTS}/executor.json" <<EOF
-          {
-            "reportName": "Run #${{ github.run_number }}",
-            "buildOrder": ${{ github.run_number }},
-            "reportUrl": "${GH_PAGES_BASE}/reports/${REPORT_ID}/awesome/index.html",
-            "buildUrl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          }
-          EOF
-
-      - name: Fallback upload merged results to Allure TestOps
-        if: >-
-          always() &&
-          needs.trigger.outputs.enabled != 'true' &&
-          steps.merged-results.outputs.has_results == 'true' &&
-          env.ALLURE_PROJECT_ID != ''
-        continue-on-error: true
-        id: testops-upload
-        working-directory: ${{ env.TESTS_DIR }}
-        env:
-          ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
-          ALLURE_LAUNCH_NAME: "${{ env.APP_SLUG }} CI — ${{ env.RUN_LABEL }}"
-        run: |
-          set +e
-          set -uo pipefail
-          if [ -z "${ALLURE_TOKEN:-}" ]; then
-            echo "No ALLURE_TOKEN — skip TestOps upload"
-            exit 0
-          fi
-          if ! command -v allurectl >/dev/null 2>&1; then
-            echo "allurectl not available — skip TestOps upload"
-            exit 0
-          fi
-          allurectl upload "build/allure-results" \
-            --endpoint "${ALLURE_ENDPOINT}" \
-            --token "${ALLURE_TOKEN}" \
-            --project-id "${ALLURE_PROJECT_ID}" \
-            --launch-name "${ALLURE_LAUNCH_NAME}" 2>&1 | tee allurectl-upload.log
-          UPLOAD_EXIT=${PIPESTATUS[0]}
-          if [ "$UPLOAD_EXIT" -eq 0 ]; then
-            LAUNCH_URL=$(grep -Eo 'https://[^ ]+/launch/[0-9]+' allurectl-upload.log | head -1 || true)
-            if [ -z "$LAUNCH_URL" ] && allurectl job-run env >/tmp/allure-env 2>/dev/null; then
-              # shellcheck disable=SC1091
-              source /tmp/allure-env
-              LAUNCH_URL="${ALLURE_LAUNCH_URL:-}"
-            fi
-            if [ -n "$LAUNCH_URL" ]; then
-              echo "launch_url=${LAUNCH_URL}" >> "$GITHUB_OUTPUT"
-              echo "TESTOPS_LAUNCH_URL=${LAUNCH_URL}" >> "$GITHUB_ENV"
-            fi
-          fi
-          exit 0
-
-      - name: Stop shared TestOps job-run
-        if: >-
-          always() &&
-          needs.trigger.outputs.job_run_id != '' &&
-          steps.setup-allurectl.outcome == 'success'
-        continue-on-error: true
-        env:
-          ALLURE_JOB_RUN_ID: ${{ needs.trigger.outputs.job_run_id }}
-        run: |
-          set -euo pipefail
-          allurectl --http-timeout 30s job-run stop \
-            --project-id "$ALLURE_PROJECT_ID" \
-            --job-run-id "$ALLURE_JOB_RUN_ID"
-
-      - name: Resolve TestOps launch URL
-        id: resolve-testops-url
-        if: always()
-        env:
-          LIVE_LAUNCH_URL: ${{ needs.trigger.outputs.launch_url }}
-          FALLBACK_LAUNCH_URL: ${{ steps.testops-upload.outputs.launch_url }}
-        run: |
-          LAUNCH_URL="${LIVE_LAUNCH_URL:-${FALLBACK_LAUNCH_URL:-}}"
-          echo "launch_url=${LAUNCH_URL}" >> "$GITHUB_OUTPUT"
-          if [ -n "$LAUNCH_URL" ]; then
-            echo "TESTOPS_LAUNCH_URL=${LAUNCH_URL}" >> "$GITHUB_ENV"
-          fi
-
-      - name: Download Sonar backend report-task
-        id: sonar-report-task
-        continue-on-error: true
-        uses: ./.github/actions/download-artifact
-        with:
-          name: sonar-backend-report-task
-          path: sonar-backend-report-task
-
-      - name: Attach live Sonar quality gate
-        if: steps.merged-results.outputs.has_results == 'true'
-        continue-on-error: true
-        working-directory: ${{ env.TESTS_DIR }}
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}
-        run: |
-          set -euo pipefail
-          REPORT_TASK="$(find "${GITHUB_WORKSPACE}/sonar-backend-report-task" -name 'report-task.txt' -print -quit 2>/dev/null || true)"
-          if [[ -z "${REPORT_TASK}" || ! -f "${REPORT_TASK}" ]]; then
-            echo "No Sonar report-task — Allure panel keeps fixture"
-            exit 0
-          fi
-          if [[ -z "${SONAR_TOKEN:-}" ]]; then
-            echo "SONAR_TOKEN unset — Allure panel keeps fixture"
-            exit 0
-          fi
-          node scripts/dump-sonar-quality-gate.mjs \
-            --report-task "${REPORT_TASK}" \
-            --out allure/sonar-quality-gate.json \
-            --timeout "${SONAR_QUALITY_GATE_TIMEOUT}"
-
-      - name: Allure quality gate + report
-        if: always() && steps.merged-results.outputs.has_results == 'true'
-        id: allure-report
-        working-directory: ${{ env.TESTS_DIR }}
+          tests_dir: ${{ env.TESTS_LANG == 'java' && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
         env:
           CI_LAYER_JOBS: ${{ toJSON(needs) }}
-        run: |
-          set +e
-          npx --no-install allure quality-gate build/allure-results --config allurerc.mjs
-          echo "QUALITY_GATE_EXIT=$?" >> "$GITHUB_ENV"
-          npx --no-install allure generate build/allure-results \
-            -o build/reports/allure-report/allureReport \
-            --config allurerc.mjs
-          REPORT_EXIT=$?
-          if [ "${REPORT_EXIT}" -eq 0 ]; then
-            node allure/tests-table-from-run.mjs \
-              --results build/allure-results \
-              --history history.jsonl \
-              --report build/reports/allure-report/allureReport
-            node allure/attach-ci-jobs-quality-gate.mjs \
-              --report build/reports/allure-report/allureReport
-          fi
-          set -e
-          exit "${REPORT_EXIT}"
-
-      - name: Publish merged Allure report artifact
-        if: always() && steps.allure-report.outcome == 'success'
-        continue-on-error: true
-        uses: actions/upload-artifact@v7
-        with:
-          name: allure-report-ci
-          path: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/
-          if-no-files-found: ignore
-          retention-days: 14
-
-      # Soft Pages — same job so generate stays the gate; PR skips these steps.
-      - name: Prepare GitHub Pages
-        id: pages-prepare
-        if: >-
-          always() &&
-          github.event_name != 'pull_request' &&
-          steps.allure-report.outcome == 'success'
-        continue-on-error: true
-        env:
-          ALLURE_REPORT_ROOT: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport
-          ALLURE_AWESOME: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/awesome
-          ALLURE_RESULTS: ${{ env.TESTS_DIR }}/build/allure-results
-        run: |
-          if [ ! -f "${ALLURE_AWESOME}/index.html" ]; then
-            echo "No ${ALLURE_AWESOME}/index.html — skip GitHub Pages"
-            exit 0
-          fi
-          mkdir -p pages/reports/${REPORT_ID}
-          cp -r "${ALLURE_REPORT_ROOT}/." "pages/reports/${REPORT_ID}/"
-          rm -rf pages/reports/latest
-          cp -r "pages/reports/${REPORT_ID}" pages/reports/latest
-          if [ -f "${{ env.TESTS_DIR }}/history.jsonl" ]; then
-            cp "${{ env.TESTS_DIR }}/history.jsonl" pages/history.jsonl
-          elif [ -f "${ALLURE_REPORT_ROOT}/history.jsonl" ]; then
-            cp "${ALLURE_REPORT_ROOT}/history.jsonl" pages/history.jsonl
-          fi
-          echo "${REPORT_ID}" > pages/latest-run-id.txt
-          printf 'reports.autotests.ai\n' > pages/CNAME
-          touch pages/.nojekyll
-          printf '%s\n' '<!DOCTYPE html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=reports/latest/awesome/index.html"><link rel="canonical" href="reports/latest/awesome/index.html"><title>Allure</title>' > pages/index.html
-          mkdir -p pages/readme
-          bash .github/scripts/generate-readme-badge.sh \
-            "${ALLURE_RESULTS}" pages/readme main "#${{ github.run_number }}" \
-            "" "Multistack" "Java 21 · Spring Boot · Allure 3" ""
-
-      - name: Upload GitHub Pages artifact
-        id: pages-artifact
-        if: >-
-          always() &&
-          github.event_name != 'pull_request' &&
-          steps.allure-report.outcome == 'success' &&
-          steps.pages-prepare.outcome == 'success' &&
-          hashFiles('pages/reports/**/awesome/index.html') != ''
-        continue-on-error: true
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: pages
-
-      - name: Backup Allure report on gh-pages
-        id: gh-pages-deploy
-        if: >-
-          always() &&
-          github.event_name != 'pull_request' &&
-          steps.allure-report.outcome == 'success' &&
-          steps.pages-prepare.outcome == 'success' &&
-          hashFiles('pages/reports/**/awesome/index.html') != ''
-        continue-on-error: true
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: pages
-          enable_jekyll: false
-          # Branch backup only (history.jsonl + one run). Live site is
-          # deploy-github-pages / pages.yml. keep_files: true bloated the
-          # branch (~12GB) when it was also the Pages source.
-          keep_files: false
-          cname: reports.autotests.ai
-
-      - name: Send Allure Telegram notification
-        if: always() && steps.allure-report.outcome == 'success'
-        continue-on-error: true
-        timeout-minutes: 2
-        working-directory: ${{ env.TESTS_DIR }}
-        env:
-          NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} CI #${{ github.run_number }}"
-          BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          TESTOPS_LAUNCH_URL: ${{ steps.resolve-testops-url.outputs.launch_url }}
-          ALLURE_FOLDER: ${{ github.workspace }}/${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/awesome
-          ALLURE_RESULTS_FOLDER: ${{ github.workspace }}/${{ env.TESTS_DIR }}/build/allure-results
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID || '-1004381150566' }}
-          TELEGRAM_TOPIC_ID: ${{ vars.TELEGRAM_TOPIC_ID || secrets.TELEGRAM_TOPIC_ID || '3' }}
-          NOTIFICATION_MODE: ${{ github.event_name != 'pull_request' && 'live' || 'dry-run' }}
-          PAGES_OUTCOME: ${{ steps.gh-pages-deploy.outcome }}
-        run: |
-          set -euo pipefail
-          if [ -z "${TELEGRAM_BOT_TOKEN:-}" ]; then
-            echo "No Telegram token — skip notification"
-            exit 0
-          fi
-          if [ ! -f "${ALLURE_FOLDER}/summary.json" ]; then
-            echo "No ${ALLURE_FOLDER}/summary.json — skip Telegram"
-            exit 0
-          fi
-          if [ "${PAGES_OUTCOME}" = "success" ]; then
-            export ALLURE_REPORT_URL="${GH_PAGES_BASE}/reports/${REPORT_ID}/awesome/index.html"
-            export ALLURE_DASHBOARD_URL="${GH_PAGES_BASE}/reports/${REPORT_ID}/dashboard/index.html"
-          else
-            export ALLURE_REPORT_URL=""
-            export ALLURE_DASHBOARD_URL=""
-          fi
-          node scripts/render-notifications-config.mjs
-          if [ "${NOTIFICATION_MODE}" = "live" ]; then
-            MODE_FLAG="--live"
-          else
-            MODE_FLAG="--dry-run"
-          fi
-          npx --no-install allure-notifications send \
-            --config notifications/config.runtime.json \
-            "${MODE_FLAG}" \
-            --out collage.png
-
-      - name: Job summary
-        if: always()
-        env:
-          ALLURE_AWESOME: ${{ env.TESTS_DIR }}/build/reports/allure-report/allureReport/awesome
-          PAGES_OUTCOME: ${{ steps.gh-pages-deploy.outcome }}
-        run: |
-          {
-            echo "## publish-allure-report"
-            echo ""
-            echo "- [GitHub Actions run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
-            if [ -f "${ALLURE_AWESOME}/index.html" ]; then
-              echo "- Allure report artifact: allure-report-ci"
-            fi
-            if [ "${PAGES_OUTCOME}" = "success" ]; then
-              echo "- [Allure report](${GH_PAGES_BASE}/reports/latest/awesome/index.html)"
-              echo "- [Allure dashboard](${GH_PAGES_BASE}/reports/latest/dashboard/index.html)"
-            elif [ "${{ github.event_name }}" != "pull_request" ]; then
-              echo "- GitHub Pages not deployed"
-            fi
-            if [ -n "${TESTOPS_LAUNCH_URL:-}" ]; then
-              echo "- [Allure TestOps launch](${TESTOPS_LAUNCH_URL})"
-            fi
-          } >> "$GITHUB_STEP_SUMMARY"
+          TRIGGER_ENABLED: ${{ needs.trigger.outputs.enabled }}
+          TRIGGER_JOB_RUN_ID: ${{ needs.trigger.outputs.job_run_id }}
+          TRIGGER_LAUNCH_URL: ${{ needs.trigger.outputs.launch_url }}
 
   # Live GitHub Pages. Soft: a 503 must not fail generate. Retry: pages.yml.
   deploy-github-pages:

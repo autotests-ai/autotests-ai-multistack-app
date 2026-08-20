@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 """Catalog CD matrix from deploy/matrix.yaml (frontends without teaching: true).
 
-Called from `.github/workflows/ci.yml` (catalog-* jobs). Stdout (`>> $GITHUB_OUTPUT`):
-  include=<json array of {service, dockerfile, context}>
-  services=<space-separated compose services>
+Writes `deploy/catalog-matrix.json` for CI (`catalog-matrix` job reads JSON; no
+Python on the runner). Skill / humans regenerate after editing matrix.yaml:
+
+  python frontend/scripts/catalog-cd-matrix.py --write
 
 `context` is the frontend module directory (compose / catalog-build context=module).
-
-Human check: python frontend/scripts/catalog-cd-matrix.py --pretty
 """
 from __future__ import annotations
 
@@ -81,9 +80,25 @@ def catalog_frontends(data: dict, repo_root: Path) -> list[dict]:
     return rows
 
 
+def _payload(include: list[dict], services: str) -> dict:
+    return {"include": include, "services": services}
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Catalog CD services from deploy/matrix.yaml")
     parser.add_argument("--pretty", action="store_true", help="print JSON include list")
+    parser.add_argument(
+        "--write",
+        nargs="?",
+        const="deploy/catalog-matrix.json",
+        default=None,
+        help="write JSON for CI (default path: deploy/catalog-matrix.json)",
+    )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="exit 1 if committed JSON does not match matrix.yaml",
+    )
     parser.add_argument("--yaml", type=Path, default=None, help="override deploy/matrix.yaml")
     args = parser.parse_args(argv)
 
@@ -103,11 +118,33 @@ def main(argv: list[str] | None = None) -> int:
         for r in rows
     ]
     services = " ".join(r["service"] for r in rows)
-    if args.pretty:
-        print(json.dumps({"include": include, "services": services}, indent=2))
+    payload = _payload(include, services)
+    text = json.dumps(payload, indent=2) + "\n"
+    default_json = repo_root / "deploy" / "catalog-matrix.json"
+    json_path = Path(args.write) if args.write else default_json
+    if not json_path.is_absolute():
+        json_path = repo_root / json_path
+
+    if args.check:
+        if not json_path.is_file():
+            print(f"STOP: {json_path} missing — run with --write", file=sys.stderr)
+            return 1
+        committed = json.loads(json_path.read_text(encoding="utf-8"))
+        if committed != payload:
+            print(f"STOP: {json_path} stale vs {yaml_path} — run with --write", file=sys.stderr)
+            return 1
+        print(f"ok: {json_path} matches {yaml_path.name}")
         return 0
-    print(f"include={json.dumps(include, separators=(',', ':'))}")
-    print(f"services={services}")
+
+    write_path = json_path if args.write or not args.pretty else None
+    if write_path is None and not args.pretty:
+        write_path = default_json
+    if write_path is not None:
+        write_path.parent.mkdir(parents=True, exist_ok=True)
+        write_path.write_text(text, encoding="utf-8")
+        print(f"wrote {write_path}", file=sys.stderr)
+    if args.pretty or write_path is None or not args.write:
+        print(text, end="")
     return 0
 
 

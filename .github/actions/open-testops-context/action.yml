@@ -1,0 +1,134 @@
+name: open-testops-context
+description: >-
+  Soft TestOps job-run for the graph root. Missing creds or allurectl outage
+  disables live upload without blocking tests.
+outputs:
+  enabled:
+    value: ${{ steps.resolve.outputs.enabled }}
+  launch_id:
+    value: ${{ steps.resolve.outputs.launch_id }}
+  job_run_id:
+    value: ${{ steps.resolve.outputs.job_run_id }}
+  launch_url:
+    value: ${{ steps.resolve.outputs.launch_url }}
+runs:
+  using: composite
+  steps:
+    - name: Check TestOps configuration
+      id: configured
+      shell: bash
+      env:
+        ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
+      run: |
+        if [ -n "${ALLURE_TOKEN:-}" ] && [ -n "${ALLURE_PROJECT_ID:-}" ]; then
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+          echo "ALLURE_LIVE_ENABLED=true" >> "$GITHUB_ENV"
+        else
+          echo "enabled=false" >> "$GITHUB_OUTPUT"
+          echo "TestOps credentials unavailable — live upload disabled"
+        fi
+
+    - id: setup-allurectl
+      uses: ./.github/actions/setup-allurectl
+      env:
+        ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
+
+    - name: Create or adopt shared TestOps context
+      id: resolve
+      if: always()
+      shell: bash
+      env:
+        ALLURE_LAUNCH_NAME: ${{ env.ALLURE_LAUNCH_NAME }}
+        CONFIGURED: ${{ steps.configured.outputs.enabled }}
+        SETUP_OUTCOME: ${{ steps.setup-allurectl.outcome }}
+      run: |
+        set +e
+        set -uo pipefail
+
+        emit_disabled() {
+          local cleanup_job_run_id="${1:-}"
+          echo "enabled=false" >> "$GITHUB_OUTPUT"
+          echo "launch_id=" >> "$GITHUB_OUTPUT"
+          echo "job_run_id=${cleanup_job_run_id}" >> "$GITHUB_OUTPUT"
+          echo "launch_url=" >> "$GITHUB_OUTPUT"
+        }
+
+        if [ "${CONFIGURED}" != "true" ] ||
+           [ "${SETUP_OUTCOME}" != "success" ] ||
+           ! command -v allurectl >/dev/null 2>&1; then
+          emit_disabled
+          exit 0
+        fi
+
+        JOB_RUN_ID="${ALLURE_JOB_RUN_ID:-}"
+        START_OUT=""
+        if [ -z "$JOB_RUN_ID" ]; then
+          JOB_RUN_BRANCH="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
+          START_OUT="$(
+            allurectl --http-timeout 10s job-run start \
+              --project-id "$ALLURE_PROJECT_ID" \
+              --ci-type github \
+              --ci-endpoint "$GITHUB_SERVER_URL" \
+              --job-name "$GITHUB_WORKFLOW" \
+              --job-uid "$ALLURE_JOB_UID" \
+              --job-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/workflows/ci.yml" \
+              --job-run-name "#$GITHUB_RUN_NUMBER.$GITHUB_RUN_ATTEMPT" \
+              --job-run-uid "$ALLURE_JOB_RUN_UID" \
+              --job-run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+              --job-run-branch "$JOB_RUN_BRANCH" \
+              --launch-name "$ALLURE_LAUNCH_NAME"
+          )"
+          START_EXIT=$?
+          if [ "$START_EXIT" -ne 0 ]; then
+            echo "Unable to create TestOps job-run — live upload disabled"
+            emit_disabled
+            exit 0
+          fi
+        fi
+
+        resolve_job_run_env() {
+          allurectl --http-timeout 10s job-run env \
+            --project-id "$ALLURE_PROJECT_ID" \
+            "$@"
+        }
+
+        if [ -n "$JOB_RUN_ID" ]; then
+          JOB_ENV="$(resolve_job_run_env --job-run-id "$JOB_RUN_ID")"
+        else
+          JOB_ENV="$(resolve_job_run_env --job-run-uid "$ALLURE_JOB_RUN_UID")"
+        fi
+        ENV_EXIT=$?
+        if [ "$ENV_EXIT" -ne 0 ] && [ -n "$START_OUT" ]; then
+          JOB_RUN_ID="$(
+            printf '%s' "$START_OUT" \
+              | grep -Eo 'Jobrun\[[0-9]+\]' \
+              | head -1 \
+              | sed -E 's/Jobrun\[([0-9]+)\]/\1/'
+          )"
+          if [ -n "$JOB_RUN_ID" ]; then
+            JOB_ENV="$(resolve_job_run_env --job-run-id "$JOB_RUN_ID")"
+            ENV_EXIT=$?
+          fi
+        fi
+        if [ "$ENV_EXIT" -ne 0 ]; then
+          echo "Unable to resolve TestOps job-run context — live upload disabled"
+          emit_disabled "${JOB_RUN_ID:-}"
+          exit 0
+        fi
+
+        # `job-run env` is the official shell-assignment handoff contract.
+        # Export it locally, then expose only non-secret numeric IDs and URL.
+        # shellcheck disable=SC2046
+        export $(printf '%s\n' "$JOB_ENV")
+        if ! [[ "${ALLURE_JOB_RUN_ID:-}" =~ ^[0-9]+$ ]] ||
+           ! [[ "${ALLURE_LAUNCH_ID:-}" =~ ^[0-9]+$ ]]; then
+          echo "Invalid TestOps context IDs — live upload disabled"
+          emit_disabled "$JOB_RUN_ID"
+          exit 0
+        fi
+
+        LAUNCH_URL="${ALLURE_LAUNCH_URL:-${ALLURE_ENDPOINT%/}/launch/${ALLURE_LAUNCH_ID}}"
+        echo "enabled=true" >> "$GITHUB_OUTPUT"
+        echo "launch_id=${ALLURE_LAUNCH_ID}" >> "$GITHUB_OUTPUT"
+        echo "job_run_id=${ALLURE_JOB_RUN_ID}" >> "$GITHUB_OUTPUT"
+        echo "launch_url=${LAUNCH_URL}" >> "$GITHUB_OUTPUT"
