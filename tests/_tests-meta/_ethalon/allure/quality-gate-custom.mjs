@@ -4,6 +4,9 @@ export const LAYERS_REQUIRE_STEPS = ["api", "integration", "e2e", "manual"];
 
 export const LAYERS_REQUIRE_ATTACHMENTS = ["e2e"];
 
+/** AllureSelenide keeps screenshots(false); only @Tag("screenshot") must attach PNGs. */
+export const ATTACHMENTS_REQUIRE_TAG = "screenshot";
+
 function countSteps(steps) {
   if (!steps?.length) {
     return 0;
@@ -15,8 +18,30 @@ function countSteps(steps) {
   return total;
 }
 
+function countAttachments(tr) {
+  let total = tr.attachments?.length ?? 0;
+  const walk = (steps) => {
+    if (!steps?.length) {
+      return;
+    }
+    for (const step of steps) {
+      if (step.type === "attachment") {
+        total += 1;
+      }
+      total += step.attachments?.length ?? 0;
+      walk(step.steps);
+    }
+  };
+  walk(tr.steps);
+  return total;
+}
+
 function labelValue(tr, name) {
   return tr.labels?.find((label) => label.name === name)?.value ?? "";
+}
+
+function hasTag(tr, tag) {
+  return (tr.labels ?? []).some((label) => label.name === "tag" && label.value === tag);
 }
 
 function isGoUnit(tr) {
@@ -57,7 +82,7 @@ export const minStepsForLayersRule = {
 export const minAttachmentsForLayersRule = {
   rule: "minAttachmentsForLayers",
   message: ({ actual, expected }) =>
-    `${actual} test(s) in layers [${(expected ?? LAYERS_REQUIRE_ATTACHMENTS).join(", ")}] have no attachments`,
+    `${actual} screenshot test(s) in layers [${(expected ?? LAYERS_REQUIRE_ATTACHMENTS).join(", ")}] have no attachments`,
   validate: async ({ trs, expected, state }) => {
     const layers = expected ?? LAYERS_REQUIRE_ATTACHMENTS;
     const previous = state.getResult() ?? 0;
@@ -68,11 +93,10 @@ export const minAttachmentsForLayersRule = {
         continue;
       }
       const layer = labelValue(tr, "layer");
-      if (!layers.includes(layer)) {
+      if (!layers.includes(layer) || !hasTag(tr, ATTACHMENTS_REQUIRE_TAG)) {
         continue;
       }
-      const attachmentCount = tr.attachments?.length ?? 0;
-      if (attachmentCount === 0) {
+      if (countAttachments(tr) === 0) {
         missing += 1;
       }
     }

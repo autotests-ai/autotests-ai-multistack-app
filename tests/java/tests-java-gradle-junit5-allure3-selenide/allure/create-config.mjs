@@ -12,6 +12,7 @@ import {
 } from "./constants.mjs";
 import { buildDashboardLayout } from "./dashboard-layout.mjs";
 import { qualityGateRules } from "./quality-gate.mjs";
+import { qualityGateUse } from "./quality-gate-use.mjs";
 
 // Allure 3 writes `logo` into <img src> as-is and does not copy the file into
 // the report. A filesystem path 404s on GitHub Pages; embed as data URI.
@@ -57,6 +58,7 @@ export function createAllureConfig({
     },
     qualityGate: {
       rules: qualityGateRules.map((rule) => ({ ...rule })),
+      ...(qualityGateUse ? { use: qualityGateUse } : {}),
       source: { ...QUALITY_GATE_SOURCE },
     },
     categories: {

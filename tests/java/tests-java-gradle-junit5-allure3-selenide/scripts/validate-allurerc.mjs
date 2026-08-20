@@ -107,6 +107,18 @@ async function main() {
     fail("qualityGate.rules: required non-empty");
   }
 
+  const useIds = new Set(
+    (config.qualityGate.use ?? []).map((item) => item?.rule).filter(Boolean),
+  );
+  const customKeys = ["minStepsForLayers", "minAttachmentsForLayers"];
+  for (const rule of config.qualityGate.rules) {
+    for (const key of customKeys) {
+      if (rule[key] !== undefined && !useIds.has(key)) {
+        fail(`qualityGate.use missing implementation for "${key}"`);
+      }
+    }
+  }
+
   const catGroupBy = config.categories?.rules?.flatMap((r) => r.groupBy ?? []) ?? [];
   const allowed = new Set([
     "flaky",

@@ -37,23 +37,23 @@ class AuthLifecycleIntegrationTest extends IntegrationTestBase {
         String username = "int_" + UUID.randomUUID().toString().substring(0, 8);
         String password = "password123";
 
-        ResponseEntity<AuthResponse> register = rest.postForEntity(
+        ResponseEntity<AuthResponse> register = postJson(
                 "/api/auth/register",
-                jsonEntity(new RegisterRequest(username, password)),
+                new RegisterRequest(username, password),
                 AuthResponse.class);
         assertEquals(HttpStatus.CREATED, register.getStatusCode());
         assertNotNull(register.getBody());
         assertEquals(username, register.getBody().username());
 
-        ResponseEntity<AuthResponse> login = rest.postForEntity(
+        ResponseEntity<AuthResponse> login = postJson(
                 "/api/auth/login",
-                jsonEntity(new LoginRequest(username, password)),
+                new LoginRequest(username, password),
                 AuthResponse.class);
         assertEquals(HttpStatus.OK, login.getStatusCode());
         assertNotNull(login.getBody());
         String token = login.getBody().token();
 
-        ResponseEntity<UserProfileResponse> profile = rest.exchange(
+        ResponseEntity<UserProfileResponse> profile = exchangeJson(
                 "/api/auth/me",
                 HttpMethod.GET,
                 bearerEntity(token),
@@ -62,7 +62,7 @@ class AuthLifecycleIntegrationTest extends IntegrationTestBase {
         assertNotNull(profile.getBody());
         assertEquals(username, profile.getBody().username());
 
-        ResponseEntity<Void> logout = rest.exchange(
+        ResponseEntity<Void> logout = exchangeJson(
                 "/api/auth/logout",
                 HttpMethod.POST,
                 bearerEntity(token),
@@ -70,7 +70,7 @@ class AuthLifecycleIntegrationTest extends IntegrationTestBase {
         assertEquals(HttpStatus.NO_CONTENT, logout.getStatusCode());
 
         // Stateless JWT: logout does not invalidate the token server-side — by design.
-        ResponseEntity<UserProfileResponse> afterLogout = rest.exchange(
+        ResponseEntity<UserProfileResponse> afterLogout = exchangeJson(
                 "/api/auth/me",
                 HttpMethod.GET,
                 bearerEntity(token),
@@ -79,7 +79,7 @@ class AuthLifecycleIntegrationTest extends IntegrationTestBase {
         assertNotNull(afterLogout.getBody());
         assertEquals(username, afterLogout.getBody().username());
 
-        ResponseEntity<Void> delete = rest.exchange(
+        ResponseEntity<Void> delete = exchangeJson(
                 "/api/auth/me",
                 HttpMethod.DELETE,
                 bearerEntity(token),
@@ -87,7 +87,7 @@ class AuthLifecycleIntegrationTest extends IntegrationTestBase {
         assertEquals(HttpStatus.NO_CONTENT, delete.getStatusCode());
 
         // The token still verifies cryptographically, but the account is gone → 401.
-        ResponseEntity<String> afterDelete = rest.exchange(
+        ResponseEntity<String> afterDelete = exchangeJson(
                 "/api/auth/me",
                 HttpMethod.GET,
                 bearerEntity(token),

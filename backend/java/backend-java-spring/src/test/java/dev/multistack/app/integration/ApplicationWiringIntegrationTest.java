@@ -24,7 +24,7 @@ class ApplicationWiringIntegrationTest extends IntegrationTestBase {
     @Test
     @DisplayName("GET /api/health — full stack reports the active backend module")
     void healthReportsActiveBackendService() {
-        ResponseEntity<HealthResponse> response = rest.getForEntity("/api/health", HealthResponse.class);
+        ResponseEntity<HealthResponse> response = getJson("/api/health", HealthResponse.class);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -35,7 +35,7 @@ class ApplicationWiringIntegrationTest extends IntegrationTestBase {
     @Test
     @DisplayName("GET /api/items — catalogue is served from PostgreSQL with Flyway seed")
     void itemsAreWiredToPostgreSQL() {
-        ResponseEntity<ItemsResponse> response = rest.getForEntity("/api/items", ItemsResponse.class);
+        ResponseEntity<ItemsResponse> response = getJson("/api/items", ItemsResponse.class);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());

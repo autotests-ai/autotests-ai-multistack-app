@@ -279,6 +279,8 @@ After generate, [`attach-ci-jobs-quality-gate.mjs`](java/tests-java-gradle-junit
 
 Layer jobs: `backend-unit-tests`, `frontend-unit-tests`, `tests-harness`, `ui-mock-tests`, `integration-tests`, `api-tests-stage`, `e2e-tests-stage`, `api-tests`, `e2e-tests`, `manual-tests`. Widget rule id: `maxCiJobFailures` (attached after generate, not an Allure CLI `use` rule).
 
+CLI (`npx allure quality-gate`) also runs `maxFailures` plus reporting via `qualityGate.use`: steps on api / integration / e2e / manual, and attachments on `@Tag("screenshot")` e2e (nested step PNGs count; AllureSelenide stays `screenshots(false)`).
+
 ## TestOps (live upload + selective rerun)
 
 `trigger` opens one shared TestOps launch/job-run (same job as lane flags); **layer** jobs stream via workflow
