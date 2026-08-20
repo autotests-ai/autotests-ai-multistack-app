@@ -253,9 +253,8 @@ Integration is **in-process Spring + PostgreSQL**, no browser. Deployed HTTP che
 | Push to `develop` | PR set + `trigger` lanes → CD stage only → `api-tests-stage` / `e2e-tests-stage` (full `api` / `e2e`, `excludeTags=mock,screenshot`) vs [stage.autotests.ai/stack/…](https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/) |
 | `workflow_dispatch` | `deploy=none\|backend\|frontend\|tests\|all` + `deploy_target=production\|stage\|both`; per-layer booleans `run_integration` / `run_api` / `run_mock` / `run_e2e` / `run_screenshot` / `run_manual`; screenshot rewrite flags; TestOps `ALLURE_JOB_RUN_ID` / `ALLURE_USERNAME` |
 
-Active stack and prod URL are workflow `env` defaults in [`ci.yml`](../.github/workflows/ci.yml)
-(`BACKEND_DIR`, `FRONTEND_DIR`, `TESTS_DIR`) — change once; family adapters `uses:` the
-matching module (GitHub does not interpolate `uses:`).
+Active stack knobs are workflow `env` in [`ci.yml`](../.github/workflows/ci.yml)
+(`BACKEND_LANG` + `BACKEND_FRAMEWORK`, `FRONTEND_LANG` + `FRONTEND_FRAMEWORK`, `TESTS_DIR`).
 Job ids are layers or languages, not tools (`e2e-tests`, not `selenide-tests`; `javascript-tests`,
 not `playwright-tests`).
 

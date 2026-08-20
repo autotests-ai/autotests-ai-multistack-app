@@ -22,8 +22,9 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        echo "==> UI ${UI_URL}"
-        curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${UI_URL}"
+        ui="https://${PUBLIC_HOST}/${STACK_MOUNT}/backend-${BACKEND_LANG}-${BACKEND_FRAMEWORK}/frontend-${FRONTEND_LANG}-${FRONTEND_FRAMEWORK}/"
+        echo "==> UI ${ui}"
+        curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${ui}"
     - uses: ./.github/actions/setup-allurectl
     - uses: actions/setup-java@v5
       with:

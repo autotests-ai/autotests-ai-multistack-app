@@ -2,12 +2,11 @@ name: CI
 
 # Teaching tests: two knobs (-Denv / -DincludeTags) pick stand and slice.
 # Layer jobs are checkout + `uses: ./backend|frontend|tests/.github/actions/<verb>`
-# with `module_dir: ${{ env.BACKEND_DIR|FRONTEND_DIR|TESTS_DIR }}`. Commands a
+# with `module_dir` from LANG+FRAMEWORK (format). Commands a
 # student types locally live inside the module action, not in this file.
 #
-# Active stack defaults live in `env:` once — APP_URL / UI_URL / BASE_URL, GHCR package
-# names and RUN_LABEL are derived from them. Swap BACKEND_DIR / FRONTEND_DIR / TESTS_DIR
-# when the teaching default changes; job ids stay layer names. Family adapters under
+# Active stack knobs live in `env:` once: BACKEND_LANG / BACKEND_FRAMEWORK,
+# FRONTEND_LANG / FRONTEND_FRAMEWORK, TESTS_DIR. Family adapters under
 # backend|frontend|tests/.github/actions/ statically `uses:` the default module
 # (GitHub does not interpolate `uses:`).
 #
@@ -44,7 +43,7 @@ name: CI
 #   sonar-frontend ← frontend-unit-tests + ui-mock-tests (mock skipped ⇒ sonar still runs)
 #   build-backend ← backend-unit-tests + integration-tests · build-frontend ← ui-mock-tests
 #   deploy-backend-stage / deploy-frontend-stage ← same gates; cd_stage; skip until vars.STAGE_APP_DIR
-#   api-tests-stage / e2e-tests-stage ← deploy-*-stage + tests-harness; full api / e2e vs STAGE_APP_URL
+  #   api-tests-stage / e2e-tests-stage ← deploy-*-stage + tests-harness; full api / e2e vs stage stand
 #     (e2e-tests-stage also compares screenshots/stage/)
 #   deploy-backend ← build-backend + sonar-backend + e2e-tests-stage (cd_production)
 #   deploy-frontend ← build-frontend + sonar-frontend + e2e-tests-stage
@@ -141,16 +140,15 @@ permissions:
 env:
   IMAGE_TAG: ${{ github.sha }}
   # ── Active stack defaults (change here only) ─────────────────────────────
-  BACKEND: backend-java-spring
-  BACKEND_DIR: backend/java/backend-java-spring
+  # Path = {zone}/{lang}/{zone}-{lang}-{framework}. Workflow env cannot nest env.*;
+  # jobs pass module_dir via format() below. Family adapter `uses:` is static —
+  # flip it with LANG/FRAMEWORK (GitHub does not interpolate uses:).
   BACKEND_LANG: java
+  BACKEND_FRAMEWORK: spring
   BACKEND_PORT: "8800"
-  # Teaching module: frontend-unit-tests + sonar + the only SHA image this workflow
-  # builds and deploys. Sibling compose frontends stay in docker-compose.yml for
-  # the catalog; they are not a CI matrix (students see one FRONTEND knob).
-  FRONTEND: frontend-typescript-react
-  FRONTEND_DIR: frontend/typescript/frontend-typescript-react
-  # Teaching tests module — selenide today; flip TESTS/TESTS_DIR/TESTS_LANG together
+  FRONTEND_LANG: typescript
+  FRONTEND_FRAMEWORK: react
+  # Tests module name is longer than lang-framework; keep TESTS_DIR as the knob.
   TESTS: tests-java-gradle-junit5-allure3-selenide
   TESTS_DIR: tests/java/tests-java-gradle-junit5-allure3-selenide
   TESTS_LANG: java
@@ -178,16 +176,10 @@ env:
   BRANCH: ${{ github.head_ref || github.ref_name }}
   SONAR_SCANNER_NPM_VERSION: "5.0.0"
   SONAR_QUALITY_GATE_TIMEOUT: "600"
-  # ── Derived (literals — workflow env cannot nest env.*; keep in sync above) ─
+  # Host + mount; stand URLs are composed in actions from LANG + FRAMEWORK.
   PUBLIC_HOST: autotests.ai
   STACK_MOUNT: stack
-  APP_URL: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
-  STAGE_APP_URL: https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/
-  # Playwright → UI_URL; pytest → BASE_URL (same stand URL)
-  UI_URL: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
-  BASE_URL: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
-  GHCR_BACKEND_PACKAGE: autotests-ai-multistack-app-backend-java-spring
-  GHCR_FRONTEND_PACKAGE: autotests-ai-multistack-app-frontend-typescript-react
+  # Stand URLs: actions compose from PUBLIC_HOST + LANG + FRAMEWORK (not listed here).
   RUN_LABEL: "${{ github.repository }} #${{ github.run_number }}"
   SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL || 'https://sonar.qa.guru' }}
   # ── Non-secret reporting defaults ───────────────────────────────────────
@@ -646,7 +638,7 @@ jobs:
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
       - uses: ./backend/.github/actions/unit
         with:
-          module_dir: ${{ env.BACKEND_DIR }}
+          module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
 
   integration-tests:
     needs: [backend-unit-tests, trigger]
@@ -672,7 +664,7 @@ jobs:
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
       - uses: ./backend/.github/actions/integration
         with:
-          module_dir: ${{ env.BACKEND_DIR }}
+          module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
 
   frontend-unit-tests:
     needs: trigger
@@ -692,7 +684,7 @@ jobs:
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
       - uses: ./frontend/.github/actions/unit
         with:
-          module_dir: ${{ env.FRONTEND_DIR }}
+          module_dir: ${{ format('frontend/{0}/frontend-{0}-{1}', env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
 
   tests-harness:
     needs: [trigger]
@@ -750,7 +742,7 @@ jobs:
       - uses: ./tests/.github/actions/mock
         with:
           module_dir: ${{ env.TESTS_DIR }}
-          frontend_dir: ${{ env.FRONTEND_DIR }}
+          frontend_dir: ${{ format('frontend/{0}/frontend-{0}-{1}', env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
           update_screenshots: ${{ inputs.update_mock_screenshots || false }}
 
   sonar-backend:
@@ -773,7 +765,7 @@ jobs:
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
       - uses: ./backend/.github/actions/sonar
         with:
-          module_dir: ${{ env.BACKEND_DIR }}
+          module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
 
   # Tests-module Sonar after full harness. Backend-only is ConfigReader coverage
   # only — skip rather than fail the tests-module gate.
@@ -818,7 +810,7 @@ jobs:
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
       - uses: ./frontend/.github/actions/sonar
         with:
-          module_dir: ${{ env.FRONTEND_DIR }}
+          module_dir: ${{ format('frontend/{0}/frontend-{0}-{1}', env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
 
   build-backend:
     needs: [backend-unit-tests, integration-tests, trigger]
@@ -843,7 +835,7 @@ jobs:
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
       - uses: ./backend/.github/actions/build
         with:
-          module_dir: ${{ env.BACKEND_DIR }}
+          module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
 
   build-frontend:
     needs: [ui-mock-tests, trigger]
@@ -867,7 +859,7 @@ jobs:
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
       - uses: ./frontend/.github/actions/build
         with:
-          module_dir: ${{ env.FRONTEND_DIR }}
+          module_dir: ${{ format('frontend/{0}/frontend-{0}-{1}', env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
 
   deploy-backend:
     needs: [build-backend, sonar-backend, trigger, e2e-tests-stage]
@@ -881,7 +873,7 @@ jobs:
     timeout-minutes: 20
     environment:
       name: ${{ vars.DEPLOY_ENVIRONMENT || 'multistack-production' }}
-      url: ${{ env.APP_URL }}
+      url: ${{ format('https://{0}/{1}/backend-{2}-{3}/frontend-{4}-{5}/', env.PUBLIC_HOST, env.STACK_MOUNT, env.BACKEND_LANG, env.BACKEND_FRAMEWORK, env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
     concurrency:
       group: deploy-autotests-ai-multistack-app
       cancel-in-progress: false
@@ -892,7 +884,6 @@ jobs:
       DEPLOY_APP_DIR: /home/autotests_ai_multistack/autotests-ai-multistack-app
       DEPLOY_COMPOSE_PROJECT: autotests-ai-multistack-app
       DEPLOY_COMPOSE_ENV_FILE: ""
-      DEPLOY_COMPOSE_SERVICES: postgres postgres-ensure-dbs backend-java-spring
       DEPLOY_HEALTH_URL: http://127.0.0.1:8800/api/health
       DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
       DEPLOY_USER: ${{ vars.DEPLOY_USER }}
@@ -901,7 +892,7 @@ jobs:
     steps:
       - uses: ./backend/.github/actions/deploy
         with:
-          module_dir: ${{ env.BACKEND_DIR }}
+          module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
           stand: prod
 
   # FE deploy after teaching build + sonar. One FRONTEND — no sibling matrix.
@@ -917,7 +908,7 @@ jobs:
     timeout-minutes: 15
     environment:
       name: ${{ vars.DEPLOY_ENVIRONMENT || 'multistack-production' }}
-      url: ${{ env.APP_URL }}
+      url: ${{ format('https://{0}/{1}/backend-{2}-{3}/frontend-{4}-{5}/', env.PUBLIC_HOST, env.STACK_MOUNT, env.BACKEND_LANG, env.BACKEND_FRAMEWORK, env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
     concurrency:
       group: deploy-autotests-ai-multistack-app
       cancel-in-progress: false
@@ -928,7 +919,6 @@ jobs:
       DEPLOY_APP_DIR: /home/autotests_ai_multistack/autotests-ai-multistack-app
       DEPLOY_COMPOSE_PROJECT: autotests-ai-multistack-app
       DEPLOY_COMPOSE_ENV_FILE: ""
-      DEPLOY_COMPOSE_SERVICES: frontend-typescript-react
       DEPLOY_HEALTH_URL: ""
       DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
       DEPLOY_USER: ${{ vars.DEPLOY_USER }}
@@ -937,7 +927,7 @@ jobs:
     steps:
       - uses: ./frontend/.github/actions/deploy
         with:
-          module_dir: ${{ env.FRONTEND_DIR }}
+          module_dir: ${{ format('frontend/{0}/frontend-{0}-{1}', env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
           stand: prod
 
   # Stage twin — push develop (WIP) or push main / dispatch production|both (promotion).
@@ -956,7 +946,7 @@ jobs:
     timeout-minutes: 20
     environment:
       name: multistack-stage
-      url: ${{ env.STAGE_APP_URL }}
+      url: ${{ format('https://stage.autotests.ai/{0}/backend-{1}-{2}/frontend-{3}-{4}/', env.STACK_MOUNT, env.BACKEND_LANG, env.BACKEND_FRAMEWORK, env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
     concurrency:
       group: deploy-autotests-ai-multistack-app-stage
       cancel-in-progress: false
@@ -967,7 +957,6 @@ jobs:
       DEPLOY_APP_DIR: ${{ vars.STAGE_APP_DIR }}
       DEPLOY_COMPOSE_PROJECT: autotests-ai-multistack-app-stage
       DEPLOY_COMPOSE_ENV_FILE: deploy/stage.env
-      DEPLOY_COMPOSE_SERVICES: postgres postgres-ensure-dbs backend-java-spring
       DEPLOY_HEALTH_URL: http://127.0.0.1:18800/api/health
       DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
       DEPLOY_USER: ${{ vars.DEPLOY_USER }}
@@ -976,7 +965,7 @@ jobs:
     steps:
       - uses: ./backend/.github/actions/deploy
         with:
-          module_dir: ${{ env.BACKEND_DIR }}
+          module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
           stand: stage
 
   deploy-frontend-stage:
@@ -993,7 +982,7 @@ jobs:
     timeout-minutes: 15
     environment:
       name: multistack-stage
-      url: ${{ env.STAGE_APP_URL }}
+      url: ${{ format('https://stage.autotests.ai/{0}/backend-{1}-{2}/frontend-{3}-{4}/', env.STACK_MOUNT, env.BACKEND_LANG, env.BACKEND_FRAMEWORK, env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
     concurrency:
       group: deploy-autotests-ai-multistack-app-stage
       cancel-in-progress: false
@@ -1004,7 +993,6 @@ jobs:
       DEPLOY_APP_DIR: ${{ vars.STAGE_APP_DIR }}
       DEPLOY_COMPOSE_PROJECT: autotests-ai-multistack-app-stage
       DEPLOY_COMPOSE_ENV_FILE: deploy/stage.env
-      DEPLOY_COMPOSE_SERVICES: frontend-typescript-react
       DEPLOY_HEALTH_URL: ""
       DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
       DEPLOY_USER: ${{ vars.DEPLOY_USER }}
@@ -1013,7 +1001,7 @@ jobs:
     steps:
       - uses: ./frontend/.github/actions/deploy
         with:
-          module_dir: ${{ env.FRONTEND_DIR }}
+          module_dir: ${{ format('frontend/{0}/frontend-{0}-{1}', env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
           stand: stage
 
   # Rest Assured against deployed backend — starts as soon as that lane finishes (FE may
@@ -1131,9 +1119,6 @@ jobs:
       LAYER: api
       ENDPOINT: stage
       PUBLIC_HOST: stage.autotests.ai
-      APP_URL: https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/
-      UI_URL: https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/
-      BASE_URL: https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/
       ALLURE_LIVE_ENABLED: ${{ needs.trigger.outputs.enabled }}
       ALLURE_LAUNCH_ID: ${{ needs.trigger.outputs.launch_id }}
       ALLURE_JOB_RUN_ID: ${{ needs.trigger.outputs.job_run_id }}
@@ -1182,9 +1167,6 @@ jobs:
       LAYER: e2e
       ENDPOINT: stage
       PUBLIC_HOST: stage.autotests.ai
-      APP_URL: https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/
-      UI_URL: https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/
-      BASE_URL: https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/
       SCREENSHOT_OS: linux
       SCREENSHOT_BROWSER: chrome
       ALLURE_LIVE_ENABLED: ${{ needs.trigger.outputs.enabled }}
