@@ -1,0 +1,1 @@
+{"id":"dced66a7a1ab4b7bf5e29c66ccecd734","fullName":"dev.multistack.app.controller.NoteControllerTest.patchTextNull","name":"PATCH /api/note maps text null to 422","status":"passed","testResultsByEnv":{"default":"72de13c8770b494f96d4f44eb6159b49"}}

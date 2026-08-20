@@ -1,0 +1,1 @@
+{"id":"51272b18f6e10d1ccdaa22f0d8af6802","fullName":"dev.multistack.app.repository.NoteRepositoryTest.deletingUserCascadesNote","name":"deleting the user cascades the note (V3 ON DELETE CASCADE)","status":"passed","testResultsByEnv":{"default":"b39a7aa60997bbb872e04ff05b306675"}}

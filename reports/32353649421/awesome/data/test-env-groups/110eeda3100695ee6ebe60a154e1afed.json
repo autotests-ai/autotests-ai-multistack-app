@@ -1,0 +1,1 @@
+{"id":"110eeda3100695ee6ebe60a154e1afed","fullName":"dev.multistack.app.controller.NoteControllerTest.deleteRequiresAuthentication","name":"DELETE /api/note without token returns 401","status":"passed","testResultsByEnv":{"default":"4b6aa6303ddfb7b99ae7e3b62b46cab1"}}

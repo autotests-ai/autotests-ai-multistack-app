@@ -1,0 +1,1 @@
+{"id":"1d0ce6fc5922cbf8844730375b58c033","fullName":"dev.multistack.app.controller.NoteControllerTest.putCreates","name":"PUT /api/note creates with 201 and Content-Location","status":"passed","testResultsByEnv":{"default":"b34ef2d1a2d6bc4950cfbcab4e3f9efb"}}

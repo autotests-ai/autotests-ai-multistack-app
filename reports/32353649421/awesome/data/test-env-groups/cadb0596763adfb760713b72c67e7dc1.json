@@ -1,0 +1,1 @@
+{"id":"cadb0596763adfb760713b72c67e7dc1","fullName":"dev.multistack.app.controller.NoteControllerTest.putRequiresAuthentication","name":"PUT /api/note without token returns 401","status":"passed","testResultsByEnv":{"default":"567dfcd23cc29407c92311d70e6acce0"}}

@@ -1,0 +1,1 @@
+{"id":"9809048c154ce7193a72e315a7d1eccf","fullName":"dev.multistack.app.integration.NoteLifecycleIntegrationTest.deleteAccountWithNoteCascades","name":"deleting the account with a note does not 500 (FK cascade)","status":"passed","testResultsByEnv":{"default":"3bee962a512173000909c7802fb40590"}}

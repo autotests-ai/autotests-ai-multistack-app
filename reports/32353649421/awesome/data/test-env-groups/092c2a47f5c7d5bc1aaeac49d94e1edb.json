@@ -1,0 +1,1 @@
+{"id":"092c2a47f5c7d5bc1aaeac49d94e1edb","fullName":"dev.multistack.app.service.NoteServiceTest.deleteUnknownUser","name":"delete rejects a username that no longer exists","status":"passed","testResultsByEnv":{"default":"61070ee39127d537ff70e30288ecb289"}}

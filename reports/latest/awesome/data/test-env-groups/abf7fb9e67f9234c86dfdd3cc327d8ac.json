@@ -1,0 +1,1 @@
+{"id":"abf7fb9e67f9234c86dfdd3cc327d8ac","fullName":"dev.multistack.app.controller.NoteControllerTest.patchReturnsOk","name":"PATCH /api/note with merge-patch returns 200","status":"passed","testResultsByEnv":{"default":"d20ebaec187380bedacb08618cdfce30"}}

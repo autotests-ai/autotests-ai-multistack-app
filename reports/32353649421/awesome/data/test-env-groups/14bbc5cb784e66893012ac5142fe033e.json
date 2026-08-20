@@ -1,0 +1,1 @@
+{"id":"14bbc5cb784e66893012ac5142fe033e","fullName":"dev.multistack.app.service.NoteServiceTest.getMissingNote","name":"get is 404 when the singleton is missing","status":"passed","testResultsByEnv":{"default":"02ac63568b156490c0dd9817027bb6b1"}}

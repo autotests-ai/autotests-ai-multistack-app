@@ -1,0 +1,1 @@
+{"id":"94beb17eee0e65cff1573d05dfe0006f","fullName":"dev.multistack.app.service.NoteServiceTest.patchNullBody","name":"patch rejects a null body","status":"passed","testResultsByEnv":{"default":"24c8ae13422c538f1830d5d342b4b9f9"}}

@@ -1,0 +1,1 @@
+{"id":"3fec3fb071d404417a5dd010974b0355","fullName":"dev.multistack.app.service.NoteServiceTest.deleteMissingNote","name":"delete is 404 when the singleton is missing","status":"passed","testResultsByEnv":{"default":"78c2fbe04a2797610a73e77f46a01ea0"}}

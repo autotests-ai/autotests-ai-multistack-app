@@ -1,0 +1,1 @@
+{"id":"07f33aa3e473680d7ccd5a29f0d4cf50","fullName":"dev.multistack.app.service.NoteServiceTest.patchTitleTooLong","name":"patch rejects a title longer than 120","status":"passed","testResultsByEnv":{"default":"8a29ef2b6d5a597491bea8912118bd24"}}
