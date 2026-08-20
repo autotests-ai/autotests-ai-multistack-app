@@ -5,11 +5,15 @@ name: CI
 # with `module_dir` from stack knobs (format). Commands a
 # student types locally live inside the module action, not in this file.
 #
+# One workflow for clone and children. No catalog_github.yml / singlestack_github.yml.
+# Catalog SPA sidecars (non-teaching frontends): jobs catalog-* in this file
+# (`deploy=catalog|all` or sidecar path change). Skip when deploy/matrix.yaml is absent.
+#
 # Active stack knobs live in `env:` once: BACKEND_LANG / BACKEND_FRAMEWORK,
 # FRONTEND_LANG / FRONTEND_FRAMEWORK, TESTS_LANG / BUILDER / FRAMEWORK / REPORT / UI_LIBRARY.
 # Family adapters under
 # backend|frontend|tests/.github/actions/ statically `uses:` the default module
-# (GitHub does not interpolate `uses:`).
+# (GitHub does not interpolate `uses:`). Flip `uses:` with the knobs.
 #
 # Allure: trigger opens one shared TestOps job-run (soft); test jobs stream live and
 # publish raw results. publish-allure-report is gating (lock pins, npm ci, generate).
@@ -37,7 +41,7 @@ name: CI
 # or running. Not one shared cancel-in-progress group — that would let develop
 # cancel a prod promotion.
 # Roots: trigger → backend-unit-tests · frontend-unit-tests · tests-harness
-#   integration-tests ← backend-unit-tests (backend Spring+PG, pre-build; PR + main)
+#   integration-tests ← backend-unit-tests (backend module, pre-build; PR + main)
 #   sonar-backend ← backend-unit-tests + integration-tests
 # Sibling Python backends: backend_python_github.yml (pytest · Testcontainers · coverage.py)
 #   sonar-tests ← tests-harness (skipped on backend-only lane)
@@ -45,6 +49,7 @@ name: CI
 #   sonar-frontend ← frontend-unit-tests + ui-mock-tests (mock skipped ⇒ sonar still runs)
 #   build-backend ← backend-unit-tests + integration-tests · build-frontend ← ui-mock-tests
 #   deploy-backend-stage / deploy-frontend-stage ← same gates; cd_stage; skip until vars.STAGE_APP_DIR
+#   catalog-matrix / catalog-build / catalog-deploy-* ← sidecar SPA; skip without deploy/matrix.yaml
   #   api-tests-stage / e2e-tests-stage ← deploy-*-stage + tests-harness; full api / e2e vs stage stand
 #     (e2e-tests-stage also compares screenshots/stage/)
 #   deploy-backend ← build-backend + sonar-backend + e2e-tests-stage (cd_production)
@@ -64,9 +69,9 @@ on:
   workflow_dispatch:
     inputs:
       deploy:
-        description: "Lanes: none (tests only, no CD) · backend · frontend · tests (api/e2e vs live stand, no CD) · all. Push infers from paths."
+        description: "Lanes: none (tests only, no CD) · backend · frontend · tests (api/e2e vs live stand, no CD) · catalog (sidecar SPA CD) · all. Push infers from paths."
         type: choice
-        options: [none, backend, frontend, tests, all]
+        options: [none, backend, frontend, tests, catalog, all]
         default: none
       deploy_target:
         description: "CD host: production (main: stage then prod) · stage (develop or main) · both (same chain as production from main). Push develop→stage only; push main→stage then prod."
@@ -74,7 +79,7 @@ on:
         options: [production, stage, both]
         default: production
       run_integration:
-        description: "Run backend Spring+PG integration tests (pre-deploy)"
+        description: "Run backend integration tests (pre-deploy)"
         type: boolean
         default: false
       run_api:
@@ -98,11 +103,11 @@ on:
         type: boolean
         default: false
       include_tags:
-        description: "e2e-tests (java): override -DincludeTags. Empty = run_e2e/run_screenshot selection."
+        description: "e2e-tests: override -DincludeTags. Empty = run_e2e/run_screenshot selection."
         type: string
         default: ""
       exclude_tags:
-        description: "e2e-tests (java): add -DexcludeTags independently of include_tags"
+        description: "e2e-tests: add -DexcludeTags independently of include_tags"
         type: string
         default: ""
       update_mock_screenshots:
@@ -321,6 +326,7 @@ jobs:
       backend: ${{ steps.set.outputs.backend }}
       frontend: ${{ steps.set.outputs.frontend }}
       tests: ${{ steps.set.outputs.tests }}
+      catalog: ${{ steps.set.outputs.catalog }}
       cd_production: ${{ steps.set.outputs.cd_production }}
       cd_stage: ${{ steps.set.outputs.cd_stage }}
       enabled: ${{ steps.context.outputs.enabled }}
@@ -344,12 +350,14 @@ jobs:
           backend=false
           frontend=false
           tests=false
+          catalog=false
           if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
             case "${DEPLOY}" in
               backend) backend=true ;;
               frontend) frontend=true ;;
               tests) tests=true ;;
-              all) backend=true; frontend=true; tests=true ;;
+              catalog) catalog=true ;;
+              all) backend=true; frontend=true; tests=true; catalog=true ;;
               none|'') ;;
               *) echo "unknown deploy=${DEPLOY}" >&2; exit 1 ;;
             esac
@@ -359,6 +367,7 @@ jobs:
               backend=true
               frontend=true
               tests=true
+              catalog=true
             else
               CHANGED="$(git diff --name-only "$BEFORE" "$GITHUB_SHA")"
               match() { printf '%s\n' "$CHANGED" | grep -qE "$1"; }
@@ -366,6 +375,9 @@ jobs:
               if match "^(backend/|${SHARED})"; then backend=true; fi
               if match "^(frontend/|${SHARED})"; then frontend=true; fi
               if match "^(tests/|${SHARED})"; then tests=true; fi
+              if match "^(frontend/javascript/|frontend/typescript/frontend-typescript-(angular|vue|vanilla|jquery)/|frontend/_shared/|frontend/scripts/catalog-cd-matrix|deploy/matrix.yaml|docker-compose)"; then
+                catalog=true
+              fi
             fi
           fi
           cd_production=false
@@ -391,9 +403,9 @@ jobs:
           elif [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/develop" ]; then
             cd_stage=true
           fi
-          printf 'backend=%s\nfrontend=%s\ntests=%s\ncd_production=%s\ncd_stage=%s\n' \
-            "$backend" "$frontend" "$tests" "$cd_production" "$cd_stage" >> "$GITHUB_OUTPUT"
-          echo "trigger backend=${backend} frontend=${frontend} tests=${tests} cd_production=${cd_production} cd_stage=${cd_stage}"
+          printf 'backend=%s\nfrontend=%s\ntests=%s\ncatalog=%s\ncd_production=%s\ncd_stage=%s\n' \
+            "$backend" "$frontend" "$tests" "$catalog" "$cd_production" "$cd_stage" >> "$GITHUB_OUTPUT"
+          echo "trigger backend=${backend} frontend=${frontend} tests=${tests} catalog=${catalog} cd_production=${cd_production} cd_stage=${cd_stage}"
 
       - name: Check TestOps configuration
         id: configured
@@ -756,7 +768,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
-      SONAR_PROJECT_KEY: ${{ vars.SONAR_BACKEND_PROJECT_KEY || 'autotests-ai-multistack-app-backend-java-spring' }}
+      SONAR_PROJECT_KEY: ${{ vars.SONAR_BACKEND_PROJECT_KEY || format('{0}-backend-{1}-{2}', env.APP_SLUG, env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
       CHECKOUT_FETCH_DEPTH: "0"
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
@@ -780,7 +792,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
-      SONAR_PROJECT_KEY: ${{ vars.SONAR_TESTS_PROJECT_KEY || 'autotests-ai-multistack-app-tests-java-gradle-junit5-allure3-selenide' }}
+      SONAR_PROJECT_KEY: ${{ vars.SONAR_TESTS_PROJECT_KEY || format('{0}-tests-{1}-{2}-{3}-{4}-{5}', env.APP_SLUG, env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) }}
       CHECKOUT_FETCH_DEPTH: "0"
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
@@ -802,7 +814,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
-      SONAR_PROJECT_KEY: ${{ vars.SONAR_FRONTEND_PROJECT_KEY || 'autotests-ai-multistack-app-frontend-typescript-react' }}
+      SONAR_PROJECT_KEY: ${{ vars.SONAR_FRONTEND_PROJECT_KEY || format('{0}-frontend-{1}-{2}', env.APP_SLUG, env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
       CHECKOUT_FETCH_DEPTH: "0"
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
@@ -1005,6 +1017,168 @@ jobs:
         with:
           module_dir: ${{ format('frontend/{0}/frontend-{0}-{1}', env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
           stand: stage
+
+  catalog-matrix:
+    name: catalog matrix
+    needs: [trigger]
+    if: >-
+      needs.trigger.outputs.catalog == 'true' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      include: ${{ steps.matrix.outputs.include }}
+      services: ${{ steps.matrix.outputs.services }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Catalog SPA matrix
+        id: matrix
+        run: |
+          set -euo pipefail
+          if [ ! -f deploy/matrix.yaml ] || [ ! -f frontend/scripts/catalog-cd-matrix.py ]; then
+            echo 'include=[{"service":"none","dockerfile":"Dockerfile"}]' >> "$GITHUB_OUTPUT"
+            echo "services=" >> "$GITHUB_OUTPUT"
+            echo "catalog skipped (no deploy/matrix.yaml)"
+            exit 0
+          fi
+          python frontend/scripts/catalog-cd-matrix.py >> "$GITHUB_OUTPUT"
+
+  catalog-build:
+    name: catalog ${{ matrix.service }}
+    needs: [catalog-matrix, trigger]
+    if: needs.catalog-matrix.outputs.services != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.catalog-matrix.outputs.include) }}
+    env:
+      DOCKER_CACHE_SCOPE: ${{ env.APP_SLUG }}-docker-${{ matrix.service }}
+      DOCKER_BUILD_CONTEXT: .
+      DOCKER_FILE: ${{ matrix.dockerfile }}
+      DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/${{ env.APP_SLUG }}-${{ matrix.service }}:${{ github.sha }}
+      DOCKER_OCI_LABELS: |
+        org.opencontainers.image.title=${{ env.APP_SLUG }}-${{ matrix.service }}
+        org.opencontainers.image.description=${{ env.APP_SLUG }} · ${{ matrix.service }}
+        org.opencontainers.image.source=https://github.com/${{ github.repository }}
+        org.opencontainers.image.url=${{ format('https://{0}/{1}/backend-{2}-{3}/{4}/', env.PUBLIC_HOST, env.STACK_MOUNT, env.BACKEND_LANG, env.BACKEND_FRAMEWORK, matrix.service) }}
+        org.opencontainers.image.vendor=autotests-ai
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/build-push-action@v7
+        with:
+          context: ${{ env.DOCKER_BUILD_CONTEXT }}
+          file: ${{ env.DOCKER_FILE }}
+          tags: ${{ env.DOCKER_TAGS }}
+          build-args: ${{ env.DOCKER_FRONTEND_BUILD_ARGS }}
+          labels: ${{ env.DOCKER_OCI_LABELS }}
+          load: true
+          cache-from: type=gha,scope=${{ env.DOCKER_CACHE_SCOPE }}
+          cache-to: type=gha,mode=max,scope=${{ env.DOCKER_CACHE_SCOPE }}
+      - name: Push catalog image to GHCR
+        run: |
+          set -euo pipefail
+          docker compose push ${{ matrix.service }}
+          if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+            echo "skip :latest (only main retags latest)"
+            exit 0
+          fi
+          img="ghcr.io/${{ github.repository_owner }}/${APP_SLUG}-${{ matrix.service }}"
+          docker tag "${img}:${IMAGE_TAG}" "${img}:latest"
+          docker push "${img}:latest"
+
+  catalog-deploy-stage:
+    needs: [catalog-matrix, catalog-build, trigger, preempt-develop-cd, yield-to-main-cd]
+    if: >-
+      always() && !cancelled() &&
+      needs.catalog-build.result == 'success' &&
+      needs.catalog-matrix.outputs.services != '' &&
+      vars.STAGE_APP_DIR != '' &&
+      needs.trigger.outputs.cd_stage == 'true' &&
+      (needs.preempt-develop-cd.result == 'success' || needs.preempt-develop-cd.result == 'skipped') &&
+      (needs.yield-to-main-cd.result == 'success' || needs.yield-to-main-cd.result == 'skipped')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: multistack-stage
+      url: ${{ format('https://stage.{0}/{1}/', env.PUBLIC_HOST, env.STACK_MOUNT) }}
+    concurrency:
+      group: deploy-autotests-ai-multistack-app-stage
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+    env:
+      DEPLOY_STEP_NAME: Deploy catalog frontends to stage
+      DEPLOY_APP_DIR: ${{ vars.STAGE_APP_DIR }}
+      DEPLOY_COMPOSE_PROJECT: autotests-ai-multistack-app-stage
+      DEPLOY_COMPOSE_ENV_FILE: deploy/stage.env
+      DEPLOY_COMPOSE_SERVICES: ${{ needs.catalog-matrix.outputs.services }}
+    steps:
+      - name: ${{ env.DEPLOY_STEP_NAME }}
+        uses: appleboy/ssh-action@v1.2.5
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          host: ${{ vars.DEPLOY_HOST }}
+          username: ${{ vars.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          command_timeout: 15m
+          envs: IMAGE_TAG,GHCR_TOKEN,DEPLOY_COMPOSE_SERVICES,DEPLOY_APP_DIR,DEPLOY_COMPOSE_PROJECT,DEPLOY_COMPOSE_ENV_FILE
+          script: ${{ env.DEPLOY_SSH_SCRIPT }}
+
+  catalog-deploy-prod:
+    needs: [catalog-matrix, catalog-build, catalog-deploy-stage, trigger]
+    if: >-
+      always() && !cancelled() &&
+      needs.catalog-build.result == 'success' &&
+      needs.catalog-matrix.outputs.services != '' &&
+      needs.trigger.outputs.cd_production == 'true' &&
+      (needs.catalog-deploy-stage.result == 'success' ||
+       needs.catalog-deploy-stage.result == 'skipped')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: ${{ vars.DEPLOY_ENVIRONMENT || 'multistack-production' }}
+      url: ${{ format('https://{0}/{1}/', env.PUBLIC_HOST, env.STACK_MOUNT) }}
+    concurrency:
+      group: deploy-autotests-ai-multistack-app
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+    env:
+      DEPLOY_STEP_NAME: Deploy catalog frontends to production
+      DEPLOY_APP_DIR: /home/autotests_ai_multistack/autotests-ai-multistack-app
+      DEPLOY_COMPOSE_PROJECT: autotests-ai-multistack-app
+      DEPLOY_COMPOSE_ENV_FILE: ""
+      DEPLOY_COMPOSE_SERVICES: ${{ needs.catalog-matrix.outputs.services }}
+    steps:
+      - name: ${{ env.DEPLOY_STEP_NAME }}
+        uses: appleboy/ssh-action@v1.2.5
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          host: ${{ vars.DEPLOY_HOST }}
+          username: ${{ vars.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          command_timeout: 15m
+          envs: IMAGE_TAG,GHCR_TOKEN,DEPLOY_COMPOSE_SERVICES,DEPLOY_APP_DIR,DEPLOY_COMPOSE_PROJECT,DEPLOY_COMPOSE_ENV_FILE
+          script: ${{ env.DEPLOY_SSH_SCRIPT }}
 
   # Rest Assured against deployed backend — starts as soon as that lane finishes (FE may
   # still be deploying). Dispatch can run api without a backend deploy this run.
