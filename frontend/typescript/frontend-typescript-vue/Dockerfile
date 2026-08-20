@@ -5,7 +5,6 @@ FROM node:26-alpine AS build
 WORKDIR /build
 COPY frontend/typescript/frontend-typescript-vue/ frontend/typescript/frontend-typescript-vue/
 COPY frontend/_shared/frontend-javascript-app/css/ frontend/_shared/frontend-javascript-app/css/
-COPY frontend/_shared/poll-toggle.ts frontend/_shared/stack-matrix.ts frontend/_shared/
 WORKDIR /build/frontend/typescript/frontend-typescript-vue
 RUN npm ci && npm run build
 
