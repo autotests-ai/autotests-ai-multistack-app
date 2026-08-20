@@ -17,20 +17,6 @@ body {
   text-align: center;
 }
 
-.multistack__note-body {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--space-3);
-}
-
-.multistack__note-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  justify-content: center;
-}
-
 .multistack__error {
   color: var(--color-danger);
 }

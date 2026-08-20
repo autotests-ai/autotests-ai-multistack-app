@@ -50,9 +50,6 @@ function stubDefaultApis(
       if (url.includes('/api/auth/logout')) {
         return Promise.resolve({ ok: true, status: 204, json: async () => ({}) } as Response);
       }
-      if (url.includes('/api/note')) {
-        return Promise.resolve(jsonResponse({ message: 'Note not found' }, false, 404));
-      }
       return Promise.reject(new Error(`unexpected request: ${url}`));
     }),
   );
@@ -105,7 +102,6 @@ describe('HomePage', () => {
     expect(screen.getByTestId('welcome-panel')).toBeVisible();
     expect(screen.getByTestId('logout-button')).toBeInTheDocument();
     expect(screen.getByTestId('delete-account-button')).toHaveTextContent('Delete account');
-    expect(screen.getByTestId('note-input').tagName).toBe('TEXTAREA');
   });
 
   it('clears invalid session and keeps welcome hidden', async () => {
