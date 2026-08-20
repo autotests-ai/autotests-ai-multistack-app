@@ -47,15 +47,20 @@ runs:
           args+=(--pattern "${ARTIFACT_PATTERN}")
         fi
         gh "${args[@]}"
-        # gh extracts each artifact into TMP/<artifact-name>/.
-        # actions/download-artifact: one name → files in path/; merge-multiple → flatten.
-        flatten=false
-        if [[ -n "${ARTIFACT_NAME}" || "${MERGE_MULTIPLE}" == "true" ]]; then
-          flatten=true
-        fi
+        # gh --name: zip contents land in --dir (reports/, classes/, …).
+        # Flattening that unwraps reports/ and breaks JaCoCo paths.
+        # gh --pattern: --dir/<artifact-name>/ even for a single match.
         shopt -s nullglob dotglob
-        if [[ "${flatten}" == "true" ]]; then
-          for dir in "${TMP}"/*; do
+        entries=("${TMP}"/*)
+        if [[ -n "${ARTIFACT_NAME}" ]]; then
+          wrapped="${TMP}/${ARTIFACT_NAME}"
+          if [[ -d "${wrapped}" && ${#entries[@]} -eq 1 ]]; then
+            cp -a "${wrapped}"/. "${DEST}/"
+          else
+            cp -a "${TMP}"/. "${DEST}/"
+          fi
+        elif [[ "${MERGE_MULTIPLE}" == "true" ]]; then
+          for dir in "${entries[@]}"; do
             [[ -d "${dir}" ]] || continue
             cp -a "${dir}"/. "${DEST}/"
           done
