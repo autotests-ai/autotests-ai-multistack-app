@@ -1,1 +1,0 @@
-{"id":"cb4cfb567811e4b050f6a273726e201e","fullName":"tests.api.AuthApiTests.loginWithUnknownUsername","name":"POST /api/auth/login answers an unknown user with the same 401 (no enumeration)","status":"passed","testResultsByEnv":{"default":"15a0e2756b3bf1e696e580c82b27cee1"}}
