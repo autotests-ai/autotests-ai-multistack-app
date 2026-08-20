@@ -133,12 +133,12 @@ flowchart TB
 
 | Job | Where |
 |-----|-------|
-| `backend-unit-tests` | `BACKEND_DIR` — `./backend/.github/actions/unit` (java: gradle+JaCoCo; excludes `@Tag("integration")`) |
-| `tests-harness` | `TESTS_DIR` — full `harness` except backend-only → `harness-backend` (`ConfigReader`). Not TestOps. |
-| `frontend-unit-tests` | `FRONTEND_DIR` — `npm test -- --coverage` |
-| `integration-tests` | `BACKEND_DIR` — after `backend-unit-tests` (java: `-DincludeTags=integration`); Spring Boot + real PG; **before** build/deploy; PR + main |
-| `api-tests` | `TESTS_DIR` — after backend deploy, or tests-lane vs live prod (`-Denv=prod -DincludeTags=api`) |
-| `api-tests-stage` | `TESTS_DIR` — after stage backend deploy, or tests-lane vs live stage (full `-DincludeTags=api`) |
+| `backend-unit-tests` | backend module — `./backend/.github/actions/unit` (java: gradle+JaCoCo; excludes `@Tag("integration")`) |
+| `tests-harness` | tests module — full `harness` except backend-only → `harness-backend` (`ConfigReader`). Not TestOps. |
+| `frontend-unit-tests` | frontend module — `npm test -- --coverage` |
+| `integration-tests` | backend module — after `backend-unit-tests` (java: `-DincludeTags=integration`); Spring Boot + real PG; **before** build/deploy; PR + main |
+| `api-tests` | tests module — after backend deploy, or tests-lane vs live prod (`-Denv=prod -DincludeTags=api`) |
+| `api-tests-stage` | tests module — after stage backend deploy, or tests-lane vs live stage (full `-DincludeTags=api`) |
 | `ui-mock-tests` | after `frontend-unit-tests`; every PR; frontend lane on main; dispatch `run_mock` / `update_mock_screenshots` |
 | `sonar-tests` | after `tests-harness` (skipped on backend-only lane) |
 | `e2e-tests` | after `api-tests` + `deploy-frontend` — java: `-Denv=prod -DincludeTags=e2e`; dispatch `run_screenshot` / `update_e2e_screenshots` are extra steps |

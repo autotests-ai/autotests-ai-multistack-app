@@ -200,7 +200,7 @@ Do **not** add Vitest to vanilla; do **not** set `FRONTEND` to vanilla (no npm r
 
 Bare `./gradlew test` (java) runs **everything**, integration included — there are no hidden excludes.
 
-Active teaching module defaults: `tests/java/tests-java-gradle-junit5-allure3-selenide/` (`TESTS_LANG=java`).  
+Active teaching module defaults: `tests/{TESTS_LANG}/tests-{TESTS_LANG}-{TESTS_BUILDER}-{TESTS_FRAMEWORK}-{TESTS_REPORT}-{TESTS_UI_LIBRARY}/` (`java` · `gradle` · `junit5` · `allure3` · `selenide`).  
 Paths SSOT: `backend/scripts/paths.sh`. Module naming: [NAMING.md](NAMING.md).
 
 ## Why `unit` and `harness`? (and why Spring “slices” ≠ integration)
@@ -254,7 +254,8 @@ Integration is **in-process Spring + PostgreSQL**, no browser. Deployed HTTP che
 | `workflow_dispatch` | `deploy=none\|backend\|frontend\|tests\|all` + `deploy_target=production\|stage\|both`; per-layer booleans `run_integration` / `run_api` / `run_mock` / `run_e2e` / `run_screenshot` / `run_manual`; screenshot rewrite flags; TestOps `ALLURE_JOB_RUN_ID` / `ALLURE_USERNAME` |
 
 Active stack knobs are workflow `env` in [`ci.yml`](../.github/workflows/ci.yml)
-(`BACKEND_LANG` + `BACKEND_FRAMEWORK`, `FRONTEND_LANG` + `FRONTEND_FRAMEWORK`, `TESTS_DIR`).
+(`BACKEND_LANG` + `BACKEND_FRAMEWORK`, `FRONTEND_LANG` + `FRONTEND_FRAMEWORK`,
+`TESTS_LANG` + `TESTS_BUILDER` + `TESTS_FRAMEWORK` + `TESTS_REPORT` + `TESTS_UI_LIBRARY`).
 Job ids are layers or languages, not tools (`e2e-tests`, not `selenide-tests`; `javascript-tests`,
 not `playwright-tests`).
 
@@ -307,7 +308,7 @@ They read env vars, not `-Denv`: Playwright takes `UI_URL`, pytest takes `BASE_U
 
 [`ci.yml`](../.github/workflows/ci.yml) is the orchestrator: same job ids, `needs` / `if` /
 dispatch. Each layer job is checkout plus `uses: ./backend|frontend|tests/.github/actions/<verb>`
-with `module_dir: ${{ env.BACKEND_DIR }}` (or `FRONTEND_DIR` / `TESTS_DIR`). The command a
+with `module_dir` from the stack knobs (`format`). The command a
 student runs locally (`./gradlew test …` / `npm test`) lives **inside the module action**,
 not in the workflow.
 
