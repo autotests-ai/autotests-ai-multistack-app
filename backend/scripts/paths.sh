@@ -16,7 +16,8 @@ BACKEND_GO_STDLIB="$REPO_ROOT/backend/go/backend-go-stdlib"
 # Deploy routing SSOT (Host × path)
 DEPLOY_MATRIX="$REPO_ROOT/deploy/matrix.yaml"
 
-# Shared (not product URL matrix)
+# Staging snapshots — sync-ds-runtime.sh / sync-react-ui.sh, then fan-out to
+# each module vendor/ds (+ vendor/react-ui on *react). Not image COPY.
 FRONTEND_JS_EMBED="$REPO_ROOT/frontend/_shared/frontend-javascript-embed"
 FRONTEND_JS_APP="$REPO_ROOT/frontend/_shared/frontend-javascript-app"
 FRONTEND_REACT_UI="$REPO_ROOT/frontend/_shared/frontend-react-ui"

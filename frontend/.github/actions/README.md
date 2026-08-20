@@ -11,3 +11,4 @@ GitHub does not interpolate `uses:`. This adapter dispatches on `FRONTEND_LANG`:
 | `javascript` | `./frontend/javascript/.github/actions/<verb>` |
 
 `FRONTEND_FRAMEWORK` selects the module directory (react / vue / …), not a second workflow.
+`build` uses that directory as Docker context (`vendor/ds` in-tree; no `_shared` COPY).

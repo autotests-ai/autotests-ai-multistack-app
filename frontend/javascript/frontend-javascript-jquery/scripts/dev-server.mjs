@@ -8,8 +8,8 @@ import { dirname, extname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const MODULE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const UI_RUNTIME = resolve(MODULE_ROOT, 'vendor/ds');
-const ROOTS = [MODULE_ROOT, UI_RUNTIME];
+const OVERLAY_ROOT = resolve(MODULE_ROOT, 'vendor/ds');
+const ROOTS = [MODULE_ROOT, OVERLAY_ROOT];
 const PORT = Number(process.env.PORT || 9804);
 
 // Not part of the served root — same list the Dockerfile deletes after the copy.
@@ -26,6 +26,8 @@ const NOT_SERVED = [
   'coverage',
   'vendor/ds',
 ];
+
+const MIME = {
   '.css': 'text/css; charset=utf-8',
   '.html': 'text/html; charset=utf-8',
   '.ico': 'image/x-icon',

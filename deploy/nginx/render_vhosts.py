@@ -74,8 +74,6 @@ def load_matrix(path: Path) -> dict:
                 "domain_suffix",
                 "public_host",
                 "short_url_host",
-                "ui_runtime",
-                "react_ui",
             ):
                 data[key] = _parse_scalar(val)
                 section = None

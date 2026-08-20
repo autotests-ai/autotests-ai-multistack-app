@@ -292,9 +292,6 @@ env:
       echo "- dashboard: ${SONAR_HOST_URL%/}/dashboard?id=${SONAR_PROJECT_KEY}"
       echo "- commit: \`${GITHUB_SHA:0:7}\`"
     } >> "$GITHUB_STEP_SUMMARY"
-  DOCKER_FRONTEND_BUILD_ARGS: |
-    REACT_UI=frontend/_shared/frontend-react-ui
-    UI_RUNTIME=frontend/_shared/frontend-javascript-app
   DEPLOY_SSH_SCRIPT: |
     set -euo pipefail
     APP_DIR="${DEPLOY_APP_DIR:-/home/autotests_ai_multistack/autotests-ai-multistack-app}"
@@ -1103,7 +1100,6 @@ jobs:
           context: ${{ env.DOCKER_BUILD_CONTEXT }}
           file: ${{ env.DOCKER_FILE }}
           tags: ${{ env.DOCKER_TAGS }}
-          build-args: ${{ env.DOCKER_FRONTEND_BUILD_ARGS }}
           labels: ${{ env.DOCKER_OCI_LABELS }}
           load: true
           cache-from: type=gha,scope=${{ env.DOCKER_CACHE_SCOPE }}

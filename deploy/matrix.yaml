@@ -18,16 +18,13 @@
 
 public_host: autotests.ai
 # Header Stage/Prod: https://{public_host} and https://stage.{public_host}
-# Runtime: frontend/_shared/frontend-javascript-app/js/env-hosts.js
-#          (python frontend/scripts/sync-stack-matrix.py)
+# env-hosts: python frontend/scripts/sync-stack-matrix.py writes
+#   frontend/_shared/frontend-javascript-app/js/env-hosts.js then fans out to each
+#   module vendor/ds. Images pack vendor/ds (module Docker context), not _shared.
 short_url_host: autotests.ai
 canonical_stack_host: autotests.ai
 canonical_stack_prefix: /stack
 domain_suffix: autotests.ai
-
-# Shared build overlays (copied into each frontend image).
-ui_runtime: frontend/_shared/frontend-javascript-app
-react_ui: frontend/_shared/frontend-react-ui
 
 backends:
   - id: backend-java-spring
