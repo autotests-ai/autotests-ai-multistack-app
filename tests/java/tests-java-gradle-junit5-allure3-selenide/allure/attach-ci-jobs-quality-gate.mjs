@@ -2,12 +2,9 @@
 /**
  * Fold GitHub layer-job `failure` into the Allure quality-gate widget.
  *
- * Kit `evaluateQualityGate` only sees Allure results (donut / tests table stay
- * on that). A red CI job that never wrote results (lint before Vitest, harness)
- * would otherwise leave the collage QG green. This step is the ethalon attach,
- * same moment as `tests-table-from-run.mjs`.
- *
- * Counts `failure` only. Expected `skipped` (PR without prod e2e, manual on
+ * GitHub layer-job `failure` is not an Allure CLI / kit rule (those paths
+ * only see Allure results — donut / tests table stay green). After generate,
+ * this script folds those failures into the QG widget. Expected `skipped` (PR without prod e2e, manual on
  * push, lane `if:`) does not fail the gate.
  *
  * Usage:

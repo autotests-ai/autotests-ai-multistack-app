@@ -277,7 +277,7 @@ After generate, [`attach-ci-jobs-quality-gate.mjs`](java/tests-java-gradle-junit
 | `skipped` because this event does not run that job (PR without prod e2e, `manual-tests` on push, lane `if:`) | unchanged |
 | Sonar / catalog / deploy | own widgets or out of Allure QG |
 
-Layer jobs: `backend-unit-tests`, `frontend-unit-tests`, `tests-harness`, `ui-mock-tests`, `integration-tests`, `api-tests-stage`, `e2e-tests-stage`, `api-tests`, `e2e-tests`, `manual-tests`. Rule: `maxCiJobFailures: 0` in [`quality-gate.mjs`](java/tests-java-gradle-junit5-allure3-selenide/allure/quality-gate.mjs).
+Layer jobs: `backend-unit-tests`, `frontend-unit-tests`, `tests-harness`, `ui-mock-tests`, `integration-tests`, `api-tests-stage`, `e2e-tests-stage`, `api-tests`, `e2e-tests`, `manual-tests`. Widget rule id: `maxCiJobFailures` (attached after generate, not an Allure CLI `use` rule).
 
 ## TestOps (live upload + selective rerun)
 
