@@ -13,6 +13,11 @@ from api.jwt_util import create_token, extract_username
 from api.models import Item, User
 
 
+def jwt_csrf_exempt(view):
+    """JSON API: Bearer JWT, no ambient cookie. Same as Java SecurityConfig S4502."""
+    return csrf_exempt(view)  # NOSONAR
+
+
 def _json_body(request) -> dict | None:
     """The parsed body, or None when it never was a JSON object (unreadable or a list)."""
     try:
@@ -48,7 +53,7 @@ def items(_request):
     return JsonResponse({"items": payload, "source": "postgresql"})
 
 
-@csrf_exempt
+@jwt_csrf_exempt
 @require_http_methods(["POST"])
 def register(request):
     body = _json_body(request)
@@ -72,7 +77,7 @@ def register(request):
     return JsonResponse(_auth_response(username), status=201)
 
 
-@csrf_exempt
+@jwt_csrf_exempt
 @require_http_methods(["POST"])
 def login(request):
     body = _json_body(request)
@@ -93,7 +98,7 @@ def login(request):
     return JsonResponse(_auth_response(username))
 
 
-@csrf_exempt
+@jwt_csrf_exempt
 @require_http_methods(["POST"])
 def logout(_request):
     return HttpResponse(status=204)
@@ -113,7 +118,7 @@ def _authenticated_username(request) -> str | None:
 # must win over the 405 that a method-restricted view would answer first.
 # DELETE is the authenticated self-delete — tokens are stateless, so a JWT issued earlier keeps
 # verifying after deletion, but this view answers 401 once the row is gone.
-@csrf_exempt
+@jwt_csrf_exempt
 @require_http_methods(["GET", "DELETE"])
 def me(request):
     username = _authenticated_username(request)
@@ -127,6 +132,7 @@ def me(request):
 
 # The reference security chain authenticates every /api/** path before routing, so an
 # unmapped one answers 401 — a client must not learn which API paths exist.
-@csrf_exempt
+@jwt_csrf_exempt
+@require_http_methods(["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
 def unmapped(_request):
     return JsonResponse({"message": "Unauthorized"}, status=401)

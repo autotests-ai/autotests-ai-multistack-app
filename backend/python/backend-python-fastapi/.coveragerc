@@ -1,6 +1,9 @@
 [run]
 branch = false
 relative_files = true
+omit =
+    tests/*
+    */test_*.py
 
 [report]
 precision = 0

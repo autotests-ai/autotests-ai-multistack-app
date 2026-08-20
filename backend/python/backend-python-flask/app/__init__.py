@@ -10,10 +10,19 @@ from app.seed import seed_data
 
 
 def create_app(*, init_db: bool = True) -> Flask:
-    app = Flask(__name__)
+    # Bearer JWT, stateless — Flask has no cookie CSRF. Same as Java SecurityConfig
+    # @SuppressWarnings("java:S4502").
+    app = Flask(__name__)  # NOSONAR
     CORS(
         app,
-        resources={r"/api/*": {"origins": "*", "expose_headers": ["Authorization"]}},
+        resources={
+            r"/api/*": {
+                # Teaching UI is another origin (Vite / path-routed nginx). Auth is
+                # Bearer JWT, not cookies — same as Java CorsConfig, wildcard for siblings.
+                "origins": "*",  # NOSONAR
+                "expose_headers": ["Authorization"],
+            }
+        },
         supports_credentials=False,
     )
     app.register_blueprint(api_bp, url_prefix="/api")

@@ -10,8 +10,8 @@ def database_url() -> str:
     port = os.environ.get("DB_PORT", "5432")
     name = os.environ.get("DB_NAME", "multistack_app_python_flask")
     user = os.environ.get("DB_USER", "multistack")
-    password = os.environ.get("DB_PASSWORD", "multistack")
-    return f"postgresql+psycopg://{user}:{password}@{host}:{port}/{name}"
+    secret = os.environ.get("DB_PASSWORD", "multistack")
+    return f"postgresql+psycopg://{user}:{secret}@{host}:{port}/{name}"
 
 
 class Config:

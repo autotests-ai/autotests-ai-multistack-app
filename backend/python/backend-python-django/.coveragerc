@@ -5,8 +5,11 @@ branch = false
 relative_files = true
 omit =
     config/wsgi.py
+    config/asgi.py
     manage.py
     */migrations/*
+    tests/*
+    */test_*.py
 
 [report]
 precision = 0

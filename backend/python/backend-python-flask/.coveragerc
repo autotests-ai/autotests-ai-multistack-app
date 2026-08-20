@@ -5,6 +5,8 @@ branch = false
 relative_files = true
 omit =
     wsgi.py
+    tests/*
+    */test_*.py
 
 [report]
 precision = 0
