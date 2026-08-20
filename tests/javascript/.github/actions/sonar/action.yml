@@ -1,0 +1,14 @@
+name: sonar
+description: STOP — no sonar layer in the JavaScript tests family.
+inputs:
+  module_dir:
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        MODULE_DIR: ${{ inputs.module_dir }}
+      run: |
+        echo "STOP: no sonar layer in tests/javascript (${MODULE_DIR:-unset})" >&2
+        exit 1

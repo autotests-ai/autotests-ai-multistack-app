@@ -1,5 +1,5 @@
 name: mock
-description: Dispatch mock to the active module (module_dir).
+description: Dispatch mock to the active tests language (module_dir).
 inputs:
   module_dir:
     required: true
@@ -20,8 +20,29 @@ runs:
       uses: ./.github/actions/resolve-module-dir
       with:
         module_dir: ${{ inputs.frontend_dir }}
-    - uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/mock
+    - if: env.TESTS_LANG == 'java'
+      uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/mock
       with:
         module_dir: ${{ steps.dir.outputs.dir }}
         frontend_dir: ${{ steps.fe.outputs.dir }}
         update_screenshots: ${{ inputs.update_screenshots }}
+    - if: env.TESTS_LANG == 'javascript'
+      uses: ./tests/javascript/.github/actions/mock
+      with:
+        module_dir: ${{ steps.dir.outputs.dir }}
+        frontend_dir: ${{ steps.fe.outputs.dir }}
+        update_screenshots: ${{ inputs.update_screenshots }}
+    - if: env.TESTS_LANG == 'python'
+      uses: ./tests/python/.github/actions/mock
+      with:
+        module_dir: ${{ steps.dir.outputs.dir }}
+        frontend_dir: ${{ steps.fe.outputs.dir }}
+        update_screenshots: ${{ inputs.update_screenshots }}
+    - if: >-
+        env.TESTS_LANG != 'java' &&
+        env.TESTS_LANG != 'javascript' &&
+        env.TESTS_LANG != 'python'
+      shell: bash
+      run: |
+        echo "STOP: no mock action for TESTS_LANG=${TESTS_LANG:-unset}" >&2
+        exit 1

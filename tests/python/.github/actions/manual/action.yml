@@ -1,0 +1,17 @@
+name: manual
+description: STOP — no manual layer in the Python tests family.
+inputs:
+  module_dir:
+    required: true
+  stand:
+    required: false
+    default: 'prod'
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        MODULE_DIR: ${{ inputs.module_dir }}
+      run: |
+        echo "STOP: no manual layer in tests/python (${MODULE_DIR:-unset})" >&2
+        exit 1

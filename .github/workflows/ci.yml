@@ -16,6 +16,7 @@ name: CI
 # BACKEND_LANG: java/kotlin → module actions; python/go/javascript/typescript → family.
 # FRONTEND_LANG: typescript → frontend/typescript/.github/actions,
 # javascript → frontend/javascript/.github/actions.
+# TESTS_LANG: java → module; javascript/python → family; typescript/unknown → STOP.
 #
 # Allure: trigger opens one shared TestOps job-run (soft); test jobs stream live and
 # publish raw results. publish-allure-report is gating (lock pins, npm ci, generate).
@@ -151,9 +152,12 @@ env:
   IMAGE_TAG: ${{ github.sha }}
   # ── Active stack defaults (change here only) ─────────────────────────────
   # Path = {zone}/{lang}/{zone}-{lang}-…. Workflow env cannot nest env.*;
-  # jobs pass module_dir via format() below. Family adapters dispatch on
-  # BACKEND_LANG / FRONTEND_LANG (GitHub does not interpolate uses:).
-  # java/kotlin → module actions; python/go/javascript/typescript → family.
+  # jobs pass module_dir via format() below. Adapters dispatch on
+  # BACKEND_LANG / FRONTEND_LANG / TESTS_LANG (GitHub does not interpolate uses:).
+  # Unknown or unwired *_LANG → STOP (never skip, never a foreign action).
+  # backend: java/kotlin → module; python/go/javascript/typescript → family.
+  # frontend: typescript/javascript → family.
+  # tests: java → module; javascript/python → family.
   BACKEND_LANG: java
   BACKEND_FRAMEWORK: spring
   BACKEND_PORT: "8800"
@@ -719,7 +723,7 @@ jobs:
       - id: harness
         uses: ./tests/.github/actions/harness
         with:
-          module_dir: ${{ format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) }}
+          module_dir: ${{ env.TESTS_LANG == 'java' && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
           backend_lane: ${{ needs.trigger.outputs.backend }}
           frontend_lane: ${{ needs.trigger.outputs.frontend }}
           tests_lane: ${{ needs.trigger.outputs.tests }}
@@ -756,7 +760,7 @@ jobs:
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
       - uses: ./tests/.github/actions/mock
         with:
-          module_dir: ${{ format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) }}
+          module_dir: ${{ env.TESTS_LANG == 'java' && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
           frontend_dir: ${{ format('frontend/{0}/frontend-{0}-{1}', env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
           update_screenshots: ${{ inputs.update_mock_screenshots || false }}
 
@@ -805,7 +809,7 @@ jobs:
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
       - uses: ./tests/.github/actions/sonar
         with:
-          module_dir: ${{ format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) }}
+          module_dir: ${{ env.TESTS_LANG == 'java' && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
 
   sonar-frontend:
     needs: [frontend-unit-tests, ui-mock-tests]
@@ -1232,7 +1236,7 @@ jobs:
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
       - uses: ./tests/.github/actions/api
         with:
-          module_dir: ${{ format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) }}
+          module_dir: ${{ env.TESTS_LANG == 'java' && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
           stand: prod
 
   e2e-tests:
@@ -1281,7 +1285,7 @@ jobs:
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
       - uses: ./tests/.github/actions/e2e
         with:
-          module_dir: ${{ format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) }}
+          module_dir: ${{ env.TESTS_LANG == 'java' && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
           stand: prod
           include_tags: ${{ inputs.include_tags || '' }}
           exclude_tags: ${{ inputs.exclude_tags || '' }}
@@ -1324,7 +1328,7 @@ jobs:
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
       - uses: ./tests/.github/actions/api
         with:
-          module_dir: ${{ format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) }}
+          module_dir: ${{ env.TESTS_LANG == 'java' && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
           stand: stage
 
   e2e-tests-stage:
@@ -1375,7 +1379,7 @@ jobs:
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
       - uses: ./tests/.github/actions/e2e
         with:
-          module_dir: ${{ format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) }}
+          module_dir: ${{ env.TESTS_LANG == 'java' && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
           stand: stage
           include_tags: ${{ inputs.include_tags || '' }}
           exclude_tags: ${{ inputs.exclude_tags || '' }}
@@ -1405,7 +1409,7 @@ jobs:
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
       - uses: ./tests/.github/actions/manual
         with:
-          module_dir: ${{ format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) }}
+          module_dir: ${{ env.TESTS_LANG == 'java' && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
           stand: prod
 
   # Gating Allure generate after e2e. Lock pins + npm ci live here (not extra

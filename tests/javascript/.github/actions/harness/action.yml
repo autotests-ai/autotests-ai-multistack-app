@@ -1,0 +1,23 @@
+name: harness
+description: STOP — no harness layer in the JavaScript tests family.
+inputs:
+  module_dir:
+    required: true
+  backend_lane:
+    required: false
+    default: 'false'
+  frontend_lane:
+    required: false
+    default: 'false'
+  tests_lane:
+    required: false
+    default: 'false'
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        MODULE_DIR: ${{ inputs.module_dir }}
+      run: |
+        echo "STOP: no harness layer in tests/javascript (${MODULE_DIR:-unset})" >&2
+        exit 1

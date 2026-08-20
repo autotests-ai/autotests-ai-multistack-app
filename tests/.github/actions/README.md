@@ -1,8 +1,15 @@
 # Tests CI verbs
 
-`ci.yml` calls `./tests/.github/actions/<verb>` with
-`module_dir: ${{ format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) }}`.
+`ci.yml` calls `./tests/.github/actions/<verb>` with `module_dir` from stack knobs.
 
-GitHub does not interpolate `uses:`. Adapter `uses:` must match that path
-(today `./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/<verb>`).
-`resolve-module-dir` maps the nested `format()` path to the flattened takeaway leaf.
+GitHub does not interpolate `uses:`. This adapter dispatches on `TESTS_LANG`:
+
+| LANG | Action | `module_dir` |
+|------|--------|----------------|
+| `java` | `./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/<verb>` | 5-segment `tests/java/tests-java-{builder}-{framework}-{report}-{ui}` |
+| `javascript` | `./tests/javascript/.github/actions/<verb>` | short `tests/javascript/tests-javascript-{ui}` (live: `playwright`) |
+| `python` | `./tests/python/.github/actions/<verb>` | short `tests/python/tests-python-{ui}` (live: `selenium`) |
+| other (`typescript`, …) | STOP | never a foreign / Java action |
+
+A verb with no layer in the live JS/Python module STOPs inside that family action (not `uses:` on Selenide).
+`resolve-module-dir` maps the nested path to the flattened takeaway leaf.
