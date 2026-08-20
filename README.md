@@ -1,6 +1,6 @@
 # autotests-ai-multistack-app
 
-Teaching product — **3-folder layout**, orchestrated CI/CD (block 1).
+Teaching product — **3-folder layout**, orchestrated CI/CD (block 1). Hub module SSOT is monorepo `ethalon/`; this repo is the public stand — ports in **[deploy/matrix.yaml](deploy/matrix.yaml)**.
 
 GitHub: **[github.com/autotests-ai/autotests-ai-multistack-app](https://github.com/autotests-ai/autotests-ai-multistack-app)** · monorepo: `projects/autotests-ai-multistack-home/autotests-ai-multistack-app/`
 

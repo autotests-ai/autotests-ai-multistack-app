@@ -31,6 +31,7 @@ backend/python/**/.venv/
 # Runtime
 *.log
 .env
+docker-compose.ethalon-context.yml
 
 # Local notification dogfood (jar write-outs)
 tests/_deferred/notifications/chart.png
