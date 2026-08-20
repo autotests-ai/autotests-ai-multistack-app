@@ -1,1 +1,0 @@
-{"id":"da992d61f6e82af1de1487cebb1b289f","fullName":"dev.multistack.app.config.SecurityChainTest.corsPreflightAllowsConfiguredOrigin","name":"CORS preflight for /api/items answers the configured dev origin","status":"passed","testResultsByEnv":{"default":"be37bb9994d26905b472a131933f1ed1"}}

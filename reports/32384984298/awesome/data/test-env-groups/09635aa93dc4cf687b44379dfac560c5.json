@@ -1,1 +1,0 @@
-{"id":"09635aa93dc4cf687b44379dfac560c5","fullName":"dev.multistack.app.integration.ApplicationWiringIntegrationTest.healthReportsActiveBackendService","name":"GET /api/health — full stack reports the active backend module","status":"passed","testResultsByEnv":{"default":"cea5b514e0354c8fd6c49522f86b4758"}}
