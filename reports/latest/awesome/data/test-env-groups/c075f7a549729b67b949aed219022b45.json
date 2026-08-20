@@ -1,1 +1,0 @@
-{"id":"c075f7a549729b67b949aed219022b45","fullName":"dev.multistack.app.service.NoteServiceTest.patchMissingNote","name":"patch is 404 when the singleton is missing","status":"passed","testResultsByEnv":{"default":"f4280431bc44ba04a5a1d73d8ca7cbfa"}}

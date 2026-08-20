@@ -1,1 +1,0 @@
-{"id":"58febd2c6fbba2a7d63a8cdea1439973","fullName":"dev.multistack.app.service.NoteServiceTest.putCreatesNote","name":"put creates the singleton when the user has no note","status":"passed","testResultsByEnv":{"default":"70b90ff28d9f1c7927161c5653df911d"}}

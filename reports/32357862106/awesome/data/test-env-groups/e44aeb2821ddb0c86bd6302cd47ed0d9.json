@@ -1,1 +1,0 @@
-{"id":"e44aeb2821ddb0c86bd6302cd47ed0d9","fullName":"dev.multistack.app.service.NoteServiceTest.patchTextNullIsUnprocessable","name":"patch JSON null on text is 422","status":"passed","testResultsByEnv":{"default":"d0fa88af6dc42e875c6cf25eb586efbd"}}

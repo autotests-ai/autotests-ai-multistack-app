@@ -1,1 +1,0 @@
-{"id":"e6637e7610da5bf62901746128b8e147","fullName":"dev.multistack.app.service.NoteServiceTest.patchNonObject","name":"patch rejects a non-object body","status":"passed","testResultsByEnv":{"default":"47802a0cb6b1a43f1e8b55464c6bb52f"}}

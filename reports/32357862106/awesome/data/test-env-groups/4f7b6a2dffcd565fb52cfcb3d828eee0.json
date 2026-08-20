@@ -1,1 +1,0 @@
-{"id":"4f7b6a2dffcd565fb52cfcb3d828eee0","fullName":"dev.multistack.app.service.NoteServiceTest.patchUnknownUser","name":"patch rejects a username that no longer exists","status":"passed","testResultsByEnv":{"default":"20d4e7a2e2927981804cc09874f65401"}}
