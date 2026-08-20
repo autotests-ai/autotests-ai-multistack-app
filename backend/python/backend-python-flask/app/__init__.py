@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from flask import Flask, jsonify, request
-from flask_cors import CORS
 
+from app.cors_policy import apply_cors
 from app.db import apply_schema
 from app.routes.api import api_bp
 from app.routes.auth_routes import auth_bp
@@ -10,21 +10,8 @@ from app.seed import seed_data
 
 
 def create_app(*, init_db: bool = True) -> Flask:
-    # Bearer JWT, stateless — Flask has no cookie CSRF. Same as Java SecurityConfig
-    # @SuppressWarnings("java:S4502").
-    app = Flask(__name__)  # NOSONAR
-    CORS(
-        app,
-        resources={
-            r"/api/*": {
-                # Teaching UI is another origin (Vite / path-routed nginx). Auth is
-                # Bearer JWT, not cookies — same as Java CorsConfig, wildcard for siblings.
-                "origins": "*",  # NOSONAR
-                "expose_headers": ["Authorization"],
-            }
-        },
-        supports_credentials=False,
-    )
+    app = Flask(__name__)
+    apply_cors(app)
     app.register_blueprint(api_bp, url_prefix="/api")
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
 

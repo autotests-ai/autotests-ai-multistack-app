@@ -26,9 +26,20 @@ def test_seed_is_idempotent(client):
 
 
 def test_cors_preflight(client):
-    response = client.options("/api/health")
+    response = client.options("/api/health", HTTP_ORIGIN="http://localhost:5173")
     assert response.status_code == 204
-    assert response["Access-Control-Allow-Origin"] == "*"
+    assert response["Access-Control-Allow-Origin"] == "http://localhost:5173"
+
+
+def test_cors_rejects_unknown_origin(client):
+    response = client.get("/api/health", HTTP_ORIGIN="https://evil.example.com")
+    assert response.status_code == 200
+    assert "Access-Control-Allow-Origin" not in response
+
+
+def test_cors_skips_non_api(client):
+    response = client.get("/", HTTP_ORIGIN="http://localhost:5173")
+    assert "Access-Control-Allow-Origin" not in response
 
 
 @pytest.mark.parametrize(

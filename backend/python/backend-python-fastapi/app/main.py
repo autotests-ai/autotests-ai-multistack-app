@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.config import Config
+from app.cors_policy import CorsPolicyMiddleware
 from app.db import SessionLocal, apply_schema
 from app.jwt_util import create_token
 from app.models import Item, User
@@ -27,14 +27,7 @@ from app.validation import validation_message
 
 def create_app(*, init_db: bool = True) -> FastAPI:
     app = FastAPI(title=Config.SERVICE_NAME, docs_url=None, redoc_url=None)
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allow_headers=["*"],
-        expose_headers=["Authorization"],
-        allow_credentials=False,
-    )
+    app.add_middleware(CorsPolicyMiddleware)
 
     @app.exception_handler(StarletteHTTPException)
     async def http_exception_handler(_request: Request, exc: StarletteHTTPException):

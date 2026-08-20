@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
+
+from api.cors_policy import allowed_origin
 
 
 class ApiBoundaryMiddleware:
@@ -26,17 +28,21 @@ class CorsMiddleware:
 
     def __call__(self, request):
         if request.method == "OPTIONS" and request.path.startswith("/api/"):
-            from django.http import HttpResponse
-
             response = HttpResponse(status=204)
         else:
             response = self.get_response(request)
 
         if request.path.startswith("/api/"):
-            response["Access-Control-Allow-Origin"] = "*"
-            response["Access-Control-Allow-Methods"] = (
-                "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+            origin = allowed_origin(
+                request.headers.get("Origin"), request.get_host()
             )
-            response["Access-Control-Allow-Headers"] = "*"
-            response["Access-Control-Expose-Headers"] = "Authorization"
+            if origin:
+                response["Access-Control-Allow-Origin"] = origin
+                response["Access-Control-Allow-Methods"] = (
+                    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+                )
+                response["Access-Control-Allow-Headers"] = (
+                    "Authorization, Content-Type"
+                )
+                response["Access-Control-Expose-Headers"] = "Authorization"
         return response
