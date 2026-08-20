@@ -13,7 +13,7 @@ name: CI
 # FRONTEND_LANG / FRONTEND_FRAMEWORK, TESTS_LANG / BUILDER / FRAMEWORK / REPORT / UI_LIBRARY.
 # Family adapters under backend|frontend|tests/.github/actions/ statically
 # `uses:` the language family (GitHub does not interpolate `uses:`).
-# BACKEND_LANG: java → java-spring module actions, python → backend/python/.github/actions.
+# BACKEND_LANG: java/kotlin → module actions; python/go/javascript/typescript → family.
 # FRONTEND_LANG: typescript → frontend/typescript/.github/actions,
 # javascript → frontend/javascript/.github/actions.
 #
@@ -153,6 +153,7 @@ env:
   # Path = {zone}/{lang}/{zone}-{lang}-…. Workflow env cannot nest env.*;
   # jobs pass module_dir via format() below. Family adapters dispatch on
   # BACKEND_LANG / FRONTEND_LANG (GitHub does not interpolate uses:).
+  # java/kotlin → module actions; python/go/javascript/typescript → family.
   BACKEND_LANG: java
   BACKEND_FRAMEWORK: spring
   BACKEND_PORT: "8800"

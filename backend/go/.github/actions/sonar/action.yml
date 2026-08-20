@@ -1,0 +1,67 @@
+name: sonar
+description: Sonar scan + quality gate for a Go backend module.
+inputs:
+  module_dir:
+    required: true
+  coverage_artifact:
+    required: false
+    default: coverage-backend
+  report_task_artifact:
+    required: false
+    default: sonar-backend-report-task
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v6
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+    - uses: ./.github/actions/download-artifact
+      with:
+        name: ${{ inputs.coverage_artifact }}
+        path: ${{ inputs.module_dir }}
+    - name: Sonar scan + gate (backend)
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+      run: |
+        set -euo pipefail
+        if [[ ! -f coverage.out ]]; then
+          echo "ERROR: coverage.out missing — backend-unit-tests artifact incomplete" >&2
+          exit 1
+        fi
+        if [[ -z "${SONAR_TOKEN:-}" ]]; then
+          echo "ERROR: SONAR_TOKEN unset" >&2
+          exit 1
+        fi
+        KEY="${SONAR_PROJECT_KEY:-autotests-ai-multistack-app-$(basename "${{ inputs.module_dir }}")}"
+        echo "==> sonar scan (coverage.out) → ${SONAR_HOST_URL} (${KEY})"
+        npx --yes "@sonar/scan@${SONAR_SCANNER_NPM_VERSION}" \
+          -Dsonar.host.url="${SONAR_HOST_URL}" \
+          -Dsonar.projectKey="${KEY}" \
+          -Dsonar.projectName="${KEY}" \
+          -Dsonar.qualitygate.wait=true \
+          -Dsonar.qualitygate.timeout="${SONAR_QUALITY_GATE_TIMEOUT}"
+    - name: Write Sonar summary
+      if: always()
+      shell: bash
+      run: |
+        if [[ -n "${WRITE_SONAR_SUMMARY:-}" ]]; then
+          eval "${WRITE_SONAR_SUMMARY}"
+        else
+          {
+            echo "## ${GITHUB_JOB}"
+            echo ""
+            echo "- projectKey: \`${SONAR_PROJECT_KEY}\`"
+            echo "- host: \`${SONAR_HOST_URL}\`"
+            echo "- dashboard: ${SONAR_HOST_URL%/}/dashboard?id=${SONAR_PROJECT_KEY}"
+          } >> "$GITHUB_STEP_SUMMARY"
+        fi
+    - name: Upload Sonar report-task
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ inputs.report_task_artifact }}
+        path: ${{ inputs.module_dir }}/.scannerwork/report-task.txt
+        if-no-files-found: ignore
+        retention-days: 1

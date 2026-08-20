@@ -8,6 +8,10 @@ GitHub does not interpolate `uses:`. This adapter dispatches on `BACKEND_LANG`:
 | LANG | Action |
 |------|--------|
 | `java` | `./backend/java/backend-java-spring/.github/actions/<verb>` |
+| `kotlin` | `./backend/kotlin/backend-kotlin-spring/.github/actions/<verb>` |
 | `python` | `./backend/python/.github/actions/<verb>` |
+| `go` | `./backend/go/.github/actions/<verb>` |
+| `javascript` | `./backend/javascript/.github/actions/<verb>` |
+| `typescript` | `./backend/typescript/.github/actions/<verb>` |
 
 `build` / `deploy` stay on the Docker verbs under the java-spring module action (they take `module_dir` / compose service name from the basename). Flattened takeaway leaf paths are resolved by `.github/actions/resolve-module-dir`.

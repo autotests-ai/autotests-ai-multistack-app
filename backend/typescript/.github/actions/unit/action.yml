@@ -1,0 +1,56 @@
+name: unit
+description: Jest + coverage (JaCoCo analog) for a TypeScript backend module.
+inputs:
+  module_dir:
+    required: true
+  coverage_artifact:
+    required: false
+    default: coverage-backend
+  allure_artifact:
+    required: false
+    default: allure-results-unit
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/setup-allurectl
+    - uses: actions/setup-node@v6
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: npm
+        cache-dependency-path: ${{ inputs.module_dir }}/package-lock.json
+    - name: Install npm dependencies
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      run: npm ci
+    - name: Typecheck backend
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      run: npm run typecheck --if-present
+    - name: Unit tests (Jest + coverage)
+      id: run-tests
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/allure-results
+      run: |
+        eval "${ALLURECTL_RUN:-true}"
+        if declare -F run_with_allurectl >/dev/null; then
+          run_with_allurectl npm test -- --runInBand --coverage --coverageReporters=lcov --coverageReporters=text --testPathIgnorePatterns=integration
+        else
+          npm test -- --runInBand --coverage --coverageReporters=lcov --coverageReporters=text --testPathIgnorePatterns=integration
+        fi
+    - if: steps.run-tests.outcome == 'success'
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ inputs.coverage_artifact }}
+        path: ${{ inputs.module_dir }}/coverage/
+        if-no-files-found: error
+    - name: Publish raw Allure results
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ inputs.allure_artifact }}
+        path: ${{ inputs.module_dir }}/allure-results/**
+        if-no-files-found: ignore
+        retention-days: 1

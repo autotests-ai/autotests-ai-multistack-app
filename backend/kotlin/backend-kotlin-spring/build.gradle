@@ -77,7 +77,22 @@ kotlin {
 }
 
 tasks.named('test') {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        def includeTagsProp = System.getProperty('includeTags')
+        if (includeTagsProp) {
+            includeTags(*(includeTagsProp.split(',')*.trim()))
+        }
+        def excludeTagsProp = System.getProperty('excludeTags')
+        if (excludeTagsProp) {
+            excludeTags(*(excludeTagsProp.split(',')*.trim()))
+        }
+    }
+    // No @Tag("integration") tests yet — includeTags must not fail the CI verb.
+    if (System.getProperty('includeTags')) {
+        filter {
+            setFailOnNoMatchingTests(false)
+        }
+    }
     finalizedBy jacocoTestReport
 }
 

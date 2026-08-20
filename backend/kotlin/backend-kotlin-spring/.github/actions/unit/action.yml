@@ -1,0 +1,50 @@
+name: unit
+description: Gradle unit + JaCoCo in this backend module.
+inputs:
+  module_dir:
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/setup-allurectl
+    - uses: actions/setup-java@v5
+      with:
+        distribution: temurin
+        java-version: ${{ env.JAVA_VERSION }}
+    - uses: gradle/actions/setup-gradle@v6
+      with:
+        cache-read-only: ${{ env.GRADLE_CACHE_READ_ONLY == 'true' }}
+        cache-encryption-key: ${{ env.GRADLE_ENCRYPTION_KEY }}
+    - uses: actions/cache@v6
+      with:
+        path: ${{ inputs.module_dir }}/.gradle/configuration-cache
+        key: gradle-cc-backend-kotlin-unit-${{ hashFiles('backend/kotlin/backend-kotlin-spring/*.gradle*', 'backend/kotlin/backend-kotlin-spring/gradle/wrapper/gradle-wrapper.properties') }}-${{ github.sha }}
+        restore-keys: |
+          gradle-cc-backend-kotlin-unit-
+    - name: Unit tests (Gradle + JaCoCo)
+      id: run-tests
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/build/allure-results
+      run: |
+        eval "${ALLURECTL_RUN}"
+        run_with_allurectl ./gradlew test jacocoTestReport jacocoTestCoverageVerification -DexcludeTags=integration
+    - if: steps.run-tests.outcome == 'success'
+      uses: actions/upload-artifact@v7
+      with:
+        name: coverage-backend
+        path: |
+          ${{ inputs.module_dir }}/build/jacoco/**
+          ${{ inputs.module_dir }}/build/reports/jacoco/**
+          ${{ inputs.module_dir }}/build/classes/**
+        if-no-files-found: error
+    - name: Publish raw Allure results
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: allure-results-unit
+        path: ${{ inputs.module_dir }}/build/allure-results/**
+        if-no-files-found: ignore
+        retention-days: 1
