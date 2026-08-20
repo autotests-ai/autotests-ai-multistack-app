@@ -12,7 +12,7 @@ change detection (`provideZonelessChangeDetection()` — no `zone.js`). Angular 
 under Vite by [`@analogjs/vite-plugin-angular`](https://analogjs.org), so the module builds
 and tests exactly like the other bundled modules in the matrix.
 Lean design-system CSS from
-[`frontend/_shared/frontend-javascript-app`](../../_shared/frontend-javascript-app/);
+[`vendor/ds`](vendor/ds/);
 the only local component wrappers are `Panel` (panel chrome) and `AppHeader`
 (header markup stays SSOT in `js/header.js`).
 
@@ -59,7 +59,7 @@ the API fails — a token the server has already rejected must never keep the UI
 
 The design-system header is SSOT and is **not** reimplemented in Angular.
 `<app-header>` publishes `window.headerConfig` and injects `js/header.js` from the mount
-(`UI_RUNTIME` overlay in this module's nginx image).
+(`vendor/ds` overlay in this module's nginx image).
 
 ## Scripts
 
@@ -76,7 +76,7 @@ diagnostics.
 
 **`npm run dev` alone is not a full product stand:** Vite does not serve
 `js/header.js` / header templates. Use Docker/compose (or monorepo
-`python scripts/stands/ensure.py autotests-ai-multistack-app`) for the `UI_RUNTIME` overlay.
+`python scripts/stands/ensure.py autotests-ai-multistack-app`) for the `vendor/ds` overlay.
 
 `npm test` runs Vitest under `--no-experimental-webstorage` for the same reason as the React
 module: on Node 26 the runtime's own empty `localStorage` global wins over the jsdom one.
@@ -85,7 +85,8 @@ module: on Node 26 the runtime's own empty `localStorage` global wins over the j
 
 - `outDir` is module-local `dist/` with `emptyOutDir: true`.
 - Asset filenames are stable (unhashed).
-- Peer CSS: lean DS from `_shared/frontend-javascript-app/css` + product CSS in `css/`.
+- Peer CSS: lean DS from `vendor/ds/css` + product CSS in `css/`.
+- Image build context is this folder (`docker build .`); no repo-root `COPY` of `_shared`.
 - `css/angular-hosts.css` is the only Angular-specific stylesheet: it drops the extra
   component host elements (`<app-root>`, `<app-home-page>`, …) out of layout so the shared
   CSS sees the same markup tree as the React / Vue modules.

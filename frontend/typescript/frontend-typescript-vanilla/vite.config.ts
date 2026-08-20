@@ -4,13 +4,13 @@ import { extname, join, resolve } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
 
 /**
- * The `${UI_RUNTIME}` overlay (design-system CSS, `js/header.js` + its header
+ * The vendor/ds overlay (design-system CSS, `js/header.js` + its header
  * template) is copied next to the built app by the Dockerfile, so the pages
  * reference those files instead of bundling them. Vite has nothing to serve
  * them from during `dev`/`preview`, so stream them straight off the overlay —
  * otherwise the header never mounts and the app renders unstyled.
  */
-const OVERLAY_ROOT = resolve(__dirname, '../../_shared/frontend-javascript-app');
+const OVERLAY_ROOT = resolve(__dirname, 'vendor/ds');
 const OVERLAY_PATH_RE = /^\/((?:css|js|templates)\/[\w.-]+)$/;
 const MIME_TYPES: Record<string, string> = {
   '.css': 'text/css; charset=utf-8',

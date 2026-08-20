@@ -8,8 +8,8 @@ Plain JS by design: `.jsx` app files, no `tsconfig.json`, no `typecheck` script,
 Vite + React 19 + React Router. Vite `base` is `./` (one dist under
 `/{backend}/frontend-javascript-react/`); router `basename` and API paths come from
 `lib/appBase.js` (pathname matrix). Built on `@zero-design-system/react`, aliased to
-committed [`frontend/_shared/frontend-react-ui`](../../_shared/frontend-react-ui/)
-(refresh: `bash frontend/scripts/sync-react-ui.sh`). That vendored package is TypeScript
+committed [`vendor/react-ui`](vendor/react-ui/)
+(refresh: `bash frontend/scripts/sync-react-ui.sh`, which also fans out here). That vendored package is TypeScript
 and Vite compiles it straight from this JS project — the alias is all the wiring needed.
 
 RTL / Vitest live in [`src/test/`](src/test/) (`component_rtl`) — same module as the product,
@@ -74,7 +74,7 @@ token must never keep the UI signed in.
 
 The design-system header is SSOT and is **not** reimplemented in React. `<AppHeader>`
 publishes `window.headerConfig` and injects `js/header.js` from the mount
-(`UI_RUNTIME` overlay in this module's nginx image).
+(`vendor/ds` overlay in this module's nginx image).
 
 **`npm run dev` alone is not a full product stand:** Vite does not serve
 `js/header.js` / header templates. Use Docker/compose (or the monorepo
@@ -112,8 +112,9 @@ product bump.
 
 - `outDir` is module-local `dist/` with `emptyOutDir: true`.
 - Asset filenames are stable (unhashed).
-- Peer CSS: lean DS from `_shared/frontend-javascript-app/css` + product CSS in `css/`
+- Peer CSS: lean DS from `vendor/ds/css` + product CSS in `css/`
   via `src/styles.js` (single CSS entry — react-ui components do not side-import styles).
+- Image build context is this folder (`docker build .`); no repo-root `COPY` of `_shared`.
 
 ## PWA baseline
 

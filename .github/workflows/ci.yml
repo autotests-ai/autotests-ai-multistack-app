@@ -1057,7 +1057,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ ! -f deploy/matrix.yaml ] || [ ! -f frontend/scripts/catalog-cd-matrix.py ]; then
-            echo 'include=[{"service":"none","dockerfile":"Dockerfile"}]' >> "$GITHUB_OUTPUT"
+            echo 'include=[{"service":"none","dockerfile":"Dockerfile","context":"."}]' >> "$GITHUB_OUTPUT"
             echo "services=" >> "$GITHUB_OUTPUT"
             echo "catalog skipped (no deploy/matrix.yaml)"
             exit 0
@@ -1076,10 +1076,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJson(needs.catalog-matrix.outputs.include || '[{"service":"none","dockerfile":"Dockerfile"}]') }}
+        include: ${{ fromJson(needs.catalog-matrix.outputs.include || '[{"service":"none","dockerfile":"Dockerfile","context":"."}]') }}
     env:
       DOCKER_CACHE_SCOPE: autotests-ai-multistack-app-docker-${{ matrix.service }}
-      DOCKER_BUILD_CONTEXT: .
+      DOCKER_BUILD_CONTEXT: ${{ matrix.context }}
       DOCKER_FILE: ${{ matrix.dockerfile }}
       DOCKER_TAGS: ghcr.io/${{ github.repository_owner }}/autotests-ai-multistack-app-${{ matrix.service }}:${{ github.sha }}
       DOCKER_OCI_LABELS: |

@@ -2,16 +2,13 @@
 import AllureReporter from 'allure-vitest/reporter';
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import { resolve } from 'node:path';
-
-const sharedRoot = resolve(__dirname, '../../_shared');
 
 export default defineConfig({
   base: './',
   plugins: [vue()],
   server: {
     fs: {
-      allow: [__dirname, sharedRoot],
+      allow: [__dirname],
     },
   },
   test: {

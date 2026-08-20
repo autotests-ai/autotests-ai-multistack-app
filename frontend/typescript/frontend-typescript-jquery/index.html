@@ -7,11 +7,11 @@
   <link rel="apple-touch-icon" href="icons/pwa-192.png" />
   <title>Multistack</title>
   <!-- Stylesheets are bundled by Vite through src/styles.ts (design-system CSS
-       comes from frontend/_shared, product CSS from ./css). -->
+       comes from vendor/ds, product CSS from ./css). -->
 </head>
 <body>
   <!-- window.headerConfig and the js/header.js embed are published by src/home.ts;
-       the ${UI_RUNTIME} overlay serves that script next to the built documents. -->
+       the vendor/ds overlay serves that script next to the built documents. -->
   <div id="app-header"></div>
 
   <main class="page-shell page-shell--below-header grid multistack" data-testid="multistack-layout">

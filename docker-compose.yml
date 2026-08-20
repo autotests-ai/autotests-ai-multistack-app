@@ -363,10 +363,7 @@ services:
         org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
         org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
         org.opencontainers.image.vendor: autotests-ai
-      context: .
-      dockerfile: frontend/javascript/frontend-javascript-vanilla/Dockerfile
-      args:
-        UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
+      context: ./frontend/javascript/frontend-javascript-vanilla
     restart: unless-stopped
     networks:
       - autotests_ai_multistack_internal
@@ -382,11 +379,7 @@ services:
         org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
         org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
         org.opencontainers.image.vendor: autotests-ai
-      context: .
-      dockerfile: frontend/javascript/frontend-javascript-react/Dockerfile
-      args:
-        UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
-        REACT_UI: ${REACT_UI:-frontend/_shared/frontend-react-ui}
+      context: ./frontend/javascript/frontend-javascript-react
     restart: unless-stopped
     networks:
       - autotests_ai_multistack_internal
@@ -402,10 +395,7 @@ services:
         org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
         org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
         org.opencontainers.image.vendor: autotests-ai
-      context: .
-      dockerfile: frontend/javascript/frontend-javascript-angular/Dockerfile
-      args:
-        UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
+      context: ./frontend/javascript/frontend-javascript-angular
     restart: unless-stopped
     networks:
       - autotests_ai_multistack_internal
@@ -421,10 +411,7 @@ services:
         org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
         org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
         org.opencontainers.image.vendor: autotests-ai
-      context: .
-      dockerfile: frontend/javascript/frontend-javascript-vue/Dockerfile
-      args:
-        UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
+      context: ./frontend/javascript/frontend-javascript-vue
     restart: unless-stopped
     networks:
       - autotests_ai_multistack_internal
@@ -440,10 +427,7 @@ services:
         org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
         org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
         org.opencontainers.image.vendor: autotests-ai
-      context: .
-      dockerfile: frontend/javascript/frontend-javascript-jquery/Dockerfile
-      args:
-        UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
+      context: ./frontend/javascript/frontend-javascript-jquery
     restart: unless-stopped
     networks:
       - autotests_ai_multistack_internal
@@ -459,10 +443,7 @@ services:
         org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
         org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
         org.opencontainers.image.vendor: autotests-ai
-      context: .
-      dockerfile: frontend/typescript/frontend-typescript-vanilla/Dockerfile
-      args:
-        UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
+      context: ./frontend/typescript/frontend-typescript-vanilla
     restart: unless-stopped
     networks:
       - autotests_ai_multistack_internal
@@ -494,10 +475,7 @@ services:
         org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
         org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
         org.opencontainers.image.vendor: autotests-ai
-      context: .
-      dockerfile: frontend/typescript/frontend-typescript-angular/Dockerfile
-      args:
-        UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
+      context: ./frontend/typescript/frontend-typescript-angular
     restart: unless-stopped
     networks:
       - autotests_ai_multistack_internal
@@ -513,10 +491,7 @@ services:
         org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
         org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
         org.opencontainers.image.vendor: autotests-ai
-      context: .
-      dockerfile: frontend/typescript/frontend-typescript-vue/Dockerfile
-      args:
-        UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
+      context: ./frontend/typescript/frontend-typescript-vue
     restart: unless-stopped
     networks:
       - autotests_ai_multistack_internal
@@ -532,10 +507,7 @@ services:
         org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
         org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
         org.opencontainers.image.vendor: autotests-ai
-      context: .
-      dockerfile: frontend/typescript/frontend-typescript-jquery/Dockerfile
-      args:
-        UI_RUNTIME: ${UI_RUNTIME:-frontend/_shared/frontend-javascript-app}
+      context: ./frontend/typescript/frontend-typescript-jquery
     restart: unless-stopped
     networks:
       - autotests_ai_multistack_internal

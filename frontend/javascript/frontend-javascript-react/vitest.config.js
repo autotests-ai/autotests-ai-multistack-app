@@ -3,16 +3,14 @@ import react from '@vitejs/plugin-react';
 import AllureReporter from 'allure-vitest/reporter';
 import { defineConfig } from 'vite';
 
-const reactUiSrc = resolve(__dirname, '../../_shared/frontend-react-ui/src/index.ts');
-const sharedRoot = resolve(__dirname, '../../_shared');
+const reactUiSrc = resolve(__dirname, 'vendor/react-ui/src/index.ts');
 
 export default defineConfig({
   base: './',
   plugins: [react()],
   resolve: {
-    // The library alias points outside this package, so its `react` import would
-    // otherwise resolve against a copy hoisted higher in the tree — two Reacts in
-    // one render tree, which fails as "Invalid hook call".
+    // vendor/react-ui imports `react` by name — keep this package's copy so the
+    // alias does not pick up a second React higher in the tree ("Invalid hook call").
     dedupe: ['react', 'react-dom'],
     alias: {
       '@zero-design-system/react': reactUiSrc,
@@ -20,7 +18,7 @@ export default defineConfig({
   },
   server: {
     fs: {
-      allow: [__dirname, sharedRoot],
+      allow: [__dirname],
     },
   },
   test: {
@@ -39,7 +37,7 @@ export default defineConfig({
       reportsDirectory: './coverage',
       include: ['src/**/*.{js,jsx}'],
       // main.jsx / styles.js are bootstrap (createRoot, CSS imports) — nothing to assert in jsdom.
-      exclude: ['src/test/**', 'src/main.jsx', 'src/styles.js'],
+      exclude: ['src/test/**', 'src/main.jsx', 'src/styles.js', 'vendor/**'],
       // Regression floor, not a target: raise when coverage grows, never lower silently.
       thresholds: {
         lines: 92,

@@ -1,5 +1,5 @@
 // Dev/preview server for the static module. Mirrors the container: the module dir is
-// layered over the ${UI_RUNTIME} overlay (design-system CSS + js/header.js), and lookup
+// layered over vendor/ds (design-system CSS + js/header.js), and lookup
 // follows the nginx try_files chain, so extensionless /login and /register resolve here
 // exactly like they do in prod. No bundler, no dependencies.
 import { createReadStream, statSync } from 'node:fs';
@@ -8,7 +8,7 @@ import { dirname, extname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const MODULE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const UI_RUNTIME = resolve(MODULE_ROOT, '../../_shared/frontend-javascript-app');
+const UI_RUNTIME = resolve(MODULE_ROOT, 'vendor/ds');
 const ROOTS = [MODULE_ROOT, UI_RUNTIME];
 const PORT = Number(process.env.PORT || 9804);
 
@@ -24,9 +24,8 @@ const NOT_SERVED = [
   'src',
   'scripts',
   'coverage',
+  'vendor/ds',
 ];
-
-const MIME = {
   '.css': 'text/css; charset=utf-8',
   '.html': 'text/html; charset=utf-8',
   '.ico': 'image/x-icon',

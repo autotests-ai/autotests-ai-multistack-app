@@ -1,12 +1,11 @@
 /// <reference types="vitest/config" />
-import { dirname, resolve } from 'node:path';
+import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import AllureReporter from 'allure-vitest/reporter';
 import { defineConfig } from 'vite';
 import { angularDecorators } from './babel-decorators.js';
 
 const moduleDir = dirname(fileURLToPath(import.meta.url));
-const sharedRoot = resolve(moduleDir, '../../_shared');
 
 export default defineConfig({
   base: './',
@@ -15,7 +14,7 @@ export default defineConfig({
   plugins: [angularDecorators()],
   server: {
     fs: {
-      allow: [moduleDir, sharedRoot],
+      allow: [moduleDir],
     },
   },
   test: {
@@ -35,7 +34,7 @@ export default defineConfig({
       include: ['src/**/*.js'],
       // main.js / styles.js are bootstrap (bootstrapApplication, CSS imports) —
       // nothing to assert in jsdom.
-      exclude: ['src/test/**', 'src/main.js', 'src/styles.js'],
+      exclude: ['src/test/**', 'src/main.js', 'src/styles.js', 'vendor/**'],
       // Regression floor, not a target: raise when coverage grows, never lower silently.
       thresholds: {
         lines: 96,

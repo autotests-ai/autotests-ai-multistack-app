@@ -2,8 +2,10 @@
 """Catalog CD matrix from deploy/matrix.yaml (frontends without teaching: true).
 
 Called from `.github/workflows/ci.yml` (catalog-* jobs). Stdout (`>> $GITHUB_OUTPUT`):
-  include=<json array of {service, dockerfile}>
+  include=<json array of {service, dockerfile, context}>
   services=<space-separated compose services>
+
+`context` is the frontend module directory (compose / catalog-build context=module).
 
 Human check: python frontend/scripts/catalog-cd-matrix.py --pretty
 """
@@ -59,7 +61,14 @@ def catalog_frontends(data: dict, repo_root: Path) -> list[dict]:
         module = str(frontend.get("module") or "").strip()
         service = str(frontend.get("compose_service") or fid).strip()
         dockerfile = f"{module}/Dockerfile" if module else ""
-        rows.append({"service": service, "dockerfile": dockerfile, "id": fid})
+        rows.append(
+            {
+                "service": service,
+                "dockerfile": dockerfile,
+                "context": module,
+                "id": fid,
+            }
+        )
     if len(teaching) != 1:
         raise SystemExit(
             f"STOP: need exactly one frontend with teaching: true, got {teaching or 'none'}"
@@ -85,7 +94,14 @@ def main(argv: list[str] | None = None) -> int:
 
     repo_root = yaml_path.parent.parent
     rows = catalog_frontends(_load_yaml(yaml_path), repo_root)
-    include = [{"service": r["service"], "dockerfile": r["dockerfile"]} for r in rows]
+    include = [
+        {
+            "service": r["service"],
+            "dockerfile": r["dockerfile"],
+            "context": r["context"],
+        }
+        for r in rows
+    ]
     services = " ".join(r["service"] for r in rows)
     if args.pretty:
         print(json.dumps({"include": include, "services": services}, indent=2))

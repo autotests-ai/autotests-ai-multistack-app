@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const { HEADER_JS, TEMPLATE_HTML } = vi.hoisted(() => {
   const { readFileSync: read } = require('node:fs');
   const { resolve: res } = require('node:path');
-  const runtime = res(__dirname, '../../../../_shared/frontend-javascript-app');
+  const runtime = res(__dirname, '../../vendor/ds');
   return {
     HEADER_JS: res(runtime, 'js/header.js'),
     TEMPLATE_HTML: read(res(runtime, 'templates/header.html'), 'utf8'),
@@ -13,7 +13,7 @@ const { HEADER_JS, TEMPLATE_HTML } = vi.hoisted(() => {
 });
 
 // String literal required — vi.mock is hoisted.
-vi.mock('../../../../_shared/frontend-javascript-app/js/dom-utils.js', () => ({
+vi.mock('../../vendor/ds/js/dom-utils.js', () => ({
   fetchTemplateText: vi.fn(async () => TEMPLATE_HTML),
   escapeHtml: (v) => v,
   copyToClipboard: vi.fn(),

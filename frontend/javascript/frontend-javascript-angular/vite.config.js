@@ -1,10 +1,9 @@
-import { dirname, resolve } from 'node:path';
+import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import { angularDecorators } from './babel-decorators.js';
 
 const moduleDir = dirname(fileURLToPath(import.meta.url));
-const sharedRoot = resolve(moduleDir, '../../_shared');
 
 // Relative base: one dist works under /{backend}/frontend-javascript-angular/
 const mountBase = './';
@@ -55,7 +54,7 @@ export default defineConfig({
     port: 9802,
     strictPort: true,
     fs: {
-      allow: [moduleDir, sharedRoot],
+      allow: [moduleDir],
     },
   },
   preview: { port: 9802, strictPort: true },

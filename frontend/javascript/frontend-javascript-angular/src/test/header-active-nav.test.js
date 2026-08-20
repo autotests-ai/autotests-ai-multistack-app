@@ -4,10 +4,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // Canonical design-system header from the lean runtime (committed; works in a
 // standalone checkout without the monorepo design-system symlink). String literal
 // required — vi.mock is hoisted, so the factory stays self-contained.
-vi.mock('../../../../_shared/frontend-javascript-app/js/dom-utils.js', async () => {
+vi.mock('../../vendor/ds/js/dom-utils.js', async () => {
   const { readFileSync } = await import('node:fs');
   const { resolve: res } = await import('node:path');
-  const runtime = res(import.meta.dirname, '../../../../_shared/frontend-javascript-app');
+  const runtime = res(import.meta.dirname, '../../vendor/ds');
   const template = readFileSync(res(runtime, 'templates/header.html'), 'utf8');
   return {
     fetchTemplateText: vi.fn(async () => template),
@@ -16,7 +16,7 @@ vi.mock('../../../../_shared/frontend-javascript-app/js/dom-utils.js', async () 
   };
 });
 
-const RUNTIME_DIR = resolve(import.meta.dirname, '../../../../_shared/frontend-javascript-app');
+const RUNTIME_DIR = resolve(import.meta.dirname, '../../vendor/ds');
 const HEADER_JS = resolve(RUNTIME_DIR, 'js/header.js');
 
 const MOUNT = '/frontend-javascript-angular';

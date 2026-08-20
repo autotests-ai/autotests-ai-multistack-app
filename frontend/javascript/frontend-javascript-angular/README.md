@@ -6,7 +6,7 @@ anywhere in the module: no `.ts` sources, no `tsconfig.json`, no `typecheck` scr
 
 Vite + Angular 22 (standalone components, `@angular/router`) under
 `/frontend-javascript-angular/`. Lean design-system CSS from
-[`frontend/_shared/frontend-javascript-app`](../../_shared/frontend-javascript-app/);
+[`vendor/ds`](vendor/ds/);
 thin Angular wrappers for Panel / Button / PlaqueField / AppHeader (header markup stays
 SSOT in `js/header.js`).
 
@@ -116,7 +116,7 @@ next to `data-testid`. Literal input values are therefore bound (`[title]="'Sess
 ## Header
 
 The design-system header is SSOT and is **not** reimplemented in Angular. `<app-header>`
-publishes `window.headerConfig` and injects `js/header.js` from the mount (`UI_RUNTIME`
+publishes `window.headerConfig` and injects `js/header.js` from the mount (`vendor/ds`
 overlay in this module's nginx image).
 
 ## Scripts
@@ -132,7 +132,7 @@ There is no `typecheck` script: this module has no TypeScript.
 
 **`npm run dev` alone is not a full product stand:** Vite does not serve `js/header.js`
 or the header templates. Use Docker/compose (or monorepo
-`python scripts/stands/ensure.py autotests-ai-multistack-app`) for the `UI_RUNTIME` overlay.
+`python scripts/stands/ensure.py autotests-ai-multistack-app`) for the `vendor/ds` overlay.
 
 `npm test` runs Vitest under `--no-experimental-webstorage` for the same reason as the
 React module: on Node 26 the runtime's own empty `localStorage` global wins over the
@@ -146,5 +146,6 @@ jsdom one.
   the `pin-mount-assets` plugin in `vite.config.js`.
 - Routes reference their components eagerly (no `loadComponent`) so the build stays a
   single chunk, which is what that pinning assumes.
-- Peer CSS: lean DS from `_shared/frontend-javascript-app/css` + product CSS in `css/`.
+- Peer CSS: lean DS from `vendor/ds/css` + product CSS in `css/`.
+- Image build context is this folder (`docker build .`); no repo-root `COPY` of `_shared`.
 - No PWA / service worker in this module.

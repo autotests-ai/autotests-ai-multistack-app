@@ -6,8 +6,8 @@ import { defineConfig, type Plugin } from 'vite';
 // Relative base: one dist works at the publish port and under /{backend}/frontend-typescript-jquery/.
 const mountBase = './';
 
-/** `${UI_RUNTIME}` overlay — the Docker image copies it over `dist/`. */
-const overlayRoot = resolve(__dirname, '../../_shared/frontend-javascript-app');
+/** vendor/ds overlay — the Docker image copies it over `dist/`. */
+const overlayRoot = resolve(__dirname, 'vendor/ds');
 
 const OVERLAY_CONTENT_TYPE: Record<string, string> = {
   '.css': 'text/css',
@@ -29,8 +29,8 @@ function pathnameOf(url: string): string {
 
 /**
  * Dev and preview only: serve the design-system runtime (`js/header.js` and the
- * markup templates it fetches) straight from `frontend/_shared`. In the container
- * those paths come from the `${UI_RUNTIME}` overlay, so they are never bundled.
+ * markup templates it fetches) straight from `vendor/ds`. In the container
+ * those paths come from the vendor/ds overlay, so they are never bundled.
  */
 function overlayRuntime(): Plugin {
   const serveOverlay: Middleware = (req, res, next) => {

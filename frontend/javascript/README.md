@@ -19,4 +19,4 @@ sharing app code with a sibling.
 `frontend-javascript-vanilla` is the UX reference the other nine modules copy — start
 there when the Session panel, auth flow or error copy changes.
 
-Shared embed / lean runtime live under `frontend/_shared/` — not product URLs.
+Shared embed lives under `frontend/_shared/`. Lean DS for product images is `vendor/ds` in each module.

@@ -11,17 +11,17 @@ frontend/
     frontend-react-ui/             # vendored @zero-design-system/react (sync-react-ui.sh)
     frontend-javascript-embed/     # full DS symlinks (wire-ui)
   javascript/
-    frontend-javascript-vanilla/   # static app — UX reference for the other nine
-    frontend-javascript-react/     # product + src/test/
-    frontend-javascript-angular/   # product + src/test/ (JIT + Babel decorators)
-    frontend-javascript-vue/       # product + src/test/
-    frontend-javascript-jquery/    # static app + src/test/ (vendored jQuery)
+    frontend-javascript-vanilla/   # static app — UX reference for the other nine; vendor/ds
+    frontend-javascript-react/     # product + src/test/ + vendor/ds + vendor/react-ui
+    frontend-javascript-angular/   # product + src/test/ (JIT + Babel decorators); vendor/ds
+    frontend-javascript-vue/       # product + src/test/; vendor/ds
+    frontend-javascript-jquery/    # static app + src/test/ (vendored jQuery + vendor/ds)
   typescript/
-    frontend-typescript-vanilla/   # product + src/test/ (multi-page, no framework)
+    frontend-typescript-vanilla/   # product + src/test/ (multi-page, no framework); vendor/ds
     frontend-typescript-react/     # product + src/test/ (component_rtl) — deploy default
-    frontend-typescript-angular/   # product + src/test/
-    frontend-typescript-vue/       # product + src/test/ (component_vue)
-    frontend-typescript-jquery/    # product + src/test/ (multi-page)
+    frontend-typescript-angular/   # product + src/test/; vendor/ds
+    frontend-typescript-vue/       # product + src/test/ (component_vue); vendor/ds
+    frontend-typescript-jquery/    # product + src/test/ (multi-page); vendor/ds
 ```
 
 All ten are `status: active` in [`deploy/matrix.yaml`](../deploy/matrix.yaml) — there are no
@@ -56,7 +56,7 @@ jQuery 4. Canon and pins: monorepo [`docs/rag/config/react-toolchain.md`](../../
 |------|----------------|----------|
 | Product UI | yes | `frontend-*-react`, `frontend-*-angular`, `frontend-*-vue`, `frontend-*-vanilla`, `frontend-*-jquery` |
 | Component tests (jsdom) | no | `frontend-*/src/test/` — every module but static `frontend-javascript-vanilla` |
-| Shared | no | `_shared/app`, `_shared/embed`, `_shared/react-ui` |
+| Shared | no | `_shared/app`, `_shared/embed`, `_shared/react-ui` (staging; product images use `vendor/`) |
 
 ## Session panel — the auth contract every module implements
 
@@ -87,7 +87,7 @@ Every module has a compose service and an image. Teaching CI ([`../.github/workf
 builds, Sonar-scans and deploys exactly one of them — `frontend-typescript-react` (:9811),
 the module `APP_URL` / `UI_URL` point at. The other nine are catalog CD
 (jobs `catalog-*` in [`ci.yml`](../.github/workflows/ci.yml)) — SHA images, no sonar/e2e matrix.
-Local: `docker compose build <service>`.
+Local: `docker compose build <service>` (context is the module folder).
 
 Host `/` is empty (404). Host nginx ([`deploy/nginx/`](../deploy/nginx/)) strips `/{backend}/{frontend}` → `/` on that frontend container.
 

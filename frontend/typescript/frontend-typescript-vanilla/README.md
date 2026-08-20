@@ -9,8 +9,8 @@ difference from [`frontend-javascript-vanilla`](../../javascript/frontend-javasc
 which this module is a port of — Vite compiles `src/*.ts` into one script per page.
 
 Lean design-system CSS and the header runtime come from
-[`frontend/_shared/frontend-javascript-app`](../../_shared/frontend-javascript-app/)
-(the `${UI_RUNTIME}` overlay, laid down by this module's Dockerfile). Header markup
+[`vendor/ds`](vendor/ds/)
+(the vendor/ds overlay, laid down by this module's Dockerfile). Header markup
 stays SSOT in `js/header.js` and is never reimplemented here.
 
 Vitest + jsdom live in [`src/test/`](src/test/) — same module as the product.
@@ -110,7 +110,7 @@ clicks and submits with `fetch` and `window.confirm` stubbed.
   `src/header.ts` publishes `window.headerConfig` and appends the module script
   instead, which is the same wiring one step later.
 - `npm run dev` / `npm run preview` serve the overlay's `css/`, `js/` and
-  `templates/` straight from `frontend/_shared/frontend-javascript-app` (see
+  `templates/` straight from `vendor/ds` (see
   `overlayRuntime()` in `vite.config.ts`), so both are complete product stands
   without Docker.
 

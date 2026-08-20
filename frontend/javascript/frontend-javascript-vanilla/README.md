@@ -3,8 +3,8 @@
 Product UI — plain HTML/JS (same screens as TypeScript React / Vue).
 
 Static files + lean design-system runtime from
-[`frontend/_shared/frontend-javascript-app`](../../_shared/frontend-javascript-app/)
-(overlaid in the module Dockerfile). Header markup stays SSOT in `js/header.js`.
+[`vendor/ds`](vendor/ds/)
+(refresh: `bash frontend/scripts/sync-ds-runtime.sh`; overlaid in this module's Dockerfile). Header markup stays SSOT in `js/header.js`.
 
 Prod URL: `https://autotests.ai/stack/{backend}/frontend-javascript-vanilla/`  
 Local compose publish: `:9800`.

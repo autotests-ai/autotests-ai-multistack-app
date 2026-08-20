@@ -4,7 +4,7 @@ Product UI — TypeScript + Vue 3 (same screens as `frontend-typescript-react` /
 
 Vite + Vue 3 + Vue Router (`createWebHistory` under `/frontend-typescript-vue/`).
 Lean design-system CSS from
-[`frontend/_shared/frontend-javascript-app`](../../_shared/frontend-javascript-app/);
+[`vendor/ds`](vendor/ds/);
 thin Vue wrappers for Panel / Button / PlaqueField / AppHeader (header markup stays SSOT in `js/header.js`).
 
 Vitest + Testing Library live in [`src/test/`](src/test/) — same module as the product.
@@ -66,7 +66,7 @@ the API fails — a token the server has already rejected must never keep the UI
 
 The design-system header is SSOT and is **not** reimplemented in Vue. `<AppHeader>`
 publishes `window.headerConfig` and injects `js/header.js` from the mount
-(`UI_RUNTIME` overlay in this module's nginx image).
+(`vendor/ds` overlay in this module's nginx image).
 
 ## Scripts
 
@@ -79,7 +79,7 @@ npm test           # Vitest + Testing Library (src/test/)
 
 **`npm run dev` alone is not a full product stand:** Vite does not serve
 `js/header.js` / header templates. Use Docker/compose (or monorepo
-`python scripts/stands/ensure.py autotests-ai-multistack-app`) for the `UI_RUNTIME` overlay.
+`python scripts/stands/ensure.py autotests-ai-multistack-app`) for the `vendor/ds` overlay.
 
 `npm test` runs Vitest under `--no-experimental-webstorage` for the same reason as the React
 module: on Node 26 the runtime's own empty `localStorage` global wins over the jsdom one.
@@ -88,7 +88,8 @@ module: on Node 26 the runtime's own empty `localStorage` global wins over the j
 
 - `outDir` is module-local `dist/` with `emptyOutDir: true`.
 - Asset filenames are stable (unhashed).
-- Peer CSS: lean DS from `_shared/frontend-javascript-app/css` + product CSS in `css/`.
+- Peer CSS: lean DS from `vendor/ds/css` + product CSS in `css/`.
+- Image build context is this folder (`docker build .`); no repo-root `COPY` of `_shared`.
 
 ## PWA baseline
 

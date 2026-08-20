@@ -4,14 +4,12 @@ import { defineConfig } from 'vite';
 import angular from '@analogjs/vite-plugin-angular';
 import { resolve } from 'node:path';
 
-const sharedRoot = resolve(__dirname, '../../_shared');
-
 export default defineConfig({
   base: './',
   plugins: [angular({ tsconfig: resolve(__dirname, 'tsconfig.json'), jit: true })],
   server: {
     fs: {
-      allow: [__dirname, sharedRoot],
+      allow: [__dirname],
     },
   },
   test: {

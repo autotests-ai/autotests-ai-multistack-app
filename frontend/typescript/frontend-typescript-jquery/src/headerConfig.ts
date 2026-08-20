@@ -23,7 +23,7 @@ declare global {
   }
 }
 
-/** Served by the `${UI_RUNTIME}` overlay next to the built documents — never bundled. */
+/** Served by the vendor/ds overlay next to the built documents — never bundled. */
 const HEADER_SCRIPT_PATH = '/js/header.js';
 
 /**

@@ -7,7 +7,8 @@ Product UI — the same Multistack screens as
 Three real HTML documents loading plain `<script>` files — no bundler, no build step.
 The design-system layer (tokens, `button.css`, `panel.css`, `header.css` and the
 `js/header.js` runtime) comes from
-[`frontend/_shared/frontend-javascript-app`](../../_shared/frontend-javascript-app/),
+[`vendor/ds`](vendor/ds/)
+(refresh: `bash frontend/scripts/sync-ds-runtime.sh`),
 overlaid in the module Dockerfile. Header markup stays SSOT in `js/header.js`.
 
 Prod URL: `https://autotests.ai/stack/{backend}/frontend-javascript-jquery/`  

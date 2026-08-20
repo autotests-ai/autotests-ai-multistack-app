@@ -1,18 +1,15 @@
-# Build context: repository root.
-ARG UI_RUNTIME=frontend/_shared/frontend-javascript-app
-
+# Build context: this module. DS runtime is vendor/ds.
 FROM node:26-alpine AS build
-WORKDIR /build
-COPY frontend/typescript/frontend-typescript-jquery/ frontend/typescript/frontend-typescript-jquery/
-COPY frontend/_shared/frontend-javascript-app/css/ frontend/_shared/frontend-javascript-app/css/
-WORKDIR /build/frontend/typescript/frontend-typescript-jquery
-RUN npm ci && npm run build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
 
 FROM nginx:1.27-alpine
-ARG UI_RUNTIME
-COPY frontend/typescript/frontend-typescript-jquery/nginx.conf /etc/nginx/conf.d/default.conf
-COPY ${UI_RUNTIME}/ /tmp/ui-runtime/
-COPY --from=build /build/frontend/typescript/frontend-typescript-jquery/dist /tmp/ui-dist/
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY vendor/ds/ /tmp/ui-runtime/
+COPY --from=build /app/dist /tmp/ui-dist/
 RUN rm -rf /usr/share/nginx/html/* \
   && cp -a /tmp/ui-runtime/. /usr/share/nginx/html/ \
   && cp -a /tmp/ui-dist/. /usr/share/nginx/html/ \

@@ -59,7 +59,7 @@ export function headerConfigFor(route: HeaderRoute): HeaderConfig {
 /**
  * Publish the config and embed the design-system header runtime into `#app-header`.
  *
- * `js/header.js` ships in the `${UI_RUNTIME}` overlay, not in this module, so it
+ * `js/header.js` ships in the `vendor/ds` overlay, not in this module, so it
  * cannot be a static `<script>` tag: Vite resolves those at build time and would
  * fail on the missing file. The tag is created here instead — same wiring as
  * `frontend-javascript-vanilla`, one step later.

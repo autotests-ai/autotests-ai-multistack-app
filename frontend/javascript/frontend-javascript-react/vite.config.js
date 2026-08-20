@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-const reactUiSrc = resolve(__dirname, '../../_shared/frontend-react-ui/src/index.ts');
+const reactUiSrc = resolve(__dirname, 'vendor/react-ui/src/index.ts');
 // Relative base: one dist works under /{backend}/frontend-javascript-react/
 const mountBase = './';
 
@@ -113,9 +113,8 @@ export default defineConfig({
     pinMountAssets(),
   ],
   resolve: {
-    // The library alias points outside this package, so its `react` import would
-    // otherwise resolve against a copy hoisted higher in the tree — two Reacts in
-    // one render tree, which fails as "Invalid hook call".
+    // vendor/react-ui imports `react` by name — keep this package's copy so the
+    // alias does not pick up a second React higher in the tree ("Invalid hook call").
     dedupe: ['react', 'react-dom'],
     alias: {
       '@zero-design-system/react': reactUiSrc,

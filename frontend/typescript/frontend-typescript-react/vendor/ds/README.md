@@ -15,4 +15,4 @@ Product overlay (not copied from design-system): `js/app-base.js`,
 The `/stack/` board is not in this snapshot — inbox
 `projects/autotests-ai-home/stack-matrix/overlay/`.
 
-Packed into each frontend nginx image as `UI_RUNTIME` (module `Dockerfile`).
+Packed into each frontend nginx image as `vendor/ds` (module `Dockerfile`).

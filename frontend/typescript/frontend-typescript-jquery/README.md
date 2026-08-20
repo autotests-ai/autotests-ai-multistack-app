@@ -9,8 +9,8 @@ by a multi-page Vite build.
 difference from `frontend-javascript-jquery`, which ships static with a vendored jQuery.
 
 Lean design-system CSS comes from
-[`frontend/_shared/frontend-javascript-app`](../../_shared/frontend-javascript-app/) and
-the header runtime (`js/header.js` + its templates) from the `UI_RUNTIME` overlay in this
+[`vendor/ds`](vendor/ds/) and
+the header runtime (`js/header.js` + its templates) from the vendor/ds overlay in this
 module's nginx image. Header markup stays SSOT in `js/header.js`.
 
 Vitest + jsdom specs live in [`src/test/`](src/test/) — same module as the product.
@@ -71,7 +71,7 @@ npm test           # Vitest + jsdom (src/test/)
 ```
 
 `dev` and `preview` serve `/js/*` and `/templates/*` straight from
-`frontend/_shared/frontend-javascript-app` and resolve `/login` → `login.html`, so both
+`vendor/ds` and resolve `/login` → `login.html`, so both
 behave like the nginx image instead of 404-ing the header runtime.
 
 `npm test` runs Vitest under `--no-experimental-webstorage` for the same reason as the React
@@ -87,5 +87,6 @@ through jQuery, so markup drift fails the suite.
   `/{backend}/frontend-typescript-jquery/`.
 - `outDir` is module-local `dist/` with `emptyOutDir: true`; asset filenames are stable
   (unhashed) under `assets/`.
-- Peer CSS: lean DS from `_shared/frontend-javascript-app/css` + product CSS in `css/`,
+- Peer CSS: lean DS from `vendor/ds/css` + product CSS in `css/`,
   both imported through `src/styles.ts`.
+- Image build context is this folder (`docker build .`); no repo-root `COPY` of `_shared`.

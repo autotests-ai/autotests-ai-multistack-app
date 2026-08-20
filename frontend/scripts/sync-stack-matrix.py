@@ -42,14 +42,7 @@ OUT_HOSTS = (
     / "env-hosts.js"
 )
 OUT_HOSTS_DTS = OUT_HOSTS.with_suffix(".d.ts")
-FANOUT_DS = (
-    ROOT
-    / "frontend"
-    / "typescript"
-    / "frontend-typescript-react"
-    / "vendor"
-    / "ds"
-)
+FRONTEND = ROOT / "frontend"
 # Board JSON inbox (sibling of autotests-ai-app). Clone ROOT.parent.parent = projects/.
 INBOX_JSON = (
     ROOT.parent.parent
@@ -250,13 +243,18 @@ def main() -> int:
         f"(public_host={public_host} · {len(payload['backends'])} be · "
         f"{len(payload['frontends'])} fe · {len(payload['tests'])} tests)"
     )
-    if FANOUT_DS.is_dir():
-        dest_hosts = FANOUT_DS / "js" / "env-hosts.js"
+    hosts_text = OUT_HOSTS.read_text(encoding="utf-8")
+    dts_text = OUT_HOSTS_DTS.read_text(encoding="utf-8")
+    fanouts = sorted(FRONTEND.glob("*/frontend-*/vendor/ds"))
+    for fanout_ds in fanouts:
+        if not fanout_ds.is_dir():
+            continue
+        dest_hosts = fanout_ds / "js" / "env-hosts.js"
         dest_dts = dest_hosts.with_suffix(".d.ts")
         dest_hosts.parent.mkdir(parents=True, exist_ok=True)
-        dest_hosts.write_text(OUT_HOSTS.read_text(encoding="utf-8"), encoding="utf-8")
-        dest_dts.write_text(OUT_HOSTS_DTS.read_text(encoding="utf-8"), encoding="utf-8")
-        print(f"fan-out {FANOUT_DS.relative_to(ROOT)} (env-hosts only)")
+        dest_hosts.write_text(hosts_text, encoding="utf-8")
+        dest_dts.write_text(dts_text, encoding="utf-8")
+        print(f"fan-out {fanout_ds.relative_to(ROOT)} (env-hosts only)")
     return 0
 
 

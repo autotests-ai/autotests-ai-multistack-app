@@ -91,12 +91,17 @@ Product overlay (not copied from design-system): `js/app-base.js`,
 The `/stack/` board is not in this snapshot — inbox
 `projects/autotests-ai-home/stack-matrix/overlay/`.
 
-Packed into each frontend nginx image as `UI_RUNTIME` (module `Dockerfile`).
+Packed into each frontend nginx image as `vendor/ds` (module `Dockerfile`).
 EOF
 
-FANOUT_DS="$REPO_ROOT/frontend/typescript/frontend-typescript-react/vendor/ds"
-mkdir -p "$FANOUT_DS"
-rsync -a --delete "$DEST/" "$FANOUT_DS/"
+FANOUT_COUNT=0
+for dest in "$REPO_ROOT"/frontend/javascript/frontend-javascript-*/ \
+            "$REPO_ROOT"/frontend/typescript/frontend-typescript-*/; do
+  [[ -d "$dest" ]] || continue
+  mkdir -p "$dest/vendor/ds"
+  rsync -a --delete "$DEST/" "$dest/vendor/ds/"
+  FANOUT_COUNT=$((FANOUT_COUNT + 1))
+done
 
 echo "sync-ds-runtime: $DS → $DEST"
-echo "sync-ds-runtime fan-out: $FANOUT_DS"
+echo "sync-ds-runtime fan-out: ${FANOUT_COUNT} vendor/ds"
