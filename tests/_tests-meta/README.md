@@ -1,6 +1,6 @@
 # tests-java metadata kit
 
-SSOT for e2e test **metadata** (keys, takeaway CI, Allure structure, Gradle shape) — **not** the runnable Selenide project.
+SSOT for e2e test **metadata** (keys, Allure structure, Gradle shape, GHA pins) — **not** the runnable Selenide project.
 
 Runnable tests: `../java/tests-java-gradle-junit5-allure3-selenide/`.  
 README badges / dashboard blocks: monorepo `generators/ethalon/readme/` (not this kit). Consumer repos keep runnable copies only (`allurerc.mjs` + `allure/`, env profiles, workflows, `scripts/gen-env-configs.py`).
@@ -22,9 +22,8 @@ README badges / dashboard blocks: monorepo `generators/ethalon/readme/` (not thi
 | `_ethalon/build.gradle` | Gradle structure (deps, tasks, Allure wiring, pyramid slices) |
 | `_ethalon/versions.yaml` | Shared Java stack pins (java/gradle/junit/slf4j/spring-boot) — bump here first; rule `java-stack-versions` |
 | `_new.gradle`, `_modified.gradle` | Inbox for build.gradle (skill `sync-gradle-ethalon`) |
-| `.github/_ethalon/singlestack_github.yml` | Thin default-stack orchestrator (flat paths, ai-first stand). Copy as takeaway `.github/workflows/ci.yml`. Notes: `singlestack_github.md`. **Не** копировать поверх matrix clone `ci.yml`. |
-| `.github/_ethalon/gha-actions.yaml` | Shared GHA action pins (skill `sync-github-workflows-ethalon`). Unified `{env_base}-ci.yml` **нет**. Matrix teaching SSOT is clone `ci.yml`. |
-| `../../.github/_ethalon/catalog_github.yml` | Catalog CD for matrix clone SPA sidecars (not this tests kit). Copy as clone `.github/workflows/catalog_github.yml`. **Не** складывать в teaching `ci.yml`. |
+| `.github/_ethalon/gha-actions.yaml` | Shared GHA action pins (skill `sync-github-workflows-ethalon`). |
+| `../../.github/workflows/ci.yml` | One orchestrator for clone and children. Stack knobs in `env:`. Catalog SPA jobs `catalog-*` in the same file. |
 | `.github/_new.yml`, `_modified.yml` | Inbox for workflows |
 | `src/test/java/_ethalon/ladder/` | Style-ladder reference tests (bootstrap source) |
 

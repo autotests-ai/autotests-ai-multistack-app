@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Catalog CD matrix from deploy/matrix.yaml (frontends without teaching: true).
 
-Stdout for GitHub Actions (`>> $GITHUB_OUTPUT`):
+Called from `.github/workflows/ci.yml` (catalog-* jobs). Stdout (`>> $GITHUB_OUTPUT`):
   include=<json array of {service, dockerfile}>
   services=<space-separated compose services>
 
