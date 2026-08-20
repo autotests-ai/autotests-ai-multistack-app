@@ -45,12 +45,9 @@ runs:
         echo "service=$(basename "$fe")" >> "$GITHUB_OUTPUT"
     - uses: docker/build-push-action@v7
       with:
-        context: .
+        context: ${{ steps.fe.outputs.dir }}
         file: ${{ steps.fe.outputs.dir }}/Dockerfile
         tags: ghcr.io/${{ github.repository_owner }}/autotests-ai-multistack-app-${{ steps.fe.outputs.service }}:mock-local
-        build-args: |
-          REACT_UI=frontend/_shared/frontend-react-ui
-          UI_RUNTIME=frontend/_shared/frontend-javascript-app
         load: true
         cache-from: type=gha,scope=autotests-ai-multistack-app-docker-mock-stand-gateway
         cache-to: type=gha,mode=max,scope=autotests-ai-multistack-app-docker-mock-stand-gateway
