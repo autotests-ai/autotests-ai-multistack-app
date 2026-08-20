@@ -86,8 +86,7 @@ https://autotests.ai/stack/{backend}/{frontend}/
 Every module has a compose service and an image. Teaching CI ([`../.github/workflows/ci.yml`](../.github/workflows/ci.yml))
 builds, Sonar-scans and deploys exactly one of them — `frontend-typescript-react` (:9811),
 the module `APP_URL` / `UI_URL` point at. The other nine are catalog CD
-([`catalog_github.yml`](../.github/workflows/catalog_github.yml); etalon
-`ethalon/.github/_ethalon/catalog_github.yml`) — SHA images, no sonar/e2e matrix.
+(jobs `catalog-*` in [`ci.yml`](../.github/workflows/ci.yml)) — SHA images, no sonar/e2e matrix.
 Local: `docker compose build <service>`.
 
 Host `/` is empty (404). Host nginx ([`deploy/nginx/`](../deploy/nginx/)) strips `/{backend}/{frontend}` → `/` on that frontend container.

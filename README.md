@@ -217,7 +217,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:9800/
 | **Runtime** | [`deploy/matrix.yaml`](deploy/matrix.yaml) + [`docker-compose.yml`](docker-compose.yml) + host nginx | Ports and path routing `/stack/{backend}/{frontend}/`. Not a CI cartesian. |
 | **Generate** | hub [`matrix.yaml`](../matrix.yaml) `cells` | Student emit. Not live CD. |
 
-Catalog SPA CD (angular / vue / the other seven, **not** teaching React) is etalon [`catalog_github.yml`](../ethalon/.github/_ethalon/catalog_github.yml) → this repo [`.github/workflows/catalog_github.yml`](.github/workflows/catalog_github.yml). Same filename. Do not paste those nine services into teaching `DEPLOY_COMPOSE_SERVICES`.
+Catalog SPA CD (angular / vue / the other seven, **not** teaching React) is jobs `catalog-*` in [`.github/workflows/ci.yml`](.github/workflows/ci.yml). Do not paste those nine services into teaching `DEPLOY_COMPOSE_SERVICES`.
 
 **Production URL:** https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/  
 **Stage URL:** https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/  
@@ -240,7 +240,7 @@ Teaching CI — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 |---------|-------|
 | `APP_DIR` | `/home/autotests_ai_multistack/autotests-ai-multistack-app` (production, `main`) |
 | `STAGE_APP_DIR` | `/home/autotests_ai_multistack/autotests-ai-multistack-app-stage` (stage: `develop` WIP and `main` promotion) |
-| Deployed stacks | Teaching: `env.BACKEND` + `env.FRONTEND` in `ci.yml` (java-spring + typescript-react). Catalog: nine sidecars in `catalog_github.yml`. |
+| Deployed stacks | Teaching: LANG/FRAMEWORK knobs in `ci.yml` (default java-spring + typescript-react). Catalog: nine sidecars, jobs `catalog-*` in the same file. |
 
 Allure: `trigger` opens the shared TestOps job-run; live `allurectl watch` on pyramid jobs (not `tests-harness`) → `publish-allure-report`
 (gating generate; soft Telegram kit collage after upload) → `publish-allure-pages` (non-gating). TestOps selective rerun: dispatch with

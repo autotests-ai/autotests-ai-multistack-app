@@ -2,7 +2,7 @@
 
 Gradle · JUnit 5 · Allure 3 · Selenide · Rest Assured.
 
-Canonical Java automation module ([`singlestack_github.yml`](../../_tests-meta/.github/_ethalon/singlestack_github.yml) → takeaway `.github/workflows/ci.yml`).
+Canonical Java automation module. CI: clone [`.github/workflows/ci.yml`](../../../.github/workflows/ci.yml) (same file in the takeaway).
 
 **Not** backend unit tests → `backend/java/backend-java-spring/src/test/java/`.  
 **Not** RTL → `frontend/typescript/frontend-typescript-react/src/test/`.
