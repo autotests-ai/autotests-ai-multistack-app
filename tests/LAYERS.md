@@ -265,6 +265,20 @@ Frontend deploy does **not** wait on backend success.
 Nothing runs on a schedule. Full e2e has no PR job: a GitHub runner has no compose stack.
 Against **prod** CI runs the same layer tags as stage (`api` / `e2e`), with `-Denv=prod`, after stage e2e in the same `main` run. Full api/e2e also run on **stage** (push `develop` WIP, and again on push `main` before prod). `ui-mock-tests` is the automatic UI gate on PR.
 
+## Allure quality gate vs GitHub
+
+Telegram / report **Allure quality gate** is the teaching verdict for the whole run. The donut and tests table stay on Allure results only (a lint failure before Vitest does not invent a failed test).
+
+After generate, [`attach-ci-jobs-quality-gate.mjs`](java/tests-java-gradle-junit5-allure3-selenide/allure/attach-ci-jobs-quality-gate.mjs) folds GitHub `needs.*.result` into that widget:
+
+| GitHub result | Allure QG |
+|---------------|-----------|
+| `failure` on a layer job (tests, biome, harness, …) | not passed |
+| `skipped` because this event does not run that job (PR without prod e2e, `manual-tests` on push, lane `if:`) | unchanged |
+| Sonar / catalog / deploy | own widgets or out of Allure QG |
+
+Layer jobs: `backend-unit-tests`, `frontend-unit-tests`, `tests-harness`, `ui-mock-tests`, `integration-tests`, `api-tests-stage`, `e2e-tests-stage`, `api-tests`, `e2e-tests`, `manual-tests`. Rule: `maxCiJobFailures: 0` in [`quality-gate.mjs`](java/tests-java-gradle-junit5-allure3-selenide/allure/quality-gate.mjs).
+
 ## TestOps (live upload + selective rerun)
 
 `trigger` opens one shared TestOps launch/job-run (same job as lane flags); **layer** jobs stream via workflow

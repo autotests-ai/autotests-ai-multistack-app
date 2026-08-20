@@ -56,7 +56,9 @@ name: CI
 #   deploy-frontend ← build-frontend + sonar-frontend + e2e-tests-stage
 #   api-tests ← deploy-backend + tests-harness; -Denv=prod -DincludeTags=api
 #   e2e-tests ← api-tests + deploy-frontend + tests-harness; -Denv=prod -DincludeTags=e2e excludeTags=mock,screenshot
-#   publish-allure-report ← layer jobs + sonar-backend (gating generate; soft Telegram + Pages)
+#   publish-allure-report ← layer jobs + tests-harness + sonar-backend
+#     (gating generate; Allure QG also fails on layer-job `failure`, not skipped;
+#      soft Telegram + Pages)
 # push main|develop: trigger infers lanes from paths (tests/ ⇒ no app deploy).
 # dispatch `deploy=none|backend|frontend|tests|all` + `deploy_target=production|stage|both`.
 # PR (main|develop): no deploy; ui-mock-tests after frontend-unit-tests (mock compose profile).
@@ -1415,6 +1417,7 @@ jobs:
     needs:
       - backend-unit-tests
       - frontend-unit-tests
+      - tests-harness
       - ui-mock-tests
       - integration-tests
       - api-tests
@@ -1649,6 +1652,8 @@ jobs:
         if: always() && steps.merged-results.outputs.has_results == 'true'
         id: allure-report
         working-directory: ${{ env.TESTS_DIR }}
+        env:
+          CI_LAYER_JOBS: ${{ toJSON(needs) }}
         run: |
           set +e
           npx --no-install allure quality-gate build/allure-results --config allurerc.mjs
@@ -1661,6 +1666,8 @@ jobs:
             node allure/tests-table-from-run.mjs \
               --results build/allure-results \
               --history history.jsonl \
+              --report build/reports/allure-report/allureReport
+            node allure/attach-ci-jobs-quality-gate.mjs \
               --report build/reports/allure-report/allureReport
           fi
           set -e

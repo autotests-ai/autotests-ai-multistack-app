@@ -127,7 +127,7 @@ flowchart TB
 
   E2E --> MAN[manual-tests<br/>dispatch]
 
-  UNIT & COMP & MOCK & INT & API & E2E & APIS & E2ES & MAN --> PUB[publish-allure-report]
+  UNIT & COMP & H & MOCK & INT & API & E2E & APIS & E2ES & MAN --> PUB[publish-allure-report]
   PUB --> PAGES[publish-allure-pages]
 ```
 
