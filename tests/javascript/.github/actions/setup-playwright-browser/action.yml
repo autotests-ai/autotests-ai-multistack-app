@@ -1,0 +1,42 @@
+name: setup-playwright-browser
+description: Local Playwright Chromium (cached), or skip when SELENOID_PLAYWRIGHT_URL is set.
+inputs:
+  module_dir:
+    required: true
+  force_local:
+    description: "true = always install on the runner (mock stand on localhost)"
+    required: false
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - name: Resolve browser target
+      id: pw
+      shell: bash
+      env:
+        FORCE_LOCAL: ${{ inputs.force_local }}
+      run: |
+        set -euo pipefail
+        if [ "${FORCE_LOCAL}" = "true" ]; then
+          echo "mode=local" >> "$GITHUB_OUTPUT"
+          echo "Playwright: local Chromium (force_local)"
+        elif [ -n "${SELENOID_PLAYWRIGHT_URL:-}" ]; then
+          echo "mode=remote" >> "$GITHUB_OUTPUT"
+          echo "Playwright: Selenoid (skip local Chromium)"
+        else
+          echo "mode=local" >> "$GITHUB_OUTPUT"
+          echo "Playwright: local Chromium (SELENOID_PLAYWRIGHT_URL empty)"
+        fi
+    - name: Cache Playwright browsers
+      if: steps.pw.outputs.mode == 'local'
+      uses: actions/cache@v6
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ hashFiles(format('{0}/package-lock.json', inputs.module_dir)) }}
+        restore-keys: |
+          playwright-${{ runner.os }}-
+    - name: Install Playwright Chromium
+      if: steps.pw.outputs.mode == 'local'
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      run: npx playwright install --with-deps chromium

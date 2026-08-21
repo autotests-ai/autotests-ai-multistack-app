@@ -32,6 +32,8 @@ name: CI
 # Sideways FE: component (jsdom) — only the active FRONTEND (same teaching knob as deploy).
 # Screenshot (@Tag screenshot): compare in ui-mock-tests (every PR) and e2e-tests-stage (stage CD).
 # Prod e2e-tests screenshot is dispatch run_screenshot.
+# Browsers: mock = local CFT / Playwright Chromium (hub cannot see :9911).
+# Live e2e/manual = Selenoid secrets.SELENOID_WEBDRIVER_URL (WebDriver) / secrets.SELENOID_PLAYWRIGHT_URL (Playwright).
 # rewrite: update_mock_screenshots / update_stage_screenshots / update_e2e_screenshots, not a CD job.
 # CD: push develop → stage only (WIP). Push main → same SHA to stage, then prod
 # (prod jobs `needs` e2e-tests-stage). `trigger` maps push paths / dispatch `deploy`
@@ -352,14 +354,6 @@ jobs:
           BEFORE: ${{ github.event.before }}
           DEPLOY: ${{ github.event.inputs.deploy || '' }}
           DEPLOY_TARGET: ${{ github.event.inputs.deploy_target || '' }}
-      - name: Cache Playwright browsers
-        if: env.TESTS_LANG == 'javascript' || env.TESTS_LANG == 'typescript'
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('tests/**/package-lock.json') }}
-          restore-keys: |
-            playwright-${{ runner.os }}-
       - name: Create or adopt shared TestOps context
         id: context
         if: always()
@@ -1013,7 +1007,8 @@ jobs:
       ALLURE_JOB_RUN_ID: ${{ needs.trigger.outputs.job_run_id }}
       ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-      SELENOID_REMOTE_URL: ${{ secrets.SELENOID_REMOTE_URL }}
+      SELENOID_WEBDRIVER_URL: ${{ secrets.SELENOID_WEBDRIVER_URL }}
+      SELENOID_PLAYWRIGHT_URL: ${{ secrets.SELENOID_PLAYWRIGHT_URL }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -1107,7 +1102,8 @@ jobs:
       ALLURE_JOB_RUN_ID: ${{ needs.trigger.outputs.job_run_id }}
       ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-      SELENOID_REMOTE_URL: ${{ secrets.SELENOID_REMOTE_URL }}
+      SELENOID_WEBDRIVER_URL: ${{ secrets.SELENOID_WEBDRIVER_URL }}
+      SELENOID_PLAYWRIGHT_URL: ${{ secrets.SELENOID_PLAYWRIGHT_URL }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -1138,6 +1134,8 @@ jobs:
       ALLURE_JOB_RUN_ID: ${{ needs.trigger.outputs.job_run_id }}
       ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+      SELENOID_WEBDRIVER_URL: ${{ secrets.SELENOID_WEBDRIVER_URL }}
+      SELENOID_PLAYWRIGHT_URL: ${{ secrets.SELENOID_PLAYWRIGHT_URL }}
     steps:
       - uses: actions/checkout@v7
         with:

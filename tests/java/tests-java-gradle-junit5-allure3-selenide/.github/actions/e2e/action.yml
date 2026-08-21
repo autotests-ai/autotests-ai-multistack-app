@@ -51,12 +51,11 @@ runs:
         RUN_ENV: ${{ inputs.stand }}
         INCLUDE_TAGS: ${{ inputs.include_tags }}
         EXCLUDE_TAGS: ${{ inputs.exclude_tags }}
-        SELENOID_REMOTE_URL: ${{ env.SELENOID_REMOTE_URL }}
       run: |
         set -euo pipefail
         ARGS=(-Denv="$RUN_ENV")
-        if [ -n "${SELENOID_REMOTE_URL:-}" ]; then
-          ARGS+=(-DremoteUrl="${SELENOID_REMOTE_URL}")
+        if [ -n "${SELENOID_WEBDRIVER_URL:-}" ]; then
+          ARGS+=(-DremoteUrl="${SELENOID_WEBDRIVER_URL}")
         fi
         if [ -n "${INCLUDE_TAGS}" ]; then
           ARGS+=(-DincludeTags="${INCLUDE_TAGS}")
@@ -91,14 +90,13 @@ runs:
       env:
         ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/build/allure-results
         RUN_ENV: ${{ inputs.stand }}
-        SELENOID_REMOTE_URL: ${{ env.SELENOID_REMOTE_URL }}
         SCREENSHOT_OS: linux
         SCREENSHOT_BROWSER: chrome
       run: |
         set -euo pipefail
         ARGS=(-Denv="$RUN_ENV" -DincludeTags=screenshot)
-        if [ -n "${SELENOID_REMOTE_URL:-}" ]; then
-          ARGS+=(-DremoteUrl="${SELENOID_REMOTE_URL}")
+        if [ -n "${SELENOID_WEBDRIVER_URL:-}" ]; then
+          ARGS+=(-DremoteUrl="${SELENOID_WEBDRIVER_URL}")
         fi
         eval "${ALLURECTL_RUN}"
         run_with_allurectl ./gradlew test "${ARGS[@]}"
@@ -109,14 +107,13 @@ runs:
       env:
         ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/build/allure-results
         RUN_ENV: ${{ inputs.stand }}
-        SELENOID_REMOTE_URL: ${{ env.SELENOID_REMOTE_URL }}
         SCREENSHOT_OS: linux
         SCREENSHOT_BROWSER: chrome
       run: |
         set -euo pipefail
         ARGS=(-Denv="$RUN_ENV" -DincludeTags=screenshot -DupdateScreenshots=true)
-        if [ -n "${SELENOID_REMOTE_URL:-}" ]; then
-          ARGS+=(-DremoteUrl="${SELENOID_REMOTE_URL}")
+        if [ -n "${SELENOID_WEBDRIVER_URL:-}" ]; then
+          ARGS+=(-DremoteUrl="${SELENOID_WEBDRIVER_URL}")
         fi
         eval "${ALLURECTL_RUN}"
         run_with_allurectl ./gradlew test "${ARGS[@]}"

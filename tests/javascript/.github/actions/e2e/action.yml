@@ -1,5 +1,5 @@
 name: e2e
-description: Playwright browser layer against a live stand.
+description: Playwright browser layer against a live stand (SELENOID_PLAYWRIGHT_URL when set).
 inputs:
   module_dir:
     required: true
@@ -35,10 +35,9 @@ runs:
       shell: bash
       working-directory: ${{ inputs.module_dir }}
       run: npm ci
-    - name: Install Playwright Chromium
-      shell: bash
-      working-directory: ${{ inputs.module_dir }}
-      run: npx playwright install --with-deps chromium
+    - uses: ./tests/javascript/.github/actions/setup-playwright-browser
+      with:
+        module_dir: ${{ inputs.module_dir }}
     - name: Run e2e tests (Playwright)
       if: >-
         github.event_name == 'push' ||

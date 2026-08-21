@@ -25,6 +25,9 @@ runs:
       shell: bash
       working-directory: ${{ inputs.module_dir }}
       run: npm ci
+    - uses: ./tests/javascript/.github/actions/setup-playwright-browser
+      with:
+        module_dir: ${{ inputs.module_dir }}
     - name: Run manual tests (Playwright)
       shell: bash
       working-directory: ${{ inputs.module_dir }}

@@ -8,7 +8,7 @@ Layers match `tests/LAYERS.md` / Java default cell: harness → api → e2e (moc
 cd tests/javascript/tests-javascript-playwright
 cp .env.example .env   # UI_URL=https://autotests.ai/stack/backend-java-spring/frontend-typescript-react
 npm ci
-npx playwright install chromium   # local only; skip when using PW_WS_ENDPOINT
+npx playwright install chromium   # local only; skip when using SELENOID_PLAYWRIGHT_URL
 npm test                          # @e2e, exclude mock/screenshot
 npm run test:api
 npm run test:harness
@@ -21,9 +21,11 @@ Stand is `UI_URL` / `STAND` / `API_BASE_URL`, not a tag.
 
 ```bash
 export UI_URL=https://autotests.ai/stack/backend-java-spring/frontend-typescript-react
-export PW_WS_ENDPOINT='wss://selenoid.qa.guru/playwright/playwright-chromium/1.61.1?accessKey=…'
+export SELENOID_PLAYWRIGHT_URL='wss://selenoid.qa.guru/playwright/playwright-chromium/1.61.1?accessKey=…'
 npm test
 ```
+
+Empty `SELENOID_PLAYWRIGHT_URL` → local Chromium. The Playwright WS image tag must match `@playwright/test`.
 
 ## Allure
 

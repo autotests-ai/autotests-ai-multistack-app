@@ -51,7 +51,6 @@ runs:
         BASE_URL: https://${{ env.PUBLIC_HOST }}/${{ env.STACK_MOUNT }}/backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}/frontend-${{ env.FRONTEND_LANG }}-${{ env.FRONTEND_FRAMEWORK }}/
         API_BASE_URL: https://${{ env.PUBLIC_HOST }}/${{ env.STACK_MOUNT }}/backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}/
         API_HEALTH_SERVICE: backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}
-        REMOTE_URL: ${{ env.SELENOID_REMOTE_URL }}
         HEADLESS: "true"
         INCLUDE_TAGS: ${{ inputs.include_tags }}
         EXCLUDE_TAGS: ${{ inputs.exclude_tags }}
@@ -102,7 +101,6 @@ runs:
         BASE_URL: https://${{ env.PUBLIC_HOST }}/${{ env.STACK_MOUNT }}/backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}/frontend-${{ env.FRONTEND_LANG }}-${{ env.FRONTEND_FRAMEWORK }}/
         API_BASE_URL: https://${{ env.PUBLIC_HOST }}/${{ env.STACK_MOUNT }}/backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}/
         API_HEALTH_SERVICE: backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}
-        REMOTE_URL: ${{ env.SELENOID_REMOTE_URL }}
         HEADLESS: "true"
         SCREENSHOT_OS: linux
         SCREENSHOT_BROWSER: chrome
@@ -123,7 +121,6 @@ runs:
         BASE_URL: https://${{ env.PUBLIC_HOST }}/${{ env.STACK_MOUNT }}/backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}/frontend-${{ env.FRONTEND_LANG }}-${{ env.FRONTEND_FRAMEWORK }}/
         API_BASE_URL: https://${{ env.PUBLIC_HOST }}/${{ env.STACK_MOUNT }}/backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}/
         API_HEALTH_SERVICE: backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}
-        REMOTE_URL: ${{ env.SELENOID_REMOTE_URL }}
         HEADLESS: "true"
         SCREENSHOT_OS: linux
         SCREENSHOT_BROWSER: chrome

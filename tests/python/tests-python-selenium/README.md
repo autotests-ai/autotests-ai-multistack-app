@@ -36,7 +36,7 @@ SCREENSHOT_BROWSER=chrome STAND=mock UPDATE_SCREENSHOTS=true HEADLESS=true pytes
 
 ```bash
 export BASE_URL=https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
-export REMOTE_URL=https://user1:1234@selenoid.qa.guru/wd/hub
+export SELENOID_WEBDRIVER_URL=https://user1:1234@selenoid.qa.guru/wd/hub
 export BROWSER_VERSION=148.0
 pytest -m e2e
 ```

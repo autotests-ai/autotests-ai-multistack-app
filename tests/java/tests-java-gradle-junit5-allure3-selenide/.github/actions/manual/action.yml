@@ -33,8 +33,13 @@ runs:
         ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/build/allure-results
         RUN_ENV: ${{ inputs.stand }}
       run: |
+        set -euo pipefail
+        ARGS=(-Denv="$RUN_ENV" -DincludeTags=manual)
+        if [ -n "${SELENOID_WEBDRIVER_URL:-}" ]; then
+          ARGS+=(-DremoteUrl="${SELENOID_WEBDRIVER_URL}")
+        fi
         eval "${ALLURECTL_RUN}"
-        run_with_allurectl ./gradlew test "-Denv=$RUN_ENV" -DincludeTags=manual
+        run_with_allurectl ./gradlew test "${ARGS[@]}"
     - name: Publish raw Allure results
       if: always()
       continue-on-error: true

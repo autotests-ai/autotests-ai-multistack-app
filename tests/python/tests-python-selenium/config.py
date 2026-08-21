@@ -117,7 +117,7 @@ def load_config() -> TestConfig:
         browser_version=os.environ.get("BROWSER_VERSION", "148.0"),
         browser_size=os.environ.get("BROWSER_SIZE", "1740x1080"),
         headless=_bool("HEADLESS", True),
-        remote_url=os.environ.get("REMOTE_URL", "").strip(),
+        remote_url=os.environ.get("SELENOID_WEBDRIVER_URL", "").strip(),
         chrome_binary_path=os.environ.get("CHROME_BINARY_PATH", "").strip(),
         chromedriver_path=os.environ.get("CHROMEDRIVER_PATH", "").strip(),
         enable_vnc=full or _bool("ENABLE_VNC"),

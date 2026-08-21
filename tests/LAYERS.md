@@ -207,7 +207,7 @@ STAND=prod pytest -m 'e2e and not screenshot and not mock'
 STAND=prod pytest -m screenshot
 ```
 
-Per-run env: `HEADLESS`, `UPDATE_SCREENSHOTS`, `SCREENSHOT_OS`, `SCREENSHOT_BROWSER`, `REMOTE_URL`.
+Per-run env: `HEADLESS`, `UPDATE_SCREENSHOTS`, `SCREENSHOT_OS`, `SCREENSHOT_BROWSER`, `SELENOID_WEBDRIVER_URL` (Playwright cells: `SELENOID_PLAYWRIGHT_URL`).
 Same contract questions as the Java default cell. Do **not** set `SCREENSHOT_OS=linux` on a Mac.
 
 For `TESTS_LANG=javascript`, a layer is a **Playwright tag**, a stand is **`UI_URL`** / `STAND` / `API_BASE_URL`
@@ -397,9 +397,10 @@ CI-only. Writers save GUH + configuration cache **inside the module action**. Re
   `@Tag("api")` / `@Tag("e2e")` and the stand from `-Denv`.
   The lifecycle round-trip also documents stateless logout: the JWT
   survives `logout` and dies with the account.
-- `prod.properties` / `stage.properties` commit the **creds-less** hub URL. CI passes the real one via
-  the `SELENOID_REMOTE_URL` secret (`-DremoteUrl=…` in `e2e-tests` / `e2e-tests-stage`);
-  locally export it the same way when you need the shared hub.
+- `prod.properties` / `stage.properties` commit the **creds-less** hub URL. Live jobs pass both
+  `SELENOID_WEBDRIVER_URL` (`/wd/hub`, Selenide/Selenium `-DremoteUrl`) and
+  `SELENOID_PLAYWRIGHT_URL` (`wss://…`). The active UI library reads one of them. Mock sets
+  neither. Playwright WS image tag must match `@playwright/test`.
 
 ## CD graph
 

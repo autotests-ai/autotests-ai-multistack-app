@@ -9,17 +9,14 @@ if (!process.env.CI) {
 }
 
 /**
- * When PW_WS_ENDPOINT is set, connect to Selenoid Playwright proxy.
- * Otherwise launch local Chromium (RealWorldTests-style local runs).
+ * When SELENOID_PLAYWRIGHT_URL is set, connect to Selenoid Playwright.
+ * Otherwise launch local Chromium.
  *
  * Video: Playwright recordVideo → Allure mp4 attachment (primary).
  * Fallback: PW_VIDEO_NAME on WS query → Selenoid hub URL in HTML player.
  */
 function remoteConnectOptions() {
-  const ws =
-    process.env.PW_WS_ENDPOINT ||
-    process.env.PLAYWRIGHT_WS_ENDPOINT ||
-    process.env.PW_TEST_CONNECT_WS_ENDPOINT;
+  const ws = process.env.SELENOID_PLAYWRIGHT_URL;
   if (!ws) {
     return undefined;
   }
