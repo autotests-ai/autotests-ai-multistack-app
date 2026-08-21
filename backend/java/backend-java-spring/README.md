@@ -30,6 +30,8 @@ behavioral tests; entity plumbing is executed by the persistence slice, not by r
 |--------|------|------|---------|------|
 | GET | `/api/health` | — | 200 | `{"status":"ok","service":"backend-java-spring"}` |
 | GET | `/api/items` | — | 200 | `{"items":[{"id","name","description"}],"source":"postgresql"}` |
+| GET | `/api/openapi.yaml` | — | 200 | classpath copy of `_contract/openapi.yaml` |
+| GET | `/api/docs` | — | 200 | Swagger UI (`url` = `./openapi.yaml`) |
 | POST | `/api/auth/register` | — | 201 | `{"token","username","redirectUrl":"/"}` |
 | POST | `/api/auth/login` | — | 200 | `{"token","username","redirectUrl":"/"}` |
 | POST | `/api/auth/logout` | — | 204 | empty |

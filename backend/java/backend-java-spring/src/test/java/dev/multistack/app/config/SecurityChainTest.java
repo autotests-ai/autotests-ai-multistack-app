@@ -3,6 +3,7 @@ package dev.multistack.app.config;
 import dev.multistack.app.allure.SliceTestBase;
 import dev.multistack.app.controller.ApiController;
 import dev.multistack.app.controller.AuthController;
+import dev.multistack.app.controller.OpenApiController;
 import dev.multistack.app.dto.UserProfileResponse;
 import dev.multistack.app.service.AuthService;
 import dev.multistack.app.service.ItemService;
@@ -37,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Epic("Security")
 @Feature("Security chain")
 @Severity(SeverityLevel.CRITICAL)
-@WebMvcTest(controllers = {ApiController.class, AuthController.class})
+@WebMvcTest(controllers = {ApiController.class, AuthController.class, OpenApiController.class})
 @Import({SecurityChainTest.RealJwtConfig.class, SecurityConfig.class, CorsConfig.class})
 @DisplayName("Security chain with real JWT filter")
 class SecurityChainTest extends SliceTestBase {
@@ -95,6 +96,18 @@ class SecurityChainTest extends SliceTestBase {
         mockMvc.perform(get("/api/auth/me")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + expired))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("GET /api/openapi.yaml is public")
+    void openapiYamlPermitAll() throws Exception {
+        mockMvc.perform(get("/api/openapi.yaml")).andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("GET /api/docs is public")
+    void openapiDocsPermitAll() throws Exception {
+        mockMvc.perform(get("/api/docs")).andExpect(status().isOk());
     }
 
     @Test
