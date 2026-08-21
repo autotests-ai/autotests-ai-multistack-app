@@ -219,3 +219,8 @@ def _num(value: Any, default: float) -> float:
         return float(value)
     except (TypeError, ValueError):
         return default
+
+
+def to_har(log_entries: list[dict]) -> str:
+    """HAR 1.2 JSON from Chrome performance-log dicts (java `HarCapture.toHar`)."""
+    return _to_har(log_entries)

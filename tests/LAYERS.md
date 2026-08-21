@@ -174,8 +174,11 @@ task — `test`:
 Anything else — `headless`, `enableHar`, `enableVideo`, `updateScreenshots`, `allureReportMode` — is a
 per-run `-D<key>=<value>`. Available keys: `src/test/resources/config/default.properties`.
 
-For `TESTS_LANG` ∈ `javascript` \| `typescript` \| `python`, CI runs the **full** active-module
-suite (`npm test` / `pytest` with `UI_URL` / `BASE_URL`) — no Gradle tag slice yet.
+For `TESTS_LANG=python`, CI slices with pytest markers (`-m api` / `-m e2e` / `-m mock` /
+`-m manual` / `-m harness`) — same contract questions as the Java default cell. Stand is
+`STAND` / `BASE_URL`, not a marker.  
+For `TESTS_LANG` ∈ `javascript` \| `typescript`, CI still runs the full active-module
+suite / STOP until that family is brought up.
 
 ## Layer table
 
@@ -314,7 +317,7 @@ Look under the test/launch **Окружение** block (not Custom fields — t
 | Module | Role |
 |--------|------|
 | `tests/javascript/tests-javascript-playwright/` | e2e, another language (**active**) |
-| `tests/python/tests-python-selenium/` | e2e, pytest (**active**) |
+| `tests/python/tests-python-selenium/` | pytest markers = layers; stand is `STAND` / `BASE_URL` (**active**) |
 | `tests/typescript/…`, `kotlin/…`, `go/…`, Cypress, … | slots in [`deploy/matrix.yaml`](../deploy/matrix.yaml) |
 
 Same app under test; not separate pyramid layers — parallel teaching stacks ([NAMING.md](NAMING.md)).

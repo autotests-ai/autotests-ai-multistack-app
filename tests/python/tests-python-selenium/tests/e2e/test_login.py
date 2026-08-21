@@ -7,6 +7,8 @@ LOGIN_REQUIRED = "Login is required (minimum 3 characters)"
 PASSWORD_REQUIRED = "Password is required (minimum 6 characters)"
 WRONG_CREDENTIALS = "Wrong login or password"
 
+pytestmark = pytest.mark.e2e
+
 
 @allure.epic("Authentication")
 @allure.feature("Login")

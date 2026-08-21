@@ -6,3 +6,6 @@ allure-results/
 allure-report/
 .env
 notifications/chart.png
+coverage.xml
+.coverage
+htmlcov/

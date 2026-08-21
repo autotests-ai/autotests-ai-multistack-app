@@ -6,6 +6,7 @@ import allure
 import pytest
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.remote.webdriver import WebDriver
 
 import attachments
@@ -24,6 +25,8 @@ def driver(config: TestConfig) -> WebDriver:
     options.add_argument("--window-size=" + config.browser_size.replace("x", ","))
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    if config.chrome_binary_path:
+        options.binary_location = config.chrome_binary_path
 
     capture_har = config.enable_har or config.attach_har_logs
     if (capture_har or config.attach_browser_console_logs) and har_capture.supports_browser(
@@ -53,11 +56,35 @@ def driver(config: TestConfig) -> WebDriver:
     else:
         if config.headless:
             options.add_argument("--headless=new")
-        drv = webdriver.Chrome(options=options)
+        service = (
+            ChromeService(executable_path=config.chromedriver_path)
+            if config.chromedriver_path
+            else ChromeService()
+        )
+        drv = webdriver.Chrome(service=service, options=options)
 
     drv.implicitly_wait(0)
     yield drv
     drv.quit()
+
+
+def pytest_runtest_setup(item: pytest.Item) -> None:
+    """Allure layer from pytest markers (LAYERS.md). mock/screenshot stay layer=e2e."""
+    if item.get_closest_marker("api"):
+        allure.dynamic.label("layer", "api")
+    elif item.get_closest_marker("manual"):
+        allure.dynamic.label("layer", "manual")
+        allure.dynamic.label("ALLURE_MANUAL", "true")
+    elif item.get_closest_marker("harness") or item.get_closest_marker("harness_backend") or item.get_closest_marker(
+        "harness_frontend"
+    ):
+        allure.dynamic.label("layer", "harness")
+    elif (
+        item.get_closest_marker("e2e")
+        or item.get_closest_marker("mock")
+        or item.get_closest_marker("screenshot")
+    ):
+        allure.dynamic.label("layer", "e2e")
 
 
 @pytest.hookimpl(hookwrapper=True, tryfirst=True)

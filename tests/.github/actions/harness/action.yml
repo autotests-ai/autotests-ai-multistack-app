@@ -15,7 +15,7 @@ inputs:
 outputs:
   slice:
     description: all or backend
-    value: ${{ steps.module.outputs.slice }}
+    value: ${{ steps.module.outputs.slice || steps.python.outputs.slice }}
 runs:
   using: composite
   steps:
@@ -39,6 +39,7 @@ runs:
         frontend_lane: ${{ inputs.frontend_lane }}
         tests_lane: ${{ inputs.tests_lane }}
     - if: env.TESTS_LANG == 'python'
+      id: python
       uses: ./tests/python/.github/actions/harness
       with:
         module_dir: ${{ steps.dir.outputs.dir }}

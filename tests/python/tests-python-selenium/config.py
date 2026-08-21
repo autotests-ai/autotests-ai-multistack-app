@@ -1,4 +1,4 @@
-"""Config loader — mirrors Java ConfigReader / properties for the Python stack."""
+"""Config loader — mirrors Java ConfigReader / -Denv stands for the Python stack."""
 
 from __future__ import annotations
 
@@ -12,6 +12,26 @@ _ROOT = Path(__file__).resolve().parent
 if not os.environ.get("CI"):
     load_dotenv(_ROOT / ".env")
 
+# Same stands as java `src/test/resources/config/{prod,stage,mock,ci}.properties`.
+_STANDS: dict[str, dict[str, str]] = {
+    "prod": {
+        "base_url": "https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/",
+        "api_base_url": "https://autotests.ai/stack/backend-java-spring/",
+    },
+    "stage": {
+        "base_url": "https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/",
+        "api_base_url": "https://stage.autotests.ai/stack/backend-java-spring/",
+    },
+    "mock": {
+        "base_url": "http://127.0.0.1:9911/",
+        "api_base_url": "http://127.0.0.1:9911/",
+    },
+    "ci": {
+        "base_url": "http://127.0.0.1:9821/",
+        "api_base_url": "http://127.0.0.1:8800/",
+    },
+}
+
 
 def _bool(name: str, default: bool = False) -> bool:
     raw = os.environ.get(name)
@@ -24,8 +44,18 @@ def _attach_full() -> bool:
     return _bool("ATTACH_FULL")
 
 
+def _slash(url: str) -> str:
+    return url.rstrip("/") + "/"
+
+
+def resolve_stand() -> str:
+    raw = (os.environ.get("STAND") or os.environ.get("ENV") or "prod").strip().lower()
+    return raw if raw in _STANDS else "prod"
+
+
 @dataclass(frozen=True)
 class TestConfig:
+    stand: str
     base_url: str
     api_base_url: str
     api_health_service: str
@@ -34,6 +64,8 @@ class TestConfig:
     browser_size: str
     headless: bool
     remote_url: str
+    chrome_binary_path: str
+    chromedriver_path: str
     enable_vnc: bool
     enable_video: bool
     enable_har: bool
@@ -46,17 +78,10 @@ class TestConfig:
 
 
 def load_config() -> TestConfig:
-    base = (
-        os.environ.get(
-            "BASE_URL",
-            "https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/",
-        ).rstrip("/")
-        + "/"
-    )
-    api = os.environ.get(
-        "API_BASE_URL",
-        "https://autotests.ai/stack/backend-java-spring/",
-    ).rstrip("/") + "/"
+    stand = resolve_stand()
+    defaults = _STANDS[stand]
+    base = _slash(os.environ.get("BASE_URL", defaults["base_url"]))
+    api = _slash(os.environ.get("API_BASE_URL", defaults["api_base_url"]))
     full = _attach_full()
     enable_video = full or _bool("ENABLE_VIDEO")
     enable_har = full or _bool("ENABLE_HAR")
@@ -64,6 +89,7 @@ def load_config() -> TestConfig:
     if video_folder and not video_folder.endswith("/"):
         video_folder += "/"
     return TestConfig(
+        stand=stand,
         base_url=base,
         api_base_url=api,
         # "service" in GET /api/health — the backend module id behind BASE_URL.
@@ -73,6 +99,8 @@ def load_config() -> TestConfig:
         browser_size=os.environ.get("BROWSER_SIZE", "1740x1080"),
         headless=_bool("HEADLESS", True),
         remote_url=os.environ.get("REMOTE_URL", "").strip(),
+        chrome_binary_path=os.environ.get("CHROME_BINARY_PATH", "").strip(),
+        chromedriver_path=os.environ.get("CHROMEDRIVER_PATH", "").strip(),
         enable_vnc=full or _bool("ENABLE_VNC"),
         enable_video=enable_video,
         enable_har=enable_har,

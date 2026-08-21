@@ -1,23 +1,66 @@
 name: harness
-description: STOP — no harness layer in the Python tests family.
+description: Tests-module helper checks (pytest -m harness; not a pyramid layer).
 inputs:
   module_dir:
     required: true
   backend_lane:
-    required: false
-    default: 'false'
+    default: "false"
   frontend_lane:
-    required: false
-    default: 'false'
+    default: "false"
   tests_lane:
-    required: false
-    default: 'false'
+    default: "false"
+outputs:
+  slice:
+    description: all or backend
+    value: ${{ steps.slice.outputs.slice }}
 runs:
   using: composite
   steps:
-    - shell: bash
+    - name: Select harness slice
+      id: slice
+      shell: bash
       env:
-        MODULE_DIR: ${{ inputs.module_dir }}
+        LANE_BACKEND: ${{ inputs.backend_lane }}
+        LANE_FRONTEND: ${{ inputs.frontend_lane }}
+        LANE_TESTS: ${{ inputs.tests_lane }}
       run: |
-        echo "STOP: no harness layer in tests/python (${MODULE_DIR:-unset})" >&2
-        exit 1
+        set -euo pipefail
+        slice=all
+        tags=harness
+        cov="--cov=config --cov=api_client --cov=har_capture"
+        if [ "$LANE_BACKEND" = "true" ] && [ "$LANE_FRONTEND" != "true" ] && [ "$LANE_TESTS" != "true" ]; then
+          slice=backend
+          tags=harness_backend
+          cov="--cov=config --cov=api_client"
+        fi
+        echo "slice=${slice}" >> "$GITHUB_OUTPUT"
+        echo "HARNESS_MARKER=${tags}" >> "$GITHUB_ENV"
+        echo "HARNESS_COV=${cov}" >> "$GITHUB_ENV"
+        echo "Harness slice=${slice} -m ${tags}"
+    - uses: actions/setup-python@v6
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: pip
+        cache-dependency-path: ${{ inputs.module_dir }}/requirements.txt
+    - name: Install Python dependencies
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      run: python -m pip install -r requirements.txt
+    - name: Run harness tests (pytest)
+      id: run-tests
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      run: |
+        set -euo pipefail
+        # Coverage of helpers only — no fail-under (not coverage theatre).
+        python -m pytest -m "${HARNESS_MARKER}" \
+          ${HARNESS_COV} \
+          --cov-report=xml:coverage.xml \
+          --cov-report=term-missing \
+          --alluredir=allure-results
+    - if: steps.run-tests.outcome == 'success'
+      uses: actions/upload-artifact@v7
+      with:
+        name: coverage-harness
+        path: ${{ inputs.module_dir }}/coverage.xml
+        if-no-files-found: error

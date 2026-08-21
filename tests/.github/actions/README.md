@@ -11,5 +11,6 @@ GitHub does not interpolate `uses:`. This adapter dispatches on `TESTS_LANG`:
 | `python` | `./tests/python/.github/actions/<verb>` | short `tests/python/tests-python-{ui}` (live: `selenium`) |
 | other (`typescript`, …) | STOP | never a foreign / Java action |
 
-A verb with no layer in the live JS/Python module STOPs inside that family action (not `uses:` on Selenide).
+A verb with no layer in the live JS module STOPs inside that family action (not `uses:` on Selenide).
+Python verbs are live (`pytest -m` slices). `typescript` / unknown STOP at this adapter.
 `resolve-module-dir` maps the nested path to the flattened takeaway leaf.

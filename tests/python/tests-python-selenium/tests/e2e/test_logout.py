@@ -3,6 +3,8 @@ import pytest
 
 from pages.login_page import LoginPage
 
+pytestmark = pytest.mark.e2e
+
 
 @allure.epic("Authentication")
 @allure.feature("Logout")

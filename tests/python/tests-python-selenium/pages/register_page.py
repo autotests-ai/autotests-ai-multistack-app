@@ -7,12 +7,12 @@ from pages.base import BasePage
 
 
 class RegisterPage(BasePage):
-    LOGIN_INPUT = (By.CSS_SELECTOR, "[data-testid='login-input']")
-    PASSWORD_INPUT = (By.CSS_SELECTOR, "[data-testid='password-input']")
+    LOGIN_INPUT = (By.CSS_SELECTOR, "[data-testid='register-login-input']")
+    PASSWORD_INPUT = (By.CSS_SELECTOR, "[data-testid='register-password-input']")
     CONFIRM_PASSWORD = (By.CSS_SELECTOR, "[data-testid='confirm-password-input']")
-    SUBMIT = (By.CSS_SELECTOR, "[data-testid='submit-button']")
+    SUBMIT = (By.CSS_SELECTOR, "[data-testid='register-submit-button']")
     FORM_TITLE = (By.CSS_SELECTOR, "[data-testid='register-form-title']")
-    ERROR = (By.CSS_SELECTOR, "[data-testid='error-message']")
+    ERROR = (By.CSS_SELECTOR, "[data-testid='register-error-message']")
     LOGIN_LINK = (By.CSS_SELECTOR, "[data-testid='login-link']")
     REGISTER_FORM = (By.CSS_SELECTOR, "[data-testid='register-form']")
 
@@ -65,4 +65,10 @@ class RegisterPage(BasePage):
         self.wait_visible(*self.PASSWORD_INPUT)
         self.wait_visible(*self.CONFIRM_PASSWORD)
         self.wait_visible(*self.SUBMIT)
+        return self
+
+    @allure.step("Verify form title message: {message}")
+    def should_have_form_title(self, message: str) -> RegisterPage:
+        el = self.wait_visible(*self.FORM_TITLE)
+        assert message in el.text
         return self

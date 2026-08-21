@@ -6,6 +6,8 @@ import pytest
 from api_client import delete_account_quietly
 from pages.register_page import RegisterPage
 
+pytestmark = pytest.mark.e2e
+
 
 @allure.epic("Authentication")
 @allure.feature("Register")

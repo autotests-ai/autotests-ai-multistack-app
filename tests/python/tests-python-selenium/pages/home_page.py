@@ -8,6 +8,7 @@ from pages.base import BasePage
 
 class HomePage(BasePage):
     LAYOUT = (By.CSS_SELECTOR, "[data-testid='multistack-layout']")
+    HEADER = (By.CSS_SELECTOR, "[data-testid='header']")
     HEALTH = (By.CSS_SELECTOR, "[data-testid='health-status']")
     ITEMS = (By.CSS_SELECTOR, "[data-testid='items-list']")
     WELCOME = (By.CSS_SELECTOR, "[data-testid='welcome-message']")
@@ -23,6 +24,21 @@ class HomePage(BasePage):
     def should_show_layout(self) -> HomePage:
         self.wait_visible(*self.LAYOUT)
         self.wait_visible(*self.ITEMS)
+        return self
+
+    @allure.step("Verify embedded header is mounted")
+    def should_show_embedded_header(self) -> HomePage:
+        self.wait_visible(*self.HEADER)
+        return self
+
+    @allure.step("Verify items panel shows a readable error: {text_fragment}")
+    def should_show_items_error(self, text_fragment: str) -> HomePage:
+        self.wait_text_contains(*self.ITEMS, text_fragment)
+        return self
+
+    @allure.step("Verify health panel shows a readable error: {text_fragment}")
+    def should_show_health_error(self, text_fragment: str) -> HomePage:
+        self.wait_text_contains(*self.HEALTH, text_fragment)
         return self
 
     @allure.step("Verify health status contains: {text_fragment}")

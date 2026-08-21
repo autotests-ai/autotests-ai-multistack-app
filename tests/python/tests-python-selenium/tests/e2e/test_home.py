@@ -3,6 +3,8 @@ import pytest
 
 from pages.home_page import HomePage
 
+pytestmark = pytest.mark.e2e
+
 
 @allure.epic("Home")
 @allure.feature("Home load")

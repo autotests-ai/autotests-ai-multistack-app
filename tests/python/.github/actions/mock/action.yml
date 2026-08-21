@@ -1,20 +1,99 @@
 name: mock
-description: STOP — no mock layer in the Python tests family.
+description: Mock compose stand + pytest -m mock on the runner.
 inputs:
   module_dir:
     required: true
   frontend_dir:
     required: false
-    default: ''
+    default: ""
   update_screenshots:
-    required: false
-    default: 'false'
+    default: "false"
 runs:
   using: composite
   steps:
-    - shell: bash
-      env:
-        MODULE_DIR: ${{ inputs.module_dir }}
+    - uses: ./.github/actions/setup-allurectl
+    - uses: actions/setup-python@v6
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: pip
+        cache-dependency-path: ${{ inputs.module_dir }}/requirements.txt
+    - name: Install Python dependencies
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      run: python -m pip install -r requirements.txt
+    - name: Cache Chrome for Testing
+      id: cache-chrome-for-testing
+      continue-on-error: true
+      uses: actions/cache@v6
+      with:
+        path: ${{ runner.tool_cache }}/setup-chrome
+        key: chrome-for-testing-${{ runner.os }}-${{ runner.arch }}-${{ env.CHROME_FOR_TESTING_VERSION }}
+    - name: Install pinned Chrome for Testing
+      id: setup-chrome
+      uses: browser-actions/setup-chrome@v2.1.2
+      with:
+        chrome-version: ${{ env.CHROME_FOR_TESTING_VERSION }}
+        install-chromedriver: true
+    - uses: docker/setup-buildx-action@v4
+    - id: fe
+      shell: bash
       run: |
-        echo "STOP: no mock layer in tests/python (${MODULE_DIR:-unset})" >&2
-        exit 1
+        fe="${{ inputs.frontend_dir }}"
+        if [ -z "$fe" ]; then fe="${FRONTEND_DIR}"; fi
+        echo "dir=${fe}" >> "$GITHUB_OUTPUT"
+        echo "service=$(basename "$fe")" >> "$GITHUB_OUTPUT"
+    - uses: docker/build-push-action@v7
+      with:
+        context: ${{ steps.fe.outputs.dir }}
+        file: ${{ steps.fe.outputs.dir }}/Dockerfile
+        tags: ghcr.io/${{ github.repository_owner }}/autotests-ai-multistack-app-${{ steps.fe.outputs.service }}:mock-local
+        load: true
+        cache-from: type=gha,scope=autotests-ai-multistack-app-docker-mock-stand-gateway
+        cache-to: type=gha,mode=max,scope=autotests-ai-multistack-app-docker-mock-stand-gateway
+    - name: Bring up mock stand
+      shell: bash
+      env:
+        IMAGE_TAG: mock-local
+        MOCK_GATEWAY_PORT: "9911"
+      run: |
+        set -euo pipefail
+        docker compose --profile mock up -d stand-gateway
+        curl -fsS --retry 30 --retry-delay 2 --retry-all-errors \
+          "http://127.0.0.1:${MOCK_GATEWAY_PORT}/api/health"
+    - name: Run ui-mock tests (pytest)
+      id: run-tests
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/allure-results
+        STAND: mock
+        BASE_URL: http://127.0.0.1:9911/
+        API_BASE_URL: http://127.0.0.1:9911/
+        HEADLESS: "true"
+        CHROME_BINARY_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+        CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
+      run: |
+        eval "${ALLURECTL_RUN:-true}"
+        if declare -F run_with_allurectl >/dev/null; then
+          run_with_allurectl python -m pytest -m mock --alluredir="${ALLURE_RESULTS}"
+        else
+          python -m pytest -m mock --alluredir="${ALLURE_RESULTS}"
+        fi
+    - name: Screenshot rewrite
+      if: always() && !cancelled() && inputs.update_screenshots == 'true'
+      shell: bash
+      run: echo "Python selenium module has no screenshot PNG tree — skip rewrite"
+    - name: Tear down mock stand
+      if: always()
+      continue-on-error: true
+      shell: bash
+      run: docker compose --profile mock down -v --remove-orphans
+    - name: Publish raw Allure results
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: allure-results-ui-mock
+        path: ${{ inputs.module_dir }}/allure-results/**
+        if-no-files-found: ignore
+        retention-days: 1

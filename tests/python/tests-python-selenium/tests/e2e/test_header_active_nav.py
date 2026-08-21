@@ -5,6 +5,8 @@ from pages.header_component import HeaderComponent
 from pages.login_page import LoginPage
 from pages.register_page import RegisterPage
 
+pytestmark = pytest.mark.e2e
+
 
 @allure.epic("Navigation")
 @allure.feature("Header active item")

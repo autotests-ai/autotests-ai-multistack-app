@@ -7,6 +7,7 @@ from pages.base import BasePage
 
 
 class LoginPage(BasePage):
+    HEADER = (By.CSS_SELECTOR, "[data-testid='header']")
     LOGIN_INPUT = (By.CSS_SELECTOR, "[data-testid='login-input']")
     PASSWORD_INPUT = (By.CSS_SELECTOR, "[data-testid='password-input']")
     SUBMIT = (By.CSS_SELECTOR, "[data-testid='submit-button']")
@@ -54,6 +55,11 @@ class LoginPage(BasePage):
     def submit_expecting_error(self) -> LoginPage:
         self.find(*self.SUBMIT).click()
         self.wait_visible(*self.ERROR)
+        return self
+
+    @allure.step("Verify embedded header is mounted")
+    def should_show_embedded_header(self) -> LoginPage:
+        self.wait_visible(*self.HEADER)
         return self
 
     @allure.step("Verify login form is mounted")

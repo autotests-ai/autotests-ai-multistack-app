@@ -1,5 +1,5 @@
 name: api
-description: STOP — no api layer in the Python tests family.
+description: HTTP contract layer against a live stand (pytest -m api).
 inputs:
   module_dir:
     required: true
@@ -8,9 +8,47 @@ inputs:
 runs:
   using: composite
   steps:
-    - shell: bash
-      env:
-        MODULE_DIR: ${{ inputs.module_dir }}
+    - name: Wait for live API
+      shell: bash
       run: |
-        echo "STOP: no api layer in tests/python (${MODULE_DIR:-unset})" >&2
-        exit 1
+        set -euo pipefail
+        backend="backend-${BACKEND_LANG}-${BACKEND_FRAMEWORK}"
+        url="https://${PUBLIC_HOST}/${STACK_MOUNT}/${backend}/api/health"
+        echo "==> API ${url}"
+        curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${url}"
+    - uses: ./.github/actions/setup-allurectl
+    - uses: actions/setup-python@v6
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: pip
+        cache-dependency-path: ${{ inputs.module_dir }}/requirements.txt
+    - name: Install Python dependencies
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      run: python -m pip install -r requirements.txt
+    - name: Run API tests (pytest)
+      id: run-tests
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/allure-results
+        STAND: ${{ inputs.stand }}
+        BASE_URL: https://${{ env.PUBLIC_HOST }}/${{ env.STACK_MOUNT }}/backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}/frontend-${{ env.FRONTEND_LANG }}-${{ env.FRONTEND_FRAMEWORK }}/
+        API_BASE_URL: https://${{ env.PUBLIC_HOST }}/${{ env.STACK_MOUNT }}/backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}/
+        API_HEALTH_SERVICE: backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}
+      run: |
+        eval "${ALLURECTL_RUN:-true}"
+        if declare -F run_with_allurectl >/dev/null; then
+          run_with_allurectl python -m pytest -m api --alluredir="${ALLURE_RESULTS}"
+        else
+          python -m pytest -m api --alluredir="${ALLURE_RESULTS}"
+        fi
+    - name: Publish raw Allure results
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: allure-results-api${{ inputs.stand == 'stage' && '-stage' || '' }}
+        path: ${{ inputs.module_dir }}/allure-results/**
+        if-no-files-found: ignore
+        retention-days: 1
