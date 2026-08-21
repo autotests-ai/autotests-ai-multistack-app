@@ -22,9 +22,12 @@ runs:
       uses: ./backend/go/.github/actions/build
       with:
         module_dir: ${{ steps.dir.outputs.dir }}
+    - if: env.BACKEND_LANG == 'javascript'
+      uses: ./backend/javascript/.github/actions/build
+      with:
+        module_dir: ${{ steps.dir.outputs.dir }}
     - if: >-
         env.BACKEND_LANG == 'java' ||
-        env.BACKEND_LANG == 'javascript' ||
         env.BACKEND_LANG == 'typescript'
       uses: ./backend/java/backend-java-spring/.github/actions/build
       with:

@@ -11,5 +11,12 @@ Same JSON contract as `backend-java-spring`.
 
 Unit tests: `npm test` in each module.
 
+CI verbs match the default Java stack: unit (Jest + coverage) ·
+integration (Testcontainers `postgres:16-alpine`) ·
+build / deploy (Docker context = module folder) · Sonar (lcov).
+Same orchestrator: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) with
+`BACKEND_LANG: javascript` and `BACKEND_FRAMEWORK: express` / `nest`.
+Actions: [`backend/javascript/.github/actions/`](.github/actions/).
+
 TypeScript twins: [`../typescript/`](../typescript/) (same stacks, `:8850+`).  
 Routing SSOT: [`deploy/matrix.yaml`](../../deploy/matrix.yaml).
