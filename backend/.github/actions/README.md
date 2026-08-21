@@ -12,7 +12,7 @@ GitHub does not interpolate `uses:`. This adapter dispatches on `BACKEND_LANG`:
 | `kotlin` | `./backend/kotlin/backend-kotlin-spring/.github/actions/<verb>` | same module (Docker context = `module_dir`) |
 | `go` | `./backend/go/.github/actions/<verb>` | same family (Docker context = `module_dir`) |
 | `javascript` | `./backend/javascript/.github/actions/<verb>` | same family (Docker context = `module_dir`) |
-| `typescript` | `./backend/typescript/.github/actions/<verb>` | java-spring Docker verbs until that family window |
+| `typescript` | `./backend/typescript/.github/actions/<verb>` | same family (Docker context = `module_dir`) |
 | other | STOP | STOP |
 
 Unknown `BACKEND_LANG` never runs a foreign module action. Flattened takeaway
