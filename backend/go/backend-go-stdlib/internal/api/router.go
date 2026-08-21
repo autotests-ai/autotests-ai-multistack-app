@@ -6,12 +6,15 @@ import (
 	"time"
 )
 
-// NewRouter mounts the API-only contract on a plain ServeMux: no UI routes, the
-// frontends are separate nginx containers. Method-aware patterns need Go 1.22+.
+// NewRouter mounts the API contract on a plain ServeMux. Frontends stay on
+// separate nginx containers; Swagger UI is under /api/docs so the gateway /api/
+// proxy reaches it. Method-aware patterns need Go 1.22+.
 func NewRouter(h *Handler) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/health", h.Health)
 	mux.HandleFunc("GET /api/items", h.Items)
+	mux.HandleFunc("GET /api/openapi.yaml", h.OpenAPISpec)
+	mux.HandleFunc("GET /api/docs", h.OpenAPIDocs)
 	mux.HandleFunc("POST /api/auth/register", h.Register)
 	mux.HandleFunc("POST /api/auth/login", h.Login)
 	mux.HandleFunc("POST /api/auth/logout", h.Logout)

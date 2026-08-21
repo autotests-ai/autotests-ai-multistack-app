@@ -2,8 +2,8 @@ package api
 
 import "github.com/gin-gonic/gin"
 
-// NewRouter mounts the API-only contract: no UI routes, the frontends are separate
-// nginx containers.
+// NewRouter mounts the API contract. Frontends stay on separate nginx containers;
+// Swagger UI is under /api/docs so the gateway /api/ proxy reaches it.
 func NewRouter(h *Handler) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 
@@ -18,6 +18,8 @@ func NewRouter(h *Handler) *gin.Engine {
 	api := engine.Group(apiPrefix)
 	api.GET("/health", h.Health)
 	api.GET("/items", h.Items)
+	api.GET("/openapi.yaml", h.OpenAPISpec)
+	api.GET("/docs", h.OpenAPIDocs)
 
 	auth := api.Group("/auth")
 	auth.POST("/register", h.Register)
