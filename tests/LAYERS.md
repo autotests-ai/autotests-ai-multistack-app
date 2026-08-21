@@ -79,7 +79,7 @@ Self-check of the **tests module helpers** before / alongside product layers —
 
 ## Mock and screenshot (inside e2e, not layers)
 
-Screenshot tests are **two stages**, not a pyramid layer. Same Selenide classes (`@Layer("e2e")` + `@Tag("screenshot")`); `-Denv` picks the PNG tree.
+Screenshot tests are **two stages**, not a pyramid layer. Same PNG tree. Java: `@Layer("e2e")` + `@Tag("screenshot")`, stand is `-Denv`. Python: `pytest.mark.screenshot` (Allure `layer=e2e`), stand is `STAND`.
 
 ```
 src/test/resources/screenshots/{mock|stage|prod}/{linux|macos|windows}/{chrome-148}/{area}/{viewport}.png
@@ -94,30 +94,39 @@ CI jobs `ui-mock-tests` and `e2e-tests` set `SCREENSHOT_OS=linux` and `SCREENSHO
 | Slice | Tag | CI |
 |-------|-----|-----|
 | UI on stub API (mount + error injection) | `@Tag("mock")` (+ `@Tag("e2e")`) | job `ui-mock-tests` step 1: `-DincludeTags=mock` |
-| Screenshot vs stub UI | `@Tag("screenshot")` | same job, compare step: `-DincludeTags=screenshot` (every PR; not Playwright) |
-| Refresh mock screenshots | `@Tag("screenshot")` + `-DupdateScreenshots=true` | same job, step `Update screenshots` — dispatch `update_mock_screenshots` writes `mock/linux/chrome-148` (skips compare) |
+| Screenshot vs stub UI | `@Tag("screenshot")` / `-m screenshot` | same job, compare step: java `-DincludeTags=screenshot` · python `-m screenshot` (every PR; not Playwright) |
+| Refresh mock screenshots | `@Tag("screenshot")` + update flag | same job, step `Update screenshots` — dispatch `update_mock_screenshots` writes `mock/linux/chrome-148` (skips compare; java `-DupdateScreenshots=true` · python `UPDATE_SCREENSHOTS=true`) |
 | Flow | `@Tag("e2e")` exclude `screenshot,mock` | job `e2e-tests` (`-Denv=prod -DincludeTags=e2e`) / `e2e-tests-stage` (`-Denv=stage`); default push does **not** run screenshot via Selenoid |
-| Screenshot vs live UI | `@Tag("screenshot")` | job `e2e-tests`, compare step — dispatch `run_screenshot` compares `prod/linux/chrome-148` |
-| Refresh prod screenshots | `@Tag("screenshot")` + `-DupdateScreenshots=true` | job `e2e-tests`, step `Update screenshots` — dispatch `update_e2e_screenshots` writes `prod/linux/chrome-148` (skips compare; independent of mock rewrite) |
+| Screenshot vs live UI | `@Tag("screenshot")` / `-m screenshot` | job `e2e-tests`, compare step — dispatch `run_screenshot` compares `prod/linux/chrome-148` |
+| Refresh prod screenshots | `@Tag("screenshot")` + update flag | job `e2e-tests`, step `Update screenshots` — dispatch `update_e2e_screenshots` writes `prod/linux/chrome-148` (skips compare; independent of mock rewrite) |
 
 Gradle `includeTags=a,b` is **OR** in this module — keep mock flows and screenshot compare as two steps so they fail separately.
+Python: `-m mock` and `-m screenshot` are two pytest runs in the same CI job for the same reason.
 AND is one token with no comma: `api&smoke` (JUnit tag expression). Do not write `api,smoke` when you mean AND.
-Prod is a stand (`-Denv=prod`), not a JUnit tag.
+Prod is a stand (`-Denv=prod` / `STAND=prod`), not a layer tag.
 
 Local mock screenshot refresh (Linux / CI writes `mock/linux/chrome-148`; on Mac do **not** force `SCREENSHOT_OS=linux`):
 
 ```bash
+# java — tests/java/tests-java-gradle-junit5-allure3-selenide
 SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=mock -DincludeTags=screenshot -DupdateScreenshots=true -Dheadless=true
+
+# python — tests/python/tests-python-selenium
+SCREENSHOT_BROWSER=chrome STAND=mock UPDATE_SCREENSHOTS=true HEADLESS=true pytest -m screenshot
 ```
 
 Local e2e screenshot refresh (compose ci stand, or `prod` + Selenoid):
 
 ```bash
+# java
 SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=ci -DincludeTags=screenshot -DupdateScreenshots=true
+
+# python
+SCREENSHOT_BROWSER=chrome STAND=ci UPDATE_SCREENSHOTS=true pytest -m screenshot
 ```
 
 **Mock stand** — browser checks that need controlled `/api/*` JSON, not a live backend.
-Stand = `-Denv=mock`; slice = `-DincludeTags=mock`.
+Java: stand = `-Denv=mock`, slice = `-DincludeTags=mock`. Python: stand = `STAND=mock`, slice = `-m mock`.
 
 The SPA is served at document root and resolves API to `/api`; the frontend container nginx
 has no `/api` route, so a **stand-gateway** (compose profile `mock`, port **9911**) proxies
@@ -139,6 +148,8 @@ mappings; they do not call admin.
 ```bash
 docker compose --profile mock up -d stand-gateway   # :9911 + api-mock + react frontend
 ./gradlew test -Denv=mock -DincludeTags=mock
+STAND=mock pytest -m mock        # from tests/python/tests-python-selenium
+STAND=mock pytest -m screenshot
 ```
 
 Stand registry id: `mock-gateway` (`python scripts/stands/ensure.py mock-gateway` from monorepo root).
@@ -164,7 +175,7 @@ task — `test`:
 ./gradlew test -Denv=prod -DincludeTags=screenshot
 ```
 
-| Stand (`-Denv`) | Where it points |
+| Stand (`-Denv` / `STAND`) | Where it points |
 |-----------------|-----------------|
 | `ci` | the compose stack on this machine — UI + real `/api` same origin via `stand-gateway-ci` `:9821`, direct API `:8800` (`docker compose up -d` first) |
 | `mock` | mock profile — UI + stub API same origin `:9911` (`docker compose --profile mock up -d stand-gateway` first) |
@@ -174,9 +185,24 @@ task — `test`:
 Anything else — `headless`, `enableHar`, `enableVideo`, `updateScreenshots`, `allureReportMode` — is a
 per-run `-D<key>=<value>`. Available keys: `src/test/resources/config/default.properties`.
 
-For `TESTS_LANG=python`, CI slices with pytest markers (`-m api` / `-m e2e` / `-m mock` /
-`-m screenshot` / `-m manual` / `-m harness`) — same contract questions as the Java default cell. Stand is
-`STAND` / `BASE_URL`, not a marker.  
+For `TESTS_LANG=python`, a layer is a **pytest marker**, a stand is **`STAND`** / `BASE_URL`
+(from `tests/python/tests-python-selenium`):
+
+```bash
+STAND=ci   pytest -m harness_backend
+STAND=ci   pytest -m harness_frontend
+STAND=ci   pytest -m harness
+STAND=mock pytest -m mock
+STAND=mock pytest -m screenshot
+STAND=stage pytest -m api
+STAND=stage pytest -m 'e2e and not screenshot and not mock'
+STAND=prod pytest -m api
+STAND=prod pytest -m 'e2e and not screenshot and not mock'
+STAND=prod pytest -m screenshot
+```
+
+Per-run env: `HEADLESS`, `UPDATE_SCREENSHOTS`, `SCREENSHOT_OS`, `SCREENSHOT_BROWSER`, `REMOTE_URL`.
+Same contract questions as the Java default cell. Do **not** set `SCREENSHOT_OS=linux` on a Mac.  
 For `TESTS_LANG` ∈ `javascript` \| `typescript`, CI still runs the full active-module
 suite / STOP until that family is brought up.
 
