@@ -1,6 +1,8 @@
 # backend-typescript-express
 
-TypeScript [Express](https://expressjs.com/) JSON API on Node — same OpenAPI contract as `backend-java-spring`.  
+TypeScript [Express](https://expressjs.com/) JSON API on Node — same OpenAPI contract as `backend-java-spring`
+(`/api/health`, items, auth/JWT). Copy: [`resources/openapi.yaml`](resources/openapi.yaml)
+(`GET /api/openapi.yaml`, `GET /api/docs`).
 Postgres DB: `multistack_app_typescript_express`.
 
 **Status:** active.

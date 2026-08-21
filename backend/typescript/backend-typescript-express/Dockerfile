@@ -12,6 +12,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist
 COPY schema.sql ./
+COPY resources ./resources
 RUN chown -R node:node /app
 USER node
 ENV NODE_ENV=production

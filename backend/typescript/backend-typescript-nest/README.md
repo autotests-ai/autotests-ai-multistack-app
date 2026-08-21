@@ -1,6 +1,8 @@
 # backend-typescript-nest
 
-TypeScript [NestJS](https://nestjs.com/) JSON API on Node — same OpenAPI contract as `backend-java-spring`.  
+TypeScript [NestJS](https://nestjs.com/) JSON API on Node — same OpenAPI contract as `backend-java-spring`
+(`/api/health`, items, auth/JWT). Copy: [`resources/openapi.yaml`](resources/openapi.yaml)
+(`GET /api/openapi.yaml`; `GET /api/docs` via `@nestjs/swagger` over that file, not DocumentBuilder).
 Postgres DB: `multistack_app_typescript_nest`.
 
 **Status:** active.
