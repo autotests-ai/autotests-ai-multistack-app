@@ -370,6 +370,10 @@ jobs:
     permissions:
       actions: write
     steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 1
       - uses: ./.github/actions/preempt-develop-cd
 
   # Develop must not start (or continue) if main already claimed the stage.
@@ -380,6 +384,10 @@ jobs:
     permissions:
       actions: write
     steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 1
       - uses: ./.github/actions/yield-to-main-cd
 
   # Keep the backend root first: GitHub has no explicit graph coordinates and uses
@@ -649,7 +657,8 @@ jobs:
       needs.build-backend.result == 'success' &&
       needs.sonar-backend.result == 'success' &&
       needs.trigger.outputs.cd_production == 'true' &&
-      needs.e2e-tests-stage.result == 'success'
+      (needs.e2e-tests-stage.result == 'success' ||
+       (needs.e2e-tests-stage.result == 'skipped' && vars.STAGE_APP_DIR == ''))
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment:
@@ -688,7 +697,8 @@ jobs:
       needs.build-frontend.result == 'success' &&
       needs.sonar-frontend.result == 'success' &&
       needs.trigger.outputs.cd_production == 'true' &&
-      needs.e2e-tests-stage.result == 'success'
+      (needs.e2e-tests-stage.result == 'success' ||
+       (needs.e2e-tests-stage.result == 'skipped' && vars.STAGE_APP_DIR == ''))
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment:
