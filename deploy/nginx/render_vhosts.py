@@ -1,9 +1,11 @@
 #!/usr/bin/env python
-"""Render nginx vhosts / stack location fragments from deploy/matrix.yaml.
+"""Render nginx stack location fragments from deploy/matrix.yaml.
 
 Outputs (wipe + rewrite generated/*.conf):
-  autotests.ai-stack-{upstreams,routes,board}.conf
-  stage.autotests.ai-stack-{upstreams,routes,board}.conf — +10000 ports, stage_ upstreams
+  autotests.ai-stack-{upstreams,routes}.conf
+  stage.autotests.ai-stack-{upstreams,routes}.conf — +10000 ports, stage_ upstreams
+
+Board (/stack/) is the landing gateway vhost, not teaching FE. Do not emit *-stack-board.conf.
 """
 
 from __future__ import annotations
@@ -228,7 +230,6 @@ def render_from_template(
         .replace("__FRONTEND_UPSTREAMS__", render_frontend_upstreams(frontends, us_prefix))
         .replace("__BACKEND_API_LOCATIONS__", render_api_locations(backends, us_prefix))
         .replace("__FRONTEND_LOCATIONS__", render_frontend_locations(frontends, us_prefix))
-        .replace("__BOARD_UPSTREAM__", extra.get("board_upstream", _us("frontend-typescript-react", us_prefix)))
     )
     if "public_host" in extra:
         conf = conf.replace("__PUBLIC_HOST__", extra["public_host"])
@@ -289,12 +290,8 @@ def main() -> int:
         encoding="utf-8"
     )
 
-    board_tpl = (repo / "deploy" / "nginx" / "stack-board.template.conf").read_text(
-        encoding="utf-8"
-    )
     stack_upstreams = render_from_template(stack_tpl, backends, frontends)
     stack_routes = render_from_template(routes_tpl, backends, frontends)
-    stack_board = render_from_template(board_tpl, backends, frontends)
 
     stage_backends = _with_port_offset(backends, STAGE_PORT_OFFSET)
     stage_frontends = _with_port_offset(frontends, STAGE_PORT_OFFSET)
@@ -303,9 +300,6 @@ def main() -> int:
     )
     stage_routes = render_from_template(
         routes_tpl, stage_backends, stage_frontends, us_prefix=STAGE_UPSTREAM_PREFIX
-    )
-    stage_board = render_from_template(
-        board_tpl, stage_backends, stage_frontends, us_prefix=STAGE_UPSTREAM_PREFIX
     )
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
@@ -319,10 +313,8 @@ def main() -> int:
 
     _write(f"{CANONICAL_HOST}-stack-upstreams.conf", stack_upstreams)
     _write(f"{CANONICAL_HOST}-stack-routes.conf", stack_routes)
-    _write(f"{CANONICAL_HOST}-stack-board.conf", stack_board)
     _write(f"{STAGE_HOST}-stack-upstreams.conf", stage_upstreams)
     _write(f"{STAGE_HOST}-stack-routes.conf", stage_routes)
-    _write(f"{STAGE_HOST}-stack-board.conf", stage_board)
     print(
         f"OK: prod/stage stack fragments "
         f"({len(backends)} be, {len(frontends)} fe, stage +{STAGE_PORT_OFFSET})"
