@@ -1,7 +1,8 @@
 # backend-kotlin-spring
 
 Kotlin Spring Boot JSON API — same OpenAPI contract as `backend-java-spring`
-(`/api/health`, items, auth/JWT). Copy: [`resources/openapi.yaml`](resources/openapi.yaml).
+(`/api/health`, items, auth/JWT). Copy: [`resources/openapi.yaml`](resources/openapi.yaml)
+(served from classpath as `GET /api/openapi.yaml`; Swagger UI at `GET /api/docs`).
 Postgres DB: `multistack_app_kotlin_spring`.
 
 **Status:** active.
