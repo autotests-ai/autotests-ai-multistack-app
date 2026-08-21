@@ -47,13 +47,14 @@ name: CI
 # Stage mutex: main preempts develop (cancel), develop yields if main is queued
 # or running. Not one shared cancel-in-progress group — that would let develop
 # cancel a prod promotion.
-# Roots: trigger → backend-unit-tests · frontend-unit-tests · tests-harness
+# Roots: trigger → backend-unit-tests · openapi-sync · frontend-unit-tests · tests-harness
+#   openapi-sync: every backend-* openapi.yaml == _contract (composite, no job run:)
 #   integration-tests ← backend-unit-tests (backend module, pre-build; PR + main)
 #   sonar-backend ← backend-unit-tests + integration-tests
 #   sonar-tests ← tests-harness (skipped on backend-only lane)
 #   ui-mock-tests ← frontend-unit-tests + tests-harness (jsdom first; mock compose on the runner)
 #   sonar-frontend ← frontend-unit-tests + ui-mock-tests (mock skipped ⇒ sonar still runs)
-#   build-backend ← backend-unit-tests + integration-tests · build-frontend ← ui-mock-tests
+#   build-backend ← backend-unit-tests + integration-tests + openapi-sync · build-frontend ← ui-mock-tests
 #   deploy-backend-stage / deploy-frontend-stage ← same gates; cd_stage; skip until vars.STAGE_APP_DIR
 #   catalog-matrix / catalog-build / catalog-deploy-* ← sidecar SPA; skip without deploy/catalog-matrix.json
   #   api-tests-stage / e2e-tests-stage ← deploy-*-stage + tests-harness; full api / e2e vs stage stand
@@ -406,6 +407,18 @@ jobs:
         with:
           module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
 
+  openapi-sync:
+    needs: trigger
+    if: always() && !cancelled()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+      - uses: ./backend/.github/actions/openapi-sync
+
   integration-tests:
     needs: [backend-unit-tests, trigger]
     if: >-
@@ -580,10 +593,11 @@ jobs:
           module_dir: ${{ format('frontend/{0}/frontend-{0}-{1}', env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
 
   build-backend:
-    needs: [backend-unit-tests, integration-tests, trigger]
+    needs: [backend-unit-tests, integration-tests, trigger, openapi-sync]
     if: >-
       !cancelled() &&
       needs.backend-unit-tests.result == 'success' &&
+      needs.openapi-sync.result == 'success' &&
       (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped') &&
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') &&
       needs.trigger.outputs.backend == 'true'
