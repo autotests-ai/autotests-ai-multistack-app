@@ -4,6 +4,7 @@ const { Module } = require('@nestjs/common');
 
 const { ApiController } = require('./api.controller');
 const { AuthController } = require('./auth.controller');
+const { OpenApiController } = require('./openapi.controller');
 const { AuthGuard } = require('./auth.guard');
 const { AuthService } = require('./auth.service');
 const { JwtService } = require('./jwt.service');
@@ -15,7 +16,7 @@ class AppModule {
   static register({ store, settings }) {
     return {
       module: AppModule,
-      controllers: [ApiController, AuthController],
+      controllers: [ApiController, AuthController, OpenApiController],
       providers: [
         { provide: STORE, useValue: store },
         { provide: SETTINGS, useValue: settings },

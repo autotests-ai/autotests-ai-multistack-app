@@ -9,6 +9,7 @@ WORKDIR /app
 COPY --from=build /app/node_modules ./node_modules
 COPY package.json schema.sql ./
 COPY src ./src
+COPY resources ./resources
 RUN chown -R node:node /app
 USER node
 ENV NODE_ENV=production

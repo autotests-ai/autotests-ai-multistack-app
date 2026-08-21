@@ -1,6 +1,8 @@
 # backend-javascript-express
 
-JavaScript [Express](https://expressjs.com/) JSON API on Node — same OpenAPI contract as `backend-java-spring`.  
+JavaScript [Express](https://expressjs.com/) JSON API on Node — same OpenAPI contract as `backend-java-spring`
+(`/api/health`, items, auth/JWT). Copy: [`resources/openapi.yaml`](resources/openapi.yaml)
+(`GET /api/openapi.yaml`, `GET /api/docs`).
 Postgres DB: `multistack_app_javascript_express`.
 
 **Status:** active.

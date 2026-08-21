@@ -1,6 +1,8 @@
 # backend-javascript-nest
 
-JavaScript [NestJS](https://nestjs.com/) JSON API on Node — same OpenAPI contract as `backend-java-spring`.  
+JavaScript [NestJS](https://nestjs.com/) JSON API on Node — same OpenAPI contract as `backend-java-spring`
+(`/api/health`, items, auth/JWT). Copy: [`resources/openapi.yaml`](resources/openapi.yaml)
+(`GET /api/openapi.yaml`; `GET /api/docs` via `@nestjs/swagger` over that file, not DocumentBuilder).
 Postgres DB: `multistack_app_javascript_nest`.
 
 **Status:** active. Teaching twin of the usual TS Nest path.

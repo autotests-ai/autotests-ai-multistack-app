@@ -8,6 +8,7 @@ const { createJwt } = require('./jwt');
 const { createAuthService } = require('./auth-service');
 const { lenientJson } = require('./json-body');
 const { ApiError } = require('./errors');
+const { readOpenApiResource } = require('./openapi-resources');
 
 const CORS_OPTIONS = {
   origin: '*',
@@ -33,6 +34,20 @@ function createApp({ store, settings = config(), jwt } = {}) {
 
   api.get('/health', (req, res) => {
     res.json({ status: 'ok', service: settings.serviceName });
+  });
+
+  // Shared contract copy + Swagger UI (same HTML as Java: unpkg + ./openapi.yaml).
+  // Not swagger-ui-express: that redirects /docs → /docs/ and breaks the relative spec URL.
+  api.get('/openapi.yaml', (req, res) => {
+    res.status(200);
+    res.setHeader('Content-Type', 'application/yaml');
+    res.end(readOpenApiResource('openapi.yaml'));
+  });
+
+  api.get('/docs', (req, res) => {
+    res.status(200);
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.end(readOpenApiResource('openapi-docs.html'));
   });
 
   api.get('/items', async (req, res, next) => {
