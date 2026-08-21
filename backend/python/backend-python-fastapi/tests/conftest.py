@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 
+import allure
 import pytest
 from fastapi.testclient import TestClient
 
@@ -16,6 +17,16 @@ if os.environ.get("PYTEST_INTEGRATION") == "1":
     os.environ["DATABASE_URL"] = _pg.get_connection_url()
 else:
     os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
+
+
+def pytest_runtest_setup(item: pytest.Item) -> None:
+    allure.dynamic.label("module", "backend-python-fastapi")
+    allure.dynamic.label("language", "python")
+    if item.get_closest_marker("integration"):
+        allure.dynamic.label("layer", "integration")
+        allure.dynamic.tag("integration")
+    else:
+        allure.dynamic.label("layer", "unit")
 
 
 def pytest_unconfigure(config):

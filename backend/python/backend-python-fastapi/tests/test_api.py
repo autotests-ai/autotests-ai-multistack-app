@@ -15,5 +15,4 @@ def test_items(client):
     assert response.status_code == 200
     body = response.json()
     assert body["source"] == "postgresql"
-    assert len(body["items"]) == 3
-    assert body["items"][0]["name"] == "Alpha"
+    assert [item["name"] for item in body["items"]] == ["Alpha", "Beta", "Gamma"]

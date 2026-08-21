@@ -1,6 +1,7 @@
 # backend-python-django
 
-Python Django JSON API — same OpenAPI contract as `backend-java-spring`.  
+Python Django JSON API — same OpenAPI contract as `backend-java-spring`.
+Copy: [`resources/openapi.yaml`](resources/openapi.yaml).
 Postgres DB: `multistack_app_python_django`.
 
 **Status:** active.
@@ -10,8 +11,9 @@ https://autotests.ai/stack/backend-python-django/{frontend}/
 https://autotests.ai/stack/backend-python-django/api/
 ```
 
-Unit tests: `tests/` (SQLite in-memory). Integration: `tests/test_integration.py`
-(Testcontainers PostgreSQL, same image as Java).
+Unit tests: `tests/` (SQLite in-memory, Allure `layer=unit`). Integration:
+`tests/test_integration.py` — same questions as Java
+(`ApplicationWiring` + `AuthLifecycle` on Testcontainers `postgres:16-alpine`).
 
 ```bash
 python -m pytest -m "not integration"

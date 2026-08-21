@@ -5,13 +5,15 @@
 
 GitHub does not interpolate `uses:`. This adapter dispatches on `BACKEND_LANG`:
 
-| LANG | Action |
-|------|--------|
-| `java` | `./backend/java/backend-java-spring/.github/actions/<verb>` |
-| `kotlin` | `./backend/kotlin/backend-kotlin-spring/.github/actions/<verb>` |
-| `python` | `./backend/python/.github/actions/<verb>` |
-| `go` | `./backend/go/.github/actions/<verb>` |
-| `javascript` | `./backend/javascript/.github/actions/<verb>` |
-| `typescript` | `./backend/typescript/.github/actions/<verb>` |
+| LANG | `unit` / `integration` / `sonar` | `build` / `deploy` |
+|------|----------------------------------|--------------------|
+| `java` | `./backend/java/backend-java-spring/.github/actions/<verb>` | same module (Docker context = `module_dir`) |
+| `python` | `./backend/python/.github/actions/<verb>` | same family (Docker context = `module_dir`) |
+| `kotlin` | `./backend/kotlin/backend-kotlin-spring/.github/actions/<verb>` | java-spring Docker verbs until that family window |
+| `go` | `./backend/go/.github/actions/<verb>` | java-spring Docker verbs until that family window |
+| `javascript` | `./backend/javascript/.github/actions/<verb>` | java-spring Docker verbs until that family window |
+| `typescript` | `./backend/typescript/.github/actions/<verb>` | java-spring Docker verbs until that family window |
+| other | STOP | STOP |
 
-`build` / `deploy` stay on the Docker verbs under the java-spring module action (they take `module_dir` / compose service name from the basename). Flattened takeaway leaf paths are resolved by `.github/actions/resolve-module-dir`.
+Unknown `BACKEND_LANG` never runs a foreign module action. Flattened takeaway
+leaf paths are resolved by `.github/actions/resolve-module-dir`.

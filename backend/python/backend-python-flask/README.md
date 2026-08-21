@@ -1,7 +1,8 @@
 # backend-python-flask
 
 Python Flask JSON API — same OpenAPI contract as `backend-java-spring`
-(`/api/health`, items, auth/JWT). Postgres DB: `multistack_app_python_flask`.
+(`/api/health`, items, auth/JWT). Copy: [`resources/openapi.yaml`](resources/openapi.yaml).
+Postgres DB: `multistack_app_python_flask`.
 
 **Status:** active.
 
@@ -10,8 +11,9 @@ https://autotests.ai/stack/backend-python-flask/{frontend}/
 https://autotests.ai/stack/backend-python-flask/api/
 ```
 
-Unit tests: `tests/` (SQLite in-memory). Integration: `tests/test_integration.py`
-(Testcontainers PostgreSQL, same image as Java).
+Unit tests: `tests/` (SQLite in-memory, Allure `layer=unit`). Integration:
+`tests/test_integration.py` — same questions as Java
+(`ApplicationWiring` + `AuthLifecycle` on Testcontainers `postgres:16-alpine`).
 
 ```bash
 python -m pytest -m "not integration"

@@ -10,6 +10,27 @@ runs:
       uses: ./.github/actions/resolve-module-dir
       with:
         module_dir: ${{ inputs.module_dir }}
-    - uses: ./backend/java/backend-java-spring/.github/actions/build
+    - if: env.BACKEND_LANG == 'python'
+      uses: ./backend/python/.github/actions/build
       with:
         module_dir: ${{ steps.dir.outputs.dir }}
+    - if: >-
+        env.BACKEND_LANG == 'java' ||
+        env.BACKEND_LANG == 'kotlin' ||
+        env.BACKEND_LANG == 'go' ||
+        env.BACKEND_LANG == 'javascript' ||
+        env.BACKEND_LANG == 'typescript'
+      uses: ./backend/java/backend-java-spring/.github/actions/build
+      with:
+        module_dir: ${{ steps.dir.outputs.dir }}
+    - if: >-
+        env.BACKEND_LANG != 'java' &&
+        env.BACKEND_LANG != 'kotlin' &&
+        env.BACKEND_LANG != 'python' &&
+        env.BACKEND_LANG != 'go' &&
+        env.BACKEND_LANG != 'javascript' &&
+        env.BACKEND_LANG != 'typescript'
+      shell: bash
+      run: |
+        echo "STOP: no build action for BACKEND_LANG=${BACKEND_LANG:-unset}" >&2
+        exit 1
