@@ -18,9 +18,12 @@ runs:
       uses: ./backend/kotlin/backend-kotlin-spring/.github/actions/build
       with:
         module_dir: ${{ steps.dir.outputs.dir }}
+    - if: env.BACKEND_LANG == 'go'
+      uses: ./backend/go/.github/actions/build
+      with:
+        module_dir: ${{ steps.dir.outputs.dir }}
     - if: >-
         env.BACKEND_LANG == 'java' ||
-        env.BACKEND_LANG == 'go' ||
         env.BACKEND_LANG == 'javascript' ||
         env.BACKEND_LANG == 'typescript'
       uses: ./backend/java/backend-java-spring/.github/actions/build
