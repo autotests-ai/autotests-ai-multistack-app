@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-"""Sync deploy/matrix.yaml (ports) + hub tests.modules → env-hosts.js + inbox matrix.json.
+"""Sync deploy/matrix.yaml (ports) + hub tests.modules → env-hosts.js + landing matrix.json.
 
 `public_host` in the YAML is the loopback Stage/Prod fallback (`stage.{public_host}`).
 On a public host, envNavItems follows the current product hostname.
 Tests axis is hub `matrix.yaml` `tests.modules` — not clone deploy/matrix.yaml.
-Board JSON: projects/autotests-ai-home/stack-matrix/overlay/stack/matrix.json
+Board JSON: autotests-ai-app frontend public/stack/matrix.json
 """
 from __future__ import annotations
 
@@ -43,12 +43,15 @@ OUT_HOSTS = (
 )
 OUT_HOSTS_DTS = OUT_HOSTS.with_suffix(".d.ts")
 FRONTEND = ROOT / "frontend"
-# Board JSON inbox (sibling of autotests-ai-app). Clone ROOT.parent.parent = projects/.
-INBOX_JSON = (
+# Board JSON for the landing SPA (sibling of this teaching clone in the monorepo).
+LANDING_JSON = (
     ROOT.parent.parent
     / "autotests-ai-home"
-    / "stack-matrix"
-    / "overlay"
+    / "autotests-ai-app"
+    / "frontend"
+    / "typescript"
+    / "frontend-typescript-react"
+    / "public"
     / "stack"
     / "matrix.json"
 )
@@ -199,9 +202,9 @@ def main() -> int:
     data = load_matrix(matrix_path, status_server)
     public_host = public_host_of(data, matrix_path)
     previous_tests: list = []
-    if INBOX_JSON.is_file():
+    if LANDING_JSON.is_file():
         try:
-            previous_tests = list(json.loads(INBOX_JSON.read_text(encoding="utf-8")).get("tests") or [])
+            previous_tests = list(json.loads(LANDING_JSON.read_text(encoding="utf-8")).get("tests") or [])
         except json.JSONDecodeError:
             previous_tests = []
     tests = tests_from_hub(previous_tests)
@@ -228,16 +231,20 @@ def main() -> int:
         ],
         "tests": tests,
     }
-    inbox_ok = INBOX_JSON.parents[2].name == "stack-matrix"
-    if inbox_ok:
-        INBOX_JSON.parent.mkdir(parents=True, exist_ok=True)
-        INBOX_JSON.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    landing_ok = (
+        LANDING_JSON.parent.name == "stack"
+        and LANDING_JSON.parents[1].name == "public"
+        and (LANDING_JSON.parents[2] / "package.json").is_file()
+    )
+    if landing_ok:
+        LANDING_JSON.parent.mkdir(parents=True, exist_ok=True)
+        LANDING_JSON.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     OUT_HOSTS.write_text(
         ENV_HOSTS_JS.replace("__PUBLIC_HOST__", repr(public_host)),
         encoding="utf-8",
     )
     OUT_HOSTS_DTS.write_text(ENV_HOSTS_DTS, encoding="utf-8")
-    json_note = str(INBOX_JSON) if inbox_ok else "inbox matrix.json skipped"
+    json_note = str(LANDING_JSON) if landing_ok else "landing matrix.json skipped"
     print(
         f"wrote {json_note} + {OUT_HOSTS.relative_to(ROOT)} "
         f"(public_host={public_host} · {len(payload['backends'])} be · "

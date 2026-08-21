@@ -4,7 +4,7 @@
 |--------|------|
 | `sync-ds-runtime.sh` | Subset css/js/templates from design-system → `_shared/frontend-javascript-app`, then fan-out → every `frontend/*/frontend-*/vendor/ds` |
 | `sync-react-ui.sh` | Vendored TSX wrappers into `_shared/frontend-react-ui` (no CSS), then fan-out → both `*react` `vendor/react-ui` |
-| `sync-stack-matrix.py` | deploy ports + hub `tests.modules` → `js/env-hosts.js` + inbox `projects/autotests-ai-home/stack-matrix/overlay/stack/matrix.json`; fan-out env-hosts into every `vendor/ds` |
+| `sync-stack-matrix.py` | deploy ports + hub `tests.modules` → `js/env-hosts.js` + landing `autotests-ai-app/.../public/stack/matrix.json`; fan-out env-hosts into every `vendor/ds` |
 | `catalog-cd-matrix.py` | Catalog CD JSON: deploy frontends minus `teaching: true`; writes `deploy/catalog-matrix.json` for CI |
 
 Run from this tree’s root (`ethalon/` or the live clone):
