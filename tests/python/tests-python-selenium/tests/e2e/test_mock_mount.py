@@ -9,7 +9,7 @@ from pages.home_page import HomePage
 from pages.login_page import LoginPage
 from pages.register_page import RegisterPage
 
-pytestmark = pytest.mark.mock
+pytestmark = [pytest.mark.e2e, pytest.mark.mock]
 
 
 @allure.epic("Home")

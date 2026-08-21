@@ -9,7 +9,7 @@ from pages.home_page import HomePage
 import screenshot_helper
 import viewport_helper
 
-pytestmark = pytest.mark.screenshot
+pytestmark = [pytest.mark.e2e, pytest.mark.screenshot]
 
 _VIEWPORT_WIDTH = 1280
 _VIEWPORT_HEIGHT = 900

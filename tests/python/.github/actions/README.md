@@ -7,8 +7,9 @@ interpolate `uses:`.
 Live module (short folder): `tests-python-selenium`.
 `TESTS_UI_LIBRARY` selects that suffix (`selenium`), not the Java 5-segment name.
 
-Local (from the module): `pytest -m api` · `pytest -m e2e` · `pytest -m mock` ·
-`pytest -m screenshot` · `pytest -m manual` · `pytest -m harness`. Stand is `STAND` / `BASE_URL`, not a marker.
+Local (from the module): `pytest -m api` · `pytest -m 'e2e and not screenshot and not mock'` ·
+`pytest -m mock` · `pytest -m screenshot` · `pytest -m manual` · `pytest -m harness`.
+Stand is `STAND` / `BASE_URL`, not a marker. Screenshot and mock also carry `e2e` (same dual tag as Java).
 
 | Verb | Layer |
 |------|-------|

@@ -9,7 +9,7 @@ from pages.login_page import LoginPage
 import screenshot_helper
 import viewport_helper
 
-pytestmark = pytest.mark.screenshot
+pytestmark = [pytest.mark.e2e, pytest.mark.screenshot]
 
 _VIEWPORT_HEIGHT = 900
 

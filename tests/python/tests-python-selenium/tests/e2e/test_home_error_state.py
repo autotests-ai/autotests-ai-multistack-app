@@ -8,7 +8,7 @@ import pytest
 import mock_scenarios
 from pages.home_page import HomePage
 
-pytestmark = [pytest.mark.mock, pytest.mark.negative]
+pytestmark = [pytest.mark.e2e, pytest.mark.mock, pytest.mark.negative]
 
 
 @pytest.fixture

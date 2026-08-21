@@ -79,7 +79,7 @@ Self-check of the **tests module helpers** before / alongside product layers —
 
 ## Mock and screenshot (inside e2e, not layers)
 
-Screenshot tests are **two stages**, not a pyramid layer. Same PNG tree. Java: `@Layer("e2e")` + `@Tag("screenshot")`, stand is `-Denv`. Python: `pytest.mark.screenshot` (Allure `layer=e2e`), stand is `STAND`.
+Screenshot tests are **two stages**, not a pyramid layer. Same PNG tree. Java: `@Layer("e2e")` + `@Tag("e2e")` + `@Tag("screenshot")`, stand is `-Denv`. Python: `pytest.mark.e2e` + `pytest.mark.screenshot` (Allure `layer=e2e`), stand is `STAND`. Mock is the same dual mark (`e2e` + `mock`).
 
 ```
 src/test/resources/screenshots/{mock|stage|prod}/{linux|macos|windows}/{chrome-148}/{area}/{viewport}.png

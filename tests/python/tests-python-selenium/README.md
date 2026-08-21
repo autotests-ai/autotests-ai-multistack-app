@@ -12,7 +12,7 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 cp .env.example .env
 pytest -m api
-pytest -m e2e
+pytest -m 'e2e and not screenshot and not mock'
 pytest -m manual
 pytest -m harness
 STAND=mock pytest -m mock   # docker compose --profile mock up -d stand-gateway first
@@ -21,7 +21,7 @@ STAND=mock pytest -m screenshot   # PNG compare vs mock/; omit SCREENSHOT_OS on 
 
 Stand is `STAND` (`prod` default) or `BASE_URL` / `API_BASE_URL`. Markers are slices, not stands.
 
-Screenshot tests are **inside e2e**, not a pyramid layer (`pytest.mark.screenshot`, Allure `layer=e2e`). Tree:
+Screenshot tests are **inside e2e**, not a pyramid layer (`e2e` + `screenshot`, Allure `layer=e2e`). Tree:
 
 `src/test/resources/screenshots/{mock|stage|prod}/{linux|macos|windows}/chrome-148/{area}/{viewport}.png`
 
