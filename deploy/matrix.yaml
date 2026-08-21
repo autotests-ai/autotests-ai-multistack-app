@@ -1,7 +1,7 @@
 # Runtime ports / compose for autotests-ai-multistack-app (not the generate catalog).
 # Axes ids (what exists) = hub matrix.yaml. Tests list is NOT here — board tests come from
 # hub tests.modules via frontend/scripts/sync-stack-matrix.py
-# (JSON → projects/autotests-ai-home/stack-matrix/overlay/stack/matrix.json).
+# (JSON → autotests-ai-app/.../public/stack/matrix.json).
 # Catalog CD: python frontend/scripts/catalog-cd-matrix.py --write → deploy/catalog-matrix.json
 # (CI catalog-matrix job reads the JSON; no Python on the runner).
 # URL: https://autotests.ai/stack/{backend}/{frontend}/
