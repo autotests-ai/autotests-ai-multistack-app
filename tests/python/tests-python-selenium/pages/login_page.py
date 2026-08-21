@@ -8,6 +8,7 @@ from pages.base import BasePage
 
 class LoginPage(BasePage):
     HEADER = (By.CSS_SELECTOR, "[data-testid='header']")
+    LOGIN_FORM = (By.CSS_SELECTOR, "[data-testid='login-form']")
     LOGIN_INPUT = (By.CSS_SELECTOR, "[data-testid='login-input']")
     PASSWORD_INPUT = (By.CSS_SELECTOR, "[data-testid='password-input']")
     SUBMIT = (By.CSS_SELECTOR, "[data-testid='submit-button']")
@@ -69,6 +70,9 @@ class LoginPage(BasePage):
         self.wait_visible(*self.PASSWORD_INPUT)
         self.wait_visible(*self.SUBMIT)
         return self
+
+    def login_form_panel(self):
+        return self.wait_visible(*self.LOGIN_FORM)
 
     @allure.step("Verify form title message: {message}")
     def should_have_form_title(self, message: str) -> LoginPage:

@@ -54,3 +54,22 @@ class TestConfig:
     def test_headless_defaults_true(self, monkeypatch):
         monkeypatch.delenv("HEADLESS", raising=False)
         assert load_config().headless is True
+
+    def test_welcome_username_mock_is_mock_user(self, monkeypatch):
+        monkeypatch.setenv("STAND", "mock")
+        monkeypatch.delenv("WELCOME_USERNAME", raising=False)
+        assert load_config().welcome_username == "mock-user"
+
+    def test_welcome_username_prod_is_user1(self, monkeypatch):
+        monkeypatch.setenv("STAND", "prod")
+        monkeypatch.delenv("WELCOME_USERNAME", raising=False)
+        assert load_config().welcome_username == "user1"
+
+    def test_welcome_username_env_wins(self, monkeypatch):
+        monkeypatch.setenv("STAND", "mock")
+        monkeypatch.setenv("WELCOME_USERNAME", "seed-user")
+        assert load_config().welcome_username == "seed-user"
+
+    def test_update_screenshots_defaults_false(self, monkeypatch):
+        monkeypatch.delenv("UPDATE_SCREENSHOTS", raising=False)
+        assert load_config().update_screenshots is False

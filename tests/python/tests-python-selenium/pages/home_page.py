@@ -26,6 +26,18 @@ class HomePage(BasePage):
         self.wait_visible(*self.ITEMS)
         return self
 
+    @allure.step("Verify home layout and health are mounted")
+    def should_show_layout_and_health(self) -> HomePage:
+        self.wait_visible(*self.LAYOUT)
+        self.wait_visible(*self.HEALTH)
+        return self
+
+    def layout_panel(self):
+        return self.wait_visible(*self.LAYOUT)
+
+    def welcome_panel_element(self):
+        return self.wait_visible(*self.WELCOME_PANEL)
+
     @allure.step("Verify embedded header is mounted")
     def should_show_embedded_header(self) -> HomePage:
         self.wait_visible(*self.HEADER)

@@ -4,8 +4,11 @@ __pycache__/
 .pytest_cache/
 allure-results/
 allure-report/
+allure-results-mock-stash/
+allure-results-e2e-stash/
 .env
 notifications/chart.png
 coverage.xml
 .coverage
 htmlcov/
+build/

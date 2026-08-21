@@ -37,18 +37,22 @@ def driver(config: TestConfig) -> WebDriver:
         )
 
     if config.remote_url:
-        # Match Java TestBase: headless via selenoid:options, not Chrome flags
-        options.set_capability("browserVersion", config.browser_version)
-        options.set_capability(
-            "selenoid:options",
-            {
-                "enableVNC": config.enable_vnc,
-                "enableVideo": config.enable_video,
-                "enableHAR": config.enable_har,
-                "headless": config.headless,
-                "name": "autotests-ai-multistack-python",
-            },
-        )
+        selenoid = "selenoid" in config.remote_url.lower()
+        if selenoid:
+            # Match Java TestBase: headless via selenoid:options, not Chrome flags
+            options.set_capability("browserVersion", config.browser_version)
+            options.set_capability(
+                "selenoid:options",
+                {
+                    "enableVNC": config.enable_vnc,
+                    "enableVideo": config.enable_video,
+                    "enableHAR": config.enable_har,
+                    "headless": config.headless,
+                    "name": "autotests-ai-multistack-python",
+                },
+            )
+        elif config.headless:
+            options.add_argument("--headless=new")
         drv: WebDriver = webdriver.Remote(
             command_executor=config.remote_url,
             options=options,

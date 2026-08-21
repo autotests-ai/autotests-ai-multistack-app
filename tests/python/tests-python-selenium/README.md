@@ -16,9 +16,21 @@ pytest -m e2e
 pytest -m manual
 pytest -m harness
 STAND=mock pytest -m mock   # docker compose --profile mock up -d stand-gateway first
+STAND=mock pytest -m screenshot   # PNG compare vs mock/; omit SCREENSHOT_OS on a Mac
 ```
 
 Stand is `STAND` (`prod` default) or `BASE_URL` / `API_BASE_URL`. Markers are slices, not stands.
+
+Screenshot tests are **inside e2e**, not a pyramid layer (`pytest.mark.screenshot`, Allure `layer=e2e`). Tree:
+
+`src/test/resources/screenshots/{mock|stage|prod}/{linux|macos|windows}/chrome-148/{area}/{viewport}.png`
+
+CI writes `linux` (`SCREENSHOT_OS=linux`). On a Mac do **not** set `SCREENSHOT_OS=linux` — that would write Linux-canon PNGs from macOS Chrome. Omit it (writes `macos`) or set `SCREENSHOT_OS=macos`.
+
+```bash
+# Local mock refresh (macos folder on Darwin)
+SCREENSHOT_BROWSER=chrome STAND=mock UPDATE_SCREENSHOTS=true HEADLESS=true pytest -m screenshot
+```
 
 ## Remote (Selenoid WebDriver)
 

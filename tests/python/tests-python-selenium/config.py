@@ -40,6 +40,21 @@ def _bool(name: str, default: bool = False) -> bool:
     return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _float(name: str, default: float) -> float:
+    raw = os.environ.get(name)
+    if raw is None or not raw.strip():
+        return default
+    return float(raw.strip())
+
+
+def _welcome_username(stand: str) -> str:
+    raw = os.environ.get("WELCOME_USERNAME")
+    if raw is not None and raw.strip():
+        return raw.strip()
+    # WireMock /me stub (java mock.properties); login form still uses seed user1/password1.
+    return "mock-user" if stand == "mock" else "user1"
+
+
 def _attach_full() -> bool:
     return _bool("ATTACH_FULL")
 
@@ -75,6 +90,10 @@ class TestConfig:
     attach_last_screenshot: bool
     attach_page_source: bool
     attach_video: bool
+    welcome_username: str
+    update_screenshots: bool
+    screenshots_dir: str
+    screenshot_diff_threshold: float
 
 
 def load_config() -> TestConfig:
@@ -110,4 +129,8 @@ def load_config() -> TestConfig:
         attach_last_screenshot=full or _bool("ATTACH_LAST_SCREENSHOT"),
         attach_page_source=full or _bool("ATTACH_PAGE_SOURCE"),
         attach_video=full or _bool("ATTACH_VIDEO") or enable_video,
+        welcome_username=_welcome_username(stand),
+        update_screenshots=_bool("UPDATE_SCREENSHOTS"),
+        screenshots_dir=os.environ.get("SCREENSHOTS_DIR", "screenshots").strip() or "screenshots",
+        screenshot_diff_threshold=_float("SCREENSHOT_DIFF_THRESHOLD", 0.015),
     )

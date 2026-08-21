@@ -175,7 +175,7 @@ Anything else — `headless`, `enableHar`, `enableVideo`, `updateScreenshots`, `
 per-run `-D<key>=<value>`. Available keys: `src/test/resources/config/default.properties`.
 
 For `TESTS_LANG=python`, CI slices with pytest markers (`-m api` / `-m e2e` / `-m mock` /
-`-m manual` / `-m harness`) — same contract questions as the Java default cell. Stand is
+`-m screenshot` / `-m manual` / `-m harness`) — same contract questions as the Java default cell. Stand is
 `STAND` / `BASE_URL`, not a marker.  
 For `TESTS_LANG` ∈ `javascript` \| `typescript`, CI still runs the full active-module
 suite / STOP until that family is brought up.
