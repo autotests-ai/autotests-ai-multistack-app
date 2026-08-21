@@ -9,7 +9,7 @@ GitHub does not interpolate `uses:`. This adapter dispatches on `BACKEND_LANG`:
 |------|----------------------------------|--------------------|
 | `java` | `./backend/java/backend-java-spring/.github/actions/<verb>` | same module (Docker context = `module_dir`) |
 | `python` | `./backend/python/.github/actions/<verb>` | same family (Docker context = `module_dir`) |
-| `kotlin` | `./backend/kotlin/backend-kotlin-spring/.github/actions/<verb>` | java-spring Docker verbs until that family window |
+| `kotlin` | `./backend/kotlin/backend-kotlin-spring/.github/actions/<verb>` | same module (Docker context = `module_dir`) |
 | `go` | `./backend/go/.github/actions/<verb>` | java-spring Docker verbs until that family window |
 | `javascript` | `./backend/javascript/.github/actions/<verb>` | java-spring Docker verbs until that family window |
 | `typescript` | `./backend/typescript/.github/actions/<verb>` | java-spring Docker verbs until that family window |

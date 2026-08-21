@@ -1,5 +1,5 @@
 name: integration
-description: Spring Boot tests tagged integration in this backend module.
+description: Spring Boot + Testcontainers PostgreSQL in this backend module.
 inputs:
   module_dir:
     required: true

@@ -1,13 +1,21 @@
 package dev.multistack.app.integration
 
+import dev.multistack.app.allure.IntegrationTestBase
 import dev.multistack.app.dto.HealthResponse
 import dev.multistack.app.dto.ItemsResponse
+import io.qameta.allure.Epic
+import io.qameta.allure.Feature
+import io.qameta.allure.Severity
+import io.qameta.allure.SeverityLevel
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 
+@Epic("Application wiring")
+@Feature("PostgreSQL and Flyway")
+@Severity(SeverityLevel.BLOCKER)
 @DisplayName("Application wiring on real PostgreSQL")
 class ApplicationWiringIntegrationTest : IntegrationTestBase() {
 
