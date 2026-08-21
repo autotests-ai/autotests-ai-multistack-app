@@ -12,6 +12,7 @@ COPY --from=build /install /usr/local
 COPY manage.py entrypoint.sh ./
 COPY config ./config
 COPY api ./api
+COPY resources ./resources
 RUN chmod +x entrypoint.sh && chown -R app:app /app
 USER app
 ENV SERVER_PORT=8080

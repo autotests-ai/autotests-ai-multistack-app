@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, Response
@@ -25,8 +27,21 @@ from app.seed import seed_data
 from app.validation import validation_message
 
 
+_RESOURCES = Path(__file__).resolve().parent.parent / "resources"
+
+
+def _resource(name: str) -> bytes:
+    return (_RESOURCES / name).read_bytes()
+
+
 def create_app(*, init_db: bool = True) -> FastAPI:
-    app = FastAPI(title=Config.SERVICE_NAME, docs_url=None, redoc_url=None)
+    # openapi_url=None: generated get_openapi is not SSOT — serve _contract yaml instead.
+    app = FastAPI(
+        title=Config.SERVICE_NAME,
+        docs_url=None,
+        redoc_url=None,
+        openapi_url=None,
+    )
     app.add_middleware(CorsPolicyMiddleware)
 
     @app.exception_handler(StarletteHTTPException)
@@ -43,6 +58,16 @@ def create_app(*, init_db: bool = True) -> FastAPI:
         return JSONResponse(
             status_code=400,
             content={"message": validation_message(exc.errors())},
+        )
+
+    @app.get("/api/openapi.yaml", include_in_schema=False)
+    def openapi_spec() -> Response:
+        return Response(content=_resource("openapi.yaml"), media_type="application/yaml")
+
+    @app.get("/api/docs", include_in_schema=False)
+    def openapi_docs() -> Response:
+        return Response(
+            content=_resource("openapi-docs.html"), media_type="text/html"
         )
 
     @app.get("/api/health", response_model=HealthResponse)

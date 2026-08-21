@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 from django.conf import settings
 from django.db import IntegrityError
@@ -11,6 +12,12 @@ from django.views.decorators.http import require_GET, require_http_methods
 from api.auth import check_password, hash_password, validate_credentials
 from api.jwt_util import create_token, extract_username
 from api.models import Item, User
+
+_RESOURCES = Path(__file__).resolve().parent.parent / "resources"
+
+
+def _resource(name: str) -> bytes:
+    return (_RESOURCES / name).read_bytes()
 
 
 def jwt_csrf_exempt(view):
@@ -37,6 +44,16 @@ def _auth_response(username: str) -> dict:
         "username": username,
         "redirectUrl": settings.POST_AUTH_REDIRECT,
     }
+
+
+@require_GET
+def openapi_spec(_request):
+    return HttpResponse(_resource("openapi.yaml"), content_type="application/yaml")
+
+
+@require_GET
+def openapi_docs(_request):
+    return HttpResponse(_resource("openapi-docs.html"), content_type="text/html")
 
 
 @require_GET

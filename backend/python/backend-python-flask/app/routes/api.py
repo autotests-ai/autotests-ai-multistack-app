@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from flask import Blueprint, jsonify
+from pathlib import Path
+
+from flask import Blueprint, Response, jsonify
 from sqlalchemy import select
 
 from app.config import Config
@@ -8,6 +10,22 @@ from app.db import SessionLocal
 from app.models import Item
 
 api_bp = Blueprint("api", __name__)
+
+_RESOURCES = Path(__file__).resolve().parents[2] / "resources"
+
+
+def _resource(name: str) -> bytes:
+    return (_RESOURCES / name).read_bytes()
+
+
+@api_bp.get("/openapi.yaml")
+def openapi_spec():
+    return Response(_resource("openapi.yaml"), mimetype="application/yaml")
+
+
+@api_bp.get("/docs")
+def openapi_docs():
+    return Response(_resource("openapi-docs.html"), mimetype="text/html")
 
 
 @api_bp.get("/health")

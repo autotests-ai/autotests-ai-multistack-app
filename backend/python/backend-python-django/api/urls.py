@@ -5,6 +5,8 @@ from django.urls import path, re_path
 from api import views
 
 urlpatterns = [
+    path("openapi.yaml", views.openapi_spec),
+    path("docs", views.openapi_docs),
     path("health", views.health),
     path("items", views.items),
     path("auth/register", views.register),

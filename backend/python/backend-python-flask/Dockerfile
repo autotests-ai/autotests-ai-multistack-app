@@ -11,6 +11,7 @@ WORKDIR /app
 COPY --from=build /install /usr/local
 COPY schema.sql wsgi.py ./
 COPY app ./app
+COPY resources ./resources
 RUN chown -R app:app /app
 USER app
 ENV SERVER_PORT=8080
