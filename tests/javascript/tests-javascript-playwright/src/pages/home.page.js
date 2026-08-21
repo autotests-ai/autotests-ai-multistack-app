@@ -10,6 +10,7 @@ exports.HomePage = class HomePage {
     this.welcomeMessage = page.getByTestId('welcome-message');
     this.welcomePanel = page.getByTestId('welcome-panel');
     this.logoutButton = page.getByTestId('logout-button');
+    this.header = page.getByTestId('header');
   }
 
   async open() {

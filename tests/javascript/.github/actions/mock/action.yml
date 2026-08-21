@@ -1,20 +1,149 @@
 name: mock
-description: STOP — no mock layer in the JavaScript tests family.
+description: Mock compose stand + Playwright mock/screenshot on the runner.
 inputs:
   module_dir:
     required: true
   frontend_dir:
     required: false
-    default: ''
+    default: ""
   update_screenshots:
-    required: false
-    default: 'false'
+    default: "false"
 runs:
   using: composite
   steps:
-    - shell: bash
-      env:
-        MODULE_DIR: ${{ inputs.module_dir }}
+    - uses: ./.github/actions/setup-allurectl
+    - uses: actions/setup-node@v6
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: npm
+        cache-dependency-path: ${{ inputs.module_dir }}/package-lock.json
+    - name: Install npm dependencies
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      run: npm ci
+    - name: Install Playwright Chromium
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      run: npx playwright install --with-deps chromium
+    - uses: docker/setup-buildx-action@v4
+    - id: fe
+      shell: bash
       run: |
-        echo "STOP: no mock layer in tests/javascript (${MODULE_DIR:-unset})" >&2
-        exit 1
+        fe="${{ inputs.frontend_dir }}"
+        if [ -z "$fe" ]; then fe="${FRONTEND_DIR}"; fi
+        echo "dir=${fe}" >> "$GITHUB_OUTPUT"
+        echo "service=$(basename "$fe")" >> "$GITHUB_OUTPUT"
+    - uses: docker/build-push-action@v7
+      with:
+        context: ${{ steps.fe.outputs.dir }}
+        file: ${{ steps.fe.outputs.dir }}/Dockerfile
+        tags: ghcr.io/${{ github.repository_owner }}/autotests-ai-multistack-app-${{ steps.fe.outputs.service }}:mock-local
+        load: true
+        cache-from: type=gha,scope=autotests-ai-multistack-app-docker-mock-stand-gateway
+        cache-to: type=gha,mode=max,scope=autotests-ai-multistack-app-docker-mock-stand-gateway
+    - name: Bring up mock stand
+      shell: bash
+      env:
+        IMAGE_TAG: mock-local
+        MOCK_GATEWAY_PORT: "9911"
+      run: |
+        set -euo pipefail
+        docker compose --profile mock up -d stand-gateway
+        curl -fsS --retry 30 --retry-delay 2 --retry-all-errors \
+          "http://127.0.0.1:${MOCK_GATEWAY_PORT}/api/health"
+    - name: Run ui-mock tests (Playwright)
+      id: run-tests
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/allure-results
+        STAND: mock
+        UI_URL: http://127.0.0.1:9911/
+        API_BASE_URL: http://127.0.0.1:9911
+      run: |
+        eval "${ALLURECTL_RUN:-true}"
+        if declare -F run_with_allurectl >/dev/null; then
+          run_with_allurectl npx playwright test --grep @mock --grep-invert @screenshot
+        else
+          npx playwright test --grep @mock --grep-invert @screenshot
+        fi
+    - name: Stash mock Allure results
+      if: always()
+      continue-on-error: true
+      shell: bash
+      run: |
+        set -euo pipefail
+        STASH="${{ inputs.module_dir }}/allure-results-mock-stash"
+        SRC="${{ inputs.module_dir }}/allure-results"
+        mkdir -p "$STASH"
+        if [ -d "$SRC" ]; then cp -R "$SRC/." "$STASH/"; fi
+    - name: Run screenshot mock compare (Playwright)
+      if: always() && !cancelled() && inputs.update_screenshots != 'true'
+      id: run-screenshot-tests
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/allure-results
+        STAND: mock
+        UI_URL: http://127.0.0.1:9911/
+        API_BASE_URL: http://127.0.0.1:9911
+        SCREENSHOT_OS: linux
+        SCREENSHOT_BROWSER: chrome
+      run: |
+        eval "${ALLURECTL_RUN:-true}"
+        if declare -F run_with_allurectl >/dev/null; then
+          run_with_allurectl npx playwright test --grep @screenshot
+        else
+          npx playwright test --grep @screenshot
+        fi
+    - name: Update screenshots
+      if: always() && !cancelled() && inputs.update_screenshots == 'true'
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/allure-results
+        STAND: mock
+        UI_URL: http://127.0.0.1:9911/
+        API_BASE_URL: http://127.0.0.1:9911
+        SCREENSHOT_OS: linux
+        SCREENSHOT_BROWSER: chrome
+        UPDATE_SCREENSHOTS: "true"
+      run: |
+        eval "${ALLURECTL_RUN:-true}"
+        if declare -F run_with_allurectl >/dev/null; then
+          run_with_allurectl npx playwright test --grep @screenshot
+        else
+          npx playwright test --grep @screenshot
+        fi
+    - name: Merge Allure results
+      if: always()
+      continue-on-error: true
+      shell: bash
+      run: |
+        set -euo pipefail
+        STASH="${{ inputs.module_dir }}/allure-results-mock-stash"
+        DEST="${{ inputs.module_dir }}/allure-results"
+        mkdir -p "$DEST"
+        if [ -d "$STASH" ]; then cp -R "$STASH/." "$DEST/"; fi
+    - name: Tear down mock stand
+      if: always()
+      continue-on-error: true
+      shell: bash
+      run: docker compose --profile mock down -v --remove-orphans
+    - name: Publish raw Allure results
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: allure-results-ui-mock
+        path: ${{ inputs.module_dir }}/allure-results/**
+        if-no-files-found: ignore
+        retention-days: 1
+    - name: Publish mock screenshot PNGs
+      if: always() && inputs.update_screenshots == 'true'
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: mock-screenshot-pngs
+        path: ${{ inputs.module_dir }}/src/test/resources/screenshots/
+        if-no-files-found: ignore

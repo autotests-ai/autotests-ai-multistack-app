@@ -1,23 +1,67 @@
 name: harness
-description: STOP — no harness layer in the JavaScript tests family.
+description: Tests-module helper checks (Playwright --grep @harness; not a pyramid layer).
 inputs:
   module_dir:
     required: true
   backend_lane:
-    required: false
-    default: 'false'
+    default: "false"
   frontend_lane:
-    required: false
-    default: 'false'
+    default: "false"
   tests_lane:
-    required: false
-    default: 'false'
+    default: "false"
+outputs:
+  slice:
+    description: all or backend
+    value: ${{ steps.slice.outputs.slice }}
 runs:
   using: composite
   steps:
-    - shell: bash
+    - name: Select harness slice
+      id: slice
+      shell: bash
       env:
-        MODULE_DIR: ${{ inputs.module_dir }}
+        LANE_BACKEND: ${{ inputs.backend_lane }}
+        LANE_FRONTEND: ${{ inputs.frontend_lane }}
+        LANE_TESTS: ${{ inputs.tests_lane }}
       run: |
-        echo "STOP: no harness layer in tests/javascript (${MODULE_DIR:-unset})" >&2
-        exit 1
+        set -euo pipefail
+        slice=all
+        grep='@harness'
+        include='src/helpers/env.js src/helpers/api.js src/helpers/har-collect.js'
+        if [ "$LANE_BACKEND" = "true" ] && [ "$LANE_FRONTEND" != "true" ] && [ "$LANE_TESTS" != "true" ]; then
+          slice=backend
+          grep='@harness_backend'
+          include='src/helpers/env.js src/helpers/api.js'
+        fi
+        echo "slice=${slice}" >> "$GITHUB_OUTPUT"
+        echo "HARNESS_GREP=${grep}" >> "$GITHUB_ENV"
+        echo "HARNESS_INCLUDE=${include}" >> "$GITHUB_ENV"
+        echo "Harness slice=${slice} --grep ${grep}"
+    - uses: actions/setup-node@v6
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: npm
+        cache-dependency-path: ${{ inputs.module_dir }}/package-lock.json
+    - name: Install npm dependencies
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      run: npm ci
+    - name: Run harness tests (Playwright + c8)
+      id: run-tests
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      run: |
+        set -euo pipefail
+        # Coverage of helpers only — no fail-under (not coverage theatre).
+        include_args=()
+        for f in ${HARNESS_INCLUDE}; do
+          include_args+=(--include="$f")
+        done
+        npx c8 "${include_args[@]}" --reporter=lcov --reporter=text --report-dir=coverage \
+          npx playwright test --grep "${HARNESS_GREP}"
+    - if: steps.run-tests.outcome == 'success'
+      uses: actions/upload-artifact@v7
+      with:
+        name: coverage-harness
+        path: ${{ inputs.module_dir }}/coverage/lcov.info
+        if-no-files-found: error

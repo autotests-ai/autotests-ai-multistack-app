@@ -3,5 +3,7 @@ allure-results/
 allure-report/
 test-results/
 playwright-report/
+coverage/
+build/
 .env
 notifications/chart.png

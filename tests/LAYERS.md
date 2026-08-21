@@ -94,7 +94,7 @@ CI jobs `ui-mock-tests` and `e2e-tests` set `SCREENSHOT_OS=linux` and `SCREENSHO
 | Slice | Tag | CI |
 |-------|-----|-----|
 | UI on stub API (mount + error injection) | `@Tag("mock")` (+ `@Tag("e2e")`) | job `ui-mock-tests` step 1: `-DincludeTags=mock` |
-| Screenshot vs stub UI | `@Tag("screenshot")` / `-m screenshot` | same job, compare step: java `-DincludeTags=screenshot` · python `-m screenshot` (every PR; not Playwright) |
+| Screenshot vs stub UI | `@Tag("screenshot")` / `-m screenshot` / `--grep @screenshot` | same job, compare step: java `-DincludeTags=screenshot` · python `-m screenshot` · javascript `--grep @screenshot` (every PR) |
 | Refresh mock screenshots | `@Tag("screenshot")` + update flag | same job, step `Update screenshots` — dispatch `update_mock_screenshots` writes `mock/linux/chrome-148` (skips compare; java `-DupdateScreenshots=true` · python `UPDATE_SCREENSHOTS=true`) |
 | Flow | `@Tag("e2e")` exclude `screenshot,mock` | job `e2e-tests` (`-Denv=prod -DincludeTags=e2e`) / `e2e-tests-stage` (`-Denv=stage`); default push does **not** run screenshot via Selenoid |
 | Screenshot vs live UI | `@Tag("screenshot")` / `-m screenshot` | job `e2e-tests`, compare step — dispatch `run_screenshot` compares `prod/linux/chrome-148` |
@@ -113,6 +113,9 @@ SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=mock -DincludeTags=screenshot -Du
 
 # python — tests/python/tests-python-selenium
 SCREENSHOT_BROWSER=chrome STAND=mock UPDATE_SCREENSHOTS=true HEADLESS=true pytest -m screenshot
+
+# javascript — tests/javascript/tests-javascript-playwright
+SCREENSHOT_BROWSER=chrome STAND=mock UPDATE_SCREENSHOTS=true npx playwright test --grep @screenshot
 ```
 
 Local e2e screenshot refresh (compose ci stand, or `prod` + Selenoid):
@@ -123,10 +126,13 @@ SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=ci -DincludeTags=screenshot -Dupd
 
 # python
 SCREENSHOT_BROWSER=chrome STAND=ci UPDATE_SCREENSHOTS=true pytest -m screenshot
+
+# javascript
+SCREENSHOT_BROWSER=chrome STAND=ci UPDATE_SCREENSHOTS=true npx playwright test --grep @screenshot
 ```
 
 **Mock stand** — browser checks that need controlled `/api/*` JSON, not a live backend.
-Java: stand = `-Denv=mock`, slice = `-DincludeTags=mock`. Python: stand = `STAND=mock`, slice = `-m mock`.
+Java: stand = `-Denv=mock`, slice = `-DincludeTags=mock`. Python: stand = `STAND=mock`, slice = `-m mock`. Javascript: stand = `STAND=mock` / `UI_URL=http://127.0.0.1:9911/`, slice = `--grep @mock`.
 
 The SPA is served at document root and resolves API to `/api`; the frontend container nginx
 has no `/api` route, so a **stand-gateway** (compose profile `mock`, port **9911**) proxies
@@ -202,9 +208,22 @@ STAND=prod pytest -m screenshot
 ```
 
 Per-run env: `HEADLESS`, `UPDATE_SCREENSHOTS`, `SCREENSHOT_OS`, `SCREENSHOT_BROWSER`, `REMOTE_URL`.
-Same contract questions as the Java default cell. Do **not** set `SCREENSHOT_OS=linux` on a Mac.  
-For `TESTS_LANG` ∈ `javascript` \| `typescript`, CI still runs the full active-module
-suite / STOP until that family is brought up.
+Same contract questions as the Java default cell. Do **not** set `SCREENSHOT_OS=linux` on a Mac.
+
+For `TESTS_LANG=javascript`, a layer is a **Playwright tag**, a stand is **`UI_URL`** / `STAND` / `API_BASE_URL`
+(from `tests/javascript/tests-javascript-playwright`):
+
+```bash
+npx playwright test --grep @harness_backend
+npx playwright test --grep @harness
+STAND=mock UI_URL=http://127.0.0.1:9911/ npx playwright test --grep @mock --grep-invert @screenshot
+STAND=mock UI_URL=http://127.0.0.1:9911/ npx playwright test --grep @screenshot
+npx playwright test --grep @api
+npx playwright test --grep @e2e --grep-invert '@mock|@screenshot'
+npx playwright test --grep @manual
+```
+
+For `TESTS_LANG=typescript`, CI still STOP until that family is brought up.
 
 ## Layer table
 
@@ -342,7 +361,7 @@ Look under the test/launch **Окружение** block (not Custom fields — t
 
 | Module | Role |
 |--------|------|
-| `tests/javascript/tests-javascript-playwright/` | e2e, another language (**active**) |
+| `tests/javascript/tests-javascript-playwright/` | Playwright tags = layers; stand is `UI_URL` / `STAND` (**active**) |
 | `tests/python/tests-python-selenium/` | pytest markers = layers; stand is `STAND` / `BASE_URL` (**active**) |
 | `tests/typescript/…`, `kotlin/…`, `go/…`, Cypress, … | slots in [`deploy/matrix.yaml`](../deploy/matrix.yaml) |
 

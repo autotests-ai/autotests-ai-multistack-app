@@ -56,7 +56,10 @@ module.exports = defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: [['line'], ['allure-playwright']],
+  reporter: [
+    ['line'],
+    ['allure-playwright', { resultsDir: process.env.ALLURE_RESULTS || 'allure-results' }],
+  ],
   use: {
     baseURL: process.env.UI_URL || 'https://autotests.ai/stack/backend-java-spring/frontend-typescript-react',
     screenshot: 'only-on-failure',

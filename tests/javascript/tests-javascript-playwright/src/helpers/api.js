@@ -1,4 +1,28 @@
+const { faker } = require('@faker-js/faker');
 const { apiRoot } = require('./env');
+
+const WRONG_CREDENTIALS_MESSAGE = 'Wrong login or password';
+
+function username() {
+  return `user_${faker.string.alphanumeric(10)}`;
+}
+
+async function apiRequest(method, path, { token, json, raw } = {}) {
+  const headers = {};
+  if (json !== undefined || raw !== undefined) {
+    headers['Content-Type'] = 'application/json';
+  }
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  let body;
+  if (raw !== undefined) {
+    body = raw;
+  } else if (json !== undefined) {
+    body = JSON.stringify(json);
+  }
+  return fetch(`${apiRoot()}${path}`, { method, headers, body });
+}
 
 /**
  * Cleanup through the product API: log in as the user the test registered and delete the
@@ -27,4 +51,9 @@ async function deleteAccountQuietly(request, username, password) {
   }
 }
 
-module.exports = { deleteAccountQuietly };
+module.exports = {
+  WRONG_CREDENTIALS_MESSAGE,
+  username,
+  apiRequest,
+  deleteAccountQuietly,
+};
