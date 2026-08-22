@@ -37,7 +37,7 @@ runs:
             none|'') ;;
             *) echo "unknown deploy=${DEPLOY}" >&2; exit 1 ;;
           esac
-        elif [ "${GITHUB_EVENT_NAME}" = "push" ] && { [ "${GITHUB_REF}" = "refs/heads/main" ] || [ "${GITHUB_REF}" = "refs/heads/develop" ]; }; then
+        elif [ "${GITHUB_EVENT_NAME}" = "push" ] && { [ "${GITHUB_REF}" = "refs/heads/main" ] || [ "${GITHUB_REF}" = "refs/heads/master" ] || [ "${GITHUB_REF}" = "refs/heads/develop" ]; }; then
           if [ -z "${BEFORE:-}" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] \
             || ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
             backend=true
@@ -63,13 +63,13 @@ runs:
               ;;
             *) echo "unknown deploy_target=${DEPLOY_TARGET}" >&2; exit 1 ;;
           esac
-          if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+          if [ "${GITHUB_REF}" != "refs/heads/main" ] && [ "${GITHUB_REF}" != "refs/heads/master" ]; then
             cd_production=false
             if [ "${DEPLOY_TARGET}" = "production" ] || [ -z "${DEPLOY_TARGET}" ]; then
               cd_stage=false
             fi
           fi
-        elif [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+        elif [ "${GITHUB_EVENT_NAME}" = "push" ] && { [ "${GITHUB_REF}" = "refs/heads/main" ] || [ "${GITHUB_REF}" = "refs/heads/master" ]; }; then
           cd_production=true
           cd_stage=true
         elif [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/develop" ]; then

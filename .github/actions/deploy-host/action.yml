@@ -1,0 +1,42 @@
+name: deploy-host
+description: >-
+  SSH git checkout + compose up. DEPLOY_MODE=compose → up --build (no GHCR).
+  Default / ghcr → login, pull, up. Job must set DEPLOY_* env (host, dir, services).
+runs:
+  using: composite
+  steps:
+    - name: Deploy over SSH
+      uses: appleboy/ssh-action@v1.2.5
+      env:
+        GHCR_TOKEN: ${{ env.GITHUB_TOKEN }}
+        GITHUB_ACTOR: ${{ github.actor }}
+      with:
+        host: ${{ env.DEPLOY_HOST }}
+        username: ${{ env.DEPLOY_USER }}
+        key: ${{ env.DEPLOY_SSH_KEY }}
+        command_timeout: 15m
+        envs: IMAGE_TAG,GHCR_TOKEN,GITHUB_ACTOR,DEPLOY_MODE,DEPLOY_COMPOSE_SERVICES,DEPLOY_HEALTH_URL,DEPLOY_APP_DIR,DEPLOY_COMPOSE_PROJECT,DEPLOY_COMPOSE_ENV_FILE
+        script: |
+          set -euo pipefail
+          APP_DIR="${DEPLOY_APP_DIR:?DEPLOY_APP_DIR is required}"
+          cd "$APP_DIR"
+          git fetch origin
+          git checkout --force "$IMAGE_TAG"
+          COMPOSE="docker compose"
+          if [ -n "${DEPLOY_COMPOSE_PROJECT:-}" ]; then
+            COMPOSE="$COMPOSE --project-name ${DEPLOY_COMPOSE_PROJECT}"
+          fi
+          if [ -n "${DEPLOY_COMPOSE_ENV_FILE:-}" ]; then
+            COMPOSE="$COMPOSE --env-file ${DEPLOY_COMPOSE_ENV_FILE}"
+          fi
+          if [ "${DEPLOY_MODE:-ghcr}" = "compose" ]; then
+            $COMPOSE up -d --build --remove-orphans ${DEPLOY_COMPOSE_SERVICES}
+          else
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
+            $COMPOSE pull ${DEPLOY_COMPOSE_SERVICES}
+            $COMPOSE up -d --remove-orphans ${DEPLOY_COMPOSE_SERVICES}
+            docker logout ghcr.io
+          fi
+          if [ -n "${DEPLOY_HEALTH_URL:-}" ]; then
+            curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${DEPLOY_HEALTH_URL}"
+          fi

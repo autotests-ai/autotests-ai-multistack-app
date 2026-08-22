@@ -23,7 +23,7 @@ README badges / dashboard blocks: monorepo `generators/ethalon/readme/` (not thi
 | `_ethalon/versions.yaml` | Shared Java stack pins (java/gradle/junit/slf4j/spring-boot) — bump here first; rule `java-stack-versions` |
 | `_new.gradle`, `_modified.gradle` | Inbox for build.gradle (skill `sync-gradle-ethalon`) |
 | `.github/_ethalon/gha-actions.yaml` | Shared GHA action pins (skill `sync-github-workflows-ethalon`). |
-| `../../.github/workflows/ci.yml` | One orchestrator for clone and children. Stack knobs in `env:`. |
+| `../../.github/workflows/ci.yml` | One orchestrator (clone = takeaway bytes). Stack knobs in `env:`; host/CD via repo vars. |
 | `.github/_new.yml`, `_modified.yml` | Inbox for workflows |
 | `src/test/java/_ethalon/ladder/` | Style-ladder reference tests (bootstrap source) |
 

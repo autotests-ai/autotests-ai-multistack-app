@@ -5,7 +5,9 @@ name: CI
 # with `module_dir` from stack knobs (format). Commands a
 # student types locally live inside the module action, not in this file.
 #
-# One workflow for clone and children. No *_github.yml siblings.
+# One workflow for clone, takeaway, and children. No *_github.yml siblings.
+# Host / CD: repo vars (APP_URL, DEPLOY_MODE=ghcr|compose, DEPLOY_APP_DIR, …).
+# Missing SONAR_TOKEN skips Sonar and does not block deploy. TestOps stays soft.
 #
 # Active stack knobs live in `env:` once: BACKEND_LANG / BACKEND_FRAMEWORK,
 # FRONTEND_LANG / FRONTEND_FRAMEWORK, TESTS_LANG / BUILDER / FRAMEWORK / REPORT / UI_LIBRARY.
@@ -69,9 +71,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [main, develop]
+    branches: [main, master, develop]
   push:
-    branches: [main, develop]
+    branches: [main, master, develop]
   workflow_dispatch:
     inputs:
       deploy:
@@ -147,7 +149,7 @@ concurrency:
   # PRs: per-ref, cancel stale. main vs develop cannot share cancel-in-progress
   # (a new develop would abort a prod promotion). Separate groups; jobs
   # preempt-develop-cd / yield-to-main-cd enforce main priority on the stage host.
-  group: ${{ github.event_name == 'pull_request' && format('ci-pr-{0}', github.ref) || github.ref == 'refs/heads/main' && 'ci-cd-main' || github.ref == 'refs/heads/develop' && 'ci-cd-develop' || format('ci-{0}', github.ref) }}
+  group: ${{ github.event_name == 'pull_request' && format('ci-pr-{0}', github.ref) || (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && 'ci-cd-main' || github.ref == 'refs/heads/develop' && 'ci-cd-develop' || format('ci-{0}', github.ref) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/develop' }}
 
 permissions:
@@ -198,8 +200,9 @@ env:
   SONAR_SCANNER_NPM_VERSION: "5.0.0"
   SONAR_QUALITY_GATE_TIMEOUT: "600"
   # Host + mount; stand URLs are composed in actions from LANG + FRAMEWORK.
-  PUBLIC_HOST: autotests.ai
-  STACK_MOUNT: stack
+  PUBLIC_HOST: ${{ vars.PUBLIC_HOST || 'autotests.ai' }}
+  STACK_MOUNT: ${{ vars.STACK_MOUNT || 'stack' }}
+  DEPLOY_MODE: ${{ vars.DEPLOY_MODE || 'ghcr' }}
   # Stand URLs: actions compose from PUBLIC_HOST + LANG + FRAMEWORK (not listed here).
   RUN_LABEL: "${{ github.repository }} #${{ github.run_number }}"
   SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL || 'https://sonar.qa.guru' }}
@@ -302,26 +305,6 @@ env:
       echo "- dashboard: ${SONAR_HOST_URL%/}/dashboard?id=${SONAR_PROJECT_KEY}"
       echo "- commit: \`${GITHUB_SHA:0:7}\`"
     } >> "$GITHUB_STEP_SUMMARY"
-  DEPLOY_SSH_SCRIPT: |
-    set -euo pipefail
-    APP_DIR="${DEPLOY_APP_DIR:-/home/autotests_ai_multistack/autotests-ai-multistack-app}"
-    cd "$APP_DIR"
-    git fetch origin
-    git checkout --force "$IMAGE_TAG"
-    echo "$GHCR_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-    COMPOSE="docker compose"
-    if [ -n "${DEPLOY_COMPOSE_PROJECT:-}" ]; then
-      COMPOSE="$COMPOSE --project-name ${DEPLOY_COMPOSE_PROJECT}"
-    fi
-    if [ -n "${DEPLOY_COMPOSE_ENV_FILE:-}" ]; then
-      COMPOSE="$COMPOSE --env-file ${DEPLOY_COMPOSE_ENV_FILE}"
-    fi
-    $COMPOSE pull ${DEPLOY_COMPOSE_SERVICES}
-    $COMPOSE up -d --remove-orphans ${DEPLOY_COMPOSE_SERVICES}
-    if [ -n "${DEPLOY_HEALTH_URL:-}" ]; then
-      curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${DEPLOY_HEALTH_URL}"
-    fi
-    docker logout ghcr.io
 
 jobs:
   # Same flags as dispatch `deploy`. Push infers from paths so tests/ does not
@@ -343,7 +326,7 @@ jobs:
       job_run_id: ${{ steps.context.outputs.job_run_id }}
       launch_url: ${{ steps.context.outputs.launch_url }}
     steps:
-      - if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+      - if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')
         uses: actions/checkout@v7
         with:
           persist-credentials: false
@@ -364,7 +347,7 @@ jobs:
           ALLURE_LAUNCH_NAME: "${{ env.APP_SLUG }} CI — ${{ env.RUN_LABEL }}"
 
   preempt-develop-cd:
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     permissions:
@@ -432,7 +415,7 @@ jobs:
     if: >-
       always() && !cancelled() && needs.backend-unit-tests.result == 'success' && (
         github.event_name == 'pull_request' ||
-        (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')) ||
+        (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')) ||
         (github.event_name == 'workflow_dispatch' && inputs.run_integration)
       )
     runs-on: ubuntu-24.04
@@ -580,11 +563,21 @@ jobs:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     steps:
-      - uses: actions/checkout@v7
+      - id: sonar_gate
+        run: |
+          if [[ -n "${SONAR_TOKEN:-}" ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "SONAR_TOKEN unset — skip Sonar (deploy not gated)"
+          fi
+      - if: steps.sonar_gate.outputs.run == 'true'
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
-      - uses: ./backend/.github/actions/sonar
+      - if: steps.sonar_gate.outputs.run == 'true'
+        uses: ./backend/.github/actions/sonar
         with:
           module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
 
@@ -604,11 +597,21 @@ jobs:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     steps:
-      - uses: actions/checkout@v7
+      - id: sonar_gate
+        run: |
+          if [[ -n "${SONAR_TOKEN:-}" ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "SONAR_TOKEN unset — skip Sonar (deploy not gated)"
+          fi
+      - if: steps.sonar_gate.outputs.run == 'true'
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
-      - uses: ./tests/.github/actions/sonar
+      - if: steps.sonar_gate.outputs.run == 'true'
+        uses: ./tests/.github/actions/sonar
         with:
           module_dir: ${{ env.TESTS_LANG == 'java' && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
 
@@ -625,11 +628,21 @@ jobs:
       CHECKOUT_FETCH_DEPTH: "0"
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
-      - uses: actions/checkout@v7
+      - id: sonar_gate
+        run: |
+          if [[ -n "${SONAR_TOKEN:-}" ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "SONAR_TOKEN unset — skip Sonar (deploy not gated)"
+          fi
+      - if: steps.sonar_gate.outputs.run == 'true'
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
-      - uses: ./frontend/.github/actions/sonar
+      - if: steps.sonar_gate.outputs.run == 'true'
+        uses: ./frontend/.github/actions/sonar
         with:
           module_dir: ${{ format('frontend/{0}/frontend-{0}-{1}', env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
 
@@ -640,7 +653,7 @@ jobs:
       needs.backend-unit-tests.result == 'success' &&
       needs.openapi-sync.result == 'success' &&
       (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped') &&
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop') &&
       needs.trigger.outputs.backend == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -664,7 +677,7 @@ jobs:
     if: >-
       !cancelled() &&
       needs.ui-mock-tests.result == 'success' &&
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop') &&
       needs.trigger.outputs.frontend == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -688,7 +701,7 @@ jobs:
     if: >-
       !cancelled() &&
       needs.build-backend.result == 'success' &&
-      needs.sonar-backend.result == 'success' &&
+      (needs.sonar-backend.result == 'success' || needs.sonar-backend.result == 'skipped') &&
       needs.trigger.outputs.cd_production == 'true' &&
       (needs.e2e-tests-stage.result == 'success' ||
        (needs.e2e-tests-stage.result == 'skipped' && vars.STAGE_APP_DIR == ''))
@@ -696,7 +709,7 @@ jobs:
     timeout-minutes: 20
     environment:
       name: ${{ vars.DEPLOY_ENVIRONMENT || 'multistack-production' }}
-      url: ${{ format('https://{0}/{1}/backend-{2}-{3}/frontend-{4}-{5}/', env.PUBLIC_HOST, env.STACK_MOUNT, env.BACKEND_LANG, env.BACKEND_FRAMEWORK, env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
+      url: ${{ vars.APP_URL || format('https://{0}/{1}/backend-{2}-{3}/frontend-{4}-{5}/', env.PUBLIC_HOST, env.STACK_MOUNT, env.BACKEND_LANG, env.BACKEND_FRAMEWORK, env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
     concurrency:
       group: deploy-autotests-ai-multistack-app
       cancel-in-progress: false
@@ -704,10 +717,10 @@ jobs:
       contents: read
       packages: read
     env:
-      DEPLOY_APP_DIR: /home/autotests_ai_multistack/autotests-ai-multistack-app
-      DEPLOY_COMPOSE_PROJECT: autotests-ai-multistack-app
-      DEPLOY_COMPOSE_ENV_FILE: ""
-      DEPLOY_HEALTH_URL: http://127.0.0.1:8800/api/health
+      DEPLOY_APP_DIR: ${{ vars.DEPLOY_APP_DIR || '/home/autotests_ai_multistack/autotests-ai-multistack-app' }}
+      DEPLOY_COMPOSE_PROJECT: ${{ vars.DEPLOY_COMPOSE_PROJECT || 'autotests-ai-multistack-app' }}
+      DEPLOY_COMPOSE_ENV_FILE: ${{ vars.DEPLOY_COMPOSE_ENV_FILE || '' }}
+      DEPLOY_HEALTH_URL: ${{ vars.DEPLOY_HEALTH_URL || 'http://127.0.0.1:8800/api/health' }}
       DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
       DEPLOY_USER: ${{ vars.DEPLOY_USER }}
       DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
@@ -728,7 +741,7 @@ jobs:
     if: >-
       !cancelled() &&
       needs.build-frontend.result == 'success' &&
-      needs.sonar-frontend.result == 'success' &&
+      (needs.sonar-frontend.result == 'success' || needs.sonar-frontend.result == 'skipped') &&
       needs.trigger.outputs.cd_production == 'true' &&
       (needs.e2e-tests-stage.result == 'success' ||
        (needs.e2e-tests-stage.result == 'skipped' && vars.STAGE_APP_DIR == ''))
@@ -736,7 +749,7 @@ jobs:
     timeout-minutes: 15
     environment:
       name: ${{ vars.DEPLOY_ENVIRONMENT || 'multistack-production' }}
-      url: ${{ format('https://{0}/{1}/backend-{2}-{3}/frontend-{4}-{5}/', env.PUBLIC_HOST, env.STACK_MOUNT, env.BACKEND_LANG, env.BACKEND_FRAMEWORK, env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
+      url: ${{ vars.APP_URL || format('https://{0}/{1}/backend-{2}-{3}/frontend-{4}-{5}/', env.PUBLIC_HOST, env.STACK_MOUNT, env.BACKEND_LANG, env.BACKEND_FRAMEWORK, env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
     concurrency:
       group: deploy-autotests-ai-multistack-app
       cancel-in-progress: false
@@ -744,10 +757,10 @@ jobs:
       contents: read
       packages: read
     env:
-      DEPLOY_APP_DIR: /home/autotests_ai_multistack/autotests-ai-multistack-app
-      DEPLOY_COMPOSE_PROJECT: autotests-ai-multistack-app
-      DEPLOY_COMPOSE_ENV_FILE: ""
-      DEPLOY_HEALTH_URL: ""
+      DEPLOY_APP_DIR: ${{ vars.DEPLOY_APP_DIR || '/home/autotests_ai_multistack/autotests-ai-multistack-app' }}
+      DEPLOY_COMPOSE_PROJECT: ${{ vars.DEPLOY_COMPOSE_PROJECT || 'autotests-ai-multistack-app' }}
+      DEPLOY_COMPOSE_ENV_FILE: ${{ vars.DEPLOY_COMPOSE_ENV_FILE || '' }}
+      DEPLOY_HEALTH_URL: ${{ vars.DEPLOY_FRONTEND_HEALTH_URL || '' }}
       DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
       DEPLOY_USER: ${{ vars.DEPLOY_USER }}
       DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
@@ -769,7 +782,7 @@ jobs:
     if: >-
       always() && !cancelled() &&
       needs.build-backend.result == 'success' &&
-      needs.sonar-backend.result == 'success' &&
+      (needs.sonar-backend.result == 'success' || needs.sonar-backend.result == 'skipped') &&
       vars.STAGE_APP_DIR != '' &&
       needs.trigger.outputs.cd_stage == 'true' &&
       (needs.preempt-develop-cd.result == 'success' || needs.preempt-develop-cd.result == 'skipped') &&
@@ -777,8 +790,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment:
-      name: multistack-stage
-      url: ${{ format('https://stage.autotests.ai/{0}/backend-{1}-{2}/frontend-{3}-{4}/', env.STACK_MOUNT, env.BACKEND_LANG, env.BACKEND_FRAMEWORK, env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
+      name: ${{ vars.STAGE_ENVIRONMENT || 'multistack-stage' }}
+      url: ${{ vars.STAGE_APP_URL || format('https://stage.{0}/{1}/backend-{2}-{3}/frontend-{4}-{5}/', env.PUBLIC_HOST, env.STACK_MOUNT, env.BACKEND_LANG, env.BACKEND_FRAMEWORK, env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
     concurrency:
       group: deploy-autotests-ai-multistack-app-stage
       cancel-in-progress: false
@@ -787,11 +800,11 @@ jobs:
       packages: read
     env:
       DEPLOY_APP_DIR: ${{ vars.STAGE_APP_DIR }}
-      DEPLOY_COMPOSE_PROJECT: autotests-ai-multistack-app-stage
-      DEPLOY_COMPOSE_ENV_FILE: deploy/stage.env
-      DEPLOY_HEALTH_URL: http://127.0.0.1:18800/api/health
-      DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
-      DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+      DEPLOY_COMPOSE_PROJECT: ${{ vars.STAGE_COMPOSE_PROJECT || 'autotests-ai-multistack-app-stage' }}
+      DEPLOY_COMPOSE_ENV_FILE: ${{ vars.STAGE_COMPOSE_ENV_FILE || 'deploy/stage.env' }}
+      DEPLOY_HEALTH_URL: ${{ vars.STAGE_HEALTH_URL || 'http://127.0.0.1:18800/api/health' }}
+      DEPLOY_HOST: ${{ vars.STAGE_HOST || vars.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ vars.STAGE_USER || vars.DEPLOY_USER }}
       DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -809,7 +822,7 @@ jobs:
     if: >-
       always() && !cancelled() &&
       needs.build-frontend.result == 'success' &&
-      needs.sonar-frontend.result == 'success' &&
+      (needs.sonar-frontend.result == 'success' || needs.sonar-frontend.result == 'skipped') &&
       vars.STAGE_APP_DIR != '' &&
       needs.trigger.outputs.cd_stage == 'true' &&
       (needs.preempt-develop-cd.result == 'success' || needs.preempt-develop-cd.result == 'skipped') &&
@@ -817,8 +830,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment:
-      name: multistack-stage
-      url: ${{ format('https://stage.autotests.ai/{0}/backend-{1}-{2}/frontend-{3}-{4}/', env.STACK_MOUNT, env.BACKEND_LANG, env.BACKEND_FRAMEWORK, env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
+      name: ${{ vars.STAGE_ENVIRONMENT || 'multistack-stage' }}
+      url: ${{ vars.STAGE_APP_URL || format('https://stage.{0}/{1}/backend-{2}-{3}/frontend-{4}-{5}/', env.PUBLIC_HOST, env.STACK_MOUNT, env.BACKEND_LANG, env.BACKEND_FRAMEWORK, env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
     concurrency:
       group: deploy-autotests-ai-multistack-app-stage
       cancel-in-progress: false
@@ -827,11 +840,11 @@ jobs:
       packages: read
     env:
       DEPLOY_APP_DIR: ${{ vars.STAGE_APP_DIR }}
-      DEPLOY_COMPOSE_PROJECT: autotests-ai-multistack-app-stage
-      DEPLOY_COMPOSE_ENV_FILE: deploy/stage.env
-      DEPLOY_HEALTH_URL: ""
-      DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
-      DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+      DEPLOY_COMPOSE_PROJECT: ${{ vars.STAGE_COMPOSE_PROJECT || 'autotests-ai-multistack-app-stage' }}
+      DEPLOY_COMPOSE_ENV_FILE: ${{ vars.STAGE_COMPOSE_ENV_FILE || 'deploy/stage.env' }}
+      DEPLOY_HEALTH_URL: ${{ vars.DEPLOY_FRONTEND_HEALTH_URL || '' }}
+      DEPLOY_HOST: ${{ vars.STAGE_HOST || vars.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ vars.STAGE_USER || vars.DEPLOY_USER }}
       DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -890,7 +903,7 @@ jobs:
       needs.trigger.outputs.cd_production == 'true' && (
         (needs.deploy-frontend.result == 'success' ||
          needs.deploy-frontend.result == 'skipped') && (
-          (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+          (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
            (needs.api-tests.result == 'success' ||
             (needs.api-tests.result == 'skipped' &&
              needs.deploy-frontend.result == 'success'))) ||
@@ -959,7 +972,7 @@ jobs:
     env:
       LAYER: api
       ENDPOINT: stage
-      PUBLIC_HOST: stage.autotests.ai
+      PUBLIC_HOST: ${{ vars.STAGE_PUBLIC_HOST || format('stage.{0}', env.PUBLIC_HOST) }}
       ALLURE_LIVE_ENABLED: ${{ needs.trigger.outputs.enabled }}
       ALLURE_LAUNCH_ID: ${{ needs.trigger.outputs.launch_id }}
       ALLURE_JOB_RUN_ID: ${{ needs.trigger.outputs.job_run_id }}
@@ -983,7 +996,7 @@ jobs:
       needs.trigger.outputs.cd_stage == 'true' && (
         (needs.deploy-frontend-stage.result == 'success' ||
          needs.deploy-frontend-stage.result == 'skipped') && (
-          (github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main') &&
+          (github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
            (needs.api-tests-stage.result == 'success' ||
             (needs.api-tests-stage.result == 'skipped' &&
              needs.deploy-frontend-stage.result == 'success'))) ||
@@ -1007,7 +1020,7 @@ jobs:
     env:
       LAYER: e2e
       ENDPOINT: stage
-      PUBLIC_HOST: stage.autotests.ai
+      PUBLIC_HOST: ${{ vars.STAGE_PUBLIC_HOST || format('stage.{0}', env.PUBLIC_HOST) }}
       SCREENSHOT_OS: linux
       SCREENSHOT_BROWSER: chrome
       ALLURE_LIVE_ENABLED: ${{ needs.trigger.outputs.enabled }}
@@ -1121,7 +1134,7 @@ jobs:
     if: >-
       always() && !cancelled() &&
       github.event_name != 'pull_request' &&
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop') &&
       needs.publish-allure-report.outputs.pages_artifact == 'success'
     runs-on: ubuntu-24.04
     timeout-minutes: 10

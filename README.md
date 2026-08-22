@@ -230,9 +230,9 @@ Teaching CI — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 | push to `develop` | PR set + lanes from paths · CD stage only (`vars.STAGE_APP_DIR`) · full api/e2e vs stage |
 | push to `main` | same pyramid · CD stage of this SHA · full api/e2e vs stage · then CD production · full api/e2e vs prod (`-Denv=prod`) |
 
-`build` runs `docker compose build` + `docker compose push`, so `docker-compose.yml` stays the only place describing how an image is built. Images go to GHCR as `ghcr.io/autotests-ai/autotests-ai-multistack-app-<service>:<sha>`; the tag comes from `IMAGE_TAG` (defaults to `latest` locally).
+`build` with `DEPLOY_MODE=ghcr` (clone default) pushes `ghcr.io/<owner>/autotests-ai-multistack-app-<service>:<sha>`. `DEPLOY_MODE=compose` (takeaway) only `docker compose build` on the runner; the host rebuilds on SSH. `docker-compose.yml` stays the image recipe.
 
-`deploy` connects over SSH and runs six lines: checkout the deployed commit, log in to GHCR, `docker compose pull`, `docker compose up -d`, then `curl --retry` on `/api/health`. There is no deploy script on the host. The script opens with `set -euo pipefail` — otherwise a failed `pull` would leave the previous containers running and the health check would still answer `200`.
+`deploy-host` SSHs, checks out `IMAGE_TAG`, then either `compose pull` + `up` (ghcr) or `up --build` (compose), then `curl --retry` on `/api/health` when `DEPLOY_HEALTH_URL` is set. There is no extra script on the host.
 
 | Setting | Value |
 |---------|-------|
@@ -252,6 +252,10 @@ Allure: `trigger` opens the shared TestOps job-run; live `allurectl watch` on py
 | `DEPLOY_HOST` | variable | `212.92.101.15` — required, no fallback in the workflow |
 | `DEPLOY_USER` | variable | `autotests_ai_multistack` |
 | `DEPLOY_ENVIRONMENT` | variable | `multistack-production` (fallback in `ci.yml` if unset) |
+| `DEPLOY_MODE` | variable | empty / `ghcr` — pull from GHCR (this repo). `compose` — host `up --build` (takeaway / no registry) |
+| `APP_URL` | variable | optional; GitHub environment URL. Empty → `https://{PUBLIC_HOST}/{STACK_MOUNT}/backend-…/frontend-…/` |
+| `PUBLIC_HOST` | variable | optional; default `autotests.ai` |
+| `DEPLOY_APP_DIR` | variable | optional; default `/home/autotests_ai_multistack/autotests-ai-multistack-app` |
 | `STAGE_APP_DIR` | variable | `/home/autotests_ai_multistack/autotests-ai-multistack-app-stage` — empty ⇒ stage CD skip |
 | `ALLURE_TOKEN` | secret | TestOps API token (live upload; optional — without it tests still run) |
 | `ALLURE_PROJECT_ID` | variable | TestOps project id |

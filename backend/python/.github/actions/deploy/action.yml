@@ -1,5 +1,5 @@
 name: deploy
-description: SSH compose pull/up for a Python backend module.
+description: SSH compose up for this backend module (pull or --build via DEPLOY_MODE).
 inputs:
   module_dir:
     required: true
@@ -18,13 +18,4 @@ runs:
           echo "DEPLOY_COMPOSE_SERVICES=postgres postgres-ensure-dbs ${service}" >> "$GITHUB_ENV"
         fi
     - name: Deploy backend
-      uses: appleboy/ssh-action@v1.2.5
-      env:
-        GHCR_TOKEN: ${{ env.GITHUB_TOKEN }}
-      with:
-        host: ${{ env.DEPLOY_HOST }}
-        username: ${{ env.DEPLOY_USER }}
-        key: ${{ env.DEPLOY_SSH_KEY }}
-        command_timeout: 15m
-        envs: IMAGE_TAG,GHCR_TOKEN,DEPLOY_COMPOSE_SERVICES,DEPLOY_HEALTH_URL,DEPLOY_APP_DIR,DEPLOY_COMPOSE_PROJECT,DEPLOY_COMPOSE_ENV_FILE
-        script: ${{ env.DEPLOY_SSH_SCRIPT }}
+      uses: ./.github/actions/deploy-host

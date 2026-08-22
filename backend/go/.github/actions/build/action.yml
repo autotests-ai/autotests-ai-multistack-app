@@ -1,28 +1,11 @@
 name: build
-description: Docker image + GHCR push for a Go backend module.
+description: Docker image for this module (GHCR push or compose build via DEPLOY_MODE).
 inputs:
   module_dir:
     required: true
 runs:
   using: composite
   steps:
-    - id: id
-      shell: bash
-      run: echo "service=$(basename "${{ inputs.module_dir }}")" >> "$GITHUB_OUTPUT"
-    - uses: docker/login-action@v4
+    - uses: ./.github/actions/docker-build
       with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ env.GITHUB_TOKEN }}
-    - uses: docker/setup-buildx-action@v4
-    - uses: docker/build-push-action@v7
-      with:
-        context: ${{ inputs.module_dir }}
-        file: ${{ inputs.module_dir }}/Dockerfile
-        tags: ghcr.io/${{ github.repository_owner }}/autotests-ai-multistack-app-${{ steps.id.outputs.service }}:${{ github.sha }}
-        load: true
-        cache-from: type=gha,scope=autotests-ai-multistack-app-docker-${{ steps.id.outputs.service }}
-        cache-to: type=gha,mode=max,scope=autotests-ai-multistack-app-docker-${{ steps.id.outputs.service }}
-    - name: Push backend Docker image to GHCR
-      shell: bash
-      run: docker compose push ${{ steps.id.outputs.service }}
+        module_dir: ${{ inputs.module_dir }}
