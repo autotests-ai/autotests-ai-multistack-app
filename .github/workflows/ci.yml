@@ -709,7 +709,7 @@ jobs:
     timeout-minutes: 20
     environment:
       name: ${{ vars.DEPLOY_ENVIRONMENT || 'multistack-production' }}
-      url: ${{ vars.APP_URL || format('https://{0}/{1}/backend-{2}-{3}/frontend-{4}-{5}/', env.PUBLIC_HOST, env.STACK_MOUNT, env.BACKEND_LANG, env.BACKEND_FRAMEWORK, env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
+      url: ${{ vars.APP_URL || format('https://{0}/{1}/backend-java-spring/frontend-typescript-react/', vars.PUBLIC_HOST || 'autotests.ai', vars.STACK_MOUNT || 'stack') }}
     concurrency:
       group: deploy-autotests-ai-multistack-app
       cancel-in-progress: false
@@ -749,7 +749,7 @@ jobs:
     timeout-minutes: 15
     environment:
       name: ${{ vars.DEPLOY_ENVIRONMENT || 'multistack-production' }}
-      url: ${{ vars.APP_URL || format('https://{0}/{1}/backend-{2}-{3}/frontend-{4}-{5}/', env.PUBLIC_HOST, env.STACK_MOUNT, env.BACKEND_LANG, env.BACKEND_FRAMEWORK, env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
+      url: ${{ vars.APP_URL || format('https://{0}/{1}/backend-java-spring/frontend-typescript-react/', vars.PUBLIC_HOST || 'autotests.ai', vars.STACK_MOUNT || 'stack') }}
     concurrency:
       group: deploy-autotests-ai-multistack-app
       cancel-in-progress: false
@@ -791,7 +791,7 @@ jobs:
     timeout-minutes: 20
     environment:
       name: ${{ vars.STAGE_ENVIRONMENT || 'multistack-stage' }}
-      url: ${{ vars.STAGE_APP_URL || format('https://stage.{0}/{1}/backend-{2}-{3}/frontend-{4}-{5}/', env.PUBLIC_HOST, env.STACK_MOUNT, env.BACKEND_LANG, env.BACKEND_FRAMEWORK, env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
+      url: ${{ vars.STAGE_APP_URL || format('https://stage.{0}/{1}/backend-java-spring/frontend-typescript-react/', vars.PUBLIC_HOST || 'autotests.ai', vars.STACK_MOUNT || 'stack') }}
     concurrency:
       group: deploy-autotests-ai-multistack-app-stage
       cancel-in-progress: false
@@ -831,7 +831,7 @@ jobs:
     timeout-minutes: 15
     environment:
       name: ${{ vars.STAGE_ENVIRONMENT || 'multistack-stage' }}
-      url: ${{ vars.STAGE_APP_URL || format('https://stage.{0}/{1}/backend-{2}-{3}/frontend-{4}-{5}/', env.PUBLIC_HOST, env.STACK_MOUNT, env.BACKEND_LANG, env.BACKEND_FRAMEWORK, env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
+      url: ${{ vars.STAGE_APP_URL || format('https://stage.{0}/{1}/backend-java-spring/frontend-typescript-react/', vars.PUBLIC_HOST || 'autotests.ai', vars.STACK_MOUNT || 'stack') }}
     concurrency:
       group: deploy-autotests-ai-multistack-app-stage
       cancel-in-progress: false
@@ -972,7 +972,7 @@ jobs:
     env:
       LAYER: api
       ENDPOINT: stage
-      PUBLIC_HOST: ${{ vars.STAGE_PUBLIC_HOST || format('stage.{0}', env.PUBLIC_HOST) }}
+      PUBLIC_HOST: ${{ vars.STAGE_PUBLIC_HOST || format('stage.{0}', vars.PUBLIC_HOST || 'autotests.ai') }}
       ALLURE_LIVE_ENABLED: ${{ needs.trigger.outputs.enabled }}
       ALLURE_LAUNCH_ID: ${{ needs.trigger.outputs.launch_id }}
       ALLURE_JOB_RUN_ID: ${{ needs.trigger.outputs.job_run_id }}
@@ -1020,7 +1020,7 @@ jobs:
     env:
       LAYER: e2e
       ENDPOINT: stage
-      PUBLIC_HOST: ${{ vars.STAGE_PUBLIC_HOST || format('stage.{0}', env.PUBLIC_HOST) }}
+      PUBLIC_HOST: ${{ vars.STAGE_PUBLIC_HOST || format('stage.{0}', vars.PUBLIC_HOST || 'autotests.ai') }}
       SCREENSHOT_OS: linux
       SCREENSHOT_BROWSER: chrome
       ALLURE_LIVE_ENABLED: ${{ needs.trigger.outputs.enabled }}
