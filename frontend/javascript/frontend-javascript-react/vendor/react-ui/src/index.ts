@@ -85,6 +85,7 @@ export type {
 } from './HarViewer';
 export {
   IconClose,
+  IconStop,
   IconTrash,
   IconDocumentRemove,
   IconDotsHorizontal,
@@ -92,7 +93,11 @@ export {
   IconUnlock,
   IconChevronUp,
   IconChevronDown,
+  IconFullscreen,
+  IconFullscreenExit,
   IconVncCopy,
+  IconCopyOut,
+  IconCopyIn,
   IconUpload,
 } from './vnc-icons';
 export {
