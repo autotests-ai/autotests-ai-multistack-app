@@ -2,8 +2,6 @@
 # Axes ids (what exists) = hub matrix.yaml. Tests list is NOT here — board tests come from
 # hub tests.modules via frontend/scripts/sync-stack-matrix.py
 # (JSON → autotests-ai-app/.../public/stack/matrix.json).
-# Catalog CD: python frontend/scripts/catalog-cd-matrix.py --write → deploy/catalog-matrix.json
-# (CI catalog-matrix job reads the JSON; no Python on the runner).
 # URL: https://autotests.ai/stack/{backend}/{frontend}/
 #      https://autotests.ai/stack/{backend}/api/
 # Stage: https://stage.autotests.ai/stack/…  (ports +10000, compose project *-stage)
