@@ -90,9 +90,6 @@ module: on Node 26 the runtime's own empty `localStorage` global wins over the j
 - `css/angular-hosts.css` is the only Angular-specific stylesheet: it drops the extra
   component host elements (`<app-root>`, `<app-home-page>`, …) out of layout so the shared
   CSS sees the same markup tree as the React / Vue modules.
-- `css/app.css` adds `.panel[hidden] { display: none }` on top of the copy shared with the
-  Vue module. Without it the author-level `.panel { display: flex }` beats the UA `[hidden]`
-  rule and the Session panel stays on screen for anonymous visitors.
 - After the shared matrix is on **Vite 8 + Vitest 4** (`docs/rag/config/react-toolchain.md`),
   this module tracks **Angular 22** + **TypeScript 6.0.3** (Angular peer `>=6 <6.1`; **not** TS 7 —
   Compiler API returns in TS 7.1).

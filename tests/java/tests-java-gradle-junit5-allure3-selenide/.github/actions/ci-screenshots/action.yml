@@ -1,0 +1,96 @@
+name: ci-screenshots
+description: Local compose CI stand + Selenide screenshot. -Denv=ci writes screenshots/prod/ (not live prod).
+inputs:
+  module_dir:
+    required: true
+  update_screenshots:
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/setup-allurectl
+    - uses: actions/setup-java@v5
+      with:
+        distribution: temurin
+        java-version: ${{ env.JAVA_VERSION }}
+    - uses: gradle/actions/setup-gradle@v6
+      with:
+        cache-read-only: true
+        cache-encryption-key: ${{ env.GRADLE_ENCRYPTION_KEY }}
+      env:
+        GRADLE_BUILD_ACTION_CACHE_KEY_JOB: tests-harness
+    - name: Cache Chrome for Testing
+      id: cache-chrome-for-testing
+      continue-on-error: true
+      uses: actions/cache@v6
+      with:
+        path: ${{ runner.tool_cache }}/setup-chrome
+        key: chrome-for-testing-${{ runner.os }}-${{ runner.arch }}-${{ env.CHROME_FOR_TESTING_VERSION }}
+    - name: Install pinned Chrome for Testing
+      id: setup-chrome
+      uses: browser-actions/setup-chrome@v2.1.2
+      with:
+        chrome-version: ${{ env.CHROME_FOR_TESTING_VERSION }}
+        install-chromedriver: true
+    - uses: docker/setup-buildx-action@v4
+    - name: Bring up CI stand
+      shell: bash
+      env:
+        IMAGE_TAG: ci-local
+        CI_GATEWAY_PORT: "9821"
+      run: |
+        set -euo pipefail
+        docker compose up -d --build stand-gateway-ci
+        curl -fsS --retry 40 --retry-delay 3 --retry-all-errors \
+          "http://127.0.0.1:${CI_GATEWAY_PORT}/api/health"
+        curl -fsS --retry 30 --retry-delay 2 --retry-all-errors \
+          "http://127.0.0.1:${CI_GATEWAY_PORT}/"
+    - name: Run screenshot compare (Gradle)
+      if: always() && !cancelled() && inputs.update_screenshots != 'true'
+      id: run-screenshot-tests
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/build/allure-results
+        CHROME_BINARY_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+        CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
+        SCREENSHOT_OS: linux
+        SCREENSHOT_BROWSER: chrome
+      run: |
+        eval "${ALLURECTL_RUN}"
+        run_with_allurectl ./gradlew test -Denv=ci -DincludeTags=screenshot
+    - name: Update screenshots
+      if: always() && !cancelled() && inputs.update_screenshots == 'true'
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/build/allure-results
+        CHROME_BINARY_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+        CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
+        SCREENSHOT_OS: linux
+        SCREENSHOT_BROWSER: chrome
+      run: |
+        eval "${ALLURECTL_RUN}"
+        run_with_allurectl ./gradlew test -Denv=ci -DincludeTags=screenshot -DupdateScreenshots=true
+    - name: Tear down CI stand
+      if: always()
+      continue-on-error: true
+      shell: bash
+      run: docker compose down -v --remove-orphans
+    - name: Publish raw Allure results
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: allure-results-ui-ci
+        path: ${{ inputs.module_dir }}/build/allure-results/**
+        if-no-files-found: ignore
+        retention-days: 1
+    - name: Publish CI screenshot PNGs
+      if: always() && inputs.update_screenshots == 'true'
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: ci-screenshot-pngs
+        path: ${{ inputs.module_dir }}/src/test/resources/screenshots/
+        if-no-files-found: ignore

@@ -1,0 +1,25 @@
+name: ci-screenshots
+description: Dispatch CI-stand screenshots to the active tests language (module_dir).
+inputs:
+  module_dir:
+    required: true
+  update_screenshots:
+    required: false
+    default: 'false'
+runs:
+  using: composite
+  steps:
+    - id: dir
+      uses: ./.github/actions/resolve-module-dir
+      with:
+        module_dir: ${{ inputs.module_dir }}
+    - if: env.TESTS_LANG == 'java'
+      uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/ci-screenshots
+      with:
+        module_dir: ${{ steps.dir.outputs.dir }}
+        update_screenshots: ${{ inputs.update_screenshots }}
+    - if: env.TESTS_LANG != 'java'
+      shell: bash
+      run: |
+        echo "STOP: no ci-screenshots action for TESTS_LANG=${TESTS_LANG:-unset}" >&2
+        exit 1

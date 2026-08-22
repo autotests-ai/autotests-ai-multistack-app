@@ -19,10 +19,3 @@ body {
 .multistack__error {
   color: var(--color-danger, #e55);
 }
-
-/* Author `display` beats UA `[hidden]` — `.panel` is `display: flex`, so the
-   Session panel would stay on screen for anonymous visitors. Same fix as
-   header.css applies to `.header__brand-link[hidden]`. */
-.panel[hidden] {
-  display: none;
-}

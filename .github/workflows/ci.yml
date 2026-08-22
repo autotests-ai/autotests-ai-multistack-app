@@ -34,7 +34,8 @@ name: CI
 # Prod e2e-tests screenshot is dispatch run_screenshot.
 # Browsers: mock = local CFT / Playwright Chromium (hub cannot see :9911).
 # Live e2e/manual = Selenoid secrets.SELENOID_WEBDRIVER_URL (WebDriver) / secrets.SELENOID_PLAYWRIGHT_URL (Playwright).
-# rewrite: update_mock_screenshots / update_stage_screenshots / update_e2e_screenshots, not a CD job.
+# rewrite: update_mock_screenshots / update_stage_screenshots / update_e2e_screenshots / update_ci_screenshots, not a CD job.
+# ui-ci-tests: dispatch update_ci_screenshots; local compose -Denv=ci writes screenshots/prod/ (not live prod).
 # CD: push develop → stage only (WIP). Push main → same SHA to stage, then prod
 # (prod jobs `needs` e2e-tests-stage). `trigger` maps push paths / dispatch `deploy`
 # onto the same flags. Sonar gates deploy, not build.
@@ -53,6 +54,7 @@ name: CI
 #   sonar-backend ← backend-unit-tests + integration-tests
 #   sonar-tests ← tests-harness (skipped on backend-only lane)
 #   ui-mock-tests ← frontend-unit-tests + tests-harness (jsdom first; mock compose on the runner)
+#   ui-ci-tests ← dispatch update_ci_screenshots; local compose -Denv=ci writes screenshots/prod/ (not live prod)
 #   sonar-frontend ← frontend-unit-tests + ui-mock-tests (mock skipped ⇒ sonar still runs)
 #   build-backend ← backend-unit-tests + integration-tests + openapi-sync · build-frontend ← ui-mock-tests
 #   deploy-backend-stage / deploy-frontend-stage ← same gates; cd_stage; skip until vars.STAGE_APP_DIR
@@ -129,6 +131,10 @@ on:
         default: false
       update_stage_screenshots:
         description: "e2e-tests-stage: rewrite stage screenshot PNGs (skips compare)"
+        type: boolean
+        default: false
+      update_ci_screenshots:
+        description: "ui-ci-tests: rewrite screenshots/prod/ from local compose (-Denv=ci, not live prod)"
         type: boolean
         default: false
       ALLURE_JOB_RUN_ID:
@@ -531,6 +537,39 @@ jobs:
           module_dir: ${{ env.TESTS_LANG == 'java' && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
           frontend_dir: ${{ format('frontend/{0}/frontend-{0}-{1}', env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
           update_screenshots: ${{ inputs.update_mock_screenshots || false }}
+
+  ui-ci-tests:
+    needs: [trigger, backend-unit-tests, frontend-unit-tests, tests-harness]
+    if: >-
+      always() && !cancelled() &&
+      github.event_name == 'workflow_dispatch' &&
+      inputs.update_ci_screenshots &&
+      needs.backend-unit-tests.result == 'success' &&
+      needs.frontend-unit-tests.result == 'success' &&
+      needs.tests-harness.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      actions: write
+    env:
+      LAYER: ui-ci
+      SCREENSHOT_OS: linux
+      SCREENSHOT_BROWSER: chrome
+      ALLURE_LIVE_ENABLED: ${{ needs.trigger.outputs.enabled }}
+      ALLURE_LAUNCH_ID: ${{ needs.trigger.outputs.launch_id }}
+      ALLURE_JOB_RUN_ID: ${{ needs.trigger.outputs.job_run_id }}
+      ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+      - uses: ./tests/.github/actions/ci-screenshots
+        with:
+          module_dir: ${{ env.TESTS_LANG == 'java' && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
+          update_screenshots: ${{ inputs.update_ci_screenshots || false }}
 
   sonar-backend:
     needs: [backend-unit-tests, integration-tests]
@@ -1180,6 +1219,7 @@ jobs:
       - frontend-unit-tests
       - tests-harness
       - ui-mock-tests
+      - ui-ci-tests
       - integration-tests
       - api-tests
       - e2e-tests
