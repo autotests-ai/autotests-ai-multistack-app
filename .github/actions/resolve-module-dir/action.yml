@@ -1,7 +1,7 @@
 name: resolve-module-dir
 description: >-
-  Nested clone path, or flattened takeaway leaf (basename) when the nested
-  tree is absent. Empty input stays empty.
+  Nested module path when that directory exists; otherwise basename
+  (old leaf layout). Empty input stays empty.
 inputs:
   module_dir:
     required: false

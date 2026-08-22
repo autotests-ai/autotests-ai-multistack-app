@@ -15,5 +15,5 @@ GitHub does not interpolate `uses:`. This adapter dispatches on `BACKEND_LANG`:
 | `typescript` | `./backend/typescript/.github/actions/<verb>` | same family (Docker context = `module_dir`) |
 | other | STOP | STOP |
 
-Unknown `BACKEND_LANG` never runs a foreign module action. Flattened takeaway
-leaf paths are resolved by `.github/actions/resolve-module-dir`.
+Unknown `BACKEND_LANG` never runs a foreign module action. Nested module paths
+are resolved by `.github/actions/resolve-module-dir`.
