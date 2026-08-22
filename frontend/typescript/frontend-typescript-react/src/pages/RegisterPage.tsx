@@ -49,11 +49,7 @@ export function RegisterPage() {
       navigate(response.redirectUrl || '/');
     } catch (err) {
       setError(
-        resolveAuthErrorMessage(
-          err,
-          REGISTER_MESSAGES,
-          REGISTER_MESSAGES.errorRegistrationFailed!,
-        ),
+        resolveAuthErrorMessage(err, REGISTER_MESSAGES, REGISTER_MESSAGES.errorRegistrationFailed!),
       );
     } finally {
       setSubmitting(false);

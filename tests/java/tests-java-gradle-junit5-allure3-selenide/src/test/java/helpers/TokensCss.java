@@ -19,20 +19,16 @@ public final class TokensCss {
     }
 
     public static Path defaultTokensPath() {
-        // cwd = tests module root (ethalon nested vs takeaway flat vendor/)
+        // cwd = tests module. Ethalon hub is frontend/_shared; takeaway bakes into vendor/ds.
         return firstExisting(tokensCssCandidates());
     }
 
     private static Path[] tokensCssCandidates() {
         return new Path[] {
                 frontendTokens("..", "..", "..", "frontend", "_shared", "frontend-javascript-app"),
-                frontendTokens("frontend", "_shared", "frontend-javascript-app"),
-                frontendTokens("..", "frontend-typescript-react", "vendor", "frontend-javascript-app"),
-                frontendTokens("frontend-typescript-react", "vendor", "frontend-javascript-app"),
+                frontendTokens("..", "..", "..", "frontend", "typescript", "frontend-typescript-react", "vendor", "ds"),
+                frontendTokens("..", "..", "..", "frontend", "typescript", "frontend-typescript-react", "vendor", "frontend-javascript-app"),
                 backendTokens("..", "..", "..", "backend", "java", "backend-java-spring"),
-                backendTokens("backend", "java", "backend-java-spring"),
-                backendTokens("..", "backend-java-spring"),
-                backendTokens("backend-java-spring"),
         };
     }
 

@@ -41,9 +41,7 @@ export function LoginPage() {
       saveSession(response.token);
       navigate(response.redirectUrl || '/');
     } catch (err) {
-      setError(
-        resolveAuthErrorMessage(err, LOGIN_MESSAGES, LOGIN_MESSAGES.errorWrongCredentials!),
-      );
+      setError(resolveAuthErrorMessage(err, LOGIN_MESSAGES, LOGIN_MESSAGES.errorWrongCredentials!));
     } finally {
       setSubmitting(false);
     }
