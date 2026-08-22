@@ -23,7 +23,7 @@ import {
 } from "./constants.mjs";
 import { qualityGateRules } from "./quality-gate.mjs";
 
-/** Layer jobs `publish-allure-report` waits on. Not Sonar, catalog, or deploy. */
+/** Layer jobs `publish-allure-report` waits on. Not Sonar or deploy. */
 export const LAYER_JOB_IDS = Object.freeze([
   "backend-unit-tests",
   "frontend-unit-tests",

@@ -323,7 +323,7 @@ After generate, [`attach-ci-jobs-quality-gate.mjs`](java/tests-java-gradle-junit
 |---------------|-----------|
 | `failure` on a layer job (tests, biome, harness, …) | not passed |
 | `skipped` because this event does not run that job (PR without prod e2e, `manual-tests` on push, lane `if:`) | unchanged |
-| Sonar / catalog / deploy | own widgets or out of Allure QG |
+| Sonar / deploy | own widgets or out of Allure QG |
 
 Layer jobs: `backend-unit-tests`, `frontend-unit-tests`, `tests-harness`, `ui-mock-tests`, `integration-tests`, `api-tests-stage`, `e2e-tests-stage`, `api-tests`, `e2e-tests`, `manual-tests`. Widget rule id: `maxCiJobFailures` (attached after generate, not an Allure CLI `use` rule).
 

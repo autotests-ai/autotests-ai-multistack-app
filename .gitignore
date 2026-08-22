@@ -18,7 +18,7 @@ tests/java/tests-java-gradle-junit5-allure3-selenide/.gradle/
 tests/java/tests-java-gradle-junit5-allure3-selenide/bin/
 tests/_deferred/java-gradle-junit5-selenium/build/
 tests/_deferred/java-gradle-junit5-selenium/.gradle/
-tests/_deferred/java-gradle-junit5-selenium/bin/
+tests/_tests-meta/_ethalon/.gradle/
 
 # IDE
 .idea/
