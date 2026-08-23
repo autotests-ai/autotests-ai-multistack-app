@@ -1,1 +1,0 @@
-{"id":"b680a009f181bf29a62079a0de25d600","fullName":"frontend-typescript-react:src/test/pages/HomePage.test.tsx#HomePage does not set welcome after unmount when profile resolves","name":"does not set welcome after unmount when profile resolves","status":"passed","testResultsByEnv":{"default":"88686bd0c690ceaa58b25f42c0bbadcc"}}

@@ -5,16 +5,16 @@
   "rules": [
     {
       "id": "maxFailures",
-      "passed": true,
-      "message": "Failed tests 0 within threshold 0",
-      "actual": 0,
+      "passed": false,
+      "message": "The number of failed tests 7 exceeds the allowed threshold value 0",
+      "actual": 7,
       "expected": 0,
       "knownExcluded": 0
     },
     {
       "id": "maxCiJobFailures",
       "passed": false,
-      "message": "The number of failed CI jobs 1 exceeds the allowed threshold value 0 (ui-mock-tests)",
+      "message": "The number of failed CI jobs 1 exceeds the allowed threshold value 0 (e2e-tests-stage)",
       "actual": 1,
       "expected": 0,
       "comparator": "GT"
