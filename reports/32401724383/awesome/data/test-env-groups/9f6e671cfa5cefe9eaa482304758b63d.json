@@ -1,1 +1,0 @@
-{"id":"9f6e671cfa5cefe9eaa482304758b63d","fullName":"dev.multistack.app.service.AuthServiceTest.deleteAccountUnknownUser","name":"deleteAccount rejects a user that no longer exists","status":"passed","testResultsByEnv":{"default":"942cc5ed8e61262df145bc58f1e0b43c"}}

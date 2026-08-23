@@ -1,0 +1,1 @@
+{"id":"2a47e660da375534baadbefb54ebceb0","fullName":"frontend-typescript-react:src/test/pwa/pwa-register.test.ts#pwa-register controllerchange reload no-ops when serviceWorker is missing","name":"no-ops when serviceWorker is missing","status":"passed","testResultsByEnv":{"default":"eab59f7f0ad2bf76683fd257a8d06103"}}
