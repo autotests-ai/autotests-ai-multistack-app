@@ -1,1 +1,0 @@
-{"id":"2bbbe53e396d966cd1bceb468a523d14","fullName":"dev.multistack.app.config.JwtAuthFilterTest.ignoresInvalidBearerToken","name":"ignores invalid bearer token","status":"passed","testResultsByEnv":{"default":"95a2c8fb3a53463b41f7949d88a2eea7"}}
