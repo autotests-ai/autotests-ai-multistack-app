@@ -31,7 +31,7 @@ name: CI
 # Screenshot (@Tag screenshot): compare in ui-mock-tests (every PR) and e2e-tests-stage (stage CD).
 # Prod e2e-tests screenshot is dispatch run_screenshot.
 # Browsers: mock = local CFT / Playwright Chromium (hub cannot see :9911).
-# Live e2e/manual = Selenoid secrets.SELENOID_WEBDRIVER_URL (WebDriver) / secrets.SELENOID_PLAYWRIGHT_URL (Playwright).
+# Live e2e/manual = Selenoid secrets.SELENOID_WEBDRIVER_URL (WebDriver; alias SELENOID_REMOTE_URL) / secrets.SELENOID_PLAYWRIGHT_URL (Playwright).
 # rewrite: update_mock_screenshots / update_stage_screenshots / update_e2e_screenshots / update_ci_screenshots, not a CD job.
 # ui-ci-tests: dispatch update_ci_screenshots; local compose -Denv=ci writes screenshots/prod/ (not live prod).
 # CD: push develop → stage only (WIP). Push main → same SHA to stage, then prod
@@ -203,6 +203,9 @@ env:
   PUBLIC_HOST: ${{ vars.PUBLIC_HOST || 'autotests.ai' }}
   STACK_MOUNT: ${{ vars.STACK_MOUNT || 'stack' }}
   DEPLOY_MODE: ${{ vars.DEPLOY_MODE || 'ghcr' }}
+  GRADLE_OPTS: -Dorg.gradle.internal.http.connectionTimeout=120000 -Dorg.gradle.internal.http.socketTimeout=120000 -Dorg.gradle.internal.repository.max.retries=8 -Dorg.gradle.internal.repository.max.interval=3000
+  SELENOID_WEBDRIVER_URL: ${{ secrets.SELENOID_WEBDRIVER_URL || secrets.SELENOID_REMOTE_URL }}
+  SELENOID_PLAYWRIGHT_URL: ${{ secrets.SELENOID_PLAYWRIGHT_URL }}
   # Stand URLs: actions compose from PUBLIC_HOST + LANG + FRAMEWORK (not listed here).
   RUN_LABEL: "${{ github.repository }} #${{ github.run_number }}"
   SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL || 'https://sonar.qa.guru' }}
@@ -927,6 +930,7 @@ jobs:
     timeout-minutes: 30
     env:
       LAYER: e2e
+      APP_URL: ${{ vars.APP_URL }}
       SCREENSHOT_OS: linux
       SCREENSHOT_BROWSER: chrome
       ALLURE_LIVE_ENABLED: ${{ needs.trigger.outputs.enabled }}
@@ -934,7 +938,7 @@ jobs:
       ALLURE_JOB_RUN_ID: ${{ needs.trigger.outputs.job_run_id }}
       ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-      SELENOID_WEBDRIVER_URL: ${{ secrets.SELENOID_WEBDRIVER_URL }}
+      SELENOID_WEBDRIVER_URL: ${{ secrets.SELENOID_WEBDRIVER_URL || secrets.SELENOID_REMOTE_URL }}
       SELENOID_PLAYWRIGHT_URL: ${{ secrets.SELENOID_PLAYWRIGHT_URL }}
     steps:
       - uses: actions/checkout@v7
@@ -1021,6 +1025,7 @@ jobs:
     env:
       LAYER: e2e
       ENDPOINT: stage
+      APP_URL: ${{ vars.STAGE_APP_URL }}
       PUBLIC_HOST: ${{ vars.STAGE_PUBLIC_HOST || format('stage.{0}', vars.PUBLIC_HOST || 'autotests.ai') }}
       SCREENSHOT_OS: linux
       SCREENSHOT_BROWSER: chrome
@@ -1029,7 +1034,7 @@ jobs:
       ALLURE_JOB_RUN_ID: ${{ needs.trigger.outputs.job_run_id }}
       ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-      SELENOID_WEBDRIVER_URL: ${{ secrets.SELENOID_WEBDRIVER_URL }}
+      SELENOID_WEBDRIVER_URL: ${{ secrets.SELENOID_WEBDRIVER_URL || secrets.SELENOID_REMOTE_URL }}
       SELENOID_PLAYWRIGHT_URL: ${{ secrets.SELENOID_PLAYWRIGHT_URL }}
     steps:
       - uses: actions/checkout@v7
@@ -1056,12 +1061,13 @@ jobs:
     timeout-minutes: 30
     env:
       LAYER: manual
+      APP_URL: ${{ vars.APP_URL }}
       ALLURE_LIVE_ENABLED: ${{ needs.trigger.outputs.enabled }}
       ALLURE_LAUNCH_ID: ${{ needs.trigger.outputs.launch_id }}
       ALLURE_JOB_RUN_ID: ${{ needs.trigger.outputs.job_run_id }}
       ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-      SELENOID_WEBDRIVER_URL: ${{ secrets.SELENOID_WEBDRIVER_URL }}
+      SELENOID_WEBDRIVER_URL: ${{ secrets.SELENOID_WEBDRIVER_URL || secrets.SELENOID_REMOTE_URL }}
       SELENOID_PLAYWRIGHT_URL: ${{ secrets.SELENOID_PLAYWRIGHT_URL }}
     steps:
       - uses: actions/checkout@v7

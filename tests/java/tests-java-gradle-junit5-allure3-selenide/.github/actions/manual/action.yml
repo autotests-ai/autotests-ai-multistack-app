@@ -12,7 +12,11 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        ui="https://${PUBLIC_HOST}/${STACK_MOUNT}/backend-${BACKEND_LANG}-${BACKEND_FRAMEWORK}/frontend-${FRONTEND_LANG}-${FRONTEND_FRAMEWORK}/"
+        if [ -n "${APP_URL:-}" ]; then
+          ui="${APP_URL}"
+        else
+          ui="https://${PUBLIC_HOST}/${STACK_MOUNT}/backend-${BACKEND_LANG}-${BACKEND_FRAMEWORK}/frontend-${FRONTEND_LANG}-${FRONTEND_FRAMEWORK}/"
+        fi
         echo "==> UI ${ui}"
         curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${ui}"
     - uses: ./.github/actions/setup-allurectl
@@ -34,6 +38,9 @@ runs:
         RUN_ENV: ${{ inputs.stand }}
       run: |
         set -euo pipefail
+        if [ -z "${SELENOID_WEBDRIVER_URL:-}" ] && [ -n "${SELENOID_REMOTE_URL:-}" ]; then
+          SELENOID_WEBDRIVER_URL="${SELENOID_REMOTE_URL}"
+        fi
         ARGS=(-Denv="$RUN_ENV" -DincludeTags=manual)
         if [ -n "${SELENOID_WEBDRIVER_URL:-}" ]; then
           ARGS+=(-DremoteUrl="${SELENOID_WEBDRIVER_URL}")
