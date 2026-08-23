@@ -326,8 +326,9 @@ jobs:
       job_run_id: ${{ steps.context.outputs.job_run_id }}
       launch_url: ${{ steps.context.outputs.launch_url }}
     steps:
-      - if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')
-        uses: actions/checkout@v7
+      # Always checkout: resolve-ci-lanes / open-testops-context are local composites.
+      # Push needs full history for path lanes (BEFORE..SHA).
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
           fetch-depth: 0

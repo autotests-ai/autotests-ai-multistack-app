@@ -29,6 +29,22 @@ runs:
           if [ -n "${DEPLOY_COMPOSE_ENV_FILE:-}" ]; then
             COMPOSE="$COMPOSE --env-file ${DEPLOY_COMPOSE_ENV_FILE}"
           fi
+          if [ -n "${DEPLOY_COMPOSE_SERVICES:-}" ]; then
+            available="$($COMPOSE config --services)"
+            keep=""
+            for s in ${DEPLOY_COMPOSE_SERVICES}; do
+              if printf '%s\n' "$available" | grep -qx "$s"; then
+                keep="${keep} ${s}"
+              else
+                echo "skip missing compose service: ${s}"
+              fi
+            done
+            DEPLOY_COMPOSE_SERVICES="${keep# }"
+            if [ -z "${DEPLOY_COMPOSE_SERVICES}" ]; then
+              echo "no listed compose services exist in this file" >&2
+              exit 1
+            fi
+          fi
           if [ "${DEPLOY_MODE:-ghcr}" = "compose" ]; then
             $COMPOSE up -d --build --remove-orphans ${DEPLOY_COMPOSE_SERVICES}
           else

@@ -326,7 +326,6 @@ runs:
     - name: Send Allure Telegram notification
       if: always() && steps.allure-report.outcome == 'success'
       continue-on-error: true
-      timeout-minutes: 2
       working-directory: ${{ inputs.tests_dir }}
       shell: bash
       env:
