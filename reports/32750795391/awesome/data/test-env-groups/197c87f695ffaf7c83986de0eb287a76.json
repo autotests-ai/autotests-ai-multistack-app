@@ -1,1 +1,0 @@
-{"id":"197c87f695ffaf7c83986de0eb287a76","fullName":"tests.api.AuthApiTests.deleteWithoutToken","name":"DELETE /api/auth/me without a token returns 401","status":"passed","testResultsByEnv":{"default":"7454663361b1db1fa249a2d5935cc68a"}}
