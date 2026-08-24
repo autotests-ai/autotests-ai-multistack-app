@@ -61,12 +61,8 @@ runs:
         UI_URL: http://127.0.0.1:9911/
         API_BASE_URL: http://127.0.0.1:9911
       run: |
-        eval "${ALLURECTL_RUN:-true}"
-        if declare -F run_with_allurectl >/dev/null; then
-          run_with_allurectl npx playwright test --grep @mock --grep-invert @screenshot
-        else
-          npx playwright test --grep @mock --grep-invert @screenshot
-        fi
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
+        run_with_allurectl npx playwright test --grep @mock --grep-invert @screenshot
     - name: Stash mock Allure results
       if: always()
       continue-on-error: true
@@ -90,12 +86,8 @@ runs:
         SCREENSHOT_OS: linux
         SCREENSHOT_BROWSER: chrome
       run: |
-        eval "${ALLURECTL_RUN:-true}"
-        if declare -F run_with_allurectl >/dev/null; then
-          run_with_allurectl npx playwright test --grep @screenshot
-        else
-          npx playwright test --grep @screenshot
-        fi
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
+        run_with_allurectl npx playwright test --grep @screenshot
     - name: Update screenshots
       if: always() && !cancelled() && inputs.update_screenshots == 'true'
       shell: bash
@@ -109,12 +101,8 @@ runs:
         SCREENSHOT_BROWSER: chrome
         UPDATE_SCREENSHOTS: "true"
       run: |
-        eval "${ALLURECTL_RUN:-true}"
-        if declare -F run_with_allurectl >/dev/null; then
-          run_with_allurectl npx playwright test --grep @screenshot
-        else
-          npx playwright test --grep @screenshot
-        fi
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
+        run_with_allurectl npx playwright test --grep @screenshot
     - name: Merge Allure results
       if: always()
       continue-on-error: true

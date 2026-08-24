@@ -27,7 +27,7 @@ runs:
       env:
         ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/build/allure-results
       run: |
-        eval "${ALLURECTL_RUN}"
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
         run_with_allurectl ./gradlew test -DincludeTags=integration
     - name: Publish raw Allure results
       if: always()

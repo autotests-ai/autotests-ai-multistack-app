@@ -33,12 +33,8 @@ runs:
       env:
         ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/allure-results
       run: |
-        eval "${ALLURECTL_RUN:-true}"
-        if declare -F run_with_allurectl >/dev/null; then
-          run_with_allurectl npm test -- --runInBand --coverage --coverageReporters=lcov --coverageReporters=text --testPathIgnorePatterns=integration
-        else
-          npm test -- --runInBand --coverage --coverageReporters=lcov --coverageReporters=text --testPathIgnorePatterns=integration
-        fi
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
+        run_with_allurectl npm test -- --runInBand --coverage --coverageReporters=lcov --coverageReporters=text --testPathIgnorePatterns=integration
     - if: steps.run-tests.outcome == 'success'
       uses: actions/upload-artifact@v7
       with:

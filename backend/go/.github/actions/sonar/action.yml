@@ -46,17 +46,7 @@ runs:
       if: always()
       shell: bash
       run: |
-        if [[ -n "${WRITE_SONAR_SUMMARY:-}" ]]; then
-          eval "${WRITE_SONAR_SUMMARY}"
-        else
-          {
-            echo "## ${GITHUB_JOB}"
-            echo ""
-            echo "- projectKey: \`${SONAR_PROJECT_KEY}\`"
-            echo "- host: \`${SONAR_HOST_URL}\`"
-            echo "- dashboard: ${SONAR_HOST_URL%/}/dashboard?id=${SONAR_PROJECT_KEY}"
-          } >> "$GITHUB_STEP_SUMMARY"
-        fi
+        bash "${GITHUB_WORKSPACE}/backend/.github/actions/sonar/write-sonar-summary.sh"
     - name: Upload Sonar report-task
       if: always()
       uses: actions/upload-artifact@v7

@@ -331,9 +331,10 @@ CLI (`npx allure quality-gate`) also runs `maxFailures` plus reporting via `qual
 
 ## TestOps (live upload + selective rerun)
 
-`trigger` opens one shared TestOps launch/job-run (same job as lane flags); **layer** jobs stream via workflow
-env helper `ALLURECTL_RUN` → `run_with_allurectl` in
-[`.github/workflows/ci.yml`](../.github/workflows/ci.yml) (`allurectl watch --job-run-child`).
+`trigger` opens one shared TestOps launch/job-run (same job as lane flags); **layer** jobs stream via
+`run_with_allurectl` in
+[`.github/actions/setup-allurectl/allurectl-run.sh`](../.github/actions/setup-allurectl/allurectl-run.sh)
+(`allurectl watch --job-run-child`).
 `tests-harness` does **not** upload (helpers, not product cases). Missing `ALLURE_TOKEN` /
 `ALLURE_PROJECT_ID` disables live upload without failing tests — raw `allure-results` still publish.
 
@@ -343,9 +344,9 @@ env helper `ALLURECTL_RUN` → `run_with_allurectl` in
 | TestOps UI rerun (`workflow_dispatch` + non-empty `ALLURE_JOB_RUN_ID`) | selective plan from TestOps | `true` — plan kept |
 
 Launch env axes → `allure-results/environment.properties` (TestOps **Окружение** /
-Report environment). Written once after each test job by `ALLURE_WRITE_ENVIRONMENT` in
-[`.github/workflows/ci.yml`](../.github/workflows/ci.yml) (and again after artifact merge in
-`publish-allure-report`), from workflow `env`:
+Report environment). Written once after each test job by `write_allure_environment` in
+[`.github/actions/setup-allurectl/allurectl-run.sh`](../.github/actions/setup-allurectl/allurectl-run.sh)
+(and again after artifact merge in `publish-allure-report`), from workflow `env`:
 
 | Env | Value |
 |-----|-------|

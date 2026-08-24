@@ -26,12 +26,8 @@ runs:
         PYTEST_INTEGRATION: "1"
         ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/allure-results
       run: |
-        eval "${ALLURECTL_RUN:-true}"
-        if declare -F run_with_allurectl >/dev/null; then
-          run_with_allurectl python -m pytest -m integration --no-cov --alluredir="${ALLURE_RESULTS}"
-        else
-          python -m pytest -m integration --no-cov --alluredir="${ALLURE_RESULTS}"
-        fi
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
+        run_with_allurectl python -m pytest -m integration --no-cov --alluredir="${ALLURE_RESULTS}"
     - name: Publish raw Allure results
       if: always()
       continue-on-error: true

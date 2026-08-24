@@ -49,12 +49,8 @@ runs:
         TEST_DATABASE_URL: postgres://test:test@127.0.0.1:5432/test?sslmode=disable
         ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/allure-results
       run: |
-        eval "${ALLURECTL_RUN:-true}"
-        if declare -F run_with_allurectl >/dev/null; then
-          run_with_allurectl go test ./... -count=1
-        else
-          go test ./... -count=1
-        fi
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
+        run_with_allurectl go test ./... -count=1
     - name: Stop scratch PostgreSQL
       if: always()
       shell: bash

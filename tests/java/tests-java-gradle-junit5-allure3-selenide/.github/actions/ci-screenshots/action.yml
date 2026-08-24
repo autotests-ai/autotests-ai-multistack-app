@@ -57,7 +57,7 @@ runs:
         SCREENSHOT_OS: linux
         SCREENSHOT_BROWSER: chrome
       run: |
-        eval "${ALLURECTL_RUN}"
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
         run_with_allurectl ./gradlew test -Denv=ci -DincludeTags=screenshot
     - name: Update screenshots
       if: always() && !cancelled() && inputs.update_screenshots == 'true'
@@ -70,7 +70,7 @@ runs:
         SCREENSHOT_OS: linux
         SCREENSHOT_BROWSER: chrome
       run: |
-        eval "${ALLURECTL_RUN}"
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
         run_with_allurectl ./gradlew test -Denv=ci -DincludeTags=screenshot -DupdateScreenshots=true
     - name: Tear down CI stand
       if: always()

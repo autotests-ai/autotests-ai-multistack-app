@@ -24,12 +24,8 @@ runs:
       env:
         ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/allure-results
       run: |
-        eval "${ALLURECTL_RUN:-true}"
-        if declare -F run_with_allurectl >/dev/null; then
-          run_with_allurectl go test ./... -coverprofile=coverage.out -covermode=atomic
-        else
-          go test ./... -coverprofile=coverage.out -covermode=atomic
-        fi
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
+        run_with_allurectl go test ./... -coverprofile=coverage.out -covermode=atomic
     - if: steps.run-tests.outcome == 'success'
       uses: actions/upload-artifact@v7
       with:

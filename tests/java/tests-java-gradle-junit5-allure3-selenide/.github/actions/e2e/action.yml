@@ -74,7 +74,7 @@ runs:
         else
           ARGS+=(-DexcludeTags=mock,screenshot)
         fi
-        eval "${ALLURECTL_RUN}"
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
         run_with_allurectl ./gradlew test "${ARGS[@]}"
     - name: Stash e2e Allure results
       if: always()
@@ -108,7 +108,7 @@ runs:
         if [ -n "${SELENOID_WEBDRIVER_URL:-}" ]; then
           ARGS+=(-DremoteUrl="${SELENOID_WEBDRIVER_URL}")
         fi
-        eval "${ALLURECTL_RUN}"
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
         run_with_allurectl ./gradlew test "${ARGS[@]}"
     - name: Update screenshots
       if: always() && !cancelled() && inputs.update_screenshots == 'true'
@@ -128,7 +128,7 @@ runs:
         if [ -n "${SELENOID_WEBDRIVER_URL:-}" ]; then
           ARGS+=(-DremoteUrl="${SELENOID_WEBDRIVER_URL}")
         fi
-        eval "${ALLURECTL_RUN}"
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
         run_with_allurectl ./gradlew test "${ARGS[@]}"
     - name: Merge Allure results
       if: always()

@@ -70,7 +70,7 @@ runs:
         CHROME_BINARY_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
         CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
       run: |
-        eval "${ALLURECTL_RUN}"
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
         run_with_allurectl ./gradlew test -Denv=mock -DincludeTags=mock
     - name: Stash mock Allure results
       if: always()
@@ -94,7 +94,7 @@ runs:
         SCREENSHOT_OS: linux
         SCREENSHOT_BROWSER: chrome
       run: |
-        eval "${ALLURECTL_RUN}"
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
         run_with_allurectl ./gradlew test -Denv=mock -DincludeTags=screenshot
     - name: Update screenshots
       if: always() && !cancelled() && inputs.update_screenshots == 'true'
@@ -107,7 +107,7 @@ runs:
         SCREENSHOT_OS: linux
         SCREENSHOT_BROWSER: chrome
       run: |
-        eval "${ALLURECTL_RUN}"
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
         run_with_allurectl ./gradlew test -Denv=mock -DincludeTags=screenshot -DupdateScreenshots=true
     - name: Merge Allure results
       if: always()

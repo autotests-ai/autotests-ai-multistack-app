@@ -50,7 +50,7 @@ runs:
       if: always()
       shell: bash
       run: |
-        eval "${WRITE_SONAR_SUMMARY}"
+        bash "${GITHUB_WORKSPACE}/backend/.github/actions/sonar/write-sonar-summary.sh"
     - name: Upload Sonar report-task
       if: always()
       uses: actions/upload-artifact@v7

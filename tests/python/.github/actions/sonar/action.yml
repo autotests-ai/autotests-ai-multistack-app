@@ -43,4 +43,4 @@ runs:
       if: always()
       shell: bash
       run: |
-        eval "${WRITE_SONAR_SUMMARY}"
+        bash "${GITHUB_WORKSPACE}/tests/.github/actions/sonar/write-sonar-summary.sh"

@@ -45,7 +45,7 @@ runs:
         if [ -n "${SELENOID_WEBDRIVER_URL:-}" ]; then
           ARGS+=(-DremoteUrl="${SELENOID_WEBDRIVER_URL}")
         fi
-        eval "${ALLURECTL_RUN}"
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
         run_with_allurectl ./gradlew test "${ARGS[@]}"
     - name: Publish raw Allure results
       if: always()

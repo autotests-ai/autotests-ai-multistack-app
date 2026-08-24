@@ -81,7 +81,7 @@ runs:
       env:
         ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.tests_dir }}/build/allure-results
       run: |
-        eval "${ALLURE_WRITE_ENVIRONMENT}"
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
         write_allure_environment
 
     - name: Restore Allure history

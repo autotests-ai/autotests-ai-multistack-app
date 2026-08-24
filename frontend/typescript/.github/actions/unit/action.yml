@@ -31,7 +31,7 @@ runs:
       env:
         ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/allure-results
       run: |
-        eval "${ALLURECTL_RUN}"
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
         run_with_allurectl npm test -- --coverage
     - if: steps.run-tests.outcome == 'success'
       uses: actions/upload-artifact@v7

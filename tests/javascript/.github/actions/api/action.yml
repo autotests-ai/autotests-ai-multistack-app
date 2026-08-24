@@ -36,12 +36,8 @@ runs:
         API_BASE_URL: https://${{ env.PUBLIC_HOST }}/${{ env.STACK_MOUNT }}/backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}
         API_HEALTH_SERVICE: backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}
       run: |
-        eval "${ALLURECTL_RUN:-true}"
-        if declare -F run_with_allurectl >/dev/null; then
-          run_with_allurectl npx playwright test --grep @api
-        else
-          npx playwright test --grep @api
-        fi
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
+        run_with_allurectl npx playwright test --grep @api
     - name: Publish raw Allure results
       if: always()
       continue-on-error: true

@@ -1,5 +1,7 @@
 name: setup-allurectl
-description: Cache and install pinned allurectl when live TestOps is enabled.
+description: >-
+  Cache and install pinned allurectl when live TestOps is enabled.
+  Layer actions source allurectl-run.sh (write_allure_environment, run_with_allurectl).
 runs:
   using: composite
   steps:
