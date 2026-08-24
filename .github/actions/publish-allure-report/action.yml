@@ -1,7 +1,7 @@
 name: publish-allure-report
 description: >-
-  Gating Allure generate after layer jobs. Pages push + Telegram are soft;
-  live Pages deploy stays a separate job (deploy-pages@v5).
+  Gating Allure generate after layer jobs. Pages push (main only) + Telegram
+  are soft; live Pages deploy stays a separate job (deploy-pages@v5).
 inputs:
   tests_dir:
     required: true
@@ -25,6 +25,7 @@ runs:
       run: node scripts/check-package-lock.mjs
 
     - name: Load Allure history
+      if: github.ref == 'refs/heads/main'
       continue-on-error: true
       uses: actions/checkout@v7
       with:
@@ -108,12 +109,18 @@ runs:
         ALLURE_RESULTS: ${{ inputs.tests_dir }}/build/allure-results
       run: |
         mkdir -p "${ALLURE_RESULTS}"
+        BUILD_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        if [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+          REPORT_URL="${GH_PAGES_BASE}/reports/${REPORT_ID}/awesome/index.html"
+        else
+          REPORT_URL="${BUILD_URL}"
+        fi
         cat > "${ALLURE_RESULTS}/executor.json" <<EOF
         {
           "reportName": "Run #${{ github.run_number }}",
           "buildOrder": ${{ github.run_number }},
-          "reportUrl": "${GH_PAGES_BASE}/reports/${REPORT_ID}/awesome/index.html",
-          "buildUrl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          "reportUrl": "${REPORT_URL}",
+          "buildUrl": "${BUILD_URL}"
         }
         EOF
 
@@ -261,6 +268,7 @@ runs:
       if: >-
         always() &&
         github.event_name != 'pull_request' &&
+        github.ref == 'refs/heads/main' &&
         steps.allure-report.outcome == 'success'
       continue-on-error: true
       shell: bash
@@ -297,6 +305,7 @@ runs:
       if: >-
         always() &&
         github.event_name != 'pull_request' &&
+        github.ref == 'refs/heads/main' &&
         steps.allure-report.outcome == 'success' &&
         steps.pages-prepare.outcome == 'success' &&
         hashFiles('pages/reports/**/awesome/index.html') != ''
@@ -310,6 +319,7 @@ runs:
       if: >-
         always() &&
         github.event_name != 'pull_request' &&
+        github.ref == 'refs/heads/main' &&
         steps.allure-report.outcome == 'success' &&
         steps.pages-prepare.outcome == 'success' &&
         hashFiles('pages/reports/**/awesome/index.html') != ''
@@ -381,8 +391,10 @@ runs:
           if [ "${PAGES_OUTCOME}" = "success" ]; then
             echo "- [Allure report](${GH_PAGES_BASE}/reports/latest/awesome/index.html)"
             echo "- [Allure dashboard](${GH_PAGES_BASE}/reports/latest/dashboard/index.html)"
-          elif [ "${{ github.event_name }}" != "pull_request" ]; then
+          elif [ "${GITHUB_REF}" = "refs/heads/main" ]; then
             echo "- GitHub Pages not deployed"
+          elif [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "- GitHub Pages: main only; this run → TestOps / allure-report-ci"
           fi
           if [ -n "${TESTOPS_LAUNCH_URL:-}" ]; then
             echo "- [Allure TestOps launch](${TESTOPS_LAUNCH_URL})"

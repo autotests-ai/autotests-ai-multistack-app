@@ -1,9 +1,9 @@
 name: Deploy GitHub Pages
 
 # Live Pages retry/bootstrap (SSOT: upload-pages-artifact@v5 + deploy-pages@v5).
-# CI still pushes gh-pages via peaceiris (history + backup). Automatic live
-# deploy is the deploy-github-pages job in ci.yml. Dispatch this workflow to
-# republish the current gh-pages tree without re-running the pyramid.
+# CI publishes gh-pages from main only (CNAME + history.jsonl snapshot).
+# Automatic live deploy is deploy-github-pages in ci.yml. Dispatch this
+# workflow to republish the current gh-pages tree without re-running the pyramid.
 
 on:
   workflow_dispatch:

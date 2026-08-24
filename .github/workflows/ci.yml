@@ -22,7 +22,8 @@ name: CI
 #
 # Screenshot: ui-mock-tests (PR) · e2e-tests-stage · e2e-tests (dispatch run_screenshot).
 # Stage mutex: preempt-develop-cd / yield-to-main-cd (main preempts develop).
-# Pages: deploy-github-pages; retry pages.yml. RAG: ci-workflow-app-orchestrator / ci-workflow-ethalon.
+# Pages: CNAME reports.autotests.ai from main only; develop → TestOps. Retry pages.yml.
+# RAG: ci-workflow-app-orchestrator / ci-workflow-ethalon.
 
 on:
   pull_request:
@@ -898,13 +899,15 @@ jobs:
           TRIGGER_JOB_RUN_ID: ${{ needs.trigger.outputs.job_run_id }}
           TRIGGER_LAUNCH_URL: ${{ needs.trigger.outputs.launch_url }}
 
-  # Live GitHub Pages. Soft: a 503 must not fail generate. Retry: pages.yml.
+  # Live GitHub Pages from main only (CNAME). Soft: a 503 must not fail generate.
+  # Retry: pages.yml. Develop uses TestOps, not this job.
   deploy-github-pages:
     name: deploy-github-pages
     needs: publish-allure-report
     if: >-
       always() && !cancelled() &&
       github.event_name != 'pull_request' &&
+      github.ref == 'refs/heads/main' &&
       needs.publish-allure-report.outputs.pages_artifact == 'success'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
