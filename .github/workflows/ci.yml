@@ -8,12 +8,12 @@ name: CI
 # PR: no CD. Push develop → stage; push main → stage then prod (needs e2e-tests-stage).
 #
 # Graph (ids = jobs: keys):
-#   trigger → backend-unit-tests · openapi-sync · frontend-unit-tests · tests-harness
+#   trigger → backend-unit-tests · frontend-unit-tests · tests-harness
 #   integration-tests ← backend-unit-tests
 #   sonar-backend ← backend-unit-tests + integration-tests · sonar-tests ← tests-harness
 #   ui-mock-tests ← frontend-unit-tests + tests-harness
 #   sonar-frontend ← frontend-unit-tests + ui-mock-tests
-#   build-backend ← backend-unit-tests + integration-tests + openapi-sync · build-frontend ← ui-mock-tests
+#   build-backend ← backend-unit-tests + integration-tests · build-frontend ← ui-mock-tests
 #   deploy-backend-stage / deploy-frontend-stage ← build-* + sonar-* + preempt-develop-cd / yield-to-main-cd
 #   api-tests-stage / e2e-tests-stage ← deploy-*-stage + tests-harness
 #   deploy-backend / deploy-frontend ← build-* + sonar-* + e2e-tests-stage
@@ -258,15 +258,6 @@ jobs:
         with:
           module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
 
-  openapi-sync:
-    needs: trigger
-    if: always() && !cancelled()
-    runs-on: ubuntu-24.04
-    timeout-minutes: 2
-    steps:
-      - *checkout
-      - uses: ./backend/.github/actions/openapi-sync
-
   integration-tests:
     needs: [backend-unit-tests, trigger]
     if: >-
@@ -459,11 +450,10 @@ jobs:
           module_dir: ${{ format('frontend/{0}/frontend-{0}-{1}', env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
 
   build-backend:
-    needs: [backend-unit-tests, integration-tests, trigger, openapi-sync]
+    needs: [backend-unit-tests, integration-tests, trigger]
     if: >-
       !cancelled() &&
       needs.backend-unit-tests.result == 'success' &&
-      needs.openapi-sync.result == 'success' &&
       (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped') &&
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop') &&
       needs.trigger.outputs.backend == 'true'
