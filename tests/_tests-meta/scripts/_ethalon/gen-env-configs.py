@@ -149,7 +149,7 @@ def format_file(stand: str, layer: str, values: dict[str, str]) -> str:
                 "allureRestAssuredListenerStyle",
             ],
         ),
-        ("Target app", ["baseUrl", "basePath"]),
+        ("Target app", ["baseUrl"]),
         ("REST API", ["apiBaseUrl"]),
         ("Selenoid hub", ["hubUrl", "uiUrl", "smokeUrl"]),
         (
@@ -181,7 +181,7 @@ def format_file(stand: str, layer: str, values: dict[str, str]) -> str:
             if key == "allureRestAssuredListenerStyle":
                 lines.append("# default = stock jar templates; colored = tpl/request.ftl + tpl/response.ftl")
             val = values[key]
-            if val == "" and key in ("remoteUrl", "videoFolder", "baseUrl", "basePath", "apiBaseUrl"):
+            if val == "" and key in ("remoteUrl", "videoFolder", "baseUrl", "apiBaseUrl"):
                 lines.append(f"# {key}=")
             else:
                 lines.append(f"{key}={val}")

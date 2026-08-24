@@ -105,14 +105,10 @@ def resolveConfiguredBaseUrl = { String env ->
         configFile.withInputStream { props.load(it) }
     }
     def baseUrl = (System.getProperty('baseUrl') ?: props.getProperty('baseUrl', '')).trim()
-    def basePath = (System.getProperty('basePath') ?: props.getProperty('basePath', '')).trim()
     if (baseUrl) {
         return baseUrl.endsWith('/') ? baseUrl : "${baseUrl}/"
     }
-    if (basePath) {
-        return null
-    }
-    throw new GradleException("Set baseUrl or basePath in config/${env}.properties")
+    throw new GradleException("Set baseUrl in config/${env}.properties")
 }
 
 def shouldSkipHealthCheck = { String env ->

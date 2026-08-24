@@ -1,6 +1,6 @@
 package pages;
 
-import config.ConfigReader;
+import com.codeborne.selenide.Configuration;
 
 import static com.codeborne.selenide.Selenide.Wait;
 import static com.codeborne.selenide.Selenide.executeJavaScript;
@@ -17,7 +17,7 @@ final class BrowserUrl {
     }
 
     static void shouldBeAtAppRoot() {
-        String expected = ConfigReader.resolveWebBaseUrl();
+        String expected = Configuration.baseUrl.replaceAll("/+$", "");
         Wait().withTimeout(PAGE_READY).until(driver -> {
             String current = driver.getCurrentUrl().replaceAll("/+$", "");
             if (current.equals(expected)) {

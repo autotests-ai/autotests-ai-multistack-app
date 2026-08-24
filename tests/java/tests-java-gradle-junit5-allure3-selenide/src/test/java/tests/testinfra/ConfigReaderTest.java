@@ -12,11 +12,9 @@ import org.aeonbits.owner.ConfigFactory;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 
-import java.nio.file.Path;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -53,28 +51,11 @@ class ConfigReaderTest extends AllureMeta {
     }
 
     @Test
-    @DisplayName("resolveBaseUrl fails fast when baseUrl and basePath are empty")
-    void resolveBaseUrlFailsWhenBothEmpty() {
-        var config = configWith(Map.of("baseUrl", "", "basePath", ""));
+    @DisplayName("resolveBaseUrl fails fast when baseUrl is empty")
+    void resolveBaseUrlFailsWhenEmpty() {
+        var config = configWith(Map.of("baseUrl", ""));
         var error = assertThrows(IllegalStateException.class, () -> ConfigReader.resolveBaseUrl(config));
-        assertTrue(error.getMessage().contains("baseUrl or basePath"));
-    }
-
-    @Test
-    @DisplayName("resolveBaseUrl maps basePath to file URL with trailing slash")
-    void resolveBaseUrlFromBasePath(@TempDir Path dir) {
-        var config = configWith(Map.of("baseUrl", "", "basePath", dir.toString()));
-        var url = ConfigReader.resolveBaseUrl(config);
-        assertTrue(url.startsWith("file:"));
-        assertTrue(url.endsWith("/"));
-    }
-
-    @Test
-    @DisplayName("resolveBaseUrl fails when basePath directory is missing")
-    void resolveBaseUrlFailsWhenBasePathMissing() {
-        var config = configWith(Map.of("baseUrl", "", "basePath", "/nonexistent/e2e-config-missing-dir"));
-        var error = assertThrows(IllegalStateException.class, () -> ConfigReader.resolveBaseUrl(config));
-        assertTrue(error.getMessage().contains("basePath not found"));
+        assertTrue(error.getMessage().contains("Set baseUrl"));
     }
 
     @Test
@@ -102,9 +83,9 @@ class ConfigReaderTest extends AllureMeta {
     }
 
     @Test
-    @DisplayName("resolveWebBaseUrl strips trailing slash from loaded config")
-    void resolveWebBaseUrlStripsTrailingSlashFromLoadedConfig() {
-        assertEquals("http://localhost:9821", ConfigReader.resolveWebBaseUrl());
+    @DisplayName("loaded baseUrl has no trailing slash (Selenide Configuration.baseUrl)")
+    void loadedBaseUrlHasNoTrailingSlash() {
+        assertEquals("http://localhost:9821", ConfigReader.testConfig.baseUrl());
     }
 
     @Test
@@ -125,14 +106,5 @@ class ConfigReaderTest extends AllureMeta {
         var constructor = ConfigReader.class.getDeclaredConstructor();
         constructor.setAccessible(true);
         assertNotNull(constructor.newInstance());
-    }
-
-    @Test
-    @DisplayName("resolveBaseUrl resolves relative basePath against user dir")
-    void resolveBaseUrlResolvesRelativeBasePath() {
-        var config = configWith(Map.of("baseUrl", "", "basePath", "build"));
-        var url = ConfigReader.resolveBaseUrl(config);
-        assertTrue(url.startsWith("file:"));
-        assertTrue(url.endsWith("/"));
     }
 }

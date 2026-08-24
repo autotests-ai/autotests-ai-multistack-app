@@ -56,7 +56,7 @@ public class TestBase extends AllureMeta {
             System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "off");
         }
 
-        Configuration.baseUrl = ConfigReader.resolveWebBaseUrl();
+        Configuration.baseUrl = config.baseUrl();
         Configuration.browser = config.browser();
         Configuration.browserSize = config.browserSize();
         Configuration.headless = config.headless();

@@ -2,23 +2,12 @@ package config;
 
 import org.aeonbits.owner.ConfigFactory;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-
 public final class ConfigReader {
 
     private ConfigReader() {
     }
 
     public static final TestConfig testConfig = ConfigFactory.create(TestConfig.class);
-
-    public static String resolveWebBaseUrl() {
-        return resolveWebBaseUrl(testConfig);
-    }
-
-    static String resolveWebBaseUrl(TestConfig config) {
-        return resolveBaseUrl(config).replaceAll("/+$", "");
-    }
 
     public static String resolveBaseUrl() {
         return resolveBaseUrl(testConfig);
@@ -28,10 +17,7 @@ public final class ConfigReader {
         var url = config.baseUrl().trim();
         if (!url.isEmpty()) return withSlash(url);
 
-        var basePath = config.basePath().trim();
-        if (!basePath.isEmpty()) return withSlash(toDirectoryUrl(basePath));
-
-        throw new IllegalStateException("Set baseUrl or basePath in config/${env}.properties");
+        throw new IllegalStateException("Set baseUrl in config/${env}.properties");
     }
 
     public static String resolveApiBaseUrl() {
@@ -46,14 +32,6 @@ public final class ConfigReader {
         if (!hubUrl.isEmpty()) return withSlash(hubUrl);
 
         throw new IllegalStateException("Set apiBaseUrl or hubUrl in config/${env}.properties");
-    }
-
-    private static String toDirectoryUrl(String pathString) {
-        var path = Path.of(pathString);
-        if (!path.isAbsolute()) path = Path.of(System.getProperty("user.dir")).resolve(path);
-        path = path.normalize();
-        if (!Files.isDirectory(path)) throw new IllegalStateException("basePath not found: " + path);
-        return path.toUri().toString();
     }
 
     private static String withSlash(String s) {

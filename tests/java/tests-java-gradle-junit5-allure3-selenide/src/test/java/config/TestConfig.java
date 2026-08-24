@@ -54,10 +54,6 @@ public interface TestConfig extends Config {
     @DefaultValue("")
     String baseUrl();
 
-    @Key("basePath")
-    @DefaultValue("")
-    String basePath();
-
     @Key("apiBaseUrl")
     @DefaultValue("")
     String apiBaseUrl();
