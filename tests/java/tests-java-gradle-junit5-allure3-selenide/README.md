@@ -26,7 +26,7 @@ One task `test`; the layer is a tag filter, the stand is `-Denv` ([pyramid-map.y
 | e2e smoke | `./gradlew test -Denv=prod -DincludeTags='e2e & smoke' -DexcludeTags=screenshot,mock` | prod subset (login + home); CI job `e2e-tests` (Selenoid) |
 | screenshot mock refresh | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=mock -DincludeTags=screenshot -DupdateScreenshots=true` | writes `screenshots/mock/linux/chrome-148/` · CI `ui-mock-tests` step `Update screenshots` (`update_mock_screenshots`) |
 | screenshot stage refresh | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=stage -DincludeTags=screenshot -DupdateScreenshots=true` | writes `screenshots/stage/linux/chrome-148/` · CI `e2e-tests-stage` step `Update screenshots` (`update_stage_screenshots`) |
-| screenshot ci refresh | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=ci -DincludeTags=screenshot -DupdateScreenshots=true` | writes `screenshots/prod/linux/chrome-148/` (same folder as prod; not live `-Denv=prod`) · CI `ui-ci-tests` (`update_ci_screenshots`, `SCREENSHOT_OS=linux` on ubuntu) |
+| screenshot ci refresh | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=ci -DincludeTags=screenshot -DupdateScreenshots=true` | writes `screenshots/prod/linux/chrome-148/` (same folder as prod; not live `-Denv=prod`). Local compose stand — not a GHA job |
 | screenshot prod refresh | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=prod -DincludeTags=screenshot -DupdateScreenshots=true` | writes `screenshots/prod/linux/chrome-148/` · CI `e2e-tests` step `Update screenshots` (`update_e2e_screenshots`) |
 | manual | `./gradlew test -Denv=ci -DincludeTags=manual` | **in code** — `@Manual` + Allure steps · `tests/manual/` (not a wiki checklist) |
 
