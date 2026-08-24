@@ -37,7 +37,7 @@ runs:
             none|'') ;;
             *) echo "unknown deploy=${DEPLOY}" >&2; exit 1 ;;
           esac
-        elif [ "${GITHUB_EVENT_NAME}" = "push" ] && { [ "${GITHUB_REF}" = "refs/heads/main" ] || [ "${GITHUB_REF}" = "refs/heads/develop" ]; }; then
+        elif [ "${GITHUB_EVENT_NAME}" = "push" ]; then
           if [ -z "${BEFORE:-}" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] \
             || ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
             backend=true
