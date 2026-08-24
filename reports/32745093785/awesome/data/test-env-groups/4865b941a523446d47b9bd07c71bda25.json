@@ -1,1 +1,0 @@
-{"id":"4865b941a523446d47b9bd07c71bda25","fullName":"frontend-typescript-react:src/test/pages/HomePage.test.tsx#HomePage does not clear session after unmount when profile fetch fails","name":"does not clear session after unmount when profile fetch fails","status":"passed","testResultsByEnv":{"default":"b6835633beb17f513ad503e7ec4832e3"}}
