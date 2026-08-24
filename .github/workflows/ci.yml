@@ -210,6 +210,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     permissions:
+      contents: read
       actions: write
     steps:
       - uses: actions/checkout@v7
@@ -224,6 +225,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     permissions:
+      contents: read
       actions: write
     steps:
       - uses: actions/checkout@v7
