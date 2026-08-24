@@ -1,6 +1,6 @@
 name: CI
 
-# Teaching orchestrator. Stack knobs live in `env:` once. Layer jobs are checkout +
+# Teaching orchestrator. Stack knobs live in `env:` once. Layer jobs are *checkout +
 # `uses: ./backend|frontend|tests/.github/actions/<verb>` with `module_dir` from knobs.
 # Commands a student types locally live in the module action, not here. One workflow
 # for clone and takeaway — no *_github.yml siblings. Host / CD: repo vars. Missing
@@ -238,7 +238,7 @@ jobs:
 
   # Keep the backend root first: GitHub has no explicit graph coordinates and uses
   # declaration order as a layout hint for otherwise independent jobs.
-  # Layer jobs: checkout + `uses: ./<family>/.github/actions/<verb>` + module_dir.
+  # Layer jobs: *checkout + `uses: ./<family>/.github/actions/<verb>` + module_dir.
   # Language setup and ./gradlew / npm live in the module action, not here.
   backend-unit-tests:
     needs: trigger
@@ -253,7 +253,8 @@ jobs:
       ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     steps:
-      - uses: actions/checkout@v7
+      - &checkout
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
           fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
@@ -267,10 +268,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+      - *checkout
       - uses: ./backend/.github/actions/openapi-sync
 
   integration-tests:
@@ -291,10 +289,7 @@ jobs:
       ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+      - *checkout
       - uses: ./backend/.github/actions/integration
         with:
           module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
@@ -311,10 +306,7 @@ jobs:
       ALLURE_JOB_RUN_ID: ${{ needs.trigger.outputs.job_run_id }}
       ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
     steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+      - *checkout
       - uses: ./frontend/.github/actions/unit
         with:
           module_dir: ${{ format('frontend/{0}/frontend-{0}-{1}', env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
@@ -330,10 +322,7 @@ jobs:
       LAYER: harness
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+      - *checkout
       - id: harness
         uses: ./tests/.github/actions/harness
         with:
@@ -368,10 +357,7 @@ jobs:
       ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+      - *checkout
       - uses: ./tests/.github/actions/mock
         with:
           module_dir: ${{ env.TESTS_LANG == 'java' && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
@@ -402,10 +388,7 @@ jobs:
       ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+      - *checkout
       - uses: ./tests/.github/actions/ci-screenshots
         with:
           module_dir: ${{ env.TESTS_LANG == 'java' && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
@@ -527,10 +510,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+      - *checkout
       - uses: ./backend/.github/actions/build
         with:
           module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
@@ -551,10 +531,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+      - *checkout
       - uses: ./frontend/.github/actions/build
         with:
           module_dir: ${{ format('frontend/{0}/frontend-{0}-{1}', env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
@@ -589,10 +566,7 @@ jobs:
       DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+      - *checkout
       - uses: ./backend/.github/actions/deploy
         with:
           module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
@@ -629,10 +603,7 @@ jobs:
       DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+      - *checkout
       - uses: ./frontend/.github/actions/deploy
         with:
           module_dir: ${{ format('frontend/{0}/frontend-{0}-{1}', env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
@@ -671,10 +642,7 @@ jobs:
       DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+      - *checkout
       - uses: ./backend/.github/actions/deploy
         with:
           module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
@@ -711,10 +679,7 @@ jobs:
       DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+      - *checkout
       - uses: ./frontend/.github/actions/deploy
         with:
           module_dir: ${{ format('frontend/{0}/frontend-{0}-{1}', env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
@@ -749,10 +714,7 @@ jobs:
       ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+      - *checkout
       - uses: ./tests/.github/actions/api
         with:
           module_dir: ${{ env.TESTS_LANG == 'java' && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
@@ -800,10 +762,7 @@ jobs:
       SELENOID_WEBDRIVER_URL: ${{ secrets.SELENOID_WEBDRIVER_URL || secrets.SELENOID_REMOTE_URL }}
       SELENOID_PLAYWRIGHT_URL: ${{ secrets.SELENOID_PLAYWRIGHT_URL }}
     steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+      - *checkout
       - uses: ./tests/.github/actions/e2e
         with:
           module_dir: ${{ env.TESTS_LANG == 'java' && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
@@ -843,10 +802,7 @@ jobs:
       ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+      - *checkout
       - uses: ./tests/.github/actions/api
         with:
           module_dir: ${{ env.TESTS_LANG == 'java' && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
@@ -896,10 +852,7 @@ jobs:
       SELENOID_WEBDRIVER_URL: ${{ secrets.SELENOID_WEBDRIVER_URL || secrets.SELENOID_REMOTE_URL }}
       SELENOID_PLAYWRIGHT_URL: ${{ secrets.SELENOID_PLAYWRIGHT_URL }}
     steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+      - *checkout
       - uses: ./tests/.github/actions/e2e
         with:
           module_dir: ${{ env.TESTS_LANG == 'java' && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
@@ -929,10 +882,7 @@ jobs:
       SELENOID_WEBDRIVER_URL: ${{ secrets.SELENOID_WEBDRIVER_URL || secrets.SELENOID_REMOTE_URL }}
       SELENOID_PLAYWRIGHT_URL: ${{ secrets.SELENOID_PLAYWRIGHT_URL }}
     steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+      - *checkout
       - uses: ./tests/.github/actions/manual
         with:
           module_dir: ${{ env.TESTS_LANG == 'java' && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
