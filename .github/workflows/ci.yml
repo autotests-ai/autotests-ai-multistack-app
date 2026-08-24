@@ -26,9 +26,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [main, master, develop]
+    branches: [main, develop]
   push:
-    branches: [main, master, develop]
+    branches: [main, develop]
   workflow_dispatch:
     inputs:
       deploy:
@@ -100,7 +100,7 @@ concurrency:
   # PRs: per-ref, cancel stale. main vs develop cannot share cancel-in-progress
   # (a new develop would abort a prod promotion). Separate groups; jobs
   # preempt-develop-cd / yield-to-main-cd enforce main priority on the stage host.
-  group: ${{ github.event_name == 'pull_request' && format('ci-pr-{0}', github.ref) || (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && 'ci-cd-main' || github.ref == 'refs/heads/develop' && 'ci-cd-develop' || format('ci-{0}', github.ref) }}
+  group: ${{ github.event_name == 'pull_request' && format('ci-pr-{0}', github.ref) || github.ref == 'refs/heads/main' && 'ci-cd-main' || github.ref == 'refs/heads/develop' && 'ci-cd-develop' || format('ci-{0}', github.ref) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/develop' }}
 
 permissions:
@@ -206,7 +206,7 @@ jobs:
           ALLURE_LAUNCH_NAME: "${{ env.APP_SLUG }} CI — ${{ env.RUN_LABEL }}"
 
   preempt-develop-cd:
-    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     permissions:
@@ -263,7 +263,7 @@ jobs:
     if: >-
       always() && !cancelled() && needs.backend-unit-tests.result == 'success' && (
         github.event_name == 'pull_request' ||
-        (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')) ||
+        (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')) ||
         (github.event_name == 'workflow_dispatch' && inputs.run_integration)
       )
     runs-on: ubuntu-24.04
@@ -455,7 +455,7 @@ jobs:
       !cancelled() &&
       needs.backend-unit-tests.result == 'success' &&
       (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped') &&
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop') &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') &&
       needs.trigger.outputs.backend == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -476,7 +476,7 @@ jobs:
     if: >-
       !cancelled() &&
       needs.ui-mock-tests.result == 'success' &&
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop') &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') &&
       needs.trigger.outputs.frontend == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -684,7 +684,7 @@ jobs:
       needs.trigger.outputs.cd_production == 'true' && (
         (needs.deploy-frontend.result == 'success' ||
          needs.deploy-frontend.result == 'skipped') && (
-          (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
+          (github.event_name == 'push' && github.ref == 'refs/heads/main' &&
            (needs.api-tests.result == 'success' ||
             (needs.api-tests.result == 'skipped' &&
              needs.deploy-frontend.result == 'success'))) ||
@@ -772,7 +772,7 @@ jobs:
       needs.trigger.outputs.cd_stage == 'true' && (
         (needs.deploy-frontend-stage.result == 'success' ||
          needs.deploy-frontend-stage.result == 'skipped') && (
-          (github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
+          (github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main') &&
            (needs.api-tests-stage.result == 'success' ||
             (needs.api-tests-stage.result == 'skipped' &&
              needs.deploy-frontend-stage.result == 'success'))) ||
@@ -905,7 +905,7 @@ jobs:
     if: >-
       always() && !cancelled() &&
       github.event_name != 'pull_request' &&
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop') &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') &&
       needs.publish-allure-report.outputs.pages_artifact == 'success'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
