@@ -1,73 +1,28 @@
 name: CI
 
-# Teaching tests: two knobs (-Denv / -DincludeTags) pick stand and slice.
-# Layer jobs are checkout + `uses: ./backend|frontend|tests/.github/actions/<verb>`
-# with `module_dir` from stack knobs (format). Commands a
-# student types locally live inside the module action, not in this file.
+# Teaching orchestrator. Stack knobs live in `env:` once. Layer jobs are checkout +
+# `uses: ./backend|frontend|tests/.github/actions/<verb>` with `module_dir` from knobs.
+# Commands a student types locally live in the module action, not here. One workflow
+# for clone and takeaway — no *_github.yml siblings. Host / CD: repo vars. Missing
+# SONAR_TOKEN skips Sonar and does not block deploy. TestOps / Telegram stay soft.
+# PR: no CD. Push develop → stage; push main → stage then prod (needs e2e-tests-stage).
 #
-# One workflow for clone, takeaway, and children. No *_github.yml siblings.
-# Host / CD: repo vars (APP_URL, DEPLOY_MODE=ghcr|compose, DEPLOY_APP_DIR, …).
-# Missing SONAR_TOKEN skips Sonar and does not block deploy. TestOps stays soft.
-#
-# Active stack knobs live in `env:` once: BACKEND_LANG / BACKEND_FRAMEWORK,
-# FRONTEND_LANG / FRONTEND_FRAMEWORK, TESTS_LANG / BUILDER / FRAMEWORK / REPORT / UI_LIBRARY.
-# Family adapters under backend|frontend|tests/.github/actions/ statically
-# `uses:` the language family (GitHub does not interpolate `uses:`).
-# BACKEND_LANG: java/kotlin → module actions; python/go/javascript/typescript → family.
-# FRONTEND_LANG: typescript → frontend/typescript/.github/actions,
-# javascript → frontend/javascript/.github/actions.
-# TESTS_LANG: java → module; javascript/python → family; typescript/unknown → STOP.
-#
-# Allure: trigger opens one shared TestOps job-run (soft); test jobs stream live and
-# publish raw results. publish-allure-report is gating (lock pins, npm ci, generate).
-# Pages: that job pushes gh-pages (soft); live deploy is deploy-github-pages
-# (upload-pages-artifact@v5 + deploy-pages@v5). Retry Pages without the graph:
-# workflow_dispatch .github/workflows/pages.yml. TestOps / Telegram stay soft too.
-# TestOps UI rerun: workflow_dispatch + ALLURE_JOB_RUN_ID → ALLURE_KEEP_TESTPLAN=true.
-# Launch env axes: BROWSER / OS / ENDPOINT / VERSION(=sha) / BRANCH.
-# SSOT host: allure.qa.guru (legacy allure.autotests.cloud redirects).
-# Layers (classical): unit · integration (no UI) · api · e2e · manual
-# Sideways FE: component (jsdom) — only the active FRONTEND (same teaching knob as deploy).
-# Screenshot (@Tag screenshot): compare in ui-mock-tests (every PR) and e2e-tests-stage (stage CD).
-# Prod e2e-tests screenshot is dispatch run_screenshot.
-# Browsers: mock = local CFT / Playwright Chromium (hub cannot see :9911).
-# Live e2e/manual = Selenoid secrets.SELENOID_WEBDRIVER_URL (WebDriver; alias SELENOID_REMOTE_URL) / secrets.SELENOID_PLAYWRIGHT_URL (Playwright).
-# rewrite: update_mock_screenshots / update_stage_screenshots / update_e2e_screenshots / update_ci_screenshots, not a CD job.
-# ui-ci-tests: dispatch update_ci_screenshots; local compose -Denv=ci writes screenshots/prod/ (not live prod).
-# CD: push develop → stage only (WIP). Push main → same SHA to stage, then prod
-# (prod jobs `needs` e2e-tests-stage). `trigger` maps push paths / dispatch `deploy`
-# onto the same flags. Sonar gates deploy, not build.
-# Prod deploy moves the **prod** checkout dir to the new SHA.
-# Stage twin: deploy-backend-stage / deploy-frontend-stage — own APP_DIR,
-# compose project autotests-ai-multistack-app-stage, ports +10000 (deploy/stage.env).
-# Stage CD: push develop | push main | dispatch stage|both|production-from-main.
-# Skip until vars.STAGE_APP_DIR is set. Live tests: full api/e2e vs stage
-# and vs prod (after stage e2e). Stand is -Denv=; layer is @Tag api/e2e.
-# Stage mutex: main preempts develop (cancel), develop yields if main is queued
-# or running. Not one shared cancel-in-progress group — that would let develop
-# cancel a prod promotion.
-# Roots: trigger → backend-unit-tests · openapi-sync · frontend-unit-tests · tests-harness
-#   openapi-sync: every backend-* openapi.yaml == _contract (composite, no job run:)
-#   integration-tests ← backend-unit-tests (backend module, pre-build; PR + main)
-#   sonar-backend ← backend-unit-tests + integration-tests
-#   sonar-tests ← tests-harness (skipped on backend-only lane)
-#   ui-mock-tests ← frontend-unit-tests + tests-harness (jsdom first; mock compose on the runner)
-#   ui-ci-tests ← dispatch update_ci_screenshots; local compose -Denv=ci writes screenshots/prod/ (not live prod)
-#   sonar-frontend ← frontend-unit-tests + ui-mock-tests (mock skipped ⇒ sonar still runs)
+# Graph (ids = jobs: keys):
+#   trigger → backend-unit-tests · openapi-sync · frontend-unit-tests · tests-harness
+#   integration-tests ← backend-unit-tests
+#   sonar-backend ← backend-unit-tests + integration-tests · sonar-tests ← tests-harness
+#   ui-mock-tests ← frontend-unit-tests + tests-harness · ui-ci-tests (dispatch)
+#   sonar-frontend ← frontend-unit-tests + ui-mock-tests
 #   build-backend ← backend-unit-tests + integration-tests + openapi-sync · build-frontend ← ui-mock-tests
-#   deploy-backend-stage / deploy-frontend-stage ← same gates; cd_stage; skip until vars.STAGE_APP_DIR
-#   api-tests-stage / e2e-tests-stage ← deploy-*-stage + tests-harness; full api / e2e vs stage stand
-#     (e2e-tests-stage also compares screenshots/stage/)
-#   deploy-backend ← build-backend + sonar-backend + e2e-tests-stage (cd_production)
-#   deploy-frontend ← build-frontend + sonar-frontend + e2e-tests-stage
-#   api-tests ← deploy-backend + tests-harness; -Denv=prod -DincludeTags=api
-#   e2e-tests ← api-tests + deploy-frontend + tests-harness; -Denv=prod -DincludeTags=e2e excludeTags=mock,screenshot
-#   publish-allure-report ← layer jobs + tests-harness + sonar-backend
-#     (gating generate; Allure QG also fails on layer-job `failure`, not skipped;
-#      soft Telegram + Pages)
-# push main|develop: trigger infers lanes from paths (tests/ ⇒ no app deploy).
-# dispatch `deploy=none|backend|frontend|tests|all` + `deploy_target=production|stage|both`.
-# PR (main|develop): no deploy; ui-mock-tests after frontend-unit-tests (mock compose profile).
+#   deploy-backend-stage / deploy-frontend-stage ← build-* + sonar-* + preempt-develop-cd / yield-to-main-cd
+#   api-tests-stage / e2e-tests-stage ← deploy-*-stage + tests-harness
+#   deploy-backend / deploy-frontend ← build-* + sonar-* + e2e-tests-stage
+#   api-tests / e2e-tests / manual-tests ← deploy-* + tests-harness
+#   publish-allure-report → deploy-github-pages
+#
+# Screenshot: ui-mock-tests (PR) · e2e-tests-stage · e2e-tests (dispatch run_screenshot).
+# Stage mutex: preempt-develop-cd / yield-to-main-cd (main preempts develop).
+# Pages: deploy-github-pages; retry pages.yml. RAG: ci-workflow-app-orchestrator / ci-workflow-ethalon.
 
 on:
   pull_request:
