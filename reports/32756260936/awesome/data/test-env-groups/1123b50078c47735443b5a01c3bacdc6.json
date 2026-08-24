@@ -1,1 +1,0 @@
-{"id":"1123b50078c47735443b5a01c3bacdc6","fullName":"tests.api.HealthItemsApiTests.itemsMatchContract","name":"GET /api/items matches the items contract (typed rows, named source)","status":"passed","testResultsByEnv":{"default":"ffc5200b0ee7dda57e853ef2d071f50f"}}
