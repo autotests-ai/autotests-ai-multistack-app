@@ -13,6 +13,14 @@ outputs:
     value: ${{ steps.set.outputs.cd_production }}
   cd_stage:
     value: ${{ steps.set.outputs.cd_stage }}
+  run_api_prod:
+    value: ${{ steps.set.outputs.run_api_prod }}
+  run_api_stage:
+    value: ${{ steps.set.outputs.run_api_stage }}
+  run_e2e_prod:
+    value: ${{ steps.set.outputs.run_e2e_prod }}
+  run_e2e_stage:
+    value: ${{ steps.set.outputs.run_e2e_stage }}
 runs:
   using: composite
   steps:
@@ -23,6 +31,13 @@ runs:
         BEFORE: ${{ env.BEFORE }}
         DEPLOY: ${{ env.DEPLOY }}
         DEPLOY_TARGET: ${{ env.DEPLOY_TARGET }}
+        RUN_API: ${{ env.RUN_API }}
+        RUN_E2E: ${{ env.RUN_E2E }}
+        RUN_SCREENSHOT: ${{ env.RUN_SCREENSHOT }}
+        UPDATE_E2E_SCREENSHOTS: ${{ env.UPDATE_E2E_SCREENSHOTS }}
+        UPDATE_STAGE_SCREENSHOTS: ${{ env.UPDATE_STAGE_SCREENSHOTS }}
+        INCLUDE_TAGS: ${{ env.INCLUDE_TAGS }}
+        EXCLUDE_TAGS: ${{ env.EXCLUDE_TAGS }}
       run: |
         set -euo pipefail
         backend=false
@@ -75,6 +90,55 @@ runs:
         elif [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/develop" ]; then
           cd_stage=true
         fi
-        printf 'backend=%s\nfrontend=%s\ntests=%s\ncd_production=%s\ncd_stage=%s\n' \
-          "$backend" "$frontend" "$tests" "$cd_production" "$cd_stage" >> "$GITHUB_OUTPUT"
-        echo "trigger backend=${backend} frontend=${frontend} tests=${tests} cd_production=${cd_production} cd_stage=${cd_stage}"
+        # Live-test intent only (event / lanes / inputs / cd_*). Deploy results stay on the jobs.
+        dispatch_api=false
+        dispatch_e2e_prod=false
+        dispatch_e2e_stage=false
+        if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+          if [ "${RUN_API:-}" = "true" ]; then dispatch_api=true; fi
+          if [ "${RUN_E2E:-}" = "true" ] || [ "${RUN_SCREENSHOT:-}" = "true" ] \
+            || [ "${UPDATE_E2E_SCREENSHOTS:-}" = "true" ] \
+            || [ -n "${INCLUDE_TAGS:-}" ] || [ -n "${EXCLUDE_TAGS:-}" ]; then
+            dispatch_e2e_prod=true
+          fi
+          if [ "${RUN_E2E:-}" = "true" ] || [ "${RUN_SCREENSHOT:-}" = "true" ] \
+            || [ "${UPDATE_STAGE_SCREENSHOTS:-}" = "true" ] \
+            || [ -n "${INCLUDE_TAGS:-}" ] || [ -n "${EXCLUDE_TAGS:-}" ]; then
+            dispatch_e2e_stage=true
+          fi
+        fi
+        want_api=false
+        if [ "$backend" = true ] || [ "$tests" = true ] || [ "$dispatch_api" = true ]; then
+          want_api=true
+        fi
+        want_e2e_prod=false
+        want_e2e_stage=false
+        if [ "${GITHUB_EVENT_NAME}" = "push" ]; then
+          if [ "$backend" = true ] || [ "$frontend" = true ] || [ "$tests" = true ]; then
+            want_e2e_prod=true
+            want_e2e_stage=true
+          fi
+        elif [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+          if [ "$tests" = true ] || [ "$dispatch_e2e_prod" = true ]; then
+            want_e2e_prod=true
+          fi
+          if [ "$tests" = true ] || [ "$dispatch_e2e_stage" = true ]; then
+            want_e2e_stage=true
+          fi
+        fi
+        run_api_prod=false
+        run_api_stage=false
+        run_e2e_prod=false
+        run_e2e_stage=false
+        if [ "$cd_production" = true ]; then
+          if [ "$want_api" = true ]; then run_api_prod=true; fi
+          if [ "$want_e2e_prod" = true ]; then run_e2e_prod=true; fi
+        fi
+        if [ "$cd_stage" = true ]; then
+          if [ "$want_api" = true ]; then run_api_stage=true; fi
+          if [ "$want_e2e_stage" = true ]; then run_e2e_stage=true; fi
+        fi
+        printf 'backend=%s\nfrontend=%s\ntests=%s\ncd_production=%s\ncd_stage=%s\nrun_api_prod=%s\nrun_api_stage=%s\nrun_e2e_prod=%s\nrun_e2e_stage=%s\n' \
+          "$backend" "$frontend" "$tests" "$cd_production" "$cd_stage" \
+          "$run_api_prod" "$run_api_stage" "$run_e2e_prod" "$run_e2e_stage" >> "$GITHUB_OUTPUT"
+        echo "trigger backend=${backend} frontend=${frontend} tests=${tests} cd_production=${cd_production} cd_stage=${cd_stage} run_api_prod=${run_api_prod} run_api_stage=${run_api_stage} run_e2e_prod=${run_e2e_prod} run_e2e_stage=${run_e2e_stage}"
