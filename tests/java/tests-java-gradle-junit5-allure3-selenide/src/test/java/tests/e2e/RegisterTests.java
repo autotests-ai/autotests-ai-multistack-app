@@ -12,7 +12,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import pages.RegisterPage;
 
 @Layer("e2e")
 @Epic("Authentication")
@@ -27,8 +26,6 @@ class RegisterTests extends TestBase {
     private static final String DUPLICATE_USERNAME_MESSAGE = "Username already taken";
 
     private static final String REGISTER_PASSWORD = "password123";
-
-    private final RegisterPage registerPage = new RegisterPage();
 
     /** Username registered by the test — deleted through the API afterwards. */
     private String registeredUsername;

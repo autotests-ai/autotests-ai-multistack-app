@@ -15,6 +15,7 @@ import helpers.HarCapture;
 import helpers.LocalChromePin;
 import pages.HomePage;
 import pages.LoginPage;
+import pages.RegisterPage;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -35,9 +36,10 @@ import static com.codeborne.selenide.Selenide.sleep;
 @Framework("selenide")
 public class TestBase extends AllureMeta {
 
-    protected HomePage homePage = new HomePage();
-    protected LoginPage loginPage = new LoginPage();
-    
+    protected final HomePage homePage = new HomePage();
+    protected final LoginPage loginPage = new LoginPage();
+    protected final RegisterPage registerPage = new RegisterPage();
+
     protected static final TestConfig config = ConfigReader.testConfig;
     private static final SimpleReport selenideReport = new SimpleReport();
 
@@ -61,6 +63,8 @@ public class TestBase extends AllureMeta {
         Configuration.browserSize = config.browserSize();
         Configuration.headless = config.headless();
 
+        // enableHar = collect CDP network events in the test process (not a hub capability).
+        // attachHarLogs = put that HAR into Allure; implies capture so the attachment is not empty.
         boolean captureHar = config.enableHar() || config.attachHarLogs();
 
         if (!config.remoteUrl().isBlank()) {
@@ -69,8 +73,6 @@ public class TestBase extends AllureMeta {
             var selenoidOpts = new HashMap<String, Object>();
             selenoidOpts.put("enableVNC", config.enableVnc());
             selenoidOpts.put("enableVideo", config.enableVideo());
-            selenoidOpts.put("headless", config.headless());
-            // enableHar is client-side (HarCapture); do not send fake hub capability
             var capabilities = new MutableCapabilities();
             capabilities.setCapability("selenoid:options", selenoidOpts);
             if (captureHar && HarCapture.supportsBrowser(config.browser())) {
@@ -138,38 +140,38 @@ public class TestBase extends AllureMeta {
 
     @AfterEach
     void afterEach(TestInfo testInfo) {
-        if (config.logToConsole() && config.selenideLogToConsole()) {
-            selenideReport.finish(testInfo.getDisplayName());
-        }
-
-        if (!allureResultsEnabled()) {
-            if (config.closeBrowserAfterEach()) {
-                closeWebDriver();
+        try {
+            if (config.logToConsole() && config.selenideLogToConsole()) {
+                selenideReport.finish(testInfo.getDisplayName());
             }
-            return;
+            if (allureResultsEnabled() && WebDriverRunner.hasWebDriverStarted()) {
+                if (config.attachBrowserConsoleLogs()) {
+                    Attachments.browserConsoleLogs();
+                }
+                if (config.attachPageSource()) {
+                    Attachments.pageSource();
+                }
+                if (config.attachLastScreenshot()) {
+                    Attachments.screenshot("Last screenshot");
+                }
+                if (config.enableVideo() && config.attachVideo()) {
+                    Attachments.video();
+                }
+            }
+        } finally {
+            // HAR from Chrome Performance logs — attach while the session is still
+            // alive, even if screenshot/source/video threw. Close the hub slot last.
+            try {
+                if (allureResultsEnabled() && config.attachHarLogs()
+                        && WebDriverRunner.hasWebDriverStarted()) {
+                    Attachments.harLogs();
+                }
+            } finally {
+                if (config.closeBrowserAfterEach()) {
+                    closeWebDriver();
+                }
+            }
         }
-
-        if (config.attachBrowserConsoleLogs()) {
-            Attachments.browserConsoleLogs();
-        }
-        if (config.attachPageSource()) {
-            Attachments.pageSource();
-        }
-
-        if (config.attachHarLogs()) {
-            Attachments.harLogs();
-        }
-
-        if (config.attachLastScreenshot()) {
-            Attachments.screenshot("Last screenshot");
-        }
-
-        if (config.enableVideo() && config.attachVideo()) {
-            Attachments.video();
-        }
-        if (config.closeBrowserAfterEach()) {
-            closeWebDriver();
-        }   
     }
 
     @AfterAll

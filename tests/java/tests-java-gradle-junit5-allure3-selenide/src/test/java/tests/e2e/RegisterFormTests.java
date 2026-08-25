@@ -9,7 +9,6 @@ import io.qameta.allure.SeverityLevel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import pages.RegisterPage;
 
 @Layer("e2e")
 @Epic("Authentication")
@@ -17,8 +16,6 @@ import pages.RegisterPage;
 @Severity(SeverityLevel.NORMAL)
 @DisplayName("Register form mount")
 class RegisterFormTests extends TestBase {
-
-    private final RegisterPage registerPage = new RegisterPage();
 
     @Test
     @Tag("e2e")

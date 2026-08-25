@@ -5,6 +5,7 @@ import io.qameta.allure.Step;
 
 import static com.codeborne.selenide.Selenide.cookies;
 import static com.codeborne.selenide.Selenide.localStorage;
+import static com.codeborne.selenide.Selenide.refresh;
 import static com.codeborne.selenide.Selenide.sessionStorage;
 import static com.codeborne.selenide.Selenide.switchTo;
 
@@ -22,6 +23,7 @@ public final class BrowserSessionHelper {
         clearLocalStorage();
         clearSessionStorage();
         clearCookies();
+        refresh();
         ViewportHelper.resetViewport();
     }
 

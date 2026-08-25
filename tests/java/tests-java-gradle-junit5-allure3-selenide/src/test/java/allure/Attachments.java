@@ -18,18 +18,35 @@ import static org.openqa.selenium.logging.LogType.BROWSER;
 
 
 public class Attachments {
-    
+
     private static final TestConfig config = ConfigReader.testConfig;
 
+    private static boolean driverAlive() {
+        return WebDriverRunner.hasWebDriverStarted();
+    }
 
     @Attachment(value = "{attachName}", type = "image/png")
     public static byte[] screenshot(String attachName) {
-        return Selenide.screenshot(OutputType.BYTES);
+        if (!driverAlive()) {
+            return null;
+        }
+        try {
+            return Selenide.screenshot(OutputType.BYTES);
+        } catch (RuntimeException ignored) {
+            return null;
+        }
     }
 
     @Attachment(value = "Page source", type = "text/html")
     public static byte[] pageSource() {
-        return WebDriverRunner.getWebDriver().getPageSource().getBytes(StandardCharsets.UTF_8);
+        if (!driverAlive()) {
+            return null;
+        }
+        try {
+            return WebDriverRunner.getWebDriver().getPageSource().getBytes(StandardCharsets.UTF_8);
+        } catch (RuntimeException ignored) {
+            return null;
+        }
     }
 
     @Attachment(value = "{attachName}", type = "text/plain")
@@ -38,18 +55,37 @@ public class Attachments {
     }
 
     public static void browserConsoleLogs() {
-        text(
-                "Browser console logs",
-                String.join("\n", Selenide.getWebDriverLogs(BROWSER))
-        );
+        if (!driverAlive()) {
+            return;
+        }
+        try {
+            text(
+                    "Browser console logs",
+                    String.join("\n", Selenide.getWebDriverLogs(BROWSER))
+            );
+        } catch (RuntimeException ignored) {
+            // dead session — skip, never mask the test failure
+        }
     }
 
     @Attachment(value = "Video", type = "text/html", fileExtension = ".html")
     public static String video() {
-        String videoUrl = config.videoFolder() + sessionId() + ".mp4";
-        return "<html><body><video width='100%' height='100%' controls autoplay><source src='"
-                + videoUrl
-                + "' type='video/mp4'></video></body></html>";
+        if (!driverAlive()) {
+            return null;
+        }
+        String folder = config.videoFolder();
+        if (folder == null || folder.isBlank()) {
+            return null;
+        }
+        try {
+            String base = folder.endsWith("/") ? folder : folder + "/";
+            String videoUrl = base + sessionId() + ".mp4";
+            return "<html><body><video width='100%' height='100%' controls autoplay><source src='"
+                    + videoUrl
+                    + "' type='video/mp4'></video></body></html>";
+        } catch (RuntimeException ignored) {
+            return null;
+        }
     }
 
     /**
@@ -59,21 +95,25 @@ public class Attachments {
      * No-op on unsupported browsers or when capture produced nothing — never throws.
      */
     public static void harLogs() {
-        if (!HarCapture.supportsBrowser(config.browser())) {
+        if (!driverAlive() || !HarCapture.supportsBrowser(config.browser())) {
             return;
         }
-        Optional<byte[]> har = HarCapture.collectHarJson();
-        har.ifPresent(bytes -> {
-            Allure.addAttachment(
-                    "capture.har",
-                    "application/json",
-                    new ByteArrayInputStream(bytes),
-                    ".har");
-            Allure.addAttachment(
-                    "HAR Viewer",
-                    "text/html",
-                    HarViewerHtml.render(bytes),
-                    ".html");
-        });
+        try {
+            Optional<byte[]> har = HarCapture.collectHarJson();
+            har.ifPresent(bytes -> {
+                Allure.addAttachment(
+                        "capture.har",
+                        "application/json",
+                        new ByteArrayInputStream(bytes),
+                        ".har");
+                Allure.addAttachment(
+                        "HAR Viewer",
+                        "text/html",
+                        HarViewerHtml.render(bytes),
+                        ".html");
+            });
+        } catch (RuntimeException ignored) {
+            // dead session or Allure I/O — skip, never mask the test failure
+        }
     }
 }
