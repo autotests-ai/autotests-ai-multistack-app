@@ -59,27 +59,18 @@ class ConfigReaderTest extends AllureMeta {
     }
 
     @Test
-    @DisplayName("resolveApiBaseUrl prefers apiBaseUrl over hubUrl")
-    void resolveApiBaseUrlPrefersExplicitKey() {
-        var config = configWith(Map.of(
-                "apiBaseUrl", "http://api.example.com",
-                "hubUrl", "http://hub.example.com/"));
+    @DisplayName("resolveApiBaseUrl adds trailing slash to HTTP apiBaseUrl")
+    void resolveApiBaseUrlAddsTrailingSlash() {
+        var config = configWith(Map.of("apiBaseUrl", "http://api.example.com"));
         assertEquals("http://api.example.com/", ConfigReader.resolveApiBaseUrl(config));
     }
 
     @Test
-    @DisplayName("resolveApiBaseUrl falls back to hubUrl when apiBaseUrl is empty")
-    void resolveApiBaseUrlFallsBackToHubUrl() {
-        var config = configWith(Map.of("apiBaseUrl", "", "hubUrl", "http://127.0.0.1:4444"));
-        assertEquals("http://127.0.0.1:4444/", ConfigReader.resolveApiBaseUrl(config));
-    }
-
-    @Test
-    @DisplayName("resolveApiBaseUrl fails fast when apiBaseUrl and hubUrl are empty")
-    void resolveApiBaseUrlFailsWhenBothEmpty() {
-        var config = configWith(Map.of("apiBaseUrl", "", "hubUrl", ""));
+    @DisplayName("resolveApiBaseUrl fails fast when apiBaseUrl is empty")
+    void resolveApiBaseUrlFailsWhenEmpty() {
+        var config = configWith(Map.of("apiBaseUrl", ""));
         var error = assertThrows(IllegalStateException.class, () -> ConfigReader.resolveApiBaseUrl(config));
-        assertTrue(error.getMessage().contains("apiBaseUrl or hubUrl"));
+        assertTrue(error.getMessage().contains("Set apiBaseUrl"));
     }
 
     @Test

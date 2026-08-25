@@ -28,10 +28,7 @@ public final class ConfigReader {
         var apiUrl = config.apiBaseUrl().trim();
         if (!apiUrl.isEmpty()) return withSlash(apiUrl);
 
-        var hubUrl = config.hubUrl().trim();
-        if (!hubUrl.isEmpty()) return withSlash(hubUrl);
-
-        throw new IllegalStateException("Set apiBaseUrl or hubUrl in config/${env}.properties");
+        throw new IllegalStateException("Set apiBaseUrl in config/${env}.properties");
     }
 
     private static String withSlash(String s) {

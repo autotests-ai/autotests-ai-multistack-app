@@ -347,7 +347,7 @@ def layerTestSlices = [
          description: 'Pyramid integration — @Tag(layout,mount)',
          includeTags: 'layout,mount'],
         [name: 'testApi',         layer: 'api',
-         description: 'Pyramid api — @Tag(api); hub on hubUrl',
+         description: 'Pyramid api — @Tag(api); Rest Assured on apiBaseUrl',
          includeTags: 'api'],
         [name: 'testE2e',         layer: 'e2e',
          description: 'Pyramid e2e smoke — @Tag(smoke), exclude visual + ladder ethalon',

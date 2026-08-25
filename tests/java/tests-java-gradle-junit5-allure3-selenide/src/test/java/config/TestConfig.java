@@ -67,14 +67,6 @@ public interface TestConfig extends Config {
     @DefaultValue("user1")
     String welcomeUsername();
 
-    @Key("hubUrl")
-    @DefaultValue("http://127.0.0.1:4444/")
-    String hubUrl();
-
-    @Key("uiUrl")
-    @DefaultValue("http://127.0.0.1:8080/")
-    String uiUrl();
-
     @Key("remoteUrl")
     @DefaultValue("")
     String remoteUrl();
