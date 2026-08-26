@@ -21,18 +21,13 @@
 <body>
   <div id="app-header"></div>
   <script src="js/app-base.js"></script>
-  <script>
-    window.headerConfig = {
-      brand: { href: appPath('/'), label: 'Multistack' },
-      nav: [
-        { href: appPath('/'), label: 'Home', testid: 'header-nav-home' },
-        { href: appPath('/login'), label: 'Login', testid: 'header-nav-login' },
-        { href: appPath('/register'), label: 'Register', active: true, testid: 'header-nav-register' },
-        { href: '/stack/', label: 'Stack', testid: 'header-nav-stack' },
-      ],
-      lang: { default: 'en' },
-      theme: { default: 'dark' },
-    };
+  <script src="js/i18n.js"></script>
+  <script src="js/header-config.js"></script>
+  <script type="module">
+    import { envNavItems } from './js/env-hosts.js';
+    window.envNavItems = envNavItems;
+    I18n.applyDocumentLang(I18n.readStoredLang());
+    window.headerConfig = buildHeaderConfig(I18n.readStoredLang());
   </script>
   <script type="module" src="js/header.js"></script>
 
@@ -45,38 +40,38 @@
           <span class="panel__dot"></span>
         </div>
         <div class="panel__trail">
-          <span class="panel__title" data-testid="register-form-title">Register</span>
+          <span class="panel__title" data-testid="register-form-title" data-i18n="register.title">Register</span>
         </div>
       </div>
       <div class="panel__body">
         <form id="register-form" class="auth-form" data-testid="register-form">
           <div class="plaque-field-list">
             <label class="plaque-field plaque-field--divided plaque-field--stretch">
-              <span class="plaque-field__text">Login</span>
+              <span class="plaque-field__text" data-i18n="register.loginLabel">Login</span>
               <input
-                id="login-input"
+                id="register-login-input"
                 name="username"
                 type="text"
                 class="plaque-field__control input"
                 autocomplete="username"
-                data-testid="login-input"
+                data-testid="register-login-input"
               />
             </label>
 
             <label class="plaque-field plaque-field--divided plaque-field--stretch">
-              <span class="plaque-field__text">Password</span>
+              <span class="plaque-field__text" data-i18n="register.passwordLabel">Password</span>
               <input
-                id="password-input"
+                id="register-password-input"
                 name="password"
                 type="password"
                 class="plaque-field__control input"
                 autocomplete="new-password"
-                data-testid="password-input"
+                data-testid="register-password-input"
               />
             </label>
 
             <label class="plaque-field plaque-field--divided plaque-field--stretch">
-              <span class="plaque-field__text">Confirm</span>
+              <span class="plaque-field__text" data-i18n="register.confirmLabel">Confirm</span>
               <input
                 id="confirm-password-input"
                 name="confirm-password"
@@ -88,77 +83,22 @@
             </label>
           </div>
 
-          <p id="error-message" class="auth-error" aria-live="polite" data-testid="error-message"></p>
+          <p id="register-error-message" class="auth-error" aria-live="polite" data-testid="register-error-message"></p>
 
           <div class="auth-form__actions">
-            <button id="submit-button" type="submit" class="btn btn--primary btn--block" data-testid="submit-button">Register</button>
+            <button id="register-submit-button" type="submit" class="btn btn--primary btn--block" data-testid="register-submit-button" data-i18n="register.submit">Register</button>
           </div>
         </form>
 
         <p class="auth-footer-link">
-          Already have an account? <a href="login" data-testid="login-link">Login</a>
+          <span data-i18n="register.haveAccount">Already have an account?</span>
+          <a href="login" data-testid="login-link" data-i18n="register.loginLink">Login</a>
         </p>
       </div>
     </div>
   </main>
 
   <script src="js/auth.js"></script>
-  <script>
-    const MESSAGES = {
-      errorBothRequired: "Login and password are required (minimum {minLogin} and {minPassword} characters)",
-      errorLoginRequired: "Login is required (minimum {minLogin} characters)",
-      errorLoginMinLength: "Login must be at least {minLogin} characters",
-      errorPasswordRequired: "Password is required (minimum {minPassword} characters)",
-      errorPasswordMinLength: "Password must be at least {minPassword} characters",
-      errorPasswordMismatch: "Passwords do not match",
-      errorNetwork: "Network error. Check your connection and try again.",
-      errorRegistrationFailed: "Registration failed",
-    };
-
-    const registerForm = document.getElementById("register-form");
-    const loginInput = document.getElementById("login-input");
-    const passwordInput = document.getElementById("password-input");
-    const confirmPasswordInput = document.getElementById("confirm-password-input");
-    const errorMessage = document.getElementById("error-message");
-    const submitButton = document.getElementById("submit-button");
-
-    if (ReferenceAuth.getToken()) {
-      window.location.replace(appPath("/"));
-    }
-
-    registerForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      errorMessage.textContent = "";
-
-      const username = loginInput.value.trim();
-      const password = passwordInput.value.trim();
-      const confirmPassword = confirmPasswordInput.value.trim();
-
-      const validationError = ReferenceAuth.validateCredentials(username, password, MESSAGES);
-      if (validationError) {
-        errorMessage.textContent = validationError;
-        return;
-      }
-      if (password !== confirmPassword) {
-        errorMessage.textContent = MESSAGES.errorPasswordMismatch;
-        return;
-      }
-
-      submitButton.disabled = true;
-      try {
-        const response = await ReferenceAuth.register(username, password);
-        ReferenceAuth.saveSession(response.token);
-        window.location.href = response.redirectUrl || appPath("/");
-      } catch (error) {
-        errorMessage.textContent = ReferenceAuth.resolveAuthErrorMessage(
-          error,
-          MESSAGES,
-          MESSAGES.errorRegistrationFailed
-        );
-      } finally {
-        submitButton.disabled = false;
-      }
-    });
-  </script>
+  <script src="js/register.js"></script>
 </body>
 </html>

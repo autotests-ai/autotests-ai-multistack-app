@@ -47,7 +47,7 @@ describe('login page', () => {
 
     expect(testId('login-panel')).toBeInTheDocument();
     expect(testId('login-form-title')).toHaveTextContent('Login Form');
-    expect(testId('register-link')).toHaveAttribute('href', 'register');
+    expect(testId('register-link')).toHaveAttribute('href', '/register');
   });
 
   it('redirects home when a session token is already stored', async () => {
@@ -161,5 +161,14 @@ describe('login page', () => {
       ),
     );
     expect(location.href).toBe('');
+  });
+
+  it('retitles the form when the header switches language', async () => {
+    await renderLogin();
+
+    document.dispatchEvent(new CustomEvent('header:lang-change', { detail: { lang: 'ru' } }));
+
+    expect(testId('login-form-title')).toHaveTextContent('Форма входа');
+    expect(document.documentElement.lang).toBe('ru');
   });
 });

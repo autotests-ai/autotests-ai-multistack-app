@@ -30,6 +30,18 @@ Local compose publish: `:9810`. Dev/preview: `:9810`.
 
 Login and register both redirect home when a token is already present.
 
+## i18n and theme
+
+Copied dictionaries in [`src/i18n/`](src/i18n/) (`en` / `ru`) — not a shared lib, not i18next.
+Default language is **en**. `header:lang-change` retitles nav (one `remountHeader`) and page copy;
+`html[lang]` follows the toggle. Theme is owned by `header.js` (`zds-theme`); this module does
+not reimplement it.
+
+Selenide-facing English copy stays exact: validation messages, `Welcome, {username}!`,
+`→ {status} | service: {service}`, form titles `Login Form` / `Register`. API payloads
+(item names, health `status`/`service`, backend error text) are not translated. `data-testid`
+values never change with language.
+
 ## Session panel
 
 Hidden until `GET /api/auth/me` returns a profile. Two actions, both ending in the
@@ -40,8 +52,8 @@ same logged-out state at `/login`:
 | `logout-button` (`btn--primary`) | `POST /api/auth/logout` | Ends this session. The JWT is **not** invalidated server-side — logout is stateless by design. |
 | `delete-account-button` (`btn--danger`) | `DELETE /api/auth/me` | **Deletes the account.** The user row is gone and the same token now yields 401. |
 
-Delete account asks `window.confirm('Delete this account? This cannot be undone.')`
-first; cancel sends no request and keeps the session. `logout()` and `deleteAccount()`
+Delete account asks `window.confirm` with `home.deleteConfirm` from the active dictionary first;
+cancel sends no request and keeps the session. `logout()` and `deleteAccount()`
 in `src/auth.ts` are twins: best-effort call, then the local token goes regardless of
 the outcome — a token the server has already rejected must never keep the UI signed in.
 `deleteAccount()` never touches the logout endpoint.
@@ -49,7 +61,7 @@ the outcome — a token the server has already rejected must never keep the UI s
 ## Contracts preserved for Selenide
 
 - Every `data-testid` used by `tests/.../pages/*.java`.
-- Exact strings: validation messages (`src/messages.ts`), `Welcome, {username}!`,
+- Exact strings (English default): validation messages (`src/messages.ts` / `src/i18n/en.ts`), `Welcome, {username}!`,
   `→ {status} | service: {service} | frontend: {UI_MOUNT}`, form titles
   `Login Form` / `Register`.
 

@@ -4,8 +4,24 @@ const welcomeMessage = document.querySelector('[data-testid="welcome-message"]')
 const welcomePanel = document.querySelector('[data-testid="welcome-panel"]');
 const logoutButton = document.getElementById('logout-button');
 const deleteAccountButton = document.getElementById('delete-account-button');
+const homeBlurb = document.getElementById('home-blurb');
 
-const DELETE_ACCOUNT_CONFIRM = 'Delete this account? This cannot be undone.';
+var healthState = { status: 'checking' };
+var itemsState = { status: 'loading' };
+var welcomeName = null;
+
+function currentCopy() {
+  return I18n.dictionaries[I18n.readStoredLang()];
+}
+
+function renderBlurb(template) {
+  var parts = String(template).split('{api}');
+  homeBlurb.replaceChildren(
+    document.createTextNode(parts[0] || ''),
+    Object.assign(document.createElement('code'), { textContent: '/api/items' }),
+    document.createTextNode(parts[1] || ''),
+  );
+}
 
 function renderPanelBar(title) {
   return `
@@ -32,24 +48,80 @@ function renderContentPanel(title, bodyHtml, testId) {
     </div>`;
 }
 
-function renderItems(items) {
-  if (!items.length) {
+function renderItems(copy) {
+  if (itemsState.status === 'loading') {
     itemsList.innerHTML = renderContentPanel(
-      'Items',
-      '<p class="text text--muted">No items found.</p>'
+      copy.home.items,
+      `<p class="text text--muted">${copy.home.itemsLoading}</p>`,
+    );
+    return;
+  }
+  if (itemsState.status === 'empty') {
+    itemsList.innerHTML = renderContentPanel(
+      copy.home.items,
+      `<p class="text text--muted">${copy.home.itemsEmpty}</p>`,
+    );
+    return;
+  }
+  if (itemsState.status === 'error') {
+    itemsList.innerHTML = renderContentPanel(
+      copy.home.items,
+      `<p class="multistack__error">${ReferenceAuth.formatMessage(copy.home.itemsError, {
+        message: itemsState.message,
+      })}</p>`,
     );
     return;
   }
 
-  itemsList.innerHTML = items
+  itemsList.innerHTML = itemsState.items
     .map((item) =>
       renderContentPanel(
         item.name,
         `<p class="text text--muted">${item.description}</p>`,
-        'item-row'
-      )
+        'item-row',
+      ),
     )
     .join('');
+}
+
+function renderHealth(copy) {
+  if (healthState.status === 'checking') {
+    healthStatus.textContent = copy.home.healthChecking;
+    healthStatus.classList.remove('multistack__error');
+    return;
+  }
+  if (healthState.status === 'ok') {
+    healthStatus.textContent = ReferenceAuth.formatMessage(copy.home.healthOk, {
+      status: healthState.health,
+      service: healthState.service,
+      frontend: window.UI_MOUNT,
+    });
+    healthStatus.classList.remove('multistack__error');
+    return;
+  }
+  healthStatus.textContent = ReferenceAuth.formatMessage(copy.home.healthError, {
+    message: healthState.message,
+  });
+  healthStatus.classList.add('multistack__error');
+}
+
+function renderSession(copy) {
+  if (welcomeName === null) {
+    welcomePanel.hidden = true;
+    welcomeMessage.textContent = '';
+    return;
+  }
+  welcomeMessage.textContent = ReferenceAuth.formatMessage(copy.home.welcome, {
+    username: welcomeName,
+  });
+  welcomePanel.hidden = false;
+}
+
+function applyHomeCopy(copy) {
+  renderBlurb(copy.home.blurb);
+  renderHealth(copy);
+  renderItems(copy);
+  renderSession(copy);
 }
 
 async function loadHealth() {
@@ -59,11 +131,11 @@ async function loadHealth() {
       throw new Error(`HTTP ${response.status}`);
     }
     const payload = await response.json();
-    healthStatus.textContent = `→ ${payload.status} | service: ${payload.service} | frontend: ${window.UI_MOUNT}`;
+    healthState = { status: 'ok', health: payload.status, service: payload.service };
   } catch (error) {
-    healthStatus.textContent = `✗ health: ${error.message}`;
-    healthStatus.classList.add('multistack__error');
+    healthState = { status: 'error', message: error.message };
   }
+  renderHealth(currentCopy());
 }
 
 async function loadItems() {
@@ -73,13 +145,12 @@ async function loadItems() {
       throw new Error(`HTTP ${response.status}`);
     }
     const payload = await response.json();
-    renderItems(payload.items || []);
+    const list = payload.items || [];
+    itemsState = list.length ? { status: 'loaded', items: list } : { status: 'empty' };
   } catch (error) {
-    itemsList.innerHTML = renderContentPanel(
-      'Items',
-      `<p class="multistack__error">✗ items: ${error.message}</p>`
-    );
+    itemsState = { status: 'error', message: error.message };
   }
+  renderItems(currentCopy());
 }
 
 async function loadSession() {
@@ -89,11 +160,12 @@ async function loadSession() {
 
   try {
     const profile = await ReferenceAuth.fetchProfile();
-    welcomeMessage.textContent = 'Welcome, ' + profile.username + '!';
-    welcomePanel.hidden = false;
+    welcomeName = profile.username;
   } catch (error) {
     ReferenceAuth.clearSession();
+    welcomeName = null;
   }
+  renderSession(currentCopy());
 }
 
 if (logoutButton) {
@@ -105,7 +177,7 @@ if (logoutButton) {
 
 if (deleteAccountButton) {
   deleteAccountButton.addEventListener('click', async () => {
-    if (!window.confirm(DELETE_ACCOUNT_CONFIRM)) {
+    if (!window.confirm(currentCopy().home.deleteConfirm)) {
       return;
     }
     await ReferenceAuth.deleteAccount();
@@ -113,6 +185,7 @@ if (deleteAccountButton) {
   });
 }
 
+startI18n(applyHomeCopy);
 loadHealth();
 loadItems();
 loadSession();

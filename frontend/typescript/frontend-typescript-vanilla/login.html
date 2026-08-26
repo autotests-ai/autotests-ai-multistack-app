@@ -30,14 +30,14 @@
           <span class="panel__dot"></span>
         </div>
         <div class="panel__trail">
-          <span class="panel__title" data-testid="login-form-title">Login Form</span>
+          <span class="panel__title" data-testid="login-form-title" data-i18n="login.title">Login Form</span>
         </div>
       </div>
       <div class="panel__body">
         <form id="login-form" class="auth-form" data-testid="login-form">
           <div class="plaque-field-list">
             <label class="plaque-field plaque-field--divided plaque-field--stretch">
-              <span class="plaque-field__text">Login</span>
+              <span class="plaque-field__text" data-i18n="login.loginLabel">Login</span>
               <input
                 id="login-input"
                 name="username"
@@ -49,7 +49,7 @@
             </label>
 
             <label class="plaque-field plaque-field--divided plaque-field--stretch">
-              <span class="plaque-field__text">Password</span>
+              <span class="plaque-field__text" data-i18n="login.passwordLabel">Password</span>
               <input
                 id="password-input"
                 name="password"
@@ -64,12 +64,13 @@
           <p id="error-message" class="auth-error" aria-live="polite" data-testid="error-message"></p>
 
           <div class="auth-form__actions">
-            <button id="submit-button" type="submit" class="btn btn--primary btn--block" data-testid="submit-button">Login</button>
+            <button id="submit-button" type="submit" class="btn btn--primary btn--block" data-testid="submit-button" data-i18n="login.submit">Login</button>
           </div>
         </form>
 
         <p class="auth-footer-link">
-          No account? <a href="register" data-testid="register-link">Register</a>
+          <span data-i18n="login.noAccount">No account?</span>
+          <a href="register" data-testid="register-link" data-i18n="login.registerLink">Register</a>
         </p>
       </div>
     </div>

@@ -1,8 +1,8 @@
 import { fetchHealth, fetchItems, type Item } from './api';
 import { appPath, UI_MOUNT } from './appBase';
-import { clearSession, deleteAccount, fetchProfile, getToken, logout } from './auth';
+import { clearSession, deleteAccount, fetchProfile, formatMessage, getToken, logout } from './auth';
 import { mountHeader } from './header';
-import { DELETE_ACCOUNT_CONFIRM } from './messages';
+import { dictionaries, readStoredLang, startI18n, type Dictionary } from './i18n';
 
 const healthStatus = document.querySelector<HTMLElement>('[data-testid="health-status"]');
 const itemsList = document.querySelector<HTMLElement>('[data-testid="items-list"]');
@@ -10,9 +10,39 @@ const welcomeMessage = document.querySelector<HTMLElement>('[data-testid="welcom
 const welcomePanel = document.querySelector<HTMLElement>('[data-testid="welcome-panel"]');
 const logoutButton = document.getElementById('logout-button');
 const deleteAccountButton = document.getElementById('delete-account-button');
+const homeBlurb = document.getElementById('home-blurb');
 
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
+type HealthState =
+  | { status: 'checking' }
+  | { status: 'ok'; health: string; service: string }
+  | { status: 'error'; message: string };
+
+type ItemsState =
+  | { status: 'loading' }
+  | { status: 'empty' }
+  | { status: 'loaded'; items: Item[] }
+  | { status: 'error'; message: string };
+
+let healthState: HealthState = { status: 'checking' };
+let itemsState: ItemsState = { status: 'loading' };
+let welcomeName: string | null = null;
+
+function currentCopy(): Dictionary {
+  return dictionaries[readStoredLang()];
+}
+
+function renderBlurb(template: string): void {
+  if (!homeBlurb) {
+    return;
+  }
+  const parts = String(template).split('{api}');
+  const code = document.createElement('code');
+  code.textContent = '/api/items';
+  homeBlurb.replaceChildren(
+    document.createTextNode(parts[0] || ''),
+    code,
+    document.createTextNode(parts[1] || ''),
+  );
 }
 
 function renderPanelBar(title: string): string {
@@ -40,62 +70,127 @@ function renderContentPanel(title: string, bodyHtml: string, testId?: string): s
     </div>`;
 }
 
-function renderItems(target: HTMLElement, items: Item[]): void {
-  if (!items.length) {
-    target.innerHTML = renderContentPanel(
-      'Items',
-      '<p class="text text--muted">No items found.</p>',
+function renderItems(copy: Dictionary): void {
+  if (!itemsList) {
+    return;
+  }
+  if (itemsState.status === 'loading') {
+    itemsList.innerHTML = renderContentPanel(
+      copy.home.items,
+      `<p class="text text--muted">${copy.home.itemsLoading}</p>`,
+    );
+    return;
+  }
+  if (itemsState.status === 'empty') {
+    itemsList.innerHTML = renderContentPanel(
+      copy.home.items,
+      `<p class="text text--muted">${copy.home.itemsEmpty}</p>`,
+    );
+    return;
+  }
+  if (itemsState.status === 'error') {
+    itemsList.innerHTML = renderContentPanel(
+      copy.home.items,
+      `<p class="multistack__error">${formatMessage(copy.home.itemsError, {
+        message: itemsState.message,
+      })}</p>`,
     );
     return;
   }
 
-  target.innerHTML = items
+  itemsList.innerHTML = itemsState.items
     .map((item) =>
-      renderContentPanel(item.name, `<p class="text text--muted">${item.description}</p>`, 'item-row'),
+      renderContentPanel(
+        item.name,
+        `<p class="text text--muted">${item.description}</p>`,
+        'item-row',
+      ),
     )
     .join('');
 }
 
-async function loadHealth(): Promise<void> {
+function renderHealth(copy: Dictionary): void {
   if (!healthStatus) {
     return;
   }
+  if (healthState.status === 'checking') {
+    healthStatus.textContent = copy.home.healthChecking;
+    healthStatus.classList.remove('multistack__error');
+    return;
+  }
+  if (healthState.status === 'ok') {
+    healthStatus.textContent = formatMessage(copy.home.healthOk, {
+      status: healthState.health,
+      service: healthState.service,
+      frontend: UI_MOUNT,
+    });
+    healthStatus.classList.remove('multistack__error');
+    return;
+  }
+  healthStatus.textContent = formatMessage(copy.home.healthError, {
+    message: healthState.message,
+  });
+  healthStatus.classList.add('multistack__error');
+}
+
+function renderSession(copy: Dictionary): void {
+  if (!welcomeMessage || !welcomePanel) {
+    return;
+  }
+  if (welcomeName === null) {
+    welcomePanel.hidden = true;
+    welcomeMessage.textContent = '';
+    return;
+  }
+  welcomeMessage.textContent = formatMessage(copy.home.welcome, { username: welcomeName });
+  welcomePanel.hidden = false;
+}
+
+function applyHomeCopy(copy: Dictionary): void {
+  renderBlurb(copy.home.blurb);
+  renderHealth(copy);
+  renderItems(copy);
+  renderSession(copy);
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+async function loadHealth(): Promise<void> {
   try {
     const payload = await fetchHealth();
-    healthStatus.textContent = `→ ${payload.status} | service: ${payload.service} | frontend: ${UI_MOUNT}`;
+    healthState = { status: 'ok', health: payload.status, service: payload.service };
   } catch (error) {
-    healthStatus.textContent = `✗ health: ${errorMessage(error)}`;
-    healthStatus.classList.add('multistack__error');
+    healthState = { status: 'error', message: errorMessage(error) };
   }
+  renderHealth(currentCopy());
 }
 
 async function loadItems(): Promise<void> {
-  if (!itemsList) {
-    return;
-  }
   try {
     const payload = await fetchItems();
-    renderItems(itemsList, payload.items ?? []);
+    const list = payload.items ?? [];
+    itemsState = list.length ? { status: 'loaded', items: list } : { status: 'empty' };
   } catch (error) {
-    itemsList.innerHTML = renderContentPanel(
-      'Items',
-      `<p class="multistack__error">✗ items: ${errorMessage(error)}</p>`,
-    );
+    itemsState = { status: 'error', message: errorMessage(error) };
   }
+  renderItems(currentCopy());
 }
 
 async function loadSession(): Promise<void> {
-  if (!welcomeMessage || !welcomePanel || !getToken()) {
+  if (!getToken()) {
     return;
   }
 
   try {
     const profile = await fetchProfile();
-    welcomeMessage.textContent = `Welcome, ${profile.username}!`;
-    welcomePanel.hidden = false;
+    welcomeName = profile.username;
   } catch {
     clearSession();
+    welcomeName = null;
   }
+  renderSession(currentCopy());
 }
 
 if (logoutButton) {
@@ -107,7 +202,7 @@ if (logoutButton) {
 
 if (deleteAccountButton) {
   deleteAccountButton.addEventListener('click', async () => {
-    if (!window.confirm(DELETE_ACCOUNT_CONFIRM)) {
+    if (!window.confirm(currentCopy().home.deleteConfirm)) {
       return;
     }
     await deleteAccount();
@@ -116,6 +211,7 @@ if (deleteAccountButton) {
 }
 
 mountHeader('/');
+startI18n(applyHomeCopy);
 loadHealth();
 loadItems();
 loadSession();

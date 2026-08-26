@@ -49,7 +49,7 @@ describe('register page', () => {
     expect(testId('register-panel')).toBeInTheDocument();
     expect(testId('register-form-title')).toHaveTextContent('Register');
     expect(testId('confirm-password-input')).toHaveAttribute('type', 'password');
-    expect(testId('login-link')).toHaveAttribute('href', 'login');
+    expect(testId('login-link')).toHaveAttribute('href', '/login');
   });
 
   it('redirects home when a session token is already stored', async () => {

@@ -11,6 +11,7 @@ async function headerAt(pathname: string) {
 
 describe('headerConfigFor', () => {
   beforeEach(() => {
+    localStorage.clear();
     stubLocation('/');
   });
 
@@ -45,6 +46,15 @@ describe('headerConfigFor', () => {
       '/login',
       '/register',
       '/stack/',
+    ]);
+  });
+
+  it('retitles nav from the copied dictionary', () => {
+    expect(headerConfigFor('/', 'ru').nav.map((item) => item.label)).toEqual([
+      'Главная',
+      'Вход',
+      'Регистрация',
+      'Стек',
     ]);
   });
 
