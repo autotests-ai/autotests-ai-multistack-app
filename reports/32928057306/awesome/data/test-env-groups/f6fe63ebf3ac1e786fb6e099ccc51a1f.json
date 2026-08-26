@@ -1,1 +1,0 @@
-{"id":"f6fe63ebf3ac1e786fb6e099ccc51a1f","fullName":"api/auth.spec.ts:110:7","name":"GET /api/auth/me returns the profile contract for a bearer token","status":"passed","testResultsByEnv":{"default":"10ce2caef1db87014095bf10ce7b5cfd"}}
