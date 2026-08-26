@@ -1,0 +1,40 @@
+{
+  "id": "login-empty-both",
+  "kind": "cdp",
+  "version": 1,
+  "source": {
+    "as_id": "Пустые логин и пароль показывают ошибку валидации",
+    "lang": "typescript-playwright",
+    "fingerprint": "0965c27b5cdd86204876940c96047983981952e983d005c2d68388f31f07b932"
+  },
+  "steps": [
+    {
+      "op": "navigate",
+      "url": "login"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=submit-button]",
+      "timeout_ms": 3000
+    },
+    {
+      "op": "click",
+      "selector": "[data-testid=submit-button]"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=error-message]",
+      "timeout_ms": 10000
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=error-message]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "text",
+      "selector": "[data-testid=error-message]",
+      "value": "Login and password are required (minimum 3 and 6 characters)"
+    }
+  ]
+}

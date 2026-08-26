@@ -22,12 +22,24 @@
         err.hidden = false;
         err.textContent = msg;
       }
-      if (u.length < 3) {
+      if (!u && !p) {
+        fail("Login and password are required (minimum 3 and 6 characters)");
+        return;
+      }
+      if (!u) {
         fail("Login is required (minimum 3 characters)");
         return;
       }
-      if (p.length < 6) {
+      if (u.length < 3) {
+        fail("Login must be at least 3 characters");
+        return;
+      }
+      if (!p) {
         fail("Password is required (minimum 6 characters)");
+        return;
+      }
+      if (p.length < 6) {
+        fail("Password must be at least 6 characters");
         return;
       }
       if (u === "user1" && p === "password1") {

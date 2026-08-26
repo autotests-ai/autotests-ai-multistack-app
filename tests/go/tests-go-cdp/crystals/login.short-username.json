@@ -1,0 +1,50 @@
+{
+  "id": "login-short-username",
+  "kind": "cdp",
+  "version": 1,
+  "source": {
+    "as_id": "Короткий логин показывает ошибку валидации",
+    "lang": "typescript-playwright",
+    "fingerprint": "5604593d868a293e54aa3285db40dcb17427e95c024b15c49ccf19eb23f7a979"
+  },
+  "steps": [
+    {
+      "op": "navigate",
+      "url": "login"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=login-input]",
+      "timeout_ms": 3000
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=login-input]",
+      "value": "ab"
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=password-input]",
+      "value": "password1"
+    },
+    {
+      "op": "click",
+      "selector": "[data-testid=submit-button]"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=error-message]",
+      "timeout_ms": 10000
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=error-message]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "text",
+      "selector": "[data-testid=error-message]",
+      "value": "Login must be at least 3 characters"
+    }
+  ]
+}

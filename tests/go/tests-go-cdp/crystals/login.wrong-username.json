@@ -1,0 +1,50 @@
+{
+  "id": "login-wrong-username",
+  "kind": "cdp",
+  "version": 1,
+  "source": {
+    "as_id": "Неверный логин показывает читаемую ошибку",
+    "lang": "typescript-playwright",
+    "fingerprint": "e496de03aa2bade17f19ea080afb06d03521df7bcc3f3129475047c1c5fff364"
+  },
+  "steps": [
+    {
+      "op": "navigate",
+      "url": "login"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=login-input]",
+      "timeout_ms": 3000
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=login-input]",
+      "value": "nouser"
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=password-input]",
+      "value": "password1"
+    },
+    {
+      "op": "click",
+      "selector": "[data-testid=submit-button]"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=error-message]",
+      "timeout_ms": 10000
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=error-message]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "text",
+      "selector": "[data-testid=error-message]",
+      "value": "Wrong login or password"
+    }
+  ]
+}
