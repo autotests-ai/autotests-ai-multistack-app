@@ -330,4 +330,17 @@ describe('canonical header.js — host-match env switchers', () => {
     });
     expect(activeTestids()).toEqual(['header-nav-register']);
   });
+
+  it('points Stage/Prod at the cell mount, not /login', async () => {
+    await mountAt('/stack/backend-java-spring/frontend-typescript-react/login');
+
+    const stage = document.querySelector<HTMLAnchorElement>('[data-testid="header-nav-stage"]');
+    const prod = document.querySelector<HTMLAnchorElement>('[data-testid="header-nav-prod"]');
+    expect(stage?.getAttribute('href')).toBe(
+      `${STAGE_ORIGIN}/stack/backend-java-spring/frontend-typescript-react/`,
+    );
+    expect(prod?.getAttribute('href')).toBe(
+      `${PROD_ORIGIN}/stack/backend-java-spring/frontend-typescript-react/`,
+    );
+  });
 });
