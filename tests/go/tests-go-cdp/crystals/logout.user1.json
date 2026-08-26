@@ -1,0 +1,59 @@
+{
+  "id": "logout-user1",
+  "kind": "cdp",
+  "version": 1,
+  "source": {
+    "as_id": "logout-after-form-login",
+    "lang": "typescript-playwright",
+    "fingerprint": "bb7dceb755f6fafc65b2921e2d4d3a36d221de25dc19033f3ad71036c86d0fd1"
+  },
+  "steps": [
+    {
+      "op": "navigate",
+      "url": "login"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=login-input]",
+      "timeout_ms": 3000
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=login-input]",
+      "value": "user1"
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=password-input]",
+      "value": "password1"
+    },
+    {
+      "op": "click",
+      "selector": "[data-testid=submit-button]"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=welcome-message]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "text",
+      "selector": "[data-testid=welcome-message]",
+      "value": "Welcome, user1!"
+    },
+    {
+      "op": "click",
+      "selector": "[data-testid=logout-button]"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=login-form-title]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "text",
+      "selector": "[data-testid=login-form-title]",
+      "value": "Login Form"
+    }
+  ]
+}

@@ -17,7 +17,9 @@ tests/
     tests-python-selenium/                       # active
   typescript/
     tests-typescript-playwright/                 # active
-  kotlin/ · go/                                  # slots in deploy/matrix.yaml
+  kotlin/                                        # slots in deploy/matrix.yaml
+  go/
+    tests-go-cdp/                                # mill IR (greedy run), not a Selenide peer
   _deferred/
 ```
 

@@ -44,6 +44,7 @@ Full IDs live in [`deploy/matrix.yaml`](../deploy/matrix.yaml) (`status: active|
 | `tests-python-playwright` | slot |
 | `tests-kotlin-gradle-junit5-allure3-selenide` | slot |
 | `tests-go-testing-allure3` | slot (selenoid-tests language) |
+| `tests-go-cdp` | mill — IR / `greedy run`, not a Selenide peer |
 
 ```
 tests-javascript-npm-playwright-no_allure
