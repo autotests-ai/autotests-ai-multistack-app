@@ -111,6 +111,51 @@ class AuthApiTests extends ApiTestBase {
     @Test
     @Tag("api")
     @Tag("negative")
+    @DisplayName("POST /api/auth/login rejects a short password with 400 and a field message")
+    void loginRejectsShortPassword() {
+        given(jsonSpec)
+                .body(new LoginRequest("user1", "123"))
+                .when()
+                .post("/api/auth/login")
+                .then()
+                .statusCode(400)
+                .body(matchesJsonSchemaInClasspath("schemas/error.json"))
+                .body("message", containsString("password"));
+    }
+
+    @Test
+    @Tag("api")
+    @Tag("negative")
+    @DisplayName("POST /api/auth/login rejects an empty username with 400")
+    void loginRejectsEmptyUsername() {
+        given(jsonSpec)
+                .body(new LoginRequest("", "password1"))
+                .when()
+                .post("/api/auth/login")
+                .then()
+                .statusCode(400)
+                .body(matchesJsonSchemaInClasspath("schemas/error.json"))
+                .body("message", containsString("username"));
+    }
+
+    @Test
+    @Tag("api")
+    @Tag("negative")
+    @DisplayName("POST /api/auth/login rejects an empty password with 400")
+    void loginRejectsEmptyPassword() {
+        given(jsonSpec)
+                .body(new LoginRequest("user1", ""))
+                .when()
+                .post("/api/auth/login")
+                .then()
+                .statusCode(400)
+                .body(matchesJsonSchemaInClasspath("schemas/error.json"))
+                .body("message", containsString("password"));
+    }
+
+    @Test
+    @Tag("api")
+    @Tag("negative")
     @DisplayName("POST /api/auth/login answers a malformed JSON body with 400, not 401")
     void loginRejectsMalformedJson() {
         given(jsonSpec)
@@ -169,6 +214,64 @@ class AuthApiTests extends ApiTestBase {
                 .statusCode(400)
                 .body(matchesJsonSchemaInClasspath("schemas/error.json"))
                 .body("message", containsString("password"));
+    }
+
+    @Test
+    @Tag("api")
+    @DisplayName("POST /api/auth/register rejects a short username with 400 and a field message")
+    void registerRejectsShortUsername() {
+        given(jsonSpec)
+                .body(new RegisterRequest("ab", "password123"))
+                .when()
+                .post("/api/auth/register")
+                .then()
+                .statusCode(400)
+                .body(matchesJsonSchemaInClasspath("schemas/error.json"))
+                .body("message", containsString("username"));
+    }
+
+    @Test
+    @Tag("api")
+    @DisplayName("POST /api/auth/register rejects an empty username with 400")
+    void registerRejectsEmptyUsername() {
+        given(jsonSpec)
+                .body(new RegisterRequest("", "password123"))
+                .when()
+                .post("/api/auth/register")
+                .then()
+                .statusCode(400)
+                .body(matchesJsonSchemaInClasspath("schemas/error.json"))
+                .body("message", containsString("username"));
+    }
+
+    @Test
+    @Tag("api")
+    @DisplayName("POST /api/auth/register rejects an empty password with 400")
+    void registerRejectsEmptyPassword() {
+        given(jsonSpec)
+                .body(new RegisterRequest("newuser", ""))
+                .when()
+                .post("/api/auth/register")
+                .then()
+                .statusCode(400)
+                .body(matchesJsonSchemaInClasspath("schemas/error.json"))
+                .body("message", containsString("password"));
+    }
+
+    @Test
+    @Tag("api")
+    @DisplayName("POST /api/auth/register joins both field errors into one 400 message")
+    void registerRejectsEmptyCredentials() {
+        given(jsonSpec)
+                .body(new RegisterRequest("", ""))
+                .when()
+                .post("/api/auth/register")
+                .then()
+                .statusCode(400)
+                .body(matchesJsonSchemaInClasspath("schemas/error.json"))
+                .body("message", allOf(
+                        containsString("username"),
+                        containsString("password")));
     }
 
     @Test
@@ -240,6 +343,19 @@ class AuthApiTests extends ApiTestBase {
     @DisplayName("DELETE /api/auth/me without a token returns 401")
     void deleteWithoutToken() {
         given()
+                .when()
+                .delete("/api/auth/me")
+                .then()
+                .statusCode(401);
+    }
+
+    @Test
+    @Tag("api")
+    @Tag("negative")
+    @DisplayName("DELETE /api/auth/me with a garbage token returns 401")
+    void deleteWithGarbageToken() {
+        given()
+                .header("Authorization", "Bearer not-a-jwt")
                 .when()
                 .delete("/api/auth/me")
                 .then()
