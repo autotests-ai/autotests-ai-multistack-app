@@ -59,9 +59,13 @@ the API fails — a token the server has already rejected must never keep the UI
 
 ## Contracts preserved for Selenide
 
-- Every `data-testid` used by `tests/.../pages/*.java`.
-- Exact strings: validation messages (`lib/messages.ts`), `Welcome, {username}!`,
+- Every `data-testid` used by `tests/.../pages/*.java` (never translated).
+- Default language is **en** (`src/i18n/`, not i18next). English copy stays
+  exact: validation messages, `Welcome, {username}!`,
   `→ {status} | service: {service}`, form titles `Login Form` / `Register`.
+- API payloads (item names, health `status`/`service`, backend error text) are
+  not translated. Nav labels follow `header:lang-change` via one `remountHeader`.
+- Theme is owned by `header.js` (`zds-theme`); the SPA does not reimplement it.
 
 ## Header
 

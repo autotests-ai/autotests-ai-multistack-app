@@ -1,6 +1,7 @@
 import { Button, Panel, PlaqueField } from '@zero-design-system/react';
 import { type FormEvent, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useI18n } from '../i18n';
 import {
   getToken,
   login,
@@ -8,13 +9,39 @@ import {
   saveSession,
   validateCredentials,
 } from '../lib/auth';
-import { LOGIN_MESSAGES } from '../lib/messages';
+import { loginMessages } from '../lib/messages';
+
+type LoginError =
+  | { type: 'none' }
+  | { type: 'validation' }
+  | { type: 'network' }
+  | { type: 'api'; message: string };
+
+function loginErrorText(
+  error: LoginError,
+  username: string,
+  password: string,
+  messages: ReturnType<typeof loginMessages>,
+): string {
+  if (error.type === 'validation') {
+    return validateCredentials(username.trim(), password.trim(), messages) ?? '';
+  }
+  if (error.type === 'network') {
+    return messages.errorNetwork;
+  }
+  if (error.type === 'api') {
+    return error.message;
+  }
+  return '';
+}
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const { lang, copy } = useI18n();
+  const messages = loginMessages(lang);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState<LoginError>({ type: 'none' });
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -25,13 +52,13 @@ export function LoginPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setError('');
+    setError({ type: 'none' });
 
     const trimmedLogin = username.trim();
     const trimmedPassword = password.trim();
-    const validationError = validateCredentials(trimmedLogin, trimmedPassword, LOGIN_MESSAGES);
+    const validationError = validateCredentials(trimmedLogin, trimmedPassword, messages);
     if (validationError) {
-      setError(validationError);
+      setError({ type: 'validation' });
       return;
     }
 
@@ -41,7 +68,12 @@ export function LoginPage() {
       saveSession(response.token);
       navigate(response.redirectUrl || '/');
     } catch (err) {
-      setError(resolveAuthErrorMessage(err, LOGIN_MESSAGES, LOGIN_MESSAGES.errorWrongCredentials!));
+      const text = resolveAuthErrorMessage(err, messages, messages.errorWrongCredentials!);
+      if ((err as { network?: boolean } | undefined)?.network) {
+        setError({ type: 'network' });
+      } else {
+        setError({ type: 'api', message: text });
+      }
     } finally {
       setSubmitting(false);
     }
@@ -50,7 +82,7 @@ export function LoginPage() {
   return (
     <main className="auth-page">
       <Panel
-        title="Login Form"
+        title={copy.login.title}
         titleTestId="login-form-title"
         testId="login-panel"
         className="auth-panel"
@@ -63,7 +95,7 @@ export function LoginPage() {
         >
           <div className="plaque-field-list">
             <PlaqueField
-              label="Login"
+              label={copy.login.loginLabel}
               id="login-input"
               name="username"
               type="text"
@@ -73,7 +105,7 @@ export function LoginPage() {
               onChange={(e) => setUsername(e.target.value)}
             />
             <PlaqueField
-              label="Password"
+              label={copy.login.passwordLabel}
               id="password-input"
               name="password"
               type="password"
@@ -90,7 +122,7 @@ export function LoginPage() {
             aria-live="polite"
             data-testid="error-message"
           >
-            {error}
+            {loginErrorText(error, username, password, messages)}
           </p>
 
           <div className="auth-form__actions">
@@ -102,15 +134,15 @@ export function LoginPage() {
               data-testid="submit-button"
               disabled={submitting}
             >
-              Login
+              {copy.login.submit}
             </Button>
           </div>
         </form>
 
         <p className="auth-footer-link">
-          No account?{' '}
+          {copy.login.noAccount}{' '}
           <Link to="/register" data-testid="register-link">
-            Register
+            {copy.login.registerLink}
           </Link>
         </p>
       </Panel>

@@ -1,8 +1,16 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { act } from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { HEADER_LANG_CHANGE, ru } from '../../i18n';
 import { RegisterPage } from '../../pages/RegisterPage';
+
+function dispatchLang(lang: string) {
+  act(() => {
+    document.dispatchEvent(new CustomEvent(HEADER_LANG_CHANGE, { detail: { lang } }));
+  });
+}
 
 function jsonResponse(body: unknown, ok = true, status = 200): Response {
   return {
@@ -138,5 +146,65 @@ describe('RegisterPage', () => {
       ),
     );
     expect(localStorage.getItem('authToken')).toBeNull();
+  });
+
+  it('shows the network message when the request never reaches the API', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('offline')));
+
+    renderRegister();
+    await user.type(screen.getByTestId('register-login-input'), 'newuser');
+    await user.type(screen.getByTestId('register-password-input'), 'password123');
+    await user.type(screen.getByTestId('confirm-password-input'), 'password123');
+    await user.click(screen.getByTestId('register-submit-button'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('register-error-message')).toHaveTextContent(
+        'Network error. Check your connection and try again.',
+      ),
+    );
+  });
+
+  it('switches visible copy on header:lang-change', async () => {
+    const user = userEvent.setup();
+    renderRegister();
+
+    await user.type(screen.getByTestId('register-login-input'), 'newuser');
+    await user.type(screen.getByTestId('register-password-input'), 'password123');
+    await user.type(screen.getByTestId('confirm-password-input'), 'password124');
+    await user.click(screen.getByTestId('register-submit-button'));
+    expect(screen.getByTestId('register-error-message')).toHaveTextContent(
+      'Passwords do not match',
+    );
+
+    dispatchLang('ru');
+
+    expect(screen.getByTestId('register-form-title')).toHaveTextContent(ru.register.title);
+    expect(screen.getByTestId('register-submit-button')).toHaveTextContent(ru.register.submit);
+    expect(screen.getByTestId('login-link')).toHaveTextContent(ru.register.loginLink);
+    expect(screen.getByTestId('register-error-message')).toHaveTextContent(
+      ru.register.errorPasswordMismatch,
+    );
+  });
+
+  it('retranslates a validation error and clears it when fields become valid', async () => {
+    const user = userEvent.setup();
+    renderRegister();
+
+    await user.type(screen.getByTestId('register-login-input'), 'ab');
+    await user.type(screen.getByTestId('register-password-input'), 'password123');
+    await user.type(screen.getByTestId('confirm-password-input'), 'password123');
+    await user.click(screen.getByTestId('register-submit-button'));
+    expect(screen.getByTestId('register-error-message')).toHaveTextContent(
+      'Login must be at least 3 characters',
+    );
+
+    dispatchLang('ru');
+    expect(screen.getByTestId('register-error-message')).toHaveTextContent(
+      'Логин должен быть не короче 3 символов',
+    );
+
+    await user.type(screen.getByTestId('register-login-input'), 'c');
+    expect(screen.getByTestId('register-error-message')).toHaveTextContent('');
   });
 });
