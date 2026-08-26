@@ -3,9 +3,10 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   createPageWindow,
+  dispatchLang,
   jsonResponse,
-  loadAuthRuntime,
   loadJQuery,
+  loadPageRuntime,
   loadScript,
   mainMarkup,
   whenReady,
@@ -17,7 +18,7 @@ let pageWindow;
 
 async function renderRegister() {
   document.body.innerHTML = REGISTER_MARKUP;
-  loadAuthRuntime();
+  loadPageRuntime();
   pageWindow = createPageWindow();
   loadScript('js/register.js', pageWindow);
   await whenReady();
@@ -41,6 +42,8 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllGlobals();
   document.body.innerHTML = '';
+  document.documentElement.lang = 'en';
+  document.documentElement.classList.remove('theme-light');
 });
 
 describe('register page', () => {
@@ -49,7 +52,7 @@ describe('register page', () => {
 
     expect(screen.getByTestId('register-panel')).toBeInTheDocument();
     expect(screen.getByTestId('confirm-password-input')).toBeInTheDocument();
-    expect(screen.getByTestId('login-link')).toHaveAttribute('href', 'login');
+    expect(screen.getByTestId('login-link')).toHaveAttribute('href', '/login');
   });
 
   it('redirects home when a session token is already stored', async () => {
@@ -122,5 +125,79 @@ describe('register page', () => {
     );
     expect(localStorage.getItem('authToken')).toBeNull();
     expect(screen.getByTestId('submit-button')).not.toBeDisabled();
+  });
+
+  it('reads zds-lang after a second render', async () => {
+    localStorage.setItem('zds-lang', 'ru');
+    await renderRegister();
+    expect(screen.getByTestId('register-form-title')).toHaveTextContent(
+      window.I18n.ru.register.title,
+    );
+    expect(document.documentElement.lang).toBe('ru');
+
+    document.body.innerHTML = '';
+    await renderRegister();
+    expect(screen.getByTestId('register-form-title')).toHaveTextContent(
+      window.I18n.ru.register.title,
+    );
+  });
+
+  it('keeps theme-light on html when language changes', async () => {
+    document.documentElement.classList.add('theme-light');
+    await renderRegister();
+    dispatchLang('ru');
+    expect(document.documentElement.classList.contains('theme-light')).toBe(true);
+    expect(document.documentElement.lang).toBe('ru');
+  });
+
+  it('retranslates register chrome and mismatch copy on header:lang-change', async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    await renderRegister();
+
+    await fillForm(user, {
+      username: 'user1',
+      password: 'password1',
+      confirmPassword: 'password2',
+    });
+    expect(screen.getByTestId('error-message')).toHaveTextContent('Passwords do not match');
+
+    dispatchLang('ru');
+
+    expect(screen.getByTestId('register-form-title')).toHaveTextContent(window.I18n.ru.register.title);
+    expect(screen.getByTestId('submit-button')).toHaveTextContent(window.I18n.ru.register.submit);
+    expect(screen.getByTestId('login-link')).toHaveTextContent(window.I18n.ru.register.loginLink);
+    expect(screen.getByTestId('confirm-password-input')).toHaveAttribute(
+      'data-testid',
+      'confirm-password-input',
+    );
+    expect(screen.getByTestId('error-message')).toHaveTextContent(
+      window.I18n.ru.register.errorPasswordMismatch,
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(document.documentElement.lang).toBe('ru');
+  });
+
+  it('does not translate refused-registration API payloads', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(jsonResponse({ message: 'Username already taken' }, false, 409)),
+    );
+    await renderRegister();
+
+    await fillForm(user, {
+      username: 'user1',
+      password: 'password1',
+      confirmPassword: 'password1',
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId('error-message')).toHaveTextContent('Username already taken'),
+    );
+
+    dispatchLang('ru');
+    expect(screen.getByTestId('register-form-title')).toHaveTextContent(window.I18n.ru.register.title);
+    expect(screen.getByTestId('error-message')).toHaveTextContent('Username already taken');
   });
 });

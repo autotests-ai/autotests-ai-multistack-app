@@ -8,8 +8,15 @@ import {
   validateCredentials,
 } from './auth';
 import { mountHeader } from './headerConfig';
-import { REGISTER_MESSAGES } from './messages';
+import { registerMessages, startI18n, type Dictionary, type Lang } from './i18n';
 import './styles';
+
+type ErrorState =
+  | { type: 'none' }
+  | { type: 'validation' }
+  | { type: 'mismatch' }
+  | { type: 'network' }
+  | { type: 'api'; message: string };
 
 function fieldValue($field: JQuery<HTMLElement>): string {
   return String($field.val() ?? '').trim();
@@ -18,32 +25,68 @@ function fieldValue($field: JQuery<HTMLElement>): string {
 $(() => {
   mountHeader('register');
 
+  if (getToken()) {
+    window.location.replace(appPath('/'));
+    return;
+  }
+
   const $form = $('[data-testid="register-form"]');
   const $login = $('[data-testid="login-input"]');
   const $password = $('[data-testid="password-input"]');
   const $confirmPassword = $('[data-testid="confirm-password-input"]');
   const $error = $('[data-testid="error-message"]');
   const $submit = $('[data-testid="submit-button"]');
+  const $loginLink = $('[data-testid="login-link"]');
 
-  if (getToken()) {
-    window.location.replace(appPath('/'));
+  let lang: Lang = 'en';
+  let error: ErrorState = { type: 'none' };
+
+  function messages() {
+    return registerMessages(lang);
+  }
+
+  function errorText(): string {
+    const pack = messages();
+    if (error.type === 'validation') {
+      return validateCredentials(fieldValue($login), fieldValue($password), pack) ?? '';
+    }
+    if (error.type === 'mismatch') {
+      return pack.errorPasswordMismatch ?? '';
+    }
+    if (error.type === 'network') {
+      return pack.errorNetwork;
+    }
+    if (error.type === 'api') {
+      return error.message;
+    }
+    return '';
+  }
+
+  function applyCopy(_copy: Dictionary, next: Lang): void {
+    lang = next;
+    $error.text(errorText());
+    $loginLink.attr('href', appPath('/login'));
   }
 
   $form.on('submit', async (event) => {
     event.preventDefault();
+    error = { type: 'none' };
     $error.text('');
 
     const username = fieldValue($login);
     const password = fieldValue($password);
     const confirmPassword = fieldValue($confirmPassword);
+    const pack = messages();
 
-    const validationError = validateCredentials(username, password, REGISTER_MESSAGES);
+    const validationError = validateCredentials(username, password, pack);
     if (validationError) {
+      error = { type: 'validation' };
       $error.text(validationError);
       return;
     }
     if (password !== confirmPassword) {
-      $error.text(REGISTER_MESSAGES.errorPasswordMismatch ?? '');
+      error = { type: 'mismatch' };
+      $error.text(pack.errorPasswordMismatch ?? '');
       return;
     }
 
@@ -52,16 +95,21 @@ $(() => {
       const response = await register(username, password);
       saveSession(response.token);
       window.location.href = response.redirectUrl || appPath('/');
-    } catch (error) {
-      $error.text(
-        resolveAuthErrorMessage(
-          error,
-          REGISTER_MESSAGES,
-          REGISTER_MESSAGES.errorRegistrationFailed ?? '',
-        ),
+    } catch (err) {
+      const text = resolveAuthErrorMessage(
+        err,
+        pack,
+        pack.errorRegistrationFailed ?? '',
       );
+      error =
+        err instanceof Error && 'network' in err && (err as { network?: boolean }).network
+          ? { type: 'network' }
+          : { type: 'api', message: text };
+      $error.text(text);
     } finally {
       $submit.prop('disabled', false);
     }
   });
+
+  startI18n(applyCopy);
 });

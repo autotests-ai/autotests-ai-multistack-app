@@ -34,8 +34,9 @@ stored.
 |--------|------|
 | `src/appBase.ts` | Path-matrix resolution — `APP_BASE`, `API_BASE`, `BACKEND_ID`, `appPath`, `apiUrl` |
 | `src/auth.ts` | Typed auth client (session, validation, error copy) |
-| `src/messages.ts` | Exact user-facing strings |
-| `src/headerConfig.ts` | `window.headerConfig` + the `js/header.js` embed |
+| `src/i18n/` | Copied `en`/`ru` dictionaries (own `home.blurb`); `header:lang-change` + `html[lang]` |
+| `src/messages.ts` | Default-en snapshots for auth unit tests |
+| `src/headerConfig.ts` | `window.headerConfig` + the `js/header.js` embed; nav labels follow lang |
 | `src/home.ts` · `src/login.ts` · `src/register.ts` | One jQuery DOM layer per document |
 
 ## Session panel
@@ -48,17 +49,26 @@ same logged-out state at `/login`:
 | `logout-button` (`btn--primary`) | `POST /api/auth/logout` | Ends this session. The JWT is **not** invalidated server-side — logout is stateless by design. |
 | `delete-account-button` (`btn--danger`) | `DELETE /api/auth/me` | **Deletes the account** — not a logout. The user row is gone and the same token now yields 401. |
 
-Delete account asks `window.confirm('Delete this account? This cannot be undone.')` first;
+Delete account asks `window.confirm` with `home.deleteConfirm` from the active dictionary first;
 cancel sends no request and keeps the session. Both calls are best effort and both drop the
 local token even when the API fails — a token the server has already rejected must never
 keep the UI signed in.
 
+## i18n and theme
+
+Copied dictionaries in [`src/i18n/`](src/i18n/) (`en` / `ru`) — not a shared lib, not i18next.
+`home.blurb` is this module's (`TypeScript jQuery demo`). Default language is **en**.
+`header:lang-change` retitles nav (one `remountHeader`) and page copy; `html[lang]` follows
+the toggle. Theme is owned by `header.js` (`zds-theme`); this module does not reimplement it.
+
 ## Contracts preserved for Selenide
 
-- Every `data-testid` used by `tests/.../pages/*.java`.
-- Exact strings: validation messages (`src/messages.ts`), `Welcome, {username}!`,
-  `→ {status} | service: {service} | frontend: {UI_MOUNT}`, form titles `Login Form` /
-  `Register`.
+- Every `data-testid` used by `tests/.../pages/*.java` (never translated).
+- Exact strings (English default): validation messages (`src/messages.ts` / `src/i18n/en.ts`), `Welcome, {username}!`,
+  `→ {status} | service: {service} | frontend: {UI_MOUNT}`, form titles
+  `Login Form` / `Register`.
+- API payloads (item names, health `status`/`service`, backend error text) are
+  not translated. Nav labels follow `header:lang-change` via one `remountHeader`.
 
 ## Scripts
 

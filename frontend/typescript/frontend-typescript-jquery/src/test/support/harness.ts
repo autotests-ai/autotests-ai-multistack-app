@@ -17,7 +17,13 @@ export function mountDocument(name: DocumentName): void {
   if (!body) {
     throw new Error(`${name} has no <body> to mount`);
   }
+  document.documentElement.lang = 'en';
   document.body.innerHTML = body[1];
+}
+
+/** Same event design-system `header.js` dispatches on lang toggle. */
+export function dispatchLang(lang: string): void {
+  document.dispatchEvent(new CustomEvent('header:lang-change', { detail: { lang } }));
 }
 
 /** The page entries run inside jQuery's ready block, which mounts the header first. */

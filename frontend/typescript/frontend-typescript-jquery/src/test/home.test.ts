@@ -1,6 +1,8 @@
 import $ from 'jquery';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ru } from '../i18n';
 import {
+  dispatchLang,
   fetchCalls,
   jsonResponse,
   type LocationStub,
@@ -219,5 +221,85 @@ describe('home', () => {
       'type',
       'module',
     );
+  });
+
+  it('shows checking copy in the stored language while health is pending', async () => {
+    localStorage.setItem('zds-lang', 'ru');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => new Promise<Response>(() => {})),
+    );
+
+    await renderHome();
+
+    expect($testId('health-status').text()).toBe(ru.home.healthChecking);
+    expect($testId('items-list').text()).toContain(ru.home.itemsLoading);
+  });
+
+  it('retranslates chrome on header:lang-change and keeps API payloads', async () => {
+    localStorage.setItem('authToken', 'valid-token');
+    await renderHome();
+    await waitForWelcome();
+
+    expect($testId('item-row').find('.panel__title').text()).toBe('Alpha');
+
+    dispatchLang('ru');
+
+    expect($testId('welcome-message').text()).toBe('Добро пожаловать, user1!');
+    expect($testId('logout-button').text()).toBe(ru.home.logout);
+    expect($testId('delete-account-button').text()).toBe(ru.home.deleteAccount);
+    expect($testId('health-status').text()).toBe(
+      '→ UP | сервис: backend-java-spring | фронтенд: frontend-typescript-jquery',
+    );
+    expect($testId('item-row').find('.panel__title').text()).toBe('Alpha');
+    expect($('#home-blurb').text()).toBe('Демо TypeScript jQuery — элементы из /api/items.');
+    expect(document.documentElement.lang).toBe('ru');
+  });
+
+  it('asks to confirm delete in the active language', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    localStorage.setItem('authToken', 'valid-token');
+    await renderHome();
+    await waitForWelcome();
+
+    dispatchLang('ru');
+    click('delete-account-button');
+
+    expect(confirmSpy).toHaveBeenCalledWith(ru.home.deleteConfirm);
+  });
+
+  it('retranslates empty items chrome without touching API names', async () => {
+    stubApis((url) => (url.includes('/api/items') ? jsonResponse({ items: [] }) : null));
+    await renderHome();
+    await vi.waitFor(() => {
+      expect($testId('items-list').text()).toContain('No items found.');
+    });
+
+    dispatchLang('ru');
+    expect($testId('items-list').text()).toContain(ru.home.itemsEmpty);
+  });
+
+  it('keeps items error payload and translates the prefix', async () => {
+    stubApis((url) =>
+      url.includes('/api/items') ? jsonResponse({ message: 'boom' }, false, 500) : null,
+    );
+    await renderHome();
+    await vi.waitFor(() => {
+      expect($testId('items-list').find('.multistack__error').text()).toBe('✗ items: HTTP 500');
+    });
+
+    dispatchLang('ru');
+    expect($testId('items-list').find('.multistack__error').text()).toBe('✗ элементы: HTTP 500');
+  });
+
+  it('shows health error state in the active language', async () => {
+    stubApis((url) => (url.includes('/api/health') ? jsonResponse({}, false, 503) : null));
+    await renderHome();
+    await vi.waitFor(() => {
+      expect($testId('health-status').text()).toBe('✗ health: HTTP 503');
+    });
+
+    dispatchLang('ru');
+    expect($testId('health-status').text()).toBe('✗ статус: HTTP 503');
   });
 });

@@ -1,10 +1,10 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import Button from '../components/Button.vue';
 import Panel from '../components/Panel.vue';
 import PlaqueField from '../components/PlaqueField.vue';
-import { LOGIN_MESSAGES } from '../lib/messages';
+import { useI18n } from '../i18n';
 import {
   getToken,
   login,
@@ -12,12 +12,30 @@ import {
   saveSession,
   validateCredentials,
 } from '../lib/auth';
+import { loginMessages } from '../lib/messages';
 
 const router = useRouter();
+const { lang, copy } = useI18n();
+const messages = computed(() => loginMessages(lang.value));
 const username = ref('');
 const password = ref('');
-const error = ref('');
+const error = ref({ type: 'none' });
 const submitting = ref(false);
+
+const errorText = computed(() => {
+  const current = error.value;
+  const msgs = messages.value;
+  if (current.type === 'validation') {
+    return validateCredentials(username.value.trim(), password.value.trim(), msgs) ?? '';
+  }
+  if (current.type === 'network') {
+    return msgs.errorNetwork;
+  }
+  if (current.type === 'api') {
+    return current.message;
+  }
+  return '';
+});
 
 onMounted(() => {
   if (getToken()) {
@@ -27,13 +45,14 @@ onMounted(() => {
 
 async function handleSubmit(event) {
   event.preventDefault();
-  error.value = '';
+  error.value = { type: 'none' };
 
   const trimmedLogin = username.value.trim();
   const trimmedPassword = password.value.trim();
-  const validationError = validateCredentials(trimmedLogin, trimmedPassword, LOGIN_MESSAGES);
+  const msgs = messages.value;
+  const validationError = validateCredentials(trimmedLogin, trimmedPassword, msgs);
   if (validationError) {
-    error.value = validationError;
+    error.value = { type: 'validation' };
     return;
   }
 
@@ -43,11 +62,14 @@ async function handleSubmit(event) {
     saveSession(response.token);
     await router.push(response.redirectUrl || '/');
   } catch (err) {
-    error.value = resolveAuthErrorMessage(
-      err,
-      LOGIN_MESSAGES,
-      LOGIN_MESSAGES.errorWrongCredentials,
-    );
+    if (err?.network) {
+      error.value = { type: 'network' };
+    } else {
+      error.value = {
+        type: 'api',
+        message: resolveAuthErrorMessage(err, msgs, msgs.errorWrongCredentials),
+      };
+    }
   } finally {
     submitting.value = false;
   }
@@ -57,7 +79,7 @@ async function handleSubmit(event) {
 <template>
   <main class="auth-page">
     <Panel
-      title="Login Form"
+      :title="copy.login.title"
       title-test-id="login-form-title"
       test-id="login-panel"
       class-name="auth-panel"
@@ -66,7 +88,7 @@ async function handleSubmit(event) {
         <div class="plaque-field-list">
           <PlaqueField
             v-model="username"
-            label="Login"
+            :label="copy.login.loginLabel"
             id="login-input"
             name="username"
             type="text"
@@ -75,7 +97,7 @@ async function handleSubmit(event) {
           />
           <PlaqueField
             v-model="password"
-            label="Password"
+            :label="copy.login.passwordLabel"
             id="password-input"
             name="password"
             type="password"
@@ -85,7 +107,7 @@ async function handleSubmit(event) {
         </div>
 
         <p id="error-message" class="auth-error" aria-live="polite" data-testid="error-message">
-          {{ error }}
+          {{ errorText }}
         </p>
 
         <div class="auth-form__actions">
@@ -97,14 +119,14 @@ async function handleSubmit(event) {
             data-testid="submit-button"
             :disabled="submitting"
           >
-            Login
+            {{ copy.login.submit }}
           </Button>
         </div>
       </form>
 
       <p class="auth-footer-link">
-        No account?
-        <RouterLink to="/register" data-testid="register-link">Register</RouterLink>
+        {{ copy.login.noAccount }}
+        <RouterLink to="/register" data-testid="register-link">{{ copy.login.registerLink }}</RouterLink>
       </p>
     </Panel>
   </main>

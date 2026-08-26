@@ -1,14 +1,6 @@
 $(function () {
-  const MESSAGES = {
-    errorBothRequired: "Login and password are required (minimum {minLogin} and {minPassword} characters)",
-    errorLoginRequired: "Login is required (minimum {minLogin} characters)",
-    errorLoginMinLength: "Login must be at least {minLogin} characters",
-    errorPasswordRequired: "Password is required (minimum {minPassword} characters)",
-    errorPasswordMinLength: "Password must be at least {minPassword} characters",
-    errorPasswordMismatch: "Passwords do not match",
-    errorNetwork: "Network error. Check your connection and try again.",
-    errorRegistrationFailed: "Registration failed",
-  };
+  var error = { type: 'none' };
+  var activeLang = 'en';
 
   const $registerForm = $('[data-testid="register-form"]');
   const $loginInput = $('[data-testid="login-input"]');
@@ -16,44 +8,93 @@ $(function () {
   const $confirmPasswordInput = $('[data-testid="confirm-password-input"]');
   const $errorMessage = $('[data-testid="error-message"]');
   const $submitButton = $('[data-testid="submit-button"]');
+  const $loginLink = $('[data-testid="login-link"]');
 
-  if (window.ReferenceAuth.getToken()) {
-    window.location.replace(window.appPath("/"));
+  function messages() {
+    return window.I18n.registerMessages(activeLang);
   }
 
-  $registerForm.on("submit", async function (event) {
+  function errorText() {
+    var pack = messages();
+    if (error.type === 'validation') {
+      return (
+        window.ReferenceAuth.validateCredentials(
+          $loginInput.val().trim(),
+          $passwordInput.val().trim(),
+          pack,
+        ) || ''
+      );
+    }
+    if (error.type === 'mismatch') {
+      return pack.errorPasswordMismatch;
+    }
+    if (error.type === 'network') {
+      return pack.errorNetwork;
+    }
+    if (error.type === 'api') {
+      return error.message;
+    }
+    return '';
+  }
+
+  function applyCopy(copy, code) {
+    if (code) {
+      activeLang = code;
+    }
+    $errorMessage.text(errorText());
+    if ($loginLink.length) {
+      $loginLink.attr('href', window.appPath('/login'));
+    }
+  }
+
+  if (window.ReferenceAuth.getToken()) {
+    window.location.replace(window.appPath('/'));
+    return;
+  }
+
+  $registerForm.on('submit', async function (event) {
     event.preventDefault();
-    $errorMessage.text("");
+    error = { type: 'none' };
+    $errorMessage.text('');
 
     const username = $loginInput.val().trim();
     const password = $passwordInput.val().trim();
     const confirmPassword = $confirmPasswordInput.val().trim();
+    const pack = messages();
 
-    const validationError = window.ReferenceAuth.validateCredentials(username, password, MESSAGES);
+    const validationError = window.ReferenceAuth.validateCredentials(username, password, pack);
     if (validationError) {
+      error = { type: 'validation' };
       $errorMessage.text(validationError);
       return;
     }
     if (password !== confirmPassword) {
-      $errorMessage.text(MESSAGES.errorPasswordMismatch);
+      error = { type: 'mismatch' };
+      $errorMessage.text(pack.errorPasswordMismatch);
       return;
     }
 
-    $submitButton.prop("disabled", true);
+    $submitButton.prop('disabled', true);
     try {
       const response = await window.ReferenceAuth.register(username, password);
       window.ReferenceAuth.saveSession(response.token);
-      window.location.href = response.redirectUrl || window.appPath("/");
-    } catch (error) {
-      $errorMessage.text(
-        window.ReferenceAuth.resolveAuthErrorMessage(
-          error,
-          MESSAGES,
-          MESSAGES.errorRegistrationFailed
-        )
+      window.location.href = response.redirectUrl || window.appPath('/');
+    } catch (err) {
+      var text = window.ReferenceAuth.resolveAuthErrorMessage(
+        err,
+        pack,
+        pack.errorRegistrationFailed,
       );
+      if (err && err.network) {
+        error = { type: 'network' };
+      } else {
+        error = { type: 'api', message: text };
+      }
+      $errorMessage.text(text);
     } finally {
-      $submitButton.prop("disabled", false);
+      $submitButton.prop('disabled', false);
     }
   });
+
+  window.startI18n(applyCopy);
 });

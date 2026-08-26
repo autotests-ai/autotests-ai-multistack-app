@@ -1,27 +1,23 @@
-/** @typedef {import('./auth').AuthMessages} AuthMessages */
+import { dictionaries } from '../i18n';
 
-/** @type {AuthMessages} */
-const AUTH_BASE_MESSAGES = {
-  errorBothRequired:
-    'Login and password are required (minimum {minLogin} and {minPassword} characters)',
-  errorLoginRequired: 'Login is required (minimum {minLogin} characters)',
-  errorLoginMinLength: 'Login must be at least {minLogin} characters',
-  errorPasswordRequired: 'Password is required (minimum {minPassword} characters)',
-  errorPasswordMinLength: 'Password must be at least {minPassword} characters',
-  errorNetwork: 'Network error. Check your connection and try again.',
-};
+export function loginMessages(lang) {
+  const { auth, login } = dictionaries[lang];
+  return {
+    ...auth,
+    errorWrongCredentials: login.errorWrongCredentials,
+  };
+}
 
-/** @type {AuthMessages} */
-export const LOGIN_MESSAGES = {
-  ...AUTH_BASE_MESSAGES,
-  errorWrongCredentials: 'Wrong login or password',
-};
+export function registerMessages(lang) {
+  const { auth, register } = dictionaries[lang];
+  return {
+    ...auth,
+    errorPasswordMismatch: register.errorPasswordMismatch,
+    errorRegistrationFailed: register.errorRegistrationFailed,
+  };
+}
 
-/** @type {AuthMessages} */
-export const REGISTER_MESSAGES = {
-  ...AUTH_BASE_MESSAGES,
-  errorPasswordMismatch: 'Passwords do not match',
-  errorRegistrationFailed: 'Registration failed',
-};
-
-export const DELETE_ACCOUNT_CONFIRM = 'Delete this account? This cannot be undone.';
+/** Default-en snapshots for auth unit tests and Selenide-facing English copy. */
+export const LOGIN_MESSAGES = loginMessages('en');
+export const REGISTER_MESSAGES = registerMessages('en');
+export const DELETE_ACCOUNT_CONFIRM = dictionaries.en.home.deleteConfirm;

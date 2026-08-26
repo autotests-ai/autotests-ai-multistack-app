@@ -3,9 +3,10 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   createPageWindow,
+  dispatchLang,
   jsonResponse,
-  loadAuthRuntime,
   loadJQuery,
+  loadPageRuntime,
   loadScript,
   mainMarkup,
   whenReady,
@@ -53,7 +54,7 @@ function deleteAccountCalls() {
 
 async function renderHome() {
   document.body.innerHTML = HOME_MARKUP;
-  loadAuthRuntime();
+  loadPageRuntime();
   pageWindow = createPageWindow();
   loadScript('js/app.js', pageWindow);
   await whenReady();
@@ -71,6 +72,8 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllGlobals();
   document.body.innerHTML = '';
+  document.documentElement.lang = 'en';
+  document.documentElement.classList.remove('theme-light');
 });
 
 describe('home page', () => {
@@ -234,5 +237,115 @@ describe('home page', () => {
       expect(screen.getByTestId('items-list')).toHaveTextContent('No items found.'),
     );
     expect(screen.queryByTestId('item-row')).not.toBeInTheDocument();
+  });
+
+  it('keeps theme-light on html when language changes', async () => {
+    document.documentElement.classList.add('theme-light');
+    await renderHome();
+    await waitFor(() => expect(screen.getByTestId('item-row')).toBeInTheDocument());
+    dispatchLang('ru');
+    expect(document.documentElement.classList.contains('theme-light')).toBe(true);
+    expect(document.documentElement.lang).toBe('ru');
+  });
+
+  it('retranslates chrome on header:lang-change and keeps API payloads', async () => {
+    localStorage.setItem('authToken', 'valid-token');
+    await renderHome();
+
+    expect(await screen.findByTestId('welcome-message')).toHaveTextContent('Welcome, user1!');
+    expect(screen.getByTestId('item-row')).toHaveTextContent('Alpha');
+
+    dispatchLang('ru');
+
+    expect(screen.getByTestId('welcome-message')).toHaveTextContent('Добро пожаловать, user1!');
+    expect(screen.getByTestId('logout-button')).toHaveTextContent(window.I18n.ru.home.logout);
+    expect(screen.getByTestId('delete-account-button')).toHaveTextContent(
+      window.I18n.ru.home.deleteAccount,
+    );
+    expect(screen.getByTestId('health-status')).toHaveTextContent(
+      '→ UP | сервис: backend-java-spring | фронтенд: frontend-javascript-jquery',
+    );
+    expect(screen.getByTestId('item-row')).toHaveTextContent('Alpha');
+    expect(screen.getByTestId('logout-button')).toHaveAttribute('data-testid', 'logout-button');
+    expect(document.documentElement.lang).toBe('ru');
+  });
+
+  it('asks to confirm delete in the active language', async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    localStorage.setItem('authToken', 'valid-token');
+    await renderHome();
+
+    await screen.findByTestId('delete-account-button');
+    dispatchLang('ru');
+    await user.click(screen.getByTestId('delete-account-button'));
+
+    expect(confirmSpy).toHaveBeenCalledWith(window.I18n.ru.home.deleteConfirm);
+    confirmSpy.mockRestore();
+  });
+
+  it('retranslates empty and error item chrome without touching API names', async () => {
+    stubDefaultApis((url) => {
+      if (url.includes('/api/items')) {
+        return jsonResponse({ items: [] });
+      }
+      return null;
+    });
+    await renderHome();
+    await waitFor(() =>
+      expect(screen.getByTestId('items-list')).toHaveTextContent('No items found.'),
+    );
+
+    dispatchLang('ru');
+    expect(screen.getByTestId('items-list')).toHaveTextContent(window.I18n.ru.home.itemsEmpty);
+  });
+
+  it('keeps items error payload and translates the prefix', async () => {
+    stubDefaultApis((url) => {
+      if (url.includes('/api/items')) {
+        return jsonResponse({ message: 'boom' }, false, 500);
+      }
+      return null;
+    });
+    await renderHome();
+    await waitFor(() =>
+      expect(screen.getByTestId('items-list')).toHaveTextContent('✗ items: HTTP 500'),
+    );
+
+    dispatchLang('ru');
+    expect(screen.getByTestId('items-list')).toHaveTextContent('✗ элементы: HTTP 500');
+  });
+
+  it('shows checking copy in the stored language while health is pending', async () => {
+    localStorage.setItem('zds-lang', 'ru');
+    const pending = new Promise(() => {});
+    stubDefaultApis((url) => {
+      if (url.includes('/api/health') || url.includes('/api/items')) {
+        return pending;
+      }
+      return null;
+    });
+
+    await renderHome();
+    expect(screen.getByTestId('health-status')).toHaveTextContent(window.I18n.ru.home.healthChecking);
+    expect(screen.getByTestId('items-list')).toHaveTextContent(window.I18n.ru.home.itemsLoading);
+    expect(document.getElementById('home-blurb')).toHaveTextContent('Демо jQuery');
+  });
+
+  it('translates health error prefix after lang change', async () => {
+    stubDefaultApis((url) => {
+      if (url.includes('/api/health')) {
+        return jsonResponse({ message: 'down' }, false, 500);
+      }
+      return null;
+    });
+
+    await renderHome();
+    await waitFor(() =>
+      expect(screen.getByTestId('health-status')).toHaveTextContent('✗ health: HTTP 500'),
+    );
+
+    dispatchLang('ru');
+    expect(screen.getByTestId('health-status')).toHaveTextContent('✗ статус: HTTP 500');
   });
 });

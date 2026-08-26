@@ -230,3 +230,45 @@ describe('canonical header.js — mobile burger menu', () => {
     expect(menu?.hidden).toBe(true);
   });
 });
+
+describe('canonical header.js — lang and theme persist', () => {
+  beforeEach(() => {
+    window.history.replaceState({}, '', `${MOUNT}/`);
+    document.documentElement.className = '';
+    localStorage.clear();
+    mockMobileViewport();
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('toggles html.theme-light and keeps it after remount', async () => {
+    await mountAt(`${MOUNT}/`);
+    const themeBtn = document.querySelector('[data-testid="header-theme-toggle"]');
+    expect(document.documentElement.classList.contains('theme-light')).toBe(false);
+
+    themeBtn?.click();
+    expect(document.documentElement.classList.contains('theme-light')).toBe(true);
+    expect(localStorage.getItem('zds-theme')).toBe('light');
+
+    await mountAt(`${MOUNT}/login`);
+    expect(document.documentElement.classList.contains('theme-light')).toBe(true);
+    expect(localStorage.getItem('zds-theme')).toBe('light');
+  });
+
+  it('toggles html[lang=ru] and keeps it after remount', async () => {
+    await mountAt(`${MOUNT}/`);
+    const langBtn = document.querySelector('[data-testid="header-lang-toggle"]');
+    expect(document.documentElement.lang).toBe('en');
+
+    langBtn?.click();
+    expect(document.documentElement.lang).toBe('ru');
+    expect(localStorage.getItem('zds-lang')).toBe('ru');
+    expect(document.querySelector('[data-testid="header-lang-label"]')?.textContent).toBe('RU');
+
+    await mountAt(`${MOUNT}/`);
+    expect(document.documentElement.lang).toBe('ru');
+    expect(document.querySelector('[data-testid="header-lang-label"]')?.textContent).toBe('RU');
+  });
+});

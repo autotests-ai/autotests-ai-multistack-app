@@ -35,6 +35,20 @@ export function loadAuthRuntime() {
   loadScript('js/auth.js');
 }
 
+/** Dictionaries + nav labels + auth — the order the HTML pages load before jQuery. */
+export function loadPageRuntime() {
+  loadScript('js/app-base.js');
+  loadScript('js/i18n.js');
+  loadScript('js/header-config.js');
+  loadScript('js/auth.js');
+}
+
+export function dispatchLang(lang) {
+  document.dispatchEvent(
+    new CustomEvent(window.I18n.HEADER_LANG_CHANGE, { detail: { lang } }),
+  );
+}
+
 /**
  * The pages navigate with `window.location.href = …`, which jsdom refuses to do. Handing
  * the page script a window whose `location` is a plain object keeps the production line

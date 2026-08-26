@@ -1,16 +1,35 @@
 import { Button, Panel } from '@zero-design-system/react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useI18n } from '../i18n';
 import { fetchHealth, fetchItems } from '../lib/api';
 import { UI_MOUNT } from '../lib/appBase';
-import { clearSession, deleteAccount, fetchProfile, getToken, logout } from '../lib/auth';
-import { DELETE_ACCOUNT_CONFIRM } from '../lib/messages';
+import {
+  clearSession,
+  deleteAccount,
+  fetchProfile,
+  formatMessage,
+  getToken,
+  logout,
+} from '../lib/auth';
+
+function Blurb({ template }) {
+  const [before, after] = template.split('{api}');
+  return (
+    <p className="text text--muted">
+      {before}
+      <code>/api/items</code>
+      {after}
+    </p>
+  );
+}
 
 export function HomePage() {
   const navigate = useNavigate();
-  const [health, setHealth] = useState({ text: '→ Checking health…', error: false });
+  const { copy } = useI18n();
+  const [health, setHealth] = useState({ status: 'checking' });
   const [items, setItems] = useState({ status: 'loading' });
-  const [welcome, setWelcome] = useState(null);
+  const [welcomeName, setWelcomeName] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -18,15 +37,12 @@ export function HomePage() {
     fetchHealth()
       .then((payload) => {
         if (active) {
-          setHealth({
-            text: `→ ${payload.status} | service: ${payload.service} | frontend: ${UI_MOUNT}`,
-            error: false,
-          });
+          setHealth({ status: 'ok', health: payload.status, service: payload.service });
         }
       })
       .catch((error) => {
         if (active) {
-          setHealth({ text: `✗ health: ${error.message}`, error: true });
+          setHealth({ status: 'error', message: error.message });
         }
       });
 
@@ -46,7 +62,7 @@ export function HomePage() {
       fetchProfile()
         .then((profile) => {
           if (active) {
-            setWelcome(`Welcome, ${profile.username}!`);
+            setWelcomeName(profile.username);
           }
         })
         .catch(() => {
@@ -67,32 +83,41 @@ export function HomePage() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!window.confirm(DELETE_ACCOUNT_CONFIRM)) {
+    if (!window.confirm(copy.home.deleteConfirm)) {
       return;
     }
     await deleteAccount();
     navigate('/login');
   };
 
+  const healthText =
+    health.status === 'checking'
+      ? copy.home.healthChecking
+      : health.status === 'ok'
+        ? formatMessage(copy.home.healthOk, {
+            status: health.health,
+            service: health.service,
+            frontend: UI_MOUNT,
+          })
+        : formatMessage(copy.home.healthError, { message: health.message });
+
   return (
     <main
       className="page-shell page-shell--below-header grid multistack"
       data-testid="multistack-layout"
     >
-      <Panel title="Multistack">
-        <p className="text text--muted">
-          JavaScript React SPA — items loaded from <code>/api/items</code>.
-        </p>
+      <Panel title={copy.home.title}>
+        <Blurb template={copy.home.blurb} />
       </Panel>
 
       <Panel
-        title="Session"
+        title={copy.home.session}
         testId="welcome-panel"
-        hidden={welcome === null}
+        hidden={welcomeName === null}
         bodyClassName="multistack__welcome-body"
       >
         <p id="welcome-message" className="text" data-testid="welcome-message">
-          {welcome}
+          {welcomeName === null ? '' : formatMessage(copy.home.welcome, { username: welcomeName })}
         </p>
         <Button
           id="logout-button"
@@ -100,7 +125,7 @@ export function HomePage() {
           data-testid="logout-button"
           onClick={handleLogout}
         >
-          Logout
+          {copy.home.logout}
         </Button>
         <Button
           id="delete-account-button"
@@ -108,37 +133,39 @@ export function HomePage() {
           data-testid="delete-account-button"
           onClick={handleDeleteAccount}
         >
-          Delete account
+          {copy.home.deleteAccount}
         </Button>
       </Panel>
 
-      <Panel title="Health" testId="health-panel">
+      <Panel title={copy.home.health} testId="health-panel">
         <p
           className={
-            health.error
+            health.status === 'error'
               ? 'text text--sm text--muted multistack__error'
               : 'text text--sm text--muted'
           }
           data-testid="health-status"
         >
-          {health.text}
+          {healthText}
         </p>
       </Panel>
 
       <div className="grid" data-testid="items-list" aria-live="polite">
         {items.status === 'loading' && (
-          <Panel title="Items">
-            <p className="text text--muted">→ Loading items…</p>
+          <Panel title={copy.home.items}>
+            <p className="text text--muted">{copy.home.itemsLoading}</p>
           </Panel>
         )}
         {items.status === 'empty' && (
-          <Panel title="Items">
-            <p className="text text--muted">No items found.</p>
+          <Panel title={copy.home.items}>
+            <p className="text text--muted">{copy.home.itemsEmpty}</p>
           </Panel>
         )}
         {items.status === 'error' && (
-          <Panel title="Items">
-            <p className="multistack__error">✗ items: {items.message}</p>
+          <Panel title={copy.home.items}>
+            <p className="multistack__error">
+              {formatMessage(copy.home.itemsError, { message: items.message })}
+            </p>
           </Panel>
         )}
         {items.status === 'loaded' &&

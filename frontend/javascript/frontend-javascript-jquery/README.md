@@ -57,11 +57,26 @@ Dockerfile deletes `package.json`, `package-lock.json`, `node_modules/`,
 
 Login and register both redirect home when `authToken` is already present.
 
+## i18n and theme
+
+Copied dictionaries in [`js/i18n.js`](js/i18n.js) (`en` / `ru`) — not a shared lib, not i18next.
+Default language is **en**. `header:lang-change` retitles nav (one `remountHeader`) and page copy;
+`html[lang]` follows the toggle. Theme is owned by `header.js` (`zds-theme`); this module does
+not reimplement it.
+
+Selenide-facing English copy stays exact: validation messages, `Welcome, {username}!`,
+`→ {status} | service: {service}`, form titles `Login Form` / `Register`. API payloads
+(item names, health `status`/`service`, backend error text) are not translated. `data-testid`
+values never change with language. `home.blurb` is the only stack-specific line (jQuery, not
+the React SPA / not vanilla).
+
 ## Files
 
 | Path | Role |
 |------|------|
 | `js/app-base.js` | path-matrix resolution — `APP_BASE` / `API_BASE` / `UI_MOUNT`, `appPath()`, `apiUrl()`. Plain JS, loaded before jQuery |
+| `js/i18n.js` | copied `en` / `ru` dictionaries + `html[lang]` helpers (`zds-lang`) |
+| `js/header-config.js` | nav labels from the dictionary; one `remountHeader` on `header:lang-change` |
 | `js/auth.js` | `window.ReferenceAuth` — validation, login/register, profile, logout, `deleteAccount`. Transport is `fetch`, not `$.ajax` |
 | `js/app.js` | home screen in jQuery idiom — `$(function () { … })`, `$('[data-testid="…"]')`, `.on('click', …)`, `.text()`, `.html()`, `.prop('hidden', false)` |
 | `js/login.js`, `js/register.js` | the two forms, same jQuery idiom |
@@ -72,7 +87,7 @@ Login and register both redirect home when `authToken` is already present.
 Rendered only when `GET /api/auth/me` returned a profile, and it carries **both** buttons:
 
 - **Logout** → `POST /api/auth/logout` → drops the local token → `/login`.
-- **Delete account** → `window.confirm('Delete this account? This cannot be undone.')`.
+- **Delete account** → `window.confirm` with `home.deleteConfirm` from the active dictionary.
   Cancel returns immediately: no request, session kept. OK → `DELETE /api/auth/me` →
   drops the local token → `/login`.
 
@@ -91,6 +106,7 @@ tests break when the shipped markup or testids drift.
 | Suite | Covers |
 |-------|--------|
 | `auth.test.js` | `window.ReferenceAuth` surface, validation copy, network errors, logout, `deleteAccount` (token / no token / 401 / network) |
-| `home.test.js` | health + items panels, empty and error states, invalid session, Session panel with both buttons, logout, delete confirmed / cancelled / refused |
-| `login.test.js` | panel markup, redirect when signed in, validation, success redirect, wrong credentials, network error |
-| `register.test.js` | panel markup, redirect when signed in, password mismatch, success, refused registration |
+| `i18n/i18n.test.js` | default **en**, `zds-lang` persist, `html[lang]`, `theme-light` left to `header.js`, jquery `home.blurb` |
+| `home.test.js` | health + items panels, empty and error states, invalid session, Session panel with both buttons, logout, delete confirmed / cancelled / refused, lang → copy, `theme-light` |
+| `login.test.js` | panel markup, redirect when signed in, validation, success redirect, wrong credentials, network error, lang → copy, persist, `theme-light` |
+| `register.test.js` | panel markup, redirect when signed in, password mismatch, success, refused registration, lang → copy, persist, `theme-light` |

@@ -1,6 +1,7 @@
 import { Button, Panel, PlaqueField } from '@zero-design-system/react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useI18n } from '../i18n';
 import {
   getToken,
   register,
@@ -8,14 +9,32 @@ import {
   saveSession,
   validateCredentials,
 } from '../lib/auth';
-import { REGISTER_MESSAGES } from '../lib/messages';
+import { registerMessages } from '../lib/messages';
+
+function registerErrorText(error, username, password, messages) {
+  if (error.type === 'validation') {
+    return validateCredentials(username.trim(), password.trim(), messages) ?? '';
+  }
+  if (error.type === 'mismatch') {
+    return messages.errorPasswordMismatch;
+  }
+  if (error.type === 'network') {
+    return messages.errorNetwork;
+  }
+  if (error.type === 'api') {
+    return error.message;
+  }
+  return '';
+}
 
 export function RegisterPage() {
   const navigate = useNavigate();
+  const { lang, copy } = useI18n();
+  const messages = registerMessages(lang);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState({ type: 'none' });
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -26,19 +45,19 @@ export function RegisterPage() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setError('');
+    setError({ type: 'none' });
 
     const trimmedLogin = username.trim();
     const trimmedPassword = password.trim();
     const trimmedConfirm = confirmPassword.trim();
 
-    const validationError = validateCredentials(trimmedLogin, trimmedPassword, REGISTER_MESSAGES);
+    const validationError = validateCredentials(trimmedLogin, trimmedPassword, messages);
     if (validationError) {
-      setError(validationError);
+      setError({ type: 'validation' });
       return;
     }
     if (trimmedPassword !== trimmedConfirm) {
-      setError(REGISTER_MESSAGES.errorPasswordMismatch ?? '');
+      setError({ type: 'mismatch' });
       return;
     }
 
@@ -48,13 +67,12 @@ export function RegisterPage() {
       saveSession(response.token);
       navigate(response.redirectUrl || '/');
     } catch (err) {
-      setError(
-        resolveAuthErrorMessage(
-          err,
-          REGISTER_MESSAGES,
-          REGISTER_MESSAGES.errorRegistrationFailed ?? '',
-        ),
-      );
+      const text = resolveAuthErrorMessage(err, messages, messages.errorRegistrationFailed);
+      if (err?.network) {
+        setError({ type: 'network' });
+      } else {
+        setError({ type: 'api', message: text });
+      }
     } finally {
       setSubmitting(false);
     }
@@ -63,7 +81,7 @@ export function RegisterPage() {
   return (
     <main className="auth-page">
       <Panel
-        title="Register"
+        title={copy.register.title}
         titleTestId="register-form-title"
         testId="register-panel"
         className="auth-panel"
@@ -76,7 +94,7 @@ export function RegisterPage() {
         >
           <div className="plaque-field-list">
             <PlaqueField
-              label="Login"
+              label={copy.register.loginLabel}
               id="login-input"
               name="username"
               type="text"
@@ -86,7 +104,7 @@ export function RegisterPage() {
               onChange={(e) => setUsername(e.target.value)}
             />
             <PlaqueField
-              label="Password"
+              label={copy.register.passwordLabel}
               id="password-input"
               name="password"
               type="password"
@@ -96,7 +114,7 @@ export function RegisterPage() {
               onChange={(e) => setPassword(e.target.value)}
             />
             <PlaqueField
-              label="Confirm"
+              label={copy.register.confirmLabel}
               id="confirm-password-input"
               name="confirm-password"
               type="password"
@@ -113,7 +131,7 @@ export function RegisterPage() {
             aria-live="polite"
             data-testid="error-message"
           >
-            {error}
+            {registerErrorText(error, username, password, messages)}
           </p>
 
           <div className="auth-form__actions">
@@ -125,15 +143,15 @@ export function RegisterPage() {
               data-testid="submit-button"
               disabled={submitting}
             >
-              Register
+              {copy.register.submit}
             </Button>
           </div>
         </form>
 
         <p className="auth-footer-link">
-          Already have an account?{' '}
+          {copy.register.haveAccount}{' '}
           <Link to="/login" data-testid="login-link">
-            Login
+            {copy.register.loginLink}
           </Link>
         </p>
       </Panel>

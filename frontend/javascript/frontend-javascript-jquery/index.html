@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="theme-dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,18 +20,13 @@
 <body>
   <div id="app-header"></div>
   <script src="js/app-base.js"></script>
-  <script>
-    window.headerConfig = {
-      brand: { href: appPath('/'), label: 'Multistack' },
-      nav: [
-        { href: appPath('/'), label: 'Home', active: true, testid: 'header-nav-home' },
-        { href: appPath('/login'), label: 'Login', testid: 'header-nav-login' },
-        { href: appPath('/register'), label: 'Register', testid: 'header-nav-register' },
-        { href: '/stack/', label: 'Stack', testid: 'header-nav-stack' },
-      ],
-      lang: { default: 'en' },
-      theme: { default: 'dark' },
-    };
+  <script src="js/i18n.js"></script>
+  <script src="js/header-config.js"></script>
+  <script type="module">
+    import { envNavItems } from './js/env-hosts.js';
+    window.envNavItems = envNavItems;
+    I18n.applyDocumentLang(I18n.readStoredLang());
+    window.headerConfig = buildHeaderConfig(I18n.readStoredLang());
   </script>
   <script type="module" src="js/header.js"></script>
 
@@ -44,11 +39,11 @@
           <span class="panel__dot"></span>
         </div>
         <div class="panel__trail">
-          <span class="panel__title">Multistack</span>
+          <span class="panel__title" data-i18n="home.title">Multistack</span>
         </div>
       </div>
       <div class="panel__body">
-        <p class="text text--muted">
+        <p id="home-blurb" class="text text--muted">
           jQuery demo — items loaded from <code>/api/items</code>.
         </p>
       </div>
@@ -62,13 +57,13 @@
           <span class="panel__dot"></span>
         </div>
         <div class="panel__trail">
-          <span class="panel__title">Session</span>
+          <span class="panel__title" data-i18n="home.session">Session</span>
         </div>
       </div>
       <div class="panel__body multistack__welcome-body">
         <p id="welcome-message" class="text" data-testid="welcome-message"></p>
-        <button id="logout-button" type="button" class="btn btn--primary" data-testid="logout-button">Logout</button>
-        <button id="delete-account-button" type="button" class="btn btn--danger" data-testid="delete-account-button">Delete account</button>
+        <button id="logout-button" type="button" class="btn btn--primary" data-testid="logout-button" data-i18n="home.logout">Logout</button>
+        <button id="delete-account-button" type="button" class="btn btn--danger" data-testid="delete-account-button" data-i18n="home.deleteAccount">Delete account</button>
       </div>
     </div>
 
@@ -80,7 +75,7 @@
           <span class="panel__dot"></span>
         </div>
         <div class="panel__trail">
-          <span class="panel__title">Health</span>
+          <span class="panel__title" data-i18n="home.health">Health</span>
         </div>
       </div>
       <div class="panel__body">
@@ -97,7 +92,7 @@
             <span class="panel__dot"></span>
           </div>
           <div class="panel__trail">
-            <span class="panel__title">Items</span>
+            <span class="panel__title" data-i18n="home.items">Items</span>
           </div>
         </div>
         <div class="panel__body">

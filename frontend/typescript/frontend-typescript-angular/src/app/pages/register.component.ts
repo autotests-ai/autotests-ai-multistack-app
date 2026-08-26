@@ -1,5 +1,13 @@
-import { Component, inject, signal, type OnInit, type WritableSignal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  signal,
+  type OnInit,
+  type WritableSignal,
+} from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { I18nService } from '../../i18n';
 import { PanelComponent } from '../components/panel.component';
 import {
   getToken,
@@ -8,17 +16,46 @@ import {
   saveSession,
   validateCredentials,
 } from '../lib/auth';
-import { REGISTER_MESSAGES } from '../lib/messages';
+import { registerMessages } from '../lib/messages';
+
+type RegisterError =
+  | { type: 'none' }
+  | { type: 'validation' }
+  | { type: 'mismatch' }
+  | { type: 'network' }
+  | { type: 'api'; message: string };
+
+function registerErrorText(
+  error: RegisterError,
+  username: string,
+  password: string,
+  messages: ReturnType<typeof registerMessages>,
+): string {
+  if (error.type === 'validation') {
+    return validateCredentials(username.trim(), password.trim(), messages) ?? '';
+  }
+  if (error.type === 'mismatch') {
+    return messages.errorPasswordMismatch ?? '';
+  }
+  if (error.type === 'network') {
+    return messages.errorNetwork;
+  }
+  if (error.type === 'api') {
+    return error.message;
+  }
+  return '';
+}
 
 @Component({
   selector: 'app-register-page',
   imports: [PanelComponent, RouterLink],
+  providers: [I18nService],
   template: `
     <main class="auth-page">
       <div
         appPanel
         class="auth-panel"
-        [panelTitle]="'Register'"
+        [panelTitle]="copy().register.title"
         [titleTestId]="'register-form-title'"
         data-testid="register-panel"
       >
@@ -30,7 +67,7 @@ import { REGISTER_MESSAGES } from '../lib/messages';
         >
           <div class="plaque-field-list">
             <label class="plaque-field plaque-field--divided plaque-field--stretch">
-              <span class="plaque-field__text">Login</span>
+              <span class="plaque-field__text">{{ copy().register.loginLabel }}</span>
               <span class="plaque-divider" aria-hidden="true"></span>
               <input
                 id="login-input"
@@ -44,7 +81,7 @@ import { REGISTER_MESSAGES } from '../lib/messages';
               />
             </label>
             <label class="plaque-field plaque-field--divided plaque-field--stretch">
-              <span class="plaque-field__text">Password</span>
+              <span class="plaque-field__text">{{ copy().register.passwordLabel }}</span>
               <span class="plaque-divider" aria-hidden="true"></span>
               <input
                 id="password-input"
@@ -58,7 +95,7 @@ import { REGISTER_MESSAGES } from '../lib/messages';
               />
             </label>
             <label class="plaque-field plaque-field--divided plaque-field--stretch">
-              <span class="plaque-field__text">Confirm</span>
+              <span class="plaque-field__text">{{ copy().register.confirmLabel }}</span>
               <span class="plaque-divider" aria-hidden="true"></span>
               <input
                 id="confirm-password-input"
@@ -74,7 +111,7 @@ import { REGISTER_MESSAGES } from '../lib/messages';
           </div>
 
           <p id="error-message" class="auth-error" aria-live="polite" data-testid="error-message">
-            {{ error() }}
+            {{ errorText() }}
           </p>
 
           <div class="auth-form__actions">
@@ -85,14 +122,14 @@ import { REGISTER_MESSAGES } from '../lib/messages';
               data-testid="submit-button"
               [disabled]="submitting()"
             >
-              Register
+              {{ copy().register.submit }}
             </button>
           </div>
         </form>
 
         <p class="auth-footer-link">
-          Already have an account?
-          <a routerLink="/login" data-testid="login-link">Login</a>
+          {{ copy().register.haveAccount }}
+          <a routerLink="/login" data-testid="login-link">{{ copy().register.loginLink }}</a>
         </p>
       </div>
     </main>
@@ -100,12 +137,22 @@ import { REGISTER_MESSAGES } from '../lib/messages';
 })
 export class RegisterPageComponent implements OnInit {
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18nService);
 
+  readonly copy = this.i18n.copy;
   readonly username = signal('');
   readonly password = signal('');
   readonly confirmPassword = signal('');
-  readonly error = signal('');
+  readonly error = signal<RegisterError>({ type: 'none' });
   readonly submitting = signal(false);
+  readonly errorText = computed(() =>
+    registerErrorText(
+      this.error(),
+      this.username(),
+      this.password(),
+      registerMessages(this.i18n.lang()),
+    ),
+  );
 
   ngOnInit(): void {
     if (getToken()) {
@@ -119,19 +166,20 @@ export class RegisterPageComponent implements OnInit {
 
   async handleSubmit(event: Event): Promise<void> {
     event.preventDefault();
-    this.error.set('');
+    this.error.set({ type: 'none' });
 
     const trimmedLogin = this.username().trim();
     const trimmedPassword = this.password().trim();
     const trimmedConfirm = this.confirmPassword().trim();
+    const messages = registerMessages(this.i18n.lang());
 
-    const validationError = validateCredentials(trimmedLogin, trimmedPassword, REGISTER_MESSAGES);
+    const validationError = validateCredentials(trimmedLogin, trimmedPassword, messages);
     if (validationError) {
-      this.error.set(validationError);
+      this.error.set({ type: 'validation' });
       return;
     }
     if (trimmedPassword !== trimmedConfirm) {
-      this.error.set(REGISTER_MESSAGES.errorPasswordMismatch ?? '');
+      this.error.set({ type: 'mismatch' });
       return;
     }
 
@@ -141,13 +189,18 @@ export class RegisterPageComponent implements OnInit {
       saveSession(response.token);
       await this.router.navigateByUrl(response.redirectUrl || '/');
     } catch (err) {
-      this.error.set(
-        resolveAuthErrorMessage(
-          err,
-          REGISTER_MESSAGES,
-          REGISTER_MESSAGES.errorRegistrationFailed ?? '',
-        ),
-      );
+      if ((err as { network?: boolean } | undefined)?.network) {
+        this.error.set({ type: 'network' });
+      } else {
+        this.error.set({
+          type: 'api',
+          message: resolveAuthErrorMessage(
+            err,
+            messages,
+            messages.errorRegistrationFailed ?? '',
+          ),
+        });
+      }
     } finally {
       this.submitting.set(false);
     }

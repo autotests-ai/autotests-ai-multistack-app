@@ -1,5 +1,13 @@
-import { Component, inject, signal, type OnInit, type WritableSignal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  signal,
+  type OnInit,
+  type WritableSignal,
+} from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { I18nService } from '../../i18n';
 import { PanelComponent } from '../components/panel.component';
 import {
   getToken,
@@ -8,17 +16,42 @@ import {
   saveSession,
   validateCredentials,
 } from '../lib/auth';
-import { LOGIN_MESSAGES } from '../lib/messages';
+import { loginMessages } from '../lib/messages';
+
+type LoginError =
+  | { type: 'none' }
+  | { type: 'validation' }
+  | { type: 'network' }
+  | { type: 'api'; message: string };
+
+function loginErrorText(
+  error: LoginError,
+  username: string,
+  password: string,
+  messages: ReturnType<typeof loginMessages>,
+): string {
+  if (error.type === 'validation') {
+    return validateCredentials(username.trim(), password.trim(), messages) ?? '';
+  }
+  if (error.type === 'network') {
+    return messages.errorNetwork;
+  }
+  if (error.type === 'api') {
+    return error.message;
+  }
+  return '';
+}
 
 @Component({
   selector: 'app-login-page',
   imports: [PanelComponent, RouterLink],
+  providers: [I18nService],
   template: `
     <main class="auth-page">
       <div
         appPanel
         class="auth-panel"
-        [panelTitle]="'Login Form'"
+        [panelTitle]="copy().login.title"
         [titleTestId]="'login-form-title'"
         data-testid="login-panel"
       >
@@ -30,7 +63,7 @@ import { LOGIN_MESSAGES } from '../lib/messages';
         >
           <div class="plaque-field-list">
             <label class="plaque-field plaque-field--divided plaque-field--stretch">
-              <span class="plaque-field__text">Login</span>
+              <span class="plaque-field__text">{{ copy().login.loginLabel }}</span>
               <span class="plaque-divider" aria-hidden="true"></span>
               <input
                 id="login-input"
@@ -44,7 +77,7 @@ import { LOGIN_MESSAGES } from '../lib/messages';
               />
             </label>
             <label class="plaque-field plaque-field--divided plaque-field--stretch">
-              <span class="plaque-field__text">Password</span>
+              <span class="plaque-field__text">{{ copy().login.passwordLabel }}</span>
               <span class="plaque-divider" aria-hidden="true"></span>
               <input
                 id="password-input"
@@ -60,7 +93,7 @@ import { LOGIN_MESSAGES } from '../lib/messages';
           </div>
 
           <p id="error-message" class="auth-error" aria-live="polite" data-testid="error-message">
-            {{ error() }}
+            {{ errorText() }}
           </p>
 
           <div class="auth-form__actions">
@@ -71,14 +104,14 @@ import { LOGIN_MESSAGES } from '../lib/messages';
               data-testid="submit-button"
               [disabled]="submitting()"
             >
-              Login
+              {{ copy().login.submit }}
             </button>
           </div>
         </form>
 
         <p class="auth-footer-link">
-          No account?
-          <a routerLink="/register" data-testid="register-link">Register</a>
+          {{ copy().login.noAccount }}
+          <a routerLink="/register" data-testid="register-link">{{ copy().login.registerLink }}</a>
         </p>
       </div>
     </main>
@@ -86,11 +119,21 @@ import { LOGIN_MESSAGES } from '../lib/messages';
 })
 export class LoginPageComponent implements OnInit {
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18nService);
 
+  readonly copy = this.i18n.copy;
   readonly username = signal('');
   readonly password = signal('');
-  readonly error = signal('');
+  readonly error = signal<LoginError>({ type: 'none' });
   readonly submitting = signal(false);
+  readonly errorText = computed(() =>
+    loginErrorText(
+      this.error(),
+      this.username(),
+      this.password(),
+      loginMessages(this.i18n.lang()),
+    ),
+  );
 
   ngOnInit(): void {
     if (getToken()) {
@@ -104,13 +147,14 @@ export class LoginPageComponent implements OnInit {
 
   async handleSubmit(event: Event): Promise<void> {
     event.preventDefault();
-    this.error.set('');
+    this.error.set({ type: 'none' });
 
     const trimmedLogin = this.username().trim();
     const trimmedPassword = this.password().trim();
-    const validationError = validateCredentials(trimmedLogin, trimmedPassword, LOGIN_MESSAGES);
+    const messages = loginMessages(this.i18n.lang());
+    const validationError = validateCredentials(trimmedLogin, trimmedPassword, messages);
     if (validationError) {
-      this.error.set(validationError);
+      this.error.set({ type: 'validation' });
       return;
     }
 
@@ -120,9 +164,14 @@ export class LoginPageComponent implements OnInit {
       saveSession(response.token);
       await this.router.navigateByUrl(response.redirectUrl || '/');
     } catch (err) {
-      this.error.set(
-        resolveAuthErrorMessage(err, LOGIN_MESSAGES, LOGIN_MESSAGES.errorWrongCredentials ?? ''),
-      );
+      if ((err as { network?: boolean } | undefined)?.network) {
+        this.error.set({ type: 'network' });
+      } else {
+        this.error.set({
+          type: 'api',
+          message: resolveAuthErrorMessage(err, messages, messages.errorWrongCredentials ?? ''),
+        });
+      }
     } finally {
       this.submitting.set(false);
     }

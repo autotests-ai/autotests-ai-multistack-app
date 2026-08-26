@@ -15,27 +15,27 @@ afterEach(() => {
 describe('appBase — mount precedence', () => {
   it('takes backend and frontend from the path matrix', async () => {
     const { APP_BASE, BACKEND_ID, appPath, apiUrl, authTokenStorageKey } = await loadFor(
-      '/backend-java-spring/frontend-typescript-jquery/login',
+      '/stack/backend-java-spring/frontend-typescript-jquery/login',
     );
 
-    expect(APP_BASE).toBe('/backend-java-spring/frontend-typescript-jquery');
+    expect(APP_BASE).toBe('/stack/backend-java-spring/frontend-typescript-jquery');
     expect(BACKEND_ID).toBe('backend-java-spring');
     expect(authTokenStorageKey()).toBe('authToken:backend-java-spring');
     expect(appPath('/js/header.js')).toBe(
-      '/backend-java-spring/frontend-typescript-jquery/js/header.js',
+      '/stack/backend-java-spring/frontend-typescript-jquery/js/header.js',
     );
-    expect(apiUrl('/api/health')).toBe('/backend-java-spring/api/health');
+    expect(apiUrl('/api/health')).toBe('/stack/backend-java-spring/api/health');
   });
 
   it('keeps a bare product mount when there is no backend prefix', async () => {
     const { APP_BASE, BACKEND_ID, appPath, apiUrl, authTokenStorageKey } = await loadFor(
-      '/frontend-typescript-jquery/login',
+      '/stack/frontend-typescript-jquery/login',
     );
 
-    expect(APP_BASE).toBe('/frontend-typescript-jquery');
+    expect(APP_BASE).toBe('/stack/frontend-typescript-jquery');
     expect(BACKEND_ID).toBeNull();
     expect(authTokenStorageKey()).toBe('authToken');
-    expect(appPath('/js/header.js')).toBe('/frontend-typescript-jquery/js/header.js');
+    expect(appPath('/js/header.js')).toBe('/stack/frontend-typescript-jquery/js/header.js');
     expect(apiUrl('/api/health')).toBe('/api/health');
   });
 
@@ -54,8 +54,8 @@ describe('appBase — mount precedence', () => {
   });
 
   it('scopes auth token keys per backend and shares them across frontends', async () => {
-    const spring = await loadFor('/backend-java-spring/frontend-typescript-jquery/');
-    const fastapi = await loadFor('/backend-python-fastapi/frontend-typescript-vue/login');
+    const spring = await loadFor('/stack/backend-java-spring/frontend-typescript-jquery/');
+    const fastapi = await loadFor('/stack/backend-python-fastapi/frontend-typescript-vue/login');
 
     expect(spring.authTokenStorageKey()).toBe('authToken:backend-java-spring');
     expect(fastapi.authTokenStorageKey()).toBe('authToken:backend-python-fastapi');

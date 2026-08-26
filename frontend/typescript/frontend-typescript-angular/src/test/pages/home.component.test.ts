@@ -1,4 +1,4 @@
-import { Component, provideZonelessChangeDetection } from '@angular/core';
+import { ApplicationRef, Component, provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -6,6 +6,7 @@ import { screen, waitFor } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { HomePageComponent } from '../../app/pages/home.component';
+import { HEADER_LANG_CHANGE, ru } from '../../i18n';
 
 @Component({ template: '' })
 class LoginStubComponent {}
@@ -35,6 +36,11 @@ async function renderHome() {
 
 function currentUrl(): string {
   return TestBed.inject(Router).url;
+}
+
+function dispatchLang(lang: string) {
+  document.dispatchEvent(new CustomEvent(HEADER_LANG_CHANGE, { detail: { lang } }));
+  TestBed.inject(ApplicationRef).tick();
 }
 
 function stubDefaultApis(
@@ -80,12 +86,14 @@ function deleteAccountCalls() {
 describe('HomePage', () => {
   beforeEach(() => {
     localStorage.clear();
+    document.documentElement.lang = 'en';
     stubDefaultApis();
   });
 
   afterEach(() => {
     TestBed.resetTestingModule();
     vi.unstubAllGlobals();
+    document.documentElement.lang = 'en';
   });
 
   it('renders the reference layout with health and items from the API', async () => {
@@ -240,5 +248,93 @@ describe('HomePage', () => {
       expect(screen.getByTestId('health-status')).toHaveTextContent('✗ health: HTTP 503'),
     );
     expect(screen.getByTestId('items-list')).toHaveTextContent('✗ items: HTTP 500');
+  });
+
+  it('shows checking copy in the stored language while health is pending', async () => {
+    localStorage.setItem('zds-lang', 'ru');
+    const pending = new Promise<Response>(() => {});
+    stubDefaultApis((url) => {
+      if (url.includes('/api/health') || url.includes('/api/items')) {
+        return pending;
+      }
+      return null;
+    });
+
+    await renderHome();
+    expect(screen.getByTestId('health-status')).toHaveTextContent(ru.home.healthChecking);
+    expect(screen.getByTestId('items-list')).toHaveTextContent(ru.home.itemsLoading);
+  });
+
+  it('retranslates chrome on header:lang-change and keeps API payloads', async () => {
+    localStorage.setItem('authToken', 'valid-token');
+    await renderHome();
+
+    await waitFor(() =>
+      expect(screen.getByTestId('welcome-message')).toHaveTextContent('Welcome, user1!'),
+    );
+    expect(screen.getByTestId('item-row')).toHaveTextContent('Alpha');
+
+    dispatchLang('ru');
+
+    expect(screen.getByTestId('welcome-message')).toHaveTextContent('Добро пожаловать, user1!');
+    expect(screen.getByTestId('logout-button')).toHaveTextContent(ru.home.logout);
+    expect(screen.getByTestId('delete-account-button')).toHaveTextContent(ru.home.deleteAccount);
+    expect(screen.getByTestId('health-status')).toHaveTextContent(
+      '→ UP | сервис: backend-java-spring | фронтенд: frontend-typescript-angular',
+    );
+    expect(screen.getByTestId('item-row')).toHaveTextContent('Alpha');
+  });
+
+  it('asks to confirm delete in the active language', async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    localStorage.setItem('authToken', 'valid-token');
+    await renderHome();
+
+    await waitFor(() => expect(screen.getByTestId('delete-account-button')).toBeInTheDocument());
+    dispatchLang('ru');
+    await user.click(screen.getByTestId('delete-account-button'));
+
+    expect(confirmSpy).toHaveBeenCalledWith(ru.home.deleteConfirm);
+    confirmSpy.mockRestore();
+  });
+
+  it('retranslates empty and error item chrome without touching API names', async () => {
+    stubDefaultApis((url) => (url.includes('/api/items') ? jsonResponse({ items: [] }) : null));
+    await renderHome();
+    await waitFor(() =>
+      expect(screen.getByTestId('items-list')).toHaveTextContent('No items found.'),
+    );
+
+    dispatchLang('ru');
+    expect(screen.getByTestId('items-list')).toHaveTextContent(ru.home.itemsEmpty);
+  });
+
+  it('keeps items error payload and translates the prefix', async () => {
+    stubDefaultApis((url) => {
+      if (url.includes('/api/items')) return jsonResponse({}, false, 500);
+      return null;
+    });
+    await renderHome();
+    await waitFor(() =>
+      expect(screen.getByTestId('items-list')).toHaveTextContent('✗ items: HTTP 500'),
+    );
+
+    dispatchLang('ru');
+    expect(screen.getByTestId('items-list')).toHaveTextContent('✗ элементы: HTTP 500');
+  });
+
+  it('translates the health error prefix on header:lang-change', async () => {
+    stubDefaultApis((url) => {
+      if (url.includes('/api/health')) return jsonResponse({}, false, 503);
+      return null;
+    });
+    await renderHome();
+    await waitFor(() =>
+      expect(screen.getByTestId('health-status')).toHaveTextContent('✗ health: HTTP 503'),
+    );
+
+    dispatchLang('ru');
+    expect(screen.getByTestId('health-status')).toHaveTextContent('✗ статус: HTTP 503');
   });
 });

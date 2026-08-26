@@ -5,6 +5,7 @@ import type { HeaderConfig } from './app/lib/header-config';
 declare global {
   interface Window {
     headerConfig?: HeaderConfig;
+    __designSystemRemountHeader?: () => Promise<void>;
   }
 }
 

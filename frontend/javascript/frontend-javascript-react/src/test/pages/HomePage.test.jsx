@@ -1,8 +1,16 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { act } from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { HEADER_LANG_CHANGE, ru } from '../../i18n';
 import { HomePage } from '../../pages/HomePage';
+
+function dispatchLang(lang) {
+  act(() => {
+    document.dispatchEvent(new CustomEvent(HEADER_LANG_CHANGE, { detail: { lang } }));
+  });
+}
 
 function jsonResponse(body, ok = true, status = 200) {
   return {
@@ -222,6 +230,9 @@ describe('HomePage', () => {
     await waitFor(() =>
       expect(screen.getByTestId('health-status')).toHaveTextContent('✗ health: HTTP 500'),
     );
+
+    dispatchLang('ru');
+    expect(screen.getByTestId('health-status')).toHaveTextContent('✗ статус: HTTP 500');
   });
 
   it('shows items error state when items API fails', async () => {
@@ -252,5 +263,85 @@ describe('HomePage', () => {
     await waitFor(() =>
       expect(screen.getByTestId('items-list')).toHaveTextContent('No items found.'),
     );
+  });
+
+  it('retranslates chrome on header:lang-change and keeps API payloads', async () => {
+    localStorage.setItem('authToken', 'valid-token');
+    renderHome();
+
+    expect(await screen.findByTestId('welcome-message')).toHaveTextContent('Welcome, user1!');
+    expect(screen.getByTestId('item-row')).toHaveTextContent('Alpha');
+
+    dispatchLang('ru');
+
+    expect(screen.getByTestId('welcome-message')).toHaveTextContent('Добро пожаловать, user1!');
+    expect(screen.getByTestId('logout-button')).toHaveTextContent(ru.home.logout);
+    expect(screen.getByTestId('delete-account-button')).toHaveTextContent(ru.home.deleteAccount);
+    expect(screen.getByTestId('health-status')).toHaveTextContent(
+      '→ UP | сервис: backend-java-spring | фронтенд: frontend-javascript-react',
+    );
+    expect(screen.getByTestId('item-row')).toHaveTextContent('Alpha');
+  });
+
+  it('asks to confirm delete in the active language', async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    localStorage.setItem('authToken', 'valid-token');
+    renderHome();
+
+    await screen.findByTestId('delete-account-button');
+    dispatchLang('ru');
+    await user.click(screen.getByTestId('delete-account-button'));
+
+    expect(confirmSpy).toHaveBeenCalledWith(ru.home.deleteConfirm);
+    confirmSpy.mockRestore();
+  });
+
+  it('retranslates empty and error item chrome without touching API names', async () => {
+    stubDefaultApis((url) => {
+      if (url.includes('/api/items')) {
+        return jsonResponse({ items: [] });
+      }
+      return null;
+    });
+    renderHome();
+    await waitFor(() =>
+      expect(screen.getByTestId('items-list')).toHaveTextContent('No items found.'),
+    );
+
+    dispatchLang('ru');
+    expect(screen.getByTestId('items-list')).toHaveTextContent(ru.home.itemsEmpty);
+  });
+
+  it('keeps items error payload and translates the prefix', async () => {
+    stubDefaultApis((url) => {
+      if (url.includes('/api/items')) {
+        return jsonResponse({ message: 'boom' }, false, 500);
+      }
+      return null;
+    });
+    renderHome();
+    await waitFor(() =>
+      expect(screen.getByTestId('items-list')).toHaveTextContent('✗ items: HTTP 500'),
+    );
+
+    dispatchLang('ru');
+    expect(screen.getByTestId('items-list')).toHaveTextContent('✗ элементы: HTTP 500');
+  });
+
+  it('shows checking copy in the stored language while health is pending', async () => {
+    localStorage.setItem('zds-lang', 'ru');
+    const pending = new Promise(() => {});
+    stubDefaultApis((url) => {
+      if (url.includes('/api/health') || url.includes('/api/items')) {
+        return pending;
+      }
+      return null;
+    });
+
+    const { unmount } = renderHome();
+    expect(screen.getByTestId('health-status')).toHaveTextContent(ru.home.healthChecking);
+    expect(screen.getByTestId('items-list')).toHaveTextContent(ru.home.itemsLoading);
+    unmount();
   });
 });

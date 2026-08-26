@@ -1,8 +1,16 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { act } from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { HEADER_LANG_CHANGE, LANG_STORAGE_KEY, ru } from '../../i18n';
 import { LoginPage } from '../../pages/LoginPage';
+
+function dispatchLang(lang) {
+  act(() => {
+    document.dispatchEvent(new CustomEvent(HEADER_LANG_CHANGE, { detail: { lang } }));
+  });
+}
 
 function jsonResponse(body, ok = true, status = 200) {
   return {
@@ -128,5 +136,70 @@ describe('LoginPage', () => {
         'Network error. Check your connection and try again.',
       ),
     );
+  });
+
+  it('does not translate API error payloads', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve(jsonResponse({ message: 'Wrong login or password' }, false, 401)),
+      ),
+    );
+
+    renderLogin();
+    await user.type(screen.getByTestId('login-input'), 'user1');
+    await user.type(screen.getByTestId('password-input'), 'wrongpassword');
+    await user.click(screen.getByTestId('submit-button'));
+    await waitFor(() =>
+      expect(screen.getByTestId('error-message')).toHaveTextContent('Wrong login or password'),
+    );
+
+    dispatchLang('ru');
+    expect(screen.getByTestId('login-form-title')).toHaveTextContent(ru.login.title);
+    expect(screen.getByTestId('error-message')).toHaveTextContent('Wrong login or password');
+  });
+
+  it('switches visible copy on header:lang-change without touching testids', async () => {
+    const user = userEvent.setup();
+    renderLogin();
+
+    expect(screen.getByTestId('login-form-title')).toHaveTextContent('Login Form');
+    await user.type(screen.getByTestId('password-input'), 'password1');
+    await user.click(screen.getByTestId('submit-button'));
+    expect(screen.getByTestId('error-message')).toHaveTextContent(
+      'Login is required (minimum 3 characters)',
+    );
+
+    dispatchLang('ru');
+
+    expect(screen.getByTestId('login-form-title')).toHaveTextContent(ru.login.title);
+    expect(screen.getByTestId('submit-button')).toHaveTextContent(ru.login.submit);
+    expect(screen.getByTestId('register-link')).toHaveTextContent(ru.login.registerLink);
+    expect(screen.getByTestId('login-input')).toHaveAttribute('data-testid', 'login-input');
+    expect(screen.getByTestId('error-message')).toHaveTextContent(
+      'Логин обязателен (минимум 3 символов)',
+    );
+
+    await user.type(screen.getByTestId('login-input'), 'user1');
+    expect(screen.getByTestId('error-message')).toHaveTextContent('');
+  });
+
+  it('reads zds-lang after unmount/remount', () => {
+    localStorage.setItem(LANG_STORAGE_KEY, 'ru');
+    const { unmount } = renderLogin();
+    expect(screen.getByTestId('login-form-title')).toHaveTextContent(ru.login.title);
+    expect(document.documentElement.lang).toBe('ru');
+    unmount();
+    renderLogin();
+    expect(screen.getByTestId('login-form-title')).toHaveTextContent(ru.login.title);
+  });
+
+  it('treats an unknown lang event as en', () => {
+    localStorage.setItem(LANG_STORAGE_KEY, 'ru');
+    renderLogin();
+    expect(screen.getByTestId('login-form-title')).toHaveTextContent(ru.login.title);
+    dispatchLang('de');
+    expect(screen.getByTestId('login-form-title')).toHaveTextContent('Login Form');
   });
 });

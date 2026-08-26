@@ -1,6 +1,8 @@
 import $ from 'jquery';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ru } from '../i18n';
 import {
+  dispatchLang,
   fetchCalls,
   jsonResponse,
   type LocationStub,
@@ -53,7 +55,7 @@ describe('login', () => {
     expect($testId('login-input').attr('name')).toBe('username');
     expect($testId('password-input').attr('name')).toBe('password');
     expect($testId('submit-button').text()).toBe('Login');
-    expect($testId('register-link').attr('href')).toBe('register');
+    expect($testId('register-link').attr('href')).toBe('/register');
     expect(window.headerConfig?.nav.find((item) => item.testid === 'header-nav-login')?.active).toBe(
       true,
     );
@@ -132,5 +134,59 @@ describe('login', () => {
     await renderLogin();
 
     expect(locationStub.replace).toHaveBeenCalledWith('/');
+  });
+
+  it('switches visible copy on header:lang-change without touching testids', async () => {
+    await renderLogin();
+
+    fillCredentials('', 'password1');
+    submit();
+    expect($testId('error-message').text()).toBe('Login is required (minimum 3 characters)');
+
+    dispatchLang('ru');
+
+    expect($testId('login-form-title').text()).toBe(ru.login.title);
+    expect($testId('submit-button').text()).toBe(ru.login.submit);
+    expect($testId('register-link').text()).toBe(ru.login.registerLink);
+    expect($testId('login-input').attr('data-testid')).toBe('login-input');
+    expect($testId('error-message').text()).toBe('Логин обязателен (минимум 3 символов)');
+    expect(document.documentElement.lang).toBe('ru');
+  });
+
+  it('does not translate API error payloads', async () => {
+    stubApis((url) =>
+      url.includes('/api/auth/login')
+        ? jsonResponse({ message: 'Wrong login or password' }, false, 401)
+        : null,
+    );
+    await renderLogin();
+
+    fillCredentials('user1', 'password1');
+    submit();
+    await vi.waitFor(() => {
+      expect($testId('error-message').text()).toBe('Wrong login or password');
+    });
+
+    dispatchLang('ru');
+    expect($testId('login-form-title').text()).toBe(ru.login.title);
+    expect($testId('error-message').text()).toBe('Wrong login or password');
+  });
+
+  it('reads zds-lang on load', async () => {
+    localStorage.setItem('zds-lang', 'ru');
+    await renderLogin();
+
+    expect($testId('login-form-title').text()).toBe(ru.login.title);
+    expect(document.documentElement.lang).toBe('ru');
+  });
+
+  it('treats an unknown lang event as en', async () => {
+    localStorage.setItem('zds-lang', 'ru');
+    await renderLogin();
+    expect($testId('login-form-title').text()).toBe(ru.login.title);
+
+    dispatchLang('de');
+    expect($testId('login-form-title').text()).toBe('Login Form');
+    expect(document.documentElement.lang).toBe('en');
   });
 });

@@ -1,10 +1,11 @@
-import { provideZonelessChangeDetection } from '@angular/core';
+import { ApplicationRef, provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { screen, waitFor } from '@testing-library/dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppComponent } from '../app/app.component';
 import { routes } from '../app/app.routes';
+import { HEADER_LANG_CHANGE, ru } from '../i18n';
 
 function jsonResponse(body: unknown): Response {
   return { ok: true, status: 200, json: async () => body } as Response;
@@ -40,16 +41,21 @@ async function renderApp(initialPath: string) {
 describe('AppComponent', () => {
   beforeEach(() => {
     localStorage.clear();
+    document.documentElement.lang = 'en';
     document.querySelectorAll('script[data-header-embed]').forEach((node) => {
       node.remove();
     });
     delete window.headerConfig;
+    window.__designSystemRemountHeader = vi.fn().mockResolvedValue(undefined);
     stubApis();
   });
 
   afterEach(() => {
     TestBed.resetTestingModule();
     vi.unstubAllGlobals();
+    delete window.headerConfig;
+    delete window.__designSystemRemountHeader;
+    document.documentElement.lang = 'en';
   });
 
   it('mounts the header slot and routes / to the home page', async () => {
@@ -78,18 +84,35 @@ describe('AppComponent', () => {
   it('publishes headerConfig and embeds the design-system header script exactly once', async () => {
     await renderApp('/');
 
-    expect(window.headerConfig?.nav.map((item) => item.testid)).toEqual([
+    expect(window.headerConfig?.nav?.map((item) => item.testid)).toEqual([
       'header-nav-home',
       'header-nav-login',
       'header-nav-register',
       'header-nav-stack',
     ]);
-    expect(window.headerConfig?.nav.map((item) => item.href)).toEqual([
+    expect(window.headerConfig?.nav?.map((item) => item.href)).toEqual([
       '/',
       '/login',
       '/register',
       '/stack/',
     ]);
+    expect(window.headerConfig?.lang?.default).toBe('en');
+    expect(window.headerConfig?.theme?.default).toBe('dark');
     expect(document.querySelectorAll('script[data-header-embed]')).toHaveLength(1);
+  });
+
+  it('remounts header nav once when language changes', async () => {
+    const remount = window.__designSystemRemountHeader as ReturnType<typeof vi.fn>;
+    await renderApp('/login');
+
+    expect(screen.getByTestId('login-form-title')).toHaveTextContent('Login Form');
+    document.dispatchEvent(new CustomEvent(HEADER_LANG_CHANGE, { detail: { lang: 'ru' } }));
+    TestBed.inject(ApplicationRef).tick();
+    expect(screen.getByTestId('login-form-title')).toHaveTextContent(ru.login.title);
+    await waitFor(() => expect(remount).toHaveBeenCalledTimes(1));
+
+    document.dispatchEvent(new CustomEvent(HEADER_LANG_CHANGE, { detail: { lang: 'ru' } }));
+    TestBed.inject(ApplicationRef).tick();
+    expect(remount).toHaveBeenCalledTimes(1);
   });
 });

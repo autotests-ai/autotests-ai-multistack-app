@@ -11,6 +11,7 @@ import type { HeaderConfig } from './lib/headerConfig';
 declare global {
   interface Window {
     headerConfig?: HeaderConfig;
+    __designSystemRemountHeader?: () => void | Promise<void>;
   }
 }
 

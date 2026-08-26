@@ -1,14 +1,25 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import Button from '../components/Button.vue';
 import Panel from '../components/Panel.vue';
+import { useI18n } from '../i18n';
 import { fetchHealth, fetchItems, type Item } from '../lib/api';
 import { UI_MOUNT } from '../lib/appBase';
-import { clearSession, deleteAccount, fetchProfile, getToken, logout } from '../lib/auth';
-import { DELETE_ACCOUNT_CONFIRM } from '../lib/messages';
+import {
+  clearSession,
+  deleteAccount,
+  fetchProfile,
+  formatMessage,
+  getToken,
+  logout,
+} from '../lib/auth';
 
-type HealthState = { text: string; error: boolean };
+type HealthState =
+  | { status: 'checking' }
+  | { status: 'ok'; health: string; service: string }
+  | { status: 'error'; message: string };
+
 type ItemsState =
   | { status: 'loading' }
   | { status: 'empty' }
@@ -16,9 +27,31 @@ type ItemsState =
   | { status: 'error'; message: string };
 
 const router = useRouter();
-const health = ref<HealthState>({ text: '→ Checking health…', error: false });
+const { copy } = useI18n();
+const health = ref<HealthState>({ status: 'checking' });
 const items = ref<ItemsState>({ status: 'loading' });
-const welcome = ref<string | null>(null);
+const welcomeName = ref<string | null>(null);
+
+const blurbParts = computed(() => copy.value.home.blurb.split('{api}'));
+const welcomeText = computed(() => {
+  const name = welcomeName.value;
+  return name === null ? '' : formatMessage(copy.value.home.welcome, { username: name });
+});
+const healthText = computed(() => {
+  const state = health.value;
+  const home = copy.value.home;
+  if (state.status === 'checking') {
+    return home.healthChecking;
+  }
+  if (state.status === 'ok') {
+    return formatMessage(home.healthOk, {
+      status: state.health,
+      service: state.service,
+      frontend: UI_MOUNT,
+    });
+  }
+  return formatMessage(home.healthError, { message: state.message });
+});
 
 let active = true;
 
@@ -29,14 +62,15 @@ onMounted(() => {
     .then((payload) => {
       if (active) {
         health.value = {
-          text: `→ ${payload.status} | service: ${payload.service} | frontend: ${UI_MOUNT}`,
-          error: false,
+          status: 'ok',
+          health: payload.status,
+          service: payload.service,
         };
       }
     })
     .catch((error: Error) => {
       if (active) {
-        health.value = { text: `✗ health: ${error.message}`, error: true };
+        health.value = { status: 'error', message: error.message };
       }
     });
 
@@ -56,7 +90,7 @@ onMounted(() => {
     fetchProfile()
       .then((profile) => {
         if (active) {
-          welcome.value = `Welcome, ${profile.username}!`;
+          welcomeName.value = profile.username;
         }
       })
       .catch(() => {
@@ -77,11 +111,15 @@ async function handleLogout(): Promise<void> {
 }
 
 async function handleDeleteAccount(): Promise<void> {
-  if (!window.confirm(DELETE_ACCOUNT_CONFIRM)) {
+  if (!window.confirm(copy.value.home.deleteConfirm)) {
     return;
   }
   await deleteAccount();
   await router.push('/login');
+}
+
+function itemsErrorText(message: string): string {
+  return formatMessage(copy.value.home.itemsError, { message });
 }
 </script>
 
@@ -90,23 +128,23 @@ async function handleDeleteAccount(): Promise<void> {
     class="page-shell page-shell--below-header grid multistack"
     data-testid="multistack-layout"
   >
-    <Panel title="Multistack">
+    <Panel :title="copy.home.title">
       <p class="text text--muted">
-        TypeScript Vue SPA — items loaded from <code>/api/items</code>.
+        {{ blurbParts[0] }}<code>/api/items</code>{{ blurbParts[1] }}
       </p>
     </Panel>
 
     <Panel
-      title="Session"
+      :title="copy.home.session"
       test-id="welcome-panel"
-      :hidden="welcome === null"
+      :hidden="welcomeName === null"
       body-class-name="multistack__welcome-body"
     >
       <p id="welcome-message" class="text" data-testid="welcome-message">
-        {{ welcome }}
+        {{ welcomeText }}
       </p>
       <Button id="logout-button" variant="primary" data-testid="logout-button" @click="handleLogout">
-        Logout
+        {{ copy.home.logout }}
       </Button>
       <Button
         id="delete-account-button"
@@ -114,32 +152,32 @@ async function handleDeleteAccount(): Promise<void> {
         data-testid="delete-account-button"
         @click="handleDeleteAccount"
       >
-        Delete account
+        {{ copy.home.deleteAccount }}
       </Button>
     </Panel>
 
-    <Panel title="Health" test-id="health-panel">
+    <Panel :title="copy.home.health" test-id="health-panel">
       <p
         :class="
-          health.error
+          health.status === 'error'
             ? 'text text--sm text--muted multistack__error'
             : 'text text--sm text--muted'
         "
         data-testid="health-status"
       >
-        {{ health.text }}
+        {{ healthText }}
       </p>
     </Panel>
 
     <div class="grid" data-testid="items-list" aria-live="polite">
-      <Panel v-if="items.status === 'loading'" title="Items">
-        <p class="text text--muted">→ Loading items…</p>
+      <Panel v-if="items.status === 'loading'" :title="copy.home.items">
+        <p class="text text--muted">{{ copy.home.itemsLoading }}</p>
       </Panel>
-      <Panel v-else-if="items.status === 'empty'" title="Items">
-        <p class="text text--muted">No items found.</p>
+      <Panel v-else-if="items.status === 'empty'" :title="copy.home.items">
+        <p class="text text--muted">{{ copy.home.itemsEmpty }}</p>
       </Panel>
-      <Panel v-else-if="items.status === 'error'" title="Items">
-        <p class="multistack__error">✗ items: {{ items.message }}</p>
+      <Panel v-else-if="items.status === 'error'" :title="copy.home.items">
+        <p class="multistack__error">{{ itemsErrorText(items.message) }}</p>
       </Panel>
       <template v-else-if="items.status === 'loaded'">
         <Panel v-for="item in items.items" :key="item.id" :title="item.name" test-id="item-row">

@@ -1,7 +1,16 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import { act } from 'react';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { HEADER_LANG_CHANGE, ru } from '../i18n';
+import { buildHeaderConfig } from '../lib/headerConfig';
 import { routes } from '../routes';
+
+function dispatchLang(lang) {
+  act(() => {
+    document.dispatchEvent(new CustomEvent(HEADER_LANG_CHANGE, { detail: { lang } }));
+  });
+}
 
 function jsonResponse(body) {
   return { ok: true, status: 200, json: async () => body };
@@ -34,10 +43,14 @@ describe('App', () => {
   beforeEach(() => {
     localStorage.clear();
     stubApis();
+    window.headerConfig = buildHeaderConfig('en');
+    window.__designSystemRemountHeader = vi.fn().mockResolvedValue(undefined);
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    delete window.headerConfig;
+    delete window.__designSystemRemountHeader;
   });
 
   it('mounts the header slot and routes / to the home page', async () => {
@@ -60,5 +73,18 @@ describe('App', () => {
     renderApp('/register');
 
     expect(screen.getByTestId('register-form-title')).toHaveTextContent('Register');
+  });
+
+  it('remounts header nav once when language changes', async () => {
+    const remount = window.__designSystemRemountHeader;
+    renderApp('/login');
+
+    expect(screen.getByTestId('login-form-title')).toHaveTextContent('Login Form');
+    dispatchLang('ru');
+    expect(screen.getByTestId('login-form-title')).toHaveTextContent(ru.login.title);
+    await waitFor(() => expect(remount).toHaveBeenCalledTimes(1));
+
+    dispatchLang('ru');
+    expect(remount).toHaveBeenCalledTimes(1);
   });
 });

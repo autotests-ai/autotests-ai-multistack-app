@@ -1,10 +1,11 @@
-import { Component, provideZonelessChangeDetection } from '@angular/core';
+import { ApplicationRef, Component, provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { screen, waitFor } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LoginPageComponent } from '../../app/pages/login.component';
+import { HEADER_LANG_CHANGE, LANG_STORAGE_KEY, ru } from '../../i18n';
 import { RouterTestingHarness } from '@angular/router/testing';
 
 @Component({ template: '' })
@@ -26,14 +27,21 @@ async function renderLogin(): Promise<{ router: Router }> {
   return { router: TestBed.inject(Router) };
 }
 
+function dispatchLang(lang: string) {
+  document.dispatchEvent(new CustomEvent(HEADER_LANG_CHANGE, { detail: { lang } }));
+  TestBed.inject(ApplicationRef).tick();
+}
+
 describe('LoginPage', () => {
   beforeEach(() => {
     localStorage.clear();
+    document.documentElement.lang = 'en';
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
     TestBed.resetTestingModule();
+    document.documentElement.lang = 'en';
   });
 
   it('mounts the login form with canonical title and controls', async () => {
@@ -140,5 +148,74 @@ describe('LoginPage', () => {
     const { router } = await renderLogin();
 
     await waitFor(() => expect(router.url).toBe('/'));
+  });
+
+  it('does not translate API error payloads', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve({
+          ok: false,
+          status: 401,
+          json: async () => ({ message: 'Wrong login or password' }),
+        }),
+      ),
+    );
+    await renderLogin();
+
+    await user.type(screen.getByTestId('login-input'), 'user1');
+    await user.type(screen.getByTestId('password-input'), 'password1');
+    await user.click(screen.getByTestId('submit-button'));
+    await waitFor(() =>
+      expect(screen.getByTestId('error-message')).toHaveTextContent('Wrong login or password'),
+    );
+
+    dispatchLang('ru');
+    expect(screen.getByTestId('login-form-title')).toHaveTextContent(ru.login.title);
+    expect(screen.getByTestId('error-message')).toHaveTextContent('Wrong login or password');
+  });
+
+  it('switches visible copy on header:lang-change without touching testids', async () => {
+    const user = userEvent.setup();
+    await renderLogin();
+
+    expect(screen.getByTestId('login-form-title')).toHaveTextContent('Login Form');
+    await user.type(screen.getByTestId('password-input'), 'password1');
+    await user.click(screen.getByTestId('submit-button'));
+    expect(screen.getByTestId('error-message')).toHaveTextContent(
+      'Login is required (minimum 3 characters)',
+    );
+
+    dispatchLang('ru');
+
+    expect(screen.getByTestId('login-form-title')).toHaveTextContent(ru.login.title);
+    expect(screen.getByTestId('submit-button')).toHaveTextContent(ru.login.submit);
+    expect(screen.getByTestId('register-link')).toHaveTextContent(ru.login.registerLink);
+    expect(screen.getByTestId('login-input')).toHaveAttribute('data-testid', 'login-input');
+    expect(screen.getByTestId('error-message')).toHaveTextContent(
+      'Логин обязателен (минимум 3 символов)',
+    );
+
+    await user.type(screen.getByTestId('login-input'), 'user1');
+    expect(screen.getByTestId('error-message')).toHaveTextContent('');
+  });
+
+  it('reads zds-lang after unmount/remount', async () => {
+    localStorage.setItem(LANG_STORAGE_KEY, 'ru');
+    await renderLogin();
+    expect(screen.getByTestId('login-form-title')).toHaveTextContent(ru.login.title);
+    expect(document.documentElement.lang).toBe('ru');
+    TestBed.resetTestingModule();
+    await renderLogin();
+    expect(screen.getByTestId('login-form-title')).toHaveTextContent(ru.login.title);
+  });
+
+  it('treats an unknown lang event as en', async () => {
+    localStorage.setItem(LANG_STORAGE_KEY, 'ru');
+    await renderLogin();
+    expect(screen.getByTestId('login-form-title')).toHaveTextContent(ru.login.title);
+    dispatchLang('de');
+    expect(screen.getByTestId('login-form-title')).toHaveTextContent('Login Form');
   });
 });
