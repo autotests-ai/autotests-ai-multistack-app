@@ -173,17 +173,23 @@ def tests_from_hub(previous: list) -> list:
         return previous
     data = yaml.safe_load(hub.read_text(encoding="utf-8")) or {}
     modules = (data.get("tests") or {}).get("modules") or []
-    return [
-        {
+    rows: list[dict] = []
+    for t in modules:
+        if not t.get("id"):
+            continue
+        row = {
             "id": t["id"],
             "status": t.get("status", "active"),
             "language": t.get("language"),
             "module": t.get("module"),
             "layers": list(t.get("layers") or []),
         }
-        for t in modules
-        if t.get("id")
-    ]
+        if "in_stack" in t:
+            row["in_stack"] = bool(t["in_stack"])
+        if t.get("role"):
+            row["role"] = t["role"]
+        rows.append(row)
+    return rows
 
 
 def public_host_of(data: dict, yaml_path: Path) -> str:
