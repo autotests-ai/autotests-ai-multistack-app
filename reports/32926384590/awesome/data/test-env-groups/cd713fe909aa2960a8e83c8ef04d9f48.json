@@ -1,1 +1,0 @@
-{"id":"cd713fe909aa2960a8e83c8ef04d9f48","fullName":"api/auth.spec.ts:65:7","name":"POST /api/auth/login answers a malformed JSON body with 400, not 401","status":"passed","testResultsByEnv":{"default":"aee818c997f425091e55abe2b2066ae2"}}
