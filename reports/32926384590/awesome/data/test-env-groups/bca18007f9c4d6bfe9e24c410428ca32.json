@@ -1,0 +1,1 @@
+{"id":"bca18007f9c4d6bfe9e24c410428ca32","fullName":"e2e/session.spec.ts:25:7","name":"Confirming delete account clears the session and navigates to login","status":"passed","testResultsByEnv":{"default":"b6360ee728fb6e4d4231d9f65415f395"}}

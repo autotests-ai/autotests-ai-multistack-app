@@ -1,0 +1,1 @@
+{"id":"8ccf9f0c248854a2092b6c0f301ab8e9","fullName":"api/auth.spec.ts:122:7","name":"GET /api/auth/me without a token returns 401","status":"passed","testResultsByEnv":{"default":"ad485a08a21b2810b10a7d180dd463fb"}}
