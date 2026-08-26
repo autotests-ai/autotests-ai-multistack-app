@@ -14,21 +14,21 @@ test.describe('Login', { tag: ['@e2e'] }, () => {
     await expect(webApp.home.getWelcomeText()).toContainText('Welcome, user1!');
   });
 
-  test('Пустой логин показывает ошибку валидации', async ({ webApp }) => {
+  test('Пустой логин показывает ошибку валидации', { tag: ['@crystal'] }, async ({ webApp }) => {
     await webApp.login.open();
     await webApp.login.typePassword('password1');
     await webApp.login.submitExpectingError();
     await expect(webApp.login.errorMessage).toContainText(LOGIN_REQUIRED);
   });
 
-  test('Пустой пароль показывает ошибку валидации', async ({ webApp }) => {
+  test('Пустой пароль показывает ошибку валидации', { tag: ['@crystal'] }, async ({ webApp }) => {
     await webApp.login.open();
     await webApp.login.typeUsername('user1');
     await webApp.login.submitExpectingError();
     await expect(webApp.login.errorMessage).toContainText(PASSWORD_REQUIRED);
   });
 
-  test('Неверный пароль показывает читаемую ошибку', async ({ webApp }) => {
+  test('Неверный пароль показывает читаемую ошибку', { tag: ['@crystal'] }, async ({ webApp }) => {
     await webApp.login.open();
     await webApp.login.typeUsername('user1');
     await webApp.login.typePassword('wrongpassword');

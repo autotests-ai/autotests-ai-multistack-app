@@ -1,0 +1,45 @@
+{
+  "id": "login-empty-username",
+  "kind": "cdp",
+  "version": 1,
+  "source": {
+    "as_id": "Пустой логин показывает ошибку валидации",
+    "lang": "typescript-playwright",
+    "fingerprint": "1c0bff04b8c5d439dece58cfdea3abdf153dfbd4fcf0adc9c428e84f250abd5a"
+  },
+  "steps": [
+    {
+      "op": "navigate",
+      "url": "login"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=password-input]",
+      "timeout_ms": 3000
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=password-input]",
+      "value": "password1"
+    },
+    {
+      "op": "click",
+      "selector": "[data-testid=submit-button]"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=error-message]",
+      "timeout_ms": 10000
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=error-message]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "text",
+      "selector": "[data-testid=error-message]",
+      "value": "Login is required (minimum 3 characters)"
+    }
+  ]
+}

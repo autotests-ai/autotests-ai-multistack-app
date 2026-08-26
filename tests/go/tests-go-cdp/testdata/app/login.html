@@ -9,16 +9,32 @@
   <form id="login-form">
     <input data-testid="login-input" name="username">
     <input data-testid="password-input" name="password" type="password">
+    <p data-testid="error-message" hidden></p>
     <button data-testid="submit-button" type="submit">Login</button>
   </form>
   <script>
     document.getElementById("login-form").addEventListener("submit", function (e) {
       e.preventDefault();
-      var u = document.querySelector("[data-testid=login-input]").value;
-      var p = document.querySelector("[data-testid=password-input]").value;
+      var u = document.querySelector("[data-testid=login-input]").value.trim();
+      var p = document.querySelector("[data-testid=password-input]").value.trim();
+      var err = document.querySelector("[data-testid=error-message]");
+      function fail(msg) {
+        err.hidden = false;
+        err.textContent = msg;
+      }
+      if (u.length < 3) {
+        fail("Login is required (minimum 3 characters)");
+        return;
+      }
+      if (p.length < 6) {
+        fail("Password is required (minimum 6 characters)");
+        return;
+      }
       if (u === "user1" && p === "password1") {
         location.href = "/home";
+        return;
       }
+      fail("Wrong login or password");
     });
   </script>
 </body>
