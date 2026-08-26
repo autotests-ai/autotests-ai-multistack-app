@@ -1,1 +1,0 @@
-{"id":"750e735adbfd1399e6c79bbc0e41a88a","fullName":"api/auth.spec.ts:71:7","name":"POST /api/auth/register creates a user, returns the auth contract, and cleans up","status":"passed","testResultsByEnv":{"default":"fa32e6b10379d711fc9364d04b5dfa9e"}}

@@ -1,1 +1,0 @@
-{"id":"5b0c5d272dfd58ae3aacbeec46d14a63","fullName":"api/round-trip.spec.ts:5:7","name":"register → login → me → logout (stateless JWT) → delete → me is 401","status":"passed","testResultsByEnv":{"default":"7ee1dcb8a819ccb45033cdfb2f2aa412"}}

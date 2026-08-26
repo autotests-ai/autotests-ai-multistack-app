@@ -1,1 +1,0 @@
-{"id":"a6d24ffa5b0c8fee798670d69d674b19","fullName":"dev.multistack.app.controller.AuthControllerTest.deleteAccountReturnsNoContent","name":"DELETE /api/auth/me removes the authenticated account with 204","status":"passed","testResultsByEnv":{"default":"b769573aae357bb790de03a7d776a3bb"}}

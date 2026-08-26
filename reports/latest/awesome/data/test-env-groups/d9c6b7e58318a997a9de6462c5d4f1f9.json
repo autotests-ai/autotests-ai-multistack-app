@@ -1,1 +1,0 @@
-{"id":"d9c6b7e58318a997a9de6462c5d4f1f9","fullName":"api/auth.spec.ts:137:7","name":"DELETE /api/auth/me without a token returns 401","status":"passed","testResultsByEnv":{"default":"bc8e77988c5b6c7daa22da2f5c2c44f9"}}

@@ -1,1 +1,0 @@
-{"id":"fc34c504800050d55cce4fa138852be6","fullName":"api/auth.spec.ts:84:7","name":"POST /api/auth/register rejects a duplicate username with 409","status":"passed","testResultsByEnv":{"default":"ca838859fdddf2ab6a1cd0ad61ccbf85"}}
