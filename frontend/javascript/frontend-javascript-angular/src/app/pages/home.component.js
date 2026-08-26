@@ -1,11 +1,11 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { ButtonComponent } from '../components/button.component.js';
 import { PanelComponent } from '../components/panel.component.js';
+import { useI18n } from '../i18n/index.js';
 import { fetchHealth, fetchItems } from '../lib/api.js';
 import { UI_MOUNT } from '../lib/app-base.js';
-import { clearSession, deleteAccount, fetchProfile, getToken, logout } from '../lib/auth.js';
-import { DELETE_ACCOUNT_CONFIRM } from '../lib/messages.js';
+import { clearSession, deleteAccount, fetchProfile, formatMessage, getToken, logout } from '../lib/auth.js';
 
 /**
  * State lives in signals, not plain fields — see README, "Signals, not zone.js".
@@ -21,19 +21,19 @@ import { DELETE_ACCOUNT_CONFIRM } from '../lib/messages.js';
       class="page-shell page-shell--below-header grid multistack"
       data-testid="multistack-layout"
     >
-      <app-panel [title]="'Multistack'">
+      <app-panel [title]="copy().home.title">
         <p class="text text--muted">
-          JavaScript Angular SPA — items loaded from <code>/api/items</code>.
+          {{ blurbParts()[0] }}<code>/api/items</code>{{ blurbParts()[1] }}
         </p>
       </app-panel>
 
       <app-panel
-        [title]="'Session'"
+        [title]="copy().home.session"
         [bodyClassName]="'multistack__welcome-body'"
-        [hidden]="welcome() === null"
+        [hidden]="welcomeName() === null"
         data-testid="welcome-panel"
       >
-        <p id="welcome-message" class="text" data-testid="welcome-message">{{ welcome() }}</p>
+        <p id="welcome-message" class="text" data-testid="welcome-message">{{ welcomeText() }}</p>
         <button
           app-button
           id="logout-button"
@@ -42,7 +42,7 @@ import { DELETE_ACCOUNT_CONFIRM } from '../lib/messages.js';
           data-testid="logout-button"
           (click)="handleLogout()"
         >
-          Logout
+          {{ copy().home.logout }}
         </button>
         <button
           app-button
@@ -52,33 +52,33 @@ import { DELETE_ACCOUNT_CONFIRM } from '../lib/messages.js';
           data-testid="delete-account-button"
           (click)="handleDeleteAccount()"
         >
-          Delete account
+          {{ copy().home.deleteAccount }}
         </button>
       </app-panel>
 
-      <app-panel [title]="'Health'" data-testid="health-panel">
+      <app-panel [title]="copy().home.health" data-testid="health-panel">
         <p
           class="text text--sm text--muted"
-          [class.multistack__error]="health().error"
+          [class.multistack__error]="health().status === 'error'"
           data-testid="health-status"
         >
-          {{ health().text }}
+          {{ healthText() }}
         </p>
       </app-panel>
 
       <div class="grid" data-testid="items-list" aria-live="polite">
         @let state = items();
         @if (state.status === 'loading') {
-          <app-panel [title]="'Items'">
-            <p class="text text--muted">→ Loading items…</p>
+          <app-panel [title]="copy().home.items">
+            <p class="text text--muted">{{ copy().home.itemsLoading }}</p>
           </app-panel>
         } @else if (state.status === 'empty') {
-          <app-panel [title]="'Items'">
-            <p class="text text--muted">No items found.</p>
+          <app-panel [title]="copy().home.items">
+            <p class="text text--muted">{{ copy().home.itemsEmpty }}</p>
           </app-panel>
         } @else if (state.status === 'error') {
-          <app-panel [title]="'Items'">
-            <p class="multistack__error">✗ items: {{ state.message }}</p>
+          <app-panel [title]="copy().home.items">
+            <p class="multistack__error">{{ itemsErrorText(state.message) }}</p>
           </app-panel>
         } @else {
           @for (item of state.items; track item.id) {
@@ -93,9 +93,31 @@ import { DELETE_ACCOUNT_CONFIRM } from '../lib/messages.js';
 })
 export class HomeComponent {
   router = inject(Router);
-  health = signal({ text: '→ Checking health…', error: false });
+  i18n = useI18n();
+  copy = this.i18n.copy;
+  health = signal({ status: 'checking' });
   items = signal({ status: 'loading' });
-  welcome = signal(null);
+  welcomeName = signal(null);
+  blurbParts = computed(() => this.copy().home.blurb.split('{api}'));
+  welcomeText = computed(() => {
+    const name = this.welcomeName();
+    return name === null ? '' : formatMessage(this.copy().home.welcome, { username: name });
+  });
+  healthText = computed(() => {
+    const health = this.health();
+    const home = this.copy().home;
+    if (health.status === 'checking') {
+      return home.healthChecking;
+    }
+    if (health.status === 'ok') {
+      return formatMessage(home.healthOk, {
+        status: health.health,
+        service: health.service,
+        frontend: UI_MOUNT,
+      });
+    }
+    return formatMessage(home.healthError, { message: health.message });
+  });
 
   active = true;
 
@@ -106,14 +128,15 @@ export class HomeComponent {
       .then((payload) => {
         if (this.active) {
           this.health.set({
-            text: `→ ${payload.status} | service: ${payload.service} | frontend: ${UI_MOUNT}`,
-            error: false,
+            status: 'ok',
+            health: payload.status,
+            service: payload.service,
           });
         }
       })
       .catch((error) => {
         if (this.active) {
-          this.health.set({ text: `✗ health: ${error.message}`, error: true });
+          this.health.set({ status: 'error', message: error.message });
         }
       });
 
@@ -133,7 +156,7 @@ export class HomeComponent {
       fetchProfile()
         .then((profile) => {
           if (this.active) {
-            this.welcome.set(`Welcome, ${profile.username}!`);
+            this.welcomeName.set(profile.username);
           }
         })
         .catch(() => {
@@ -148,13 +171,17 @@ export class HomeComponent {
     this.active = false;
   }
 
+  itemsErrorText(message) {
+    return formatMessage(this.copy().home.itemsError, { message });
+  }
+
   async handleLogout() {
     await logout();
     await this.router.navigate(['/login']);
   }
 
   async handleDeleteAccount() {
-    if (!window.confirm(DELETE_ACCOUNT_CONFIRM)) {
+    if (!window.confirm(this.copy().home.deleteConfirm)) {
       return;
     }
     await deleteAccount();

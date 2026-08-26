@@ -1,8 +1,9 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ButtonComponent } from '../components/button.component.js';
 import { PanelComponent } from '../components/panel.component.js';
 import { PlaqueFieldComponent } from '../components/plaque-field.component.js';
+import { useI18n } from '../i18n/index.js';
 import {
   getToken,
   login,
@@ -10,7 +11,7 @@ import {
   saveSession,
   validateCredentials,
 } from '../lib/auth.js';
-import { LOGIN_MESSAGES } from '../lib/messages.js';
+import { loginMessages } from '../lib/messages.js';
 
 @Component({
   selector: 'app-login',
@@ -19,7 +20,7 @@ import { LOGIN_MESSAGES } from '../lib/messages.js';
   template: `
     <main class="auth-page">
       <app-panel
-        [title]="'Login Form'"
+        [title]="copy().login.title"
         [titleTestId]="'login-form-title'"
         class="auth-panel"
         data-testid="login-panel"
@@ -33,7 +34,7 @@ import { LOGIN_MESSAGES } from '../lib/messages.js';
           <div class="plaque-field-list">
             <label
               app-plaque-field
-              [label]="'Login'"
+              [label]="copy().login.loginLabel"
               [controlId]="'login-input'"
               [controlName]="'username'"
               [type]="'text'"
@@ -44,7 +45,7 @@ import { LOGIN_MESSAGES } from '../lib/messages.js';
             ></label>
             <label
               app-plaque-field
-              [label]="'Password'"
+              [label]="copy().login.passwordLabel"
               [controlId]="'password-input'"
               [controlName]="'password'"
               [type]="'password'"
@@ -56,7 +57,7 @@ import { LOGIN_MESSAGES } from '../lib/messages.js';
           </div>
 
           <p id="error-message" class="auth-error" aria-live="polite" data-testid="error-message">
-            {{ error() }}
+            {{ errorText() }}
           </p>
 
           <div class="auth-form__actions">
@@ -69,14 +70,14 @@ import { LOGIN_MESSAGES } from '../lib/messages.js';
               data-testid="submit-button"
               [disabled]="submitting()"
             >
-              Login
+              {{ copy().login.submit }}
             </button>
           </div>
         </form>
 
         <p class="auth-footer-link">
-          No account?
-          <a routerLink="/register" data-testid="register-link">Register</a>
+          {{ copy().login.noAccount }}
+          <a routerLink="/register" data-testid="register-link">{{ copy().login.registerLink }}</a>
         </p>
       </app-panel>
     </main>
@@ -84,10 +85,26 @@ import { LOGIN_MESSAGES } from '../lib/messages.js';
 })
 export class LoginComponent {
   router = inject(Router);
+  i18n = useI18n();
+  copy = this.i18n.copy;
   username = signal('');
   password = signal('');
-  error = signal('');
+  error = signal({ type: 'none' });
   submitting = signal(false);
+  errorText = computed(() => {
+    const error = this.error();
+    const messages = loginMessages(this.i18n.lang());
+    if (error.type === 'validation') {
+      return validateCredentials(this.username().trim(), this.password().trim(), messages) ?? '';
+    }
+    if (error.type === 'network') {
+      return messages.errorNetwork;
+    }
+    if (error.type === 'api') {
+      return error.message;
+    }
+    return '';
+  });
 
   ngOnInit() {
     if (getToken()) {
@@ -97,13 +114,14 @@ export class LoginComponent {
 
   async handleSubmit(event) {
     event.preventDefault();
-    this.error.set('');
+    this.error.set({ type: 'none' });
 
     const trimmedLogin = this.username().trim();
     const trimmedPassword = this.password().trim();
-    const validationError = validateCredentials(trimmedLogin, trimmedPassword, LOGIN_MESSAGES);
+    const messages = loginMessages(this.i18n.lang());
+    const validationError = validateCredentials(trimmedLogin, trimmedPassword, messages);
     if (validationError) {
-      this.error.set(validationError);
+      this.error.set({ type: 'validation' });
       return;
     }
 
@@ -113,9 +131,14 @@ export class LoginComponent {
       saveSession(response.token);
       await this.router.navigateByUrl(response.redirectUrl || '/');
     } catch (err) {
-      this.error.set(
-        resolveAuthErrorMessage(err, LOGIN_MESSAGES, LOGIN_MESSAGES.errorWrongCredentials ?? ''),
-      );
+      if (err?.network) {
+        this.error.set({ type: 'network' });
+      } else {
+        this.error.set({
+          type: 'api',
+          message: resolveAuthErrorMessage(err, messages, messages.errorWrongCredentials ?? ''),
+        });
+      }
     } finally {
       this.submitting.set(false);
     }

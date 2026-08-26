@@ -109,15 +109,27 @@ next to `data-testid`. Literal input values are therefore bound (`[title]="'Sess
 
 ## Contracts preserved for Selenide
 
-- Every `data-testid` used by `tests/.../pages/*.java`.
-- Exact strings: validation messages (`app/lib/messages.js`), `Welcome, {username}!`,
-  `→ {status} | service: {service}`, form titles `Login Form` / `Register`.
+- Every `data-testid` used by `tests/.../pages/*.java` (never translated).
+- Default language is **en** (`src/app/i18n/`, not i18next / `@angular/localize`).
+  English copy stays exact: validation messages (`app/lib/messages.js`),
+  `Welcome, {username}!`, `→ {status} | service: {service}`, form titles
+  `Login Form` / `Register`.
+- API payloads (item names, health `status`/`service`, backend error text) are
+  not translated. Nav labels follow `header:lang-change` via one `remountHeader`.
+- Theme is owned by `header.js` (`zds-theme`); this module does not reimplement it.
 
 ## Header
 
 The design-system header is SSOT and is **not** reimplemented in Angular. `<app-header>`
 publishes `window.headerConfig` and injects `js/header.js` from the mount (`vendor/ds`
 overlay in this module's nginx image).
+
+## i18n and theme
+
+Copied dictionaries in [`src/app/i18n/`](src/app/i18n/) (`en` / `ru`) — not a shared lib.
+Default language is **en**. `header:lang-change` retitles nav (one `remountHeader`) and
+page copy; `html[lang]` follows the toggle. Theme is owned by `header.js` (`zds-theme`);
+this module does not reimplement it.
 
 ## Scripts
 

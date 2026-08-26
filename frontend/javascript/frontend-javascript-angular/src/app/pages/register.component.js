@@ -1,8 +1,9 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ButtonComponent } from '../components/button.component.js';
 import { PanelComponent } from '../components/panel.component.js';
 import { PlaqueFieldComponent } from '../components/plaque-field.component.js';
+import { useI18n } from '../i18n/index.js';
 import {
   getToken,
   register,
@@ -10,7 +11,7 @@ import {
   saveSession,
   validateCredentials,
 } from '../lib/auth.js';
-import { REGISTER_MESSAGES } from '../lib/messages.js';
+import { registerMessages } from '../lib/messages.js';
 
 @Component({
   selector: 'app-register',
@@ -19,7 +20,7 @@ import { REGISTER_MESSAGES } from '../lib/messages.js';
   template: `
     <main class="auth-page">
       <app-panel
-        [title]="'Register'"
+        [title]="copy().register.title"
         [titleTestId]="'register-form-title'"
         class="auth-panel"
         data-testid="register-panel"
@@ -33,7 +34,7 @@ import { REGISTER_MESSAGES } from '../lib/messages.js';
           <div class="plaque-field-list">
             <label
               app-plaque-field
-              [label]="'Login'"
+              [label]="copy().register.loginLabel"
               [controlId]="'login-input'"
               [controlName]="'username'"
               [type]="'text'"
@@ -44,7 +45,7 @@ import { REGISTER_MESSAGES } from '../lib/messages.js';
             ></label>
             <label
               app-plaque-field
-              [label]="'Password'"
+              [label]="copy().register.passwordLabel"
               [controlId]="'password-input'"
               [controlName]="'password'"
               [type]="'password'"
@@ -55,7 +56,7 @@ import { REGISTER_MESSAGES } from '../lib/messages.js';
             ></label>
             <label
               app-plaque-field
-              [label]="'Confirm'"
+              [label]="copy().register.confirmLabel"
               [controlId]="'confirm-password-input'"
               [controlName]="'confirm-password'"
               [type]="'password'"
@@ -67,7 +68,7 @@ import { REGISTER_MESSAGES } from '../lib/messages.js';
           </div>
 
           <p id="error-message" class="auth-error" aria-live="polite" data-testid="error-message">
-            {{ error() }}
+            {{ errorText() }}
           </p>
 
           <div class="auth-form__actions">
@@ -80,14 +81,14 @@ import { REGISTER_MESSAGES } from '../lib/messages.js';
               data-testid="submit-button"
               [disabled]="submitting()"
             >
-              Register
+              {{ copy().register.submit }}
             </button>
           </div>
         </form>
 
         <p class="auth-footer-link">
-          Already have an account?
-          <a routerLink="/login" data-testid="login-link">Login</a>
+          {{ copy().register.haveAccount }}
+          <a routerLink="/login" data-testid="login-link">{{ copy().register.loginLink }}</a>
         </p>
       </app-panel>
     </main>
@@ -95,11 +96,30 @@ import { REGISTER_MESSAGES } from '../lib/messages.js';
 })
 export class RegisterComponent {
   router = inject(Router);
+  i18n = useI18n();
+  copy = this.i18n.copy;
   username = signal('');
   password = signal('');
   confirmPassword = signal('');
-  error = signal('');
+  error = signal({ type: 'none' });
   submitting = signal(false);
+  errorText = computed(() => {
+    const error = this.error();
+    const messages = registerMessages(this.i18n.lang());
+    if (error.type === 'validation') {
+      return validateCredentials(this.username().trim(), this.password().trim(), messages) ?? '';
+    }
+    if (error.type === 'mismatch') {
+      return messages.errorPasswordMismatch;
+    }
+    if (error.type === 'network') {
+      return messages.errorNetwork;
+    }
+    if (error.type === 'api') {
+      return error.message;
+    }
+    return '';
+  });
 
   ngOnInit() {
     if (getToken()) {
@@ -109,19 +129,20 @@ export class RegisterComponent {
 
   async handleSubmit(event) {
     event.preventDefault();
-    this.error.set('');
+    this.error.set({ type: 'none' });
 
     const trimmedLogin = this.username().trim();
     const trimmedPassword = this.password().trim();
     const trimmedConfirm = this.confirmPassword().trim();
+    const messages = registerMessages(this.i18n.lang());
 
-    const validationError = validateCredentials(trimmedLogin, trimmedPassword, REGISTER_MESSAGES);
+    const validationError = validateCredentials(trimmedLogin, trimmedPassword, messages);
     if (validationError) {
-      this.error.set(validationError);
+      this.error.set({ type: 'validation' });
       return;
     }
     if (trimmedPassword !== trimmedConfirm) {
-      this.error.set(REGISTER_MESSAGES.errorPasswordMismatch ?? '');
+      this.error.set({ type: 'mismatch' });
       return;
     }
 
@@ -131,13 +152,18 @@ export class RegisterComponent {
       saveSession(response.token);
       await this.router.navigateByUrl(response.redirectUrl || '/');
     } catch (err) {
-      this.error.set(
-        resolveAuthErrorMessage(
-          err,
-          REGISTER_MESSAGES,
-          REGISTER_MESSAGES.errorRegistrationFailed ?? '',
-        ),
-      );
+      if (err?.network) {
+        this.error.set({ type: 'network' });
+      } else {
+        this.error.set({
+          type: 'api',
+          message: resolveAuthErrorMessage(
+            err,
+            messages,
+            messages.errorRegistrationFailed ?? '',
+          ),
+        });
+      }
     } finally {
       this.submitting.set(false);
     }

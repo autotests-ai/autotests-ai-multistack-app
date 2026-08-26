@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { screen, waitFor } from '@testing-library/dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { HEADER_LANG_CHANGE, ru } from '../app/i18n/index.js';
 import { AppComponent } from '../app/app.component.js';
 import { routes } from '../app/app.routes.js';
 
@@ -44,11 +45,15 @@ describe('AppComponent', () => {
     localStorage.clear();
     delete window.headerConfig;
     document.querySelector('script[data-header-embed]')?.remove();
+    window.__designSystemRemountHeader = vi.fn().mockResolvedValue(undefined);
     stubApis();
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    delete window.headerConfig;
+    delete window.__designSystemRemountHeader;
+    document.documentElement.lang = 'en';
   });
 
   it('mounts the header slot and routes / to the home page', async () => {
@@ -99,5 +104,20 @@ describe('AppComponent', () => {
     expect(scripts).toHaveLength(1);
     expect(scripts[0].type).toBe('module');
     expect(scripts[0].getAttribute('src')).toBe('/js/header.js');
+  });
+
+  it('remounts header nav once when language changes', async () => {
+    const remount = window.__designSystemRemountHeader;
+    const fixture = await renderApp('/login');
+
+    expect(screen.getByTestId('login-form-title')).toHaveTextContent('Login Form');
+    document.dispatchEvent(new CustomEvent(HEADER_LANG_CHANGE, { detail: { lang: 'ru' } }));
+    fixture.detectChanges();
+    expect(screen.getByTestId('login-form-title')).toHaveTextContent(ru.login.title);
+    await waitFor(() => expect(remount).toHaveBeenCalledTimes(1));
+
+    document.dispatchEvent(new CustomEvent(HEADER_LANG_CHANGE, { detail: { lang: 'ru' } }));
+    fixture.detectChanges();
+    expect(remount).toHaveBeenCalledTimes(1);
   });
 });

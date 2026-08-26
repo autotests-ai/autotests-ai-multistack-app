@@ -1,35 +1,52 @@
+import { dictionaries } from '../i18n/index.js';
 import { appPath } from './app-base.js';
 
-/**
- * Minimal header contract matching design-system `window.headerConfig`.
- *
- * @typedef {{ href: string, label: string, active?: boolean, testid?: string }} HeaderNavItem
- * @typedef {{
- *   brand: { href: string, label: string },
- *   nav: HeaderNavItem[],
- *   lang: { default: string },
- *   theme: { default: string },
- * }} HeaderConfig
- */
+/** Stack matrix board — origin `/stack/`, not `/{pair}/stack`. */
+export const STACK_INDEX_HREF = '/stack/';
+
+function navLabelsKey(config) {
+  return (config?.nav ?? []).map((item) => item.label).join('\0');
+}
 
 /**
  * Canonical header config for the Multistack SPA. Nav hrefs are mount-prefixed
  * so design-system `header.js` matches the live route under
  * `/frontend-javascript-angular/`. Omit `active` — header.js derives it from location.
+ * Nav *labels* follow the SPA dictionary; testids and hrefs stay stable.
+ *
+ * @param {'en' | 'ru'} [lang]
  */
+export function buildHeaderConfig(lang = 'en') {
+  const nav = dictionaries[lang].nav;
+  return {
+    brand: { href: appPath('/'), label: 'Multistack' },
+    nav: [
+      { href: appPath('/'), label: nav.home, testid: 'header-nav-home' },
+      { href: appPath('/login'), label: nav.login, testid: 'header-nav-login' },
+      { href: appPath('/register'), label: nav.register, testid: 'header-nav-register' },
+      { href: STACK_INDEX_HREF, label: nav.stack, testid: 'header-nav-stack' },
+    ],
+    lang: { default: 'en' },
+    theme: { default: 'dark' },
+  };
+}
 
-/** Stack matrix board — origin `/stack/`, not `/{pair}/stack`. */
-export const STACK_INDEX_HREF = '/stack/';
+/**
+ * Publish nav labels and remount the canonical header **once** when they change.
+ * Theme stays in header.js — this only retitles nav after `header:lang-change`.
+ *
+ * Compare against `previousKey` (caller field), not `window.headerConfig`:
+ * `<app-header>` writes the new config in `ngOnChanges` first, which would
+ * otherwise hide the label change and skip remount.
+ */
+export function syncHeaderNav(config, previousKey) {
+  window.headerConfig = config;
+  const next = navLabelsKey(config);
+  if (previousKey !== null && previousKey !== next) {
+    void window.__designSystemRemountHeader?.();
+  }
+  return next;
+}
 
-/** @type {HeaderConfig} */
-export const headerConfig = {
-  brand: { href: appPath('/'), label: 'Multistack' },
-  nav: [
-    { href: appPath('/'), label: 'Home', testid: 'header-nav-home' },
-    { href: appPath('/login'), label: 'Login', testid: 'header-nav-login' },
-    { href: appPath('/register'), label: 'Register', testid: 'header-nav-register' },
-    { href: STACK_INDEX_HREF, label: 'Stack', testid: 'header-nav-stack' },
-  ],
-  lang: { default: 'en' },
-  theme: { default: 'dark' },
-};
+/** English snapshot — default lang, used by tests that do not switch language. */
+export const headerConfig = buildHeaderConfig('en');
