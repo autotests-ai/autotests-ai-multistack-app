@@ -9,8 +9,8 @@ GitHub does not interpolate `uses:`. This adapter dispatches on `TESTS_LANG`:
 | `java` | `./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/<verb>` | 5-segment `tests/java/tests-java-{builder}-{framework}-{report}-{ui}` |
 | `javascript` | `./tests/javascript/.github/actions/<verb>` | short `tests/javascript/tests-javascript-{ui}` (live: `playwright`) |
 | `python` | `./tests/python/.github/actions/<verb>` | short `tests/python/tests-python-{ui}` (live: `selenium`) |
-| other (`typescript`, …) | STOP | never a foreign / Java action |
+| other (`typescript`, …) | STOP | clone `tests-typescript-playwright` is living; adapter still STOP until family verbs land |
 
 A verb with no layer in the live JS module STOPs inside that family action (not `uses:` on Selenide).
-Python verbs are live (`pytest -m` slices). `typescript` / unknown STOP at this adapter.
+Python verbs are live (`pytest -m` slices). `TESTS_LANG=typescript` still STOP at this adapter (clone is living; family verbs not wired).
 `resolve-module-dir` uses the nested path (basename only if that directory is missing).

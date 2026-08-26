@@ -223,7 +223,7 @@ npx playwright test --grep @e2e --grep-invert '@mock|@screenshot'
 npx playwright test --grep @manual
 ```
 
-For `TESTS_LANG=typescript`, CI still STOP until that family is brought up.
+For `TESTS_LANG=typescript`, local clone is living (`tests/typescript/tests-typescript-playwright`, same Playwright tags / `UI_URL` as JS). CI adapter still STOP until remaining family verbs (api / mock / screenshot / manual) land.
 
 ## Layer table
 
@@ -363,8 +363,9 @@ Look under the test/launch **Окружение** block (not Custom fields — t
 | Module | Role |
 |--------|------|
 | `tests/javascript/tests-javascript-playwright/` | Playwright tags = layers; stand is `UI_URL` / `STAND` (**active**) |
+| `tests/typescript/tests-typescript-playwright/` | Playwright tags = layers; stand is `UI_URL` / `STAND` (**active**, JS etalon typed) |
 | `tests/python/tests-python-selenium/` | pytest markers = layers; stand is `STAND` / `BASE_URL` (**active**) |
-| `tests/typescript/…`, `kotlin/…`, `go/…`, Cypress, … | slots in [`deploy/matrix.yaml`](../deploy/matrix.yaml) |
+| `kotlin/…`, `go/…`, Cypress, … | slots in [`deploy/matrix.yaml`](../deploy/matrix.yaml) |
 
 Same app under test; not separate pyramid layers — parallel teaching stacks ([NAMING.md](NAMING.md)).
 They read env vars, not `-Denv`: Playwright takes `UI_URL`, pytest takes `BASE_URL`.

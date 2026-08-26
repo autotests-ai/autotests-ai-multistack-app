@@ -15,7 +15,9 @@ tests/
     tests-javascript-playwright/                 # active
   python/
     tests-python-selenium/                       # active
-  typescript/ · kotlin/ · go/                    # slots in deploy/matrix.yaml
+  typescript/
+    tests-typescript-playwright/                 # active
+  kotlin/ · go/                                  # slots in deploy/matrix.yaml
   _deferred/
 ```
 

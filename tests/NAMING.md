@@ -39,7 +39,7 @@ Full IDs live in [`deploy/matrix.yaml`](../deploy/matrix.yaml) (`status: active|
 |-------------|--------|
 | `tests-javascript-playwright` | **active** |
 | `tests-javascript-cypress` | slot |
-| `tests-typescript-playwright` | slot |
+| `tests-typescript-playwright` | **active** |
 | `tests-python-selenium` | **active** |
 | `tests-python-playwright` | slot |
 | `tests-kotlin-gradle-junit5-allure3-selenide` | slot |
