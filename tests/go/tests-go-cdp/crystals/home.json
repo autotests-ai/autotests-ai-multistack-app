@@ -1,0 +1,41 @@
+{
+  "id": "home",
+  "kind": "cdp",
+  "version": 1,
+  "source": {
+    "as_id": "Home загружает health и items",
+    "lang": "typescript-playwright",
+    "fingerprint": "140dfbd2de196abcc342dd2b7b6031a8b71721606935da963077ba9a078e91be"
+  },
+  "steps": [
+    {
+      "op": "navigate",
+      "url": "."
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=multistack-layout]",
+      "timeout_ms": 10000
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=health-status]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "text",
+      "selector": "[data-testid=health-status]",
+      "value": "service: backend-java-spring"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=items-list]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "text",
+      "selector": "[data-testid=items-list]",
+      "value": "Alpha"
+    }
+  ]
+}

@@ -282,6 +282,13 @@ func serveApp(t *testing.T, dir string) *httptest.Server {
 	mux.HandleFunc("/home", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(dir, "home.html"))
 	})
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		http.ServeFile(w, r, filepath.Join(dir, "home.html"))
+	})
 	srv := httptest.NewUnstartedServer(mux)
 	ln, err := net.Listen("tcp", "0.0.0.0:0")
 	if err != nil {

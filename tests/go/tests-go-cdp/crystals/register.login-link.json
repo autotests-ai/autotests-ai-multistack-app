@@ -1,0 +1,40 @@
+{
+  "id": "register-login-link",
+  "kind": "cdp",
+  "version": 1,
+  "source": {
+    "as_id": "Ссылка Login на регистрации открывает форму логина",
+    "lang": "typescript-playwright",
+    "fingerprint": "bbf6226da2d642513b87e584085e1c82f21dac6d8554485f34cbb3e072970f84"
+  },
+  "steps": [
+    {
+      "op": "navigate",
+      "url": "register"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=login-link]",
+      "timeout_ms": 3000
+    },
+    {
+      "op": "click",
+      "selector": "[data-testid=login-link]"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=login-form]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=login-form-title]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "text",
+      "selector": "[data-testid=login-form-title]",
+      "value": "Login Form"
+    }
+  ]
+}

@@ -36,4 +36,18 @@ test.describe('Header active nav', { tag: ['@e2e'] }, () => {
     await expect(webApp.login.loginForm).toBeVisible();
     await expect(webApp.header.activeNav('header-nav-login')).toHaveClass(/is-active/);
   });
+
+  test('Ссылка Register на логине открывает форму регистрации', { tag: ['@crystal'] }, async ({ webApp }) => {
+    await webApp.login.open();
+    await webApp.login.clickRegisterLink();
+    await expect(webApp.register.registerForm).toBeVisible();
+    await expect(webApp.register.formTitle).toContainText('Register');
+  });
+
+  test('Ссылка Login на регистрации открывает форму логина', { tag: ['@crystal'] }, async ({ webApp }) => {
+    await webApp.register.open();
+    await webApp.register.clickLoginLink();
+    await expect(webApp.login.loginForm).toBeVisible();
+    await expect(webApp.login.formTitle).toContainText('Login Form');
+  });
 });

@@ -6,12 +6,13 @@
 </head>
 <body>
   <h1 data-testid="login-form-title">Login Form</h1>
-  <form id="login-form">
+  <form id="login-form" data-testid="login-form">
     <input data-testid="login-input" name="username">
     <input data-testid="password-input" name="password" type="password">
     <p data-testid="error-message" hidden></p>
     <button data-testid="submit-button" type="submit">Login</button>
   </form>
+  <p><a href="/register" data-testid="register-link">Register</a></p>
   <script>
     document.getElementById("login-form").addEventListener("submit", function (e) {
       e.preventDefault();
