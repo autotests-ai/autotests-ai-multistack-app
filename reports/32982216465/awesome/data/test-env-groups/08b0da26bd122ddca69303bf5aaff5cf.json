@@ -1,0 +1,1 @@
+{"id":"08b0da26bd122ddca69303bf5aaff5cf","fullName":"api/auth.spec.ts:94:7","name":"POST /api/auth/register rejects a short password with 400","status":"passed","testResultsByEnv":{"default":"1369954c5b2f876c37ffaa7c9ef7b066"}}
