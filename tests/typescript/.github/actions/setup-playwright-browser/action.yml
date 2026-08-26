@@ -19,7 +19,9 @@ runs:
         set -euo pipefail
         if [ "${FORCE_LOCAL}" = "true" ]; then
           echo "mode=local" >> "$GITHUB_OUTPUT"
-          echo "Playwright: local Chromium (force_local)"
+          # Mock stand is on the runner; Selenoid would resolve 127.0.0.1 on the hub.
+          echo "SELENOID_PLAYWRIGHT_URL=" >> "$GITHUB_ENV"
+          echo "Playwright: local Chromium (force_local); Selenoid URL cleared"
         elif [ -n "${SELENOID_PLAYWRIGHT_URL:-}" ]; then
           echo "mode=remote" >> "$GITHUB_OUTPUT"
           echo "Playwright: Selenoid (skip local Chromium)"

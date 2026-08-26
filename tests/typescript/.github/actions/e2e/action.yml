@@ -146,6 +146,14 @@ runs:
         name: ${{ inputs.stand }}-screenshot-pngs
         path: ${{ inputs.module_dir }}/src/test/resources/screenshots/
         if-no-files-found: ignore
+    - name: Publish screenshot diffs
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: screenshot-diff-${{ inputs.stand }}
+        path: ${{ inputs.module_dir }}/build/screenshot-diff/
+        if-no-files-found: ignore
     - name: Publish raw Allure results
       if: always()
       continue-on-error: true

@@ -97,7 +97,14 @@ async function captureAndCompare(locator, area, viewport, attachmentName) {
   const expected = fs.readFileSync(filePath);
   const exp = PNG.sync.read(expected);
   const act = PNG.sync.read(actual);
+  const dumpDir = path.join(ROOT, 'build', 'screenshot-diff');
+  const dumpActual = () => {
+    fs.mkdirSync(dumpDir, { recursive: true });
+    fs.writeFileSync(path.join(dumpDir, `${attachmentName}-actual.png`), actual);
+  };
+
   if (exp.width !== act.width || exp.height !== act.height) {
+    dumpActual();
     throw new Error(
       `Screenshot size changed for ${label}: expected ${exp.width}x${exp.height}, actual ${act.width}x${act.height}`,
     );
@@ -107,9 +114,8 @@ async function captureAndCompare(locator, area, viewport, attachmentName) {
     threshold: 0,
   });
   if (mismatched > 0) {
-    const diffDir = path.join(ROOT, 'build', 'screenshot-diff');
-    fs.mkdirSync(diffDir, { recursive: true });
-    fs.writeFileSync(path.join(diffDir, `${attachmentName}-diff.png`), PNG.sync.write(diff));
+    dumpActual();
+    fs.writeFileSync(path.join(dumpDir, `${attachmentName}-diff.png`), PNG.sync.write(diff));
     throw new Error(`Screenshot mismatch for ${label}: ${mismatched} pixels (${attachmentName})`);
   }
 }

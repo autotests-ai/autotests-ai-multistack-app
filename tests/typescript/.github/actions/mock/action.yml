@@ -60,6 +60,7 @@ runs:
         STAND: mock
         UI_URL: http://127.0.0.1:9911/
         API_BASE_URL: http://127.0.0.1:9911
+        SELENOID_PLAYWRIGHT_URL: ""
       run: |
         source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
         run_with_allurectl npx playwright test --grep @mock --grep-invert @screenshot
@@ -83,6 +84,7 @@ runs:
         STAND: mock
         UI_URL: http://127.0.0.1:9911/
         API_BASE_URL: http://127.0.0.1:9911
+        SELENOID_PLAYWRIGHT_URL: ""
         SCREENSHOT_OS: linux
         SCREENSHOT_BROWSER: chrome
       run: |
@@ -97,6 +99,7 @@ runs:
         STAND: mock
         UI_URL: http://127.0.0.1:9911/
         API_BASE_URL: http://127.0.0.1:9911
+        SELENOID_PLAYWRIGHT_URL: ""
         SCREENSHOT_OS: linux
         SCREENSHOT_BROWSER: chrome
         UPDATE_SCREENSHOTS: "true"
@@ -118,6 +121,14 @@ runs:
       continue-on-error: true
       shell: bash
       run: docker compose --profile mock down -v --remove-orphans
+    - name: Publish screenshot diffs
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: screenshot-diff-mock
+        path: ${{ inputs.module_dir }}/build/screenshot-diff/
+        if-no-files-found: ignore
     - name: Publish raw Allure results
       if: always()
       continue-on-error: true
