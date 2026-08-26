@@ -1,0 +1,50 @@
+{
+  "id": "register",
+  "kind": "cdp",
+  "version": 1,
+  "source": {
+    "as_id": "Новый пользователь может зарегистрироваться",
+    "lang": "typescript-playwright",
+    "fingerprint": "7ae3c43702e277e60915210f7fdf7943dd6165e2e44936b82278a1a0a8d1f3d3"
+  },
+  "steps": [
+    {
+      "op": "navigate",
+      "url": "register"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=register-login-input]",
+      "timeout_ms": 3000
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=register-login-input]",
+      "value": "reguser1"
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=register-password-input]",
+      "value": "password123"
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=confirm-password-input]",
+      "value": "password123"
+    },
+    {
+      "op": "click",
+      "selector": "[data-testid=register-submit-button]"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=welcome-message]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "text",
+      "selector": "[data-testid=welcome-message]",
+      "value": "Welcome, reguser1!"
+    }
+  ]
+}

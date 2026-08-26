@@ -1,0 +1,55 @@
+{
+  "id": "register-username-taken",
+  "kind": "cdp",
+  "version": 1,
+  "source": {
+    "as_id": "Занятый username на регистрации показывает ошибку",
+    "lang": "typescript-playwright",
+    "fingerprint": "07e1f14bcca6e49536a18dfd73895e9fc1f4357cb5a81cc4db341be529767ba1"
+  },
+  "steps": [
+    {
+      "op": "navigate",
+      "url": "register"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=register-login-input]",
+      "timeout_ms": 3000
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=register-login-input]",
+      "value": "user1"
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=register-password-input]",
+      "value": "password123"
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=confirm-password-input]",
+      "value": "password123"
+    },
+    {
+      "op": "click",
+      "selector": "[data-testid=register-submit-button]"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=register-error-message]",
+      "timeout_ms": 10000
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=register-error-message]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "text",
+      "selector": "[data-testid=register-error-message]",
+      "value": "Username already taken"
+    }
+  ]
+}

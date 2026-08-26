@@ -1,0 +1,55 @@
+{
+  "id": "register-short-username",
+  "kind": "cdp",
+  "version": 1,
+  "source": {
+    "as_id": "Короткий логин на регистрации показывает ошибку валидации",
+    "lang": "typescript-playwright",
+    "fingerprint": "d1425ccdf2b5b49c304e972d546c90e0f73cd02c476547b2f8391bc20a22d211"
+  },
+  "steps": [
+    {
+      "op": "navigate",
+      "url": "register"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=register-login-input]",
+      "timeout_ms": 3000
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=register-login-input]",
+      "value": "ab"
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=register-password-input]",
+      "value": "password123"
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=confirm-password-input]",
+      "value": "password123"
+    },
+    {
+      "op": "click",
+      "selector": "[data-testid=register-submit-button]"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=register-error-message]",
+      "timeout_ms": 10000
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=register-error-message]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "text",
+      "selector": "[data-testid=register-error-message]",
+      "value": "Login must be at least 3 characters"
+    }
+  ]
+}

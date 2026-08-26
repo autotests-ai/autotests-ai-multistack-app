@@ -1,0 +1,50 @@
+{
+  "id": "register-empty-username",
+  "kind": "cdp",
+  "version": 1,
+  "source": {
+    "as_id": "Пустой логин на регистрации показывает ошибку валидации",
+    "lang": "typescript-playwright",
+    "fingerprint": "ba5343d87443afbbe25626f6b2b8e7d7e9dbe2af7b5bca26043b57a6aa5c7ebf"
+  },
+  "steps": [
+    {
+      "op": "navigate",
+      "url": "register"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=register-password-input]",
+      "timeout_ms": 3000
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=register-password-input]",
+      "value": "password123"
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=confirm-password-input]",
+      "value": "password123"
+    },
+    {
+      "op": "click",
+      "selector": "[data-testid=register-submit-button]"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=register-error-message]",
+      "timeout_ms": 10000
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=register-error-message]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "text",
+      "selector": "[data-testid=register-error-message]",
+      "value": "Login is required (minimum 3 characters)"
+    }
+  ]
+}

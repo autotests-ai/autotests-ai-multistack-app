@@ -1,0 +1,40 @@
+{
+  "id": "register-empty-both",
+  "kind": "cdp",
+  "version": 1,
+  "source": {
+    "as_id": "Пустые логин и пароль на регистрации показывают ошибку валидации",
+    "lang": "typescript-playwright",
+    "fingerprint": "2203806c9e33540688f8f10663aa11ebe15171b9f70a20690c74254643eb3ed9"
+  },
+  "steps": [
+    {
+      "op": "navigate",
+      "url": "register"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=register-submit-button]",
+      "timeout_ms": 3000
+    },
+    {
+      "op": "click",
+      "selector": "[data-testid=register-submit-button]"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=register-error-message]",
+      "timeout_ms": 10000
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=register-error-message]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "text",
+      "selector": "[data-testid=register-error-message]",
+      "value": "Login and password are required (minimum 3 and 6 characters)"
+    }
+  ]
+}

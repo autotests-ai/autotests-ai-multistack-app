@@ -8,6 +8,11 @@
   <p data-testid="welcome-message">Welcome, user1!</p>
   <button type="button" data-testid="logout-button">Logout</button>
   <script>
+    var user = new URLSearchParams(location.search).get("user");
+    if (user) {
+      document.querySelector("[data-testid=welcome-message]").textContent =
+        "Welcome, " + user + "!";
+    }
     document.querySelector("[data-testid=logout-button]").addEventListener("click", function () {
       location.href = "/login";
     });

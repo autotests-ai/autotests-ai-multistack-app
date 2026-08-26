@@ -3,6 +3,8 @@ package mill
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -48,6 +50,98 @@ func liveCrystals(t *testing.T) []string {
 	return out
 }
 
+func uniqueRegisterUser() string {
+	var b [5]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		panic(err)
+	}
+	return "user_" + hex.EncodeToString(b[:])
+}
+
+// registerIRForRun copies the happy-path register crystal and fills a crypto/rand
+// username (stdlib, not faker) so mill replay does not collide if the store is sticky.
+func registerIRForRun(t *testing.T, path string) string {
+	t.Helper()
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var doc map[string]any
+	if err := json.Unmarshal(raw, &doc); err != nil {
+		t.Fatal(err)
+	}
+	if doc["id"] != "register" {
+		return path
+	}
+	name := uniqueRegisterUser()
+	steps, _ := doc["steps"].([]any)
+	for _, step := range steps {
+		m, ok := step.(map[string]any)
+		if !ok {
+			continue
+		}
+		op, _ := m["op"].(string)
+		sel, _ := m["selector"].(string)
+		if op == "fill" && sel == "[data-testid=register-login-input]" {
+			m["value"] = name
+		}
+		if op == "text" && sel == "[data-testid=welcome-message]" {
+			m["value"] = "Welcome, " + name + "!"
+		}
+	}
+	out := filepath.Join(t.TempDir(), "register.json")
+	b, err := json.MarshalIndent(doc, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(out, append(b, '\n'), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
+
+func TestRegisterIRForRunPatchesUsername(t *testing.T) {
+	src := filepath.Join(t.TempDir(), "in.json")
+	if err := os.WriteFile(src, []byte(`{
+  "id": "register",
+  "steps": [
+    {"op": "fill", "selector": "[data-testid=register-login-input]", "value": "reguser1"},
+    {"op": "text", "selector": "[data-testid=welcome-message]", "value": "Welcome, reguser1!"}
+  ]
+}
+`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	out := registerIRForRun(t, src)
+	raw, err := os.ReadFile(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var doc map[string]any
+	if err := json.Unmarshal(raw, &doc); err != nil {
+		t.Fatal(err)
+	}
+	steps := doc["steps"].([]any)
+	fill := steps[0].(map[string]any)["value"].(string)
+	text := steps[1].(map[string]any)["value"].(string)
+	if fill == "reguser1" || !strings.HasPrefix(fill, "user_") {
+		t.Fatalf("want crypto/rand user, got %q", fill)
+	}
+	if text != "Welcome, "+fill+"!" {
+		t.Fatalf("welcome %q", text)
+	}
+}
+
+func TestRegisterIRForRunLeavesOtherCrystals(t *testing.T) {
+	src := filepath.Join(t.TempDir(), "login.json")
+	if err := os.WriteFile(src, []byte(`{"id":"login"}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if registerIRForRun(t, src) != src {
+		t.Fatal("login IR must not be copied")
+	}
+}
+
 func TestValidateCrystals(t *testing.T) {
 	bin := greedyBinary(t)
 	for _, crystal := range liveCrystals(t) {
@@ -90,11 +184,12 @@ func TestRunCrystals(t *testing.T) {
 		t.Run(filepath.Base(crystal), func(t *testing.T) {
 			runCtx, runCancel := context.WithTimeout(ctx, 60*time.Second)
 			defer runCancel()
+			ir := registerIRForRun(t, crystal)
 			cmd := exec.CommandContext(runCtx, bin, "run",
 				"--cdp", cdpURL,
 				"--base-url", baseURL,
 				"--mode", "none",
-				crystal,
+				ir,
 			)
 			var stdout, stderr bytes.Buffer
 			cmd.Stdout = &stdout
@@ -180,6 +275,9 @@ func serveApp(t *testing.T, dir string) *httptest.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(dir, "login.html"))
+	})
+	mux.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(dir, "register.html"))
 	})
 	mux.HandleFunc("/home", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(dir, "home.html"))
