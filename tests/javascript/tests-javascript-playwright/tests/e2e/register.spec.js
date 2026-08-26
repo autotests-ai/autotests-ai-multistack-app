@@ -3,6 +3,11 @@ const { test } = require('../../src/helpers/fixtures/fixture');
 const { UserBuilder } = require('../../src/helpers/builders');
 const { deleteAccountQuietly } = require('../../src/helpers/api');
 
+const LOGIN_REQUIRED = 'Login is required (minimum 3 characters)';
+const LOGIN_MIN_LENGTH = 'Login must be at least 3 characters';
+const PASSWORD_REQUIRED = 'Password is required (minimum 6 characters)';
+const BOTH_REQUIRED = 'Login and password are required (minimum 3 and 6 characters)';
+
 test.describe('Register', { tag: ['@e2e'] }, () => {
   test('Новый пользователь может зарегистрироваться', async ({ webApp, request }) => {
     const user = new UserBuilder().withUsername().withPassword().build();
@@ -44,5 +49,35 @@ test.describe('Register', { tag: ['@e2e'] }, () => {
     await webApp.register.typeConfirmPassword('password123');
     await webApp.register.submitExpectingError();
     await expect(webApp.register.errorMessage).toContainText('Username already taken');
+  });
+
+  test('Короткий логин на регистрации показывает ошибку валидации', async ({ webApp }) => {
+    await webApp.register.open();
+    await webApp.register.typeUsername('ab');
+    await webApp.register.typePassword('password123');
+    await webApp.register.typeConfirmPassword('password123');
+    await webApp.register.submitExpectingError();
+    await expect(webApp.register.errorMessage).toContainText(LOGIN_MIN_LENGTH);
+  });
+
+  test('Пустой логин на регистрации показывает ошибку валидации', async ({ webApp }) => {
+    await webApp.register.open();
+    await webApp.register.typePassword('password123');
+    await webApp.register.typeConfirmPassword('password123');
+    await webApp.register.submitExpectingError();
+    await expect(webApp.register.errorMessage).toContainText(LOGIN_REQUIRED);
+  });
+
+  test('Пустой пароль на регистрации показывает ошибку валидации', async ({ webApp }) => {
+    await webApp.register.open();
+    await webApp.register.typeUsername('newuser');
+    await webApp.register.submitExpectingError();
+    await expect(webApp.register.errorMessage).toContainText(PASSWORD_REQUIRED);
+  });
+
+  test('Пустые логин и пароль на регистрации показывают ошибку валидации', async ({ webApp }) => {
+    await webApp.register.open();
+    await webApp.register.submitExpectingError();
+    await expect(webApp.register.errorMessage).toContainText(BOTH_REQUIRED);
   });
 });

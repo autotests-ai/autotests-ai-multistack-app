@@ -19,8 +19,14 @@ class LoginTests extends TestBase {
 
     private static final String LOGIN_REQUIRED_MESSAGE =
             "Login is required (minimum 3 characters)";
+    private static final String LOGIN_MIN_LENGTH_MESSAGE =
+            "Login must be at least 3 characters";
     private static final String PASSWORD_REQUIRED_MESSAGE =
             "Password is required (minimum 6 characters)";
+    private static final String PASSWORD_MIN_LENGTH_MESSAGE =
+            "Password must be at least 6 characters";
+    private static final String BOTH_REQUIRED_MESSAGE =
+            "Login and password are required (minimum 3 and 6 characters)";
     private static final String WRONG_CREDENTIALS_MESSAGE = "Wrong login or password";
 
     @Test
@@ -66,5 +72,51 @@ class LoginTests extends TestBase {
                 .typePassword("wrongpassword")
                 .submitExpectingError()
                 .shouldHaveErrorMessage(WRONG_CREDENTIALS_MESSAGE);
+    }
+
+    @Test
+    @Tag("e2e")
+    @Tag("negative")
+    @DisplayName("Short username shows validation error")
+    void shouldShowValidationErrorWhenUsernameIsTooShort() {
+        loginPage.openPage()
+                .typeUsername("ab")
+                .typePassword("password1")
+                .submitExpectingError()
+                .shouldHaveErrorMessage(LOGIN_MIN_LENGTH_MESSAGE);
+    }
+
+    @Test
+    @Tag("e2e")
+    @Tag("negative")
+    @DisplayName("Short password shows validation error")
+    void shouldShowValidationErrorWhenPasswordIsTooShort() {
+        loginPage.openPage()
+                .typeUsername("user1")
+                .typePassword("123")
+                .submitExpectingError()
+                .shouldHaveErrorMessage(PASSWORD_MIN_LENGTH_MESSAGE);
+    }
+
+    @Test
+    @Tag("e2e")
+    @Tag("negative")
+    @DisplayName("Unknown username shows readable error")
+    void shouldShowErrorWhenUsernameIsUnknown() {
+        loginPage.openPage()
+                .typeUsername("nouser")
+                .typePassword("password1")
+                .submitExpectingError()
+                .shouldHaveErrorMessage(WRONG_CREDENTIALS_MESSAGE);
+    }
+
+    @Test
+    @Tag("e2e")
+    @Tag("negative")
+    @DisplayName("Empty username and password show validation error")
+    void shouldShowValidationErrorWhenCredentialsAreEmpty() {
+        loginPage.openPage()
+                .submitExpectingError()
+                .shouldHaveErrorMessage(BOTH_REQUIRED_MESSAGE);
     }
 }

@@ -20,9 +20,17 @@ import org.junit.jupiter.api.Test;
 @DisplayName("Register")
 class RegisterTests extends TestBase {
 
+    private static final String LOGIN_REQUIRED_MESSAGE =
+            "Login is required (minimum 3 characters)";
+    private static final String LOGIN_MIN_LENGTH_MESSAGE =
+            "Login must be at least 3 characters";
+    private static final String PASSWORD_REQUIRED_MESSAGE =
+            "Password is required (minimum 6 characters)";
     private static final String PASSWORD_MISMATCH_MESSAGE = "Passwords do not match";
     private static final String PASSWORD_MIN_LENGTH_MESSAGE =
             "Password must be at least 6 characters";
+    private static final String BOTH_REQUIRED_MESSAGE =
+            "Login and password are required (minimum 3 and 6 characters)";
     private static final String DUPLICATE_USERNAME_MESSAGE = "Username already taken";
 
     private static final String REGISTER_PASSWORD = "password123";
@@ -87,5 +95,51 @@ class RegisterTests extends TestBase {
                 .typeConfirmPassword("password123")
                 .submitExpectingError()
                 .shouldHaveErrorMessage(DUPLICATE_USERNAME_MESSAGE);
+    }
+
+    @Test
+    @Tag("e2e")
+    @Tag("negative")
+    @DisplayName("Short username shows validation error")
+    void shouldShowValidationErrorWhenUsernameIsTooShort() {
+        registerPage.openPage()
+                .typeUsername("ab")
+                .typePassword("password123")
+                .typeConfirmPassword("password123")
+                .submitExpectingError()
+                .shouldHaveErrorMessage(LOGIN_MIN_LENGTH_MESSAGE);
+    }
+
+    @Test
+    @Tag("e2e")
+    @Tag("negative")
+    @DisplayName("Empty username shows validation error")
+    void shouldShowValidationErrorWhenUsernameIsEmpty() {
+        registerPage.openPage()
+                .typePassword("password123")
+                .typeConfirmPassword("password123")
+                .submitExpectingError()
+                .shouldHaveErrorMessage(LOGIN_REQUIRED_MESSAGE);
+    }
+
+    @Test
+    @Tag("e2e")
+    @Tag("negative")
+    @DisplayName("Empty password shows validation error")
+    void shouldShowValidationErrorWhenPasswordIsEmpty() {
+        registerPage.openPage()
+                .typeUsername("newuser")
+                .submitExpectingError()
+                .shouldHaveErrorMessage(PASSWORD_REQUIRED_MESSAGE);
+    }
+
+    @Test
+    @Tag("e2e")
+    @Tag("negative")
+    @DisplayName("Empty username and password show validation error")
+    void shouldShowValidationErrorWhenCredentialsAreEmpty() {
+        registerPage.openPage()
+                .submitExpectingError()
+                .shouldHaveErrorMessage(BOTH_REQUIRED_MESSAGE);
     }
 }

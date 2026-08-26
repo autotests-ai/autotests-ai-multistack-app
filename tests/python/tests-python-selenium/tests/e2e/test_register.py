@@ -6,6 +6,11 @@ import pytest
 from api_client import delete_account_quietly
 from pages.register_page import RegisterPage
 
+LOGIN_REQUIRED = "Login is required (minimum 3 characters)"
+LOGIN_MIN_LENGTH = "Login must be at least 3 characters"
+PASSWORD_REQUIRED = "Password is required (minimum 6 characters)"
+BOTH_REQUIRED = "Login and password are required (minimum 3 and 6 characters)"
+
 pytestmark = pytest.mark.e2e
 
 
@@ -67,4 +72,50 @@ class TestRegister:
             .type_confirm_password("password123")
             .submit_expecting_error()
             .should_have_error_message("Username already taken")
+        )
+
+    @allure.title("Short username shows validation error")
+    @allure.severity(allure.severity_level.NORMAL)
+    @pytest.mark.negative
+    def test_should_show_validation_error_when_username_is_too_short(self, register_page: RegisterPage):
+        (
+            register_page.open_page()
+            .type_username("ab")
+            .type_password("password123")
+            .type_confirm_password("password123")
+            .submit_expecting_error()
+            .should_have_error_message(LOGIN_MIN_LENGTH)
+        )
+
+    @allure.title("Empty username shows validation error")
+    @allure.severity(allure.severity_level.NORMAL)
+    @pytest.mark.negative
+    def test_should_show_validation_error_when_username_is_empty(self, register_page: RegisterPage):
+        (
+            register_page.open_page()
+            .type_password("password123")
+            .type_confirm_password("password123")
+            .submit_expecting_error()
+            .should_have_error_message(LOGIN_REQUIRED)
+        )
+
+    @allure.title("Empty password shows validation error")
+    @allure.severity(allure.severity_level.NORMAL)
+    @pytest.mark.negative
+    def test_should_show_validation_error_when_password_is_empty(self, register_page: RegisterPage):
+        (
+            register_page.open_page()
+            .type_username("newuser")
+            .submit_expecting_error()
+            .should_have_error_message(PASSWORD_REQUIRED)
+        )
+
+    @allure.title("Empty username and password show validation error")
+    @allure.severity(allure.severity_level.NORMAL)
+    @pytest.mark.negative
+    def test_should_show_validation_error_when_credentials_are_empty(self, register_page: RegisterPage):
+        (
+            register_page.open_page()
+            .submit_expecting_error()
+            .should_have_error_message(BOTH_REQUIRED)
         )
