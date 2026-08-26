@@ -62,6 +62,36 @@ test.describe('Auth API', { tag: ['@api'] }, () => {
     expect(body.message).toContain('username');
   });
 
+  test('POST /api/auth/login rejects a short password with 400', async () => {
+    const response = await apiRequest('POST', '/api/auth/login', {
+      json: { username: 'user1', password: '123' },
+    });
+    expect(response.status).toBe(400);
+    const body = await json(response);
+    assertSchema(body, 'error.json');
+    expect(body.message).toContain('password');
+  });
+
+  test('POST /api/auth/login rejects an empty username with 400', async () => {
+    const response = await apiRequest('POST', '/api/auth/login', {
+      json: { username: '', password: 'password1' },
+    });
+    expect(response.status).toBe(400);
+    const body = await json(response);
+    assertSchema(body, 'error.json');
+    expect(body.message).toContain('username');
+  });
+
+  test('POST /api/auth/login rejects an empty password with 400', async () => {
+    const response = await apiRequest('POST', '/api/auth/login', {
+      json: { username: 'user1', password: '' },
+    });
+    expect(response.status).toBe(400);
+    const body = await json(response);
+    assertSchema(body, 'error.json');
+    expect(body.message).toContain('password');
+  });
+
   test('POST /api/auth/login answers a malformed JSON body with 400, not 401', async () => {
     const response = await apiRequest('POST', '/api/auth/login', { raw: 'not json' });
     expect(response.status).toBe(400);
@@ -101,6 +131,47 @@ test.describe('Auth API', { tag: ['@api'] }, () => {
     expect(body.message).toContain('password');
   });
 
+  test('POST /api/auth/register rejects a short username with 400', async () => {
+    const response = await apiRequest('POST', '/api/auth/register', {
+      json: { username: 'ab', password: 'password123' },
+    });
+    expect(response.status).toBe(400);
+    const body = await json(response);
+    assertSchema(body, 'error.json');
+    expect(body.message).toContain('username');
+  });
+
+  test('POST /api/auth/register rejects an empty username with 400', async () => {
+    const response = await apiRequest('POST', '/api/auth/register', {
+      json: { username: '', password: 'password123' },
+    });
+    expect(response.status).toBe(400);
+    const body = await json(response);
+    assertSchema(body, 'error.json');
+    expect(body.message).toContain('username');
+  });
+
+  test('POST /api/auth/register rejects an empty password with 400', async () => {
+    const response = await apiRequest('POST', '/api/auth/register', {
+      json: { username: 'newuser', password: '' },
+    });
+    expect(response.status).toBe(400);
+    const body = await json(response);
+    assertSchema(body, 'error.json');
+    expect(body.message).toContain('password');
+  });
+
+  test('POST /api/auth/register joins both field errors into one 400 message', async () => {
+    const response = await apiRequest('POST', '/api/auth/register', {
+      json: { username: '', password: '' },
+    });
+    expect(response.status).toBe(400);
+    const body = await json(response);
+    assertSchema(body, 'error.json');
+    expect(body.message).toContain('username');
+    expect(body.message).toContain('password');
+  });
+
   test('POST /api/auth/register answers a malformed JSON body with 400, not 401', async () => {
     const response = await apiRequest('POST', '/api/auth/register', { raw: 'not json' });
     expect(response.status).toBe(400);
@@ -136,6 +207,11 @@ test.describe('Auth API', { tag: ['@api'] }, () => {
 
   test('DELETE /api/auth/me without a token returns 401', async () => {
     const response = await apiRequest('DELETE', '/api/auth/me');
+    expect(response.status).toBe(401);
+  });
+
+  test('DELETE /api/auth/me with a garbage token returns 401', async () => {
+    const response = await apiRequest('DELETE', '/api/auth/me', { token: 'not-a-jwt' });
     expect(response.status).toBe(401);
   });
 

@@ -76,6 +76,39 @@ class TestAuthApi:
         assert_schema(body, "error.json")
         assert "username" in body["message"]
 
+    @allure.title("POST /api/auth/login rejects a short password with 400 and a field message")
+    @pytest.mark.negative
+    def test_login_rejects_short_password(self, config):
+        response = request(
+            config, "POST", "/api/auth/login", json={"username": "user1", "password": "123"}
+        )
+        assert response.status_code == 400
+        body = response.json()
+        assert_schema(body, "error.json")
+        assert "password" in body["message"]
+
+    @allure.title("POST /api/auth/login rejects an empty username with 400")
+    @pytest.mark.negative
+    def test_login_rejects_empty_username(self, config):
+        response = request(
+            config, "POST", "/api/auth/login", json={"username": "", "password": "password1"}
+        )
+        assert response.status_code == 400
+        body = response.json()
+        assert_schema(body, "error.json")
+        assert "username" in body["message"]
+
+    @allure.title("POST /api/auth/login rejects an empty password with 400")
+    @pytest.mark.negative
+    def test_login_rejects_empty_password(self, config):
+        response = request(
+            config, "POST", "/api/auth/login", json={"username": "user1", "password": ""}
+        )
+        assert response.status_code == 400
+        body = response.json()
+        assert_schema(body, "error.json")
+        assert "password" in body["message"]
+
     @allure.title("POST /api/auth/login answers a malformed JSON body with 400, not 401")
     @pytest.mark.negative
     def test_login_rejects_malformed_json(self, config):
@@ -122,6 +155,57 @@ class TestAuthApi:
         assert_schema(body, "error.json")
         assert "password" in body["message"]
 
+    @allure.title("POST /api/auth/register rejects a short username with 400 and a field message")
+    def test_register_rejects_short_username(self, config):
+        response = request(
+            config,
+            "POST",
+            "/api/auth/register",
+            json={"username": "ab", "password": "password123"},
+        )
+        assert response.status_code == 400
+        body = response.json()
+        assert_schema(body, "error.json")
+        assert "username" in body["message"]
+
+    @allure.title("POST /api/auth/register rejects an empty username with 400")
+    def test_register_rejects_empty_username(self, config):
+        response = request(
+            config,
+            "POST",
+            "/api/auth/register",
+            json={"username": "", "password": "password123"},
+        )
+        assert response.status_code == 400
+        body = response.json()
+        assert_schema(body, "error.json")
+        assert "username" in body["message"]
+
+    @allure.title("POST /api/auth/register rejects an empty password with 400")
+    def test_register_rejects_empty_password(self, config):
+        response = request(
+            config,
+            "POST",
+            "/api/auth/register",
+            json={"username": "newuser", "password": ""},
+        )
+        assert response.status_code == 400
+        body = response.json()
+        assert_schema(body, "error.json")
+        assert "password" in body["message"]
+
+    @allure.title("POST /api/auth/register joins both field errors into one 400 message")
+    def test_register_rejects_empty_credentials(self, config):
+        response = request(
+            config, "POST", "/api/auth/register", json={"username": "", "password": ""}
+        )
+        assert response.status_code == 400
+        body = response.json()
+        assert_schema(body, "error.json")
+        message = body["message"]
+        assert "username" in message
+        assert "password" in message
+
     @allure.title("POST /api/auth/register answers a malformed JSON body with 400, not 401")
     def test_register_rejects_malformed_json(self, config):
         response = request(config, "POST", "/api/auth/register", data="not json")
@@ -156,6 +240,12 @@ class TestAuthApi:
     @pytest.mark.negative
     def test_delete_without_token(self, config):
         response = request(config, "DELETE", "/api/auth/me")
+        assert response.status_code == 401
+
+    @allure.title("DELETE /api/auth/me with a garbage token returns 401")
+    @pytest.mark.negative
+    def test_delete_with_garbage_token(self, config):
+        response = request(config, "DELETE", "/api/auth/me", token="not-a-jwt")
         assert response.status_code == 401
 
     @allure.title("DELETE /api/auth/me removes the account: repeated login is rejected")
