@@ -2,7 +2,7 @@ import { expect } from '@playwright/test';
 import { test } from '../../src/helpers/fixtures/fixture';
 import * as mock from '../../src/helpers/mock-scenarios';
 
-test.describe('home error states (mock)', { tag: ['@e2e', '@mock'] }, () => {
+test.describe('Home error states', { tag: ['@e2e', '@mock'] }, () => {
   test.beforeEach(async () => {
     test.skip(!(await mock.available()), 'WireMock admin API is not exposed on this stand');
   });

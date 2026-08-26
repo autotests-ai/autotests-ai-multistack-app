@@ -250,7 +250,8 @@ Do **not** add Vitest to vanilla; do **not** set `FRONTEND` to vanilla (no npm r
 Bare `./gradlew test` (java) runs **everything**, integration included — there are no hidden excludes.
 
 Active teaching module defaults: `tests/{TESTS_LANG}/tests-{TESTS_LANG}-{TESTS_BUILDER}-{TESTS_FRAMEWORK}-{TESTS_REPORT}-{TESTS_UI_LIBRARY}/` (`java` · `gradle` · `junit5` · `allure3` · `selenide`).  
-Paths SSOT: `backend/scripts/paths.sh`. Module naming: [NAMING.md](NAMING.md).
+Paths SSOT: `backend/scripts/paths.sh`. Module naming: [NAMING.md](NAMING.md).  
+Suite **stems** (one Java class → one Playwright spec / one pytest module, idiomatic suffixes): [NAMING.md](NAMING.md) § Suite file stems.
 
 ## Why `unit` and `harness`? (and why Spring “slices” ≠ integration)
 

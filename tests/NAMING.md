@@ -54,6 +54,46 @@ tests-python-pip-pytest-no_allure-playwright
 tests-go-mod-testing-allure3
 ```
 
+## Suite file stems (cross-language)
+
+One **stem** per Java class. Suffixes stay idiomatic — do not copy `LoginTests.java` into Playwright or pytest.
+
+| Stem | Java | Playwright (`*.spec.ts` / `*.spec.js`) | pytest |
+|------|------|----------------------------------------|--------|
+| `login` | `LoginTests.java` | `login.spec.ts` | `test_login.py` |
+| `register` | `RegisterTests.java` | `register.spec.ts` | `test_register.py` |
+| `logout` | `LogoutTests.java` | `logout.spec.ts` | `test_logout.py` |
+| `home` | `HomeTests.java` | `home.spec.ts` | `test_home.py` |
+| `session` | `SessionTests.java` | `session.spec.ts` | `test_session.py` |
+| `delete-account` | `DeleteAccountTests.java` | `delete-account.spec.ts` | `test_delete_account.py` |
+| `home-error-state` | `HomeErrorStateTests.java` | `home-error-state.spec.ts` | `test_home_error_state.py` |
+| `home-layout` | `HomeLayoutTests.java` | `home-layout.spec.ts` | `test_home_layout.py` |
+| `login-form` | `LoginFormTests.java` | `login-form.spec.ts` | `test_login_form.py` |
+| `login-embed` | `LoginEmbedTests.java` | `login-embed.spec.ts` | `test_login_embed.py` |
+| `register-form` | `RegisterFormTests.java` | `register-form.spec.ts` | `test_register_form.py` |
+| `login-screenshot` | `LoginScreenshotTests.java` | `login-screenshot.spec.ts` | `test_login_screenshot.py` |
+| `home-layout-screenshot` | `HomeLayoutScreenshotTests.java` | `home-layout-screenshot.spec.ts` | `test_home_layout_screenshot.py` |
+| `welcome-panel-screenshot` | `WelcomePanelScreenshotTests.java` | `welcome-panel-screenshot.spec.ts` | `test_welcome_panel_screenshot.py` |
+| `header-active-nav` | — (Python/Playwright extra) | `header-active-nav.spec.ts` | `test_header_active_nav.py` |
+
+API lives under `tests/api/` in every language. Playwright names the **file** after the stem (`auth.spec.ts`); pytest repeats `_api` (`test_auth_api.py`) because pytest discovery is file-based. Same stems as Java: `AuthApiTests`, `AuthRoundTripApiTests`, `BackendWiringApiTests`, `HealthItemsApiTests`, `SeedDataApiTests`.
+
+`test.describe('Login')` / `@allure.title("Login")` / `@DisplayName("Login")` share the Java display name. Tags stay language-native (`@Tag("e2e")` · `@e2e` · `pytest.mark.e2e`).
+
+### Page objects — keep stack convention
+
+Same locators and roles; **filenames and method style follow the stack**, not Java.
+
+| Stack | Files | Typical methods |
+|-------|-------|-----------------|
+| Java / Selenide | `HomePage.java`, `LoginPage.java`, `RegisterPage.java` | `openPage()`, fluent `should…` |
+| Playwright | `home.page.ts`, `login.page.ts`, `register.page.ts`, `header.page.ts` | `open()`, locators as fields |
+| Python / Selenium | `home_page.py`, `login_page.py`, `register_page.py`, `header_component.py` | `open_page()`, snake_case fluent |
+
+Do **not** rename Playwright files to `HomePage.ts` (not Playwright canon). Do **not** rename Python to PascalCase files (not PEP8). Java stays PascalCase classes.
+
+Playwright groups pages behind a facade (`App` / `webApp`) — common in Playwright teaching; Java/Python inject page objects via the test base / fixtures instead.
+
 ## Related zones
 
 | Kind | Path | Not in `tests/` |

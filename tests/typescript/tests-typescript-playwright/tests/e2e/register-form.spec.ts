@@ -1,0 +1,10 @@
+import { expect } from '@playwright/test';
+import { test } from '../../src/helpers/fixtures/fixture';
+
+test.describe('Register form', { tag: ['@e2e', '@mock'] }, () => {
+  test('Register form fields and submit are visible', async ({ webApp }) => {
+    await webApp.register.open();
+    await expect(webApp.register.registerForm).toBeVisible();
+    await expect(webApp.register.formTitle).toContainText('Register');
+  });
+});

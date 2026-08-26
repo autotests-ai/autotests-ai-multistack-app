@@ -29,3 +29,42 @@ class TestRegister:
             )
         finally:
             delete_account_quietly(config, username, password)
+
+    @allure.title("Password mismatch shows validation error")
+    @allure.severity(allure.severity_level.NORMAL)
+    @pytest.mark.negative
+    def test_should_show_error_when_passwords_do_not_match(self, register_page: RegisterPage):
+        (
+            register_page.open_page()
+            .type_username("newuser")
+            .type_password("password123")
+            .type_confirm_password("password124")
+            .submit_expecting_error()
+            .should_have_error_message("Passwords do not match")
+        )
+
+    @allure.title("Short password shows validation error")
+    @allure.severity(allure.severity_level.NORMAL)
+    @pytest.mark.negative
+    def test_should_show_error_when_password_is_too_short(self, register_page: RegisterPage):
+        (
+            register_page.open_page()
+            .type_username("newuser")
+            .type_password("abc")
+            .type_confirm_password("abc")
+            .submit_expecting_error()
+            .should_have_error_message("Password must be at least 6 characters")
+        )
+
+    @allure.title("Duplicate username shows readable error")
+    @allure.severity(allure.severity_level.NORMAL)
+    @pytest.mark.negative
+    def test_should_show_error_when_username_is_taken(self, register_page: RegisterPage):
+        (
+            register_page.open_page()
+            .type_username("user1")
+            .type_password("password123")
+            .type_confirm_password("password123")
+            .submit_expecting_error()
+            .should_have_error_message("Username already taken")
+        )

@@ -58,6 +58,17 @@ class RegisterPage(BasePage):
         self.wait_url_is_home()
         return HomePage(self.driver, self.config)
 
+    @allure.step("Submit register form expecting validation error")
+    def submit_expecting_error(self) -> RegisterPage:
+        self.find(*self.SUBMIT).click()
+        self.wait_visible(*self.ERROR)
+        return self
+
+    @allure.step("Verify error message: {message}")
+    def should_have_error_message(self, message: str) -> RegisterPage:
+        self.wait_text_contains(*self.ERROR, message)
+        return self
+
     @allure.step("Verify register form is mounted")
     def should_show_register_form(self) -> RegisterPage:
         self.wait_visible(*self.FORM_TITLE)

@@ -1,6 +1,6 @@
-import { expect } from '@playwright/test';
-import { test } from '../../src/helpers/fixtures/fixture';
-import { loginToken } from '../../src/helpers/api';
+const { expect } = require('@playwright/test');
+const { test } = require('../../src/helpers/fixtures/fixture');
+const { loginToken } = require('../../src/helpers/api');
 
 test.describe('Session', { tag: ['@e2e'] }, () => {
   test('Invalid token clears session and hides welcome', async ({ webApp }) => {

@@ -2,7 +2,7 @@ const { expect } = require('@playwright/test');
 const { test } = require('../../src/helpers/fixtures/fixture');
 const mock = require('../../src/helpers/mock-scenarios');
 
-test.describe('home error states (mock)', { tag: ['@e2e', '@mock'] }, () => {
+test.describe('Home error states', { tag: ['@e2e', '@mock'] }, () => {
   test.beforeEach(async () => {
     test.skip(!(await mock.available()), 'WireMock admin API is not exposed on this stand');
   });

@@ -24,6 +24,20 @@ async function apiRequest(method, path, { token, json, raw } = {}) {
   return fetch(`${apiRoot()}${path}`, { method, headers, body });
 }
 
+async function loginToken(name, password) {
+  const response = await apiRequest('POST', '/api/auth/login', {
+    json: { username: name, password },
+  });
+  if (!response.ok) {
+    throw new Error(`login ${name}: ${response.status}`);
+  }
+  const body = await response.json();
+  if (!body.token) {
+    throw new Error(`login ${name}: no token`);
+  }
+  return body.token;
+}
+
 /**
  * Cleanup through the product API: log in as the user the test registered and delete the
  * account (DELETE /api/auth/me), so the stand does not accumulate user_* rows.
@@ -55,5 +69,6 @@ module.exports = {
   WRONG_CREDENTIALS_MESSAGE,
   username,
   apiRequest,
+  loginToken,
   deleteAccountQuietly,
 };
