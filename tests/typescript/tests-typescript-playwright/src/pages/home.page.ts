@@ -72,7 +72,9 @@ export class HomePage {
   }
 
   async clickDeleteAccountAndConfirm(): Promise<void> {
-    await this.stubConfirm(true);
+    this.page.once('dialog', (dialog) => {
+      void dialog.accept();
+    });
     await this.deleteAccountButton.click();
   }
 

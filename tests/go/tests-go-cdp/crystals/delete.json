@@ -1,0 +1,64 @@
+{
+  "id": "delete",
+  "kind": "cdp",
+  "version": 1,
+  "source": {
+    "as_id": "Пользователь может удалить аккаунт",
+    "lang": "typescript-playwright",
+    "fingerprint": "64dc392b8f38abe8aca50b0b655f5762efbe5df9b2accae72e3eaceb8d541320"
+  },
+  "steps": [
+    {
+      "op": "navigate",
+      "url": "register"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=register-login-input]",
+      "timeout_ms": 3000
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=register-login-input]",
+      "value": "deluser1"
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=register-password-input]",
+      "value": "password123"
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=confirm-password-input]",
+      "value": "password123"
+    },
+    {
+      "op": "click",
+      "selector": "[data-testid=register-submit-button]"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=welcome-message]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "text",
+      "selector": "[data-testid=welcome-message]",
+      "value": "Welcome, deluser1!"
+    },
+    {
+      "op": "click",
+      "selector": "[data-testid=delete-account-button]"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=login-form-title]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "text",
+      "selector": "[data-testid=login-form-title]",
+      "value": "Login Form"
+    }
+  ]
+}

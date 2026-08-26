@@ -8,6 +8,7 @@
   <main data-testid="multistack-layout">
     <p data-testid="welcome-message">Welcome, user1!</p>
     <button type="button" data-testid="logout-button">Logout</button>
+    <button type="button" data-testid="delete-account-button">Delete account</button>
     <p data-testid="health-status">→ UP | service: backend-java-spring | frontend: frontend-typescript-react</p>
     <div data-testid="items-list">
       <p>Alpha</p>
@@ -20,6 +21,9 @@
         "Welcome, " + user + "!";
     }
     document.querySelector("[data-testid=logout-button]").addEventListener("click", function () {
+      location.href = "/login";
+    });
+    document.querySelector("[data-testid=delete-account-button]").addEventListener("click", function () {
       location.href = "/login";
     });
   </script>
