@@ -410,7 +410,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
-      SONAR_PROJECT_KEY: ${{ env.TESTS_LANG == 'java' && (vars.SONAR_TESTS_PROJECT_KEY || 'autotests-ai-multistack-app-tests-java-gradle-junit5-allure3-selenide') || format('autotests-ai-multistack-app-tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
+      # Job-level `env:` cannot read the env context. Keep in sync with TESTS_LANG + TESTS_UI_LIBRARY.
+      SONAR_PROJECT_KEY: autotests-ai-multistack-app-tests-typescript-playwright
       CHECKOUT_FETCH_DEPTH: "0"
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
