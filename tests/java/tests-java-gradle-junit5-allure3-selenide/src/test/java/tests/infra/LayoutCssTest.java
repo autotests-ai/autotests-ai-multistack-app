@@ -1,4 +1,4 @@
-package tests.testinfra;
+package tests.infra;
 
 import tests.AllureMeta;
 import annotations.Layer;
@@ -17,12 +17,12 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Layer("harness")
-@Epic("Test harness")
+@Layer("infra")
+@Epic("Test infra")
 @Feature("Layout CSS")
 @Severity(SeverityLevel.NORMAL)
-@Tag("harness")
-@Tag("harness-frontend")
+@Tag("infra")
+@Tag("infra-frontend")
 @DisplayName("LayoutCss")
 class LayoutCssTest extends AllureMeta {
 

@@ -27,7 +27,7 @@ import { qualityGateRules } from "./quality-gate.mjs";
 export const LAYER_JOB_IDS = Object.freeze([
   "backend-unit-tests",
   "frontend-unit-tests",
-  "tests-harness",
+  "infra-tests",
   "ui-mock-tests",
   "integration-tests",
   "api-tests-stage",

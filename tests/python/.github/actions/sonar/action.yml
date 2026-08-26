@@ -11,8 +11,8 @@ runs:
         node-version: ${{ env.NODE_VERSION }}
     - uses: ./.github/actions/download-artifact
       with:
-        name: coverage-harness
-        path: harness
+        name: coverage-infra
+        path: infra
     - name: Sonar scan + gate (tests)
       shell: bash
       working-directory: ${{ inputs.module_dir }}
@@ -20,7 +20,7 @@ runs:
         SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
       run: |
         set -euo pipefail
-        COV="${GITHUB_WORKSPACE}/harness/coverage.xml"
+        COV="${GITHUB_WORKSPACE}/infra/coverage.xml"
         if [[ ! -f "$COV" ]]; then
           echo "ERROR: coverage.xml missing: $COV" >&2
           exit 1
@@ -31,7 +31,7 @@ runs:
           exit 1
         fi
         KEY="${SONAR_PROJECT_KEY:-autotests-ai-multistack-app-$(basename "${{ inputs.module_dir }}")}"
-        echo "==> sonar scan (harness coverage artifact) → ${SONAR_HOST_URL} (${KEY})"
+        echo "==> sonar scan (infra coverage artifact) → ${SONAR_HOST_URL} (${KEY})"
         npx --yes "@sonar/scan@${SONAR_SCANNER_NPM_VERSION}" \
           -Dsonar.host.url="${SONAR_HOST_URL}" \
           -Dsonar.projectKey="${KEY}" \

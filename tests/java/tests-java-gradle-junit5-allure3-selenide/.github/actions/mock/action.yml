@@ -21,7 +21,7 @@ runs:
         cache-read-only: true
         cache-encryption-key: ${{ env.GRADLE_ENCRYPTION_KEY }}
       env:
-        GRADLE_BUILD_ACTION_CACHE_KEY_JOB: tests-harness
+        GRADLE_BUILD_ACTION_CACHE_KEY_JOB: infra-tests
     - name: Cache Chrome for Testing
       id: cache-chrome-for-testing
       continue-on-error: true

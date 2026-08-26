@@ -1,4 +1,4 @@
-package tests.testinfra;
+package tests.infra;
 
 import tests.AllureMeta;
 import annotations.Layer;
@@ -22,12 +22,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Layer("harness")
-@Epic("Test harness")
+@Layer("infra")
+@Epic("Test infra")
 @Feature("ConfigReader")
 @Severity(SeverityLevel.NORMAL)
-@Tag("harness")
-@Tag("harness-backend")
+@Tag("infra")
+@Tag("infra-backend")
 @DisplayName("ConfigReader")
 @Execution(ExecutionMode.SAME_THREAD)
 class ConfigReaderTest extends AllureMeta {

@@ -1,4 +1,4 @@
-package tests.testinfra;
+package tests.infra;
 
 import tests.AllureMeta;
 import annotations.Layer;
@@ -16,12 +16,12 @@ import org.openqa.selenium.logging.LogEntry;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Layer("harness")
-@Epic("Test harness")
+@Layer("infra")
+@Epic("Test infra")
 @Feature("HAR capture")
 @Severity(SeverityLevel.NORMAL)
-@Tag("harness")
-@Tag("harness-frontend")
+@Tag("infra")
+@Tag("infra-frontend")
 class HarCaptureTest extends AllureMeta {
 
     @Test

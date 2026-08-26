@@ -1,5 +1,5 @@
-name: harness
-description: Tests-module helper checks (pytest -m harness; not a pyramid layer).
+name: infra
+description: Tests-module helper checks (pytest -m infra; not a pyramid layer).
 inputs:
   module_dir:
     required: true
@@ -16,7 +16,7 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Select harness slice
+    - name: Select infra slice
       id: slice
       shell: bash
       env:
@@ -26,17 +26,17 @@ runs:
       run: |
         set -euo pipefail
         slice=all
-        tags=harness
+        tags=infra
         cov="--cov=config --cov=api_client --cov=har_capture"
         if [ "$LANE_BACKEND" = "true" ] && [ "$LANE_FRONTEND" != "true" ] && [ "$LANE_TESTS" != "true" ]; then
           slice=backend
-          tags=harness_backend
+          tags=infra_backend
           cov="--cov=config --cov=api_client"
         fi
         echo "slice=${slice}" >> "$GITHUB_OUTPUT"
-        echo "HARNESS_MARKER=${tags}" >> "$GITHUB_ENV"
-        echo "HARNESS_COV=${cov}" >> "$GITHUB_ENV"
-        echo "Harness slice=${slice} -m ${tags}"
+        echo "INFRA_MARKER=${tags}" >> "$GITHUB_ENV"
+        echo "INFRA_COV=${cov}" >> "$GITHUB_ENV"
+        echo "Infra slice=${slice} -m ${tags}"
     - uses: actions/setup-python@v6
       with:
         python-version: ${{ env.PYTHON_VERSION }}
@@ -46,21 +46,21 @@ runs:
       shell: bash
       working-directory: ${{ inputs.module_dir }}
       run: python -m pip install -r requirements.txt
-    - name: Run harness tests (pytest)
+    - name: Run infra tests (pytest)
       id: run-tests
       shell: bash
       working-directory: ${{ inputs.module_dir }}
       run: |
         set -euo pipefail
         # Coverage of helpers only — no fail-under (not coverage theatre).
-        python -m pytest -m "${HARNESS_MARKER}" \
-          ${HARNESS_COV} \
+        python -m pytest -m "${INFRA_MARKER}" \
+          ${INFRA_COV} \
           --cov-report=xml:coverage.xml \
           --cov-report=term-missing \
           --alluredir=allure-results
     - if: steps.run-tests.outcome == 'success'
       uses: actions/upload-artifact@v7
       with:
-        name: coverage-harness
+        name: coverage-infra
         path: ${{ inputs.module_dir }}/coverage.xml
         if-no-files-found: error

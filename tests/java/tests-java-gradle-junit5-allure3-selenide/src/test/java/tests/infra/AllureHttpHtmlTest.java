@@ -1,4 +1,4 @@
-package tests.testinfra;
+package tests.infra;
 
 import annotations.Layer;
 import helpers.AllureHtmlPreview;
@@ -14,9 +14,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Layer("harness")
-@Tag("harness")
-@Tag("harness-backend")
+@Layer("infra")
+@Tag("infra")
+@Tag("infra-backend")
 class AllureHttpHtmlTest {
 
     private static final Path GALLERY = Path.of("build/http-attachment-preview");

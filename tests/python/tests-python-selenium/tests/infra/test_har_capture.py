@@ -1,4 +1,4 @@
-"""HAR helper — java HarCaptureTest (harness-frontend, no browser)."""
+"""HAR helper — java HarCaptureTest (infra-frontend, no browser)."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ import pytest
 
 from har_capture import supports_browser, to_har
 
-pytestmark = [pytest.mark.harness, pytest.mark.harness_frontend]
+pytestmark = [pytest.mark.infra, pytest.mark.infra_frontend]
 
 
-@allure.epic("Test harness")
+@allure.epic("Test infra")
 @allure.feature("HAR capture")
 @allure.severity(allure.severity_level.NORMAL)
 @allure.title("HAR capture")

@@ -14,7 +14,7 @@ cp .env.example .env
 pytest -m api
 pytest -m 'e2e and not screenshot and not mock'
 pytest -m manual
-pytest -m harness
+pytest -m infra
 STAND=mock pytest -m mock   # docker compose --profile mock up -d stand-gateway first
 STAND=mock pytest -m screenshot   # PNG compare vs mock/; omit SCREENSHOT_OS on a Mac
 ```

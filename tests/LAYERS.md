@@ -59,20 +59,20 @@ or TestOps-only drafts outside git:
 Same repo, same review/PR flow as automated layers. Promote a stub to e2e by replacing steps
 with real Selenide/API calls and retagging — do not keep a parallel wiki checklist.
 
-## Harness (not a pyramid layer)
+## Infra tests (not a pyramid layer)
 
-Self-check of the **tests module helpers** before / alongside product layers — umbrella `@Tag("harness")`, one CI job:
+Self-check of the **tests module helpers** before / alongside product layers — umbrella `@Tag("infra")`, one CI job:
 
 | Slice | Tags | CI | Gates |
 |-------|------|----|-------|
-| all | `harness` | `tests-harness` | PR · frontend · tests · mixed/`all`; feeds `sonar-tests` |
-| backend-only | `harness-backend` | same job | backend lane — `ConfigReader` only; **skips** `sonar-tests` |
-| frontend helpers | `harness` + `harness-frontend` | inside the all slice | CSS/HAR/`LocalChromePin` — frontend lane runs the **full** harness because UI tests read `ConfigReader` |
+| all | `infra` | `infra-tests` | PR · frontend · tests · mixed/`all`; feeds `sonar-tests` |
+| backend-only | `infra-backend` | same job | backend lane — `ConfigReader` only; **skips** `sonar-tests` |
+| frontend helpers | `infra` + `infra-frontend` | inside the all slice | CSS/HAR/`LocalChromePin` — frontend lane runs the **full** infra because UI tests read `ConfigReader` |
 
 ```bash
-./gradlew test -Denv=ci -DincludeTags=harness-backend   # + JaCoCo on ConfigReader
-./gradlew test -Denv=ci -DincludeTags=harness-frontend  # + JaCoCo on CSS helpers
-./gradlew test -Denv=ci -DincludeTags=harness           # full harness (CI default)
+./gradlew test -Denv=ci -DincludeTags=infra-backend   # + JaCoCo on ConfigReader
+./gradlew test -Denv=ci -DincludeTags=infra-frontend  # + JaCoCo on CSS helpers
+./gradlew test -Denv=ci -DincludeTags=infra           # full infra (CI default)
 ```
 
 **Not** application code (that's `backend-unit-tests` on `BACKEND_DIR` / `frontend-unit-tests` on `FRONTEND_DIR`).
@@ -169,9 +169,9 @@ When `TESTS_LANG=java`, a layer is a **tag filter**, a stand is **`-Denv`**. The
 task — `test`:
 
 ```bash
-./gradlew test -Denv=ci   -DincludeTags=harness-backend
-./gradlew test -Denv=ci   -DincludeTags=harness-frontend
-./gradlew test -Denv=ci   -DincludeTags=harness
+./gradlew test -Denv=ci   -DincludeTags=infra-backend
+./gradlew test -Denv=ci   -DincludeTags=infra-frontend
+./gradlew test -Denv=ci   -DincludeTags=infra
 ./gradlew test -Denv=mock -DincludeTags=mock
 ./gradlew test -Denv=mock -DincludeTags=screenshot
 ./gradlew test -Denv=stage -DincludeTags=api
@@ -195,9 +195,9 @@ For `TESTS_LANG=python`, a layer is a **pytest marker**, a stand is **`STAND`** 
 (from `tests/python/tests-python-selenium`):
 
 ```bash
-STAND=ci   pytest -m harness_backend
-STAND=ci   pytest -m harness_frontend
-STAND=ci   pytest -m harness
+STAND=ci   pytest -m infra_backend
+STAND=ci   pytest -m infra_frontend
+STAND=ci   pytest -m infra
 STAND=mock pytest -m mock
 STAND=mock pytest -m screenshot
 STAND=stage pytest -m api
@@ -214,8 +214,8 @@ For `TESTS_LANG=javascript`, a layer is a **Playwright tag**, a stand is **`UI_U
 (from `tests/javascript/tests-javascript-playwright`):
 
 ```bash
-npx playwright test --grep @harness_backend
-npx playwright test --grep @harness
+npx playwright test --grep @infra_backend
+npx playwright test --grep @infra
 STAND=mock UI_URL=http://127.0.0.1:9911/ npx playwright test --grep @mock --grep-invert @screenshot
 STAND=mock UI_URL=http://127.0.0.1:9911/ npx playwright test --grep @screenshot
 npx playwright test --grep @api
@@ -253,16 +253,16 @@ Active teaching module defaults: `tests/{TESTS_LANG}/tests-{TESTS_LANG}-{TESTS_B
 Paths SSOT: `backend/scripts/paths.sh`. Module naming: [NAMING.md](NAMING.md).  
 Suite **stems** (one Java class → one Playwright spec / one pytest module, idiomatic suffixes): [NAMING.md](NAMING.md) § Suite file stems.
 
-## Why `unit` and `harness`? (and why Spring “slices” ≠ integration)
+## Why `unit` and `infra`? (and why Spring “slices” ≠ integration)
 
 | Job | Product under test |
 |-----|--------------------|
 | `backend-unit-tests` | **Application** (active `BACKEND_DIR` via `./backend/.github/actions/unit`; excludes `@Tag("integration")`) |
 | `integration-tests` | **Application** (full Spring Boot + Testcontainers PostgreSQL in `BACKEND_DIR`) |
-| `tests-harness` | **Test tooling** — full helpers except backend-only (`ConfigReader`); frontend keeps ConfigReader because UI tests read it |
+| `infra-tests` | **Test tooling** — full helpers except backend-only (`ConfigReader`); frontend keeps ConfigReader because UI tests read it |
 | `frontend-unit-tests` | **Application** (active `FRONTEND_DIR` only — Vitest + coverage → `sonar-frontend` / `ui-mock-tests` → `build-frontend`) |
 
-Students: product unit layers (`backend-unit-tests` / `frontend-unit-tests`); harness = helper checks that higher layers depend on.
+Students: product unit layers (`backend-unit-tests` / `frontend-unit-tests`); infra = helper checks that higher layers depend on.
 
 **Slices (java Spring, inside `backend-unit-tests` — not the classical integration layer).**  
 After the integration/api split, “slice” means a *partial Spring context* in the backend
@@ -280,8 +280,8 @@ Spring context against real PostgreSQL **before** build/deploy. Do not rename Sp
 to `integration` and do not move deploy HTTP checks into `backend-unit-tests` or backend integration.
 
 The 100% line-coverage gate (`jacocoTestCoverageVerification`) is java-only and slices by
-`-DincludeTags` (`harness-backend` → `ConfigReader`; `harness-frontend` → `LayoutCss`/`TokensCss`;
-`harness` → all three). `LocalChromePin` is tagged `harness-frontend` (skipped on backend-only CI)
+`-DincludeTags` (`infra-backend` → `ConfigReader`; `infra-frontend` → `LayoutCss`/`TokensCss`;
+`infra` → all three). `LocalChromePin` is tagged `infra-frontend` (skipped on backend-only CI)
 and is **not** in the JaCoCo class set. It reads `build/jacoco/test.exec`.
 
 ## Why `component` vs `e2e` (not vs integration)?
@@ -298,7 +298,7 @@ Integration is **in-process Spring + PostgreSQL**, no browser. Deployed HTTP che
 
 | Trigger | Jobs |
 |---------|------|
-| Pull request (blocks merge) | `backend-unit-tests`, `integration-tests`, `frontend-unit-tests`, `tests-harness`, `ui-mock-tests`, `sonar-backend`, `sonar-tests`, `sonar-frontend` |
+| Pull request (blocks merge) | `backend-unit-tests`, `integration-tests`, `frontend-unit-tests`, `infra-tests`, `ui-mock-tests`, `sonar-backend`, `sonar-tests`, `sonar-frontend` |
 | Push to `main` | PR set + `trigger` lanes → CD stage of this SHA → full api/e2e vs stage → CD production → `api-tests` / `e2e-tests` (`-Denv=prod`, same layer tags) |
 | Push to `develop` | PR set + `trigger` lanes → CD stage only → `api-tests-stage` / `e2e-tests-stage` (full `api` / `e2e`, `excludeTags=mock,screenshot`) vs [stage.autotests.ai/stack/…](https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/) |
 | `workflow_dispatch` | `deploy=none\|backend\|frontend\|tests\|all` + `deploy_target=production\|stage\|both`; per-layer booleans `run_integration` / `run_api` / `run_mock` / `run_e2e` / `run_screenshot` / `run_manual`; screenshot rewrite flags; TestOps `ALLURE_JOB_RUN_ID` / `ALLURE_USERNAME` |
@@ -323,11 +323,11 @@ After generate, [`attach-ci-jobs-quality-gate.mjs`](java/tests-java-gradle-junit
 
 | GitHub result | Allure QG |
 |---------------|-----------|
-| `failure` on a layer job (tests, biome, harness, …) | not passed |
+| `failure` on a layer job (tests, biome, infra, …) | not passed |
 | `skipped` because this event does not run that job (PR without prod e2e, `manual-tests` on push, lane `if:`) | unchanged |
 | Sonar / deploy | own widgets or out of Allure QG |
 
-Layer jobs: `backend-unit-tests`, `frontend-unit-tests`, `tests-harness`, `ui-mock-tests`, `integration-tests`, `api-tests-stage`, `e2e-tests-stage`, `api-tests`, `e2e-tests`, `manual-tests`. Widget rule id: `maxCiJobFailures` (attached after generate, not an Allure CLI `use` rule).
+Layer jobs: `backend-unit-tests`, `frontend-unit-tests`, `infra-tests`, `ui-mock-tests`, `integration-tests`, `api-tests-stage`, `e2e-tests-stage`, `api-tests`, `e2e-tests`, `manual-tests`. Widget rule id: `maxCiJobFailures` (attached after generate, not an Allure CLI `use` rule).
 
 CLI (`npx allure quality-gate`) also runs `maxFailures` plus reporting via `qualityGate.use`: steps on api / integration / e2e / manual, and attachments on `@Tag("screenshot")` e2e (nested step PNGs count; AllureSelenide stays `screenshots(false)`).
 
@@ -337,7 +337,7 @@ CLI (`npx allure quality-gate`) also runs `maxFailures` plus reporting via `qual
 `run_with_allurectl` in
 [`.github/actions/setup-allurectl/allurectl-run.sh`](../.github/actions/setup-allurectl/allurectl-run.sh)
 (`allurectl watch --job-run-child`).
-`tests-harness` does **not** upload (helpers, not product cases). Missing `ALLURE_TOKEN` /
+`infra-tests` does **not** upload (helpers, not product cases). Missing `ALLURE_TOKEN` /
 `ALLURE_PROJECT_ID` disables live upload without failing tests — raw `allure-results` still publish.
 
 | Mode | Selection | `ALLURE_KEEP_TESTPLAN` |
@@ -386,13 +386,13 @@ To add another layer, copy `manual-tests` in `ci.yml` and the matching tests mod
 
 ## CI cache (Gradle)
 
-CI-only. Writers save GUH + configuration cache **inside the module action**. Readers restore GUH **read-only** from `tests-harness` (`GRADLE_BUILD_ACTION_CACHE_KEY_JOB`) and **do not** restore CC. **Do not enable CC on `api-tests` / `e2e-tests` / `api-tests-stage` / `e2e-tests-stage`** (or `ui-mock-tests` / `manual-tests`) — CC pins absolute `GRADLE_USER_HOME` / JaCoCo paths from another runner.
+CI-only. Writers save GUH + configuration cache **inside the module action**. Readers restore GUH **read-only** from `infra-tests` (`GRADLE_BUILD_ACTION_CACHE_KEY_JOB`) and **do not** restore CC. **Do not enable CC on `api-tests` / `e2e-tests` / `api-tests-stage` / `e2e-tests-stage`** (or `ui-mock-tests` / `manual-tests`) — CC pins absolute `GRADLE_USER_HOME` / JaCoCo paths from another runner.
 
 | | Jobs | GUH | CC |
 |--|------|-----|-----|
 | Writer, backend | `backend-unit-tests`, `integration-tests`, `sonar-backend` | own `github.job` | yes (`backend/java/backend-java-spring`) |
-| Writer, tests | `tests-harness`, `sonar-tests` | own `github.job` | yes (tests module) |
-| Reader | `ui-mock-tests`, `api-tests`, `e2e-tests`, `api-tests-stage`, `e2e-tests-stage`, `manual-tests` | read-only from `tests-harness` | **no** |
+| Writer, tests | `infra-tests`, `sonar-tests` | own `github.job` | yes (tests module) |
+| Reader | `ui-mock-tests`, `api-tests`, `e2e-tests`, `api-tests-stage`, `e2e-tests-stage`, `manual-tests` | read-only from `infra-tests` | **no** |
 
 ## Test data and secrets
 
@@ -416,7 +416,7 @@ every run (PR + main):
   backend-unit-tests → integration-tests
   backend-unit-tests + integration-tests → sonar-backend
   frontend-unit-tests → ui-mock-tests → sonar-frontend
-  tests-harness → sonar-tests (sonar-tests skipped on backend-only lane)
+  infra-tests → sonar-tests (sonar-tests skipped on backend-only lane)
   ui-mock-tests (needs frontend-unit-tests + trigger; every PR; frontend lane on main)
 
 main (via `trigger.cd_stage` then `cd_production`):
@@ -444,9 +444,9 @@ cancel-in-progress). PRs stay `ci-pr-<ref>` and may cancel in progress.
 
 `api-tests` gates on `deploy-backend` (not a join with frontend). `api-tests-stage` is the same vs `deploy-backend-stage`. `integration-tests` runs in `BACKEND_DIR` before
 build/deploy and does **not** wait on deploy.
-`sonar-tests` scans **testinfra helpers** (`-DincludeTags=harness`), not api/e2e results.
-It runs after `tests-harness` on **PR** and **main**, except the backend-only lane
-(`harness-backend` only — no full tests-module coverage to gate).
+`sonar-tests` scans **infra helpers** (`-DincludeTags=infra`), not api/e2e results.
+It runs after `infra-tests` on **PR** and **main**, except the backend-only lane
+(`infra-backend` only — no full tests-module coverage to gate).
 `build-backend` / `build-frontend` do **not** `needs` Sonar. `sonar-frontend` waits on
 `ui-mock-tests` (success or skipped — backend-only lane still scans). There is no
 `build-frontend` → `ui-mock-tests` edge (mock does not wait for the GHCR image) and no

@@ -1,4 +1,4 @@
-package tests.testinfra;
+package tests.infra;
 
 import tests.AllureMeta;
 import annotations.Layer;
@@ -14,12 +14,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Layer("harness")
-@Epic("Test harness")
+@Layer("infra")
+@Epic("Test infra")
 @Feature("HAR viewer")
 @Severity(SeverityLevel.NORMAL)
-@Tag("harness")
-@Tag("harness-frontend")
+@Tag("infra")
+@Tag("infra-frontend")
 class HarViewerHtmlTest extends AllureMeta {
 
     @Test

@@ -79,10 +79,10 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
     elif item.get_closest_marker("manual"):
         allure.dynamic.label("layer", "manual")
         allure.dynamic.label("ALLURE_MANUAL", "true")
-    elif item.get_closest_marker("harness") or item.get_closest_marker("harness_backend") or item.get_closest_marker(
-        "harness_frontend"
+    elif item.get_closest_marker("infra") or item.get_closest_marker("infra_backend") or item.get_closest_marker(
+        "infra_frontend"
     ):
-        allure.dynamic.label("layer", "harness")
+        allure.dynamic.label("layer", "infra")
     elif (
         item.get_closest_marker("e2e")
         or item.get_closest_marker("mock")

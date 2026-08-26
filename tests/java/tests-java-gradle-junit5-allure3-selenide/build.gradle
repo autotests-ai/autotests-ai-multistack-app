@@ -63,7 +63,7 @@ sonar {
         property 'sonar.java.binaries', 'build/classes/java/test'
         property 'sonar.coverage.jacoco.xmlReportPaths',
                 "${layout.buildDirectory.get()}/reports/jacoco/test/jacocoTestReport.xml"
-        // Same allow-list as JaCoCo harness (ConfigReader + CSS helpers). A deny-list
+        // Same allow-list as JaCoCo infra (ConfigReader + CSS helpers). A deny-list
         // of other helpers lets new page/Allure classes fail Coverage on New Code.
         property 'sonar.inclusions', '**/config/ConfigReader.java,**/helpers/LayoutCss.java,**/helpers/TokensCss.java'
     }
@@ -140,17 +140,17 @@ def resolveConfiguredBaseUrl = { String env ->
     throw new GradleException("Set baseUrl in config/${env}.properties")
 }
 
-// JaCoCo is only needed for harness coverage gates; browser/prod layers skip the agent
+// JaCoCo is only needed for infra coverage gates; browser/prod layers skip the agent
 // so configuration cache entries do not pin absolute paths under GRADLE_USER_HOME.
-def harnessJacocoTags = ['harness', 'harness-backend', 'harness-frontend'] as Set
+def infraJacocoTags = ['infra', 'infra-backend', 'infra-frontend'] as Set
 
 def jacocoEnabledForCurrentRun = {
     def tags = (System.getProperty('includeTags') ?: '').split(',').collect { it.trim() }.findAll { it } as Set
-    return tags.isEmpty() || tags.any { harnessJacocoTags.contains(it) }
+    return tags.isEmpty() || tags.any { infraJacocoTags.contains(it) }
 }
 
 // Layers that never touch the app through a browser — nothing to health-check.
-def browserlessTags = ['harness', 'harness-backend', 'harness-frontend', 'api', 'integration'] as Set
+def browserlessTags = ['infra', 'infra-backend', 'infra-frontend', 'api', 'integration'] as Set
 
 def shouldSkipHealthCheck = {
     if (System.getProperty('skipHealthCheck', 'false') == 'true') {
@@ -166,7 +166,7 @@ def healthCheckUrl = shouldSkipHealthCheck() ? null : resolveConfiguredBaseUrl(t
 
 tasks.register('healthCheck') {
     group = 'verification'
-    description = 'GET baseUrl/ — auto-skip for -DincludeTags=harness*|api|integration and -DskipHealthCheck=true'
+    description = 'GET baseUrl/ — auto-skip for -DincludeTags=infra*|api|integration and -DskipHealthCheck=true'
     String url = healthCheckUrl
     onlyIf { url != null && url.startsWith('http') }
     doLast {
@@ -295,14 +295,14 @@ if (allureQualityGateHook && allureReportMode != 'none') {
     }
 }
 
-// Coverage axis = harness helpers; product/page/UI classes are out.
-// Slice follows -DincludeTags: harness-backend → ConfigReader; harness-frontend → CSS helpers
+// Coverage axis = infra helpers; product/page/UI classes are out.
+// Slice follows -DincludeTags: infra-backend → ConfigReader; infra-frontend → CSS helpers
 // (LayoutCss, TokensCss; LocalChromePin is tagged frontend but not JaCoCo-gated);
-// harness / unset → ConfigReader + CSS helpers (local umbrella).
-def harnessCoverageIncludes = {
+// infra / unset → ConfigReader + CSS helpers (local umbrella).
+def infraCoverageIncludes = {
     def tags = (System.getProperty('includeTags') ?: '').split(',').collect { it.trim() }.findAll { it } as Set
-    def backendOnly = tags.contains('harness-backend') && !tags.contains('harness-frontend') && !tags.contains('harness')
-    def frontendOnly = tags.contains('harness-frontend') && !tags.contains('harness-backend') && !tags.contains('harness')
+    def backendOnly = tags.contains('infra-backend') && !tags.contains('infra-frontend') && !tags.contains('infra')
+    def frontendOnly = tags.contains('infra-frontend') && !tags.contains('infra-backend') && !tags.contains('infra')
     if (backendOnly) {
         return ['config/ConfigReader.class']
     }
@@ -316,8 +316,8 @@ def harnessCoverageIncludes = {
     ]
 }
 
-def testInfraCoverageSlice = {
-    def includes = harnessCoverageIncludes()
+def infraCoverageSlice = {
+    def includes = infraCoverageIncludes()
     sourceSets.test.output.classesDirs.collect { classDir ->
         fileTree(dir: classDir, include: includes)
     }
@@ -325,20 +325,20 @@ def testInfraCoverageSlice = {
 
 tasks.named('jacocoTestReport', JacocoReport).configure {
     group = 'verification'
-    description = 'JaCoCo report for test-harness config + CSS helpers'
+    description = 'JaCoCo report for test-infra config + CSS helpers'
     dependsOn tasks.named('test')
     reports {
         xml.required = true
         html.required = true
     }
-    classDirectories.setFrom(files(testInfraCoverageSlice()))
+    classDirectories.setFrom(files(infraCoverageSlice()))
     sourceDirectories.setFrom(files(sourceSets.test.java.srcDirs))
     executionData.setFrom(layout.buildDirectory.file('jacoco/test.exec'))
 }
 
 tasks.named('jacocoTestCoverageVerification', JacocoCoverageVerification).configure {
     group = 'verification'
-    description = 'Fail when test-harness helpers/config drop below 100% line coverage'
+    description = 'Fail when test-infra helpers/config drop below 100% line coverage'
     dependsOn tasks.named('jacocoTestReport')
     violationRules {
         rule {
@@ -348,6 +348,6 @@ tasks.named('jacocoTestCoverageVerification', JacocoCoverageVerification).config
             }
         }
     }
-    classDirectories.setFrom(files(testInfraCoverageSlice()))
+    classDirectories.setFrom(files(infraCoverageSlice()))
     executionData.setFrom(layout.buildDirectory.file('jacoco/test.exec'))
 }

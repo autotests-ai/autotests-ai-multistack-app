@@ -1,7 +1,7 @@
 # Multistack — tests-typescript-playwright
 
 Typed sibling of `tests-javascript-playwright` (`tests/LAYERS.md`): Playwright tags = layers.
-Coverage matches the Java default cell (harness → api → e2e including mock/screenshot + session/delete account → manual).
+Coverage matches the Java default cell (infra → api → e2e including mock/screenshot + session/delete account → manual).
 c8 lcov is the JaCoCo analog; Sonar key `autotests-ai-multistack-app-tests-typescript-playwright`.
 
 ## Quick start
@@ -13,7 +13,7 @@ npm ci
 npx playwright install chromium   # local only; skip when using SELENOID_PLAYWRIGHT_URL
 npm test                          # @e2e, exclude mock/screenshot
 npm run test:api
-npm run test:harness
+npm run test:infra
 npm run test:manual
 npm run typecheck
 ```

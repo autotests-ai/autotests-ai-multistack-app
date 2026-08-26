@@ -15,7 +15,7 @@ import {
 } from '../../src/helpers/env';
 import { username } from '../../src/helpers/api';
 
-test.describe('env helpers', { tag: ['@harness', '@harness_backend'] }, () => {
+test.describe('env helpers', { tag: ['@infra', '@infra_backend'] }, () => {
   test('slash adds trailing slash', () => {
     expect(slash('http://localhost:3000')).toBe('http://localhost:3000/');
   });
@@ -48,7 +48,7 @@ test.describe('env helpers', { tag: ['@harness', '@harness_backend'] }, () => {
   });
 
   test('envBool default and truthy tokens', () => {
-    const key = 'ZDS_HARNESS_ENV_BOOL';
+    const key = 'ZDS_INFRA_ENV_BOOL';
     delete process.env[key];
     expect(envBool(key)).toBe(false);
     expect(envBool(key, true)).toBe(true);

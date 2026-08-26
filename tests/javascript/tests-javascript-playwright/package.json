@@ -7,7 +7,7 @@
   "scripts": {
     "test": "npx playwright test --grep @e2e --grep-invert \"@mock|@screenshot\"",
     "test:api": "npx playwright test --grep @api",
-    "test:harness": "npx c8 --include=src/helpers/env.js --include=src/helpers/api.js --include=src/helpers/har-collect.js --reporter=lcov --reporter=text --report-dir=coverage npx playwright test --grep @harness",
+    "test:infra": "npx c8 --include=src/helpers/env.js --include=src/helpers/api.js --include=src/helpers/har-collect.js --reporter=lcov --reporter=text --report-dir=coverage npx playwright test --grep @infra",
     "test:mock": "npx playwright test --grep @mock --grep-invert @screenshot",
     "test:screenshot": "npx playwright test --grep @screenshot",
     "test:manual": "npx playwright test --grep @manual",

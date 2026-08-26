@@ -8,20 +8,20 @@ name: CI
 # PR: no CD. Push develop → stage; push main → stage then prod (needs e2e-tests-stage).
 #
 # Graph (ids = jobs: keys):
-#   trigger → backend-unit-tests · frontend-unit-tests · tests-harness
+#   trigger → backend-unit-tests · frontend-unit-tests · infra-tests
 #   preempt-develop-cd (main) · yield-to-main-cd (develop)
 #   integration-tests ← backend-unit-tests (PR/push; dispatch run_integration)
 #   sonar-backend ← backend-unit-tests + integration-tests
-#   sonar-tests ← tests-harness (slice≠backend); does not gate deploy or publish
-#   ui-mock-tests ← frontend-unit-tests + tests-harness (PR; frontend lane; dispatch run_mock)
+#   sonar-tests ← infra-tests (slice≠backend); does not gate deploy or publish
+#   ui-mock-tests ← frontend-unit-tests + infra-tests (PR; frontend lane; dispatch run_mock)
 #   sonar-frontend ← frontend-unit-tests + ui-mock-tests
 #   build-backend ← backend-unit-tests + integration-tests (backend lane) · build-frontend ← ui-mock-tests (frontend lane)
 #   deploy-*-stage ← matching build + sonar-backend / sonar-frontend + preempt/yield (STAGE_APP_DIR, cd_stage)
-#   api-tests-stage ← deploy-backend-stage + tests-harness (STAGE_APP_DIR, run_api_stage)
-#   e2e-tests-stage ← api-tests-stage + deploy-frontend-stage + tests-harness (STAGE_APP_DIR, run_e2e_stage)
+#   api-tests-stage ← deploy-backend-stage + infra-tests (STAGE_APP_DIR, run_api_stage)
+#   e2e-tests-stage ← api-tests-stage + deploy-frontend-stage + infra-tests (STAGE_APP_DIR, run_e2e_stage)
 #   deploy-* ← matching build + sonar-backend / sonar-frontend + e2e-tests-stage (cd_production)
-#   api-tests ← deploy-backend + tests-harness (run_api_prod)
-#   e2e-tests ← api-tests + deploy-frontend + tests-harness (run_e2e_prod)
+#   api-tests ← deploy-backend + infra-tests (run_api_prod)
+#   e2e-tests ← api-tests + deploy-frontend + infra-tests (run_e2e_prod)
 #   manual-tests ← e2e-tests; dispatch run_manual (not after deploy-*)
 #   publish-allure-report ← layer jobs + sonar-backend → deploy-github-pages
 #
@@ -173,7 +173,7 @@ jobs:
   # rebuild the app; PR is none (no CD). Not a layer job.
   # Shared TestOps job-run lives here too (soft: missing creds / outage disable
   # live upload without blocking tests) so the graph is one root:
-  # trigger → backend-unit-tests (backend) / frontend-unit-tests (frontend) / tests-harness.
+  # trigger → backend-unit-tests (backend) / frontend-unit-tests (frontend) / infra-tests.
   trigger:
     runs-on: ubuntu-24.04
     timeout-minutes: 2
@@ -318,20 +318,20 @@ jobs:
         with:
           module_dir: ${{ format('frontend/{0}/frontend-{0}-{1}', env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
 
-  tests-harness:
+  infra-tests:
     needs: [trigger]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     outputs:
-      slice: ${{ steps.harness.outputs.slice }}
+      slice: ${{ steps.infra.outputs.slice }}
     env:
-      LAYER: harness
+      LAYER: infra
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     steps:
       - *checkout
-      - id: harness
-        uses: ./tests/.github/actions/harness
+      - id: infra
+        uses: ./tests/.github/actions/infra
         with:
           module_dir: ${{ env.TESTS_LANG == 'java' && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
           backend_lane: ${{ needs.trigger.outputs.backend }}
@@ -339,11 +339,11 @@ jobs:
           tests_lane: ${{ needs.trigger.outputs.tests }}
 
   ui-mock-tests:
-    needs: [trigger, frontend-unit-tests, tests-harness]
+    needs: [trigger, frontend-unit-tests, infra-tests]
     if: >-
       always() && !cancelled() &&
       needs.frontend-unit-tests.result == 'success' &&
-      needs.tests-harness.result == 'success' && (
+      needs.infra-tests.result == 'success' && (
         github.event_name == 'pull_request' ||
         needs.trigger.outputs.frontend == 'true' ||
         (github.event_name == 'workflow_dispatch' &&
@@ -399,14 +399,14 @@ jobs:
         with:
           module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
 
-  # Tests-module Sonar after full harness. Backend-only is ConfigReader coverage
+  # Tests-module Sonar after full infra. Backend-only is ConfigReader coverage
   # only — skip rather than fail the tests-module gate.
   sonar-tests:
-    needs: [tests-harness]
+    needs: [infra-tests]
     if: >-
       !cancelled() &&
-      needs.tests-harness.result == 'success' &&
-      needs.tests-harness.outputs.slice != 'backend'
+      needs.infra-tests.result == 'success' &&
+      needs.infra-tests.outputs.slice != 'backend'
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
@@ -648,10 +648,10 @@ jobs:
   # Rest Assured against deployed backend — starts as soon as that lane finishes (FE may
   # still be deploying). Dispatch can run api without a backend deploy this run.
   api-tests:
-    needs: [deploy-backend, trigger, tests-harness]
+    needs: [deploy-backend, trigger, infra-tests]
     if: >-
       always() && !cancelled() &&
-      needs.tests-harness.result == 'success' &&
+      needs.infra-tests.result == 'success' &&
       needs.trigger.outputs.run_api_prod == 'true' &&
       (needs.deploy-backend.result == 'success' ||
        needs.deploy-backend.result == 'skipped') &&
@@ -674,10 +674,10 @@ jobs:
           stand: prod
 
   e2e-tests:
-    needs: [api-tests, deploy-frontend, trigger, tests-harness]
+    needs: [api-tests, deploy-frontend, trigger, infra-tests]
     if: >-
       always() && !cancelled() &&
-      needs.tests-harness.result == 'success' &&
+      needs.infra-tests.result == 'success' &&
       needs.trigger.outputs.run_e2e_prod == 'true' &&
       (needs.deploy-frontend.result == 'success' ||
        needs.deploy-frontend.result == 'skipped') &&
@@ -714,10 +714,10 @@ jobs:
           update_screenshots: ${{ inputs.update_e2e_screenshots || false }}
 
   api-tests-stage:
-    needs: [deploy-backend-stage, trigger, tests-harness]
+    needs: [deploy-backend-stage, trigger, infra-tests]
     if: >-
       always() && !cancelled() &&
-      needs.tests-harness.result == 'success' &&
+      needs.infra-tests.result == 'success' &&
       vars.STAGE_APP_DIR != '' &&
       needs.trigger.outputs.run_api_stage == 'true' &&
       (needs.deploy-backend-stage.result == 'success' ||
@@ -743,10 +743,10 @@ jobs:
           stand: stage
 
   e2e-tests-stage:
-    needs: [api-tests-stage, deploy-frontend-stage, trigger, tests-harness]
+    needs: [api-tests-stage, deploy-frontend-stage, trigger, infra-tests]
     if: >-
       always() && !cancelled() &&
-      needs.tests-harness.result == 'success' &&
+      needs.infra-tests.result == 'success' &&
       vars.STAGE_APP_DIR != '' &&
       needs.trigger.outputs.run_e2e_stage == 'true' &&
       (needs.deploy-frontend-stage.result == 'success' ||
@@ -818,7 +818,7 @@ jobs:
     needs:
       - backend-unit-tests
       - frontend-unit-tests
-      - tests-harness
+      - infra-tests
       - ui-mock-tests
       - integration-tests
       - api-tests

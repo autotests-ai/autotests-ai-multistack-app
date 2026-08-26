@@ -1,6 +1,6 @@
 # Multistack — tests-javascript-playwright
 
-Layers match `tests/LAYERS.md` / Java default cell: harness → api → e2e (mock/screenshot inside e2e) → manual. App facade + page objects stay for UI.
+Layers match `tests/LAYERS.md` / Java default cell: infra → api → e2e (mock/screenshot inside e2e) → manual. App facade + page objects stay for UI.
 
 ## Quick start
 
@@ -11,7 +11,7 @@ npm ci
 npx playwright install chromium   # local only; skip when using SELENOID_PLAYWRIGHT_URL
 npm test                          # @e2e, exclude mock/screenshot
 npm run test:api
-npm run test:harness
+npm run test:infra
 npm run test:manual
 ```
 

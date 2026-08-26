@@ -14,6 +14,6 @@ Pattern: `tests-java-{build}-{framework}-{reporting}-{automation}` — see [../N
 
 ```bash
 cd tests/java/tests-java-gradle-junit5-allure3-selenide
-./gradlew test -Denv=ci -DincludeTags=harness
+./gradlew test -Denv=ci -DincludeTags=infra
 ./gradlew test -Denv=ci -DincludeTags=e2e -DexcludeTags=screenshot
 ```

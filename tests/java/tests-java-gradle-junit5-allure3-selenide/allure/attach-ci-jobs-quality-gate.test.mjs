@@ -26,9 +26,9 @@ test("failedLayerJobs counts failure only, not skipped or missing", () => {
   );
 });
 
-test("failedLayerJobs includes tests-harness", () => {
-  assert.deepEqual(failedLayerJobs({ "tests-harness": { result: "failure" } }), [
-    "tests-harness",
+test("failedLayerJobs includes infra-tests", () => {
+  assert.deepEqual(failedLayerJobs({ "infra-tests": { result: "failure" } }), [
+    "infra-tests",
   ]);
 });
 
@@ -88,7 +88,7 @@ test("attachCiJobsQualityGate writes awesome and dashboard widgets", () => {
     }),
   );
 
-  const result = attachCiJobsQualityGate(report, ["tests-harness", "frontend-unit-tests"]);
+  const result = attachCiJobsQualityGate(report, ["infra-tests", "frontend-unit-tests"]);
   assert.equal(result.changed, true);
   assert.equal(result.written.length, 2);
 
@@ -96,7 +96,7 @@ test("attachCiJobsQualityGate writes awesome and dashboard widgets", () => {
     const widget = JSON.parse(fs.readFileSync(qualityGateWidgetPath(report, plugin), "utf8"));
     assert.equal(widget.passed, false);
     assert.equal(widget.rules.at(-1).actual, 2);
-    assert.match(widget.rules.at(-1).message, /tests-harness/);
+    assert.match(widget.rules.at(-1).message, /infra-tests/);
   }
 });
 

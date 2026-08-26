@@ -1,4 +1,4 @@
-package tests.testinfra;
+package tests.infra;
 
 import tests.AllureMeta;
 import annotations.Layer;
@@ -19,12 +19,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Layer("harness")
-@Epic("Test harness")
+@Layer("infra")
+@Epic("Test infra")
 @Feature("ScreenshotHelper")
 @Severity(SeverityLevel.NORMAL)
-@Tag("harness")
-@Tag("harness-backend")
+@Tag("infra")
+@Tag("infra-backend")
 @DisplayName("ScreenshotHelper")
 @Execution(ExecutionMode.SAME_THREAD)
 class ScreenshotHelperTest extends AllureMeta {

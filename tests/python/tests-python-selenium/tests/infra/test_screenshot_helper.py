@@ -1,4 +1,4 @@
-"""ScreenshotHelper analog — java ScreenshotHelperTest (harness-backend)."""
+"""ScreenshotHelper analog — java ScreenshotHelperTest (infra-backend)."""
 
 from __future__ import annotations
 
@@ -7,10 +7,10 @@ import pytest
 
 from screenshot_helper import screenshot_mode, screenshot_os
 
-pytestmark = [pytest.mark.harness, pytest.mark.harness_backend]
+pytestmark = [pytest.mark.infra, pytest.mark.infra_backend]
 
 
-@allure.epic("Test harness")
+@allure.epic("Test infra")
 @allure.feature("ScreenshotHelper")
 @allure.severity(allure.severity_level.NORMAL)
 @allure.title("ScreenshotHelper")

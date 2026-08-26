@@ -2,7 +2,7 @@ const { test, expect } = require('@playwright/test');
 const { slash, apiRootFrom } = require('../../src/helpers/env');
 const { username } = require('../../src/helpers/api');
 
-test.describe('env helpers', { tag: ['@harness', '@harness_backend'] }, () => {
+test.describe('env helpers', { tag: ['@infra', '@infra_backend'] }, () => {
   test('slash adds trailing slash', () => {
     expect(slash('http://localhost:3000')).toBe('http://localhost:3000/');
   });

@@ -1,7 +1,7 @@
 const { test, expect } = require('@playwright/test');
 const { createHarCollector } = require('../../src/helpers/har-collect');
 
-test.describe('HAR capture', { tag: ['@harness', '@harness_frontend'] }, () => {
+test.describe('HAR capture', { tag: ['@infra', '@infra_frontend'] }, () => {
   test('createHarCollector exposes start/stop/toHarBytes', () => {
     const har = createHarCollector();
     expect(typeof har.start).toBe('function');

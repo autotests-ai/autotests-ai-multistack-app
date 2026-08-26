@@ -1,4 +1,4 @@
-"""ConfigReader analog — java ConfigReaderTest (harness-backend)."""
+"""ConfigReader analog — java ConfigReaderTest (infra-backend)."""
 
 from __future__ import annotations
 
@@ -7,10 +7,10 @@ import pytest
 
 from config import _slash, load_config, resolve_stand
 
-pytestmark = [pytest.mark.harness, pytest.mark.harness_backend]
+pytestmark = [pytest.mark.infra, pytest.mark.infra_backend]
 
 
-@allure.epic("Test harness")
+@allure.epic("Test infra")
 @allure.feature("config")
 @allure.severity(allure.severity_level.NORMAL)
 @allure.title("config")

@@ -1,4 +1,4 @@
-name: harness
+name: infra
 description: Tests-module helper checks (not a pyramid layer).
 inputs:
   module_dir:
@@ -16,7 +16,7 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Select harness slice
+    - name: Select infra slice
       id: slice
       shell: bash
       env:
@@ -26,14 +26,14 @@ runs:
       run: |
         set -euo pipefail
         slice=all
-        tags=harness
+        tags=infra
         if [ "$LANE_BACKEND" = "true" ] && [ "$LANE_FRONTEND" != "true" ] && [ "$LANE_TESTS" != "true" ]; then
           slice=backend
-          tags=harness-backend
+          tags=infra-backend
         fi
         echo "slice=${slice}" >> "$GITHUB_OUTPUT"
-        echo "HARNESS_INCLUDE_TAGS=${tags}" >> "$GITHUB_ENV"
-        echo "Harness slice=${slice} includeTags=${tags}"
+        echo "INFRA_INCLUDE_TAGS=${tags}" >> "$GITHUB_ENV"
+        echo "Infra slice=${slice} includeTags=${tags}"
     - uses: actions/setup-java@v5
       with:
         distribution: temurin
@@ -44,18 +44,18 @@ runs:
     - uses: actions/cache@v6
       with:
         path: ${{ inputs.module_dir }}/.gradle/configuration-cache
-        key: gradle-cc-tests-harness-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
+        key: gradle-cc-infra-tests-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
         restore-keys: |
-          gradle-cc-tests-harness-
-    - name: Run harness tests (Gradle)
+          gradle-cc-infra-tests-
+    - name: Run infra tests (Gradle)
       id: run-tests
       shell: bash
       working-directory: ${{ inputs.module_dir }}
-      run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification -Denv=ci -DincludeTags="${HARNESS_INCLUDE_TAGS}"
+      run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification -Denv=ci -DincludeTags="${INFRA_INCLUDE_TAGS}"
     - if: steps.run-tests.outcome == 'success'
       uses: actions/upload-artifact@v7
       with:
-        name: coverage-harness
+        name: coverage-infra
         path: |
           ${{ inputs.module_dir }}/build/jacoco/**
           ${{ inputs.module_dir }}/build/reports/jacoco/**

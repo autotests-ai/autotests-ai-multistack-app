@@ -1,4 +1,4 @@
-"""api_client helpers — harness-backend (no live stand)."""
+"""api_client helpers — infra-backend (no live stand)."""
 
 from __future__ import annotations
 
@@ -7,10 +7,10 @@ import pytest
 
 from api_client import api_root, username
 
-pytestmark = [pytest.mark.harness, pytest.mark.harness_backend]
+pytestmark = [pytest.mark.infra, pytest.mark.infra_backend]
 
 
-@allure.epic("Test harness")
+@allure.epic("Test infra")
 @allure.feature("api_client")
 @allure.severity(allure.severity_level.NORMAL)
 @allure.title("api_client")

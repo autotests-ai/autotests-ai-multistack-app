@@ -15,9 +15,9 @@ One task `test`; the layer is a tag filter, the stand is `-Denv` ([pyramid-map.y
 
 | Layer | Command | Notes |
 |-------|---------|--------|
-| harness (all) | `./gradlew test -Denv=ci -DincludeTags=harness` | umbrella — all `testinfra/` · CI job `tests-harness` (feeds `sonar-tests`; gates `ui-mock-tests` / `api-tests` / `e2e-tests`) |
-| harness-backend | `./gradlew test -Denv=ci -DincludeTags=harness-backend` | `ConfigReader` · `AllureHttpHtml` · backend-only lane |
-| harness-frontend | `./gradlew test -Denv=ci -DincludeTags=harness-frontend` | CSS + HAR + `LocalChromePin` · inside full `tests-harness` (frontend lane included) |
+| infra (all) | `./gradlew test -Denv=ci -DincludeTags=infra` | umbrella — all `infra/` · CI job `infra-tests` (feeds `sonar-tests`; gates `ui-mock-tests` / `api-tests` / `e2e-tests`) |
+| infra-backend | `./gradlew test -Denv=ci -DincludeTags=infra-backend` | `ConfigReader` · `AllureHttpHtml` · backend-only lane |
+| infra-frontend | `./gradlew test -Denv=ci -DincludeTags=infra-frontend` | CSS + HAR + `LocalChromePin` · inside full `infra-tests` (frontend lane included) |
 | api | `./gradlew test -Denv=ci -DincludeTags=api` | local compose; CI job `api-tests` |
 | api smoke | `./gradlew test -Denv=prod -DincludeTags='api & smoke'` | prod subset (health, seed, login); CI job `api-tests` |
 | mock | `./gradlew test -Denv=mock -DincludeTags=mock` | stub API mount checks · CI `ui-mock-tests` step 1 |
@@ -30,7 +30,7 @@ One task `test`; the layer is a tag filter, the stand is `-Denv` ([pyramid-map.y
 | screenshot prod refresh | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=prod -DincludeTags=screenshot -DupdateScreenshots=true` | writes `screenshots/prod/linux/chrome-148/` · CI `e2e-tests` step `Update screenshots` (`update_e2e_screenshots`) |
 | manual | `./gradlew test -Denv=ci -DincludeTags=manual` | **in code** — `@Manual` + Allure steps · `tests/manual/` (not a wiki checklist) |
 
-CI `api-tests` / `e2e-tests` run against prod after deploy (`-Denv=prod`; jobs `needs` `tests-harness`).  
+CI `api-tests` / `e2e-tests` run against prod after deploy (`-Denv=prod`; jobs `needs` `infra-tests`).  
 Pipeline `-Denv=ci` is local. Stage: `api-tests-stage` / `e2e-tests-stage`. Same
 filters locally: swap `-Denv`. Combined smoke (api+e2e): `-DincludeTags=smoke`.
 Stands live in `src/test/resources/config/`; every other key is a `-D` override on top of

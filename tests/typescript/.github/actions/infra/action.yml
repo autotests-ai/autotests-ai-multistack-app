@@ -1,5 +1,5 @@
-name: harness
-description: Tests-module helper checks (Playwright --grep @harness; not a pyramid layer).
+name: infra
+description: Tests-module helper checks (Playwright --grep @infra; not a pyramid layer).
 inputs:
   module_dir:
     required: true
@@ -16,7 +16,7 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Select harness slice
+    - name: Select infra slice
       id: slice
       shell: bash
       env:
@@ -26,17 +26,17 @@ runs:
       run: |
         set -euo pipefail
         slice=all
-        grep='@harness'
+        grep='@infra'
         include='src/helpers/env.ts src/helpers/api.ts src/helpers/har-collect.ts'
         if [ "$LANE_BACKEND" = "true" ] && [ "$LANE_FRONTEND" != "true" ] && [ "$LANE_TESTS" != "true" ]; then
           slice=backend
-          grep='@harness_backend'
+          grep='@infra_backend'
           include='src/helpers/env.ts src/helpers/api.ts'
         fi
         echo "slice=${slice}" >> "$GITHUB_OUTPUT"
-        echo "HARNESS_GREP=${grep}" >> "$GITHUB_ENV"
-        echo "HARNESS_INCLUDE=${include}" >> "$GITHUB_ENV"
-        echo "Harness slice=${slice} --grep ${grep}"
+        echo "INFRA_GREP=${grep}" >> "$GITHUB_ENV"
+        echo "INFRA_INCLUDE=${include}" >> "$GITHUB_ENV"
+        echo "Infra slice=${slice} --grep ${grep}"
     - uses: actions/setup-node@v6
       with:
         node-version: ${{ env.NODE_VERSION }}
@@ -46,7 +46,7 @@ runs:
       shell: bash
       working-directory: ${{ inputs.module_dir }}
       run: npm ci
-    - name: Run harness tests (Playwright + c8)
+    - name: Run infra tests (Playwright + c8)
       id: run-tests
       shell: bash
       working-directory: ${{ inputs.module_dir }}
@@ -54,14 +54,14 @@ runs:
         set -euo pipefail
         # Coverage of helpers only — no fail-under (not coverage theatre).
         include_args=()
-        for f in ${HARNESS_INCLUDE}; do
+        for f in ${INFRA_INCLUDE}; do
           include_args+=(--include="$f")
         done
         npx c8 "${include_args[@]}" --reporter=lcov --reporter=text --report-dir=coverage \
-          npx playwright test --grep "${HARNESS_GREP}"
+          npx playwright test --grep "${INFRA_GREP}"
     - if: steps.run-tests.outcome == 'success'
       uses: actions/upload-artifact@v7
       with:
-        name: coverage-harness
+        name: coverage-infra
         path: ${{ inputs.module_dir }}/coverage/lcov.info
         if-no-files-found: error
