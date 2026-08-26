@@ -1,19 +1,12 @@
-# tests-go-cdp
+# tests-go-cdp — IR mill
 
-IR mill (`role: mill`, `layers: [crystal]`). Not a Selenide / Playwright peer.
+`role: mill` · `layers: [crystal]` · `in_stack: true` (crystal column on `/stack/`, not a Selenide peer).
+
+Crystals in git. The mill **execs** `greedy run --cdp` (JSON stdout). No chromedp page objects, no `import` of greedy.guru `internal/cdp`, no MCP.
 
 ```bash
+cd tests/go/tests-go-cdp
 go test
 ```
 
-Execs `greedy run --cdp --base-url --mode none` on `crystals/*.json`. Does **not** `import` `greedy.guru/greedy/internal/cdp`. No chromedp page objects, no go-playwright, no MCP.
-
-CDP is already-live Chrome (`--remote-allow-origins=*`), not `ensure.py`, not stand `greedy-guru-site`.
-
-| Env | Role |
-|-----|------|
-| `GREEDY_BIN` | `greedy` binary (else `go build` from `GREEDY_GURU`) |
-| `GREEDY_GURU` | greedy.guru module root |
-| `GREEDY_CDP` | existing Chrome DevTools HTTP URL |
-| `GREEDY_BASE_URL` | SPA origin (default teaching Java/React stack) |
-| `CHROME_BIN` | Chrome if `GREEDY_CDP` is unset |
+Override: `GREEDY_BIN` · `GREEDY_CDP` · `GREEDY_BASE_URL` · `CHROME_BIN` · `GREEDY_PW_MIN_IMAGE`. CDP is live Chrome DevTools HTTP, not `ensure.py`.

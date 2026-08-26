@@ -25,7 +25,8 @@ Five classical layers: unit → integration → api → e2e → manual.
 DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
 **Not classical:** calling Chrome “mount” checks `integration`. Those are thin **e2e** (`@Tag("mock")`).  
-**Not classical either:** Spring `@WebMvcTest` / `@DataJpaTest` — those stay in **unit** (see slices below).
+**Not classical either:** Spring `@WebMvcTest` / `@DataJpaTest` — those stay in **unit** (see slices below).  
+**Not a pyramid language:** `tests/go/tests-go-cdp` mills IR via `greedy run` (`layers: [crystal]`, crystal column on `/stack/`). Not `@Layer`.
 
 ## integration vs api — intent, not tag
 
