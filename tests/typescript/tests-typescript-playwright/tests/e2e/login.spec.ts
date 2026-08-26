@@ -7,7 +7,7 @@ const PASSWORD_REQUIRED = 'Password is required (minimum 6 characters)';
 const WRONG_CREDENTIALS = 'Wrong login or password';
 
 test.describe('Login', { tag: ['@e2e'] }, () => {
-  test('Пользователь может войти с валидными credentials', async ({ webApp }) => {
+  test('Пользователь может войти с валидными credentials', { tag: ['@crystal'] }, async ({ webApp }) => {
     const user = new UserBuilder().withSeededUser().build();
     await webApp.login.open();
     await webApp.login.login(user.username!, user.password!);
