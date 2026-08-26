@@ -51,6 +51,35 @@ test.describe('e2e ui', { tag: ['@e2e'] }, () => {
     }
   });
 
+  test('Несовпадение паролей на регистрации показывает ошибку', async ({ webApp }) => {
+    await webApp.register.open();
+    await webApp.register.typeUsername('newuser');
+    await webApp.register.typePassword('password123');
+    await webApp.register.typeConfirmPassword('password124');
+    await webApp.register.submitExpectingError();
+    await expect(webApp.register.errorMessage).toContainText('Passwords do not match');
+  });
+
+  test('Короткий пароль на регистрации показывает ошибку', async ({ webApp }) => {
+    await webApp.register.open();
+    await webApp.register.typeUsername('newuser');
+    await webApp.register.typePassword('abc');
+    await webApp.register.typeConfirmPassword('abc');
+    await webApp.register.submitExpectingError();
+    await expect(webApp.register.errorMessage).toContainText(
+      'Password must be at least 6 characters',
+    );
+  });
+
+  test('Занятый username на регистрации показывает ошибку', async ({ webApp }) => {
+    await webApp.register.open();
+    await webApp.register.typeUsername('user1');
+    await webApp.register.typePassword('password123');
+    await webApp.register.typeConfirmPassword('password123');
+    await webApp.register.submitExpectingError();
+    await expect(webApp.register.errorMessage).toContainText('Username already taken');
+  });
+
   test('Пользователь может выйти после логина', async ({ webApp }) => {
     const user = new UserBuilder().withSeededUser().build();
     await webApp.login.open();

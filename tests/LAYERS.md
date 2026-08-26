@@ -94,7 +94,7 @@ CI jobs `ui-mock-tests` and `e2e-tests` set `SCREENSHOT_OS=linux` and `SCREENSHO
 | Slice | Tag | CI |
 |-------|-----|-----|
 | UI on stub API (mount + error injection) | `@Tag("mock")` (+ `@Tag("e2e")`) | job `ui-mock-tests` step 1: `-DincludeTags=mock` |
-| Screenshot vs stub UI | `@Tag("screenshot")` / `-m screenshot` / `--grep @screenshot` | same job, compare step: java `-DincludeTags=screenshot` · python `-m screenshot` · javascript `--grep @screenshot` (every PR) |
+| Screenshot vs stub UI | `@Tag("screenshot")` / `-m screenshot` / `--grep @screenshot` | same job, compare step: java `-DincludeTags=screenshot` · python `-m screenshot` · javascript/typescript `--grep @screenshot` (every PR) |
 | Refresh mock screenshots | `@Tag("screenshot")` + update flag | same job, step `Update screenshots` — dispatch `update_mock_screenshots` writes `mock/linux/chrome-148` (skips compare; java `-DupdateScreenshots=true` · python `UPDATE_SCREENSHOTS=true`) |
 | Flow | `@Tag("e2e")` exclude `screenshot,mock` | job `e2e-tests` (`-Denv=prod -DincludeTags=e2e`) / `e2e-tests-stage` (`-Denv=stage`); default push does **not** run screenshot via Selenoid |
 | Screenshot vs live UI | `@Tag("screenshot")` / `-m screenshot` | job `e2e-tests`, compare step — dispatch `run_screenshot` compares `prod/linux/chrome-148` |
@@ -114,7 +114,7 @@ SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=mock -DincludeTags=screenshot -Du
 # python — tests/python/tests-python-selenium
 SCREENSHOT_BROWSER=chrome STAND=mock UPDATE_SCREENSHOTS=true HEADLESS=true pytest -m screenshot
 
-# javascript — tests/javascript/tests-javascript-playwright
+# javascript / typescript — tests/{javascript,typescript}/tests-*-playwright
 SCREENSHOT_BROWSER=chrome STAND=mock UPDATE_SCREENSHOTS=true npx playwright test --grep @screenshot
 ```
 
@@ -127,7 +127,7 @@ SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=ci -DincludeTags=screenshot -Dupd
 # python
 SCREENSHOT_BROWSER=chrome STAND=ci UPDATE_SCREENSHOTS=true pytest -m screenshot
 
-# javascript
+# javascript / typescript
 SCREENSHOT_BROWSER=chrome STAND=ci UPDATE_SCREENSHOTS=true npx playwright test --grep @screenshot
 ```
 
@@ -223,7 +223,8 @@ npx playwright test --grep @e2e --grep-invert '@mock|@screenshot'
 npx playwright test --grep @manual
 ```
 
-For `TESTS_LANG=typescript`, local clone is living (`tests/typescript/tests-typescript-playwright`, same Playwright tags / `UI_URL` as JS). CI adapter still STOP until remaining family verbs (api / mock / screenshot / manual) land.
+For `TESTS_LANG=typescript`, a layer is a **Playwright tag**, a stand is **`UI_URL`** / `STAND` / `API_BASE_URL`
+(from `tests/typescript/tests-typescript-playwright`) — same commands as javascript.
 
 ## Layer table
 

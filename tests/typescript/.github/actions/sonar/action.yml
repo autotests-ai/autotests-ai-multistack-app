@@ -1,0 +1,48 @@
+name: sonar
+description: Sonar scan + quality gate for the TypeScript tests module.
+inputs:
+  module_dir:
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v6
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+    - uses: ./.github/actions/download-artifact
+      with:
+        name: coverage-harness
+        path: harness
+    - name: Sonar scan + gate (tests)
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+      run: |
+        set -euo pipefail
+        COV="${GITHUB_WORKSPACE}/harness/lcov.info"
+        if [[ ! -f "$COV" ]]; then
+          echo "ERROR: lcov.info missing: $COV" >&2
+          exit 1
+        fi
+        mkdir -p coverage
+        cp "$COV" coverage/lcov.info
+        if [[ -z "${SONAR_TOKEN:-}" ]]; then
+          echo "ERROR: SONAR_TOKEN unset" >&2
+          exit 1
+        fi
+        KEY="${SONAR_PROJECT_KEY:-autotests-ai-multistack-app-$(basename "${{ inputs.module_dir }}")}"
+        echo "==> sonar scan (harness coverage artifact) → ${SONAR_HOST_URL} (${KEY})"
+        npx --yes "@sonar/scan@${SONAR_SCANNER_NPM_VERSION}" \
+          -Dsonar.host.url="${SONAR_HOST_URL}" \
+          -Dsonar.projectKey="${KEY}" \
+          -Dsonar.projectName="${KEY}" \
+          -Dsonar.inclusions='**/helpers/env.ts' \
+          -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info \
+          -Dsonar.qualitygate.wait=true \
+          -Dsonar.qualitygate.timeout="${SONAR_QUALITY_GATE_TIMEOUT}"
+    - name: Write Sonar summary
+      if: always()
+      shell: bash
+      run: |
+        bash "${GITHUB_WORKSPACE}/tests/.github/actions/sonar/write-sonar-summary.sh"

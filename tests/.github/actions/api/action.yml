@@ -27,10 +27,16 @@ runs:
       with:
         module_dir: ${{ steps.dir.outputs.dir }}
         stand: ${{ inputs.stand }}
+    - if: env.TESTS_LANG == 'typescript'
+      uses: ./tests/typescript/.github/actions/api
+      with:
+        module_dir: ${{ steps.dir.outputs.dir }}
+        stand: ${{ inputs.stand }}
     - if: >-
         env.TESTS_LANG != 'java' &&
         env.TESTS_LANG != 'javascript' &&
-        env.TESTS_LANG != 'python'
+        env.TESTS_LANG != 'python' &&
+        env.TESTS_LANG != 'typescript'
       shell: bash
       run: |
         echo "STOP: no api action for TESTS_LANG=${TESTS_LANG:-unset}" >&2

@@ -41,6 +41,23 @@ export class RegisterPage {
     await this.page.waitForURL(isAppRootUrl);
   }
 
+  async typeUsername(username: string): Promise<void> {
+    await this.loginInput.fill(username);
+  }
+
+  async typePassword(password: string): Promise<void> {
+    await this.passwordInput.fill(password);
+  }
+
+  async typeConfirmPassword(password: string): Promise<void> {
+    await this.confirmPasswordInput.fill(password);
+  }
+
+  async submitExpectingError(): Promise<void> {
+    await this.submitButton.click();
+    await this.errorMessage.waitFor({ state: 'visible', timeout: 10_000 });
+  }
+
   async clickLoginLink(): Promise<void> {
     await this.loginLink.click();
   }

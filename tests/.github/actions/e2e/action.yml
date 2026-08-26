@@ -57,10 +57,21 @@ runs:
         run_e2e: ${{ inputs.run_e2e }}
         run_screenshot: ${{ inputs.run_screenshot }}
         update_screenshots: ${{ inputs.update_screenshots }}
+    - if: env.TESTS_LANG == 'typescript'
+      uses: ./tests/typescript/.github/actions/e2e
+      with:
+        module_dir: ${{ steps.dir.outputs.dir }}
+        stand: ${{ inputs.stand }}
+        include_tags: ${{ inputs.include_tags }}
+        exclude_tags: ${{ inputs.exclude_tags }}
+        run_e2e: ${{ inputs.run_e2e }}
+        run_screenshot: ${{ inputs.run_screenshot }}
+        update_screenshots: ${{ inputs.update_screenshots }}
     - if: >-
         env.TESTS_LANG != 'java' &&
         env.TESTS_LANG != 'javascript' &&
-        env.TESTS_LANG != 'python'
+        env.TESTS_LANG != 'python' &&
+        env.TESTS_LANG != 'typescript'
       shell: bash
       run: |
         echo "STOP: no e2e action for TESTS_LANG=${TESTS_LANG:-unset}" >&2

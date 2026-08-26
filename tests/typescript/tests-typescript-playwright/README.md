@@ -1,7 +1,8 @@
 # Multistack — tests-typescript-playwright
 
 Typed sibling of `tests-javascript-playwright` (`tests/LAYERS.md`): Playwright tags = layers.
-App facade + page objects stay for UI. Living first slice: e2e UI (seed login `user1`) + harness env.
+Coverage matches the Java default cell (harness → api → e2e including mock/screenshot + session/delete account → manual).
+c8 lcov is the JaCoCo analog; Sonar key `autotests-ai-multistack-app-tests-typescript-playwright`.
 
 ## Quick start
 
@@ -11,7 +12,9 @@ cp .env.example .env   # UI_URL=https://autotests.ai/stack/backend-java-spring/f
 npm ci
 npx playwright install chromium   # local only; skip when using SELENOID_PLAYWRIGHT_URL
 npm test                          # @e2e, exclude mock/screenshot
+npm run test:api
 npm run test:harness
+npm run test:manual
 npm run typecheck
 ```
 

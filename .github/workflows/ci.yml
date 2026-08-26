@@ -120,17 +120,17 @@ env:
   # Unknown or unwired *_LANG → STOP (never skip, never a foreign action).
   # backend: java/kotlin → module; python/go/javascript/typescript → family.
   # frontend: typescript/javascript → family.
-  # tests: java → module; javascript/python → family.
+  # tests: java → module; javascript/python/typescript → family.
   BACKEND_LANG: java
   BACKEND_FRAMEWORK: spring
   BACKEND_PORT: "8800"
   FRONTEND_LANG: typescript
   FRONTEND_FRAMEWORK: react
-  TESTS_LANG: java
+  TESTS_LANG: typescript
   TESTS_BUILDER: gradle
   TESTS_FRAMEWORK: junit5
   TESTS_REPORT: allure3
-  TESTS_UI_LIBRARY: selenide
+  TESTS_UI_LIBRARY: playwright
   APP_SLUG: autotests-ai-multistack-app
   JAVA_VERSION: "21"
   NODE_VERSION: "26"
@@ -410,7 +410,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
-      SONAR_PROJECT_KEY: ${{ vars.SONAR_TESTS_PROJECT_KEY || 'autotests-ai-multistack-app-tests-java-gradle-junit5-allure3-selenide' }}
+      SONAR_PROJECT_KEY: ${{ env.TESTS_LANG == 'java' && (vars.SONAR_TESTS_PROJECT_KEY || 'autotests-ai-multistack-app-tests-java-gradle-junit5-allure3-selenide') || format('autotests-ai-multistack-app-tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
       CHECKOUT_FETCH_DEPTH: "0"
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}

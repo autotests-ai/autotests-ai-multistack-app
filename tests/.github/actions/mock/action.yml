@@ -38,10 +38,17 @@ runs:
         module_dir: ${{ steps.dir.outputs.dir }}
         frontend_dir: ${{ steps.fe.outputs.dir }}
         update_screenshots: ${{ inputs.update_screenshots }}
+    - if: env.TESTS_LANG == 'typescript'
+      uses: ./tests/typescript/.github/actions/mock
+      with:
+        module_dir: ${{ steps.dir.outputs.dir }}
+        frontend_dir: ${{ steps.fe.outputs.dir }}
+        update_screenshots: ${{ inputs.update_screenshots }}
     - if: >-
         env.TESTS_LANG != 'java' &&
         env.TESTS_LANG != 'javascript' &&
-        env.TESTS_LANG != 'python'
+        env.TESTS_LANG != 'python' &&
+        env.TESTS_LANG != 'typescript'
       shell: bash
       run: |
         echo "STOP: no mock action for TESTS_LANG=${TESTS_LANG:-unset}" >&2

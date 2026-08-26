@@ -1,0 +1,157 @@
+name: e2e
+description: Playwright browser layer against a live stand (SELENOID_PLAYWRIGHT_URL when set).
+inputs:
+  module_dir:
+    required: true
+  stand:
+    required: true
+  include_tags:
+    default: ""
+  exclude_tags:
+    default: ""
+  run_e2e:
+    default: "false"
+  run_screenshot:
+    default: "false"
+  update_screenshots:
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - name: Wait for live UI
+      shell: bash
+      run: |
+        set -euo pipefail
+        ui="https://${PUBLIC_HOST}/${STACK_MOUNT}/backend-${BACKEND_LANG}-${BACKEND_FRAMEWORK}/frontend-${FRONTEND_LANG}-${FRONTEND_FRAMEWORK}/"
+        echo "==> UI ${ui}"
+        curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${ui}"
+    - uses: ./.github/actions/setup-allurectl
+    - uses: actions/setup-node@v6
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: npm
+        cache-dependency-path: ${{ inputs.module_dir }}/package-lock.json
+    - name: Install npm dependencies
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      run: npm ci
+    - uses: ./tests/typescript/.github/actions/setup-playwright-browser
+      with:
+        module_dir: ${{ inputs.module_dir }}
+    - name: Run e2e tests (Playwright)
+      if: >-
+        github.event_name == 'push' ||
+        inputs.run_e2e == 'true' ||
+        inputs.include_tags != '' ||
+        inputs.exclude_tags != '' ||
+        github.event_name != 'workflow_dispatch'
+      id: run-tests
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/allure-results
+        UI_URL: https://${{ env.PUBLIC_HOST }}/${{ env.STACK_MOUNT }}/backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}/frontend-${{ env.FRONTEND_LANG }}-${{ env.FRONTEND_FRAMEWORK }}/
+        API_BASE_URL: https://${{ env.PUBLIC_HOST }}/${{ env.STACK_MOUNT }}/backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}
+        API_HEALTH_SERVICE: backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}
+        INCLUDE_TAGS: ${{ inputs.include_tags }}
+        EXCLUDE_TAGS: ${{ inputs.exclude_tags }}
+      run: |
+        set -euo pipefail
+        to_grep() {
+          local raw="$1"
+          local out="" p
+          IFS=',' read -ra parts <<< "$raw"
+          for p in "${parts[@]}"; do
+            p="${p// /}"
+            [ -z "$p" ] && continue
+            case "$p" in @*) ;; *) p="@$p" ;; esac
+            [ -n "$out" ] && out="$out|"
+            out="$out$p"
+          done
+          printf '%s' "$out"
+        }
+        if [ -n "${INCLUDE_TAGS}" ]; then
+          GREP="$(to_grep "${INCLUDE_TAGS}")"
+        else
+          GREP="@e2e"
+        fi
+        if [ -n "${EXCLUDE_TAGS}" ]; then
+          INVERT="$(to_grep "${EXCLUDE_TAGS}")"
+        else
+          INVERT="@mock|@screenshot"
+        fi
+        echo "==> playwright test --grep '${GREP}' --grep-invert '${INVERT}'"
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
+        run_with_allurectl npx playwright test --grep "${GREP}" --grep-invert "${INVERT}"
+    - name: Stash e2e Allure results
+      if: always()
+      continue-on-error: true
+      shell: bash
+      run: |
+        set -euo pipefail
+        STASH="${{ inputs.module_dir }}/allure-results-e2e-stash"
+        SRC="${{ inputs.module_dir }}/allure-results"
+        mkdir -p "$STASH"
+        if [ -d "$SRC" ]; then cp -R "$SRC/." "$STASH/"; fi
+    - name: Run screenshot compare (Playwright)
+      if: >-
+        always() && !cancelled() &&
+        (inputs.run_screenshot == 'true' || inputs.stand == 'stage') &&
+        inputs.update_screenshots != 'true'
+      id: run-screenshot-tests
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/allure-results
+        UI_URL: https://${{ env.PUBLIC_HOST }}/${{ env.STACK_MOUNT }}/backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}/frontend-${{ env.FRONTEND_LANG }}-${{ env.FRONTEND_FRAMEWORK }}/
+        API_BASE_URL: https://${{ env.PUBLIC_HOST }}/${{ env.STACK_MOUNT }}/backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}
+        API_HEALTH_SERVICE: backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}
+        STAND: ${{ inputs.stand }}
+        SCREENSHOT_OS: linux
+        SCREENSHOT_BROWSER: chrome
+      run: |
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
+        run_with_allurectl npx playwright test --grep @screenshot
+    - name: Update screenshots
+      if: always() && !cancelled() && inputs.update_screenshots == 'true'
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/allure-results
+        UI_URL: https://${{ env.PUBLIC_HOST }}/${{ env.STACK_MOUNT }}/backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}/frontend-${{ env.FRONTEND_LANG }}-${{ env.FRONTEND_FRAMEWORK }}/
+        API_BASE_URL: https://${{ env.PUBLIC_HOST }}/${{ env.STACK_MOUNT }}/backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}
+        API_HEALTH_SERVICE: backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}
+        STAND: ${{ inputs.stand }}
+        SCREENSHOT_OS: linux
+        SCREENSHOT_BROWSER: chrome
+        UPDATE_SCREENSHOTS: "true"
+      run: |
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
+        run_with_allurectl npx playwright test --grep @screenshot
+    - name: Merge Allure results
+      if: always()
+      continue-on-error: true
+      shell: bash
+      run: |
+        set -euo pipefail
+        STASH="${{ inputs.module_dir }}/allure-results-e2e-stash"
+        DEST="${{ inputs.module_dir }}/allure-results"
+        mkdir -p "$DEST"
+        if [ -d "$STASH" ]; then cp -R "$STASH/." "$DEST/"; fi
+    - name: Publish screenshot PNGs
+      if: always() && inputs.update_screenshots == 'true'
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ inputs.stand }}-screenshot-pngs
+        path: ${{ inputs.module_dir }}/src/test/resources/screenshots/
+        if-no-files-found: ignore
+    - name: Publish raw Allure results
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: allure-results-e2e${{ inputs.stand == 'stage' && '-stage' || '' }}
+        path: ${{ inputs.module_dir }}/allure-results/**
+        if-no-files-found: ignore
+        retention-days: 1

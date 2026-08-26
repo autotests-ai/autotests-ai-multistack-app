@@ -1,0 +1,49 @@
+name: manual
+description: Manual-tagged stubs against a live stand (Playwright --grep @manual).
+inputs:
+  module_dir:
+    required: true
+  stand:
+    default: prod
+runs:
+  using: composite
+  steps:
+    - name: Wait for live UI
+      shell: bash
+      run: |
+        set -euo pipefail
+        ui="https://${PUBLIC_HOST}/${STACK_MOUNT}/backend-${BACKEND_LANG}-${BACKEND_FRAMEWORK}/frontend-${FRONTEND_LANG}-${FRONTEND_FRAMEWORK}/"
+        echo "==> UI ${ui}"
+        curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${ui}"
+    - uses: ./.github/actions/setup-allurectl
+    - uses: actions/setup-node@v6
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: npm
+        cache-dependency-path: ${{ inputs.module_dir }}/package-lock.json
+    - name: Install npm dependencies
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      run: npm ci
+    - uses: ./tests/typescript/.github/actions/setup-playwright-browser
+      with:
+        module_dir: ${{ inputs.module_dir }}
+    - name: Run manual tests (Playwright)
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/allure-results
+        UI_URL: https://${{ env.PUBLIC_HOST }}/${{ env.STACK_MOUNT }}/backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}/frontend-${{ env.FRONTEND_LANG }}-${{ env.FRONTEND_FRAMEWORK }}/
+        API_BASE_URL: https://${{ env.PUBLIC_HOST }}/${{ env.STACK_MOUNT }}/backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}
+      run: |
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
+        run_with_allurectl npx playwright test --grep @manual
+    - name: Publish raw Allure results
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: allure-results-manual
+        path: ${{ inputs.module_dir }}/allure-results/**
+        if-no-files-found: ignore
+        retention-days: 1

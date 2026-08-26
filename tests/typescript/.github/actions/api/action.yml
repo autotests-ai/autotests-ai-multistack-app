@@ -1,0 +1,49 @@
+name: api
+description: HTTP contract layer against a live stand (Playwright --grep @api).
+inputs:
+  module_dir:
+    required: true
+  stand:
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Wait for live API
+      shell: bash
+      run: |
+        set -euo pipefail
+        backend="backend-${BACKEND_LANG}-${BACKEND_FRAMEWORK}"
+        url="https://${PUBLIC_HOST}/${STACK_MOUNT}/${backend}/api/health"
+        echo "==> API ${url}"
+        curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${url}"
+    - uses: ./.github/actions/setup-allurectl
+    - uses: actions/setup-node@v6
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: npm
+        cache-dependency-path: ${{ inputs.module_dir }}/package-lock.json
+    - name: Install npm dependencies
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      run: npm ci
+    - name: Run API tests (Playwright)
+      id: run-tests
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/allure-results
+        UI_URL: https://${{ env.PUBLIC_HOST }}/${{ env.STACK_MOUNT }}/backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}/frontend-${{ env.FRONTEND_LANG }}-${{ env.FRONTEND_FRAMEWORK }}/
+        API_BASE_URL: https://${{ env.PUBLIC_HOST }}/${{ env.STACK_MOUNT }}/backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}
+        API_HEALTH_SERVICE: backend-${{ env.BACKEND_LANG }}-${{ env.BACKEND_FRAMEWORK }}
+      run: |
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
+        run_with_allurectl npx playwright test --grep @api
+    - name: Publish raw Allure results
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: allure-results-api${{ inputs.stand == 'stage' && '-stage' || '' }}
+        path: ${{ inputs.module_dir }}/allure-results/**
+        if-no-files-found: ignore
+        retention-days: 1

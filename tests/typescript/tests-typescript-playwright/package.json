@@ -1,12 +1,12 @@
 {
   "name": "autotests-ai-multistack-tests-ts",
   "version": "1.0.0",
-  "description": "Playwright UI smoke for Multistack (TypeScript; JS etalon page objects)",
+  "description": "Playwright pyramid for Multistack (TypeScript; Java-cell coverage, JS page-object shape)",
   "private": true,
   "scripts": {
     "test": "npx playwright test --grep @e2e --grep-invert \"@mock|@screenshot\"",
     "test:api": "npx playwright test --grep @api",
-    "test:harness": "npx c8 --include=src/helpers/env.ts --include=src/helpers/api.ts --reporter=lcov --reporter=text --report-dir=coverage npx playwright test --grep @harness",
+    "test:harness": "npx c8 --include=src/helpers/env.ts --include=src/helpers/api.ts --include=src/helpers/har-collect.ts --reporter=lcov --reporter=text --report-dir=coverage npx playwright test --grep @harness",
     "test:mock": "npx playwright test --grep @mock --grep-invert @screenshot",
     "test:screenshot": "npx playwright test --grep @screenshot",
     "test:manual": "npx playwright test --grep @manual",
@@ -22,8 +22,11 @@
     "@playwright/test": "1.61.1",
     "@types/node": "26.2.0",
     "allure-playwright": "^3.10.2",
+    "ajv": "^8.17.1",
     "c8": "^10.1.3",
     "dotenv": "^17.4.2",
+    "pixelmatch": "^5.3.0",
+    "pngjs": "^7.0.0",
     "typescript": "7.0.2"
   }
 }
