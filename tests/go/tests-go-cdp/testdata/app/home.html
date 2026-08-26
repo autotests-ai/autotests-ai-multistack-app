@@ -5,6 +5,13 @@
   <title>home</title>
 </head>
 <body>
+  <header data-testid="header">
+    <nav data-testid="header-nav">
+      <a href="/" data-testid="header-nav-home">Home</a>
+      <a href="/login" data-testid="header-nav-login">Login</a>
+      <a href="/register" data-testid="header-nav-register">Register</a>
+    </nav>
+  </header>
   <main data-testid="multistack-layout">
     <p data-testid="welcome-message">Welcome, user1!</p>
     <button type="button" data-testid="logout-button">Logout</button>

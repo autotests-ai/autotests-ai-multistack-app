@@ -1,0 +1,40 @@
+{
+  "id": "header-nav-to-register",
+  "kind": "cdp",
+  "version": 1,
+  "source": {
+    "as_id": "Ссылка Register в header открывает форму регистрации",
+    "lang": "typescript-playwright",
+    "fingerprint": "5949e2f6fadce25e68e762b6642b70c520601e11e22941707e74f68a7d7eb0b6"
+  },
+  "steps": [
+    {
+      "op": "navigate",
+      "url": "login"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=header-nav-register]",
+      "timeout_ms": 3000
+    },
+    {
+      "op": "click",
+      "selector": "[data-testid=header-nav-register]"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=register-form]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=register-form-title]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "text",
+      "selector": "[data-testid=register-form-title]",
+      "value": "Register"
+    }
+  ]
+}

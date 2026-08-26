@@ -1,0 +1,26 @@
+{
+  "id": "header-register",
+  "kind": "cdp",
+  "version": 1,
+  "source": {
+    "as_id": "Header на регистрации показывает Register",
+    "lang": "typescript-playwright",
+    "fingerprint": "3d487700dfcbf9b5656dbfbafbaa0dd784ab2df22fb9d1763ce8b65ea6b68640"
+  },
+  "steps": [
+    {
+      "op": "navigate",
+      "url": "register"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=header-nav-register]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "text",
+      "selector": "[data-testid=header-nav-register]",
+      "value": "Register"
+    }
+  ]
+}

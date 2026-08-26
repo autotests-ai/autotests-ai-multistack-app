@@ -167,7 +167,7 @@ func TestRunCrystals(t *testing.T) {
 		t.Skip("live Chrome")
 	}
 	bin := greedyBinary(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 180*time.Second)
 	t.Cleanup(cancel)
 
 	cdpURL := os.Getenv("GREEDY_CDP")

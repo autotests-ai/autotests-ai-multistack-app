@@ -50,4 +50,28 @@ test.describe('Header active nav', { tag: ['@e2e'] }, () => {
     await expect(webApp.login.loginForm).toBeVisible();
     await expect(webApp.login.formTitle).toContainText('Login Form');
   });
+
+  test('Header на логине показывает Login', { tag: ['@crystal'] }, async ({ webApp }) => {
+    await webApp.login.open();
+    await expect(webApp.header.activeNav('header-nav-login')).toContainText('Login');
+  });
+
+  test('Header на регистрации показывает Register', { tag: ['@crystal'] }, async ({ webApp }) => {
+    await webApp.register.open();
+    await expect(webApp.header.activeNav('header-nav-register')).toContainText('Register');
+  });
+
+  test('Ссылка Register в header открывает форму регистрации', { tag: ['@crystal'] }, async ({ webApp }) => {
+    await webApp.login.open();
+    await webApp.header.activeNav('header-nav-register').click();
+    await expect(webApp.register.registerForm).toBeVisible();
+    await expect(webApp.register.formTitle).toContainText('Register');
+  });
+
+  test('Ссылка Login в header открывает форму логина', { tag: ['@crystal'] }, async ({ webApp }) => {
+    await webApp.register.open();
+    await webApp.header.activeNav('header-nav-login').click();
+    await expect(webApp.login.loginForm).toBeVisible();
+    await expect(webApp.login.formTitle).toContainText('Login Form');
+  });
 });

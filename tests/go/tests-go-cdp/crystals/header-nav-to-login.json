@@ -1,0 +1,40 @@
+{
+  "id": "header-nav-to-login",
+  "kind": "cdp",
+  "version": 1,
+  "source": {
+    "as_id": "Ссылка Login в header открывает форму логина",
+    "lang": "typescript-playwright",
+    "fingerprint": "00989580a8725fb65a4cec5b6da08453386d864758302d6a3298487088a80526"
+  },
+  "steps": [
+    {
+      "op": "navigate",
+      "url": "register"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=header-nav-login]",
+      "timeout_ms": 3000
+    },
+    {
+      "op": "click",
+      "selector": "[data-testid=header-nav-login]"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=login-form]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=login-form-title]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "text",
+      "selector": "[data-testid=login-form-title]",
+      "value": "Login Form"
+    }
+  ]
+}

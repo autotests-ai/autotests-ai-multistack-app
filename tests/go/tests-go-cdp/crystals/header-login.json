@@ -1,0 +1,26 @@
+{
+  "id": "header-login",
+  "kind": "cdp",
+  "version": 1,
+  "source": {
+    "as_id": "Header на логине показывает Login",
+    "lang": "typescript-playwright",
+    "fingerprint": "f3f7ff6a618ae927f64099fbdd358bec325563ef5d50c493c9f27396a8d9e649"
+  },
+  "steps": [
+    {
+      "op": "navigate",
+      "url": "login"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=header-nav-login]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "text",
+      "selector": "[data-testid=header-nav-login]",
+      "value": "Login"
+    }
+  ]
+}
