@@ -10,7 +10,6 @@ LOGIN_MIN_LENGTH = "Login must be at least 3 characters"
 PASSWORD_REQUIRED = "Password is required (minimum 6 characters)"
 BOTH_REQUIRED = "Login and password are required (minimum 3 and 6 characters)"
 REGISTER_PASSWORD = "password123"
-SEEDED_USER = UserBuilder().with_seeded_user().build()
 
 pytestmark = pytest.mark.e2e
 
@@ -67,7 +66,7 @@ class TestRegister:
     def test_should_show_error_when_username_is_taken(self, register_page: RegisterPage):
         (
             register_page.open_page()
-            .type_username(SEEDED_USER.username)
+            .type_username("user1")
             .type_password(REGISTER_PASSWORD)
             .type_confirm_password(REGISTER_PASSWORD)
             .submit_expecting_error()

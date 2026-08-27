@@ -2,8 +2,6 @@ package tests.e2e;
 
 import tests.TestBase;
 import annotations.Layer;
-import helpers.User;
-import helpers.UserBuilder;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -18,8 +16,6 @@ import org.junit.jupiter.api.Test;
 @Severity(SeverityLevel.CRITICAL)
 @DisplayName("Login")
 class LoginTests extends TestBase {
-
-    private static final User SEEDED_USER = new UserBuilder().withSeededUser().build();
 
     private static final String LOGIN_REQUIRED_MESSAGE =
             "Login is required (minimum 3 characters)";
@@ -40,8 +36,8 @@ class LoginTests extends TestBase {
     @DisplayName("User is logged in with valid credentials")
     void shouldLoginWithValidCredentials() {
         loginPage.openPage()
-                .fillAndSubmitForm(SEEDED_USER.username(), SEEDED_USER.password())
-                .shouldHaveWelcomeMessage(SEEDED_USER.welcomeMessage());
+                .fillAndSubmitForm("user1", "password1")
+                .shouldHaveWelcomeMessage("Welcome, user1!");
     }
 
     @Test
@@ -50,7 +46,7 @@ class LoginTests extends TestBase {
     @DisplayName("Empty username shows validation error")
     void shouldShowValidationErrorWhenUsernameIsEmpty() {
         loginPage.openPage()
-                .typePassword(SEEDED_USER.password())
+                .typePassword("password1")
                 .submitExpectingError()
                 .shouldHaveErrorMessage(LOGIN_REQUIRED_MESSAGE);
     }
@@ -61,7 +57,7 @@ class LoginTests extends TestBase {
     @DisplayName("Empty password shows validation error")
     void shouldShowValidationErrorWhenPasswordIsEmpty() {
         loginPage.openPage()
-                .typeUsername(SEEDED_USER.username())
+                .typeUsername("user1")
                 .submitExpectingError()
                 .shouldHaveErrorMessage(PASSWORD_REQUIRED_MESSAGE);
     }
@@ -72,7 +68,7 @@ class LoginTests extends TestBase {
     @DisplayName("Wrong password shows readable error")
     void shouldShowErrorWhenPasswordIsWrong() {
         loginPage.openPage()
-                .typeUsername(SEEDED_USER.username())
+                .typeUsername("user1")
                 .typePassword("wrongpassword")
                 .submitExpectingError()
                 .shouldHaveErrorMessage(WRONG_CREDENTIALS_MESSAGE);
@@ -85,7 +81,7 @@ class LoginTests extends TestBase {
     void shouldShowValidationErrorWhenUsernameIsTooShort() {
         loginPage.openPage()
                 .typeUsername("ab")
-                .typePassword(SEEDED_USER.password())
+                .typePassword("password1")
                 .submitExpectingError()
                 .shouldHaveErrorMessage(LOGIN_MIN_LENGTH_MESSAGE);
     }
@@ -96,7 +92,7 @@ class LoginTests extends TestBase {
     @DisplayName("Short password shows validation error")
     void shouldShowValidationErrorWhenPasswordIsTooShort() {
         loginPage.openPage()
-                .typeUsername(SEEDED_USER.username())
+                .typeUsername("user1")
                 .typePassword("123")
                 .submitExpectingError()
                 .shouldHaveErrorMessage(PASSWORD_MIN_LENGTH_MESSAGE);
@@ -109,7 +105,7 @@ class LoginTests extends TestBase {
     void shouldShowErrorWhenUsernameIsUnknown() {
         loginPage.openPage()
                 .typeUsername("nouser")
-                .typePassword(SEEDED_USER.password())
+                .typePassword("password1")
                 .submitExpectingError()
                 .shouldHaveErrorMessage(WRONG_CREDENTIALS_MESSAGE);
     }

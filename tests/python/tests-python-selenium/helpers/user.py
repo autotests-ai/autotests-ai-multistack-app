@@ -14,9 +14,7 @@ class User:
 
 
 class UserBuilder:
-    """User data for tests. with_seeded_user() is the stand account; faker-like
-    methods are for register / throwaway only.
-    """
+    """Throwaway identity for register / delete-account."""
 
     def __init__(self) -> None:
         self._username = ""
@@ -28,12 +26,6 @@ class UserBuilder:
 
     def with_password(self) -> UserBuilder:
         self._password = "password123"
-        return self
-
-    def with_seeded_user(self) -> UserBuilder:
-        """Seeded demo user on the teaching stack (user1 / password1)."""
-        self._username = "user1"
-        self._password = "password1"
         return self
 
     def build(self) -> User:

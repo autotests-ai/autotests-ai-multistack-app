@@ -1,10 +1,7 @@
 import allure
 import pytest
 
-from helpers.user import UserBuilder
 from pages.home_page import HomePage
-
-SEEDED_USER = UserBuilder().with_seeded_user().build()
 
 pytestmark = pytest.mark.e2e
 
@@ -30,10 +27,8 @@ class TestSession:
     @pytest.mark.positive
     def test_session_survives_reload(self, home_page: HomePage):
         (
-            home_page.open_page_with_local_storage_authentication(
-                SEEDED_USER.username, SEEDED_USER.password
-            )
-            .should_have_welcome_message(SEEDED_USER.welcome_message())
+            home_page.open_page_with_local_storage_authentication("user1", "password1")
+            .should_have_welcome_message("Welcome, user1!")
             .reload_page()
-            .should_have_welcome_message(SEEDED_USER.welcome_message())
+            .should_have_welcome_message("Welcome, user1!")
         )

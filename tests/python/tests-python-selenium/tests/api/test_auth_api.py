@@ -6,10 +6,7 @@ import allure
 import pytest
 
 from api_client import WRONG_CREDENTIALS_MESSAGE, delete_account, login, register, request, username
-from helpers.user import UserBuilder
 from schema_assert import assert_schema
-
-SEEDED_USER = UserBuilder().with_seeded_user().build()
 
 pytestmark = pytest.mark.api
 
@@ -23,12 +20,12 @@ class TestAuthApi:
     @pytest.mark.smoke
     def test_login_with_valid_credentials(self, config):
         response = request(
-            config, "POST", "/api/auth/login", json={"username": SEEDED_USER.username, "password": SEEDED_USER.password}
+            config, "POST", "/api/auth/login", json={"username": "user1", "password": "password1"}
         )
         assert response.status_code == 200
         body = response.json()
         assert_schema(body, "auth-response.json")
-        assert body["username"] == SEEDED_USER.username
+        assert body["username"] == "user1"
         assert body["redirectUrl"] == "/"
 
     @allure.title("POST /api/auth/login rejects a wrong password with 401")
@@ -37,7 +34,7 @@ class TestAuthApi:
             config,
             "POST",
             "/api/auth/login",
-            json={"username": SEEDED_USER.username, "password": "wrongpassword"},
+            json={"username": "user1", "password": "wrongpassword"},
         )
         assert response.status_code == 401
         body = response.json()
@@ -72,7 +69,7 @@ class TestAuthApi:
     @pytest.mark.negative
     def test_login_rejects_short_username(self, config):
         response = request(
-            config, "POST", "/api/auth/login", json={"username": "ab", "password": SEEDED_USER.password}
+            config, "POST", "/api/auth/login", json={"username": "ab", "password": "password1"}
         )
         assert response.status_code == 400
         body = response.json()
@@ -83,7 +80,7 @@ class TestAuthApi:
     @pytest.mark.negative
     def test_login_rejects_short_password(self, config):
         response = request(
-            config, "POST", "/api/auth/login", json={"username": SEEDED_USER.username, "password": "123"}
+            config, "POST", "/api/auth/login", json={"username": "user1", "password": "123"}
         )
         assert response.status_code == 400
         body = response.json()
@@ -94,7 +91,7 @@ class TestAuthApi:
     @pytest.mark.negative
     def test_login_rejects_empty_username(self, config):
         response = request(
-            config, "POST", "/api/auth/login", json={"username": "", "password": SEEDED_USER.password}
+            config, "POST", "/api/auth/login", json={"username": "", "password": "password1"}
         )
         assert response.status_code == 400
         body = response.json()
@@ -105,7 +102,7 @@ class TestAuthApi:
     @pytest.mark.negative
     def test_login_rejects_empty_password(self, config):
         response = request(
-            config, "POST", "/api/auth/login", json={"username": SEEDED_USER.username, "password": ""}
+            config, "POST", "/api/auth/login", json={"username": "user1", "password": ""}
         )
         assert response.status_code == 400
         body = response.json()
@@ -138,7 +135,7 @@ class TestAuthApi:
             config,
             "POST",
             "/api/auth/register",
-            json={"username": SEEDED_USER.username, "password": "password123"},
+            json={"username": "user1", "password": "password123"},
         )
         assert response.status_code == 409
         body = response.json()
@@ -217,12 +214,12 @@ class TestAuthApi:
 
     @allure.title("GET /api/auth/me returns the profile contract for a bearer token")
     def test_profile_with_bearer_token(self, config):
-        token = login(config, SEEDED_USER.username, SEEDED_USER.password)
+        token = login(config, "user1", "password1")
         response = request(config, "GET", "/api/auth/me", token=token)
         assert response.status_code == 200
         body = response.json()
         assert_schema(body, "profile.json")
-        assert body["username"] == SEEDED_USER.username
+        assert body["username"] == "user1"
 
     @allure.title("GET /api/auth/me without a token returns 401")
     def test_profile_without_token(self, config):

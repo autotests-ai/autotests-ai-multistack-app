@@ -25,13 +25,6 @@ export class UserBuilder {
     return this;
   }
 
-  /** Seeded demo user on the teaching stack */
-  withSeededUser(): this {
-    this.username = 'user1';
-    this.password = 'password1';
-    return this;
-  }
-
   build(): User {
     return new User(this.username, this.password);
   }

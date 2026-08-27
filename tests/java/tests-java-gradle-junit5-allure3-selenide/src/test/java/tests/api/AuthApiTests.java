@@ -6,8 +6,6 @@ import api.AuthApiClient;
 import api.model.LoginRequest;
 import api.model.RegisterRequest;
 import helpers.DataFaker;
-import helpers.User;
-import helpers.UserBuilder;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -33,7 +31,6 @@ import static org.hamcrest.Matchers.equalTo;
 @DisplayName("Auth API")
 class AuthApiTests extends ApiTestBase {
 
-    private static final User SEEDED_USER = new UserBuilder().withSeededUser().build();
     private static final String WRONG_CREDENTIALS_MESSAGE = "Wrong login or password";
 
     @Test
@@ -42,13 +39,13 @@ class AuthApiTests extends ApiTestBase {
     @DisplayName("POST /api/auth/login returns the auth contract for a seeded user")
     void loginWithValidCredentials() {
         given(jsonSpec)
-                .body(new LoginRequest(SEEDED_USER.username(), SEEDED_USER.password()))
+                .body(new LoginRequest("user1", "password1"))
                 .when()
                 .post("/api/auth/login")
                 .then()
                 .statusCode(200)
                 .body(matchesJsonSchemaInClasspath("schemas/auth-response.json"))
-                .body("username", equalTo(SEEDED_USER.username()))
+                .body("username", equalTo("user1"))
                 .body("redirectUrl", equalTo("/"));
     }
 
@@ -57,7 +54,7 @@ class AuthApiTests extends ApiTestBase {
     @DisplayName("POST /api/auth/login rejects a wrong password with 401")
     void loginWithInvalidPassword() {
         given(jsonSpec)
-                .body(new LoginRequest(SEEDED_USER.username(), "wrongpassword"))
+                .body(new LoginRequest("user1", "wrongpassword"))
                 .when()
                 .post("/api/auth/login")
                 .then()
@@ -102,7 +99,7 @@ class AuthApiTests extends ApiTestBase {
     @DisplayName("POST /api/auth/login rejects a short username with 400")
     void loginRejectsShortUsername() {
         given(jsonSpec)
-                .body(new LoginRequest("ab", SEEDED_USER.password()))
+                .body(new LoginRequest("ab", "password1"))
                 .when()
                 .post("/api/auth/login")
                 .then()
@@ -117,7 +114,7 @@ class AuthApiTests extends ApiTestBase {
     @DisplayName("POST /api/auth/login rejects a short password with 400")
     void loginRejectsShortPassword() {
         given(jsonSpec)
-                .body(new LoginRequest(SEEDED_USER.username(), "123"))
+                .body(new LoginRequest("user1", "123"))
                 .when()
                 .post("/api/auth/login")
                 .then()
@@ -132,7 +129,7 @@ class AuthApiTests extends ApiTestBase {
     @DisplayName("POST /api/auth/login rejects an empty username with 400")
     void loginRejectsEmptyUsername() {
         given(jsonSpec)
-                .body(new LoginRequest("", SEEDED_USER.password()))
+                .body(new LoginRequest("", "password1"))
                 .when()
                 .post("/api/auth/login")
                 .then()
@@ -147,7 +144,7 @@ class AuthApiTests extends ApiTestBase {
     @DisplayName("POST /api/auth/login rejects an empty password with 400")
     void loginRejectsEmptyPassword() {
         given(jsonSpec)
-                .body(new LoginRequest(SEEDED_USER.username(), ""))
+                .body(new LoginRequest("user1", ""))
                 .when()
                 .post("/api/auth/login")
                 .then()
@@ -196,7 +193,7 @@ class AuthApiTests extends ApiTestBase {
     @DisplayName("POST /api/auth/register rejects a duplicate username with 409")
     void registerDuplicateUsername() {
         given(jsonSpec)
-                .body(new RegisterRequest(SEEDED_USER.username(), "password123"))
+                .body(new RegisterRequest("user1", "password123"))
                 .when()
                 .post("/api/auth/register")
                 .then()
@@ -294,7 +291,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("api")
     @DisplayName("GET /api/auth/me returns the profile contract for a bearer token")
     void profileWithBearerToken() {
-        String token = AuthApiClient.login(SEEDED_USER.username(), SEEDED_USER.password());
+        String token = AuthApiClient.login("user1", "password1");
 
         given()
                 .header("Authorization", "Bearer " + token)
@@ -303,7 +300,7 @@ class AuthApiTests extends ApiTestBase {
                 .then()
                 .statusCode(200)
                 .body(matchesJsonSchemaInClasspath("schemas/profile.json"))
-                .body("username", equalTo(SEEDED_USER.username()));
+                .body("username", equalTo("user1"));
     }
 
     @Test

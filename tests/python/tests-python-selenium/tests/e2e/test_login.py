@@ -1,7 +1,6 @@
 import allure
 import pytest
 
-from helpers.user import UserBuilder
 from pages.login_page import LoginPage
 
 LOGIN_REQUIRED = "Login is required (minimum 3 characters)"
@@ -10,8 +9,6 @@ PASSWORD_REQUIRED = "Password is required (minimum 6 characters)"
 PASSWORD_MIN_LENGTH = "Password must be at least 6 characters"
 BOTH_REQUIRED = "Login and password are required (minimum 3 and 6 characters)"
 WRONG_CREDENTIALS = "Wrong login or password"
-
-SEEDED_USER = UserBuilder().with_seeded_user().build()
 
 pytestmark = pytest.mark.e2e
 
@@ -28,8 +25,8 @@ class TestLogin:
     def test_should_login_with_valid_credentials(self, login_page: LoginPage):
         (
             login_page.open_page()
-            .fill_and_submit_form(SEEDED_USER.username, SEEDED_USER.password)
-            .should_have_welcome_message(SEEDED_USER.welcome_message())
+            .fill_and_submit_form("user1", "password1")
+            .should_have_welcome_message("Welcome, user1!")
         )
 
     @allure.title("Empty username shows validation error")
@@ -39,7 +36,7 @@ class TestLogin:
     def test_should_show_validation_error_when_username_is_empty(self, login_page: LoginPage):
         (
             login_page.open_page()
-            .type_password(SEEDED_USER.password)
+            .type_password("password1")
             .submit_expecting_error()
             .should_have_error_message(LOGIN_REQUIRED)
         )
@@ -51,7 +48,7 @@ class TestLogin:
     def test_should_show_validation_error_when_password_is_empty(self, login_page: LoginPage):
         (
             login_page.open_page()
-            .type_username(SEEDED_USER.username)
+            .type_username("user1")
             .submit_expecting_error()
             .should_have_error_message(PASSWORD_REQUIRED)
         )
@@ -63,7 +60,7 @@ class TestLogin:
     def test_should_show_error_when_password_is_wrong(self, login_page: LoginPage):
         (
             login_page.open_page()
-            .type_username(SEEDED_USER.username)
+            .type_username("user1")
             .type_password("wrongpassword")
             .submit_expecting_error()
             .should_have_error_message(WRONG_CREDENTIALS)
@@ -76,7 +73,7 @@ class TestLogin:
         (
             login_page.open_page()
             .type_username("ab")
-            .type_password(SEEDED_USER.password)
+            .type_password("password1")
             .submit_expecting_error()
             .should_have_error_message(LOGIN_MIN_LENGTH)
         )
@@ -87,7 +84,7 @@ class TestLogin:
     def test_should_show_validation_error_when_password_is_too_short(self, login_page: LoginPage):
         (
             login_page.open_page()
-            .type_username(SEEDED_USER.username)
+            .type_username("user1")
             .type_password("123")
             .submit_expecting_error()
             .should_have_error_message(PASSWORD_MIN_LENGTH)
@@ -100,7 +97,7 @@ class TestLogin:
         (
             login_page.open_page()
             .type_username("nouser")
-            .type_password(SEEDED_USER.password)
+            .type_password("password1")
             .submit_expecting_error()
             .should_have_error_message(WRONG_CREDENTIALS)
         )

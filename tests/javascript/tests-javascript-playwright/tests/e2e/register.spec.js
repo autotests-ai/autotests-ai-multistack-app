@@ -8,7 +8,6 @@ const LOGIN_MIN_LENGTH = 'Login must be at least 3 characters';
 const PASSWORD_REQUIRED = 'Password is required (minimum 6 characters)';
 const BOTH_REQUIRED = 'Login and password are required (minimum 3 and 6 characters)';
 const REGISTER_PASSWORD = 'password123';
-const seeded = new UserBuilder().withSeededUser().build();
 
 test.describe('Register', { tag: ['@e2e'] }, () => {
   test('Новый пользователь может зарегистрироваться', async ({ webApp, request }) => {
@@ -44,7 +43,7 @@ test.describe('Register', { tag: ['@e2e'] }, () => {
 
   test('Занятый username на регистрации показывает ошибку', async ({ webApp }) => {
     await webApp.register.open();
-    await webApp.register.typeUsername(seeded.username);
+    await webApp.register.typeUsername('user1');
     await webApp.register.typePassword(REGISTER_PASSWORD);
     await webApp.register.typeConfirmPassword(REGISTER_PASSWORD);
     await webApp.register.submitExpectingError();

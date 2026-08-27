@@ -34,8 +34,6 @@ class RegisterTests extends TestBase {
             "Login and password are required (minimum 3 and 6 characters)";
     private static final String DUPLICATE_USERNAME_MESSAGE = "Username already taken";
 
-    private static final User SEEDED_USER = new UserBuilder().withSeededUser().build();
-
     private static final String REGISTER_PASSWORD = "password123";
 
     /** Throwaway registered by the test — deleted through the API afterwards. */
@@ -96,7 +94,7 @@ class RegisterTests extends TestBase {
     @DisplayName("Duplicate username shows readable error")
     void shouldShowErrorWhenUsernameIsTaken() {
         registerPage.openPage()
-                .typeUsername(SEEDED_USER.username())
+                .typeUsername("user1")
                 .typePassword(REGISTER_PASSWORD)
                 .typeConfirmPassword(REGISTER_PASSWORD)
                 .submitExpectingError()

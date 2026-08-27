@@ -1,8 +1,7 @@
 package helpers;
 
 /**
- * Test identity. Seeded stand account — {@link UserBuilder#withSeededUser()};
- * throwaway — {@link UserBuilder#withUsername()} / {@link UserBuilder#withPassword()}.
+ * Throwaway test identity for register / delete-account.
  */
 public record User(String username, String password) {
 

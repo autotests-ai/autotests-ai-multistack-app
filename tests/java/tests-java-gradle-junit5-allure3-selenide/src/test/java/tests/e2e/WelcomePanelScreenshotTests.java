@@ -5,8 +5,6 @@ import annotations.Layer;
 import annotations.SubSuite;
 import annotations.Suite;
 import helpers.ScreenshotHelper;
-import helpers.User;
-import helpers.UserBuilder;
 import helpers.ViewportHelper;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -38,10 +36,8 @@ class WelcomePanelScreenshotTests extends TestBase {
     @DisplayName("Welcome panel matches screenshot")
     void welcomePanelMatchesScreenshot(int viewportWidth) {
         ViewportHelper.setViewport(viewportWidth, VIEWPORT_HEIGHT);
-        User user = new UserBuilder().withSeededUser().build();
         var home = loginPage.openPage()
-                .fillAndSubmitForm(user.username(), user.password())
-                // Mock stand stubs /me as welcomeUsername; seed credentials stay user1/password1.
+                .fillAndSubmitForm("user1", "password1")
                 .shouldHaveWelcomeMessage("Welcome, " + config.welcomeUsername() + "!");
 
         ScreenshotHelper.captureAndCompare(

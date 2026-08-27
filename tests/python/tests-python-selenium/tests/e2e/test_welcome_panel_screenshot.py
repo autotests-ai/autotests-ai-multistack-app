@@ -6,7 +6,6 @@ import allure
 import pytest
 
 from pages.login_page import LoginPage
-from helpers.user import UserBuilder
 import screenshot_helper
 import viewport_helper
 
@@ -26,10 +25,9 @@ class TestWelcomePanelScreenshot:
     ):
         allure.dynamic.title(f"Welcome panel matches screenshot at {viewport_width}px")
         viewport_helper.set_viewport(login_page.driver, viewport_width, _VIEWPORT_HEIGHT)
-        user = UserBuilder().with_seeded_user().build()
         home = (
             login_page.open_page()
-            .fill_and_submit_form(user.username, user.password)
+            .fill_and_submit_form("user1", "password1")
             .should_have_welcome_message(f"Welcome, {config.welcome_username}!")
         )
         screenshot_helper.capture_and_compare(

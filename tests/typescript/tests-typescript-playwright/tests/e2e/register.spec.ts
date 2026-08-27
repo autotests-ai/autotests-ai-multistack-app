@@ -11,7 +11,6 @@ const BOTH_REQUIRED = 'Login and password are required (minimum 3 and 6 characte
 const PASSWORD_MISMATCH = 'Passwords do not match';
 const USERNAME_TAKEN = 'Username already taken';
 const REGISTER_PASSWORD = 'password123';
-const seeded = new UserBuilder().withSeededUser().build();
 
 test.describe('Register', { tag: ['@e2e'] }, () => {
   test('Новый пользователь может зарегистрироваться', { tag: ['@crystal'] }, async ({ webApp, request }) => {
@@ -45,7 +44,7 @@ test.describe('Register', { tag: ['@e2e'] }, () => {
 
   test('Занятый username на регистрации показывает ошибку', { tag: ['@crystal'] }, async ({ webApp }) => {
     await webApp.register.open();
-    await webApp.register.typeUsername(seeded.username);
+    await webApp.register.typeUsername('user1');
     await webApp.register.typePassword(REGISTER_PASSWORD);
     await webApp.register.typeConfirmPassword(REGISTER_PASSWORD);
     await webApp.register.submitExpectingError();
