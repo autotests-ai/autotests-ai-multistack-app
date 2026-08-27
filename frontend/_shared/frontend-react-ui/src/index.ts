@@ -1,6 +1,6 @@
 export { Badge } from './Badge';
 export type { BadgeProps, BadgeVariant } from './Badge';
-export { LangToggle, LangIcon } from './LangToggle';
+export { LangToggle, LangIcon, HEADER_LANG_CHANGE, LANG_STORAGE_KEY } from './LangToggle';
 export type { LangToggleProps, LangCode } from './LangToggle';
 export { PollToggle, PollIcon, formatPollLabel, POLL_DEFAULT_MS } from './PollToggle';
 export type { PollToggleProps } from './PollToggle';
@@ -54,8 +54,8 @@ export { PlaqueFieldGrid } from './PlaqueFieldGrid';
 export type { PlaqueFieldGridProps, PlaqueFieldGridLayout } from './PlaqueFieldGrid';
 export { usePlaqueFieldMagnet } from './usePlaqueFieldMagnet';
 export type { UsePlaqueFieldMagnetOptions } from './usePlaqueFieldMagnet';
-export { ThemeToggle } from './ThemeToggle';
-export type { ThemeToggleProps } from './ThemeToggle';
+export { ThemeToggle, HEADER_THEME_CHANGE, THEME_STORAGE_KEY } from './ThemeToggle';
+export type { ThemeToggleProps, ThemeCode } from './ThemeToggle';
 export { ThemeIconMoon, ThemeIconSun } from './theme-icons';
 export { IconCopy, IconDownload, IconReset } from './panel-icons';
 export { WindowControl } from './WindowControl';
