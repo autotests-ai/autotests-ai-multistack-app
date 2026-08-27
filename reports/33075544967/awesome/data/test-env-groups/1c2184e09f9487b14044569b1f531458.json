@@ -1,1 +1,0 @@
-{"id":"1c2184e09f9487b14044569b1f531458","fullName":"api/auth.spec.ts:75:7","name":"POST /api/auth/login rejects an empty username with 400","status":"passed","testResultsByEnv":{"default":"d16b76654fe6e2940ad15dd2bac3cc55"}}
