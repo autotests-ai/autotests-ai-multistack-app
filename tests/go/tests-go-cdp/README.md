@@ -2,7 +2,7 @@
 
 `role: mill` · `layers: [crystal]` · `in_stack: true` (crystal column on `/stack/`, not a Selenide peer).
 
-Crystals in git. The mill **execs** `greedy run --cdp` (JSON stdout). No chromedp page objects, no `import` of greedy.guru `internal/cdp`, no MCP.
+Crystals in git. The mill **execs** `greedy run --cdp` (JSON stdout). IR values are literals (`user1` / `reguser1`), not `UserBuilder`. No chromedp page objects, no `import` of greedy.guru `internal/cdp`, no MCP.
 
 ```bash
 cd tests/go/tests-go-cdp
