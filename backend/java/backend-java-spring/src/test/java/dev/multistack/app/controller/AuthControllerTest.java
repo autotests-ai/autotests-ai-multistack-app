@@ -138,7 +138,7 @@ class AuthControllerTest extends SliceTestBase {
     }
 
     @Test
-    @DisplayName("POST /api/auth/register rejects short password with 400 and a field message")
+    @DisplayName("POST /api/auth/register rejects a short password with 400")
     void registerRejectsShortPassword() throws Exception {
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)

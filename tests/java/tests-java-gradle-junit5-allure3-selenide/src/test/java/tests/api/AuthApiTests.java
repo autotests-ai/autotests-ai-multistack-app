@@ -96,7 +96,7 @@ class AuthApiTests extends ApiTestBase {
     @Test
     @Tag("api")
     @Tag("negative")
-    @DisplayName("POST /api/auth/login rejects a short username with 400 and a field message")
+    @DisplayName("POST /api/auth/login rejects a short username with 400")
     void loginRejectsShortUsername() {
         given(jsonSpec)
                 .body(new LoginRequest("ab", "password1"))
@@ -111,7 +111,7 @@ class AuthApiTests extends ApiTestBase {
     @Test
     @Tag("api")
     @Tag("negative")
-    @DisplayName("POST /api/auth/login rejects a short password with 400 and a field message")
+    @DisplayName("POST /api/auth/login rejects a short password with 400")
     void loginRejectsShortPassword() {
         given(jsonSpec)
                 .body(new LoginRequest("user1", "123"))
@@ -204,7 +204,7 @@ class AuthApiTests extends ApiTestBase {
 
     @Test
     @Tag("api")
-    @DisplayName("POST /api/auth/register rejects a short password with 400 and a field message")
+    @DisplayName("POST /api/auth/register rejects a short password with 400")
     void registerRejectsShortPassword() {
         given(jsonSpec)
                 .body(new RegisterRequest("shortuser", "abc"))
@@ -218,7 +218,7 @@ class AuthApiTests extends ApiTestBase {
 
     @Test
     @Tag("api")
-    @DisplayName("POST /api/auth/register rejects a short username with 400 and a field message")
+    @DisplayName("POST /api/auth/register rejects a short username with 400")
     void registerRejectsShortUsername() {
         given(jsonSpec)
                 .body(new RegisterRequest("ab", "password123"))

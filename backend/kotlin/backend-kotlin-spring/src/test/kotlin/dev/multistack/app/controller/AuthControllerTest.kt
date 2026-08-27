@@ -128,7 +128,7 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/auth/register rejects short password with 400")
+    @DisplayName("POST /api/auth/register rejects a short password with 400")
     fun registerRejectsShortPassword() {
         mockMvc.perform(
             post("/api/auth/register")

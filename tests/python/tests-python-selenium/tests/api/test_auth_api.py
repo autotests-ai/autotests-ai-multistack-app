@@ -65,7 +65,7 @@ class TestAuthApi:
         assert "password" in message
         assert "; " in message
 
-    @allure.title("POST /api/auth/login rejects a short username with 400 and a field message")
+    @allure.title("POST /api/auth/login rejects a short username with 400")
     @pytest.mark.negative
     def test_login_rejects_short_username(self, config):
         response = request(
@@ -76,7 +76,7 @@ class TestAuthApi:
         assert_schema(body, "error.json")
         assert "username" in body["message"]
 
-    @allure.title("POST /api/auth/login rejects a short password with 400 and a field message")
+    @allure.title("POST /api/auth/login rejects a short password with 400")
     @pytest.mark.negative
     def test_login_rejects_short_password(self, config):
         response = request(
@@ -142,7 +142,7 @@ class TestAuthApi:
         assert_schema(body, "error.json")
         assert body["message"] == "Username already taken"
 
-    @allure.title("POST /api/auth/register rejects a short password with 400 and a field message")
+    @allure.title("POST /api/auth/register rejects a short password with 400")
     def test_register_rejects_short_password(self, config):
         response = request(
             config,
@@ -155,7 +155,7 @@ class TestAuthApi:
         assert_schema(body, "error.json")
         assert "password" in body["message"]
 
-    @allure.title("POST /api/auth/register rejects a short username with 400 and a field message")
+    @allure.title("POST /api/auth/register rejects a short username with 400")
     def test_register_rejects_short_username(self, config):
         response = request(
             config,
