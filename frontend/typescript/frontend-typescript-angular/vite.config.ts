@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin } from 'vite';
 import angular from '@analogjs/vite-plugin-angular';
 import { resolve } from 'node:path';
+import { overlayRuntime } from '../../scripts/vite-overlay-runtime.mjs';
 
 // Relative base: one dist works under /{backend}/frontend-typescript-angular/
 const mountBase = './';
@@ -51,7 +52,11 @@ export default defineConfig({
   preview: { port: 9812, strictPort: true },
   // Single tsconfig for app + tests, so point the Angular compiler at it
   // (the plugin otherwise looks for the CLI's tsconfig.app.json).
-  plugins: [angular({ tsconfig: resolve(__dirname, 'tsconfig.json') }), pinMountAssets()],
+  plugins: [
+    overlayRuntime(resolve(__dirname, 'vendor/ds')),
+    angular({ tsconfig: resolve(__dirname, 'tsconfig.json') }),
+    pinMountAssets(),
+  ],
   build: {
     outDir: 'dist',
     emptyOutDir: true,

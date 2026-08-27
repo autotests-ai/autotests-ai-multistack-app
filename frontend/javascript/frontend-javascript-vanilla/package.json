@@ -1,0 +1,9 @@
+{
+  "name": "frontend-javascript-vanilla",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "PORT=9800 node ../../scripts/serve-static-with-ds.mjs",
+    "preview": "PORT=9800 node ../../scripts/serve-static-with-ds.mjs"
+  }
+}

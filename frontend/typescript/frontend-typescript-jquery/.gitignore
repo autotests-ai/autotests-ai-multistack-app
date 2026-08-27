@@ -4,4 +4,3 @@ dist/
 coverage/
 allure-results/
 *.tsbuildinfo
-.stand-overlay

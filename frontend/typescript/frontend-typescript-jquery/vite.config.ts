@@ -1,20 +1,11 @@
-import { createReadStream, existsSync, statSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { extname, join, resolve } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
+import { overlayRuntime } from '../../scripts/vite-overlay-runtime.mjs';
 
 // Relative base: one dist works at the publish port and under /{backend}/frontend-typescript-jquery/.
 const mountBase = './';
-
-/** vendor/ds overlay — the Docker image copies it over `dist/`. */
-const overlayRoot = resolve(__dirname, 'vendor/ds');
-
-const OVERLAY_CONTENT_TYPE: Record<string, string> = {
-  '.css': 'text/css',
-  '.html': 'text/html',
-  '.js': 'text/javascript',
-  '.svg': 'image/svg+xml',
-};
 
 type Middleware = (req: IncomingMessage, res: ServerResponse, next: () => void) => void;
 
@@ -25,38 +16,6 @@ function insideDir(dir: string, candidate: string): boolean {
 function pathnameOf(url: string): string {
   const queryAt = url.indexOf('?');
   return queryAt === -1 ? url : url.slice(0, queryAt);
-}
-
-/**
- * Dev and preview only: serve the design-system runtime (`js/header.js` and the
- * markup templates it fetches) straight from `vendor/ds`. In the container
- * those paths come from the vendor/ds overlay, so they are never bundled.
- */
-function overlayRuntime(): Plugin {
-  const serveOverlay: Middleware = (req, res, next) => {
-    const pathname = pathnameOf(req.url ?? '/');
-    if (!/^\/(js|templates)\//.test(pathname)) {
-      next();
-      return;
-    }
-    const file = resolve(join(overlayRoot, pathname));
-    if (!insideDir(overlayRoot, file) || !existsSync(file) || !statSync(file).isFile()) {
-      next();
-      return;
-    }
-    res.setHeader('Content-Type', OVERLAY_CONTENT_TYPE[extname(file)] ?? 'application/octet-stream');
-    createReadStream(file).pipe(res);
-  };
-
-  return {
-    name: 'overlay-runtime',
-    configureServer(server) {
-      server.middlewares.use(serveOverlay);
-    },
-    configurePreviewServer(server) {
-      server.middlewares.use(serveOverlay);
-    },
-  };
 }
 
 /**
@@ -101,7 +60,7 @@ export default defineConfig({
   appType: 'mpa',
   server: { port: 9814, strictPort: true },
   preview: { port: 9814, strictPort: true },
-  plugins: [extensionlessHtml(), overlayRuntime()],
+  plugins: [extensionlessHtml(), overlayRuntime(resolve(__dirname, 'vendor/ds'))],
   build: {
     outDir: 'dist',
     emptyOutDir: true,

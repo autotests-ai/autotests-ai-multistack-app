@@ -3,4 +3,3 @@ dist/
 .vite/
 coverage/
 allure-results/
-.stand-overlay

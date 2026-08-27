@@ -77,9 +77,7 @@ npm run typecheck  # vue-tsc --noEmit
 npm test           # Vitest + Testing Library (src/test/)
 ```
 
-**`npm run dev` alone is not a full product stand:** Vite does not serve
-`js/header.js` / header templates. Use Docker/compose (or monorepo
-`python scripts/stands/ensure.py autotests-ai-multistack-app`) for the `vendor/ds` overlay.
+`npm run dev` serves `vendor/ds` (`js/header.js` + templates) so the header mounts without Docker. Compose/catalog nginx still overlays the same files in the image.
 
 `npm test` runs Vitest under `--no-experimental-webstorage` for the same reason as the React
 module: on Node 26 the runtime's own empty `localStorage` global wins over the jsdom one.

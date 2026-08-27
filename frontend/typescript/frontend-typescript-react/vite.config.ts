@@ -2,6 +2,7 @@ import { resolve } from 'node:path';
 import react from '@vitejs/plugin-react';
 import { defineConfig, type Plugin } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { overlayRuntime } from '../../scripts/vite-overlay-runtime.mjs';
 
 const reactUiSrc = resolve(__dirname, 'vendor/react-ui/src/index.ts');
 // Relative base: one dist works under /{backend}/frontend-typescript-react/
@@ -59,6 +60,7 @@ export default defineConfig({
   server: { port: 9811, strictPort: true },
   preview: { port: 9811, strictPort: true },
   plugins: [
+    overlayRuntime(resolve(__dirname, 'vendor/ds')),
     react(),
     VitePWA({
       registerType: 'autoUpdate',

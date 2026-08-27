@@ -122,8 +122,8 @@ clicks and submits with `fetch` and `window.confirm` stubbed.
   `src/header.ts` publishes `window.headerConfig` and appends the module script
   instead, which is the same wiring one step later.
 - `npm run dev` / `npm run preview` serve the overlay's `css/`, `js/` and
-  `templates/` straight from `vendor/ds` (see
-  `overlayRuntime()` in `vite.config.ts`), so both are complete product stands
+  `templates/` straight from `vendor/ds` (`overlayRuntime` in
+  `frontend/scripts/vite-overlay-runtime.mjs`), so both are complete product stands
   without Docker.
 
 ## nginx

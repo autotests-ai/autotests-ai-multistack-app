@@ -56,6 +56,3 @@ htmlcov/
 
 # OS
 .DS_Store
-
-# Local Vite/ensure DS copy (never commit)
-.stand-overlay/

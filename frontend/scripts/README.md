@@ -5,6 +5,8 @@
 | `sync-ds-runtime.sh` | Subset css/js/templates from design-system → `_shared/frontend-javascript-app`, then fan-out → every `frontend/*/frontend-*/vendor/ds` |
 | `sync-react-ui.sh` | Vendored TSX wrappers into `_shared/frontend-react-ui` (no CSS), then fan-out → both `*react` `vendor/react-ui` |
 | `sync-stack-matrix.py` | deploy ports + hub `tests.modules` → `js/env-hosts.js` + landing `autotests-ai-app/.../public/stack/matrix.json`; fan-out env-hosts into every `vendor/ds` |
+| `vite-overlay-runtime.mjs` | Vite plugin: serve `vendor/ds` (`css`/`js`/`templates`) in `dev`/`preview` |
+| `serve-static-with-ds.mjs` | Same overlay for static cells (vanilla / jquery). `PORT` from env; cwd = cell |
 
 Run from this tree’s root (`ethalon/` or the live clone):
 

@@ -9,6 +9,8 @@ Static files + lean design-system runtime from
 Prod URL: `https://autotests.ai/stack/{backend}/frontend-javascript-vanilla/`  
 Local compose publish: `:9800`.
 
+`npm run dev` layers this module over `vendor/ds` on `:9800` (header.js + templates, same as the image). Do not copy a merged tree into the cell.
+
 ## Screens
 
 | Page | Key testids |

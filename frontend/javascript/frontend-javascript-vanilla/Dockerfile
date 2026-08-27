@@ -7,6 +7,7 @@ RUN rm -rf /usr/share/nginx/html/* \
   && cp -a /tmp/ui-runtime/. /usr/share/nginx/html/ \
   && cp -a /tmp/ui-src/. /usr/share/nginx/html/ \
   && rm -f /usr/share/nginx/html/README.md \
+  && rm -f /usr/share/nginx/html/package.json \
   && rm -rf /usr/share/nginx/html/Dockerfile \
   && rm -rf /usr/share/nginx/html/nginx.conf \
   && rm -rf /usr/share/nginx/html/.github \

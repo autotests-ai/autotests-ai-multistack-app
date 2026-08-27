@@ -1,7 +1,8 @@
-import { dirname } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import { angularDecorators } from './babel-decorators.js';
+import { overlayRuntime } from '../../scripts/vite-overlay-runtime.mjs';
 
 const moduleDir = dirname(fileURLToPath(import.meta.url));
 
@@ -58,7 +59,7 @@ export default defineConfig({
     },
   },
   preview: { port: 9802, strictPort: true },
-  plugins: [angularDecorators(), pinMountAssets()],
+  plugins: [overlayRuntime(resolve(moduleDir, 'vendor/ds')), angularDecorators(), pinMountAssets()],
   build: {
     outDir: 'dist',
     emptyOutDir: true,

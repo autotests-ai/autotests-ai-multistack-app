@@ -1,62 +1,6 @@
-import { createReadStream, statSync } from 'node:fs';
-import type { IncomingMessage, ServerResponse } from 'node:http';
-import { extname, join, resolve } from 'node:path';
-import { defineConfig, type Plugin } from 'vite';
-
-/**
- * The vendor/ds overlay (design-system CSS, `js/header.js` + its header
- * template) is copied next to the built app by the Dockerfile, so the pages
- * reference those files instead of bundling them. Vite has nothing to serve
- * them from during `dev`/`preview`, so stream them straight off the overlay —
- * otherwise the header never mounts and the app renders unstyled.
- */
-const OVERLAY_ROOT = resolve(__dirname, 'vendor/ds');
-const OVERLAY_PATH_RE = /^\/((?:css|js|templates)\/[\w.-]+)$/;
-const MIME_TYPES: Record<string, string> = {
-  '.css': 'text/css; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
-  '.html': 'text/html; charset=utf-8',
-  '.svg': 'image/svg+xml',
-};
-
-function serveOverlayFile(
-  req: IncomingMessage,
-  res: ServerResponse,
-  next: (err?: unknown) => void,
-): void {
-  const [path] = (req.url ?? '').split('?');
-  const match = OVERLAY_PATH_RE.exec(path);
-  if (!match) {
-    next();
-    return;
-  }
-  const file = join(OVERLAY_ROOT, match[1]);
-  const inOverlay = file.startsWith(`${OVERLAY_ROOT}/`);
-  if (!inOverlay || !statSync(file, { throwIfNoEntry: false })?.isFile()) {
-    next();
-    return;
-  }
-  res.setHeader('Content-Type', MIME_TYPES[extname(file)] ?? 'application/octet-stream');
-  createReadStream(file).pipe(res);
-}
-
-/**
- * Installed ahead of Vite's own handlers — the preview server would otherwise
- * answer every overlay path with `index.html`. Product CSS is unaffected: the
- * overlay owns no `app/auth/grid/page/text.css`, so those fall through to
- * `public/`.
- */
-function overlayRuntime(): Plugin {
-  return {
-    name: 'overlay-runtime',
-    configureServer(server) {
-      server.middlewares.use(serveOverlayFile);
-    },
-    configurePreviewServer(server) {
-      server.middlewares.use(serveOverlayFile);
-    },
-  };
-}
+import { resolve } from 'node:path';
+import { defineConfig } from 'vite';
+import { overlayRuntime } from '../../scripts/vite-overlay-runtime.mjs';
 
 export default defineConfig({
   root: resolve(__dirname),
@@ -64,7 +8,7 @@ export default defineConfig({
   base: './',
   server: { port: 9810, strictPort: true },
   preview: { port: 9810, strictPort: true },
-  plugins: [overlayRuntime()],
+  plugins: [overlayRuntime(resolve(__dirname, 'vendor/ds'), { css: true })],
   build: {
     outDir: 'dist',
     emptyOutDir: true,
