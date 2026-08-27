@@ -236,7 +236,7 @@ func TestRunCrystals(t *testing.T) {
 			if m["ok"] != true {
 				t.Fatalf("%s", stdout.String())
 			}
-			t.Logf("%s wall_ms=%v", m["id"], m["wall_ms"])
+			t.Logf("%s wall_ms=%v reset_ms=%v", m["id"], m["wall_ms"], m["reset_ms"])
 		})
 	}
 }
