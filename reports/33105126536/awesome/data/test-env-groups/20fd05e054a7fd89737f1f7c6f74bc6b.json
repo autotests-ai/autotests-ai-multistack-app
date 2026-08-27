@@ -1,1 +1,0 @@
-{"id":"20fd05e054a7fd89737f1f7c6f74bc6b","fullName":"dev.multistack.app.integration.AuthLifecycleIntegrationTest.accountLifecycleRoundTrip","name":"register → login → me → logout (stateless: token survives) → delete → me is 401","status":"passed","testResultsByEnv":{"default":"fb3da0fc1b3d5945f453df76f723215d"}}
