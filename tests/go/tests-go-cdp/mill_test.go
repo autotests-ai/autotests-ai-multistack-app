@@ -58,7 +58,7 @@ func uniqueRegisterUser() string {
 	return "user_" + hex.EncodeToString(b[:])
 }
 
-// registerIRForRun copies the happy-path register crystal and fills a crypto/rand
+// registerIRForRun copies register/delete crystals and fills a crypto/rand
 // username (stdlib, not faker) so mill replay does not collide if the store is sticky.
 func registerIRForRun(t *testing.T, path string) string {
 	t.Helper()
@@ -70,7 +70,7 @@ func registerIRForRun(t *testing.T, path string) string {
 	if err := json.Unmarshal(raw, &doc); err != nil {
 		t.Fatal(err)
 	}
-	if doc["id"] != "register" {
+	if doc["id"] != "register" && doc["id"] != "delete" {
 		return path
 	}
 	name := uniqueRegisterUser()
@@ -89,7 +89,7 @@ func registerIRForRun(t *testing.T, path string) string {
 			m["value"] = "Welcome, " + name + "!"
 		}
 	}
-	out := filepath.Join(t.TempDir(), "register.json")
+	out := filepath.Join(t.TempDir(), filepath.Base(path))
 	b, err := json.MarshalIndent(doc, "", "  ")
 	if err != nil {
 		t.Fatal(err)
@@ -125,6 +125,38 @@ func TestRegisterIRForRunPatchesUsername(t *testing.T) {
 	fill := steps[0].(map[string]any)["value"].(string)
 	text := steps[1].(map[string]any)["value"].(string)
 	if fill == "reguser1" || !strings.HasPrefix(fill, "user_") {
+		t.Fatalf("want crypto/rand user, got %q", fill)
+	}
+	if text != "Welcome, "+fill+"!" {
+		t.Fatalf("welcome %q", text)
+	}
+}
+
+func TestRegisterIRForRunPatchesDelete(t *testing.T) {
+	src := filepath.Join(t.TempDir(), "in.json")
+	if err := os.WriteFile(src, []byte(`{
+  "id": "delete",
+  "steps": [
+    {"op": "fill", "selector": "[data-testid=register-login-input]", "value": "deluser1"},
+    {"op": "text", "selector": "[data-testid=welcome-message]", "value": "Welcome, deluser1!"}
+  ]
+}
+`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	out := registerIRForRun(t, src)
+	raw, err := os.ReadFile(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var doc map[string]any
+	if err := json.Unmarshal(raw, &doc); err != nil {
+		t.Fatal(err)
+	}
+	steps := doc["steps"].([]any)
+	fill := steps[0].(map[string]any)["value"].(string)
+	text := steps[1].(map[string]any)["value"].(string)
+	if fill == "deluser1" || !strings.HasPrefix(fill, "user_") {
 		t.Fatalf("want crypto/rand user, got %q", fill)
 	}
 	if text != "Welcome, "+fill+"!" {
