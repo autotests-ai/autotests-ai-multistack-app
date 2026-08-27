@@ -2,6 +2,8 @@ package tests.e2e;
 
 import tests.TestBase;
 import annotations.Layer;
+import helpers.User;
+import helpers.UserBuilder;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -16,6 +18,8 @@ import org.junit.jupiter.api.Test;
 @Severity(SeverityLevel.CRITICAL)
 @DisplayName("Session")
 class SessionTests extends TestBase {
+
+    private static final User SEEDED_USER = new UserBuilder().withSeededUser().build();
 
     @Test
     @Tag("e2e")
@@ -33,9 +37,9 @@ class SessionTests extends TestBase {
     @Tag("positive")
     @DisplayName("Session survives a page reload (token in localStorage)")
     void sessionSurvivesReload() {
-        homePage.openPageWithLocalStorageAuthentication("user1", "password1")
-                .shouldHaveWelcomeMessage("Welcome, user1!")
+        homePage.openPageWithLocalStorageAuthentication(SEEDED_USER.username(), SEEDED_USER.password())
+                .shouldHaveWelcomeMessage(SEEDED_USER.welcomeMessage())
                 .reloadPage()
-                .shouldHaveWelcomeMessage("Welcome, user1!");
+                .shouldHaveWelcomeMessage(SEEDED_USER.welcomeMessage());
     }
 }

@@ -5,6 +5,9 @@ const {
   apiRequest,
 } = require('../../src/helpers/api');
 const { assertSchema } = require('../../src/helpers/schema');
+const { UserBuilder } = require('../../src/helpers/builders');
+
+const seeded = new UserBuilder().withSeededUser().build();
 
 async function json(response) {
   return response.json();
@@ -13,18 +16,18 @@ async function json(response) {
 test.describe('Auth API', { tag: ['@api'] }, () => {
   test('POST /api/auth/login returns the auth contract for a seeded user', async () => {
     const response = await apiRequest('POST', '/api/auth/login', {
-      json: { username: 'user1', password: 'password1' },
+      json: { username: seeded.username, password: seeded.password },
     });
     expect(response.status).toBe(200);
     const body = await json(response);
     assertSchema(body, 'auth-response.json');
-    expect(body.username).toBe('user1');
+    expect(body.username).toBe(seeded.username);
     expect(body.redirectUrl).toBe('/');
   });
 
   test('POST /api/auth/login rejects a wrong password with 401', async () => {
     const response = await apiRequest('POST', '/api/auth/login', {
-      json: { username: 'user1', password: 'wrongpassword' },
+      json: { username: seeded.username, password: 'wrongpassword' },
     });
     expect(response.status).toBe(401);
     const body = await json(response);
@@ -54,7 +57,7 @@ test.describe('Auth API', { tag: ['@api'] }, () => {
 
   test('POST /api/auth/login rejects a short username with 400', async () => {
     const response = await apiRequest('POST', '/api/auth/login', {
-      json: { username: 'ab', password: 'password1' },
+      json: { username: 'ab', password: seeded.password },
     });
     expect(response.status).toBe(400);
     const body = await json(response);
@@ -64,7 +67,7 @@ test.describe('Auth API', { tag: ['@api'] }, () => {
 
   test('POST /api/auth/login rejects a short password with 400', async () => {
     const response = await apiRequest('POST', '/api/auth/login', {
-      json: { username: 'user1', password: '123' },
+      json: { username: seeded.username, password: '123' },
     });
     expect(response.status).toBe(400);
     const body = await json(response);
@@ -74,7 +77,7 @@ test.describe('Auth API', { tag: ['@api'] }, () => {
 
   test('POST /api/auth/login rejects an empty username with 400', async () => {
     const response = await apiRequest('POST', '/api/auth/login', {
-      json: { username: '', password: 'password1' },
+      json: { username: '', password: seeded.password },
     });
     expect(response.status).toBe(400);
     const body = await json(response);
@@ -84,7 +87,7 @@ test.describe('Auth API', { tag: ['@api'] }, () => {
 
   test('POST /api/auth/login rejects an empty password with 400', async () => {
     const response = await apiRequest('POST', '/api/auth/login', {
-      json: { username: 'user1', password: '' },
+      json: { username: seeded.username, password: '' },
     });
     expect(response.status).toBe(400);
     const body = await json(response);
@@ -113,7 +116,7 @@ test.describe('Auth API', { tag: ['@api'] }, () => {
 
   test('POST /api/auth/register rejects a duplicate username with 409', async () => {
     const response = await apiRequest('POST', '/api/auth/register', {
-      json: { username: 'user1', password: 'password123' },
+      json: { username: seeded.username, password: 'password123' },
     });
     expect(response.status).toBe(409);
     const body = await json(response);
@@ -180,14 +183,14 @@ test.describe('Auth API', { tag: ['@api'] }, () => {
 
   test('GET /api/auth/me returns the profile contract for a bearer token', async () => {
     const login = await apiRequest('POST', '/api/auth/login', {
-      json: { username: 'user1', password: 'password1' },
+      json: { username: seeded.username, password: seeded.password },
     });
     const token = (await json(login)).token;
     const response = await apiRequest('GET', '/api/auth/me', { token });
     expect(response.status).toBe(200);
     const body = await json(response);
     assertSchema(body, 'profile.json');
-    expect(body.username).toBe('user1');
+    expect(body.username).toBe(seeded.username);
   });
 
   test('GET /api/auth/me without a token returns 401', async () => {

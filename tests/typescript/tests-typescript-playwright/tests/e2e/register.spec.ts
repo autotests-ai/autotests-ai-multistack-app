@@ -1,6 +1,7 @@
 import { expect } from '@playwright/test';
 import { test } from '../../src/helpers/fixtures/fixture';
 import { deleteAccountQuietly } from '../../src/helpers/api';
+import { UserBuilder } from '../../src/helpers/builders';
 
 const LOGIN_REQUIRED = 'Login is required (minimum 3 characters)';
 const LOGIN_MIN_LENGTH = 'Login must be at least 3 characters';
@@ -9,18 +10,18 @@ const PASSWORD_MIN_LENGTH = 'Password must be at least 6 characters';
 const BOTH_REQUIRED = 'Login and password are required (minimum 3 and 6 characters)';
 const PASSWORD_MISMATCH = 'Passwords do not match';
 const USERNAME_TAKEN = 'Username already taken';
-const REGISTER_USER = 'reguser1';
 const REGISTER_PASSWORD = 'password123';
+const seeded = new UserBuilder().withSeededUser().build();
 
 test.describe('Register', { tag: ['@e2e'] }, () => {
   test('Новый пользователь может зарегистрироваться', { tag: ['@crystal'] }, async ({ webApp, request }) => {
-    await deleteAccountQuietly(request, REGISTER_USER, REGISTER_PASSWORD);
+    const user = new UserBuilder().withUsername().withPassword().build();
     try {
       await webApp.register.open();
-      await webApp.register.signup(REGISTER_USER, REGISTER_PASSWORD);
-      await expect(webApp.home.getWelcomeText()).toContainText(`Welcome, ${REGISTER_USER}!`);
+      await webApp.register.signup(user.username, user.password);
+      await expect(webApp.home.getWelcomeText()).toContainText(user.welcomeMessage());
     } finally {
-      await deleteAccountQuietly(request, REGISTER_USER, REGISTER_PASSWORD);
+      await deleteAccountQuietly(request, user.username, user.password);
     }
   });
 
@@ -44,9 +45,9 @@ test.describe('Register', { tag: ['@e2e'] }, () => {
 
   test('Занятый username на регистрации показывает ошибку', { tag: ['@crystal'] }, async ({ webApp }) => {
     await webApp.register.open();
-    await webApp.register.typeUsername('user1');
-    await webApp.register.typePassword('password123');
-    await webApp.register.typeConfirmPassword('password123');
+    await webApp.register.typeUsername(seeded.username);
+    await webApp.register.typePassword(REGISTER_PASSWORD);
+    await webApp.register.typeConfirmPassword(REGISTER_PASSWORD);
     await webApp.register.submitExpectingError();
     await expect(webApp.register.errorMessage).toContainText(USERNAME_TAKEN);
   });

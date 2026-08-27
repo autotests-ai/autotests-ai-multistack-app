@@ -22,4 +22,9 @@ public final class DataFaker {
         }
         return base + "_" + FAKER.number().digits(6);
     }
+
+    /** Meets backend password {@code @Size(min = 6)}. */
+    public static String password() {
+        return FAKER.internet().password(8, 16);
+    }
 }

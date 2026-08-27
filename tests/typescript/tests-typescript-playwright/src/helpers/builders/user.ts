@@ -1,31 +1,38 @@
 import { faker } from '@faker-js/faker';
 
-export type BuiltUser = {
-  username?: string;
-  password?: string;
-};
+export class User {
+  constructor(
+    readonly username: string,
+    readonly password: string,
+  ) {}
+
+  welcomeMessage(): string {
+    return `Welcome, ${this.username}!`;
+  }
+}
 
 export class UserBuilder {
-  private user: BuiltUser = {};
+  private username = '';
+  private password = '';
 
   withUsername(): this {
-    this.user.username = `user_${faker.string.alphanumeric(8).toLowerCase()}`;
+    this.username = `user_${faker.string.alphanumeric(8).toLowerCase()}`;
     return this;
   }
 
   withPassword(): this {
-    this.user.password = faker.internet.password({ length: 12 });
+    this.password = faker.internet.password({ length: 12 });
     return this;
   }
 
   /** Seeded demo user on the teaching stack */
   withSeededUser(): this {
-    this.user.username = 'user1';
-    this.user.password = 'password1';
+    this.username = 'user1';
+    this.password = 'password1';
     return this;
   }
 
-  build(): BuiltUser {
-    return { ...this.user };
+  build(): User {
+    return new User(this.username, this.password);
   }
 }

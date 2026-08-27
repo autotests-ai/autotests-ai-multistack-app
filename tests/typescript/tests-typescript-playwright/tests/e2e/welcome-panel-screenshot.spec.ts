@@ -12,7 +12,7 @@ test.describe('Welcome panel screenshot', { tag: ['@e2e', '@screenshot'] }, () =
       const user = new UserBuilder().withSeededUser().build();
       await page.setViewportSize({ width, height: HEIGHT });
       await webApp.login.open();
-      await webApp.login.login(user.username!, user.password!);
+      await webApp.login.login(user.username, user.password);
       await expect(webApp.home.welcomeMessage).toContainText('Welcome,');
       await captureAndCompare(
         webApp.home.welcomePanel,

@@ -1,3 +1,3 @@
-const { UserBuilder } = require('./user');
+const { User, UserBuilder } = require('./user');
 
-module.exports = { UserBuilder };
+module.exports = { User, UserBuilder };

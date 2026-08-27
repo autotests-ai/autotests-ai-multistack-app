@@ -1,28 +1,42 @@
 const { faker } = require('@faker-js/faker');
 
+class User {
+  constructor(username, password) {
+    this.username = username;
+    this.password = password;
+  }
+
+  welcomeMessage() {
+    return `Welcome, ${this.username}!`;
+  }
+}
+
+exports.User = User;
+
 exports.UserBuilder = class UserBuilder {
   constructor() {
-    this.user = {};
+    this.username = '';
+    this.password = '';
   }
 
   withUsername() {
-    this.user.username = `user_${faker.string.alphanumeric(8).toLowerCase()}`;
+    this.username = `user_${faker.string.alphanumeric(8).toLowerCase()}`;
     return this;
   }
 
   withPassword() {
-    this.user.password = faker.internet.password({ length: 12 });
+    this.password = faker.internet.password({ length: 12 });
     return this;
   }
 
   /** Seeded demo user on the teaching stack */
   withSeededUser() {
-    this.user.username = 'user1';
-    this.user.password = 'password1';
+    this.username = 'user1';
+    this.password = 'password1';
     return this;
   }
 
   build() {
-    return { ...this.user };
+    return new User(this.username, this.password);
   }
 };

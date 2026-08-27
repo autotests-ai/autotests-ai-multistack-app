@@ -3,7 +3,8 @@ package tests.e2e;
 import tests.TestBase;
 import annotations.Layer;
 import api.AuthApiClient;
-import helpers.DataFaker;
+import helpers.User;
+import helpers.UserBuilder;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -33,16 +34,18 @@ class RegisterTests extends TestBase {
             "Login and password are required (minimum 3 and 6 characters)";
     private static final String DUPLICATE_USERNAME_MESSAGE = "Username already taken";
 
+    private static final User SEEDED_USER = new UserBuilder().withSeededUser().build();
+
     private static final String REGISTER_PASSWORD = "password123";
 
-    /** Username registered by the test — deleted through the API afterwards. */
-    private String registeredUsername;
+    /** Throwaway registered by the test — deleted through the API afterwards. */
+    private User registeredUser;
 
     @AfterEach
     void cleanupRegisteredUser() {
-        if (registeredUsername != null) {
-            AuthApiClient.deleteAccountQuietly(registeredUsername, REGISTER_PASSWORD);
-            registeredUsername = null;
+        if (registeredUser != null) {
+            AuthApiClient.deleteAccountQuietly(registeredUser.username(), registeredUser.password());
+            registeredUser = null;
         }
     }
 
@@ -51,11 +54,14 @@ class RegisterTests extends TestBase {
     @Tag("positive")
     @DisplayName("New user can register and land on home")
     void shouldRegisterNewUser() {
-        registeredUsername = DataFaker.username();
+        registeredUser = new UserBuilder().withUsername().withPassword().build();
 
         registerPage.openPage()
-                .fillAndSubmitForm(registeredUsername, REGISTER_PASSWORD, REGISTER_PASSWORD)
-                .shouldHaveWelcomeMessage("Welcome, " + registeredUsername + "!");
+                .fillAndSubmitForm(
+                        registeredUser.username(),
+                        registeredUser.password(),
+                        registeredUser.password())
+                .shouldHaveWelcomeMessage(registeredUser.welcomeMessage());
     }
 
     @Test
@@ -90,9 +96,9 @@ class RegisterTests extends TestBase {
     @DisplayName("Duplicate username shows readable error")
     void shouldShowErrorWhenUsernameIsTaken() {
         registerPage.openPage()
-                .typeUsername("user1")
-                .typePassword("password123")
-                .typeConfirmPassword("password123")
+                .typeUsername(SEEDED_USER.username())
+                .typePassword(REGISTER_PASSWORD)
+                .typeConfirmPassword(REGISTER_PASSWORD)
                 .submitExpectingError()
                 .shouldHaveErrorMessage(DUPLICATE_USERNAME_MESSAGE);
     }

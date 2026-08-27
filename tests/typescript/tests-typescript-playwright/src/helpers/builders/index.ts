@@ -1,2 +1,1 @@
-export { UserBuilder } from './user';
-export type { BuiltUser } from './user';
+export { User, UserBuilder } from './user';

@@ -1,15 +1,16 @@
-import uuid
-
 import allure
 import pytest
 
 from api_client import delete_account_quietly
+from helpers.user import UserBuilder
 from pages.register_page import RegisterPage
 
 LOGIN_REQUIRED = "Login is required (minimum 3 characters)"
 LOGIN_MIN_LENGTH = "Login must be at least 3 characters"
 PASSWORD_REQUIRED = "Password is required (minimum 6 characters)"
 BOTH_REQUIRED = "Login and password are required (minimum 3 and 6 characters)"
+REGISTER_PASSWORD = "password123"
+SEEDED_USER = UserBuilder().with_seeded_user().build()
 
 pytestmark = pytest.mark.e2e
 
@@ -24,16 +25,15 @@ class TestRegister:
     @pytest.mark.smoke
     @pytest.mark.positive
     def test_should_register_new_user(self, register_page: RegisterPage, config):
-        username = f"user_{uuid.uuid4().hex[:8]}"
-        password = "password123"
+        user = UserBuilder().with_username().with_password().build()
         try:
             (
                 register_page.open_page()
-                .fill_and_submit_form(username, password, password)
-                .should_have_welcome_message(f"Welcome, {username}!")
+                .fill_and_submit_form(user.username, user.password, user.password)
+                .should_have_welcome_message(user.welcome_message())
             )
         finally:
-            delete_account_quietly(config, username, password)
+            delete_account_quietly(config, user.username, user.password)
 
     @allure.title("Password mismatch shows validation error")
     @allure.severity(allure.severity_level.NORMAL)
@@ -67,9 +67,9 @@ class TestRegister:
     def test_should_show_error_when_username_is_taken(self, register_page: RegisterPage):
         (
             register_page.open_page()
-            .type_username("user1")
-            .type_password("password123")
-            .type_confirm_password("password123")
+            .type_username(SEEDED_USER.username)
+            .type_password(REGISTER_PASSWORD)
+            .type_confirm_password(REGISTER_PASSWORD)
             .submit_expecting_error()
             .should_have_error_message("Username already taken")
         )
