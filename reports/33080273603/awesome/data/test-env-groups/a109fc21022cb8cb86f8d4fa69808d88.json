@@ -1,1 +1,0 @@
-{"id":"a109fc21022cb8cb86f8d4fa69808d88","fullName":"frontend-typescript-react:src/test/pwa/pwa-register.test.ts#pwa-register controllerchange reload calls onRegisterError when register rejects","name":"calls onRegisterError when register rejects","status":"passed","testResultsByEnv":{"default":"f8003d579843180549dbbe1202706672"}}
