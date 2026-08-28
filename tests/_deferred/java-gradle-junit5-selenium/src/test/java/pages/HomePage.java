@@ -30,13 +30,6 @@ public class HomePage extends BasePage {
         return this;
     }
 
-    @Step("Verify home layout is mounted")
-    public HomePage shouldShowLayout() {
-        waitVisible(LAYOUT);
-        waitVisible(ITEMS);
-        return this;
-    }
-
     @Step("Verify health status contains: {textFragment}")
     public HomePage shouldShowHealthText(String textFragment) {
         waitTextContains(HEALTH, textFragment);
@@ -58,8 +51,7 @@ public class HomePage extends BasePage {
 
     @Step("Click logout button")
     public LoginPage clickLogoutButton() {
-        jsClick(LOGOUT);
-        waitUrlPathEndsWith("login");
+        click(LOGOUT);
         return new LoginPage(driver, config);
     }
 }

@@ -14,7 +14,6 @@ public class LoginPage extends BasePage {
     private static final By FORM_TITLE = By.cssSelector("[data-testid='login-form-title']");
     private static final By ERROR = By.cssSelector("[data-testid='error-message']");
     private static final By REGISTER_LINK = By.cssSelector("[data-testid='register-link']");
-    private static final By HEADER = By.cssSelector("[data-testid='header']");
 
     public LoginPage(WebDriver driver, TestConfig config) {
         super(driver, config);
@@ -28,7 +27,7 @@ public class LoginPage extends BasePage {
 
     @Step("Click 'Register' link under the login form")
     public RegisterPage clickRegisterLink() {
-        driver.findElement(REGISTER_LINK).click();
+        click(REGISTER_LINK);
         return new RegisterPage(driver, config);
     }
 
@@ -41,48 +40,32 @@ public class LoginPage extends BasePage {
 
     @Step("Type username: {username}")
     public LoginPage typeUsername(String username) {
-        fill(LOGIN_INPUT, username);
+        type(LOGIN_INPUT, username);
         return this;
     }
 
     @Step("Type password")
     public LoginPage typePassword(String password) {
-        fill(PASSWORD_INPUT, password);
+        type(PASSWORD_INPUT, password);
         return this;
     }
 
     @Step("Submit login form")
     public HomePage submit() {
-        driver.findElement(SUBMIT).click();
-        waitUrlIsHome();
+        click(SUBMIT);
         return new HomePage(driver, config);
     }
 
     @Step("Submit login form expecting validation error")
     public LoginPage submitExpectingError() {
-        driver.findElement(SUBMIT).click();
+        click(SUBMIT);
         waitVisible(ERROR);
-        return this;
-    }
-
-    @Step("Verify embedded header is mounted")
-    public LoginPage shouldShowEmbeddedHeader() {
-        waitVisible(HEADER);
         return this;
     }
 
     @Step("Verify login page is open")
     public LoginPage shouldBeOpen() {
         waitVisible(LOGIN_FORM);
-        return this;
-    }
-
-    @Step("Verify login form is mounted")
-    public LoginPage shouldShowLoginForm() {
-        waitVisible(FORM_TITLE);
-        waitVisible(LOGIN_INPUT);
-        waitVisible(PASSWORD_INPUT);
-        waitVisible(SUBMIT);
         return this;
     }
 
