@@ -1,1 +1,0 @@
-{"id":"3c29a75ae22805fd285c1729ad798f1d","fullName":"api/auth.spec.ts:35:7","name":"POST /api/auth/login answers an unknown user with the same 401 (no enumeration)","status":"passed","testResultsByEnv":{"default":"b3c6133d02480204b8fa19f047534917"}}
