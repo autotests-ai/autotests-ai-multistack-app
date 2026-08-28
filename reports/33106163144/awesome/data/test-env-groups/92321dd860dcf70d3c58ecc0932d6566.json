@@ -1,1 +1,0 @@
-{"id":"92321dd860dcf70d3c58ecc0932d6566","fullName":"e2e/register.spec.ts:78:7","name":"Пустые логин и пароль на регистрации показывают ошибку валидации","status":"passed","testResultsByEnv":{"default":"76c0bd9818c1f56269ca683b20e34e2f"}}
