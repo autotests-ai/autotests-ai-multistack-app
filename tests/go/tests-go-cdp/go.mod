@@ -1,3 +1,3 @@
 module tests-go-cdp
 
-go 1.22
+go 1.27
