@@ -7,6 +7,7 @@ import org.openqa.selenium.WebDriver;
 
 public class LoginPage extends BasePage {
 
+    private static final By LOGIN_FORM = By.cssSelector("[data-testid='login-form']");
     private static final By LOGIN_INPUT = By.cssSelector("[data-testid='login-input']");
     private static final By PASSWORD_INPUT = By.cssSelector("[data-testid='password-input']");
     private static final By SUBMIT = By.cssSelector("[data-testid='submit-button']");
@@ -22,7 +23,7 @@ public class LoginPage extends BasePage {
     @Step("Open login page")
     public LoginPage openPage() {
         openPath("/login");
-        return this;
+        return shouldBeOpen();
     }
 
     @Step("Click 'Register' link under the login form")
@@ -67,6 +68,12 @@ public class LoginPage extends BasePage {
     @Step("Verify embedded header is mounted")
     public LoginPage shouldShowEmbeddedHeader() {
         waitVisible(HEADER);
+        return this;
+    }
+
+    @Step("Verify login page is open")
+    public LoginPage shouldBeOpen() {
+        waitVisible(LOGIN_FORM);
         return this;
     }
 

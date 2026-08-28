@@ -57,8 +57,10 @@ module.exports = defineConfig({
     ['line'],
     ['allure-playwright', { resultsDir: process.env.ALLURE_RESULTS || 'allure-results' }],
   ],
+  expect: { timeout: 5_000 },
   use: {
     baseURL: process.env.UI_URL || 'https://autotests.ai/stack/backend-java-spring/frontend-typescript-react',
+    actionTimeout: 5_000,
     screenshot: 'only-on-failure',
     trace: 'on-first-retry',
     ...(connectOptions ? { connectOptions } : {}),

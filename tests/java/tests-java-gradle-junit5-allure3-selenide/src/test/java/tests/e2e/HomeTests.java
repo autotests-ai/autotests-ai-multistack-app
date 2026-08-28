@@ -23,7 +23,6 @@ class HomeTests extends TestBase {
     @DisplayName("Page load fetches health and items from API")
     void pageLoadFetchesItems() {
         homePage.openPage()
-                .shouldShowLayout()
                 .shouldShowHealthText("service: " + config.apiHealthService())
                 .shouldShowItemText("Alpha");
     }

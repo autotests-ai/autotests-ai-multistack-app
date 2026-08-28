@@ -17,7 +17,6 @@ class TestHome:
     def test_page_load_fetches_items(self, home_page: HomePage, config):
         (
             home_page.open_page()
-            .should_show_layout()
             .should_show_health_text(f"service: {config.api_health_service}")
             .should_show_item_text("Alpha")
         )

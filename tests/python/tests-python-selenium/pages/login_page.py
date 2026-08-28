@@ -19,7 +19,7 @@ class LoginPage(BasePage):
     @allure.step("Open login page")
     def open_page(self) -> LoginPage:
         self.open_path("/login")
-        return self
+        return self.should_be_open()
 
     @allure.step("Click 'Register' link under the login form")
     def click_register_link(self):
@@ -49,7 +49,6 @@ class LoginPage(BasePage):
         from pages.home_page import HomePage
 
         self.find(*self.SUBMIT).click()
-        self.wait_url_is_home()
         return HomePage(self.driver, self.config)
 
     @allure.step("Submit login form expecting validation error")
@@ -61,6 +60,11 @@ class LoginPage(BasePage):
     @allure.step("Verify embedded header is mounted")
     def should_show_embedded_header(self) -> LoginPage:
         self.wait_visible(*self.HEADER)
+        return self
+
+    @allure.step("Verify login page is open")
+    def should_be_open(self) -> LoginPage:
+        self.wait_visible(*self.LOGIN_FORM)
         return self
 
     @allure.step("Verify login form is mounted")

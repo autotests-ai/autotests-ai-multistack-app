@@ -14,8 +14,8 @@
     },
     {
       "op": "wait",
-      "selector": "[data-testid=submit-button]",
-      "timeout_ms": 3000
+      "selector": "[data-testid=login-form]",
+      "timeout_ms": 5000
     },
     {
       "op": "click",
@@ -24,7 +24,7 @@
     {
       "op": "wait",
       "selector": "[data-testid=error-message]",
-      "timeout_ms": 10000
+      "timeout_ms": 5000
     },
     {
       "op": "wait",

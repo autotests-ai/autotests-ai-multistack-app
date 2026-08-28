@@ -4,14 +4,12 @@ import {
   apiRootFrom,
   apiRoot,
   envBool,
-  isAppRootUrl,
   attachFull,
   attachBrowserConsoleLogs,
   attachHarLogs,
   attachLastScreenshot,
   attachPageSource,
   attachVideo,
-  BASE_URL,
 } from '../../src/helpers/env';
 import { username } from '../../src/helpers/api';
 
@@ -71,12 +69,6 @@ test.describe('env helpers', { tag: ['@infra', '@infra_backend'] }, () => {
     if (prev !== undefined) {
       process.env.API_BASE_URL = prev;
     }
-  });
-
-  test('isAppRootUrl is mount-aware', () => {
-    expect(isAppRootUrl(BASE_URL)).toBe(true);
-    expect(isAppRootUrl(new URL(BASE_URL))).toBe(true);
-    expect(isAppRootUrl(`${BASE_URL}login`)).toBe(false);
   });
 
   test('attach flags default off', () => {

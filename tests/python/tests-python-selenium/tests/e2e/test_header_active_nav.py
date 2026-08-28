@@ -39,7 +39,7 @@ class TestHeaderActiveNav:
     ):
         register_page.open_page()
         header.should_have_active_nav("header-nav-register")
-        register_page.click_login_link().should_show_login_form()
+        register_page.click_login_link().should_be_open()
         header.should_have_active_nav("header-nav-login")
 
     @allure.title("In-form link Login -> Register re-syncs the active item")
@@ -50,5 +50,5 @@ class TestHeaderActiveNav:
     ):
         login_page.open_page()
         header.should_have_active_nav("header-nav-login")
-        login_page.click_register_link().should_show_register_form()
+        login_page.click_register_link().should_be_open()
         header.should_have_active_nav("header-nav-register")

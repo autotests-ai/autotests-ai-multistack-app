@@ -21,6 +21,12 @@ public class HomePage extends BasePage {
     @Step("Open home page")
     public HomePage openPage() {
         openPath("/");
+        return shouldBeOpen();
+    }
+
+    @Step("Verify home page is open")
+    public HomePage shouldBeOpen() {
+        waitVisible(LAYOUT);
         return this;
     }
 

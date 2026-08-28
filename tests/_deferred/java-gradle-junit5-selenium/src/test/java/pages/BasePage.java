@@ -22,7 +22,7 @@ public abstract class BasePage {
     protected final Duration timeout;
 
     protected BasePage(WebDriver driver, TestConfig config) {
-        this(driver, config, Duration.ofSeconds(10));
+        this(driver, config, Duration.ofSeconds(5));
     }
 
     protected BasePage(WebDriver driver, TestConfig config, Duration timeout) {

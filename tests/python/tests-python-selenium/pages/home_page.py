@@ -49,12 +49,12 @@ class HomePage(BasePage):
     @allure.step("Open home page")
     def open_page(self) -> HomePage:
         self.open_path("/")
-        return self
+        return self.should_be_open()
 
     @allure.step("Reload current page")
     def reload_page(self) -> HomePage:
         self.driver.refresh()
-        return self
+        return self.should_be_open()
 
     @allure.step("Open home page with local storage authentication")
     def open_page_with_local_storage_authentication(
@@ -67,7 +67,7 @@ class HomePage(BasePage):
             "localStorage.setItem(arguments[0], arguments[1]);", key, token
         )
         self.open_path("/")
-        return self
+        return self.should_be_open()
 
     @allure.step("Open home page with invalid local storage token")
     def open_page_with_invalid_token(self) -> HomePage:
@@ -77,6 +77,11 @@ class HomePage(BasePage):
             "localStorage.setItem(arguments[0], arguments[1]);", key, "invalid-token"
         )
         self.open_path("/")
+        return self.should_be_open()
+
+    @allure.step("Verify home page is open")
+    def should_be_open(self) -> HomePage:
+        self.wait_visible(*self.LAYOUT)
         return self
 
     @allure.step("Verify home layout is mounted")

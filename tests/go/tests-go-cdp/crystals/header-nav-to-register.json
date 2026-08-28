@@ -15,7 +15,7 @@
     {
       "op": "wait",
       "selector": "[data-testid=header-nav-register]",
-      "timeout_ms": 3000
+      "timeout_ms": 5000
     },
     {
       "op": "click",

@@ -26,7 +26,8 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
 **Not classical:** calling Chrome “mount” checks `integration`. Those are thin **e2e** (`@Tag("mock")`).  
 **Not classical either:** Spring `@WebMvcTest` / `@DataJpaTest` — those stay in **unit** (see slices below).  
-**Not a pyramid language:** `tests/go/tests-go-cdp` mills IR via `greedy run` (`layers: [crystal]`, crystal column on `/stack/`). Not `@Layer`.
+**Not a pyramid language:** `tests/go/tests-go-cdp` mills IR via `greedy run` (`layers: [crystal]`, crystal column on `/stack/`). Not `@Layer`.  
+**Go living cell:** `tests/go/tests-go-testing-allure3` — `go test` + official Allure Go + testify, **api** layer only. Not Playwright (that is TS/JS). Not Gomega.
 
 ## integration vs api — intent, not tag
 

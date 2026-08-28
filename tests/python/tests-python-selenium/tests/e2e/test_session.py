@@ -17,7 +17,6 @@ class TestSession:
     def test_invalid_token_clears_session(self, home_page: HomePage):
         (
             home_page.open_page_with_invalid_token()
-            .should_show_layout()
             .should_hide_welcome_panel()
             .should_clear_auth_token()
         )

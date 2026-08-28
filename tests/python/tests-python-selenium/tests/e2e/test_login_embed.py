@@ -18,6 +18,5 @@ class TestLoginEmbed:
         (
             login_page.open_page()
             .should_show_embedded_header()
-            .should_show_login_form()
             .should_have_form_title("Login Form")
         )

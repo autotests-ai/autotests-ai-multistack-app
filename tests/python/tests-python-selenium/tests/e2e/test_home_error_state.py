@@ -27,9 +27,9 @@ class TestHomeErrorState:
     @allure.title("Items API failure shows a readable error, not a blank page")
     def test_items_api_failure_shows_readable_error(self, mock_admin, home_page: HomePage, config):
         mock_scenarios.set_state(config, "items", "error")
-        home_page.open_page().should_show_layout().should_show_items_error("✗ items: HTTP 500")
+        home_page.open_page().should_show_items_error("✗ items: HTTP 500")
 
     @allure.title("Health API failure shows a readable error in the health panel")
     def test_health_api_failure_shows_readable_error(self, mock_admin, home_page: HomePage, config):
         mock_scenarios.set_state(config, "health", "error")
-        home_page.open_page().should_show_layout().should_show_health_error("✗ health: HTTP 500")
+        home_page.open_page().should_show_health_error("✗ health: HTTP 500")

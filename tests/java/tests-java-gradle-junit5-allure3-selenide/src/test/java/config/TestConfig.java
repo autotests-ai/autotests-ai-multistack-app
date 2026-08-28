@@ -99,6 +99,14 @@ public interface TestConfig extends Config {
     @DefaultValue("false")
     boolean skipBlankOpen();
 
+    /**
+     * Maps to {@code Configuration.fastSetValue}. Off = Selenide {@code sendKeys}.
+     * On = JS setValue via test {@code set-value.js} (native HTMLInputElement setter).
+     */
+    @Key("fastSetValue")
+    @DefaultValue("false")
+    boolean fastSetValue();
+
     @Key("enableHar")
     @DefaultValue("false")
     boolean enableHar();

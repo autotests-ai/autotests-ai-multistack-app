@@ -23,7 +23,6 @@ class SessionTests extends TestBase {
     @DisplayName("Invalid token clears session and hides welcome")
     void invalidTokenClearsSession() {
         homePage.openPageWithInvalidToken()
-                .shouldShowLayout()
                 .shouldHideWelcomePanel()
                 .shouldClearAuthToken();
     }

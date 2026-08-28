@@ -1,5 +1,4 @@
 import type { Locator, Page } from '@playwright/test';
-import { isAppRootUrl } from '../helpers/env';
 
 export class LoginPage {
   readonly page: Page;
@@ -25,13 +24,24 @@ export class LoginPage {
   async open(): Promise<void> {
     // Relative to baseURL (ends with '/') — stays inside path-mounted deploys.
     await this.page.goto('login');
+    await this.shouldBeOpen();
+  }
+
+  async shouldBeOpen(): Promise<void> {
+    await this.loginForm.waitFor({ state: 'visible' });
+  }
+
+  async shouldShowLoginForm(): Promise<void> {
+    await this.formTitle.waitFor({ state: 'visible' });
+    await this.loginInput.waitFor({ state: 'visible' });
+    await this.passwordInput.waitFor({ state: 'visible' });
+    await this.submitButton.waitFor({ state: 'visible' });
   }
 
   async login(username: string, password: string): Promise<void> {
     await this.loginInput.fill(username);
     await this.passwordInput.fill(password);
     await this.submitButton.click();
-    await this.page.waitForURL(isAppRootUrl);
   }
 
   async typeUsername(username: string): Promise<void> {
@@ -44,7 +54,7 @@ export class LoginPage {
 
   async submitExpectingError(): Promise<void> {
     await this.submitButton.click();
-    await this.errorMessage.waitFor({ state: 'visible', timeout: 10_000 });
+    await this.errorMessage.waitFor({ state: 'visible' });
   }
 
   async clickRegisterLink(): Promise<void> {

@@ -37,7 +37,7 @@ class HeaderActiveNavTests extends TestBase {
     void inFormLinkFromRegisterToLoginSyncsHeader() {
         registerPage.openPage();
         header.shouldHaveActiveNav("header-nav-register");
-        registerPage.clickLoginLink().shouldShowLoginForm();
+        registerPage.clickLoginLink().shouldBeOpen();
         header.shouldHaveActiveNav("header-nav-login");
     }
 
@@ -47,7 +47,7 @@ class HeaderActiveNavTests extends TestBase {
     void inFormLinkFromLoginToRegisterSyncsHeader() {
         loginPage.openPage();
         header.shouldHaveActiveNav("header-nav-login");
-        loginPage.clickRegisterLink().shouldShowRegisterForm();
+        loginPage.clickRegisterLink().shouldBeOpen();
         header.shouldHaveActiveNav("header-nav-register");
     }
 }

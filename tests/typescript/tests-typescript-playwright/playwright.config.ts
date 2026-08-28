@@ -55,8 +55,10 @@ export default defineConfig({
     ['line'],
     ['allure-playwright', { resultsDir: process.env.ALLURE_RESULTS || 'allure-results' }],
   ],
+  expect: { timeout: 5_000 },
   use: {
     baseURL: uiBaseUrl(),
+    actionTimeout: 5_000,
     screenshot: 'only-on-failure',
     trace: 'on-first-retry',
     ...(connectOptions ? { connectOptions } : {}),

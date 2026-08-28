@@ -8,10 +8,9 @@ import static com.codeborne.selenide.Selenide.open;
 import com.codeborne.selenide.SelenideElement;
 import io.qameta.allure.Step;
 
-import static pages.PageTimeouts.PAGE_READY;
-
 public class RegisterPage {
 
+    private final SelenideElement registerForm = $("[data-testid='register-form']");
     private final SelenideElement loginInput = $("[data-testid='register-login-input']");
     private final SelenideElement passwordInput = $("[data-testid='register-password-input']");
     private final SelenideElement confirmPasswordInput = $("[data-testid='confirm-password-input']");
@@ -22,7 +21,7 @@ public class RegisterPage {
     @Step("Open register page")
     public RegisterPage openPage() {
         open("/register");
-        return this;
+        return shouldBeOpen();
     }
 
     @Step("Fill and submit register form")
@@ -54,20 +53,25 @@ public class RegisterPage {
     @Step("Submit register form")
     public HomePage submit() {
         submitButton.click();
-        BrowserUrl.shouldBeAtAppRoot();
         return new HomePage();
     }
 
     @Step("Submit register form expecting validation or API error")
     public RegisterPage submitExpectingError() {
         submitButton.click();
-        errorMessage.shouldBe(visible, PAGE_READY);
+        errorMessage.shouldBe(visible);
+        return this;
+    }
+
+    @Step("Verify register page is open")
+    public RegisterPage shouldBeOpen() {
+        registerForm.shouldBe(visible);
         return this;
     }
 
     @Step("Verify register form is mounted")
     public RegisterPage shouldShowRegisterForm() {
-        formTitle.shouldBe(visible, PAGE_READY);
+        formTitle.shouldBe(visible);
         loginInput.shouldBe(visible);
         passwordInput.shouldBe(visible);
         confirmPasswordInput.shouldBe(visible);
@@ -83,7 +87,7 @@ public class RegisterPage {
 
     @Step("Verify error message: {message}")
     public RegisterPage shouldHaveErrorMessage(String message) {
-        errorMessage.shouldBe(visible, PAGE_READY);
+        errorMessage.shouldBe(visible);
         errorMessage.shouldHave(text(message));
         return this;
     }

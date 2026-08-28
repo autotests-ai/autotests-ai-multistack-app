@@ -26,6 +26,7 @@ export class HomePage {
   async open(): Promise<void> {
     // '.' resolves to the baseURL directory — the SPA root on both root and path mounts.
     await this.page.goto('.');
+    await this.shouldBeOpen();
   }
 
   async logout(): Promise<void> {
@@ -59,6 +60,16 @@ export class HomePage {
 
   async reload(): Promise<void> {
     await this.page.reload();
+    await this.shouldBeOpen();
+  }
+
+  async shouldBeOpen(): Promise<void> {
+    await this.layout.waitFor({ state: 'visible' });
+  }
+
+  async shouldShowLayout(): Promise<void> {
+    await this.layout.waitFor({ state: 'visible' });
+    await this.itemsList.waitFor({ state: 'visible' });
   }
 
   async stubConfirm(accepted: boolean): Promise<void> {

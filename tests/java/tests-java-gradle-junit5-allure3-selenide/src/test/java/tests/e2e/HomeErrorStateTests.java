@@ -53,7 +53,6 @@ class HomeErrorStateTests extends TestBase {
         MockScenarios.setState("items", "error");
 
         homePage.openPage()
-                .shouldShowLayout()
                 .shouldShowItemsError("✗ items: HTTP 500");
     }
 
@@ -66,7 +65,6 @@ class HomeErrorStateTests extends TestBase {
         MockScenarios.setState("health", "error");
 
         homePage.openPage()
-                .shouldShowLayout()
                 .shouldShowHealthError("✗ health: HTTP 500");
     }
 }

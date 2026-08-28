@@ -46,16 +46,6 @@ export function apiRoot(): string {
   return apiRootFrom(uiBaseUrl());
 }
 
-/** True when the browser landed on the SPA root — mount-aware, trailing-slash-insensitive. */
-export function isAppRootUrl(url: URL | string): boolean {
-  const base = new URL(BASE_URL);
-  const current = url instanceof URL ? url : new URL(url);
-  return (
-    current.host === base.host &&
-    current.pathname.replace(/\/+$/, '') === base.pathname.replace(/\/+$/, '')
-  );
-}
-
 /** Maximum Allure attachments (video, HAR, screenshot, page source, console). */
 export function attachFull(): boolean {
   return envBool('ATTACH_FULL');

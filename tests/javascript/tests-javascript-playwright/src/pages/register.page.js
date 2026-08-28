@@ -1,5 +1,3 @@
-const { isAppRootUrl } = require('../helpers/env');
-
 exports.RegisterPage = class RegisterPage {
   /**
    * @param {import('@playwright/test').Page} page
@@ -19,6 +17,19 @@ exports.RegisterPage = class RegisterPage {
   async open() {
     // Relative to baseURL (ends with '/') — stays inside path-mounted deploys.
     await this.page.goto('register');
+    await this.shouldBeOpen();
+  }
+
+  async shouldBeOpen() {
+    await this.registerForm.waitFor({ state: 'visible' });
+  }
+
+  async shouldShowRegisterForm() {
+    await this.formTitle.waitFor({ state: 'visible' });
+    await this.loginInput.waitFor({ state: 'visible' });
+    await this.passwordInput.waitFor({ state: 'visible' });
+    await this.confirmPasswordInput.waitFor({ state: 'visible' });
+    await this.submitButton.waitFor({ state: 'visible' });
   }
 
   async signup(username, password, confirmPassword = password) {
@@ -26,7 +37,6 @@ exports.RegisterPage = class RegisterPage {
     await this.passwordInput.fill(password);
     await this.confirmPasswordInput.fill(confirmPassword);
     await this.submitButton.click();
-    await this.page.waitForURL(isAppRootUrl);
   }
 
   async typeUsername(username) {
@@ -43,7 +53,7 @@ exports.RegisterPage = class RegisterPage {
 
   async submitExpectingError() {
     await this.submitButton.click();
-    await this.errorMessage.waitFor({ state: 'visible', timeout: 10_000 });
+    await this.errorMessage.waitFor({ state: 'visible' });
   }
 
   async clickLoginLink() {

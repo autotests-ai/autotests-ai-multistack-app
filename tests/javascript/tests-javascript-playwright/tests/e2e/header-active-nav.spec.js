@@ -25,7 +25,7 @@ test.describe('Header active nav', { tag: ['@e2e'] }, () => {
     await webApp.login.open();
     await expect(webApp.header.activeNav('header-nav-login')).toHaveClass(/is-active/);
     await webApp.login.clickRegisterLink();
-    await expect(webApp.register.registerForm).toBeVisible();
+    await webApp.register.shouldBeOpen();
     await expect(webApp.header.activeNav('header-nav-register')).toHaveClass(/is-active/);
   });
 
@@ -33,7 +33,7 @@ test.describe('Header active nav', { tag: ['@e2e'] }, () => {
     await webApp.register.open();
     await expect(webApp.header.activeNav('header-nav-register')).toHaveClass(/is-active/);
     await webApp.register.clickLoginLink();
-    await expect(webApp.login.loginForm).toBeVisible();
+    await webApp.login.shouldBeOpen();
     await expect(webApp.header.activeNav('header-nav-login')).toHaveClass(/is-active/);
   });
 });

@@ -14,8 +14,8 @@
     },
     {
       "op": "wait",
-      "selector": "[data-testid=register-login-input]",
-      "timeout_ms": 3000
+      "selector": "[data-testid=register-form]",
+      "timeout_ms": 5000
     },
     {
       "op": "fill",
@@ -39,7 +39,7 @@
     {
       "op": "wait",
       "selector": "[data-testid=register-error-message]",
-      "timeout_ms": 10000
+      "timeout_ms": 5000
     },
     {
       "op": "wait",

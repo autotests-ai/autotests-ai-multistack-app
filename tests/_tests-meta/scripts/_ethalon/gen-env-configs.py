@@ -35,6 +35,7 @@ COMMON_BROWSER = {
     "browserSize": "1920x1280",
     "headless": "true",
     "closeBrowserAfterAll": "true",
+    "fastSetValue": "false",
     "enableHar": "false",
     "enableVnc": "false",
     "enableVideo": "false",
@@ -154,7 +155,7 @@ def format_file(stand: str, layer: str, values: dict[str, str]) -> str:
         ("Selenoid hub", ["hubUrl", "uiUrl", "smokeUrl"]),
         (
             "Browser configuration",
-            ["browser", "browserVersion", "browserSize", "headless", "closeBrowserAfterEach", "closeBrowserAfterAll"],
+            ["browser", "browserVersion", "browserSize", "headless", "closeBrowserAfterEach", "closeBrowserAfterAll", "fastSetValue"],
         ),
         (
             "Remote browser hub configuration",

@@ -13,7 +13,7 @@ import static com.codeborne.selenide.Selenide.refresh;
 import com.codeborne.selenide.SelenideElement;
 import io.qameta.allure.Step;
 
-public class LoginPage extends BasePage {
+public class HeaderComponent {
 
     private final SelenideElement embeddedHeader = $("[data-testid='header']");
     private final SelenideElement loginForm = $("[data-testid='login-form']");
@@ -22,75 +22,18 @@ public class LoginPage extends BasePage {
     private final SelenideElement submitButton = $("[data-testid='submit-button']");
     private final SelenideElement formTitle = $("[data-testid='login-form-title']");
     private final SelenideElement errorMessage = $("[data-testid='error-message']");
-
-    @Step("Open login page")
-    public LoginPage openPage() {
-        open("/login");
-        return shouldBeOpen();
-    }
-
-    @Step("Fill and submit form")
-    public HomePage fillAndSubmitForm(String username, String password) {
-        typeUsername(username);
-        typePassword(password);
-        return submit();
-    }
-
-    @Step("Type username: {username}")
-    public LoginPage typeUsername(String username) {
-        loginInput.setValue(username);
-        return this;
-    }
-
-    @Step("Type password")
-    public LoginPage typePassword(String password) {
-        passwordInput.setValue(password);
-        return this;
-    }
-
-    @Step("Submit login form")
-    public HomePage submit() {
-        submitButton.click();
-        return new HomePage();
-    }
-
-    @Step("Submit login form expecting validation error")
-    public LoginPage submitExpectingError() {
-        submitButton.click();
-        errorMessage.shouldBe(visible);
-        return this;
-    }
+    private final SelenideElement langToggle =
+            $("[data-testid='header-tools'] [data-testid='header-lang-toggle']");
+    private final SelenideElement langLabel =
+            $("[data-testid='header-tools'] [data-testid='header-lang-label']");
+    private final SelenideElement themeToggle =
+            $("[data-testid='header-tools'] [data-testid='header-theme-toggle']");
+    private final SelenideElement html = $("html");
 
     @Step("Verify embedded header is mounted")
     public LoginPage shouldShowEmbeddedHeader() {
         embeddedHeader.shouldBe(visible);
         return this;
-    }
-
-    @Step("Verify login page is open")
-    public LoginPage shouldBeOpen() {
-        loginForm.shouldBe(visible);
-        return this;
-    }
-
-    @Step("Verify login form is mounted")
-    public LoginPage shouldShowLoginForm() {
-        formTitle.shouldBe(visible);
-        loginInput.shouldBe(visible);
-        passwordInput.shouldBe(visible);
-        submitButton.shouldBe(visible);
-        return this;
-    }
-
-    @Step("Login form panel is visible")
-    public SelenideElement loginFormPanel() {
-        return loginForm.shouldBe(visible);
-    }
-
-    @Step("Reload current page")
-    public LoginPage reloadPage() {
-        refresh();
-        return shouldBeOpen();
     }
 
     @Step("Click language toggle")
@@ -130,15 +73,4 @@ public class LoginPage extends BasePage {
         return this;
     }
 
-    @Step("Verify form title message: {message}")
-    public LoginPage shouldHaveFormTitle(String message) {
-        formTitle.shouldHave(text(message));
-        return this;
-    }
-
-    @Step("Verify error message: {message}")
-    public LoginPage shouldHaveErrorMessage(String message) {
-        errorMessage.shouldHave(text(message));
-        return this;
-    }
 }

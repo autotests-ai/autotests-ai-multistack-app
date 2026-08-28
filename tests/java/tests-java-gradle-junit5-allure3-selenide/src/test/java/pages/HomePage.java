@@ -8,7 +8,6 @@ import static com.codeborne.selenide.Selenide.Wait;
 import static com.codeborne.selenide.Selenide.executeJavaScript;
 import static com.codeborne.selenide.Selenide.open;
 import static com.codeborne.selenide.Selenide.refresh;
-import static pages.PageTimeouts.PAGE_READY;
 
 import api.AuthApiClient;
 import com.codeborne.selenide.SelenideElement;
@@ -59,13 +58,13 @@ public class HomePage {
     @Step("Open home page")
     public HomePage openPage() {
         open("/");
-        return this;
+        return shouldBeOpen();
     }
 
     @Step("Reload current page")
     public HomePage reloadPage() {
         refresh();
-        return this;
+        return shouldBeOpen();
     }
 
     @Step("Open home page with local storage authentication")
@@ -79,7 +78,7 @@ public class HomePage {
                 token
         );
         open("/");
-        return this;
+        return shouldBeOpen();
     }
 
     @Step("Open home page with invalid local storage token")
@@ -91,43 +90,49 @@ public class HomePage {
                 "invalid-token"
         );
         open("/");
+        return shouldBeOpen();
+    }
+
+    @Step("Verify home page is open")
+    public HomePage shouldBeOpen() {
+        layout.shouldBe(visible);
         return this;
     }
 
     @Step("Verify home layout is mounted")
     public HomePage shouldShowLayout() {
-        layout.shouldBe(visible, PAGE_READY);
+        layout.shouldBe(visible);
         itemsList.shouldBe(visible);
         return this;
     }
 
     @Step("Verify home layout and health are mounted")
     public HomePage shouldShowLayoutAndHealth() {
-        layout.shouldBe(visible, PAGE_READY);
+        layout.shouldBe(visible);
         healthStatus.shouldBe(visible);
         return this;
     }
 
     @Step("Home layout panel is visible")
     public SelenideElement layoutPanel() {
-        return layout.shouldBe(visible, PAGE_READY);
+        return layout.shouldBe(visible);
     }
 
     @Step("Welcome panel is visible")
     public SelenideElement welcomePanelElement() {
-        return welcomePanel.shouldBe(visible, PAGE_READY);
+        return welcomePanel.shouldBe(visible);
     }
 
     @Step("Verify embedded header is mounted")
     public HomePage shouldShowEmbeddedHeader() {
-        header.shouldBe(visible, PAGE_READY);
+        header.shouldBe(visible);
         return this;
     }
 
     @Step("Verify welcome panel stays hidden")
     public HomePage shouldHideWelcomePanel() {
         // Panel uses the HTML hidden attribute (welcome === null); remote Chrome may still report isDisplayed().
-        welcomePanel.shouldHave(attribute("hidden"), PAGE_READY);
+        welcomePanel.shouldHave(attribute("hidden"));
         return this;
     }
 
@@ -142,31 +147,31 @@ public class HomePage {
 
     @Step("Verify health status contains: {textFragment}")
     public HomePage shouldShowHealthText(String textFragment) {
-        healthStatus.shouldHave(text(textFragment), PAGE_READY);
+        healthStatus.shouldHave(text(textFragment));
         return this;
     }
 
     @Step("Verify items list contains: {textFragment}")
     public HomePage shouldShowItemText(String textFragment) {
-        itemsList.shouldHave(text(textFragment), PAGE_READY);
+        itemsList.shouldHave(text(textFragment));
         return this;
     }
 
     @Step("Verify items panel shows a readable error: {textFragment}")
     public HomePage shouldShowItemsError(String textFragment) {
-        itemsList.shouldHave(text(textFragment), PAGE_READY);
+        itemsList.shouldHave(text(textFragment));
         return this;
     }
 
     @Step("Verify health panel shows a readable error: {textFragment}")
     public HomePage shouldShowHealthError(String textFragment) {
-        healthStatus.shouldHave(text(textFragment), PAGE_READY);
+        healthStatus.shouldHave(text(textFragment));
         return this;
     }
 
     @Step("Verify welcome message: {message}")
     public HomePage shouldHaveWelcomeMessage(String message) {
-        welcomePanel.shouldBe(visible, PAGE_READY);
+        welcomePanel.shouldBe(visible);
         welcomeMessage.shouldHave(text(message));
         return this;
     }
@@ -177,7 +182,7 @@ public class HomePage {
      */
     @Step("Verify session panel offers logout and delete account")
     public HomePage shouldShowSessionActions() {
-        logoutButton.shouldBe(visible, PAGE_READY).shouldHave(text("Logout"));
+        logoutButton.shouldBe(visible).shouldHave(text("Logout"));
         deleteAccountButton.shouldBe(visible).shouldHave(text("Delete account"));
         return this;
     }
@@ -191,7 +196,7 @@ public class HomePage {
     @Step("Click delete account and confirm")
     public LoginPage clickDeleteAccountAndConfirm() {
         stubConfirm(true);
-        deleteAccountButton.shouldBe(visible, PAGE_READY).click();
+        deleteAccountButton.shouldBe(visible).click();
         shouldHaveConfirmMessage();
         return new LoginPage();
     }
@@ -199,7 +204,7 @@ public class HomePage {
     @Step("Click delete account and cancel the confirm")
     public HomePage clickDeleteAccountAndCancel() {
         stubConfirm(false);
-        deleteAccountButton.shouldBe(visible, PAGE_READY).click();
+        deleteAccountButton.shouldBe(visible).click();
         shouldHaveConfirmMessage();
         return this;
     }

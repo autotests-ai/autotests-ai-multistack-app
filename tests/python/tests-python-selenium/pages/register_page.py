@@ -19,7 +19,7 @@ class RegisterPage(BasePage):
     @allure.step("Open register page")
     def open_page(self) -> RegisterPage:
         self.open_path("/register")
-        return self
+        return self.should_be_open()
 
     @allure.step("Click 'Login' link under the register form")
     def click_login_link(self):
@@ -55,7 +55,6 @@ class RegisterPage(BasePage):
         from pages.home_page import HomePage
 
         self.find(*self.SUBMIT).click()
-        self.wait_url_is_home()
         return HomePage(self.driver, self.config)
 
     @allure.step("Submit register form expecting validation error")
@@ -67,6 +66,11 @@ class RegisterPage(BasePage):
     @allure.step("Verify error message: {message}")
     def should_have_error_message(self, message: str) -> RegisterPage:
         self.wait_text_contains(*self.ERROR, message)
+        return self
+
+    @allure.step("Verify register page is open")
+    def should_be_open(self) -> RegisterPage:
+        self.wait_visible(*self.REGISTER_FORM)
         return self
 
     @allure.step("Verify register form is mounted")

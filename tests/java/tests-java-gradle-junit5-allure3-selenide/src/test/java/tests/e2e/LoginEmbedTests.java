@@ -24,7 +24,6 @@ class LoginEmbedTests extends TestBase {
     void embeddedHeaderIsVisibleOnLoginPage() {
         loginPage.openPage()
                 .shouldShowEmbeddedHeader()
-                .shouldShowLoginForm()
                 .shouldHaveFormTitle("Login Form");
     }
 }

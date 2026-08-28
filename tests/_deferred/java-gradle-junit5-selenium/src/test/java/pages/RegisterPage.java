@@ -7,6 +7,7 @@ import org.openqa.selenium.WebDriver;
 
 public class RegisterPage extends BasePage {
 
+    private static final By REGISTER_FORM = By.cssSelector("[data-testid='register-form']");
     private static final By LOGIN_INPUT = By.cssSelector("[data-testid='login-input']");
     private static final By PASSWORD_INPUT = By.cssSelector("[data-testid='password-input']");
     private static final By CONFIRM_PASSWORD = By.cssSelector("[data-testid='confirm-password-input']");
@@ -22,7 +23,7 @@ public class RegisterPage extends BasePage {
     @Step("Open register page")
     public RegisterPage openPage() {
         openPath("/register");
-        return this;
+        return shouldBeOpen();
     }
 
     @Step("Click 'Login' link under the register form")
@@ -62,6 +63,12 @@ public class RegisterPage extends BasePage {
         driver.findElement(SUBMIT).click();
         waitUrlIsHome();
         return new HomePage(driver, config);
+    }
+
+    @Step("Verify register page is open")
+    public RegisterPage shouldBeOpen() {
+        waitVisible(REGISTER_FORM);
+        return this;
     }
 
     @Step("Verify register form is mounted")

@@ -15,7 +15,7 @@
     {
       "op": "wait",
       "selector": "[data-testid=multistack-layout]",
-      "timeout_ms": 10000
+      "timeout_ms": 5000
     },
     {
       "op": "wait",
