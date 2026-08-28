@@ -1,6 +1,6 @@
 module dev.multistack/backend-go-gin
 
-go 1.25.0
+go 1.27
 
 require (
 	github.com/gin-gonic/gin v1.12.0
