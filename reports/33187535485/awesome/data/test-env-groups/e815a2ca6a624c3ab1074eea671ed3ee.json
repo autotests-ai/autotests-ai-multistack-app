@@ -1,1 +1,0 @@
-{"id":"e815a2ca6a624c3ab1074eea671ed3ee","fullName":"dev.multistack.app.config.SecurityChainTest.meWithRealBearerToken","name":"GET /api/auth/me with a real bearer token passes the filter chain","status":"passed","testResultsByEnv":{"default":"170b7de74c33b2926515dcb40d3840bf"}}
