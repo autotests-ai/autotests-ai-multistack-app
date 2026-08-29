@@ -2,4 +2,4 @@
 
 `status: slot` · `layers: [performance]` · Grafana k6.
 
-Empty teaching folder. Not a generate sibling. Student emit: `k6-http-smoke` (hub `planned_student_profiles`).
+Empty teaching folder. Not a generate sibling. Student emit: `javascript-k6` (hub `planned_student_profiles`).
