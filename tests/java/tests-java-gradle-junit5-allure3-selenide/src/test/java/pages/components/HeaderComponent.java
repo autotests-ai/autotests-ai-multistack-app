@@ -2,16 +2,20 @@ package pages.components;
 
 import static com.codeborne.selenide.Condition.attribute;
 import static com.codeborne.selenide.Condition.cssClass;
+import static com.codeborne.selenide.Condition.hidden;
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.$;
 
 import com.codeborne.selenide.SelenideElement;
+import helpers.ViewportHelper;
 import io.qameta.allure.Step;
 
 public class HeaderComponent {
 
     private final SelenideElement root = $("[data-testid='header']");
+    private final SelenideElement burger = $("[data-testid='header-burger']");
+    private final SelenideElement menu = $("[data-testid='header-menu']");
     private final SelenideElement langToggle =
             $("[data-testid='header-tools'] [data-testid='header-lang-toggle']");
     private final SelenideElement langLabel =
@@ -19,6 +23,48 @@ public class HeaderComponent {
     private final SelenideElement themeToggle =
             $("[data-testid='header-tools'] [data-testid='header-theme-toggle']");
     private final SelenideElement html = $("html");
+
+    @Step("Emulate mobile viewport (375x812)")
+    public HeaderComponent setMobileViewport() {
+        ViewportHelper.setViewport(375, 812);
+        return this;
+    }
+
+    @Step("Reset viewport to default")
+    public HeaderComponent resetViewport() {
+        ViewportHelper.resetViewport();
+        return this;
+    }
+
+    @Step("Open the burger menu")
+    public HeaderComponent openMenu() {
+        burger.shouldBe(visible).click();
+        menu.shouldBe(visible);
+        burger.shouldHave(attribute("aria-expanded", "true"));
+        return this;
+    }
+
+    @Step("Menu nav '{menuNavTestid}' is the active item")
+    public HeaderComponent shouldHaveActiveMenuNav(String menuNavTestid) {
+        $("[data-testid='" + menuNavTestid + "']")
+                .shouldBe(visible)
+                .shouldHave(cssClass("is-active"))
+                .shouldHave(attribute("aria-current", "page"));
+        return this;
+    }
+
+    @Step("Click menu nav link '{menuNavTestid}'")
+    public HeaderComponent clickMenuNav(String menuNavTestid) {
+        $("[data-testid='" + menuNavTestid + "']").shouldBe(visible).click();
+        return this;
+    }
+
+    @Step("Menu is closed")
+    public HeaderComponent shouldHaveClosedMenu() {
+        menu.shouldBe(hidden);
+        burger.shouldHave(attribute("aria-expanded", "false"));
+        return this;
+    }
 
     @Step("Verify embedded header is mounted")
     public HeaderComponent shouldShowEmbeddedHeader() {
