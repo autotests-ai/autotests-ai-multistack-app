@@ -22,6 +22,12 @@ import (
 	"time"
 )
 
+// Host Chrome /json/version — same 5s as mill wait / PW actionTimeout. Do not import greedy.guru.
+const hostDebugWait = 5 * time.Second
+
+// Docker pw-min: container + port map, not IR.
+const pwMinDebugWait = 20 * time.Second
+
 func millRoot(t *testing.T) string {
 	t.Helper()
 	_, file, _, ok := runtime.Caller(0)
@@ -427,7 +433,7 @@ func startHostChrome(t *testing.T, ctx context.Context) string {
 		_, _ = cmd.Process.Wait()
 	})
 	url := "http://127.0.0.1:" + strconv.Itoa(port)
-	waitDebug(t, ctx, url, 8*time.Second, "")
+	waitDebug(t, ctx, url, hostDebugWait, "")
 	return url
 }
 
@@ -480,7 +486,7 @@ exec "$bin" ` + chromeCmd
 		_ = exec.Command("docker", "rm", "-f", name).Run()
 	})
 	url := "http://127.0.0.1:" + strconv.Itoa(hostPort)
-	waitDebug(t, ctx, url, 20*time.Second, name)
+	waitDebug(t, ctx, url, pwMinDebugWait, name)
 	return url
 }
 
