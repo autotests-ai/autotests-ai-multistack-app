@@ -1,5 +1,13 @@
 # tests-java-gradle-junit5-allure3-restassured
 
-`status: slot` · `layers: [api]` · **HTTP block** · Rest Assured (Gradle · JUnit 5 · Allure 3).
+Gradle · JUnit 5 · Allure 3 · **Rest Assured** HTTP-only school.
 
-UI schools are sibling folders. Client combo (e.g. Selenium+Rest Assured) = generate. Student emit: `java-gradle-junit5-restassured`.
+No browser. Same `/api` contract as the Selenide/Selenium living cells. UI stays in sibling folders. Retrofit 2 is [`tests-java-gradle-junit5-allure3-retrofit2`](../tests-java-gradle-junit5-allure3-retrofit2/).
+
+```bash
+cd tests/java/tests-java-gradle-junit5-allure3-restassured
+./gradlew test -Denv=ci -DincludeTags=infra
+./gradlew test -Denv=ci -DincludeTags=api
+```
+
+Stand: `-Denv=ci` → API [http://localhost:8800/](http://localhost:8800/).

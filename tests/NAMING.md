@@ -23,8 +23,8 @@ tests-{language}-{build}-{framework}-{reporting}-{automation}
 | `tests-java-gradle-junit5-allure3-selenide` | **active** — block 2 CI target |
 | `tests-java-gradle-junit5-allure3-selenium` | **active** — UI+HTTP block Selenium 4 + Rest Assured |
 | `tests-java-gradle-junit5-allure3-playwright` | slot — UI block |
-| `tests-java-gradle-junit5-allure3-restassured` | slot — HTTP block |
-| `tests-java-gradle-junit5-allure3-retrofit2` | slot — HTTP block |
+| `tests-java-gradle-junit5-allure3-restassured` | **active** — HTTP block Rest Assured |
+| `tests-java-gradle-junit5-allure3-retrofit2` | **active** — HTTP block Retrofit 2 |
 | `tests-java-gradle-junit5-allure2-selenide` | slot |
 | `tests-java-gradle-junit5-no_allure-selenide` | slot |
 | `tests-java-gradle-junit4-allure2-selenium` | slot |
@@ -33,7 +33,7 @@ tests-{language}-{build}-{framework}-{reporting}-{automation}
 | `tests-java-jmeter` | slot — JMeter JMX, `layers: [performance]` |
 | `tests-java-gradle-gatling` | slot — Gatling Java DSL, `layers: [performance]` |
 
-Only one module is the CI default (Selenide). Selenium living block has api+e2e; others are teaching slots / generator outputs.
+Only one module is the CI default (Selenide). Selenium living block has api+e2e; Rest Assured and Retrofit 2 are living HTTP-only (`layers: [api]`). Other folders are teaching slots / generator outputs.
 
 ## JavaScript / TypeScript / Python / Go / Kotlin / C#
 

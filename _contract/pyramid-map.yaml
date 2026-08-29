@@ -4,7 +4,7 @@
 # Do not confuse:
 #   component     = React Testing Library + Vitest in the SPA (CI job component-tests)
 #   integration   = backend src/test with @Tag("integration") (Spring + Testcontainers)
-#   api           = Rest Assured against a running stand (tests/.../tests/api)
+#   api           = HTTP against a running stand (tests/.../tests/api) — Rest Assured or Retrofit 2
 #   contracts     = OpenAPI SSOT + openapi-diff
 
 default:
