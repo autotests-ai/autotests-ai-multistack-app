@@ -13,7 +13,7 @@ Clone folder = **teaching block** (UI school, HTTP client, runner/build variant,
 tests/
   java/
     tests-java-gradle-junit5-allure3-selenide/     # active — default cell (Selenide + Rest Assured)
-    tests-java-gradle-junit5-allure3-selenium/       # slot — UI block
+    tests-java-gradle-junit5-allure3-selenium/       # active — UI block Selenium 4
     tests-java-gradle-junit5-allure3-playwright/     # slot — UI block
     tests-java-gradle-junit5-allure3-restassured/   # slot — HTTP block
     tests-java-gradle-junit5-allure3-retrofit2/    # slot — HTTP block

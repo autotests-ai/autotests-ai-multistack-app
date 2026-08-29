@@ -1,0 +1,9 @@
+.gradle/
+build/
+.idea/
+.vscode/
+*.iml
+
+allure-results/
+bin/
+node_modules/

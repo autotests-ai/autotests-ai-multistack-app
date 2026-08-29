@@ -1,0 +1,155 @@
+/*
+ * tests-java — UI block · Selenium 4 · JUnit 5 · Allure 3
+ *
+ *   ./gradlew test -Denv=ci -DincludeTags=e2e
+ *
+ * HTTP client is a sibling slot (Rest Assured / Retrofit 2). AuthHttp is fixture
+ * plumbing for register/delete cleanup, not that school.
+ */
+
+buildscript {
+    ext {
+        javaVersion         = 21
+        junitVersion        = '5.11.4'
+        slf4jVersion        = '2.0.17'
+        allurePluginVersion = '4.1.0'
+        allureVersion       = '3.13.0'
+        allureBomVersion    = '2.35.2'
+        seleniumVersion     = '4.33.0'
+        ownerVersion        = '1.0.12'
+        datafakerVersion    = '2.4.4'
+        jacksonVersion      = '2.18.2'
+        testParallelForks   = 1
+        defaultEnv          = 'ci'
+    }
+}
+
+plugins {
+    id 'java-library'
+    id 'io.qameta.allure' version "${allurePluginVersion}"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(javaVersion)
+    }
+}
+
+def allureReportMode = System.getProperty('allureReportMode', 'allure3')
+
+repositories {
+    mavenCentral()
+}
+
+allure {
+    version = allureVersion
+    adapter {
+        allureJavaVersion = allureBomVersion
+        resultsDir.set(layout.buildDirectory.dir('allure-results'))
+        autoconfigure.set(allureReportMode != 'none')
+        aspectjWeaver.set(allureReportMode != 'none')
+        frameworks {
+            junit5 {
+                enabled.set(allureReportMode != 'none')
+                autoconfigureListeners.set(allureReportMode != 'none')
+            }
+        }
+    }
+}
+
+dependencies {
+    testImplementation platform("io.qameta.allure:allure-bom:${allureBomVersion}")
+    testImplementation platform("org.seleniumhq.selenium:selenium-bom:${seleniumVersion}")
+    testImplementation (
+            'io.qameta.allure:allure-jupiter',
+            'org.seleniumhq.selenium:selenium-java',
+            "org.aeonbits.owner:owner:${ownerVersion}",
+            "org.junit.jupiter:junit-jupiter:${junitVersion}",
+            "net.datafaker:datafaker:${datafakerVersion}",
+            "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
+    testRuntimeOnly (
+            'org.junit.platform:junit-platform-launcher',
+            "org.slf4j:slf4j-simple:${slf4jVersion}")
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+def testEnv = System.getProperty('env', defaultEnv)
+
+def configKeys = new Properties().with { props ->
+    file('src/test/resources/config/default.properties').withInputStream { props.load(it) }
+    props.stringPropertyNames()
+}
+
+def resolveConfiguredBaseUrl = { String env ->
+    def props = new Properties()
+    def configFile = file("src/test/resources/config/${env}.properties")
+    if (configFile.exists()) {
+        configFile.withInputStream { props.load(it) }
+    }
+    def baseUrl = (System.getProperty('baseUrl') ?: props.getProperty('baseUrl', '')).trim()
+    if (baseUrl) {
+        return baseUrl.endsWith('/') ? baseUrl : baseUrl + '/'
+    }
+    throw new GradleException("Set baseUrl in config/${env}.properties")
+}
+
+def healthCheckUrl = System.getProperty('skipHealthCheck', 'false') == 'true' ? null : resolveConfiguredBaseUrl(testEnv)
+
+tasks.register('healthCheck') {
+    group = 'verification'
+    description = 'GET baseUrl/ — skip with -DskipHealthCheck=true'
+    String url = healthCheckUrl
+    onlyIf { url != null && url.startsWith('http') }
+    doLast {
+        def client = java.net.http.HttpClient.newBuilder()
+                .connectTimeout(java.time.Duration.ofMillis(5000))
+                .build()
+        def request = java.net.http.HttpRequest.newBuilder()
+                .uri(java.net.URI.create(url))
+                .timeout(java.time.Duration.ofMillis(5000))
+                .GET()
+                .build()
+        try {
+            def code = client.send(request, java.net.http.HttpResponse.BodyHandlers.discarding()).statusCode()
+            if (code != 200) {
+                throw new GradleException(
+                        "App health check failed: GET ${url} returned HTTP ${code}. " +
+                        'Start stack: docker compose up -d (or cd backend && ./gradlew bootRun)'
+                )
+            }
+        } catch (java.net.ConnectException | java.net.http.HttpTimeoutException e) {
+            throw new GradleException(
+                    "App health check failed: cannot reach ${url} (${e.class.simpleName}). " +
+                    'Start stack: docker compose up -d (or cd backend && ./gradlew bootRun)',
+                    e
+            )
+        }
+    }
+}
+
+test {
+    dependsOn healthCheck
+    description = 'Run tests: -Denv=<stand> -DincludeTags=<tags> -DexcludeTags=<tags>'
+    useJUnitPlatform {
+        def includeTagsProp = System.getProperty('includeTags')
+        if (includeTagsProp) {
+            includeTags(*(includeTagsProp.split(',')*.trim()))
+        }
+        def excludeTagsProp = System.getProperty('excludeTags')
+        if (excludeTagsProp) {
+            excludeTags(*(excludeTagsProp.split(',')*.trim()))
+        }
+    }
+    systemProperty 'env', testEnv
+    systemProperty 'allureReportMode', allureReportMode
+    configKeys.each { key ->
+        def override = System.getProperty(key)
+        if (override != null) {
+            systemProperty key, override
+        }
+    }
+    maxParallelForks = testParallelForks
+}
