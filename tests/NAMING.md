@@ -41,6 +41,7 @@ Full IDs live in hub [`matrix.yaml`](../../matrix.yaml) `tests.modules` (`status
 |-------------|--------|
 | `tests-javascript-playwright` | **active** |
 | `tests-javascript-cypress` | slot |
+| `tests-javascript-k6` | slot — k6 JavaScript, `layers: [performance]` |
 | `tests-typescript-playwright` | **active** |
 | `tests-typescript-k6` | slot — k6 TypeScript, `layers: [performance]` |
 | `tests-python-selenium` | **active** |
@@ -82,7 +83,11 @@ One **stem** per Java class. Suffixes stay idiomatic — do not copy `LoginTests
 | `login-screenshot` | `LoginScreenshotTests.java` | `login-screenshot.spec.ts` | `test_login_screenshot.py` |
 | `home-layout-screenshot` | `HomeLayoutScreenshotTests.java` | `home-layout-screenshot.spec.ts` | `test_home_layout_screenshot.py` |
 | `welcome-panel-screenshot` | `WelcomePanelScreenshotTests.java` | `welcome-panel-screenshot.spec.ts` | `test_welcome_panel_screenshot.py` |
-| `header-active-nav` | — (Python/Playwright extra) | `header-active-nav.spec.ts` | `test_header_active_nav.py` |
+| `header` | `HeaderTests.java` | — | — |
+| `burger-menu` | `BurgerMenuTests.java` | — | — |
+| `header-screenshot` | `HeaderScreenshotTests.java` | — | — |
+| `burger-menu-screenshot` | `BurgerMenuScreenshotTests.java` | — | — |
+| `header-active-nav` | `HeaderActiveNavTests.java` | `header-active-nav.spec.ts` | `test_header_active_nav.py` |
 
 API lives under `tests/api/` in every language. Playwright names the **file** after the stem (`auth.spec.ts`); pytest repeats `_api` (`test_auth_api.py`) because pytest discovery is file-based. Same stems as Java: `AuthApiTests`, `AuthRoundTripApiTests`, `BackendWiringApiTests`, `HealthItemsApiTests`, `SeedDataApiTests`.
 

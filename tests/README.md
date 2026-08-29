@@ -21,6 +21,7 @@ tests/
     tests-scala-gatling/                         # slot — Gatling Scala DSL
   javascript/
     tests-javascript-playwright/                 # active
+    tests-javascript-k6/                         # slot — k6 JavaScript
   python/
     tests-python-selenium/                       # active
     tests-python-yandex-tank/                    # slot — Yandex.Tank
