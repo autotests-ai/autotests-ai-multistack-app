@@ -2,7 +2,7 @@ package tests.e2e;
 
 import tests.TestBase;
 import annotations.Layer;
-import helpers.AuthHttp;
+import api.AuthApiClient;
 import helpers.DataFaker;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -28,7 +28,7 @@ class DeleteAccountTests extends TestBase {
     @AfterEach
     void cleanupThrowawayUser() {
         if (throwawayUsername != null) {
-            AuthHttp.deleteAccountQuietly(throwawayUsername, PASSWORD);
+            AuthApiClient.deleteAccountQuietly(throwawayUsername, PASSWORD);
             throwawayUsername = null;
         }
     }
@@ -39,7 +39,7 @@ class DeleteAccountTests extends TestBase {
     @DisplayName("Confirming delete account clears the session and navigates to login")
     void confirmingDeleteClearsSessionAndNavigatesToLogin() {
         throwawayUsername = DataFaker.username();
-        AuthHttp.register(throwawayUsername, PASSWORD);
+        AuthApiClient.register(throwawayUsername, PASSWORD);
 
         homePage.openPageWithLocalStorageAuthentication(throwawayUsername, PASSWORD)
                 .shouldHaveWelcomeMessage("Welcome, " + throwawayUsername + "!")
@@ -57,7 +57,7 @@ class DeleteAccountTests extends TestBase {
     @DisplayName("Cancelling the confirm keeps the session and sends no delete request")
     void cancellingConfirmKeepsSession() {
         throwawayUsername = DataFaker.username();
-        AuthHttp.register(throwawayUsername, PASSWORD);
+        AuthApiClient.register(throwawayUsername, PASSWORD);
 
         homePage.openPageWithLocalStorageAuthentication(throwawayUsername, PASSWORD)
                 .shouldHaveWelcomeMessage("Welcome, " + throwawayUsername + "!")
@@ -65,6 +65,6 @@ class DeleteAccountTests extends TestBase {
                 .shouldHaveWelcomeMessage("Welcome, " + throwawayUsername + "!")
                 .shouldKeepAuthToken();
 
-        AuthHttp.login(throwawayUsername, PASSWORD);
+        AuthApiClient.login(throwawayUsername, PASSWORD);
     }
 }

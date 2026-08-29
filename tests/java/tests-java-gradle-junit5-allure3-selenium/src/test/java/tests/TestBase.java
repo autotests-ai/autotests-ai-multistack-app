@@ -1,15 +1,12 @@
 package tests;
 
 import annotations.Framework;
-import annotations.Language;
-import annotations.Module;
 import annotations.Scope;
 import config.ConfigReader;
 import config.TestConfig;
 import helpers.Attachments;
 import helpers.WebDriverHolder;
 import helpers.WebDrivers;
-import io.qameta.allure.Owner;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -18,12 +15,9 @@ import pages.HomePage;
 import pages.LoginPage;
 import pages.RegisterPage;
 
-@Owner("stanislav")
-@Module("tests-java-gradle-junit5-allure3-selenium")
-@Language("java")
 @Scope("browser")
 @Framework("selenium")
-public class TestBase {
+public class TestBase extends AllureMeta {
 
     protected final HomePage homePage = new HomePage();
     protected final LoginPage loginPage = new LoginPage();
@@ -66,8 +60,14 @@ public class TestBase {
                 }
             }
         } finally {
-            if (config.closeBrowserAfterEach()) {
-                WebDriverHolder.quit();
+            try {
+                if (allureResultsEnabled() && config.attachHarLogs() && WebDriverHolder.has()) {
+                    Attachments.harLogs();
+                }
+            } finally {
+                if (config.closeBrowserAfterEach()) {
+                    WebDriverHolder.quit();
+                }
             }
         }
     }

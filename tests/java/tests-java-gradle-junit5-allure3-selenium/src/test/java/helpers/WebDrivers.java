@@ -82,6 +82,10 @@ public final class WebDrivers {
         } else if (local) {
             options.addArguments("--disable-gpu", "--no-sandbox", "--disable-dev-shm-usage");
         }
+        boolean captureHar = config.enableHar() || config.attachHarLogs();
+        if (captureHar && HarCapture.supportsBrowser(config.browser())) {
+            HarCapture.enablePerformanceLogging(options);
+        }
         if (!local) {
             options.setBrowserVersion(config.browserVersion());
             var selenoidOpts = new HashMap<String, Object>();

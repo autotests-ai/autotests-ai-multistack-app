@@ -2,7 +2,7 @@ package tests.e2e;
 
 import tests.TestBase;
 import annotations.Layer;
-import helpers.AuthHttp;
+import api.AuthApiClient;
 import helpers.User;
 import helpers.UserBuilder;
 import io.qameta.allure.Epic;
@@ -42,7 +42,7 @@ class RegisterTests extends TestBase {
     @AfterEach
     void cleanupRegisteredUser() {
         if (registeredUser != null) {
-            AuthHttp.deleteAccountQuietly(registeredUser.username(), registeredUser.password());
+            AuthApiClient.deleteAccountQuietly(registeredUser.username(), registeredUser.password());
             registeredUser = null;
         }
     }

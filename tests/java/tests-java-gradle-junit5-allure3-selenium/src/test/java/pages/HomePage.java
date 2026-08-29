@@ -1,8 +1,9 @@
 package pages;
 
-import helpers.AuthHttp;
+import api.AuthApiClient;
 import helpers.Ui;
 import io.qameta.allure.Step;
+import org.openqa.selenium.WebElement;
 
 public class HomePage extends BasePage<HomePage> {
 
@@ -41,7 +42,7 @@ public class HomePage extends BasePage<HomePage> {
 
     @Step("Open home page with local storage authentication")
     public HomePage openPageWithLocalStorageAuthentication(String username, String password) {
-        String token = AuthHttp.login(username, password);
+        String token = AuthApiClient.login(username, password);
         Ui.open("/login");
         Ui.js(
                 "localStorage.setItem(arguments[0], arguments[1]);",
@@ -78,6 +79,23 @@ public class HomePage extends BasePage<HomePage> {
         return this;
     }
 
+    @Step("Verify home layout and health are mounted")
+    public HomePage shouldShowLayoutAndHealth() {
+        Ui.shouldBeVisible("multistack-layout");
+        Ui.shouldBeVisible("health-status");
+        return this;
+    }
+
+    @Step("Home layout panel is visible")
+    public WebElement layoutPanel() {
+        return Ui.el("multistack-layout");
+    }
+
+    @Step("Welcome panel is visible")
+    public WebElement welcomePanelElement() {
+        return Ui.el("welcome-panel");
+    }
+
     @Step("Verify welcome panel stays hidden")
     public HomePage shouldHideWelcomePanel() {
         Ui.shouldHaveAttribute("welcome-panel", "hidden", "");
@@ -99,6 +117,18 @@ public class HomePage extends BasePage<HomePage> {
     @Step("Verify items list contains: {textFragment}")
     public HomePage shouldShowItemText(String textFragment) {
         Ui.shouldHaveText("items-list", textFragment);
+        return this;
+    }
+
+    @Step("Verify items panel shows a readable error: {textFragment}")
+    public HomePage shouldShowItemsError(String textFragment) {
+        Ui.shouldHaveText("items-list", textFragment);
+        return this;
+    }
+
+    @Step("Verify health panel shows a readable error: {textFragment}")
+    public HomePage shouldShowHealthError(String textFragment) {
+        Ui.shouldHaveText("health-status", textFragment);
         return this;
     }
 

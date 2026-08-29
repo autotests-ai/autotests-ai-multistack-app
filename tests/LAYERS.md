@@ -30,7 +30,7 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 **Not a pyramid layer:** load slots — JMeter (`tests-java-jmeter`, `tests-groovy-jmeter`) · Gatling (`tests-java-gradle-gatling`, `tests-kotlin-gradle-gatling`, `tests-scala-gatling`, `tests-javascript-gatling`, `tests-typescript-gatling`) · k6 (`tests-javascript-k6`, `tests-typescript-k6`) · Locust (`tests-python-locust`) · Yandex.Tank (`tests-python-yandex-tank`). `layers: [performance]` on `/stack/` Tests board. Not `@Layer`.  
 **Go living HTTP block:** `tests/go/tests-go-testing-allure3` — `go test` + official Allure Go + testify, **api** layer only. UI block is slot `tests-go-testing-allure3-playwright`. Mill stays `tests-go-cdp`. Not Gomega.
 
-**Java Selenium UI block:** `tests/java/tests-java-gradle-junit5-allure3-selenium` — raw WebDriver, `layers: [e2e]`. Not the Selenide default cell. HTTP fixture `AuthHttp` is not the Rest Assured school.
+**Java Selenium living block:** `tests/java/tests-java-gradle-junit5-allure3-selenium` — raw WebDriver + Rest Assured, `layers: [api, e2e]`. Not the Selenide default cell. HTTP-only school is sibling `tests-java-gradle-junit5-allure3-restassured`.
 
 ## integration vs api — intent, not tag
 

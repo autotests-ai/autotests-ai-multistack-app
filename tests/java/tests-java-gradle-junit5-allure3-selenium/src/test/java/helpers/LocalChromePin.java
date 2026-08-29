@@ -24,6 +24,10 @@ public final class LocalChromePin {
     public record Binaries(Path chrome, Path driver) {
     }
 
+    public static Binaries apply(String browserVersion) {
+        return resolve(browserVersion);
+    }
+
     public static Binaries resolve(String browserVersion) {
         if (browserVersion == null || browserVersion.isBlank()) {
             throw new IllegalStateException(

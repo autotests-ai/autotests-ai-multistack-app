@@ -1,5 +1,6 @@
 package helpers;
 
+import config.ConfigReader;
 import io.qameta.allure.Allure;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
@@ -45,5 +46,31 @@ public final class Attachments {
     public static void asUtf8(String name, String body) {
         Allure.addAttachment(name, "text/plain", new ByteArrayInputStream(
                 body.getBytes(StandardCharsets.UTF_8)), ".txt");
+    }
+
+    /**
+     * Attach client-side HAR plus a self-contained HTML viewer. No-op when capture
+     * produced nothing — never throws.
+     */
+    public static void harLogs() {
+        if (!WebDriverHolder.has() || !HarCapture.supportsBrowser(ConfigReader.testConfig.browser())) {
+            return;
+        }
+        try {
+            HarCapture.collectHarJson().ifPresent(bytes -> {
+                Allure.addAttachment(
+                        "capture.har",
+                        "application/json",
+                        new ByteArrayInputStream(bytes),
+                        ".har");
+                Allure.addAttachment(
+                        "HAR Viewer",
+                        "text/html",
+                        HarViewerHtml.render(bytes),
+                        ".html");
+            });
+        } catch (RuntimeException ignored) {
+            // dead session or Allure I/O — skip, never mask the test failure
+        }
     }
 }

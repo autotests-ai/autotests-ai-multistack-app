@@ -4,6 +4,7 @@ import helpers.Ui;
 import helpers.ViewportHelper;
 import io.qameta.allure.Step;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 
 public class HeaderComponent {
 
@@ -64,6 +65,16 @@ public class HeaderComponent {
         Ui.shouldBeHidden(Ui.testId("header-menu"));
         Ui.shouldHaveAttribute(Ui.testId("header-burger"), "aria-expanded", "false");
         return this;
+    }
+
+    @Step("Burger menu panel is visible")
+    public WebElement menuPanel() {
+        return Ui.el("header-menu");
+    }
+
+    @Step("Header bar is visible")
+    public WebElement headerPanel() {
+        return Ui.el("header");
     }
 
     @Step("Verify embedded header is mounted")

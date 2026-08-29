@@ -2,6 +2,7 @@ package pages;
 
 import helpers.Ui;
 import io.qameta.allure.Step;
+import org.openqa.selenium.WebElement;
 
 public class LoginPage extends BasePage<LoginPage> {
 
@@ -63,6 +64,11 @@ public class LoginPage extends BasePage<LoginPage> {
         Ui.shouldBeVisible("password-input");
         Ui.shouldBeVisible("submit-button");
         return this;
+    }
+
+    @Step("Login form panel is visible")
+    public WebElement loginFormPanel() {
+        return Ui.el("login-form");
     }
 
     @Step("Verify form title message: {message}")
