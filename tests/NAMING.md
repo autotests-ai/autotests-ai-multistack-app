@@ -10,7 +10,7 @@ tests-{language}-{build}-{framework}-{reporting}-{automation}
 
 | Segment | Examples | Notes |
 |---------|----------|-------|
-| `language` | `java`, `kotlin`, `javascript`, `typescript`, `python`, `go` | top-level under `tests/` |
+| `language` | `java`, `kotlin`, `scala`, `groovy`, `javascript`, `typescript`, `python`, `go` | top-level under `tests/` |
 | `build` | `gradle`, `maven`, `npm`, `pip`, `mod` | omit when obvious (e.g. JS → npm) |
 | `framework` | `junit4`, `junit5`, `junit6`, `testng`, `pytest`, `vitest`, `testing` | test runner |
 | `reporting` | `allure2`, `allure3`, `no_allure` | underscore in `no_allure` |
@@ -27,8 +27,8 @@ tests-{language}-{build}-{framework}-{reporting}-{automation}
 | `tests-java-gradle-junit4-allure2-selenium` | planned |
 | `tests-java-gradle-testng-allure3-selenium` | planned |
 | `tests-java-maven-junit5-allure3-selenide` | planned |
-| `tests-java-jmeter` | slot — load, `layers: [performance]` |
-| `tests-java-gradle-gatling` | slot — load, `layers: [performance]` |
+| `tests-java-jmeter` | slot — JMeter JMX, `layers: [performance]` |
+| `tests-java-gradle-gatling` | slot — Gatling Java DSL, `layers: [performance]` |
 
 Only one module is runnable per app fork; others are teaching slots / generator outputs.
 
@@ -41,12 +41,15 @@ Full IDs live in hub [`matrix.yaml`](../../matrix.yaml) `tests.modules` (`status
 |-------------|--------|
 | `tests-javascript-playwright` | **active** |
 | `tests-javascript-cypress` | slot |
-| `tests-javascript-k6` | slot — load, `layers: [performance]` |
 | `tests-typescript-playwright` | **active** |
+| `tests-typescript-k6` | slot — k6 TypeScript, `layers: [performance]` |
 | `tests-python-selenium` | **active** |
 | `tests-python-playwright` | slot |
-| `tests-python-yandex-tank` | slot — load, `layers: [performance]` |
+| `tests-python-yandex-tank` | slot — Yandex.Tank, `layers: [performance]` |
 | `tests-kotlin-gradle-junit5-allure3-selenide` | slot |
+| `tests-kotlin-gradle-gatling` | slot — Gatling Kotlin DSL |
+| `tests-scala-gatling` | slot — Gatling Scala DSL |
+| `tests-groovy-jmeter` | slot — JMeter JSR223 Groovy |
 | `tests-go-testing-allure3` | **active** — HTTP api, Allure Go |
 | `tests-go-cdp` | mill — IR / `greedy run`, not a Selenide peer |
 

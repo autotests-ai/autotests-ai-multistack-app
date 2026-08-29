@@ -11,8 +11,8 @@ Pattern: `tests-java-{build}-{framework}-{reporting}-{automation}` — see [../N
 | `tests-java-gradle-junit4-allure2-selenium` | Gradle · JUnit 4 · Allure 2 · Selenium | planned |
 | `tests-java-gradle-testng-allure3-selenium` | Gradle · TestNG · Allure 3 · Selenium | planned |
 | `tests-java-maven-junit5-allure3-selenide` | Maven · JUnit 5 · Allure 3 · Selenide | planned |
-| `tests-java-jmeter` | Apache JMeter | slot — `layers: [performance]` |
-| `tests-java-gradle-gatling` | Gradle · Gatling | slot — `layers: [performance]` |
+| `tests-java-jmeter` | Apache JMeter (JMX) | slot — `layers: [performance]` |
+| `tests-java-gradle-gatling` | Gradle · Gatling Java DSL | slot — `layers: [performance]` |
 
 ```bash
 cd tests/java/tests-java-gradle-junit5-allure3-selenide
