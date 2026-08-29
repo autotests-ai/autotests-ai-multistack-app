@@ -14,7 +14,7 @@ tests-{language}-{build}-{framework}-{reporting}-{automation}
 | `build` | `gradle`, `maven`, `npm`, `pip`, `mod` | omit when obvious (e.g. JS → npm) |
 | `framework` | `junit4`, `junit5`, `junit6`, `testng`, `pytest`, `vitest`, `testing` | test runner |
 | `reporting` | `allure2`, `allure3`, `no_allure` | underscore in `no_allure` |
-| `automation` | `selenium`, `selenide`, `playwright`, `cypress`, `none` | browser/UI driver; `none` for api-only |
+| `automation` | `selenium`, `selenide`, `playwright`, `cypress`, `jmeter`, `gatling`, `k6`, `yandex-tank`, `none` | browser/UI driver; load tools; `none` for api-only |
 
 ## Java (Gradle) — matrix
 
@@ -27,23 +27,27 @@ tests-{language}-{build}-{framework}-{reporting}-{automation}
 | `tests-java-gradle-junit4-allure2-selenium` | planned |
 | `tests-java-gradle-testng-allure3-selenium` | planned |
 | `tests-java-maven-junit5-allure3-selenide` | planned |
+| `tests-java-jmeter` | slot — load, `layers: [performance]` |
+| `tests-java-gradle-gatling` | slot — load, `layers: [performance]` |
 
 Only one module is runnable per app fork; others are teaching slots / generator outputs.
 
 ## JavaScript / TypeScript / Python / Go / Kotlin
 
 Living folders may shorten when dimensions are obvious (`tests-javascript-playwright`).
-Full IDs live in [`deploy/matrix.yaml`](../deploy/matrix.yaml) (`status: active|slot`).
+Full IDs live in hub [`matrix.yaml`](../../matrix.yaml) `tests.modules` (`status: active|slot`).
 
 | Folder / id | Status |
 |-------------|--------|
 | `tests-javascript-playwright` | **active** |
 | `tests-javascript-cypress` | slot |
+| `tests-javascript-k6` | slot — load, `layers: [performance]` |
 | `tests-typescript-playwright` | **active** |
 | `tests-python-selenium` | **active** |
 | `tests-python-playwright` | slot |
+| `tests-python-yandex-tank` | slot — load, `layers: [performance]` |
 | `tests-kotlin-gradle-junit5-allure3-selenide` | slot |
-| `tests-go-testing-allure3` | slot (selenoid-tests language) |
+| `tests-go-testing-allure3` | **active** — HTTP api, Allure Go |
 | `tests-go-cdp` | mill — IR / `greedy run`, not a Selenide peer |
 
 ```

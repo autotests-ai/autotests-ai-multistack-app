@@ -11,14 +11,19 @@ Automation outside backend unit / frontend RTL — by **language** → **stack d
 tests/
   java/
     tests-java-gradle-junit5-allure3-selenide/   # active
+    tests-java-jmeter/                           # slot — JMeter
+    tests-java-gradle-gatling/                   # slot — Gatling
   javascript/
     tests-javascript-playwright/                 # active
+    tests-javascript-k6/                         # slot — k6
   python/
     tests-python-selenium/                       # active
+    tests-python-yandex-tank/                    # slot — Yandex.Tank
   typescript/
     tests-typescript-playwright/                 # active
-  kotlin/                                        # slots in deploy/matrix.yaml
+  kotlin/                                        # slots in hub matrix.yaml
   go/
+    tests-go-testing-allure3/                    # active — HTTP api
     tests-go-cdp/                                # mill IR (greedy run), not a Selenide peer
   _deferred/
 ```
