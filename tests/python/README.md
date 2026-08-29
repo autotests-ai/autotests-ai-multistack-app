@@ -2,7 +2,9 @@
 
 | Folder | Runner |
 |--------|--------|
-| `tests-python-selenium/` | pytest · Selenium · layers = markers (`api` / `e2e` / `mock` / `screenshot` / `manual` / `infra`) |
+| `tests-python-selenium/` | **active** — pytest · Selenium · markers (`api` / `e2e` / `mock` / `screenshot` / `manual` / `infra`) |
+| `tests-python-selene/` | slot — UI block Selene |
+| `tests-python-playwright/` | slot — UI block Playwright |
 | `tests-python-yandex-tank/` | slot — Yandex.Tank (`layers: [performance]`) |
 | `tests-python-locust/` | slot — Locust (`layers: [performance]`) |
 

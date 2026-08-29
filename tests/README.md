@@ -2,38 +2,59 @@
 
 Automation outside backend unit / frontend RTL — by **language** → **stack dimensions**.
 
+Clone folder = **teaching block** (UI school, HTTP client, runner/build variant, or load). Client combo (Selenium+Retrofit) = generate, not a cartesian extra folder.
+
 | Doc | Role |
 |-----|------|
 | **[LAYERS.md](LAYERS.md)** | Pyramid layers → paths → Gradle/npm → CI jobs |
-| **[NAMING.md](NAMING.md)** | Module folder pattern `tests_{lang}_{build}_{framework}_{reporting}_{automation}` |
+| **[NAMING.md](NAMING.md)** | Module folder pattern `tests-{lang}-{build}-{framework}-{reporting}-{automation}` |
 
 ```
 tests/
   java/
-    tests-java-gradle-junit5-allure3-selenide/   # active
-    tests-java-jmeter/                           # slot — JMeter JMX
-    tests-java-gradle-gatling/                   # slot — Gatling Java DSL
+    tests-java-gradle-junit5-allure3-selenide/     # active — default cell (Selenide + Rest Assured)
+    tests-java-gradle-junit5-allure3-selenium/       # slot — UI block
+    tests-java-gradle-junit5-allure3-playwright/     # slot — UI block
+    tests-java-gradle-junit5-allure3-restassured/   # slot — HTTP block
+    tests-java-gradle-junit5-allure3-retrofit2/    # slot — HTTP block
+    tests-java-gradle-junit5-allure2-selenide/       # slot — Allure 2
+    tests-java-gradle-junit5-no_allure-selenide/    # slot — no Allure
+    tests-java-gradle-junit4-allure2-selenium/        # slot — JUnit 4
+    tests-java-gradle-testng-allure3-selenium/       # slot — TestNG
+    tests-java-maven-junit5-allure3-selenide/       # slot — Maven
+    tests-java-jmeter/                               # slot — JMeter JMX
+    tests-java-gradle-gatling/                       # slot — Gatling Java DSL
+  csharp/
+    tests-csharp-nunit-allure3-selenium/              # slot — UI block
+    tests-csharp-xunit-allure3-playwright/           # slot — UI block
   groovy/
-    tests-groovy-jmeter/                         # slot — JMeter JSR223
+    tests-groovy-jmeter/                             # slot — JMeter JSR223
   kotlin/
-    tests-kotlin-gradle-gatling/                 # slot — Gatling Kotlin DSL
+    tests-kotlin-gradle-junit5-allure3-selenide/     # slot — UI block
+    tests-kotlin-gradle-junit5-allure3-selenium/    # slot — UI block
+    tests-kotlin-gradle-junit5-allure3-playwright/   # slot — UI block
+    tests-kotlin-gradle-gatling/                     # slot — Gatling Kotlin DSL
   scala/
-    tests-scala-gatling/                         # slot — Gatling Scala DSL
+    tests-scala-gatling/                             # slot — Gatling Scala DSL
   javascript/
-    tests-javascript-playwright/                 # active
-    tests-javascript-k6/                         # slot — k6 JavaScript
-    tests-javascript-gatling/                    # slot — Gatling JS SDK
+    tests-javascript-playwright/                     # active
+    tests-javascript-cypress/                       # slot — UI block
+    tests-javascript-k6/                             # slot — k6 JavaScript
+    tests-javascript-gatling/                       # slot — Gatling JS SDK
   python/
-    tests-python-selenium/                       # active
-    tests-python-yandex-tank/                    # slot — Yandex.Tank
-    tests-python-locust/                         # slot — Locust
+    tests-python-selenium/                            # active
+    tests-python-selene/                             # slot — UI block
+    tests-python-playwright/                          # slot — UI block
+    tests-python-yandex-tank/                         # slot — Yandex.Tank
+    tests-python-locust/                             # slot — Locust
   typescript/
-    tests-typescript-playwright/                 # active
-    tests-typescript-k6/                         # slot — k6 TypeScript
-    tests-typescript-gatling/                    # slot — Gatling TS SDK
+    tests-typescript-playwright/                     # active
+    tests-typescript-k6/                             # slot — k6 TypeScript
+    tests-typescript-gatling/                       # slot — Gatling TS SDK
   go/
-    tests-go-testing-allure3/                    # active — HTTP api
-    tests-go-cdp/                                # mill IR (greedy run), not a Selenide peer
+    tests-go-testing-allure3/                         # active — HTTP block
+    tests-go-testing-allure3-playwright/             # slot — UI block
+    tests-go-cdp/                                    # mill IR (greedy run)
   _deferred/
 ```
 
@@ -46,7 +67,7 @@ tests/
 
 CI: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
 
-The Java module has one Gradle task — `test`. The layer is a tag filter, the stand is `-Denv`:
+The Java canon module has one Gradle task — `test`. The layer is a tag filter, the stand is `-Denv`:
 
 ```bash
 ./gradlew test -Denv=ci -DincludeTags=infra

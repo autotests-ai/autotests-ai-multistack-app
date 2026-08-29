@@ -28,7 +28,7 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 **Not classical either:** Spring `@WebMvcTest` / `@DataJpaTest` — those stay in **unit** (see slices below).  
 **Not a pyramid language:** `tests/go/tests-go-cdp` mills IR via `greedy run` (`layers: [crystal]`, crystal column on `/stack/`). Not `@Layer`.  
 **Not a pyramid layer:** load slots — JMeter (`tests-java-jmeter`, `tests-groovy-jmeter`) · Gatling (`tests-java-gradle-gatling`, `tests-kotlin-gradle-gatling`, `tests-scala-gatling`, `tests-javascript-gatling`, `tests-typescript-gatling`) · k6 (`tests-javascript-k6`, `tests-typescript-k6`) · Locust (`tests-python-locust`) · Yandex.Tank (`tests-python-yandex-tank`). `layers: [performance]` on `/stack/` Tests board. Not `@Layer`.  
-**Go living cell:** `tests/go/tests-go-testing-allure3` — `go test` + official Allure Go + testify, **api** layer only. Not Playwright (that is TS/JS). Not Gomega.
+**Go living HTTP block:** `tests/go/tests-go-testing-allure3` — `go test` + official Allure Go + testify, **api** layer only. UI block is slot `tests-go-testing-allure3-playwright`. Mill stays `tests-go-cdp`. Not Gomega.
 
 ## integration vs api — intent, not tag
 
