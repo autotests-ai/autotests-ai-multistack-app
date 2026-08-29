@@ -1,11 +1,13 @@
 package pages.components;
 
+import static com.codeborne.selenide.CollectionCondition.size;
 import static com.codeborne.selenide.Condition.attribute;
 import static com.codeborne.selenide.Condition.cssClass;
 import static com.codeborne.selenide.Condition.hidden;
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.$;
+import static com.codeborne.selenide.Selenide.$$;
 
 import com.codeborne.selenide.SelenideElement;
 import helpers.ViewportHelper;
@@ -33,6 +35,22 @@ public class HeaderComponent {
     @Step("Reset viewport to default")
     public HeaderComponent resetViewport() {
         ViewportHelper.resetViewport();
+        return this;
+    }
+
+    @Step("Desktop nav '{navTestid}' is the active item")
+    public HeaderComponent shouldHaveActiveNav(String navTestid) {
+        $("[data-testid='" + navTestid + "']")
+                .shouldBe(visible)
+                .shouldHave(cssClass("is-active"))
+                .shouldHave(attribute("aria-current", "page"));
+        $$("[data-testid='header-nav'] a[aria-current='page']").shouldHave(size(1));
+        return this;
+    }
+
+    @Step("Click header nav '{navTestid}'")
+    public HeaderComponent clickNav(String navTestid) {
+        $("[data-testid='" + navTestid + "']").shouldBe(visible).click();
         return this;
     }
 

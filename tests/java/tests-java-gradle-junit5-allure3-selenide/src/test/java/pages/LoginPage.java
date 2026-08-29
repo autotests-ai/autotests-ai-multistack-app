@@ -23,6 +23,12 @@ public class LoginPage extends BasePage<LoginPage> {
         return shouldBeOpen();
     }
 
+    @Step("Click Register link under the login form")
+    public RegisterPage clickRegisterLink() {
+        $("[data-testid='register-link']").shouldBe(visible).click();
+        return new RegisterPage();
+    }
+
     @Step("Fill and submit form")
     public HomePage fillAndSubmitForm(String username, String password) {
         typeUsername(username);

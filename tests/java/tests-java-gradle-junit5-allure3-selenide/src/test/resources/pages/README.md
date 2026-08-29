@@ -4,8 +4,10 @@
 
 | Page | Class | Open |
 |------|-------|------|
-| Home | `HomePage` | `open("")` → `GET /` |
+| Home | `HomePage` | `open("/")` → `GET /` |
 | Login | `LoginPage` | `open("/login")` |
+| Register | `RegisterPage` | `open("/register")` |
+| Header | `HeaderComponent` via `BasePage.header` | desktop `header-nav-*` · burger `header-menu-nav-*` |
 
 Post-auth state (welcome message, logout) lives on `HomePage` at `/`.
 
