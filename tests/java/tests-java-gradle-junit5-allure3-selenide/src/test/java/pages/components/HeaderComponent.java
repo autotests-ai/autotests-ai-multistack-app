@@ -71,6 +71,11 @@ public class HeaderComponent {
         return menu.shouldBe(visible);
     }
 
+    @Step("Header bar is visible")
+    public SelenideElement headerPanel() {
+        return root.shouldBe(visible);
+    }
+
     @Step("Verify embedded header is mounted")
     public HeaderComponent shouldShowEmbeddedHeader() {
         root.shouldBe(visible);
