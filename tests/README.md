@@ -22,12 +22,14 @@ tests/
   javascript/
     tests-javascript-playwright/                 # active
     tests-javascript-k6/                         # slot — k6 JavaScript
+    tests-javascript-gatling/                    # slot — Gatling JS SDK
   python/
     tests-python-selenium/                       # active
     tests-python-yandex-tank/                    # slot — Yandex.Tank
   typescript/
     tests-typescript-playwright/                 # active
     tests-typescript-k6/                         # slot — k6 TypeScript
+    tests-typescript-gatling/                    # slot — Gatling TS SDK
   go/
     tests-go-testing-allure3/                    # active — HTTP api
     tests-go-cdp/                                # mill IR (greedy run), not a Selenide peer
