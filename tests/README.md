@@ -26,6 +26,7 @@ tests/
   python/
     tests-python-selenium/                       # active
     tests-python-yandex-tank/                    # slot — Yandex.Tank
+    tests-python-locust/                         # slot — Locust
   typescript/
     tests-typescript-playwright/                 # active
     tests-typescript-k6/                         # slot — k6 TypeScript

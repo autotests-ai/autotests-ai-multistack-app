@@ -49,6 +49,7 @@ Full IDs live in hub [`matrix.yaml`](../../matrix.yaml) `tests.modules` (`status
 | `tests-python-selenium` | **active** |
 | `tests-python-playwright` | slot |
 | `tests-python-yandex-tank` | slot — Yandex.Tank, `layers: [performance]` |
+| `tests-python-locust` | slot — Locust, `layers: [performance]` |
 | `tests-kotlin-gradle-junit5-allure3-selenide` | slot |
 | `tests-kotlin-gradle-gatling` | slot — Gatling Kotlin DSL |
 | `tests-scala-gatling` | slot — Gatling Scala DSL |
