@@ -1,1 +1,0 @@
-{"id":"37c661c5fb47b1b2c327e686893366b6","fullName":"api/auth.spec.ts:43:7","name":"POST /api/auth/login joins both field errors into one 400 message","status":"passed","testResultsByEnv":{"default":"c9ae933841c1d99a820e359e76927118"}}

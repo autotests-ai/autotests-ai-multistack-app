@@ -1,1 +1,0 @@
-{"id":"76ec3a32f56fc22700b54cabae4122b2","fullName":"api/health-items.spec.ts:14:7","name":"GET /api/items matches the items contract (typed rows, named source)","status":"passed","testResultsByEnv":{"default":"9772872e5d91742b5b22b5f3f048e6a3"}}

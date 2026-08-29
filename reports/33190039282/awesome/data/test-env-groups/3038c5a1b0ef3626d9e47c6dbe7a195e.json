@@ -1,1 +1,0 @@
-{"id":"3038c5a1b0ef3626d9e47c6dbe7a195e","fullName":"api/wiring.spec.ts:13:7","name":"GET /api/items — catalogue is served from PostgreSQL, not a stub or fallback","status":"passed","testResultsByEnv":{"default":"9ad3d12c7ac0a47cff6fbb144cb29126"}}

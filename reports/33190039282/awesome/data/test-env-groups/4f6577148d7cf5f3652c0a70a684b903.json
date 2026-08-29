@@ -1,1 +1,0 @@
-{"id":"4f6577148d7cf5f3652c0a70a684b903","fullName":"dev.multistack.app.integration.ApplicationWiringIntegrationTest.itemsAreWiredToPostgreSQL","name":"GET /api/items — catalogue is served from PostgreSQL with Flyway seed","status":"passed","testResultsByEnv":{"default":"0bd5659091aee6004e8c58d4684d92f3"}}

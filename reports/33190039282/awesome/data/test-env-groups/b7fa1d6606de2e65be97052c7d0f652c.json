@@ -1,1 +1,0 @@
-{"id":"b7fa1d6606de2e65be97052c7d0f652c","fullName":"api/auth.spec.ts:198:7","name":"GET /api/auth/me with a garbage token returns 401","status":"passed","testResultsByEnv":{"default":"c4e072883b8b95c503a04c77cb9d5780"}}
