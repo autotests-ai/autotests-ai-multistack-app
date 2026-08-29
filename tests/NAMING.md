@@ -22,7 +22,7 @@ tests-{language}-{build}-{framework}-{reporting}-{automation}
 |--------|--------|
 | `tests-java-gradle-junit5-allure3-selenide` | **active** — block 2 CI target |
 | `tests-java-gradle-junit5-allure3-selenium` | **active** — UI+HTTP block Selenium 4 + Rest Assured |
-| `tests-java-gradle-junit5-allure3-playwright` | slot — UI block |
+| `tests-java-gradle-junit5-allure3-playwright` | **active** — UI block Playwright for Java |
 | `tests-java-gradle-junit5-allure3-restassured` | **active** — HTTP block Rest Assured |
 | `tests-java-gradle-junit5-allure3-retrofit2` | **active** — HTTP block Retrofit 2 |
 | `tests-java-gradle-junit5-allure2-selenide` | slot |
@@ -33,7 +33,7 @@ tests-{language}-{build}-{framework}-{reporting}-{automation}
 | `tests-java-jmeter` | slot — JMeter JMX, `layers: [performance]` |
 | `tests-java-gradle-gatling` | slot — Gatling Java DSL, `layers: [performance]` |
 
-Only one module is the CI default (Selenide). Selenium living block has api+e2e; Rest Assured and Retrofit 2 are living HTTP-only (`layers: [api]`). Other folders are teaching slots / generator outputs.
+Only one module is the CI default (Selenide). Selenium living block has api+e2e; Rest Assured and Retrofit 2 are living HTTP-only (`layers: [api]`). Java Playwright is living UI-only (`layers: [e2e]`). Other folders are teaching slots / generator outputs.
 
 ## JavaScript / TypeScript / Python / Go / Kotlin / C#
 
@@ -104,6 +104,8 @@ One **stem** per Java class. Suffixes stay idiomatic — do not copy `LoginTests
 API lives under `tests/api/` in every language. Playwright names the **file** after the stem (`auth.spec.ts`); pytest repeats `_api` (`test_auth_api.py`) because pytest discovery is file-based. Same stems as Java: `AuthApiTests`, `AuthRoundTripApiTests`, `BackendWiringApiTests`, `HealthItemsApiTests`, `SeedDataApiTests`.
 
 `test.describe('Login')` / `@allure.title("Login")` / `@DisplayName("Login")` share the Java display name. Tags stay language-native (`@Tag("e2e")` · `@e2e` · `pytest.mark.e2e`).
+
+Java Playwright living (`tests-java-gradle-junit5-allure3-playwright`) covers the same functional stems as TypeScript Playwright, including `header-active-nav`. Screenshot PNG compare is **not in this school yet** (Playwright Chromium baselines ≠ CFT Chrome SSOT). Burger/header-screenshot stay Java Selenide/Selenium-only, as in the table.
 
 ### Page objects — keep stack convention
 

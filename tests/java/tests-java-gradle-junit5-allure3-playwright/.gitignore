@@ -1,0 +1,11 @@
+.gradle/
+build/
+.idea/
+.vscode/
+*.iml
+
+allure-results/
+allure/sonar-quality-gate.json
+bin/
+node_modules/
+history.jsonl

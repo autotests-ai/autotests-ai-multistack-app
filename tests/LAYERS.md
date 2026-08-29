@@ -34,6 +34,8 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
 **Java HTTP-only living blocks:** `tests-java-gradle-junit5-allure3-restassured` (Rest Assured) and `tests-java-gradle-junit5-allure3-retrofit2` (Retrofit 2) — `layers: [api]`. Same `/api` contract. Combo Selenium+Retrofit = generate, not a third folder.
 
+**Java Playwright living block:** `tests-java-gradle-junit5-allure3-playwright` — Playwright for Java, `layers: [e2e]`. Same `data-testid` as the TS Playwright cell. No Rest Assured; cleanup is UI register/delete.
+
 ## integration vs api — intent, not tag
 
 **integration** = full Spring Boot context against real PostgreSQL (Testcontainers) in the
