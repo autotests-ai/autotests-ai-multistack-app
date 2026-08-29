@@ -66,6 +66,11 @@ public class HeaderComponent {
         return this;
     }
 
+    @Step("Burger menu panel is visible")
+    public SelenideElement menuPanel() {
+        return menu.shouldBe(visible);
+    }
+
     @Step("Verify embedded header is mounted")
     public HeaderComponent shouldShowEmbeddedHeader() {
         root.shouldBe(visible);
