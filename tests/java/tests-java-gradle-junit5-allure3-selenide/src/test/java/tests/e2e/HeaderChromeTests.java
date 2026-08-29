@@ -23,7 +23,7 @@ class HeaderChromeTests extends TestBase {
     void loginPageStaysEnglishByDefault() {
         loginPage.openPage()
                 .shouldHaveFormTitle("Login Form")
-                .shouldHaveLangLabel("EN")
+                .header.shouldHaveLangLabel("EN")
                 .shouldHaveHtmlLang("en");
     }
 
@@ -33,11 +33,11 @@ class HeaderChromeTests extends TestBase {
     void themeTogglePersistsLightThemeAfterReload() {
         loginPage.openPage()
                 .shouldHaveFormTitle("Login Form")
-                .shouldHaveThemeLight(false)
+                .header.shouldHaveTheme("dark")
                 .clickThemeToggle()
-                .shouldHaveThemeLight(true)
-                .reloadPage()
-                .shouldHaveThemeLight(true);
+                .shouldHaveTheme("light");
+        loginPage.reloadPage()
+                .header.shouldHaveTheme("light");
     }
 
     @Test
@@ -46,17 +46,17 @@ class HeaderChromeTests extends TestBase {
     void langToggleSwitchesLoginCopyToRussianAndBack() {
         loginPage.openPage()
                 .shouldHaveFormTitle("Login Form")
-                .clickLangToggle()
+                .header.clickLangToggle()
                 .shouldHaveLangLabel("RU")
-                .shouldHaveHtmlLang("ru")
-                .shouldHaveFormTitle("Форма входа")
+                .shouldHaveHtmlLang("ru");
+        loginPage.shouldHaveFormTitle("Форма входа")
                 .reloadPage()
-                .shouldHaveLangLabel("RU")
-                .shouldHaveHtmlLang("ru")
-                .shouldHaveFormTitle("Форма входа")
-                .clickLangToggle()
+                .header.shouldHaveLangLabel("RU")
+                .shouldHaveHtmlLang("ru");
+        loginPage.shouldHaveFormTitle("Форма входа")
+                .header.clickLangToggle()
                 .shouldHaveLangLabel("EN")
-                .shouldHaveHtmlLang("en")
-                .shouldHaveFormTitle("Login Form");
+                .shouldHaveHtmlLang("en");
+        loginPage.shouldHaveFormTitle("Login Form");
     }
 }

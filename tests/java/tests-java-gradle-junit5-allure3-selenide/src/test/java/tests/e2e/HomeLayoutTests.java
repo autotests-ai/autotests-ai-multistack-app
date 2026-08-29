@@ -23,7 +23,7 @@ class HomeLayoutTests extends TestBase {
     @DisplayName("Home shows embedded header and reference layout")
     void homeLayoutIsMounted() {
         homePage.openPage()
-                .shouldShowEmbeddedHeader()
-                .shouldShowLayout();
+                .shouldShowLayout()
+                .header.shouldShowEmbeddedHeader();
     }
 }

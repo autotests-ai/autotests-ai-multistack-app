@@ -7,13 +7,12 @@ import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.Wait;
 import static com.codeborne.selenide.Selenide.executeJavaScript;
 import static com.codeborne.selenide.Selenide.open;
-import static com.codeborne.selenide.Selenide.refresh;
 
 import api.AuthApiClient;
 import com.codeborne.selenide.SelenideElement;
 import io.qameta.allure.Step;
 
-public class HomePage {
+public class HomePage extends BasePage<HomePage> {
 
     /** Mirrors frontend authTokenStorageKey (backend-scoped on matrix paths). */
     private static final String AUTH_TOKEN_KEY_JS =
@@ -31,7 +30,6 @@ public class HomePage {
     private final SelenideElement logoutButton = $("[data-testid='logout-button']");
     private final SelenideElement deleteAccountButton = $("[data-testid='delete-account-button']");
     private final SelenideElement welcomePanel = $("[data-testid='welcome-panel']");
-    private final SelenideElement header = $("[data-testid='header']");
 
     private String authTokenKey() {
         return executeJavaScript(AUTH_TOKEN_KEY_JS);
@@ -61,12 +59,6 @@ public class HomePage {
         return shouldBeOpen();
     }
 
-    @Step("Reload current page")
-    public HomePage reloadPage() {
-        refresh();
-        return shouldBeOpen();
-    }
-
     @Step("Open home page with local storage authentication")
     public HomePage openPageWithLocalStorageAuthentication(String username, String password) {
         String token = AuthApiClient.login(username, password);
@@ -93,6 +85,7 @@ public class HomePage {
         return shouldBeOpen();
     }
 
+    @Override
     @Step("Verify home page is open")
     public HomePage shouldBeOpen() {
         layout.shouldBe(visible);
@@ -121,12 +114,6 @@ public class HomePage {
     @Step("Welcome panel is visible")
     public SelenideElement welcomePanelElement() {
         return welcomePanel.shouldBe(visible);
-    }
-
-    @Step("Verify embedded header is mounted")
-    public HomePage shouldShowEmbeddedHeader() {
-        header.shouldBe(visible);
-        return this;
     }
 
     @Step("Verify welcome panel stays hidden")

@@ -1,22 +1,19 @@
 package pages;
 
-import static com.codeborne.selenide.Condition.attribute;
-import static com.codeborne.selenide.Condition.cssClass;
-import static com.codeborne.selenide.Condition.text;
-import static com.codeborne.selenide.Condition.visible;
-import static com.codeborne.selenide.Selenide.$;
-import static com.codeborne.selenide.Selenide.Wait;
-import static com.codeborne.selenide.Selenide.localStorage;
-import static com.codeborne.selenide.Selenide.open;
 import static com.codeborne.selenide.Selenide.refresh;
 
-import com.codeborne.selenide.SelenideElement;
 import io.qameta.allure.Step;
+import pages.components.HeaderComponent;
 
-public class BasePage {
+public abstract class BasePage<T extends BasePage<T>> {
 
-    private final SelenideElement html = $("html");
+    public final HeaderComponent header = new HeaderComponent();
 
-    public HeaderComponent = new HeaderComponent();
+    public abstract T shouldBeOpen();
 
+    @Step("Reload current page")
+    public T reloadPage() {
+        refresh();
+        return shouldBeOpen();
+    }
 }

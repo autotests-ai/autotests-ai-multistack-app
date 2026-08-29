@@ -8,7 +8,7 @@ import static com.codeborne.selenide.Selenide.open;
 import com.codeborne.selenide.SelenideElement;
 import io.qameta.allure.Step;
 
-public class RegisterPage {
+public class RegisterPage extends BasePage<RegisterPage> {
 
     private final SelenideElement registerForm = $("[data-testid='register-form']");
     private final SelenideElement loginInput = $("[data-testid='register-login-input']");
@@ -63,6 +63,7 @@ public class RegisterPage {
         return this;
     }
 
+    @Override
     @Step("Verify register page is open")
     public RegisterPage shouldBeOpen() {
         registerForm.shouldBe(visible);
