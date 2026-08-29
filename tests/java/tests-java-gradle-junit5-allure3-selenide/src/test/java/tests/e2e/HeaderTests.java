@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Test;
 @Epic("Header")
 @Feature("Lang and theme")
 @Severity(SeverityLevel.NORMAL)
-@DisplayName("Header chrome")
-class HeaderChromeTests extends TestBase {
+@DisplayName("Header")
+class HeaderTests extends TestBase {
 
     @Test
     @Tag("e2e")
