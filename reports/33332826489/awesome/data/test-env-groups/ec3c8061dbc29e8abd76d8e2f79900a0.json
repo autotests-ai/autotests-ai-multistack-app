@@ -1,1 +1,0 @@
-{"id":"ec3c8061dbc29e8abd76d8e2f79900a0","fullName":"frontend-typescript-react:src/test/lib/auth.test.ts#network failures saveSession swallows a disabled localStorage","name":"saveSession swallows a disabled localStorage","status":"passed","testResultsByEnv":{"default":"7a26dbbc54f3b48053d0bd487e2d53f5"}}

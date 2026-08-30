@@ -1,1 +1,0 @@
-{"id":"e27ac5ecbaf78e0f397c882b0310138a","fullName":"dev.multistack.app.controller.AuthControllerTest.registerRejectsUnreadableBody","name":"POST /api/auth/register rejects an unreadable body with 400","status":"passed","testResultsByEnv":{"default":"dd6140aa5796d86f0a4facf55ae3acfc"}}

@@ -1,1 +1,0 @@
-{"id":"9530bae13e357d55bb60bec2ff9c0a50","fullName":"tests.api.BackendWiringApiTests.healthReportsActiveBackendService","name":"GET /api/health — deployed service is the active backend module, not a neighbour","status":"passed","testResultsByEnv":{"default":"a2b0f7d8a4d0603c42aaa77ce524eae6"}}
