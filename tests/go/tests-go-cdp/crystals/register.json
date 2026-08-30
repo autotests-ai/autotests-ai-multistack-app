@@ -5,7 +5,7 @@
   "source": {
     "as_id": "Новый пользователь может зарегистрироваться",
     "lang": "typescript-playwright",
-    "fingerprint": "7ae3c43702e277e60915210f7fdf7943dd6165e2e44936b82278a1a0a8d1f3d3"
+    "fingerprint": "45787aedf7dc96812a42ed83eca18956f28983463be1a748d4659b8f428bd5c1"
   },
   "steps": [
     {
