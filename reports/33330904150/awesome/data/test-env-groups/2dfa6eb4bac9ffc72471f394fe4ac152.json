@@ -1,1 +1,0 @@
-{"id":"2dfa6eb4bac9ffc72471f394fe4ac152","fullName":"api/auth.spec.ts:134:7","name":"POST /api/auth/register rejects a short username with 400","status":"passed","testResultsByEnv":{"default":"1321ff1773b0d0ce93cfa9ff549fa6d4"}}

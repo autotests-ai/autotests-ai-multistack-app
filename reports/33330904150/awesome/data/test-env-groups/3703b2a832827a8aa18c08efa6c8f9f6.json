@@ -1,1 +1,0 @@
-{"id":"3703b2a832827a8aa18c08efa6c8f9f6","fullName":"dev.multistack.app.config.CorsConfigTest.sameHostUsesServerName","name":"sameHost falls back to server name when Host header is absent","status":"passed","testResultsByEnv":{"default":"5e39fee3b676c3f1d84018cf3d5edd30"}}

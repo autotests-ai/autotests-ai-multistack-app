@@ -1,1 +1,0 @@
-{"id":"6e463b7075afd7cd81e97542e73d858d","fullName":"api/auth.spec.ts:25:7","name":"POST /api/auth/login rejects a wrong password with 401","status":"passed","testResultsByEnv":{"default":"c4e052756220ec82ec80d7f255c81197"}}
