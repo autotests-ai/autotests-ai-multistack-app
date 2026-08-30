@@ -1,1 +1,0 @@
-{"id":"efe7a60bad789aca3fa2d15714bb707c","fullName":"api/auth.spec.ts:213:7","name":"DELETE /api/auth/me with a garbage token returns 401","status":"passed","testResultsByEnv":{"default":"d070e3bf0a1b38f4c0d3237f1bdc5277"}}
