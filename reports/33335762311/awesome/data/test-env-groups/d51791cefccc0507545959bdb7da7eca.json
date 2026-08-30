@@ -1,1 +1,0 @@
-{"id":"d51791cefccc0507545959bdb7da7eca","fullName":"tests.api.AuthApiTests.registerRejectsShortUsername","name":"POST /api/auth/register rejects a short username with 400","status":"passed","testResultsByEnv":{"default":"e5b8c7181c3e58fca657281db87ea958"}}
