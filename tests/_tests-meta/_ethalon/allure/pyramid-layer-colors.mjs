@@ -1,7 +1,7 @@
 /**
  * Palette A (cool → warm) for Allure testing pyramid (config/tests helpers).
- * Runtime HTML theme: @qa-guru/allure-report-kit (layers + collage palette).
- * Keep hex in sync with kit collage-palette + pyramid-layers.json.
+ * Runtime HTML theme: @qa-guru/allure-report-kit → @qa-guru/allure-notifications-pyramid.
+ * Keep hex in sync with @qa-guru/allure-notifications-pyramid + pyramid-layers.json.
  */
 
 /** Config / @Layer order (base → tip). */
@@ -10,6 +10,7 @@ export const PYRAMID_LAYERS = [
   "component",
   "integration",
   "api",
+  "ui",
   "e2e",
   "manual",
 ];
@@ -23,6 +24,7 @@ export const PYRAMID_COLORS_DARK = {
   component: "#ffa833",
   integration: "#a65ac4",
   api: "#ffd833",
+  ui: "#f472b6",
   e2e: "#ff574f",
   manual: "#61b6fb",
   other: "#5d6876",
@@ -34,6 +36,7 @@ export const PYRAMID_COLORS_LIGHT = {
   component: "#ff8200",
   integration: "#7e22ce",
   api: "#e8bd00",
+  ui: "#db2777",
   e2e: "#dc2626",
   manual: "#459bde",
   other: "#64748b",

@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { test as base } from '@playwright/test';
 import type { TestInfo } from '@playwright/test';
+import { label } from 'allure-js-commons';
 import { App } from '../../pages/app';
 import {
   BASE_URL,
@@ -19,6 +20,22 @@ type ZdsTestInfo = TestInfo & {
   _zdsConsoleLogs?: string[];
   _zdsHar?: ReturnType<typeof createHarCollector>;
 };
+
+async function applyAllureLayer(testInfo: TestInfo): Promise<void> {
+  const tags = testInfo.tags ?? [];
+  const has = (tag: string) => tags.includes(tag);
+  if (has('@api')) {
+    await label('layer', 'api');
+  } else if (has('@manual')) {
+    await label('layer', 'manual');
+  } else if (has('@infra') || has('@infra_backend') || has('@infra_frontend')) {
+    await label('layer', 'infra');
+  } else if (has('@ui')) {
+    await label('layer', 'ui');
+  } else if (has('@e2e')) {
+    await label('layer', 'e2e');
+  }
+}
 
 function wantAnyAttachments(): boolean {
   return (
@@ -97,7 +114,8 @@ export const test = base.extend<{ webApp: App; _artifactCapture: undefined }>({
     }
   },
 
-  webApp: async ({ page }, use) => {
+  webApp: async ({ page }, use, testInfo) => {
+    await applyAllureLayer(testInfo);
     const app = new App(page);
     await use(app);
   },

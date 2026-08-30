@@ -5,6 +5,8 @@
 #   component     = React Testing Library + Vitest in the SPA (CI job component-tests)
 #   integration   = backend src/test with @Tag("integration") (Spring + Testcontainers)
 #   api           = HTTP against a running stand (tests/.../tests/api) — Rest Assured or Retrofit 2
+#   ui            = browser SPA on stub API (tests/.../tests/ui) — mock stand
+#   e2e           = browser through live backend (tests/.../tests/e2e)
 #   contracts     = OpenAPI SSOT + openapi-diff
 
 default:
@@ -12,6 +14,7 @@ default:
   integration: backend/src/test
   component: null  # RTL when SPA present — never tests/component
   e2e: tests/e2e
+  ui: tests/ui
   manual: tests/e2e  # @Manual on method, same tree as e2e
 
 stacks:
@@ -20,7 +23,8 @@ stacks:
     unit_tests_helpers: tests/java/tests-java-gradle-junit5-allure3-selenide/src/test/java/helpers  # *Test + config.*Test via testUnit
     integration: backend/java/backend-java-spring/src/test
     component: frontend/typescript/frontend-typescript-react/src  # Vitest + RTL; CI job component-tests
-    e2e: tests/java/tests-java-gradle-junit5-allure3-selenide/src/test/java/tests
+    ui: tests/java/tests-java-gradle-junit5-allure3-selenide/src/test/java/tests/ui
+    e2e: tests/java/tests-java-gradle-junit5-allure3-selenide/src/test/java/tests/e2e
     testRunner: gradle
     browser: selenide
     frontendTestRunner: vitest
@@ -59,8 +63,13 @@ layers:
       layer: component
       scope: react
       framework: react-testing-library
+  ui:
+    description: Browser SPA on stub API (layout, chrome, WireMock) — job ui-mock-tests
+    required: true
+    allure_labels:
+      layer: ui
   e2e:
-    description: Browser flows, page objects
+    description: Browser journeys through a live backend
     required: true
   manual:
     description: Exploratory, @Manual tag

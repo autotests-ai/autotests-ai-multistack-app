@@ -63,7 +63,7 @@ runs:
         SELENOID_PLAYWRIGHT_URL: ""
       run: |
         source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
-        run_with_allurectl npx playwright test --grep @mock --grep-invert @screenshot
+        run_with_allurectl npx playwright test --grep @ui --grep-invert @screenshot
     - name: Stash mock Allure results
       if: always()
       continue-on-error: true

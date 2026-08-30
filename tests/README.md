@@ -26,6 +26,7 @@ tests/
     tests-java-gradle-gatling/                       # slot — Gatling Java DSL
   csharp/
     tests-csharp-nunit-allure3-selenium/              # slot — UI block
+    tests-csharp-nunit-allure3-restsharp/             # slot — HTTP block RestSharp
     tests-csharp-xunit-allure3-playwright/           # slot — UI block
   groovy/
     tests-groovy-jmeter/                             # slot — JMeter JSR223
@@ -33,22 +34,27 @@ tests/
     tests-kotlin-gradle-junit5-allure3-selenide/     # slot — UI block
     tests-kotlin-gradle-junit5-allure3-selenium/    # slot — UI block
     tests-kotlin-gradle-junit5-allure3-playwright/   # slot — UI block
+    tests-kotlin-gradle-junit5-allure3-ktor/         # slot — HTTP block Ktor
     tests-kotlin-gradle-gatling/                     # slot — Gatling Kotlin DSL
   scala/
     tests-scala-gatling/                             # slot — Gatling Scala DSL
   javascript/
-    tests-javascript-playwright/                     # active
+    tests-javascript-playwright/                     # active — UI+HTTP, APIRequest in-cell
     tests-javascript-cypress/                       # slot — UI block
+    tests-javascript-axios/                         # slot — HTTP-only Axios (not PW client)
     tests-javascript-k6/                             # slot — k6 JavaScript
     tests-javascript-gatling/                       # slot — Gatling JS SDK
   python/
     tests-python-selenium/                            # active
     tests-python-selene/                             # slot — UI block
     tests-python-playwright/                          # slot — UI block
+    tests-python-requests/                            # slot — HTTP block requests
+    tests-python-httpx/                               # slot — HTTP block httpx
     tests-python-yandex-tank/                         # slot — Yandex.Tank
     tests-python-locust/                             # slot — Locust
   typescript/
-    tests-typescript-playwright/                     # active
+    tests-typescript-playwright/                     # active — UI+HTTP, APIRequest in-cell
+    tests-typescript-axios/                          # slot — HTTP-only Axios (not PW client)
     tests-typescript-k6/                             # slot — k6 TypeScript
     tests-typescript-gatling/                       # slot — Gatling TS SDK
   go/
@@ -63,7 +69,7 @@ tests/
 | Product unit | `backend-unit-tests` | `backend/java/backend-java-spring/src/test/` |
 | Infra | `infra-tests` | `…/tests/infra/` · `@Tag("infra")`; backend-only lane → `infra-backend` (`ConfigReader`) |
 | RTL | `frontend-unit-tests` | `frontend/typescript/frontend-typescript-react/src/test/` |
-| integration / api / e2e / manual | `integration-tests` · `api-tests` / `api-tests-stage` · `ui-mock-tests` · `e2e-tests` / `e2e-tests-stage` / `manual-tests` | `backend/java/…/integration/` · `tests/api/` · `tests/e2e/` · manual stubs **in code** (`tests/manual/`) |
+| integration / api / ui / e2e / manual | `integration-tests` · `api-tests` / `api-tests-stage` · `ui-mock-tests` · `e2e-tests` / `e2e-tests-stage` / `manual-tests` | `backend/java/…/integration/` · `tests/api/` · `tests/ui/` · `tests/e2e/` · manual stubs **in code** (`tests/manual/`) |
 
 CI: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
 
@@ -72,10 +78,10 @@ The Java canon module has one Gradle task — `test`. The layer is a tag filter,
 ```bash
 ./gradlew test -Denv=ci -DincludeTags=infra
 ./gradlew test -Denv=ci -DincludeTags=infra-backend
-./gradlew test -Denv=mock -DincludeTags=mock
+./gradlew test -Denv=mock -DincludeTags=ui -DexcludeTags=screenshot
 ./gradlew test -Denv=mock -DincludeTags=screenshot
-./gradlew test -Denv=stage -DincludeTags=e2e -DexcludeTags=screenshot,mock
-./gradlew test -Denv=prod -DincludeTags=e2e -DexcludeTags=screenshot,mock
+./gradlew test -Denv=stage -DincludeTags=e2e -DexcludeTags=screenshot
+./gradlew test -Denv=prod -DincludeTags=e2e -DexcludeTags=screenshot
 ```
 
 Screenshot tests are two Selenide stages (`screenshots/{mock|e2e}/{os}/{chrome-148}/…`), not a pyramid layer — see [LAYERS.md](LAYERS.md).

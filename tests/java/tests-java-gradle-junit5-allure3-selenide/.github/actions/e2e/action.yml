@@ -72,7 +72,7 @@ runs:
         if [ -n "${EXCLUDE_TAGS}" ]; then
           ARGS+=(-DexcludeTags="${EXCLUDE_TAGS}")
         else
-          ARGS+=(-DexcludeTags=mock,screenshot)
+          ARGS+=(-DexcludeTags=screenshot)
         fi
         source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
         run_with_allurectl ./gradlew test "${ARGS[@]}"

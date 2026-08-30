@@ -7,4 +7,5 @@ Pattern: `tests-kotlin-{build}-{framework}-{reporting}-{automation}` — see [..
 | `tests-kotlin-gradle-junit5-allure3-selenide` | slot — UI block Selenide |
 | `tests-kotlin-gradle-junit5-allure3-selenium` | slot — UI block Selenium |
 | `tests-kotlin-gradle-junit5-allure3-playwright` | slot — UI block Playwright |
+| `tests-kotlin-gradle-junit5-allure3-ktor` | slot — HTTP block Ktor client |
 | `tests-kotlin-gradle-gatling` | slot — Gatling Kotlin DSL (`layers: [performance]`) |

@@ -68,7 +68,7 @@ runs:
             [ -n "$p" ] && MARKER="${MARKER} and not ${p}"
           done
         else
-          MARKER="${MARKER} and not mock and not screenshot"
+          MARKER="${MARKER} and not screenshot"
         fi
         echo "==> pytest -m '${MARKER}'"
         source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"

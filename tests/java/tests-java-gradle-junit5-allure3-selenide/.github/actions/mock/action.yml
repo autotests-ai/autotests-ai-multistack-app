@@ -71,7 +71,7 @@ runs:
         CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
       run: |
         source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
-        run_with_allurectl ./gradlew test -Denv=mock -DincludeTags=mock
+        run_with_allurectl ./gradlew test -Denv=mock -DincludeTags=ui -DexcludeTags=screenshot
     - name: Stash mock Allure results
       if: always()
       continue-on-error: true

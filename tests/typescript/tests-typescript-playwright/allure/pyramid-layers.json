@@ -5,12 +5,14 @@
     "component",
     "integration",
     "api",
+    "ui",
     "e2e",
     "manual"
   ],
   "statusMapping": {
     "unit": "passed",
     "e2e": "failed",
+    "ui": "brand-pink",
     "api": "broken",
     "integration": "unknown",
     "other": "skipped",
@@ -40,6 +42,10 @@
     "api": {
       "light": "#e8bd00",
       "dark": "#ffd833"
+    },
+    "ui": {
+      "light": "#db2777",
+      "dark": "#f472b6"
     },
     "e2e": {
       "light": "#dc2626",

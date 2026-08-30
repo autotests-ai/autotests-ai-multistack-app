@@ -1,5 +1,6 @@
 const fs = require('fs');
 const { test: base } = require('@playwright/test');
+const { label } = require('allure-js-commons');
 const { App } = require('../../pages/app');
 const {
   BASE_URL,
@@ -13,6 +14,22 @@ const {
 const Attachments = require('../attachments');
 const { pageSourceQuiet, screenshotQuiet } = require('../quiet-page');
 const { createHarCollector } = require('../har-collect');
+
+async function applyAllureLayer(testInfo) {
+  const tags = testInfo.tags || [];
+  const has = (tag) => tags.includes(tag);
+  if (has('@api')) {
+    await label('layer', 'api');
+  } else if (has('@manual')) {
+    await label('layer', 'manual');
+  } else if (has('@infra') || has('@infra_backend') || has('@infra_frontend')) {
+    await label('layer', 'infra');
+  } else if (has('@ui')) {
+    await label('layer', 'ui');
+  } else if (has('@e2e')) {
+    await label('layer', 'e2e');
+  }
+}
 
 function wantAnyAttachments() {
   return (
@@ -93,7 +110,8 @@ const test = base.extend({
     }
   },
 
-  webApp: async ({ page }, use) => {
+  webApp: async ({ page }, use, testInfo) => {
+    await applyAllureLayer(testInfo);
     const app = new App(page);
     await use(app);
   },

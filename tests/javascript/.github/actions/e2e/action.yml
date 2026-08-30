@@ -78,7 +78,7 @@ runs:
         if [ -n "${EXCLUDE_TAGS}" ]; then
           INVERT="$(to_grep "${EXCLUDE_TAGS}")"
         else
-          INVERT="@mock|@screenshot"
+          INVERT="@screenshot"
         fi
         echo "==> playwright test --grep '${GREP}' --grep-invert '${INVERT}'"
         source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"

@@ -14,7 +14,7 @@ tests-{language}-{build}-{framework}-{reporting}-{automation}
 | `build` | `gradle`, `maven`, `npm`, `pip`, `mod` | omit when obvious (e.g. JS → npm) |
 | `framework` | `junit4`, `junit5`, `junit6`, `testng`, `pytest`, `vitest`, `testing`, `nunit`, `xunit` | test runner |
 | `reporting` | `allure2`, `allure3`, `no_allure` | underscore in `no_allure` |
-| `automation` | `selenium`, `selenide`, `selene`, `playwright`, `cypress`, `restassured`, `retrofit2`, `jmeter`, `gatling`, `k6`, `yandex-tank`, `locust`, `none` | UI/HTTP school or load tool; `none` for api-only when unnamed |
+| `automation` | `selenium`, `selenide`, `selene`, `playwright`, `cypress`, `restassured`, `retrofit2`, `requests`, `httpx`, `axios`, `ktor`, `restsharp`, `jmeter`, `gatling`, `k6`, `yandex-tank`, `locust`, `none` | UI/HTTP school or load tool; `none` for api-only when unnamed |
 
 ## Java (Gradle) — matrix
 
@@ -33,7 +33,7 @@ tests-{language}-{build}-{framework}-{reporting}-{automation}
 | `tests-java-jmeter` | slot — JMeter JMX, `layers: [performance]` |
 | `tests-java-gradle-gatling` | slot — Gatling Java DSL, `layers: [performance]` |
 
-Only one module is the CI default (Selenide). Selenium living block has api+e2e; Rest Assured and Retrofit 2 are living HTTP-only (`layers: [api]`). Java Playwright is living UI+HTTP (`layers: [api, e2e]`, Rest Assured for HTTP — same as Selenide/Selenium). Other folders are teaching slots / generator outputs.
+Only one module is the CI default (Selenide). Selenium living block has api+ui+e2e; Rest Assured and Retrofit 2 are living HTTP-only (`layers: [api]`). Java Playwright is living UI+HTTP (`layers: [api, ui, e2e]`, Rest Assured for HTTP — same as Selenide/Selenium). Other folders are teaching slots / generator outputs.
 
 ## JavaScript / TypeScript / Python / Go / Kotlin / C#
 
@@ -44,19 +44,24 @@ Full IDs live in hub [`matrix.yaml`](../../matrix.yaml) `tests.modules` (`status
 |-------------|--------|
 | `tests-javascript-playwright` | **active** |
 | `tests-javascript-cypress` | slot — UI block |
+| `tests-javascript-axios` | slot — HTTP-only Axios (not in-cell Playwright) |
 | `tests-javascript-k6` | slot — k6 JavaScript, `layers: [performance]` |
 | `tests-javascript-gatling` | slot — Gatling JS SDK, `layers: [performance]` |
 | `tests-typescript-playwright` | **active** |
+| `tests-typescript-axios` | slot — HTTP-only Axios (not in-cell Playwright) |
 | `tests-typescript-k6` | slot — k6 TypeScript, `layers: [performance]` |
 | `tests-typescript-gatling` | slot — Gatling TS SDK, `layers: [performance]` |
 | `tests-python-selenium` | **active** |
 | `tests-python-selene` | slot — UI block Selene |
 | `tests-python-playwright` | slot — UI block |
+| `tests-python-requests` | slot — HTTP block requests |
+| `tests-python-httpx` | slot — HTTP block httpx |
 | `tests-python-yandex-tank` | slot — Yandex.Tank, `layers: [performance]` |
 | `tests-python-locust` | slot — Locust, `layers: [performance]` |
 | `tests-kotlin-gradle-junit5-allure3-selenide` | slot — UI block |
 | `tests-kotlin-gradle-junit5-allure3-selenium` | slot — UI block |
 | `tests-kotlin-gradle-junit5-allure3-playwright` | slot — UI block |
+| `tests-kotlin-gradle-junit5-allure3-ktor` | slot — HTTP block Ktor client |
 | `tests-kotlin-gradle-gatling` | slot — Gatling Kotlin DSL |
 | `tests-scala-gatling` | slot — Gatling Scala DSL |
 | `tests-groovy-jmeter` | slot — JMeter JSR223 Groovy |
@@ -64,6 +69,7 @@ Full IDs live in hub [`matrix.yaml`](../../matrix.yaml) `tests.modules` (`status
 | `tests-go-testing-allure3-playwright` | slot — UI block Playwright |
 | `tests-go-cdp` | mill — IR / `greedy run`, not a Selenide peer |
 | `tests-csharp-nunit-allure3-selenium` | slot — UI block |
+| `tests-csharp-nunit-allure3-restsharp` | slot — HTTP block RestSharp |
 | `tests-csharp-xunit-allure3-playwright` | slot — UI block |
 
 ```

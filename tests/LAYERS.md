@@ -1,7 +1,7 @@
 # Test layers (canonical map)
 
 Teaching pyramid for autotests-ai-multistack-app — **classical** names (ISTQB-style):
-unit → integration (wired, no UI) → api → e2e → manual.
+unit → integration (wired, no UI) → api → ui → e2e → manual.
 **One** CI file: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
 (pyramid + Allure 3 / TestOps / Notifications + JaCoCo + Sonar quality axis).  
 Module folders: `-` between segments, `_` in compounds (`react_testing_library`, `no_allure`).
@@ -10,7 +10,9 @@ Module folders: `-` between segments, `_` in compounds (`react_testing_library`,
                     ┌─────────────┐
                     │   manual    │  in code — exploratory stubs (@Manual + steps)
                     ├─────────────┤
-                    │     e2e     │  UI through browser (@Tag e2e; optional screenshot / mock)
+                    │     e2e     │  live stand + real backend (@Tag e2e)
+                    ├─────────────┤
+                    │     ui      │  browser SPA on stub API (@Tag ui; job ui-mock-tests)
                     ├─────────────┤     component — jsdom job (Vitest), not a pyramid layer
                     │     api     │  HTTP contract (@Tag api — any client / language)
                     ├─────────────┤
@@ -20,21 +22,25 @@ Module folders: `-` between segments, `_` in compounds (`react_testing_library`,
                     └─────────────┘
 ```
 
-Five classical layers: unit → integration → api → e2e → manual.  
+Six classical layers: unit → integration → api → ui → e2e → manual.  
 `component` sits **beside** the ladder (frontend jsdom job), not between unit and integration, not inside `tests/<lang>/…`.  
 DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
-**Not classical:** calling Chrome “mount” checks `integration`. Those are thin **e2e** (`@Tag("mock")`).  
+**Not classical:** calling Chrome “mount” checks `integration`. Those are **ui** (`@Tag("ui")` + `@Tag("mock")`).  
 **Not classical either:** Spring `@WebMvcTest` / `@DataJpaTest` — those stay in **unit** (see slices below).  
 **Not a pyramid language:** `tests/go/tests-go-cdp` mills IR via `greedy run` (`layers: [crystal]`, crystal column on `/stack/`). Not `@Layer`.  
 **Not a pyramid layer:** load slots — JMeter (`tests-java-jmeter`, `tests-groovy-jmeter`) · Gatling (`tests-java-gradle-gatling`, `tests-kotlin-gradle-gatling`, `tests-scala-gatling`, `tests-javascript-gatling`, `tests-typescript-gatling`) · k6 (`tests-javascript-k6`, `tests-typescript-k6`) · Locust (`tests-python-locust`) · Yandex.Tank (`tests-python-yandex-tank`). `layers: [performance]` on `/stack/` Tests board. Not `@Layer`.  
 **Go living HTTP block:** `tests/go/tests-go-testing-allure3` — `go test` + official Allure Go + testify, **api** layer only. UI block is slot `tests-go-testing-allure3-playwright`. Mill stays `tests-go-cdp`. Not Gomega.
 
-**Java Selenium living block:** `tests/java/tests-java-gradle-junit5-allure3-selenium` — raw WebDriver + Rest Assured, `layers: [api, e2e]`. Not the Selenide default cell.
+**Java Selenium living block:** `tests/java/tests-java-gradle-junit5-allure3-selenium` — raw WebDriver + Rest Assured, `layers: [api, ui, e2e]`. Not the Selenide default cell.
 
 **Java HTTP-only living blocks:** `tests-java-gradle-junit5-allure3-restassured` (Rest Assured) and `tests-java-gradle-junit5-allure3-retrofit2` (Retrofit 2) — `layers: [api]`. Same `/api` contract. Combo Selenium+Retrofit = generate, not a third folder.
 
-**Java Playwright living block:** `tests-java-gradle-junit5-allure3-playwright` — Playwright for Java + Rest Assured, `layers: [api, e2e]`. Same `data-testid` as the TS Playwright cell. HTTP-only Rest Assured school stays in `tests-java-gradle-junit5-allure3-restassured`.
+**HTTP-only slots (other languages):** empty folders, `layers: [api]`, same `/api` contract. Python `tests-python-requests` / `tests-python-httpx` · JS/TS `tests-javascript-axios` / `tests-typescript-axios` · Kotlin `tests-kotlin-gradle-junit5-allure3-ktor` · C# `tests-csharp-nunit-allure3-restsharp`. Go already has living `tests-go-testing-allure3`. Combo with a UI school = generate, not a third folder.
+
+**JS/TS Playwright living:** api inside `tests-javascript-playwright` / `tests-typescript-playwright` is Playwright **APIRequest** (`request` fixture). Axios is the sibling HTTP-only school, not the client in those folders. Java Playwright uses Rest Assured in-cell (JVM HTTP school).
+
+**Java Playwright living block:** `tests-java-gradle-junit5-allure3-playwright` — Playwright for Java + Rest Assured, `layers: [api, ui, e2e]`. Same `data-testid` as the TS Playwright cell. HTTP-only Rest Assured school stays in `tests-java-gradle-junit5-allure3-restassured`.
 
 ## integration vs api — intent, not tag
 
@@ -86,9 +92,9 @@ Self-check of the **tests module helpers** before / alongside product layers —
 
 **Not** application code (that's `backend-unit-tests` on `BACKEND_DIR` / `frontend-unit-tests` on `FRONTEND_DIR`).
 
-## Mock and screenshot (inside e2e, not layers)
+## Mock and screenshot (ui vs e2e; screenshot is not a layer)
 
-Screenshot tests are **two stages**, not a pyramid layer. Same PNG tree. Java: `@Layer("e2e")` + `@Tag("e2e")` + `@Tag("screenshot")`, stand is `-Denv`. Python: `pytest.mark.e2e` + `pytest.mark.screenshot` (Allure `layer=e2e`), stand is `STAND`. Mock is the same dual mark (`e2e` + `mock`).
+Screenshot tests are **two stages**, not a pyramid layer. Same PNG tree. Chrome / form PNG: `@Layer("ui")` + `@Tag("ui")` + `@Tag("screenshot")`. Welcome-panel after login: `@Layer("e2e")` + `@Tag("e2e")` + `@Tag("screenshot")`. Stand is `-Denv`. Python: `pytest.mark.ui` or `pytest.mark.e2e` + `pytest.mark.screenshot`. Mock is a slice **inside ui** (`@Tag("mock")`), not a substitute for `@Tag("ui")`.
 
 ```
 src/test/resources/screenshots/{mock|stage|prod}/{linux|macos|windows}/{chrome-148}/{area}/{viewport}.png
@@ -102,10 +108,10 @@ CI jobs `ui-mock-tests` and `e2e-tests` set `SCREENSHOT_OS=linux` and `SCREENSHO
 
 | Slice | Tag | CI |
 |-------|-----|-----|
-| UI on stub API (mount + error injection) | `@Tag("mock")` (+ `@Tag("e2e")`) | job `ui-mock-tests` step 1: `-DincludeTags=mock` |
+| UI on stub API (mount + error injection + header chrome) | `@Tag("ui")` (+ optional `@Tag("mock")`) | job `ui-mock-tests` step 1: `-DincludeTags=ui -DexcludeTags=screenshot` |
 | Screenshot vs stub UI | `@Tag("screenshot")` / `-m screenshot` / `--grep @screenshot` | same job, compare step: java `-DincludeTags=screenshot` · python `-m screenshot` · javascript/typescript `--grep @screenshot` (every PR) |
 | Refresh mock screenshots | `@Tag("screenshot")` + update flag | same job, step `Update screenshots` — dispatch `update_mock_screenshots` writes `mock/linux/chrome-148` (skips compare; java `-DupdateScreenshots=true` · python `UPDATE_SCREENSHOTS=true`) |
-| Flow | `@Tag("e2e")` exclude `screenshot,mock` | job `e2e-tests` (`-Denv=prod -DincludeTags=e2e`) / `e2e-tests-stage` (`-Denv=stage`); default push does **not** run screenshot via Selenoid |
+| Flow through live backend | `@Tag("e2e")` exclude `screenshot` | job `e2e-tests` (`-Denv=prod -DincludeTags=e2e`) / `e2e-tests-stage` (`-Denv=stage`); default push does **not** run screenshot via Selenoid |
 | Screenshot vs live UI | `@Tag("screenshot")` / `-m screenshot` | job `e2e-tests`, compare step — dispatch `run_screenshot` compares `prod/linux/chrome-148` |
 | Refresh prod screenshots | `@Tag("screenshot")` + update flag | job `e2e-tests`, step `Update screenshots` — dispatch `update_e2e_screenshots` writes `prod/linux/chrome-148` (skips compare; independent of mock rewrite) |
 
@@ -141,7 +147,7 @@ SCREENSHOT_BROWSER=chrome STAND=ci UPDATE_SCREENSHOTS=true npx playwright test -
 ```
 
 **Mock stand** — browser checks that need controlled `/api/*` JSON, not a live backend.
-Java: stand = `-Denv=mock`, slice = `-DincludeTags=mock`. Python: stand = `STAND=mock`, slice = `-m mock`. Javascript: stand = `STAND=mock` / `UI_URL=http://127.0.0.1:9911/`, slice = `--grep @mock`.
+Java: stand = `-Denv=mock`, slice = `-DincludeTags=ui`. Python: stand = `STAND=mock`, slice = `-m ui`. Javascript: stand = `STAND=mock` / `UI_URL=http://127.0.0.1:9911/`, slice = `--grep @ui`.
 
 The SPA is served at document root and resolves API to `/api`; the frontend container nginx
 has no `/api` route, so a **stand-gateway** (compose profile `mock`, port **9911**) proxies
@@ -149,7 +155,7 @@ has no `/api` route, so a **stand-gateway** (compose profile `mock`, port **9911
 the same shapes as the real controllers (incl. `401` on `/api/auth/me` without a bearer).
 The gateway also proxies WireMock admin at `/__admin/` for scenario switches.
 
-Two `@Tag("mock")` flavours in the same job:
+Two `@Tag("mock")` flavours in the same **ui** job (plus header/chrome tests that are `@Tag("ui")` only):
 
 | Flavour | What | Classes / mechanism |
 |---------|------|---------------------|
@@ -162,8 +168,8 @@ mappings; they do not call admin.
 
 ```bash
 docker compose --profile mock up -d stand-gateway   # :9911 + api-mock + react frontend
-./gradlew test -Denv=mock -DincludeTags=mock
-STAND=mock pytest -m mock        # from tests/python/tests-python-selenium
+./gradlew test -Denv=mock -DincludeTags=ui
+STAND=mock pytest -m ui        # from tests/python/tests-python-selenium
 STAND=mock pytest -m screenshot
 ```
 
@@ -181,12 +187,12 @@ task — `test`:
 ./gradlew test -Denv=ci   -DincludeTags=infra-backend
 ./gradlew test -Denv=ci   -DincludeTags=infra-frontend
 ./gradlew test -Denv=ci   -DincludeTags=infra
-./gradlew test -Denv=mock -DincludeTags=mock
+./gradlew test -Denv=mock -DincludeTags=ui -DexcludeTags=screenshot
 ./gradlew test -Denv=mock -DincludeTags=screenshot
 ./gradlew test -Denv=stage -DincludeTags=api
-./gradlew test -Denv=stage -DincludeTags=e2e -DexcludeTags=screenshot,mock
+./gradlew test -Denv=stage -DincludeTags=e2e -DexcludeTags=screenshot
 ./gradlew test -Denv=prod -DincludeTags=api
-./gradlew test -Denv=prod -DincludeTags=e2e -DexcludeTags=screenshot,mock
+./gradlew test -Denv=prod -DincludeTags=e2e -DexcludeTags=screenshot
 ./gradlew test -Denv=prod -DincludeTags=screenshot
 ```
 
@@ -207,12 +213,12 @@ For `TESTS_LANG=python`, a layer is a **pytest marker**, a stand is **`STAND`** 
 STAND=ci   pytest -m infra_backend
 STAND=ci   pytest -m infra_frontend
 STAND=ci   pytest -m infra
-STAND=mock pytest -m mock
+STAND=mock pytest -m 'ui and not screenshot'
 STAND=mock pytest -m screenshot
 STAND=stage pytest -m api
-STAND=stage pytest -m 'e2e and not screenshot and not mock'
+STAND=stage pytest -m 'e2e and not screenshot'
 STAND=prod pytest -m api
-STAND=prod pytest -m 'e2e and not screenshot and not mock'
+STAND=prod pytest -m 'e2e and not screenshot'
 STAND=prod pytest -m screenshot
 ```
 
@@ -225,10 +231,10 @@ For `TESTS_LANG=javascript`, a layer is a **Playwright tag**, a stand is **`UI_U
 ```bash
 npx playwright test --grep @infra_backend
 npx playwright test --grep @infra
-STAND=mock UI_URL=http://127.0.0.1:9911/ npx playwright test --grep @mock --grep-invert @screenshot
+STAND=mock UI_URL=http://127.0.0.1:9911/ npx playwright test --grep @ui --grep-invert @screenshot
 STAND=mock UI_URL=http://127.0.0.1:9911/ npx playwright test --grep @screenshot
 npx playwright test --grep @api
-npx playwright test --grep @e2e --grep-invert '@mock|@screenshot'
+npx playwright test --grep @e2e --grep-invert @screenshot
 npx playwright test --grep @manual
 ```
 
@@ -243,7 +249,8 @@ For `TESTS_LANG=typescript`, a layer is a **Playwright tag**, a stand is **`UI_U
 | component | frontend | active `FRONTEND_DIR` only (default `frontend/typescript/frontend-typescript-react/`) — siblings not CI-gated | Vitest + coverage | `npm test -- --coverage` via `frontend-unit-tests` |
 | integration | backend | `backend/java/backend-java-spring/src/test/java/dev/reference/app/integration/` (`ApplicationWiringIntegrationTest`, `AuthLifecycleIntegrationTest`) | `@Tag("integration")` | `./gradlew test -DincludeTags=integration` in `BACKEND_DIR` via `integration-tests` (after `backend-unit-tests`, **before** build/deploy; PR + main) |
 | api | tests | `…/tests/api/` (`AuthApiTests`, `ReferenceApiTests`, `BackendWiringApiTests`, `SeedDataApiTests`, `AuthRoundTripApiTests`) — HTTP contract + deployed-stand facts | `@Tag("api")` | java → `-DincludeTags=api` via `api-tests-stage` (`-Denv=stage`) and `api-tests` (`-Denv=prod`); retarget any backend with `-DapiBaseUrl` / `-DapiHealthService` |
-| e2e | tests | `…/tests/e2e/` | `@Tag("e2e")` (+ optional `screenshot` / `mock`) | `ui-mock-tests` (mock flows + screenshot mock PNG); `e2e-tests-stage` (`-Denv=stage` after `api-tests-stage` + `deploy-frontend-stage`); `e2e-tests` (`-Denv=prod -DincludeTags=e2e` after `api-tests` + `deploy-frontend`; screenshot excluded on default push) |
+| ui | tests | `…/tests/ui/` (layout, header, form chrome, error injection, chrome screenshots) | `@Tag("ui")` (+ optional `mock` / `screenshot`) | `ui-mock-tests` (`-Denv=mock -DincludeTags=ui`; screenshot compare is a second step) |
+| e2e | tests | `…/tests/e2e/` (login, register, session, home load, welcome-panel screenshot) | `@Tag("e2e")` (+ optional `screenshot`) | `e2e-tests-stage` (`-Denv=stage` after `api-tests-stage` + `deploy-frontend-stage`); `e2e-tests` (`-Denv=prod -DincludeTags=e2e` after `api-tests` + `deploy-frontend`; screenshot excluded on default push) |
 | manual | tests | `…/tests/manual/` **in code** | `@Tag("manual")` + `@Manual` | java → `-DincludeTags=manual` via `manual-tests` (after `e2e-tests`, dispatch) |
 
 ### Frontend reference modules (not interchangeable)
@@ -293,15 +300,16 @@ The 100% line-coverage gate (`jacocoTestCoverageVerification`) is java-only and 
 `infra` → all three). `LocalChromePin` is tagged `infra-frontend` (skipped on backend-only CI)
 and is **not** in the JaCoCo class set. It reads `build/jacoco/test.exec`.
 
-## Why `component` vs `e2e` (not vs integration)?
+## Why `component` vs `ui` vs `e2e` (not vs integration)?
 
-| | `component` | `e2e` (incl. mock) |
-|---|-----------------|---------------------|
-| Runtime | jsdom | real Chrome |
-| Object | React SPA units | product pages in a browser |
-| Lesson | logic / props / a11y | real CSS / layout / flows |
+| | `component` | `ui` | `e2e` |
+|---|-----------------|------|-------|
+| Runtime | jsdom | real Chrome | real Chrome |
+| Backend | none | WireMock stubs | live `/api` |
+| Object | React SPA units | product pages, chrome, layout | user journeys through the stack |
+| Lesson | logic / props / a11y | real CSS / forms / error panels | login, session, catalogue |
 
-Integration is **in-process Spring + PostgreSQL**, no browser. Deployed HTTP checks belong under **api**. Chrome checks belong under e2e.
+Integration is **in-process Spring + PostgreSQL**, no browser. Deployed HTTP checks belong under **api**. Browser-on-stub belongs under **ui**. Browser-on-live-backend belongs under **e2e**.
 
 ## When each layer runs
 
@@ -309,7 +317,7 @@ Integration is **in-process Spring + PostgreSQL**, no browser. Deployed HTTP che
 |---------|------|
 | Pull request (blocks merge) | `backend-unit-tests`, `integration-tests`, `frontend-unit-tests`, `infra-tests`, `ui-mock-tests`, `sonar-backend`, `sonar-tests`, `sonar-frontend` |
 | Push to `main` | PR set + `trigger` lanes → CD stage of this SHA → full api/e2e vs stage → CD production → `api-tests` / `e2e-tests` (`-Denv=prod`, same layer tags) |
-| Push to `develop` | PR set + `trigger` lanes → CD stage only → `api-tests-stage` / `e2e-tests-stage` (full `api` / `e2e`, `excludeTags=mock,screenshot`) vs [stage.autotests.ai/stack/…](https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/) |
+| Push to `develop` | PR set + `trigger` lanes → CD stage only → `api-tests-stage` / `e2e-tests-stage` (full `api` / `e2e`, `excludeTags=screenshot`) vs [stage.autotests.ai/stack/…](https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/) |
 | `workflow_dispatch` | `deploy=none\|backend\|frontend\|tests\|all` + `deploy_target=production\|stage\|both`; per-layer booleans `run_integration` / `run_api` / `run_mock` / `run_e2e` / `run_screenshot` / `run_manual`; screenshot rewrite flags; TestOps `ALLURE_JOB_RUN_ID` / `ALLURE_USERNAME` |
 
 Active stack knobs are workflow `env` in [`ci.yml`](../.github/workflows/ci.yml)
@@ -338,7 +346,7 @@ After generate, [`attach-ci-jobs-quality-gate.mjs`](java/tests-java-gradle-junit
 
 Layer jobs: `backend-unit-tests`, `frontend-unit-tests`, `infra-tests`, `ui-mock-tests`, `integration-tests`, `api-tests-stage`, `e2e-tests-stage`, `api-tests`, `e2e-tests`, `manual-tests`. Widget rule id: `maxCiJobFailures` (attached after generate, not an Allure CLI `use` rule).
 
-CLI (`npx allure quality-gate`) also runs `maxFailures` plus reporting via `qualityGate.use`: steps on api / integration / e2e / manual, and attachments on `@Tag("screenshot")` e2e (nested step PNGs count; AllureSelenide stays `screenshots(false)`).
+CLI (`npx allure quality-gate`) also runs `maxFailures` plus reporting via `qualityGate.use`: steps on api / integration / ui / e2e / manual, and attachments on `@Tag("screenshot")` (nested step PNGs count; AllureSelenide stays `screenshots(false)`).
 
 ## TestOps (live upload + selective rerun)
 
@@ -436,7 +444,7 @@ main (via `trigger.cd_stage` then `cd_production`):
   deploy-backend ← build-backend + sonar-backend + e2e-tests-stage
   deploy-frontend ← build-frontend + sonar-frontend + e2e-tests-stage
   api-tests ← deploy-backend (or tests-lane vs live stand); -Denv=prod -DincludeTags=api
-  e2e-tests ← api-tests + deploy-frontend; -Denv=prod -DincludeTags=e2e excludeTags=mock,screenshot
+  e2e-tests ← api-tests + deploy-frontend; -Denv=prod -DincludeTags=e2e excludeTags=screenshot
   manual-tests: dispatch (needs e2e-tests + testops)
 
 develop (via `trigger.cd_stage` only — no prod):

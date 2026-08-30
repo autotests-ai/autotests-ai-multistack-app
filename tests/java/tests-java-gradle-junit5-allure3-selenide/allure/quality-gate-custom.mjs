@@ -1,8 +1,8 @@
 /** Custom quality gate rules — steps/attachments by @Layer label. */
 
-export const LAYERS_REQUIRE_STEPS = ["api", "integration", "e2e", "manual"];
+export const LAYERS_REQUIRE_STEPS = ["api", "integration", "ui", "e2e", "manual"];
 
-export const LAYERS_REQUIRE_ATTACHMENTS = ["e2e"];
+export const LAYERS_REQUIRE_ATTACHMENTS = ["ui", "e2e"];
 
 /** AllureSelenide keeps screenshots(false); only @Tag("screenshot") must attach PNGs. */
 export const ATTACHMENTS_REQUIRE_TAG = "screenshot";

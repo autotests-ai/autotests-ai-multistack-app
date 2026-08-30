@@ -74,7 +74,7 @@ runs:
         CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
       run: |
         source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
-        run_with_allurectl python -m pytest -m mock --alluredir="${ALLURE_RESULTS}"
+        run_with_allurectl python -m pytest -m 'ui and not screenshot' --alluredir="${ALLURE_RESULTS}"
     - name: Stash mock Allure results
       if: always()
       continue-on-error: true

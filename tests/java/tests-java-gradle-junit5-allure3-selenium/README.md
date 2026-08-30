@@ -8,7 +8,8 @@ Gradle · JUnit 5 · Allure 3 · **Selenium 4** (not Selenide) · Rest Assured a
 cd tests/java/tests-java-gradle-junit5-allure3-selenium
 ./gradlew test -Denv=ci -DincludeTags=infra
 ./gradlew test -Denv=ci -DincludeTags=api
-./gradlew test -Denv=ci -DincludeTags=e2e -DexcludeTags=screenshot,mock
+./gradlew test -Denv=mock -DincludeTags=ui -DexcludeTags=screenshot
+./gradlew test -Denv=ci -DincludeTags=e2e -DexcludeTags=screenshot
 ```
 
 Screenshot PNGs follow the Selenide tree (`mock|stage|prod/{linux|macos}/chrome-148`). Linux is CI SSOT — do not rewrite linux canon from macOS Chrome. Local Mac compare may skip screenshot (`-DexcludeTags=screenshot`).

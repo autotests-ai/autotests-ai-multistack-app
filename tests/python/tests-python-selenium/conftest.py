@@ -73,7 +73,7 @@ def driver(config: TestConfig) -> WebDriver:
 
 
 def pytest_runtest_setup(item: pytest.Item) -> None:
-    """Allure layer from pytest markers (LAYERS.md). mock/screenshot stay layer=e2e."""
+    """Allure layer from pytest markers (LAYERS.md). mock/screenshot stay slices."""
     if item.get_closest_marker("api"):
         allure.dynamic.label("layer", "api")
     elif item.get_closest_marker("manual"):
@@ -83,12 +83,12 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
         "infra_frontend"
     ):
         allure.dynamic.label("layer", "infra")
-    elif (
-        item.get_closest_marker("e2e")
-        or item.get_closest_marker("mock")
-        or item.get_closest_marker("screenshot")
-    ):
+    elif item.get_closest_marker("ui"):
+        allure.dynamic.label("layer", "ui")
+    elif item.get_closest_marker("e2e") or item.get_closest_marker("screenshot"):
         allure.dynamic.label("layer", "e2e")
+    elif item.get_closest_marker("mock"):
+        allure.dynamic.label("layer", "ui")
 
 
 @pytest.hookimpl(hookwrapper=True, tryfirst=True)
