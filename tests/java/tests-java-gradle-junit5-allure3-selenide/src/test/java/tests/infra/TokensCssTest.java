@@ -78,27 +78,6 @@ class TokensCssTest extends AllureMeta {
     }
 
     @Test
-    @DisplayName("resolveTokensCssPath prefers frontend candidate")
-    void resolveTokensCssPathPrefersFrontendCandidate(@TempDir Path temp) throws Exception {
-        var frontend = temp.resolve("tokens.css");
-        var backend = temp.resolve("backend-tokens.css");
-        Files.writeString(frontend, ":root { --x: 1px; }");
-        Files.writeString(backend, ":root { --y: 2px; }");
-
-        assertEquals(frontend, TokensCss.resolveTokensCssPath(frontend, backend));
-    }
-
-    @Test
-    @DisplayName("resolveTokensCssPath falls back to backend candidate")
-    void resolveTokensCssPathFallsBackToBackendCandidate(@TempDir Path temp) throws Exception {
-        var frontend = temp.resolve("missing-tokens.css");
-        var backend = temp.resolve("backend-tokens.css");
-        Files.writeString(backend, ":root { --y: 2px; }");
-
-        assertEquals(backend, TokensCss.resolveTokensCssPath(frontend, backend));
-    }
-
-    @Test
     @DisplayName("parseRootTokens rejects css without :root block")
     void parseRootTokensRejectsMissingRootBlock(@TempDir Path temp) throws Exception {
         var css = temp.resolve("tokens-invalid.css");

@@ -19,7 +19,7 @@ public final class TokensCss {
     }
 
     public static Path defaultTokensPath() {
-        // cwd = tests module. Ethalon hub is frontend/_shared; takeaway bakes into vendor/ds.
+        // cwd = tests module. Tokens live in frontend (hub / vendor/ds), never in a backend cell.
         return firstExisting(tokensCssCandidates());
     }
 
@@ -28,7 +28,6 @@ public final class TokensCss {
                 frontendTokens("..", "..", "..", "frontend", "_shared", "frontend-javascript-app"),
                 frontendTokens("..", "..", "..", "frontend", "typescript", "frontend-typescript-react", "vendor", "ds"),
                 frontendTokens("..", "..", "..", "frontend", "typescript", "frontend-typescript-react", "vendor", "frontend-javascript-app"),
-                backendTokens("..", "..", "..", "backend", "java", "backend-java-spring"),
         };
     }
 
@@ -42,13 +41,6 @@ public final class TokensCss {
             fallback = abs;
         }
         return fallback;
-    }
-
-    public static Path resolveTokensCssPath(Path frontendCandidate, Path backendCandidate) {
-        if (Files.exists(frontendCandidate)) {
-            return frontendCandidate;
-        }
-        return backendCandidate;
     }
 
     public static Map<String, String> parseRootTokens(Path cssFile) throws Exception {
@@ -67,10 +59,6 @@ public final class TokensCss {
 
     private static Path frontendTokens(String... moduleRoot) {
         return join(moduleRoot, "css", "tokens.css");
-    }
-
-    private static Path backendTokens(String... moduleRoot) {
-        return join(moduleRoot, "src", "main", "resources", "static", "css", "tokens.css");
     }
 
     private static Path join(String[] prefix, String... suffix) {
