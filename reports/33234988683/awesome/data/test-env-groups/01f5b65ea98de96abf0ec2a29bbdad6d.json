@@ -1,1 +1,0 @@
-{"id":"01f5b65ea98de96abf0ec2a29bbdad6d","fullName":"api/auth.spec.ts:65:7","name":"POST /api/auth/login rejects a short password with 400","status":"passed","testResultsByEnv":{"default":"70e71682a939b14491a873c2df6a1567"}}

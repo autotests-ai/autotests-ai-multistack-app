@@ -1,1 +1,0 @@
-{"id":"00ac76f62120ca5ed86e249e50ddbae0","fullName":"api/wiring.spec.ts:7:7","name":"GET /api/health — deployed service is the active backend module, not a neighbour","status":"passed","testResultsByEnv":{"default":"f7ea72465ab014c18ed2be2cec529ca0"}}
