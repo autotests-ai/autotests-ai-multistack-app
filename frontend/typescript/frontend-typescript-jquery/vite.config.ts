@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { extname, join, resolve } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
-import { overlayRuntime } from '../../scripts/vite-overlay-runtime.mjs';
+import { overlayRuntime } from './scripts/vite-overlay-runtime.mjs';
 
 // Relative base: one dist works at the publish port and under /{backend}/frontend-typescript-jquery/.
 const mountBase = './';

@@ -34,6 +34,6 @@
     "src",
     "vite.config.ts",
     "vitest.config.ts",
-    "../../scripts/vite-overlay-runtime.mjs"
+    "./scripts/vite-overlay-runtime.mjs"
   ]
 }

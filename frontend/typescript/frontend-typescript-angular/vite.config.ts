@@ -1,7 +1,7 @@
 import { defineConfig, type Plugin } from 'vite';
 import angular from '@analogjs/vite-plugin-angular';
 import { resolve } from 'node:path';
-import { overlayRuntime } from '../../scripts/vite-overlay-runtime.mjs';
+import { overlayRuntime } from './scripts/vite-overlay-runtime.mjs';
 
 // Relative base: one dist works under /{backend}/frontend-typescript-angular/
 const mountBase = './';

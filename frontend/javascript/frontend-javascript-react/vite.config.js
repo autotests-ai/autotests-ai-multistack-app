@@ -2,7 +2,7 @@ import { resolve } from 'node:path';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
-import { overlayRuntime } from '../../scripts/vite-overlay-runtime.mjs';
+import { overlayRuntime } from './scripts/vite-overlay-runtime.mjs';
 
 const reactUiSrc = resolve(__dirname, 'vendor/react-ui/src/index.ts');
 // Relative base: one dist works under /{backend}/frontend-javascript-react/

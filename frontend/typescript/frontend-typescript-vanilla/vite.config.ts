@@ -1,6 +1,6 @@
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
-import { overlayRuntime } from '../../scripts/vite-overlay-runtime.mjs';
+import { overlayRuntime } from './scripts/vite-overlay-runtime.mjs';
 
 export default defineConfig({
   root: resolve(__dirname),

@@ -2,7 +2,7 @@ import { defineConfig, type Plugin } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { VitePWA } from 'vite-plugin-pwa';
 import { resolve } from 'node:path';
-import { overlayRuntime } from '../../scripts/vite-overlay-runtime.mjs';
+import { overlayRuntime } from './scripts/vite-overlay-runtime.mjs';
 
 // Relative base: one dist works under /{backend}/frontend-typescript-vue/
 const mountBase = './';

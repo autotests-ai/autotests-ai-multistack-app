@@ -59,12 +59,25 @@ runs:
             frontend=true
             tests=true
           else
-            CHANGED="$(git diff --name-only "$BEFORE" "$GITHUB_SHA")"
-            match() { printf '%s\n' "$CHANGED" | grep -qE "$1"; }
-            SHARED='deploy/|docker-compose|\.github/'
-            if match "^(backend/|${SHARED})"; then backend=true; fi
-            if match "^(frontend/|${SHARED})"; then frontend=true; fi
-            if match "^(tests/|${SHARED})"; then tests=true; fi
+            TIP="${GITHUB_SHA:-HEAD}"
+            if ! git cat-file -e "${TIP}^{commit}" 2>/dev/null; then
+              TIP=HEAD
+            fi
+            CHANGED="$(git diff --name-only "$BEFORE" "$TIP")"
+            nfiles=$(printf '%s\n' "$CHANGED" | grep -c . || true)
+            echo "lane-diff before=${BEFORE} tip=${TIP} files=${nfiles}"
+            if [ "$nfiles" = "0" ] && [ "$BEFORE" != "$TIP" ]; then
+              echo "lane-diff empty between distinct SHAs — enabling all lanes" >&2
+              backend=true
+              frontend=true
+              tests=true
+            else
+              match() { printf '%s\n' "$CHANGED" | grep -qE "$1"; }
+              SHARED='deploy/|docker-compose|\.github/'
+              if match "^(backend/|${SHARED})"; then backend=true; fi
+              if match "^(frontend/|${SHARED})"; then frontend=true; fi
+              if match "^(tests/|${SHARED})"; then tests=true; fi
+            fi
           fi
         fi
         cd_production=false

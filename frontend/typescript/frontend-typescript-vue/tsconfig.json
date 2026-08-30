@@ -24,5 +24,5 @@
     "allowJs": true,
     "jsx": "preserve"
   },
-  "include": ["src", "vite.config.ts", "vitest.config.ts", "../../scripts/vite-overlay-runtime.mjs"]
+  "include": ["src", "vite.config.ts", "vitest.config.ts", "./scripts/vite-overlay-runtime.mjs"]
 }
