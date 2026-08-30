@@ -21,7 +21,8 @@
     "esModuleInterop": true,
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
+    "allowJs": true,
     "jsx": "preserve"
   },
-  "include": ["src", "vite.config.ts", "vitest.config.ts"]
+  "include": ["src", "vite.config.ts", "vitest.config.ts", "../../scripts/vite-overlay-runtime.mjs"]
 }
