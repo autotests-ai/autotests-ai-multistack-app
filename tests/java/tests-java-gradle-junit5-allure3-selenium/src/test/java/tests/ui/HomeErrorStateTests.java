@@ -13,6 +13,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.api.parallel.Isolated;
 
 /**
  * UI error states that a healthy live backend can never produce — the mock stand's WireMock
@@ -24,6 +27,8 @@ import org.junit.jupiter.api.Test;
 @Feature("Error states")
 @Severity(SeverityLevel.NORMAL)
 @DisplayName("Home error states (mock)")
+@Isolated("WireMock scenarios are process-global")
+@Execution(ExecutionMode.SAME_THREAD)
 class HomeErrorStateTests extends TestBase {
 
     private boolean mockStandAvailable;

@@ -14,6 +14,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.api.parallel.ResourceAccessMode;
+import org.junit.jupiter.api.parallel.ResourceLock;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -25,6 +27,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 @Feature("Login form")
 @Suite("Login")
 @SubSuite("screenshot")
+@ResourceLock(value = "screenshot-compare", mode = ResourceAccessMode.READ_WRITE)
 @Execution(ExecutionMode.SAME_THREAD)
 @DisplayName("Login form screenshot")
 class LoginScreenshotTests extends TestBase {

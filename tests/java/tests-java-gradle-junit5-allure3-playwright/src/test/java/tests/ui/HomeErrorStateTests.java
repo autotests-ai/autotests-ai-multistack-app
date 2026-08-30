@@ -12,6 +12,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.api.parallel.Isolated;
 import tests.TestBase;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
@@ -21,6 +24,8 @@ import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertTha
 @Feature("Error states")
 @Severity(SeverityLevel.NORMAL)
 @DisplayName("Home error states (mock)")
+@Isolated("WireMock scenarios are process-global")
+@Execution(ExecutionMode.SAME_THREAD)
 class HomeErrorStateTests extends TestBase {
 
     private boolean mockStandAvailable;
