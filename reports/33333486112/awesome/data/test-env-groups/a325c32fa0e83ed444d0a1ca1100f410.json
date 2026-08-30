@@ -1,1 +1,0 @@
-{"id":"a325c32fa0e83ed444d0a1ca1100f410","fullName":"dev.multistack.app.config.CorsConfigTest.sameHostRejectsInvalidOrigin","name":"sameHost rejects malformed and host-less origins","status":"passed","testResultsByEnv":{"default":"e32603e38210f54686c4738cbf858a7b"}}
