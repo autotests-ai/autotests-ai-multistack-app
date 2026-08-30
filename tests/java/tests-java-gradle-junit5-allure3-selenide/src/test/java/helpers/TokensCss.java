@@ -1,9 +1,13 @@
 package helpers;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,16 +23,19 @@ public final class TokensCss {
     }
 
     public static Path defaultTokensPath() {
-        // cwd = tests module. Tokens live in frontend (hub / vendor/ds), never in a backend cell.
-        return firstExisting(tokensCssCandidates());
+        // cwd = tests module → app root. Tokens are frontend-only; cell id is not pinned.
+        return resolveFromAppRoot(Path.of("..", "..", ".."));
     }
 
-    private static Path[] tokensCssCandidates() {
-        return new Path[] {
-                frontendTokens("..", "..", "..", "frontend", "_shared", "frontend-javascript-app"),
-                frontendTokens("..", "..", "..", "frontend", "typescript", "frontend-typescript-react", "vendor", "ds"),
-                frontendTokens("..", "..", "..", "frontend", "typescript", "frontend-typescript-react", "vendor", "frontend-javascript-app"),
-        };
+    public static Path resolveFromAppRoot(Path appRoot) {
+        return firstExisting(tokensCssCandidates(appRoot));
+    }
+
+    private static Path[] tokensCssCandidates(Path appRoot) {
+        var candidates = new ArrayList<Path>();
+        candidates.add(hubTokens(appRoot));
+        appendVendorTokens(appRoot.resolve("frontend"), candidates);
+        return candidates.toArray(Path[]::new);
     }
 
     public static Path firstExisting(Path... candidates) {
@@ -57,13 +64,40 @@ public final class TokensCss {
         return tokens;
     }
 
-    private static Path frontendTokens(String... moduleRoot) {
-        return join(moduleRoot, "css", "tokens.css");
+    private static Path hubTokens(Path appRoot) {
+        return appRoot.resolve(Path.of(
+                "frontend", "_shared", "frontend-javascript-app", "css", "tokens.css"));
     }
 
-    private static Path join(String[] prefix, String... suffix) {
-        var parts = Arrays.copyOf(prefix, prefix.length + suffix.length);
-        System.arraycopy(suffix, 0, parts, prefix.length, suffix.length);
-        return Path.of(parts[0], Arrays.copyOfRange(parts, 1, parts.length));
+    private static void appendVendorTokens(Path frontendRoot, List<Path> out) {
+        File[] langs = frontendRoot.toFile().listFiles(File::isDirectory);
+        if (langs == null) {
+            return;
+        }
+        Arrays.sort(langs, Comparator.comparing(File::getName));
+        for (File lang : langs) {
+            if (!isProductLanguageDir(lang)) {
+                continue;
+            }
+            File[] cells = lang.listFiles(File::isDirectory);
+            Arrays.sort(cells, Comparator.comparing(File::getName));
+            for (File cell : cells) {
+                if (cell.getName().startsWith(".")) {
+                    continue;
+                }
+                out.add(vendorTokens(cell.toPath(), "ds"));
+                out.add(vendorTokens(cell.toPath(), "frontend-javascript-app"));
+            }
+        }
+    }
+
+    private static boolean isProductLanguageDir(File dir) {
+        String name = dir.getName();
+        return !name.startsWith(".") && !name.startsWith("_")
+                && !"scripts".equals(name) && !"node_modules".equals(name);
+    }
+
+    private static Path vendorTokens(Path cell, String vendor) {
+        return cell.resolve(Path.of("vendor", vendor, "css", "tokens.css"));
     }
 }
