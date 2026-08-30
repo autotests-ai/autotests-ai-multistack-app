@@ -22,14 +22,23 @@ public class ApiTestBase extends AllureMeta {
      */
     protected static RequestSpecification jsonSpec;
 
+    private static final Object REST_ASSURED_SETUP = new Object();
+    private static volatile boolean restAssuredReady;
+
     @BeforeAll
     static void setupRestAssured() {
-        RestAssured.baseURI = ConfigReader.resolveApiBaseUrl();
-        jsonSpec = new RequestSpecBuilder()
-                .setBaseUri(ConfigReader.resolveApiBaseUrl())
-                .setContentType(ContentType.JSON)
-                .build();
-        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
-        AllureRestAssuredFilters.apply(config);
+        synchronized (REST_ASSURED_SETUP) {
+            if (restAssuredReady) {
+                return;
+            }
+            RestAssured.baseURI = ConfigReader.resolveApiBaseUrl();
+            jsonSpec = new RequestSpecBuilder()
+                    .setBaseUri(ConfigReader.resolveApiBaseUrl())
+                    .setContentType(ContentType.JSON)
+                    .build();
+            RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+            AllureRestAssuredFilters.apply(config);
+            restAssuredReady = true;
+        }
     }
 }
