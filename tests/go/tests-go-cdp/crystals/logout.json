@@ -5,7 +5,7 @@
   "source": {
     "as_id": "Пользователь может выйти после логина",
     "lang": "typescript-playwright",
-    "fingerprint": "bb7dceb755f6fafc65b2921e2d4d3a36d221de25dc19033f3ad71036c86d0fd1"
+    "fingerprint": "681aa31a5177a37f46cfd38a4d5904e98d98155bbbb1461c4ed0e4a447d2c2af"
   },
   "steps": [
     {
