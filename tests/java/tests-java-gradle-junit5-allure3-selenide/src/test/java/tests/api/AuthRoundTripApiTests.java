@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
+import static io.restassured.http.ContentType.JSON;
 import static org.hamcrest.Matchers.equalTo;
 
 @Layer("api")
@@ -36,7 +37,8 @@ class AuthRoundTripApiTests extends ApiTestBase {
         String username = DataFaker.username();
         String password = "password123";
 
-        given(jsonSpec())
+        given()
+                .contentType(JSON)
                 .body(new RegisterRequest(username, password))
                 .when()
                 .post("/api/auth/register")
@@ -44,7 +46,8 @@ class AuthRoundTripApiTests extends ApiTestBase {
                 .statusCode(201)
                 .body("username", equalTo(username));
 
-        String token = given(jsonSpec())
+        String token = given()
+                .contentType(JSON)
                 .body(new LoginRequest(username, password))
                 .when()
                 .post("/api/auth/login")
@@ -53,7 +56,7 @@ class AuthRoundTripApiTests extends ApiTestBase {
                 .extract()
                 .path("token");
 
-        given(jsonSpec())
+        given()
                 .header("Authorization", "Bearer " + token)
                 .when()
                 .get("/api/auth/me")
@@ -61,7 +64,7 @@ class AuthRoundTripApiTests extends ApiTestBase {
                 .statusCode(200)
                 .body("username", equalTo(username));
 
-        given(jsonSpec())
+        given()
                 .header("Authorization", "Bearer " + token)
                 .when()
                 .post("/api/auth/logout")
@@ -69,7 +72,7 @@ class AuthRoundTripApiTests extends ApiTestBase {
                 .statusCode(204);
 
         // Stateless JWT: logout does not invalidate the token server-side — by design.
-        given(jsonSpec())
+        given()
                 .header("Authorization", "Bearer " + token)
                 .when()
                 .get("/api/auth/me")
@@ -77,7 +80,7 @@ class AuthRoundTripApiTests extends ApiTestBase {
                 .statusCode(200)
                 .body("username", equalTo(username));
 
-        given(jsonSpec())
+        given()
                 .header("Authorization", "Bearer " + token)
                 .when()
                 .delete("/api/auth/me")
@@ -85,7 +88,7 @@ class AuthRoundTripApiTests extends ApiTestBase {
                 .statusCode(204);
 
         // The token still verifies cryptographically, but the account is gone → 401.
-        given(jsonSpec())
+        given()
                 .header("Authorization", "Bearer " + token)
                 .when()
                 .get("/api/auth/me")

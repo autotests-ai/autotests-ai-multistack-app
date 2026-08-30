@@ -30,7 +30,7 @@ class HealthItemsApiTests extends ApiTestBase {
     @Tag("api")
     @DisplayName("GET /api/health matches the health contract and reports ok")
     void healthMatchesContract() {
-        given(jsonSpec())
+        given()
                 .when()
                 .get("/api/health")
                 .then()
@@ -43,7 +43,7 @@ class HealthItemsApiTests extends ApiTestBase {
     @Tag("api")
     @DisplayName("GET /api/items matches the items contract (typed rows, named source)")
     void itemsMatchContract() {
-        given(jsonSpec())
+        given()
                 .when()
                 .get("/api/items")
                 .then()

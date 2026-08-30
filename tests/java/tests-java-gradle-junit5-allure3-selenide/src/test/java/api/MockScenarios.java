@@ -1,6 +1,7 @@
 package api;
 
 import io.qameta.allure.Step;
+import io.restassured.http.ContentType;
 
 import java.util.Map;
 
@@ -13,13 +14,17 @@ import static io.restassured.RestAssured.given;
  */
 public final class MockScenarios {
 
+    static {
+        ApiTestBase.useRestAssured();
+    }
+
     private MockScenarios() {
     }
 
     /** True when the stand under test exposes the WireMock admin API (mock stand only). */
     public static boolean available() {
         try {
-            int status = given(ApiSpecs.json())
+            int status = given()
                     .when()
                     .get("/__admin/scenarios")
                     .statusCode();
@@ -31,7 +36,8 @@ public final class MockScenarios {
 
     @Step("Mock: switch scenario {scenario} to state {state}")
     public static void setState(String scenario, String state) {
-        given(ApiSpecs.json())
+        given()
+                .contentType(ContentType.JSON)
                 .body(Map.of("state", state))
                 .when()
                 .put("/__admin/scenarios/" + scenario + "/state")
@@ -41,7 +47,7 @@ public final class MockScenarios {
 
     @Step("Mock: reset all scenarios")
     public static void resetAll() {
-        given(ApiSpecs.json())
+        given()
                 .when()
                 .post("/__admin/scenarios/reset")
                 .then()

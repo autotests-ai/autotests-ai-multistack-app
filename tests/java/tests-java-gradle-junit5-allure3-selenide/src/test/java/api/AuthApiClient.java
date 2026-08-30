@@ -3,6 +3,7 @@ package api;
 import api.model.LoginRequest;
 import api.model.RegisterRequest;
 import io.qameta.allure.Step;
+import io.restassured.http.ContentType;
 
 import static io.restassured.RestAssured.given;
 
@@ -12,12 +13,17 @@ import static io.restassured.RestAssured.given;
  */
 public final class AuthApiClient {
 
+    static {
+        ApiTestBase.useRestAssured();
+    }
+
     private AuthApiClient() {
     }
 
     @Step("API: register user {username}")
     public static String register(String username, String password) {
-        return given(ApiSpecs.json())
+        return given()
+                .contentType(ContentType.JSON)
                 .body(new RegisterRequest(username, password))
                 .when()
                 .post("/api/auth/register")
@@ -29,7 +35,8 @@ public final class AuthApiClient {
 
     @Step("API: login as {username}")
     public static String login(String username, String password) {
-        return given(ApiSpecs.json())
+        return given()
+                .contentType(ContentType.JSON)
                 .body(new LoginRequest(username, password))
                 .when()
                 .post("/api/auth/login")
@@ -41,7 +48,7 @@ public final class AuthApiClient {
 
     @Step("API: delete current account")
     public static void deleteAccount(String token) {
-        given(ApiSpecs.json())
+        given()
                 .header("Authorization", "Bearer " + token)
                 .when()
                 .delete("/api/auth/me")

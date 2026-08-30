@@ -2,7 +2,6 @@ package allure;
 
 import config.TestConfig;
 import io.qameta.allure.restassured.AllureRestAssured;
-import io.restassured.builder.RequestSpecBuilder;
 
 public final class AllureRestAssuredFilters {
 
@@ -25,12 +24,5 @@ public final class AllureRestAssuredFilters {
             filter.setResponseTemplate(RESPONSE_TEMPLATE);
         }
         return filter;
-    }
-
-    /** Per-spec, not {@code RestAssured.filters()} — that global list is not parallel-safe. */
-    public static void addTo(RequestSpecBuilder builder, TestConfig config) {
-        if (isEnabled(config)) {
-            builder.addFilter(create(config));
-        }
     }
 }
