@@ -221,6 +221,20 @@ test {
             systemProperty key, override
         }
     }
+    // junit-platform.properties is the default; -D on the Gradle CLI must be
+    // copied into the test JVM or the worker never sees it.
+    [
+            'junit.jupiter.execution.parallel.enabled',
+            'junit.jupiter.execution.parallel.mode.default',
+            'junit.jupiter.execution.parallel.mode.classes.default',
+            'junit.jupiter.execution.parallel.config.strategy',
+            'junit.jupiter.execution.parallel.config.fixed.parallelism',
+    ].each { key ->
+        def override = System.getProperty(key)
+        if (override != null) {
+            systemProperty key, override
+        }
+    }
     maxParallelForks = testParallelForks
 }
 
