@@ -104,15 +104,15 @@ src/test/resources/screenshots/{mock|stage|prod}/{linux|macos|windows}/{chrome-1
 
 `SCREENSHOT_OS` overrides the OS folder (`darwin` → `macos`, `linux` → `linux`, `win32` → `windows`). CI SSOT is `mock/linux/chrome-148` plus the CFT pin. **Do not** set `SCREENSHOT_OS=linux` on a Mac — that would write Linux-canon PNGs from macOS Chrome. On Mac omit `SCREENSHOT_OS` (writes `macos`) or set `SCREENSHOT_OS=macos`.
 
-CI jobs `ui-tests` and `e2e-tests` set `SCREENSHOT_OS=linux` and `SCREENSHOT_BROWSER=chrome`. Screenshot **compare** is a step in each job (mock: every PR; e2e: dispatch `run_screenshot`). Screenshot **rewrite** is a step `Update screenshots` in the same jobs (`update_mock_screenshots` / `update_e2e_screenshots`) — independent flags, not a CD job.
+CI jobs `ui-tests` and `e2e-tests` set `SCREENSHOT_OS=linux` and `SCREENSHOT_BROWSER=chrome`. Screenshot **compare** is a step in each job (mock: every PR; e2e-tests and e2e-tests-stage: always, unless rewriting). Screenshot **rewrite** is a step `Update screenshots` in the same jobs (`update_mock_screenshots` / `update_e2e_screenshots` / `update_stage_screenshots`) — independent flags, not a CD job.
 
 | Slice | Tag | CI |
 |-------|-----|-----|
 | UI on stub API (mount + error injection + header chrome) | `@Tag("ui")` (+ optional `@Tag("mock")`) | job `ui-tests` step 1: `-DincludeTags=ui -DexcludeTags=screenshot` |
 | Screenshot vs stub UI | `@Tag("screenshot")` / `-m screenshot` / `--grep @screenshot` | same job, compare step: java `-DincludeTags=screenshot` · python `-m screenshot` · javascript/typescript `--grep @screenshot` (every PR) |
 | Refresh mock screenshots | `@Tag("screenshot")` + update flag | same job, step `Update screenshots` — dispatch `update_mock_screenshots` writes `mock/linux/chrome-148` (skips compare; java `-DupdateScreenshots=true` · python `UPDATE_SCREENSHOTS=true`) |
-| Flow through live backend | `@Tag("e2e")` exclude `screenshot` | job `e2e-tests` (`-Denv=prod -DincludeTags=e2e`) / `e2e-tests-stage` (`-Denv=stage`); default push does **not** run screenshot via Selenoid |
-| Screenshot vs live UI | `@Tag("screenshot")` / `-m screenshot` | job `e2e-tests`, compare step — dispatch `run_screenshot` compares `prod/linux/chrome-148` |
+| Flow through live backend | `@Tag("e2e")` exclude `screenshot` | job `e2e-tests` (`-Denv=prod -DincludeTags=e2e`) / `e2e-tests-stage` (`-Denv=stage`); PNG compare is a second step |
+| Screenshot vs live UI | `@Tag("screenshot")` / `-m screenshot` | same jobs, compare step — `stage/linux/chrome-148` and `prod/linux/chrome-148` |
 | Refresh prod screenshots | `@Tag("screenshot")` + update flag | job `e2e-tests`, step `Update screenshots` — dispatch `update_e2e_screenshots` writes `prod/linux/chrome-148` (skips compare; independent of mock rewrite) |
 
 Gradle `includeTags=a,b` is **OR** in this module — keep mock flows and screenshot compare as two steps so they fail separately.

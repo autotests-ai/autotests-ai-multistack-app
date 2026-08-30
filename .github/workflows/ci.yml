@@ -25,7 +25,7 @@ name: CI
 #   manual-tests ← e2e-tests; dispatch run_manual (not after deploy-*)
 #   publish-allure-report ← layer jobs + sonar-backend → deploy-github-pages
 #
-# Screenshot: ui-tests (PR) · e2e-tests-stage · e2e-tests (dispatch run_screenshot).
+# Screenshot: ui-tests (PR) · e2e-tests-stage · e2e-tests (prod compare always on).
 # RAG: ci-workflow-app-orchestrator / ci-workflow-ethalon.
 
 on:
@@ -58,11 +58,11 @@ on:
         type: boolean
         default: false
       run_e2e:
-        description: "Run E2E tests (prod: -Denv=prod -DincludeTags=e2e; stage: -Denv=stage). Stage screenshot compare is always on."
+        description: "Run E2E tests (prod: -Denv=prod -DincludeTags=e2e; stage: -Denv=stage). Screenshot compare is always on for both stands."
         type: boolean
         default: false
       run_screenshot:
-        description: "e2e-tests (prod): compare screenshot PNGs (Selenoid)"
+        description: "Unused for compare (PNG always runs with e2e-tests). Still turns on the e2e job from dispatch."
         type: boolean
         default: false
       run_manual:
@@ -688,7 +688,7 @@ jobs:
         needs.trigger.outputs.backend != 'true' &&
         needs.trigger.outputs.frontend != 'true'))
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 40
     env:
       LAYER: e2e
       APP_URL: ${{ vars.APP_URL }}

@@ -141,7 +141,7 @@ flowchart TB
 | `api-tests-stage` | tests module — after stage backend deploy, or tests-lane vs live stage (full `-DincludeTags=api`) |
 | `ui-tests` | after `frontend-unit-tests`; every PR; frontend lane on main; dispatch `run_mock` / `update_mock_screenshots` |
 | `sonar-tests` | after `infra-tests` (skipped on backend-only lane) |
-| `e2e-tests` | after `api-tests` + `deploy-frontend` — java: `-Denv=prod -DincludeTags=e2e`; dispatch `run_screenshot` / `update_e2e_screenshots` are extra steps |
+| `e2e-tests` | after `api-tests` + `deploy-frontend` — java: `-Denv=prod -DincludeTags=e2e`; screenshot compare always on; `update_e2e_screenshots` rewrites PNG |
 | `e2e-tests-stage` | after `api-tests-stage` + `deploy-frontend-stage` — full `-DincludeTags=e2e` `excludeTags=screenshot` |
 | `manual-tests` | after `e2e-tests`; dispatch only — java: `-DincludeTags=manual` |
 

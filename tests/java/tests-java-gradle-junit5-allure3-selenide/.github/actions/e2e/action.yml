@@ -87,10 +87,7 @@ runs:
         mkdir -p "$STASH"
         if [ -d "$SRC" ]; then cp -R "$SRC/." "$STASH/"; fi
     - name: Run screenshot compare (Gradle)
-      if: >-
-        always() && !cancelled() &&
-        (inputs.run_screenshot == 'true' || inputs.stand == 'stage') &&
-        inputs.update_screenshots != 'true'
+      if: always() && !cancelled() && inputs.update_screenshots != 'true'
       id: run-screenshot-tests
       shell: bash
       working-directory: ${{ inputs.module_dir }}
