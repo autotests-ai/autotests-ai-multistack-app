@@ -126,11 +126,11 @@ env:
   BACKEND_PORT: "8800"
   FRONTEND_LANG: typescript
   FRONTEND_FRAMEWORK: react
-  TESTS_LANG: typescript
+  TESTS_LANG: java
   TESTS_BUILDER: gradle
   TESTS_FRAMEWORK: junit5
   TESTS_REPORT: allure3
-  TESTS_UI_LIBRARY: playwright
+  TESTS_UI_LIBRARY: selenide
   APP_SLUG: autotests-ai-multistack-app
   JAVA_VERSION: "21"
   NODE_VERSION: "26"
@@ -411,7 +411,7 @@ jobs:
     timeout-minutes: 25
     env:
       # Job-level `env:` cannot read the env context. Keep in sync with TESTS_LANG + TESTS_UI_LIBRARY.
-      SONAR_PROJECT_KEY: autotests-ai-multistack-app-tests-typescript-playwright
+      SONAR_PROJECT_KEY: autotests-ai-multistack-app-tests-java-gradle-junit5-allure3-selenide
       CHECKOUT_FETCH_DEPTH: "0"
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
