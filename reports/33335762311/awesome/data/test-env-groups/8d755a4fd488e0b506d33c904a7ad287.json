@@ -1,0 +1,1 @@
+{"id":"8d755a4fd488e0b506d33c904a7ad287","fullName":"tests.e2e.RegisterTests.shouldShowValidationErrorWhenUsernameIsEmpty","name":"Empty username shows validation error","status":"passed","testResultsByEnv":{"default":"03988069a0a41665e6a46ea38acdf293"}}

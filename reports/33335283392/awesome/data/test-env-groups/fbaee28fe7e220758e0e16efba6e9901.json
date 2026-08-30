@@ -1,1 +1,0 @@
-{"id":"fbaee28fe7e220758e0e16efba6e9901","fullName":"dev.multistack.app.controller.AuthControllerTest.deleteAccountRequiresAuthentication","name":"DELETE /api/auth/me without token returns 401","status":"passed","testResultsByEnv":{"default":"6b348ece6a6e2bbc687e6a6ae61ef4c8"}}
