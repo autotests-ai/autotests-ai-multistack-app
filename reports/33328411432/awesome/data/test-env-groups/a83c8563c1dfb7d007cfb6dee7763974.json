@@ -1,1 +1,0 @@
-{"id":"a83c8563c1dfb7d007cfb6dee7763974","fullName":"api/auth.spec.ts:203:7","name":"POST /api/auth/logout returns 204","status":"passed","testResultsByEnv":{"default":"0e5c725ad3c82b8d0cf78a0c492628b1"}}

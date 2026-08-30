@@ -1,1 +1,0 @@
-{"id":"39ae15e9f9e4f9cbd376a3ac1452b41a","fullName":"api/auth.spec.ts:232:7","name":"unmapped /api/* path requires authentication (security catch-all)","status":"passed","testResultsByEnv":{"default":"3936cd48c7a82303b45aa31dd227c259"}}
