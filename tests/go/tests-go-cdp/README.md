@@ -2,7 +2,9 @@
 
 `role: mill` · `layers: [crystal]` · `in_stack: true` (crystal column on `/stack/`, not a Selenide peer).
 
-Crystals in git. The mill **execs** `greedy run --cdp` (JSON stdout). IR values are literals (`user1` / `reguser1`), not `UserBuilder`. No chromedp page objects, no `import` of greedy.guru `internal/cdp`, no MCP.
+**Live IR SSOT:** `crystals/*.json` here (the cell that mills in prod). greedy.guru keeps schema + `login.example.json` only — do not copy live JSON into guru.
+
+The mill **execs** `greedy run --cdp` (JSON stdout). IR values are literals (`user1` / `reguser1`), not `UserBuilder`. No chromedp page objects, no `import` of greedy.guru `internal/cdp`, no MCP.
 
 ```bash
 cd tests/go/tests-go-cdp
