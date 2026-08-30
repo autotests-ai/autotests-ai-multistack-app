@@ -74,6 +74,7 @@ public class TestBase extends AllureMeta {
         boolean captureHar = config.enableHar() || config.attachHarLogs();
 
         if (!config.remoteUrl().isBlank()) {
+            // Remote hub (Selenoid): any browser the hub has; image tag = browserVersion.
             Configuration.browserVersion = config.browserVersion();
             Configuration.remote = config.remoteUrl();
             var selenoidOpts = new HashMap<String, Object>();
@@ -86,6 +87,7 @@ public class TestBase extends AllureMeta {
             }
             Configuration.browserCapabilities = capabilities;
         } else if ("chrome".equals(config.browser())) {
+            // Local Chrome only — Chrome for Testing pin, not system Chrome.
             LocalChromePin.apply(config.browserVersion());
             ChromeOptions chrome = new ChromeOptions();
             if (config.headless()) {
@@ -98,6 +100,7 @@ public class TestBase extends AllureMeta {
                 Configuration.browserCapabilities = chrome;
             }
         } else {
+            // Local non-Chrome: Selenide / Selenium Manager; LocalChromePin does not apply.
             Configuration.browserVersion = config.browserVersion();
         }
 

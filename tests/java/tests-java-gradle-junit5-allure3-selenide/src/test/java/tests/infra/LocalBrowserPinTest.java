@@ -18,15 +18,24 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Local browser pin (infra-frontend): the suite is not Chrome-only.
+ * <p>
+ * Living helper is {@link LocalChromePin} (Chrome for Testing). {@code TestBase}
+ * applies it only when {@code remoteUrl} is empty and {@code browser=chrome}.
+ * Selenoid uses the hub image tag; {@code -Dbrowser=firefox} skips the pin.
+ * Do not grow this helper into a multi-browser installer until there is a
+ * matching pin + screenshot folder ({@code firefox-140/} beside {@code chrome-148/}).
+ */
 @Layer("infra")
 @Epic("Test infra")
-@Feature("LocalChromePin")
+@Feature("Local browser pin")
 @Severity(SeverityLevel.NORMAL)
 @Tag("infra")
 @Tag("infra-frontend")
-@DisplayName("LocalChromePin")
+@DisplayName("Local browser pin")
 @Execution(ExecutionMode.SAME_THREAD)
-class LocalChromePinTest extends AllureMeta {
+class LocalBrowserPinTest extends AllureMeta {
 
     private static String major(String version) {
         return version.split("\\.")[0];

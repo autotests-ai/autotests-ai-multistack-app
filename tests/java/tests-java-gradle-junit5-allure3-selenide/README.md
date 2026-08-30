@@ -17,7 +17,7 @@ One task `test`; the layer is a tag filter, the stand is `-Denv` ([pyramid-map.y
 |-------|---------|--------|
 | infra (all) | `./gradlew test -Denv=ci -DincludeTags=infra` | umbrella — all `infra/` · CI job `infra-tests` (feeds `sonar-tests`; gates `ui-tests` / `api-tests` / `e2e-tests`) |
 | infra-backend | `./gradlew test -Denv=ci -DincludeTags=infra-backend` | `ConfigReader` · `AllureHttpHtml` · backend-only lane |
-| infra-frontend | `./gradlew test -Denv=ci -DincludeTags=infra-frontend` | CSS + HAR + `LocalChromePin` · inside full `infra-tests` (frontend lane included) |
+| infra-frontend | `./gradlew test -Denv=ci -DincludeTags=infra-frontend` | CSS + HAR + local browser pin (`LocalChromePin` = local Chrome for Testing; other browsers skip it) · inside full `infra-tests` (frontend lane included) |
 | api | `./gradlew test -Denv=ci -DincludeTags=api` | local compose; CI job `api-tests` |
 | api smoke | `./gradlew test -Denv=prod -DincludeTags='api & smoke'` | prod subset (health, seed, login); CI job `api-tests` |
 | ui | `./gradlew test -Denv=mock -DincludeTags=ui -DexcludeTags=screenshot` | browser on stub API · CI `ui-tests` step 1 |
