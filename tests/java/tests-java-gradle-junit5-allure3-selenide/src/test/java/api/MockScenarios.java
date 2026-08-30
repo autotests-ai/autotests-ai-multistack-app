@@ -1,8 +1,6 @@
 package api;
 
-import config.ConfigReader;
 import io.qameta.allure.Step;
-import io.restassured.http.ContentType;
 
 import java.util.Map;
 
@@ -21,8 +19,7 @@ public final class MockScenarios {
     /** True when the stand under test exposes the WireMock admin API (mock stand only). */
     public static boolean available() {
         try {
-            int status = given()
-                    .baseUri(ConfigReader.resolveApiBaseUrl())
+            int status = given(ApiSpecs.json())
                     .when()
                     .get("/__admin/scenarios")
                     .statusCode();
@@ -34,9 +31,7 @@ public final class MockScenarios {
 
     @Step("Mock: switch scenario {scenario} to state {state}")
     public static void setState(String scenario, String state) {
-        given()
-                .baseUri(ConfigReader.resolveApiBaseUrl())
-                .contentType(ContentType.JSON)
+        given(ApiSpecs.json())
                 .body(Map.of("state", state))
                 .when()
                 .put("/__admin/scenarios/" + scenario + "/state")
@@ -46,8 +41,7 @@ public final class MockScenarios {
 
     @Step("Mock: reset all scenarios")
     public static void resetAll() {
-        given()
-                .baseUri(ConfigReader.resolveApiBaseUrl())
+        given(ApiSpecs.json())
                 .when()
                 .post("/__admin/scenarios/reset")
                 .then()

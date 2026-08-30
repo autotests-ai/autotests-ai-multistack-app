@@ -38,7 +38,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("smoke")
     @DisplayName("POST /api/auth/login returns the auth contract for a seeded user")
     void loginWithValidCredentials() {
-        given(jsonSpec)
+        given(jsonSpec())
                 .body(new LoginRequest("user1", "password1"))
                 .when()
                 .post("/api/auth/login")
@@ -53,7 +53,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("api")
     @DisplayName("POST /api/auth/login rejects a wrong password with 401")
     void loginWithInvalidPassword() {
-        given(jsonSpec)
+        given(jsonSpec())
                 .body(new LoginRequest("user1", "wrongpassword"))
                 .when()
                 .post("/api/auth/login")
@@ -67,7 +67,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("api")
     @DisplayName("POST /api/auth/login answers an unknown user with the same 401 (no enumeration)")
     void loginWithUnknownUsername() {
-        given(jsonSpec)
+        given(jsonSpec())
                 .body(new LoginRequest(DataFaker.username(), "password123"))
                 .when()
                 .post("/api/auth/login")
@@ -80,7 +80,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("api")
     @DisplayName("POST /api/auth/login joins both field errors into one 400 message")
     void loginRejectsEmptyCredentials() {
-        given(jsonSpec)
+        given(jsonSpec())
                 .body(new LoginRequest("", ""))
                 .when()
                 .post("/api/auth/login")
@@ -98,7 +98,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("negative")
     @DisplayName("POST /api/auth/login rejects a short username with 400")
     void loginRejectsShortUsername() {
-        given(jsonSpec)
+        given(jsonSpec())
                 .body(new LoginRequest("ab", "password1"))
                 .when()
                 .post("/api/auth/login")
@@ -113,7 +113,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("negative")
     @DisplayName("POST /api/auth/login rejects a short password with 400")
     void loginRejectsShortPassword() {
-        given(jsonSpec)
+        given(jsonSpec())
                 .body(new LoginRequest("user1", "123"))
                 .when()
                 .post("/api/auth/login")
@@ -128,7 +128,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("negative")
     @DisplayName("POST /api/auth/login rejects an empty username with 400")
     void loginRejectsEmptyUsername() {
-        given(jsonSpec)
+        given(jsonSpec())
                 .body(new LoginRequest("", "password1"))
                 .when()
                 .post("/api/auth/login")
@@ -143,7 +143,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("negative")
     @DisplayName("POST /api/auth/login rejects an empty password with 400")
     void loginRejectsEmptyPassword() {
-        given(jsonSpec)
+        given(jsonSpec())
                 .body(new LoginRequest("user1", ""))
                 .when()
                 .post("/api/auth/login")
@@ -158,7 +158,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("negative")
     @DisplayName("POST /api/auth/login answers a malformed JSON body with 400, not 401")
     void loginRejectsMalformedJson() {
-        given(jsonSpec)
+        given(jsonSpec())
                 .body("not json")
                 .when()
                 .post("/api/auth/login")
@@ -173,7 +173,7 @@ class AuthApiTests extends ApiTestBase {
     void registerNewUser() {
         String username = DataFaker.username();
 
-        String token = given(jsonSpec)
+        String token = given(jsonSpec())
                 .body(new RegisterRequest(username, "password123"))
                 .when()
                 .post("/api/auth/register")
@@ -192,7 +192,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("api")
     @DisplayName("POST /api/auth/register rejects a duplicate username with 409")
     void registerDuplicateUsername() {
-        given(jsonSpec)
+        given(jsonSpec())
                 .body(new RegisterRequest("user1", "password123"))
                 .when()
                 .post("/api/auth/register")
@@ -206,7 +206,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("api")
     @DisplayName("POST /api/auth/register rejects a short password with 400")
     void registerRejectsShortPassword() {
-        given(jsonSpec)
+        given(jsonSpec())
                 .body(new RegisterRequest("shortuser", "abc"))
                 .when()
                 .post("/api/auth/register")
@@ -220,7 +220,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("api")
     @DisplayName("POST /api/auth/register rejects a short username with 400")
     void registerRejectsShortUsername() {
-        given(jsonSpec)
+        given(jsonSpec())
                 .body(new RegisterRequest("ab", "password123"))
                 .when()
                 .post("/api/auth/register")
@@ -234,7 +234,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("api")
     @DisplayName("POST /api/auth/register rejects an empty username with 400")
     void registerRejectsEmptyUsername() {
-        given(jsonSpec)
+        given(jsonSpec())
                 .body(new RegisterRequest("", "password123"))
                 .when()
                 .post("/api/auth/register")
@@ -248,7 +248,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("api")
     @DisplayName("POST /api/auth/register rejects an empty password with 400")
     void registerRejectsEmptyPassword() {
-        given(jsonSpec)
+        given(jsonSpec())
                 .body(new RegisterRequest("newuser", ""))
                 .when()
                 .post("/api/auth/register")
@@ -262,7 +262,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("api")
     @DisplayName("POST /api/auth/register joins both field errors into one 400 message")
     void registerRejectsEmptyCredentials() {
-        given(jsonSpec)
+        given(jsonSpec())
                 .body(new RegisterRequest("", ""))
                 .when()
                 .post("/api/auth/register")
@@ -278,7 +278,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("api")
     @DisplayName("POST /api/auth/register answers a malformed JSON body with 400, not 401")
     void registerRejectsMalformedJson() {
-        given(jsonSpec)
+        given(jsonSpec())
                 .body("not json")
                 .when()
                 .post("/api/auth/register")
@@ -293,7 +293,7 @@ class AuthApiTests extends ApiTestBase {
     void profileWithBearerToken() {
         String token = AuthApiClient.login("user1", "password1");
 
-        given()
+        given(jsonSpec())
                 .header("Authorization", "Bearer " + token)
                 .when()
                 .get("/api/auth/me")
@@ -307,7 +307,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("api")
     @DisplayName("GET /api/auth/me without a token returns 401")
     void profileWithoutToken() {
-        given()
+        given(jsonSpec())
                 .when()
                 .get("/api/auth/me")
                 .then()
@@ -318,7 +318,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("api")
     @DisplayName("GET /api/auth/me with a garbage token returns 401")
     void profileWithGarbageToken() {
-        given()
+        given(jsonSpec())
                 .header("Authorization", "Bearer not-a-jwt")
                 .when()
                 .get("/api/auth/me")
@@ -330,7 +330,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("api")
     @DisplayName("POST /api/auth/logout returns 204")
     void logoutReturnsNoContent() {
-        given()
+        given(jsonSpec())
                 .when()
                 .post("/api/auth/logout")
                 .then()
@@ -342,7 +342,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("negative")
     @DisplayName("DELETE /api/auth/me without a token returns 401")
     void deleteWithoutToken() {
-        given()
+        given(jsonSpec())
                 .when()
                 .delete("/api/auth/me")
                 .then()
@@ -354,7 +354,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("negative")
     @DisplayName("DELETE /api/auth/me with a garbage token returns 401")
     void deleteWithGarbageToken() {
-        given()
+        given(jsonSpec())
                 .header("Authorization", "Bearer not-a-jwt")
                 .when()
                 .delete("/api/auth/me")
@@ -371,7 +371,7 @@ class AuthApiTests extends ApiTestBase {
 
         AuthApiClient.deleteAccount(token);
 
-        given(jsonSpec)
+        given(jsonSpec())
                 .body(new LoginRequest(username, "password123"))
                 .when()
                 .post("/api/auth/login")
@@ -384,7 +384,7 @@ class AuthApiTests extends ApiTestBase {
     @Tag("api")
     @DisplayName("unmapped /api/* path requires authentication (security catch-all)")
     void unmappedApiPathRequiresAuthentication() {
-        given()
+        given(jsonSpec())
                 .when()
                 .get("/api/nope")
                 .then()

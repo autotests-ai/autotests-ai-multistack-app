@@ -2,18 +2,13 @@ package api;
 
 import api.model.LoginRequest;
 import api.model.RegisterRequest;
-import config.ConfigReader;
 import io.qameta.allure.Step;
-import io.restassured.http.ContentType;
 
 import static io.restassured.RestAssured.given;
 
 /**
  * Thin API client for test setup and cleanup. API and e2e tests use it to arrange
  * state through the product API instead of duplicating raw JSON strings.
- *
- * <p>Uses absolute URIs from {@link ConfigReader}, so it works from any test base
- * (browser tests never touch {@code RestAssured.baseURI}).
  */
 public final class AuthApiClient {
 
@@ -22,9 +17,7 @@ public final class AuthApiClient {
 
     @Step("API: register user {username}")
     public static String register(String username, String password) {
-        return given()
-                .baseUri(ConfigReader.resolveApiBaseUrl())
-                .contentType(ContentType.JSON)
+        return given(ApiSpecs.json())
                 .body(new RegisterRequest(username, password))
                 .when()
                 .post("/api/auth/register")
@@ -36,9 +29,7 @@ public final class AuthApiClient {
 
     @Step("API: login as {username}")
     public static String login(String username, String password) {
-        return given()
-                .baseUri(ConfigReader.resolveApiBaseUrl())
-                .contentType(ContentType.JSON)
+        return given(ApiSpecs.json())
                 .body(new LoginRequest(username, password))
                 .when()
                 .post("/api/auth/login")
@@ -50,8 +41,7 @@ public final class AuthApiClient {
 
     @Step("API: delete current account")
     public static void deleteAccount(String token) {
-        given()
-                .baseUri(ConfigReader.resolveApiBaseUrl())
+        given(ApiSpecs.json())
                 .header("Authorization", "Bearer " + token)
                 .when()
                 .delete("/api/auth/me")

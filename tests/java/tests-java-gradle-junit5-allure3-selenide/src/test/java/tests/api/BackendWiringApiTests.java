@@ -29,7 +29,7 @@ class BackendWiringApiTests extends ApiTestBase {
     @Tag("smoke")
     @DisplayName("GET /api/health — deployed service is the active backend module, not a neighbour")
     void healthReportsActiveBackendService() {
-        given()
+        given(jsonSpec())
                 .when()
                 .get("/api/health")
                 .then()
@@ -41,7 +41,7 @@ class BackendWiringApiTests extends ApiTestBase {
     @Tag("api")
     @DisplayName("GET /api/items — catalogue is served from PostgreSQL, not a stub or fallback")
     void itemsAreWiredToPostgreSQL() {
-        given()
+        given(jsonSpec())
                 .when()
                 .get("/api/items")
                 .then()

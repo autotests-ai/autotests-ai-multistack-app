@@ -26,7 +26,7 @@ class SeedDataApiTests extends ApiTestBase {
     @Tag("smoke")
     @DisplayName("Flyway seed items Alpha, Beta, Gamma are present in PostgreSQL")
     void seededItemsAreReadyAfterDeploy() {
-        given()
+        given(jsonSpec())
                 .when()
                 .get("/api/items")
                 .then()
