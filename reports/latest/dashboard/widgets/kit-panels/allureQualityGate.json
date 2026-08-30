@@ -6,15 +6,15 @@
     {
       "id": "maxFailures",
       "passed": false,
-      "message": "The number of failed tests 37 exceeds the allowed threshold value 0",
-      "actual": 37,
+      "message": "The number of failed tests 9 exceeds the allowed threshold value 0",
+      "actual": 9,
       "expected": 0,
       "knownExcluded": 0
     },
     {
       "id": "maxCiJobFailures",
       "passed": false,
-      "message": "The number of failed CI jobs 2 exceeds the allowed threshold value 0 (ui-tests, e2e-tests-stage)",
+      "message": "The number of failed CI jobs 2 exceeds the allowed threshold value 0 (e2e-tests-stage, e2e-tests)",
       "actual": 2,
       "expected": 0,
       "comparator": "GT"
