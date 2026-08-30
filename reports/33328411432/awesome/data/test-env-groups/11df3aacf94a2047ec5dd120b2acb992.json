@@ -1,0 +1,1 @@
+{"id":"11df3aacf94a2047ec5dd120b2acb992","fullName":"e2e/session.spec.ts:12:7","name":"Session survives a page reload (token in localStorage)","status":"passed","testResultsByEnv":{"default":"88ab926c37d0474cbe6b0052241705b3"}}

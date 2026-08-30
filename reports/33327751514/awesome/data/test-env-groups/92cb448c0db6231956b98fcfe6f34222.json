@@ -1,1 +1,0 @@
-{"id":"92cb448c0db6231956b98fcfe6f34222","fullName":"dev.multistack.app.controller.ApiControllerTest.itemsReturnsList","name":"GET /api/items returns items from service","status":"passed","testResultsByEnv":{"default":"d1fc2ead58a588e46e4f9000c16a0b9b"}}

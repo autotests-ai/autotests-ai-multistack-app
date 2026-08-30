@@ -1,1 +1,0 @@
-{"id":"7fbb483e4dd2e2bfcfbbaa23551048d1","fullName":"dev.multistack.app.config.CorsConfigTest.corsForRequestIgnoresForeignOrigin","name":"corsForRequest does not admit a foreign origin from another host","status":"passed","testResultsByEnv":{"default":"f9f8831061b460d832c682d88c51b9ea"}}

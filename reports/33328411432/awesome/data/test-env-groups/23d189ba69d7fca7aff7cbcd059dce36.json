@@ -1,0 +1,1 @@
+{"id":"23d189ba69d7fca7aff7cbcd059dce36","fullName":"e2e/delete-account.spec.ts:22:7","name":"Cancelling the confirm keeps the session and sends no delete request","status":"passed","testResultsByEnv":{"default":"fb98f9537941e6034360b259eb060362"}}

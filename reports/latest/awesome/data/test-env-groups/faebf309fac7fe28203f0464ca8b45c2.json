@@ -1,0 +1,1 @@
+{"id":"faebf309fac7fe28203f0464ca8b45c2","fullName":"api/auth.spec.ts:154:7","name":"POST /api/auth/register rejects an empty password with 400","status":"passed","testResultsByEnv":{"default":"d3d4912551a40a1e354b4e8d2951b8b8"}}
