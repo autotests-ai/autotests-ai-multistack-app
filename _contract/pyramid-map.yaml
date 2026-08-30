@@ -64,7 +64,7 @@ layers:
       scope: react
       framework: react-testing-library
   ui:
-    description: Browser SPA on stub API (layout, chrome, WireMock) — job ui-mock-tests
+    description: Browser SPA on stub API (layout, chrome, WireMock) — job ui-tests
     required: true
     allure_labels:
       layer: ui

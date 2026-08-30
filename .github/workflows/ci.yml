@@ -13,9 +13,9 @@ name: CI
 #   integration-tests ← backend-unit-tests (PR/push; dispatch run_integration)
 #   sonar-backend ← backend-unit-tests + integration-tests
 #   sonar-tests ← infra-tests (slice≠backend); does not gate deploy or publish
-#   ui-mock-tests ← frontend-unit-tests + infra-tests (PR; frontend lane; dispatch run_mock)
-#   sonar-frontend ← frontend-unit-tests + ui-mock-tests
-#   build-backend ← backend-unit-tests + integration-tests (backend lane) · build-frontend ← ui-mock-tests (frontend lane)
+#   ui-tests ← frontend-unit-tests + infra-tests (PR; frontend lane; dispatch run_mock)
+#   sonar-frontend ← frontend-unit-tests + ui-tests
+#   build-backend ← backend-unit-tests + integration-tests (backend lane) · build-frontend ← ui-tests (frontend lane)
 #   deploy-*-stage ← matching build + sonar-backend / sonar-frontend + preempt/yield (STAGE_APP_DIR, cd_stage)
 #   api-tests-stage ← deploy-backend-stage + infra-tests (STAGE_APP_DIR, run_api_stage)
 #   e2e-tests-stage ← api-tests-stage + deploy-frontend-stage + infra-tests (STAGE_APP_DIR, run_e2e_stage)
@@ -25,7 +25,7 @@ name: CI
 #   manual-tests ← e2e-tests; dispatch run_manual (not after deploy-*)
 #   publish-allure-report ← layer jobs + sonar-backend → deploy-github-pages
 #
-# Screenshot: ui-mock-tests (PR) · e2e-tests-stage · e2e-tests (dispatch run_screenshot).
+# Screenshot: ui-tests (PR) · e2e-tests-stage · e2e-tests (dispatch run_screenshot).
 # RAG: ci-workflow-app-orchestrator / ci-workflow-ethalon.
 
 on:
@@ -54,7 +54,7 @@ on:
         type: boolean
         default: false
       run_mock:
-        description: "Run ui-mock tests on the runner (flows + screenshot compare)"
+        description: "Run ui-tests on the mock stand (flows + screenshot compare)"
         type: boolean
         default: false
       run_e2e:
@@ -78,7 +78,7 @@ on:
         type: string
         default: ""
       update_mock_screenshots:
-        description: "ui-mock-tests: rewrite mock screenshot PNGs (skips compare)"
+        description: "ui-tests: rewrite mock screenshot PNGs (skips compare)"
         type: boolean
         default: false
       update_e2e_screenshots:
@@ -338,7 +338,7 @@ jobs:
           frontend_lane: ${{ needs.trigger.outputs.frontend }}
           tests_lane: ${{ needs.trigger.outputs.tests }}
 
-  ui-mock-tests:
+  ui-tests:
     needs: [trigger, frontend-unit-tests, infra-tests]
     if: >-
       always() && !cancelled() &&
@@ -355,7 +355,7 @@ jobs:
       contents: read
       actions: write
     env:
-      LAYER: ui-mock
+      LAYER: ui
       SCREENSHOT_OS: linux
       SCREENSHOT_BROWSER: chrome
       ALLURE_LIVE_ENABLED: ${{ needs.trigger.outputs.enabled }}
@@ -430,11 +430,11 @@ jobs:
           module_dir: ${{ env.TESTS_LANG == 'java' && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
 
   sonar-frontend:
-    needs: [frontend-unit-tests, ui-mock-tests]
+    needs: [frontend-unit-tests, ui-tests]
     if: >-
       !cancelled() &&
       needs.frontend-unit-tests.result == 'success' &&
-      (needs.ui-mock-tests.result == 'success' || needs.ui-mock-tests.result == 'skipped')
+      (needs.ui-tests.result == 'success' || needs.ui-tests.result == 'skipped')
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
@@ -477,10 +477,10 @@ jobs:
           module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
 
   build-frontend:
-    needs: [ui-mock-tests, trigger]
+    needs: [ui-tests, trigger]
     if: >-
       !cancelled() &&
-      needs.ui-mock-tests.result == 'success' &&
+      needs.ui-tests.result == 'success' &&
       needs.trigger.outputs.frontend == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -819,7 +819,7 @@ jobs:
       - backend-unit-tests
       - frontend-unit-tests
       - infra-tests
-      - ui-mock-tests
+      - ui-tests
       - integration-tests
       - api-tests
       - e2e-tests

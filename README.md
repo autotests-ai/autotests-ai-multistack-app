@@ -82,7 +82,7 @@ flowchart TB
   TRG --> UNIT[backend-unit-tests]
   TRG --> COMP[frontend-unit-tests]
   TRG --> H[infra-tests]
-  TRG --> MOCK[ui-mock-tests]
+  TRG --> UI[ui-tests]
   TRG --> INT[integration-tests]
   TRG --> BB
   TRG --> BF
@@ -97,12 +97,12 @@ flowchart TB
   UNIT --> SB[sonar-backend]
   INT --> SB
   COMP --> SF[sonar-frontend]
-  COMP --> MOCK
+  COMP --> UI
   H --> ST[sonar-tests]
 
   UNIT --> BB[build-backend]
   INT --> BB
-  MOCK --> BF[build-frontend]
+  UI --> BF[build-frontend]
 
   BB --> DB[deploy-backend]
   SB --> DB
@@ -127,7 +127,7 @@ flowchart TB
 
   E2E --> MAN[manual-tests<br/>dispatch]
 
-  UNIT & COMP & H & MOCK & INT & API & E2E & APIS & E2ES & MAN --> PUB[publish-allure-report]
+  UNIT & COMP & H & UI & INT & API & E2E & APIS & E2ES & MAN --> PUB[publish-allure-report]
   PUB --> PAGES[publish-allure-pages]
 ```
 
@@ -139,13 +139,13 @@ flowchart TB
 | `integration-tests` | backend module — after `backend-unit-tests` (java: `-DincludeTags=integration`); Spring Boot + real PG; **before** build/deploy; PR + main |
 | `api-tests` | tests module — after backend deploy, or tests-lane vs live prod (`-Denv=prod -DincludeTags=api`) |
 | `api-tests-stage` | tests module — after stage backend deploy, or tests-lane vs live stage (full `-DincludeTags=api`) |
-| `ui-mock-tests` | after `frontend-unit-tests`; every PR; frontend lane on main; dispatch `run_mock` / `update_mock_screenshots` |
+| `ui-tests` | after `frontend-unit-tests`; every PR; frontend lane on main; dispatch `run_mock` / `update_mock_screenshots` |
 | `sonar-tests` | after `infra-tests` (skipped on backend-only lane) |
 | `e2e-tests` | after `api-tests` + `deploy-frontend` — java: `-Denv=prod -DincludeTags=e2e`; dispatch `run_screenshot` / `update_e2e_screenshots` are extra steps |
 | `e2e-tests-stage` | after `api-tests-stage` + `deploy-frontend-stage` — full `-DincludeTags=e2e` `excludeTags=screenshot` |
 | `manual-tests` | after `e2e-tests`; dispatch only — java: `-DincludeTags=manual` |
 
-`backend-unit-tests`, `integration-tests`, `frontend-unit-tests`, `infra-tests`, and `ui-mock-tests` gate a pull request.
+`backend-unit-tests`, `integration-tests`, `frontend-unit-tests`, `infra-tests`, and `ui-tests` gate a pull request.
 Post-deploy layers follow `trigger` lanes: backend deploy, frontend deploy, or tests-lane against the live stand. Push `develop` → stage only (full api/e2e). Push `main` → same SHA to stage, then prod (same layer tags, `-Denv=prod`) after stage e2e. Dispatch `deploy=none|backend|frontend|tests|all` is the same contract; push infers from `backend/` · `frontend/` · `tests/`.
 
 ## Ports (local = prod host upstream)
@@ -226,7 +226,7 @@ Teaching CI — [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
 | Event | Jobs |
 |-------|------|
-| pull request | `backend-unit-tests` · `integration-tests` · `frontend-unit-tests` · `infra-tests` · `ui-mock-tests` · `sonar-backend` · `sonar-frontend` · `sonar-tests` |
+| pull request | `backend-unit-tests` · `integration-tests` · `frontend-unit-tests` · `infra-tests` · `ui-tests` · `sonar-backend` · `sonar-frontend` · `sonar-tests` |
 | push to `develop` | PR set + lanes from paths · CD stage only (`vars.STAGE_APP_DIR`) · full api/e2e vs stage |
 | push to `main` | same pyramid · CD stage of this SHA · full api/e2e vs stage · then CD production · full api/e2e vs prod (`-Denv=prod`) |
 

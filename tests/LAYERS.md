@@ -12,7 +12,7 @@ Module folders: `-` between segments, `_` in compounds (`react_testing_library`,
                     ├─────────────┤
                     │     e2e     │  live stand + real backend (@Tag e2e)
                     ├─────────────┤
-                    │     ui      │  browser SPA on stub API (@Tag ui; job ui-mock-tests)
+                    │     ui      │  browser SPA on stub API (@Tag ui; job ui-tests)
                     ├─────────────┤     component — jsdom job (Vitest), not a pyramid layer
                     │     api     │  HTTP contract (@Tag api — any client / language)
                     ├─────────────┤
@@ -104,11 +104,11 @@ src/test/resources/screenshots/{mock|stage|prod}/{linux|macos|windows}/{chrome-1
 
 `SCREENSHOT_OS` overrides the OS folder (`darwin` → `macos`, `linux` → `linux`, `win32` → `windows`). CI SSOT is `mock/linux/chrome-148` plus the CFT pin. **Do not** set `SCREENSHOT_OS=linux` on a Mac — that would write Linux-canon PNGs from macOS Chrome. On Mac omit `SCREENSHOT_OS` (writes `macos`) or set `SCREENSHOT_OS=macos`.
 
-CI jobs `ui-mock-tests` and `e2e-tests` set `SCREENSHOT_OS=linux` and `SCREENSHOT_BROWSER=chrome`. Screenshot **compare** is a step in each job (mock: every PR; e2e: dispatch `run_screenshot`). Screenshot **rewrite** is a step `Update screenshots` in the same jobs (`update_mock_screenshots` / `update_e2e_screenshots`) — independent flags, not a CD job.
+CI jobs `ui-tests` and `e2e-tests` set `SCREENSHOT_OS=linux` and `SCREENSHOT_BROWSER=chrome`. Screenshot **compare** is a step in each job (mock: every PR; e2e: dispatch `run_screenshot`). Screenshot **rewrite** is a step `Update screenshots` in the same jobs (`update_mock_screenshots` / `update_e2e_screenshots`) — independent flags, not a CD job.
 
 | Slice | Tag | CI |
 |-------|-----|-----|
-| UI on stub API (mount + error injection + header chrome) | `@Tag("ui")` (+ optional `@Tag("mock")`) | job `ui-mock-tests` step 1: `-DincludeTags=ui -DexcludeTags=screenshot` |
+| UI on stub API (mount + error injection + header chrome) | `@Tag("ui")` (+ optional `@Tag("mock")`) | job `ui-tests` step 1: `-DincludeTags=ui -DexcludeTags=screenshot` |
 | Screenshot vs stub UI | `@Tag("screenshot")` / `-m screenshot` / `--grep @screenshot` | same job, compare step: java `-DincludeTags=screenshot` · python `-m screenshot` · javascript/typescript `--grep @screenshot` (every PR) |
 | Refresh mock screenshots | `@Tag("screenshot")` + update flag | same job, step `Update screenshots` — dispatch `update_mock_screenshots` writes `mock/linux/chrome-148` (skips compare; java `-DupdateScreenshots=true` · python `UPDATE_SCREENSHOTS=true`) |
 | Flow through live backend | `@Tag("e2e")` exclude `screenshot` | job `e2e-tests` (`-Denv=prod -DincludeTags=e2e`) / `e2e-tests-stage` (`-Denv=stage`); default push does **not** run screenshot via Selenoid |
@@ -249,7 +249,7 @@ For `TESTS_LANG=typescript`, a layer is a **Playwright tag**, a stand is **`UI_U
 | component | frontend | active `FRONTEND_DIR` only (default `frontend/typescript/frontend-typescript-react/`) — siblings not CI-gated | Vitest + coverage | `npm test -- --coverage` via `frontend-unit-tests` |
 | integration | backend | `backend/java/backend-java-spring/src/test/java/dev/reference/app/integration/` (`ApplicationWiringIntegrationTest`, `AuthLifecycleIntegrationTest`) | `@Tag("integration")` | `./gradlew test -DincludeTags=integration` in `BACKEND_DIR` via `integration-tests` (after `backend-unit-tests`, **before** build/deploy; PR + main) |
 | api | tests | `…/tests/api/` (`AuthApiTests`, `ReferenceApiTests`, `BackendWiringApiTests`, `SeedDataApiTests`, `AuthRoundTripApiTests`) — HTTP contract + deployed-stand facts | `@Tag("api")` | java → `-DincludeTags=api` via `api-tests-stage` (`-Denv=stage`) and `api-tests` (`-Denv=prod`); retarget any backend with `-DapiBaseUrl` / `-DapiHealthService` |
-| ui | tests | `…/tests/ui/` (layout, header, form chrome, error injection, chrome screenshots) | `@Tag("ui")` (+ optional `mock` / `screenshot`) | `ui-mock-tests` (`-Denv=mock -DincludeTags=ui`; screenshot compare is a second step) |
+| ui | tests | `…/tests/ui/` (layout, header, form chrome, error injection, chrome screenshots) | `@Tag("ui")` (+ optional `mock` / `screenshot`) | `ui-tests` (`-Denv=mock -DincludeTags=ui`; screenshot compare is a second step) |
 | e2e | tests | `…/tests/e2e/` (login, register, session, home load, welcome-panel screenshot) | `@Tag("e2e")` (+ optional `screenshot`) | `e2e-tests-stage` (`-Denv=stage` after `api-tests-stage` + `deploy-frontend-stage`); `e2e-tests` (`-Denv=prod -DincludeTags=e2e` after `api-tests` + `deploy-frontend`; screenshot excluded on default push) |
 | manual | tests | `…/tests/manual/` **in code** | `@Tag("manual")` + `@Manual` | java → `-DincludeTags=manual` via `manual-tests` (after `e2e-tests`, dispatch) |
 
@@ -276,7 +276,7 @@ Suite **stems** (one Java class → one Playwright spec / one pytest module, idi
 | `backend-unit-tests` | **Application** (active `BACKEND_DIR` via `./backend/.github/actions/unit`; excludes `@Tag("integration")`) |
 | `integration-tests` | **Application** (full Spring Boot + Testcontainers PostgreSQL in `BACKEND_DIR`) |
 | `infra-tests` | **Test tooling** — full helpers except backend-only (`ConfigReader`); frontend keeps ConfigReader because UI tests read it |
-| `frontend-unit-tests` | **Application** (active `FRONTEND_DIR` only — Vitest + coverage → `sonar-frontend` / `ui-mock-tests` → `build-frontend`) |
+| `frontend-unit-tests` | **Application** (active `FRONTEND_DIR` only — Vitest + coverage → `sonar-frontend` / `ui-tests` → `build-frontend`) |
 
 Students: product unit layers (`backend-unit-tests` / `frontend-unit-tests`); infra = helper checks that higher layers depend on.
 
@@ -315,7 +315,7 @@ Integration is **in-process Spring + PostgreSQL**, no browser. Deployed HTTP che
 
 | Trigger | Jobs |
 |---------|------|
-| Pull request (blocks merge) | `backend-unit-tests`, `integration-tests`, `frontend-unit-tests`, `infra-tests`, `ui-mock-tests`, `sonar-backend`, `sonar-tests`, `sonar-frontend` |
+| Pull request (blocks merge) | `backend-unit-tests`, `integration-tests`, `frontend-unit-tests`, `infra-tests`, `ui-tests`, `sonar-backend`, `sonar-tests`, `sonar-frontend` |
 | Push to `main` | PR set + `trigger` lanes → CD stage of this SHA → full api/e2e vs stage → CD production → `api-tests` / `e2e-tests` (`-Denv=prod`, same layer tags) |
 | Push to `develop` | PR set + `trigger` lanes → CD stage only → `api-tests-stage` / `e2e-tests-stage` (full `api` / `e2e`, `excludeTags=screenshot`) vs [stage.autotests.ai/stack/…](https://stage.autotests.ai/stack/backend-java-spring/frontend-typescript-react/) |
 | `workflow_dispatch` | `deploy=none\|backend\|frontend\|tests\|all` + `deploy_target=production\|stage\|both`; per-layer booleans `run_integration` / `run_api` / `run_mock` / `run_e2e` / `run_screenshot` / `run_manual`; screenshot rewrite flags; TestOps `ALLURE_JOB_RUN_ID` / `ALLURE_USERNAME` |
@@ -330,7 +330,7 @@ Deploy jobs share concurrency group `deploy-autotests-ai-multistack-app` (one ch
 Frontend deploy does **not** wait on backend success.
 
 Nothing runs on a schedule. Full e2e has no PR job: a GitHub runner has no compose stack.
-Against **prod** CI runs the same layer tags as stage (`api` / `e2e`), with `-Denv=prod`, after stage e2e in the same `main` run. Full api/e2e also run on **stage** (push `develop` WIP, and again on push `main` before prod). `ui-mock-tests` is the automatic UI gate on PR.
+Against **prod** CI runs the same layer tags as stage (`api` / `e2e`), with `-Denv=prod`, after stage e2e in the same `main` run. Full api/e2e also run on **stage** (push `develop` WIP, and again on push `main` before prod). `ui-tests` is the automatic UI gate on PR.
 
 ## Allure quality gate vs GitHub
 
@@ -344,7 +344,7 @@ After generate, [`attach-ci-jobs-quality-gate.mjs`](java/tests-java-gradle-junit
 | `skipped` because this event does not run that job (PR without prod e2e, `manual-tests` on push, lane `if:`) | unchanged |
 | Sonar / deploy | own widgets or out of Allure QG |
 
-Layer jobs: `backend-unit-tests`, `frontend-unit-tests`, `infra-tests`, `ui-mock-tests`, `integration-tests`, `api-tests-stage`, `e2e-tests-stage`, `api-tests`, `e2e-tests`, `manual-tests`. Widget rule id: `maxCiJobFailures` (attached after generate, not an Allure CLI `use` rule).
+Layer jobs: `backend-unit-tests`, `frontend-unit-tests`, `infra-tests`, `ui-tests`, `integration-tests`, `api-tests-stage`, `e2e-tests-stage`, `api-tests`, `e2e-tests`, `manual-tests`. Widget rule id: `maxCiJobFailures` (attached after generate, not an Allure CLI `use` rule).
 
 CLI (`npx allure quality-gate`) also runs `maxFailures` plus reporting via `qualityGate.use`: steps on api / integration / ui / e2e / manual, and attachments on `@Tag("screenshot")` (nested step PNGs count; AllureSelenide stays `screenshots(false)`).
 
@@ -403,13 +403,13 @@ To add another layer, copy `manual-tests` in `ci.yml` and the matching tests mod
 
 ## CI cache (Gradle)
 
-CI-only. Writers save GUH + configuration cache **inside the module action**. Readers restore GUH **read-only** from `infra-tests` (`GRADLE_BUILD_ACTION_CACHE_KEY_JOB`) and **do not** restore CC. **Do not enable CC on `api-tests` / `e2e-tests` / `api-tests-stage` / `e2e-tests-stage`** (or `ui-mock-tests` / `manual-tests`) — CC pins absolute `GRADLE_USER_HOME` / JaCoCo paths from another runner.
+CI-only. Writers save GUH + configuration cache **inside the module action**. Readers restore GUH **read-only** from `infra-tests` (`GRADLE_BUILD_ACTION_CACHE_KEY_JOB`) and **do not** restore CC. **Do not enable CC on `api-tests` / `e2e-tests` / `api-tests-stage` / `e2e-tests-stage`** (or `ui-tests` / `manual-tests`) — CC pins absolute `GRADLE_USER_HOME` / JaCoCo paths from another runner.
 
 | | Jobs | GUH | CC |
 |--|------|-----|-----|
 | Writer, backend | `backend-unit-tests`, `integration-tests`, `sonar-backend` | own `github.job` | yes (`backend/java/backend-java-spring`) |
 | Writer, tests | `infra-tests`, `sonar-tests` | own `github.job` | yes (tests module) |
-| Reader | `ui-mock-tests`, `api-tests`, `e2e-tests`, `api-tests-stage`, `e2e-tests-stage`, `manual-tests` | read-only from `infra-tests` | **no** |
+| Reader | `ui-tests`, `api-tests`, `e2e-tests`, `api-tests-stage`, `e2e-tests-stage`, `manual-tests` | read-only from `infra-tests` | **no** |
 
 ## Test data and secrets
 
@@ -426,15 +426,15 @@ CI-only. Writers save GUH + configuration cache **inside the module action**. Re
 ## CD graph
 
 Matches [`ci.yml`](../.github/workflows/ci.yml) `needs` (Sonar ×3 gates **deploy**, not build;
-FE lane: `frontend-unit-tests` → `ui-mock-tests` → `sonar-frontend`; mock also gates `build-frontend`):
+FE lane: `frontend-unit-tests` → `ui-tests` → `sonar-frontend`; mock also gates `build-frontend`):
 
 ```
 every run (PR + main):
   backend-unit-tests → integration-tests
   backend-unit-tests + integration-tests → sonar-backend
-  frontend-unit-tests → ui-mock-tests → sonar-frontend
+  frontend-unit-tests → ui-tests → sonar-frontend
   infra-tests → sonar-tests (sonar-tests skipped on backend-only lane)
-  ui-mock-tests (needs frontend-unit-tests + trigger; every PR; frontend lane on main)
+  ui-tests (needs frontend-unit-tests + trigger; every PR; frontend lane on main)
 
 main (via `trigger.cd_stage` then `cd_production`):
   same builds (main|develop)
@@ -465,6 +465,6 @@ build/deploy and does **not** wait on deploy.
 It runs after `infra-tests` on **PR** and **main**, except the backend-only lane
 (`infra-backend` only — no full tests-module coverage to gate).
 `build-backend` / `build-frontend` do **not** `needs` Sonar. `sonar-frontend` waits on
-`ui-mock-tests` (success or skipped — backend-only lane still scans). There is no
-`build-frontend` → `ui-mock-tests` edge (mock does not wait for the GHCR image) and no
+`ui-tests` (success or skipped — backend-only lane still scans). There is no
+`build-frontend` → `ui-tests` edge (mock does not wait for the GHCR image) and no
 deploy → `integration-tests` edge.

@@ -69,7 +69,7 @@ tests/
 | Product unit | `backend-unit-tests` | `backend/java/backend-java-spring/src/test/` |
 | Infra | `infra-tests` | `…/tests/infra/` · `@Tag("infra")`; backend-only lane → `infra-backend` (`ConfigReader`) |
 | RTL | `frontend-unit-tests` | `frontend/typescript/frontend-typescript-react/src/test/` |
-| integration / api / ui / e2e / manual | `integration-tests` · `api-tests` / `api-tests-stage` · `ui-mock-tests` · `e2e-tests` / `e2e-tests-stage` / `manual-tests` | `backend/java/…/integration/` · `tests/api/` · `tests/ui/` · `tests/e2e/` · manual stubs **in code** (`tests/manual/`) |
+| integration / api / ui / e2e / manual | `integration-tests` · `api-tests` / `api-tests-stage` · `ui-tests` · `e2e-tests` / `e2e-tests-stage` / `manual-tests` | `backend/java/…/integration/` · `tests/api/` · `tests/ui/` · `tests/e2e/` · manual stubs **in code** (`tests/manual/`) |
 
 CI: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
 

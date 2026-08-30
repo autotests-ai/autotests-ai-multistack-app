@@ -33,8 +33,8 @@ test("failedLayerJobs includes infra-tests", () => {
 });
 
 test("parseNeeds reads GitHub toJSON(needs) strings", () => {
-  const needs = parseNeeds('{"ui-mock-tests":{"result":"failure","outputs":{}}}');
-  assert.deepEqual(failedLayerJobs(needs), ["ui-mock-tests"]);
+  const needs = parseNeeds('{"ui-tests":{"result":"failure","outputs":{}}}');
+  assert.deepEqual(failedLayerJobs(needs), ["ui-tests"]);
 });
 
 test("applyCiJobFailures keeps result rules and is idempotent", () => {

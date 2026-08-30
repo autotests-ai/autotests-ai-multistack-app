@@ -15,16 +15,16 @@ One task `test`; the layer is a tag filter, the stand is `-Denv` ([pyramid-map.y
 
 | Layer | Command | Notes |
 |-------|---------|--------|
-| infra (all) | `./gradlew test -Denv=ci -DincludeTags=infra` | umbrella — all `infra/` · CI job `infra-tests` (feeds `sonar-tests`; gates `ui-mock-tests` / `api-tests` / `e2e-tests`) |
+| infra (all) | `./gradlew test -Denv=ci -DincludeTags=infra` | umbrella — all `infra/` · CI job `infra-tests` (feeds `sonar-tests`; gates `ui-tests` / `api-tests` / `e2e-tests`) |
 | infra-backend | `./gradlew test -Denv=ci -DincludeTags=infra-backend` | `ConfigReader` · `AllureHttpHtml` · backend-only lane |
 | infra-frontend | `./gradlew test -Denv=ci -DincludeTags=infra-frontend` | CSS + HAR + `LocalChromePin` · inside full `infra-tests` (frontend lane included) |
 | api | `./gradlew test -Denv=ci -DincludeTags=api` | local compose; CI job `api-tests` |
 | api smoke | `./gradlew test -Denv=prod -DincludeTags='api & smoke'` | prod subset (health, seed, login); CI job `api-tests` |
-| ui | `./gradlew test -Denv=mock -DincludeTags=ui -DexcludeTags=screenshot` | browser on stub API · CI `ui-mock-tests` step 1 |
-| screenshot mock | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=mock -DincludeTags=screenshot` | PNG compare `screenshots/mock/linux/chrome-148/` · CI `ui-mock-tests` compare step |
+| ui | `./gradlew test -Denv=mock -DincludeTags=ui -DexcludeTags=screenshot` | browser on stub API · CI `ui-tests` step 1 |
+| screenshot mock | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=mock -DincludeTags=screenshot` | PNG compare `screenshots/mock/linux/chrome-148/` · CI `ui-tests` compare step |
 | e2e | `./gradlew test -Denv=ci -DincludeTags=e2e -DexcludeTags=screenshot` | live-backend journeys; screenshot is a second stage, not a pyramid layer |
 | e2e smoke | `./gradlew test -Denv=prod -DincludeTags='e2e & smoke' -DexcludeTags=screenshot` | prod subset (login + home); CI job `e2e-tests` (Selenoid) |
-| screenshot mock refresh | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=mock -DincludeTags=screenshot -DupdateScreenshots=true` | writes `screenshots/mock/linux/chrome-148/` · CI `ui-mock-tests` step `Update screenshots` (`update_mock_screenshots`) |
+| screenshot mock refresh | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=mock -DincludeTags=screenshot -DupdateScreenshots=true` | writes `screenshots/mock/linux/chrome-148/` · CI `ui-tests` step `Update screenshots` (`update_mock_screenshots`) |
 | screenshot stage refresh | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=stage -DincludeTags=screenshot -DupdateScreenshots=true` | writes `screenshots/stage/linux/chrome-148/` · CI `e2e-tests-stage` step `Update screenshots` (`update_stage_screenshots`) |
 | screenshot ci refresh | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=ci -DincludeTags=screenshot -DupdateScreenshots=true` | writes `screenshots/prod/linux/chrome-148/` (same folder as prod; not live `-Denv=prod`). Local compose stand — not a GHA job |
 | screenshot prod refresh | `SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=prod -DincludeTags=screenshot -DupdateScreenshots=true` | writes `screenshots/prod/linux/chrome-148/` · CI `e2e-tests` step `Update screenshots` (`update_e2e_screenshots`) |

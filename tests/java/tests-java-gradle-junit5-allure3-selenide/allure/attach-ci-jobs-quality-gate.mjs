@@ -28,7 +28,7 @@ export const LAYER_JOB_IDS = Object.freeze([
   "backend-unit-tests",
   "frontend-unit-tests",
   "infra-tests",
-  "ui-mock-tests",
+  "ui-tests",
   "integration-tests",
   "api-tests-stage",
   "e2e-tests-stage",
