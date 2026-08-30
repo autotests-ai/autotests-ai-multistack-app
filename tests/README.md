@@ -14,7 +14,7 @@ tests/
   java/
     tests-java-gradle-junit5-allure3-selenide/     # active — default cell (Selenide + Rest Assured)
     tests-java-gradle-junit5-allure3-selenium/       # active — UI+HTTP Selenium 4 + Rest Assured
-    tests-java-gradle-junit5-allure3-playwright/     # active — UI block Playwright for Java
+    tests-java-gradle-junit5-allure3-playwright/     # active — UI+HTTP Playwright for Java + Rest Assured
     tests-java-gradle-junit5-allure3-restassured/   # active — HTTP block Rest Assured
     tests-java-gradle-junit5-allure3-retrofit2/    # active — HTTP block Retrofit 2
     tests-java-gradle-junit5-allure2-selenide/       # slot — Allure 2

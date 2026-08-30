@@ -8,7 +8,7 @@ Clone folder = teaching **block**. Combo (e.g. Selenium + Retrofit) = generate, 
 |--------|--------|--------|
 | `tests-java-gradle-junit5-allure3-selenide` | Gradle · JUnit 5 · Allure 3 · Selenide (+ Rest Assured in this default cell) | **active** |
 | `tests-java-gradle-junit5-allure3-selenium` | UI+HTTP block · Selenium 4 + Rest Assured | **active** |
-| `tests-java-gradle-junit5-allure3-playwright` | UI block · Playwright for Java | **active** |
+| `tests-java-gradle-junit5-allure3-playwright` | UI+HTTP block · Playwright for Java + Rest Assured | **active** |
 | `tests-java-gradle-junit5-allure3-restassured` | HTTP block · Rest Assured | **active** |
 | `tests-java-gradle-junit5-allure3-retrofit2` | HTTP block · Retrofit 2 | **active** |
 | `tests-java-gradle-junit5-allure2-selenide` | Gradle · JUnit 5 · Allure 2 · Selenide | slot |
@@ -40,5 +40,6 @@ cd tests/java/tests-java-gradle-junit5-allure3-retrofit2
 cd tests/java/tests-java-gradle-junit5-allure3-playwright
 ./gradlew installChromium
 ./gradlew test -Denv=ci -DincludeTags=infra
+./gradlew test -Denv=ci -DincludeTags=api
 ./gradlew test -Denv=ci -DincludeTags=e2e
 ```

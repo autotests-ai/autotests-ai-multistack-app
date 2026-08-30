@@ -1,14 +1,15 @@
 # tests-java-gradle-junit5-allure3-playwright
 
-Gradle · JUnit 5 · Allure 3 · **Playwright for Java** UI school.
+Gradle · JUnit 5 · Allure 3 · **Playwright for Java** UI + **Rest Assured** HTTP.
 
-Same `data-testid` stems as the TypeScript Playwright living cell. Page objects use `getByTestId` / `Locator`, not Selenide `$`. No Rest Assured — register/delete cleanup is UI. Screenshot PNG compare is not in this school yet (Chromium baselines would be a separate linux SSOT).
+Same `data-testid` stems as the TypeScript Playwright living cell. Page objects use `getByTestId` / `Locator`. HTTP is Rest Assured (same contract as Selenide/Selenium). The HTTP-only Rest Assured school stays in the sibling folder. Screenshot PNG compare is not in this school yet (Chromium baselines would be a separate linux SSOT).
 
 ```bash
 cd tests/java/tests-java-gradle-junit5-allure3-playwright
 ./gradlew installChromium
 ./gradlew test -Denv=ci -DincludeTags=infra
+./gradlew test -Denv=ci -DincludeTags=api
 ./gradlew test -Denv=ci -DincludeTags=e2e
 ```
 
-Stand: `-Denv=ci` → gateway [http://localhost:9821/](http://localhost:9821/).
+Stand: `-Denv=ci` → gateway [http://localhost:9821/](http://localhost:9821/), API [http://localhost:8800/](http://localhost:8800/).
