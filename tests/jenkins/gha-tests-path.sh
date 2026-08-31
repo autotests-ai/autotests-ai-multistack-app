@@ -94,7 +94,7 @@ run_gradle() {
 }
 
 need_cft() {
-  if is_true "${RUN_MOCK:-false}"; then
+  if is_true "${RUN_MOCK:-false}" && command -v docker >/dev/null; then
     return 0
   fi
   if [ "$TESTS_UI_LIBRARY" = playwright ] && {
@@ -114,10 +114,13 @@ cmd_prepare() {
   command -v java >/dev/null
   java -version
   if is_true "${RUN_MOCK:-false}"; then
-    command -v docker >/dev/null
-    compose version
-    test -d "$FRONTEND_DIR"
-    test -f "${FRONTEND_DIR}/Dockerfile"
+    if ! command -v docker >/dev/null; then
+      echo "WARN: no docker on this agent — UI mock will fail; api/e2e still run (Selenoid + live stands)" >&2
+    else
+      compose version
+      test -d "$FRONTEND_DIR"
+      test -f "${FRONTEND_DIR}/Dockerfile"
+    fi
   fi
   if need_cft; then
     local installer="${MODULE}/scripts/install-chrome-for-testing.sh"
@@ -133,7 +136,11 @@ cmd_mock() {
     echo "STOP: tests cell missing: ${MODULE}" >&2
     exit 1
   fi
-  command -v docker >/dev/null
+  if ! command -v docker >/dev/null; then
+    echo "STOP: mock needs Docker (compose --profile mock). Agent label java-jdk21 has no docker.sock." >&2
+    echo "Uncheck RUN_MOCK to skip ui-tests, or mount the host docker socket on the agent." >&2
+    exit 1
+  fi
   local exit_code=0
   cleanup_mock() {
     IMAGE_TAG=mock-local MOCK_GATEWAY_PORT="${MOCK_GATEWAY_PORT}" \
