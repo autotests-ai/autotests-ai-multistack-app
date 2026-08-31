@@ -32,9 +32,12 @@ public final class AllureRestAssuredFilters {
         if (!isEnabled(config)) {
             return;
         }
-        for (Filter filter : RestAssured.filters()) {
-            if (filter instanceof AllureRestAssured) {
-                return;
+        var existing = RestAssured.filters();
+        if (existing != null) {
+            for (Filter filter : existing) {
+                if (filter instanceof AllureRestAssured) {
+                    return;
+                }
             }
         }
         RestAssured.filters(create(config));

@@ -33,7 +33,9 @@ public class HomePage {
 
     @Step("Open home page")
     public HomePage open() {
-        page.navigate("/");
+        // Relative to context baseURL (path prefix on prod/stage). navigate("/") is
+        // origin-absolute and drops /stack/.../frontend-.../.
+        page.navigate("./");
         return shouldBeOpen();
     }
 

@@ -9,8 +9,6 @@ import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
-import org.junit.jupiter.api.BeforeAll;
-
 @Framework("playwright")
 public class ApiTestBase extends AllureMeta {
 
@@ -24,8 +22,7 @@ public class ApiTestBase extends AllureMeta {
      */
     protected static RequestSpecification jsonSpec;
 
-    @BeforeAll
-    static void setupRestAssured() {
+    static {
         RestAssured.baseURI = ConfigReader.resolveApiBaseUrl();
         jsonSpec = new RequestSpecBuilder()
                 .setBaseUri(ConfigReader.resolveApiBaseUrl())
