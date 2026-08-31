@@ -4,6 +4,9 @@ import api.AuthApiClient;
 import helpers.Ui;
 import io.qameta.allure.Step;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+
+import java.time.Duration;
 
 public class HomePage extends BasePage<HomePage> {
 
@@ -151,6 +154,11 @@ public class HomePage extends BasePage<HomePage> {
     @Step("Click logout button")
     public LoginPage clickLogoutButton() {
         Ui.click("logout-button");
+        // logout() POSTs /api/auth/logout then navigate('/login') — wait for the
+        // round-trip, not only the click. Selenoid→stand can exceed Ui.TIMEOUT.
+        Ui.waitUntil(
+                ExpectedConditions.visibilityOfElementLocated(Ui.testId("login-form")),
+                Duration.ofSeconds(15));
         return new LoginPage();
     }
 

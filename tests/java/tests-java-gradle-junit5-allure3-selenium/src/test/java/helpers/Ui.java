@@ -148,6 +148,10 @@ public final class Ui {
     }
 
     public static <T> T waitUntil(Function<WebDriver, T> condition) {
-        return new WebDriverWait(driver(), TIMEOUT).until(condition);
+        return waitUntil(condition, TIMEOUT);
+    }
+
+    public static <T> T waitUntil(Function<WebDriver, T> condition, Duration timeout) {
+        return new WebDriverWait(driver(), timeout).until(condition);
     }
 }
