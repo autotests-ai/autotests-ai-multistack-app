@@ -59,6 +59,15 @@ public class HomePage {
         return this;
     }
 
+    @Step("Verify health and items finished loading")
+    public HomePage shouldShowSettledHealthAndItems() {
+        shouldShowLayoutAndHealth();
+        itemsList.waitFor();
+        assertThat(healthStatus).not().containsText("Checking health");
+        assertThat(itemsList).not().containsText("Loading items");
+        return this;
+    }
+
     @Step("Logout")
     public HomePage logout() {
         logoutButton.click();

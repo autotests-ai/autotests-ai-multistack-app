@@ -34,7 +34,7 @@ class HomeLayoutScreenshotTests extends TestBase {
     @BeforeEach
     void openHome() {
         ViewportHelper.setViewport(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
-        app.home.open().shouldShowLayoutAndHealth();
+        app.home.open().shouldShowSettledHealthAndItems();
     }
 
     @Test
