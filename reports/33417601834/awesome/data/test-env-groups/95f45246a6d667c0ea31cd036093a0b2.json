@@ -1,1 +1,0 @@
-{"id":"95f45246a6d667c0ea31cd036093a0b2","fullName":"tests.api.AuthRoundTripApiTests.accountLifecycleRoundTrip","name":"register → login → me → logout (stateless: token survives) → delete → me is 401","status":"passed","testResultsByEnv":{"default":"53b13e97b5af50f3cf8d926ff8af189c"}}

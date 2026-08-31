@@ -1,1 +1,0 @@
-{"id":"3348f66be503c3842f2fe2b45d2153e7","fullName":"tests.api.AuthApiTests.loginWithValidCredentials","name":"POST /api/auth/login returns the auth contract for a seeded user","status":"passed","testResultsByEnv":{"default":"f9de05b4f0bfff16d58e5e9f19e33483"}}

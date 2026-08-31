@@ -1,1 +1,0 @@
-{"id":"3c356ac6228ae5c91a68495b91f53419","fullName":"dev.multistack.app.controller.AuthControllerTest.loginInvalidCredentials","name":"POST /api/auth/login maps invalid credentials to 401","status":"passed","testResultsByEnv":{"default":"90c3847ec0fb0b82ba701ab15bde0040"}}
