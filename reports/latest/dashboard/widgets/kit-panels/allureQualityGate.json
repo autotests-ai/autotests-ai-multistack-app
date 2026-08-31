@@ -6,8 +6,8 @@
     {
       "id": "maxFailures",
       "passed": false,
-      "message": "The number of failed tests 54 exceeds the allowed threshold value 0",
-      "actual": 54,
+      "message": "The number of failed tests 9 exceeds the allowed threshold value 0",
+      "actual": 9,
       "expected": 0,
       "knownExcluded": 0
     },

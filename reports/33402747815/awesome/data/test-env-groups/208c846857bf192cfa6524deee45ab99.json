@@ -1,1 +1,0 @@
-{"id":"208c846857bf192cfa6524deee45ab99","fullName":"frontend-typescript-react:src/test/i18n/i18n.test.ts#i18n helpers falls back to en when localStorage throws","name":"falls back to en when localStorage throws","status":"passed","testResultsByEnv":{"default":"f8ae586ed1d39252e44b03b4ac0ada7a"}}
