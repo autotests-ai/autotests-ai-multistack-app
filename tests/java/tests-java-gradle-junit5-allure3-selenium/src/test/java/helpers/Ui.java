@@ -58,7 +58,7 @@ public final class Ui {
     }
 
     public static void click(By locator) {
-        el(locator).click();
+        waitUntil(ExpectedConditions.elementToBeClickable(locator)).click();
     }
 
     public static void click(String testId) {
