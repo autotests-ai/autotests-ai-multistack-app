@@ -1,1 +1,0 @@
-{"id":"a517b7e65d375b2960044d18c35fab58","fullName":"tests.api.AuthApiTests.profileWithoutToken","name":"GET /api/auth/me without a token returns 401","status":"passed","testResultsByEnv":{"default":"50ca7b93aa89dc73e70a1f7fd1f55e2a"}}
