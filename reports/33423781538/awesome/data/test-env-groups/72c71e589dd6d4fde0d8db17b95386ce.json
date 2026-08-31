@@ -1,1 +1,0 @@
-{"id":"72c71e589dd6d4fde0d8db17b95386ce","fullName":"tests.e2e.LoginTests.shouldShowValidationErrorWhenUsernameIsShort","name":"Short username shows validation error","status":"passed","testResultsByEnv":{"default":"f4c08aa3c36d46d8403bf2e820ff7407"}}

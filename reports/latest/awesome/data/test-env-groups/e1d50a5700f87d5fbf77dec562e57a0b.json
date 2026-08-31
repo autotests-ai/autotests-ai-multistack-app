@@ -1,1 +1,0 @@
-{"id":"e1d50a5700f87d5fbf77dec562e57a0b","fullName":"tests.e2e.RegisterTests.shouldShowErrorWhenUsernameIsEmpty","name":"Empty username on register shows validation error","status":"passed","testResultsByEnv":{"default":"1b062c6ba7a68407a0577a88fa66e9ff"}}
