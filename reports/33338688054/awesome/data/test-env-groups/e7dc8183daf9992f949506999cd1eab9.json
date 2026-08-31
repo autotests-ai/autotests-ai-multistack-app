@@ -1,1 +1,0 @@
-{"id":"e7dc8183daf9992f949506999cd1eab9","fullName":"frontend-typescript-react:src/test/lib/auth.test.ts#deleteAccount skips the request when there is no session","name":"skips the request when there is no session","status":"passed","testResultsByEnv":{"default":"77e8b9d5c8c7281590cf18e23c52ac81"}}
