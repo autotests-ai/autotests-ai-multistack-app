@@ -105,6 +105,52 @@ need_cft() {
   return 1
 }
 
+# inbound-agent:jdk21 is Debian 13 slim — CFT's chrome needs these .so files.
+# GHA ubuntu-24.04 already has them (browser-actions/setup-chrome).
+ensure_linux_chrome_runtime() {
+  [ "$(uname -s)" = Linux ] || return 0
+  if [ "$(id -u)" -ne 0 ]; then
+    echo "STOP: Linux Chrome for Testing needs root apt-get for shared libraries (libglib-2.0)." >&2
+    exit 1
+  fi
+  command -v apt-get >/dev/null || {
+    echo "STOP: apt-get not found; cannot install Chrome runtime libraries." >&2
+    exit 1
+  }
+  if dpkg -s libglib2.0-0t64 >/dev/null 2>&1 && dpkg -s libnss3 >/dev/null 2>&1; then
+    echo "==> Chrome runtime libraries already installed"
+    return 0
+  fi
+  echo "==> apt-get Chrome runtime libraries (Debian)"
+  export DEBIAN_FRONTEND=noninteractive
+  apt-get update -qq
+  apt-get install -y --no-install-recommends \
+    ca-certificates \
+    fonts-liberation \
+    libasound2t64 \
+    libatk-bridge2.0-0t64 \
+    libatk1.0-0t64 \
+    libatspi2.0-0t64 \
+    libcairo2 \
+    libcups2t64 \
+    libdbus-1-3 \
+    libdrm2 \
+    libgbm1 \
+    libglib2.0-0t64 \
+    libnspr4 \
+    libnss3 \
+    libpango-1.0-0t64 \
+    libx11-6 \
+    libx11-xcb1 \
+    libxcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxkbcommon0 \
+    libxrandr2
+}
+
 cmd_prepare() {
   if [ ! -d "$MODULE" ]; then
     echo "STOP: tests cell missing: ${MODULE}" >&2
@@ -123,6 +169,7 @@ cmd_prepare() {
     fi
   fi
   if need_cft; then
+    ensure_linux_chrome_runtime
     local installer="${MODULE}/scripts/install-chrome-for-testing.sh"
     test -x "$installer" || chmod +x "$installer"
     if ! "$installer" --verify; then
