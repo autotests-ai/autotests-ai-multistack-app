@@ -1,7 +1,7 @@
 // GHA tests-lane twin (not the full CI graph: no Sonar, Pages, unit, CD).
 // Dispatch equivalent: deploy=tests + run_mock + run_api + run_e2e (screenshots on).
 // Layers: tests/jenkins/gha-tests-path.sh ← selenide .github/actions/{mock,api,e2e}.
-// GHA stays canon for push/PR/CD. Bind SELENOID_WEBDRIVER_URL on the job if the hub needs auth.
+// GHA stays canon for push/PR/CD. Selenoid: credentialsId selenoid-guest-remote-url.
 
 pipeline {
   agent { label 'java-jdk21' }
@@ -30,7 +30,7 @@ pipeline {
 
   environment {
     ALLURE_ENDPOINT = 'https://allure.qa.guru'
-    ALLURE_PROJECT_ID = '5311'
+    ALLURE_PROJECT_ID = '5274'
     ALLURE_SERVER_ID = 'Allure TestOps'
     ALLURE_RESULTS = 'allure-results-ci'
     BACKEND_LANG = 'java'
@@ -54,6 +54,7 @@ pipeline {
     UPDATE_MOCK_SCREENSHOTS = "${params.UPDATE_MOCK_SCREENSHOTS}"
     UPDATE_STAGE_SCREENSHOTS = "${params.UPDATE_STAGE_SCREENSHOTS}"
     UPDATE_E2E_SCREENSHOTS = "${params.UPDATE_E2E_SCREENSHOTS}"
+    SELENOID_WEBDRIVER_URL = credentials('selenoid-guest-remote-url')
   }
 
   stages {
