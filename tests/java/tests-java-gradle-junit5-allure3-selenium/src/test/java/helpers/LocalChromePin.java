@@ -7,8 +7,14 @@ import java.util.Locale;
 import java.util.Properties;
 
 /**
- * Pins local Chrome to the build in chrome-for-testing.properties.
- * Bypasses Selenium Manager so system Chrome is never used silently.
+ * Pins <em>local</em> Chrome to the Chrome for Testing build in
+ * {@code chrome-for-testing.properties}. Bypasses Selenium Manager so system
+ * Chrome is never used silently.
+ * <p>
+ * Not a Chrome-only suite. {@code WebDrivers} calls {@link #apply} only when
+ * {@code remoteUrl} is empty and {@code browser=chrome}. A remote hub uses the
+ * image tag; other local browsers ({@code -Dbrowser=firefox}) skip this class.
+ * Do not generalize until there is a matching pin + installer for that browser.
  */
 public final class LocalChromePin {
 
@@ -24,6 +30,7 @@ public final class LocalChromePin {
     public record Binaries(Path chrome, Path driver) {
     }
 
+    /** Resolves pinned Chrome + chromedriver; callers set binary and {@code webdriver.chrome.driver}. */
     public static Binaries apply(String browserVersion) {
         return resolve(browserVersion);
     }

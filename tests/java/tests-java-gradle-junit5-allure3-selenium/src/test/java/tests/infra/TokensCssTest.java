@@ -78,24 +78,62 @@ class TokensCssTest extends AllureMeta {
     }
 
     @Test
-    @DisplayName("resolveTokensCssPath prefers frontend candidate")
-    void resolveTokensCssPathPrefersFrontendCandidate(@TempDir Path temp) throws Exception {
-        var frontend = temp.resolve("tokens.css");
-        var backend = temp.resolve("backend-tokens.css");
-        Files.writeString(frontend, ":root { --x: 1px; }");
-        Files.writeString(backend, ":root { --y: 2px; }");
+    @DisplayName("resolveFromAppRoot prefers the frontend hub over any vendor copy")
+    void resolveFromAppRootPrefersHub(@TempDir Path temp) throws Exception {
+        var hub = writeTokens(temp.resolve(Path.of(
+                "frontend", "_shared", "frontend-javascript-app", "css", "tokens.css")));
+        writeTokens(temp.resolve(Path.of(
+                "frontend", "javascript", "frontend-javascript-vue",
+                "vendor", "ds", "css", "tokens.css")));
 
-        assertEquals(frontend, TokensCss.resolveTokensCssPath(frontend, backend));
+        assertEquals(hub.toAbsolutePath().normalize(), TokensCss.resolveFromAppRoot(temp));
     }
 
     @Test
-    @DisplayName("resolveTokensCssPath falls back to backend candidate")
-    void resolveTokensCssPathFallsBackToBackendCandidate(@TempDir Path temp) throws Exception {
-        var frontend = temp.resolve("missing-tokens.css");
-        var backend = temp.resolve("backend-tokens.css");
-        Files.writeString(backend, ":root { --y: 2px; }");
+    @DisplayName("resolveFromAppRoot finds vendor/ds on javascript-vue when hub is missing")
+    void resolveFromAppRootFindsVueVendorWhenHubMissing(@TempDir Path temp) throws Exception {
+        var vue = writeTokens(temp.resolve(Path.of(
+                "frontend", "javascript", "frontend-javascript-vue",
+                "vendor", "ds", "css", "tokens.css")));
 
-        assertEquals(backend, TokensCss.resolveTokensCssPath(frontend, backend));
+        assertEquals(vue.toAbsolutePath().normalize(), TokensCss.resolveFromAppRoot(temp));
+    }
+
+    @Test
+    @DisplayName("resolveFromAppRoot ignores scripts/.github/node_modules and uses a product cell")
+    void resolveFromAppRootSkipsNonProductFrontendDirs(@TempDir Path temp) throws Exception {
+        writeTokens(temp.resolve(Path.of(
+                "frontend", "scripts", "not-a-cell", "vendor", "ds", "css", "tokens.css")));
+        writeTokens(temp.resolve(Path.of(
+                "frontend", ".github", "workflows", "vendor", "ds", "css", "tokens.css")));
+        writeTokens(temp.resolve(Path.of(
+                "frontend", "node_modules", "pkg", "vendor", "ds", "css", "tokens.css")));
+        writeTokens(temp.resolve(Path.of(
+                "frontend", "javascript", ".github", "vendor", "ds", "css", "tokens.css")));
+        var vue = writeTokens(temp.resolve(Path.of(
+                "frontend", "javascript", "frontend-javascript-vue",
+                "vendor", "ds", "css", "tokens.css")));
+
+        assertEquals(vue.toAbsolutePath().normalize(), TokensCss.resolveFromAppRoot(temp));
+    }
+
+    @Test
+    @DisplayName("resolveFromAppRoot falls back to vendor/frontend-javascript-app when vendor/ds is missing")
+    void resolveFromAppRootFallsBackToVendoredApp(@TempDir Path temp) throws Exception {
+        var baked = writeTokens(temp.resolve(Path.of(
+                "frontend", "javascript", "frontend-javascript-vue",
+                "vendor", "frontend-javascript-app", "css", "tokens.css")));
+
+        assertEquals(baked.toAbsolutePath().normalize(), TokensCss.resolveFromAppRoot(temp));
+    }
+
+    @Test
+    @DisplayName("resolveFromAppRoot falls back to hub path when frontend tree is missing")
+    void resolveFromAppRootFallsBackToHubWhenFrontendMissing(@TempDir Path temp) {
+        var hub = temp.resolve(Path.of(
+                "frontend", "_shared", "frontend-javascript-app", "css", "tokens.css"));
+
+        assertEquals(hub.toAbsolutePath().normalize(), TokensCss.resolveFromAppRoot(temp));
     }
 
     @Test
@@ -105,5 +143,11 @@ class TokensCssTest extends AllureMeta {
         Files.writeString(css, "body { color: red; }");
 
         assertThrows(IllegalArgumentException.class, () -> TokensCss.parseRootTokens(css));
+    }
+
+    private static Path writeTokens(Path file) throws Exception {
+        Files.createDirectories(file.getParent());
+        Files.writeString(file, ":root { --x: 1px; }");
+        return file;
     }
 }
