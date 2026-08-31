@@ -31,14 +31,32 @@ runs:
           echo "ERROR: SONAR_TOKEN unset" >&2
           exit 1
         fi
-        KEY="${SONAR_PROJECT_KEY:-autotests-ai-multistack-app-$(basename "${{ inputs.module_dir }}")}"
+        KEY="${SONAR_PROJECT_KEY:-${APP_SLUG:-autotests-ai-multistack-app}-$(basename "${{ inputs.module_dir }}")}"
+        echo "SONAR_PROJECT_KEY=${KEY}" >> "$GITHUB_ENV"
         echo "==> sonar scan (coverage artifact) → ${SONAR_HOST_URL} (${KEY})"
+        set +e
         npx --yes "@sonar/scan@${SONAR_SCANNER_NPM_VERSION}" \
           -Dsonar.host.url="${SONAR_HOST_URL}" \
           -Dsonar.projectKey="${KEY}" \
           -Dsonar.projectName="${KEY}" \
           -Dsonar.qualitygate.wait=true \
           -Dsonar.qualitygate.timeout="${SONAR_QUALITY_GATE_TIMEOUT}"
+        status=$?
+        set -e
+        if [[ "$status" -ne 0 ]]; then
+          echo "==> quality gate conditions (${KEY}):"
+          curl -sf -u "${SONAR_TOKEN}:" \
+            "${SONAR_HOST_URL%/}/api/qualitygates/project_status?projectKey=${KEY}" \
+            | python3 -c 'import json,sys
+d=json.load(sys.stdin)
+ps=d.get("projectStatus",{})
+print("status", ps.get("status"))
+for c in ps.get("conditions",[]):
+  if c.get("status")!="OK":
+    print(c)
+'
+          exit "$status"
+        fi
     - name: Write Sonar summary
       if: always()
       shell: bash
