@@ -58,7 +58,10 @@ public final class Ui {
     }
 
     public static void click(By locator) {
-        waitUntil(ExpectedConditions.elementToBeClickable(locator)).click();
+        var element = waitUntil(ExpectedConditions.elementToBeClickable(locator));
+        // Remote Chrome after a client-side React navigation often swallows a
+        // native click; dispatch a DOM click so onClick always runs.
+        js("arguments[0].click();", element);
     }
 
     public static void click(String testId) {
