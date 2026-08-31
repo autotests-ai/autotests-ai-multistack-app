@@ -1,1 +1,0 @@
-{"id":"7b66b02e382198779ef7221a5be3ac52","fullName":"tests.api.AuthApiTests.unmappedApiPathRequiresAuthentication","name":"unmapped /api/* path requires authentication (security catch-all)","status":"broken","testResultsByEnv":{"default":"d6c3fec1b39c65b39c812c1fff38cb9d"}}

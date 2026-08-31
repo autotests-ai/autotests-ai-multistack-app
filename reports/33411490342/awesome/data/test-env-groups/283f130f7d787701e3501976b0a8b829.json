@@ -1,1 +1,0 @@
-{"id":"283f130f7d787701e3501976b0a8b829","fullName":"dev.multistack.app.controller.ApiControllerTest.healthReturnsOk","name":"GET /api/health returns ok","status":"passed","testResultsByEnv":{"default":"79f05ca5ac14821232c3208ece263a3c"}}
