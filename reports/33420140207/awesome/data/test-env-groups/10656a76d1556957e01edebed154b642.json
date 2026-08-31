@@ -1,1 +1,0 @@
-{"id":"10656a76d1556957e01edebed154b642","fullName":"tests.api.AuthApiTests.registerRejectsEmptyCredentials","name":"POST /api/auth/register joins both field errors into one 400 message","status":"passed","testResultsByEnv":{"default":"312189d33fec0c7b65a0abad5e470e5d"}}
