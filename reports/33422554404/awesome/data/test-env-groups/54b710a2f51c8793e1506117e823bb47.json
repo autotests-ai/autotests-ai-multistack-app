@@ -1,1 +1,0 @@
-{"id":"54b710a2f51c8793e1506117e823bb47","fullName":"tests.e2e.RegisterTests.shouldShowErrorWhenUsernameIsTaken","name":"Taken username on register shows readable error","status":"passed","testResultsByEnv":{"default":"83c2241ebe4617c636b5295cb5d7e2a6"}}

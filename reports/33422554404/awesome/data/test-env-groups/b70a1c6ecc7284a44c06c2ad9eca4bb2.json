@@ -1,1 +1,0 @@
-{"id":"b70a1c6ecc7284a44c06c2ad9eca4bb2","fullName":"tests.e2e.LoginTests.shouldShowErrorWhenUsernameIsUnknown","name":"Unknown username shows the same readable error","status":"passed","testResultsByEnv":{"default":"a2d050c84dae9ce22214faf4d78aff3d"}}
