@@ -79,4 +79,10 @@ public class LoginPage {
         registerLink.click();
         return this;
     }
+
+    @Step("Reload current page")
+    public LoginPage reload() {
+        page.reload();
+        return shouldBeOpen();
+    }
 }

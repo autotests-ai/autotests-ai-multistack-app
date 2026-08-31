@@ -47,6 +47,13 @@ public class HomePage {
         return this;
     }
 
+    @Step("Verify home layout and health are mounted")
+    public HomePage shouldShowLayoutAndHealth() {
+        layout.waitFor();
+        healthStatus.waitFor();
+        return this;
+    }
+
     @Step("Logout")
     public HomePage logout() {
         logoutButton.click();

@@ -1,5 +1,6 @@
 package helpers;
 
+import allure.Attachments;
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.BrowserType;
@@ -9,6 +10,11 @@ import config.ConfigReader;
 import config.TestConfig;
 import pages.App;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+
 public final class PlaywrightRuntime implements AutoCloseable {
 
     private final Playwright playwright;
@@ -16,24 +22,74 @@ public final class PlaywrightRuntime implements AutoCloseable {
     public final BrowserContext context;
     public final Page page;
     public final App app;
+    private final Path harPath;
+    private final boolean attachHar;
 
     public PlaywrightRuntime(TestConfig config) {
         playwright = Playwright.create();
         var parts = config.browserSize().split("x");
         int width = Integer.parseInt(parts[0].trim());
         int height = Integer.parseInt(parts[1].trim());
-        browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
-                .setHeadless(config.headless()));
-        context = browser.newContext(new Browser.NewContextOptions()
+
+        var launch = new BrowserType.LaunchOptions().setHeadless(config.headless());
+        if (config.remoteUrl().isBlank() && "chrome".equalsIgnoreCase(config.browser())) {
+            LocalChromePin.apply(config.browserVersion());
+            launch.setExecutablePath(LocalChromePin.chromeExecutable());
+            var args = config.headless()
+                    ? List.of("--disable-gpu", "--no-sandbox", "--disable-dev-shm-usage",
+                            "--force-device-scale-factor=1")
+                    : List.of("--force-device-scale-factor=1");
+            launch.setArgs(args);
+        }
+
+        browser = playwright.chromium().launch(launch);
+
+        boolean captureHar = config.enableHar() || config.attachHarLogs();
+        Path recordedHar = null;
+        var contextOptions = new Browser.NewContextOptions()
                 .setBaseURL(ConfigReader.resolveBaseUrl())
-                .setViewportSize(width, height));
+                .setViewportSize(width, height)
+                .setDeviceScaleFactor(1);
+        if (captureHar && HarCapture.supportsBrowser(config.browser())) {
+            try {
+                recordedHar = Files.createTempDirectory("pw-har-").resolve("capture.har");
+            } catch (IOException e) {
+                throw new IllegalStateException("Cannot create HAR temp file", e);
+            }
+            HarCapture.enableRecording(contextOptions, recordedHar);
+        }
+        this.harPath = recordedHar;
+        this.attachHar = config.attachHarLogs();
+
+        context = browser.newContext(contextOptions);
         page = context.newPage();
         page.setDefaultTimeout(15_000);
+        ViewportHelper.bind(page);
         app = new App(page);
     }
 
     @Override
     public void close() {
-        playwright.close();
+        try {
+            context.close();
+            if (attachHar && harPath != null) {
+                Attachments.harLogs(harPath);
+            }
+        } finally {
+            ViewportHelper.unbind();
+            playwright.close();
+            if (harPath != null) {
+                try {
+                    var dir = harPath.getParent();
+                    Files.deleteIfExists(harPath);
+                    if (dir != null && dir.getFileName() != null
+                            && dir.getFileName().toString().startsWith("pw-har-")) {
+                        Files.deleteIfExists(dir);
+                    }
+                } catch (IOException ignored) {
+                    // temp HAR is best-effort
+                }
+            }
+        }
     }
 }

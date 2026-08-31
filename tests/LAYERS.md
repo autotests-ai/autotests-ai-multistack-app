@@ -40,7 +40,7 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
 **JS/TS Playwright living:** api inside `tests-javascript-playwright` / `tests-typescript-playwright` is Playwright **APIRequest** (`request` fixture). Axios is the sibling HTTP-only school, not the client in those folders. Java Playwright uses Rest Assured in-cell (JVM HTTP school).
 
-**Java Playwright living block:** `tests-java-gradle-junit5-allure3-playwright` — Playwright for Java + Rest Assured, `layers: [api, ui, e2e]`. Same `data-testid` as the TS Playwright cell. HTTP-only Rest Assured school stays in `tests-java-gradle-junit5-allure3-restassured`.
+**Java Playwright living block:** `tests-java-gradle-junit5-allure3-playwright` — Playwright for Java + Rest Assured, `layers: [api, ui, e2e]`. Same `data-testid` as the TS Playwright cell; screenshot PNG tree matches Selenide (`@Tag("screenshot")` slice). HTTP-only Rest Assured school stays in `tests-java-gradle-junit5-allure3-restassured`.
 
 ## integration vs api — intent, not tag
 
