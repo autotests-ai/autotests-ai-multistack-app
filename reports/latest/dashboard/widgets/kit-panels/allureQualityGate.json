@@ -1,1 +1,70 @@
-{"kind":"allure","testId":"quality-gate","passed":true,"rules":[{"id":"maxFailures","passed":true,"message":"Failed tests 0 within threshold 0","actual":0,"expected":0,"knownExcluded":0}],"title":"Allure Quality Gate","barTitle":"Allure Quality Gate","config":{"rules":[{"id":"failures","maxFailures":0,"fastFail":true},{"id":"reporting","minStepsForLayers":["api","integration","ui","e2e","manual"],"minAttachmentsForLayers":["ui","e2e"]}],"knownIssuesPath":"./known.json","source":{"configFile":"allurerc.mjs","rulesFile":"allure/quality-gate.mjs","knownIssuesFile":"./known.json","hrefBase":"https://github.com/autotests-ai/autotests-ai-multistack-app/blob/main/tests/java/tests-java-gradle-junit5-allure3-selenide/"}},"labels":{"passed":{"ru":"Allure Quality Gate пройден","en":"Allure Quality Gate passed"},"failed":{"ru":"Allure Quality Gate не пройден","en":"Allure Quality Gate failed"}},"lang":"ru"}
+{
+  "kind": "allure",
+  "testId": "quality-gate",
+  "passed": false,
+  "rules": [
+    {
+      "id": "maxFailures",
+      "passed": false,
+      "message": "The number of failed tests 31 exceeds the allowed threshold value 0",
+      "actual": 31,
+      "expected": 0,
+      "knownExcluded": 0
+    },
+    {
+      "id": "maxCiJobFailures",
+      "passed": false,
+      "message": "The number of failed CI jobs 1 exceeds the allowed threshold value 0 (api-tests)",
+      "actual": 1,
+      "expected": 0,
+      "comparator": "GT"
+    }
+  ],
+  "title": "Allure Quality Gate",
+  "barTitle": "Allure Quality Gate",
+  "config": {
+    "rules": [
+      {
+        "id": "failures",
+        "maxFailures": 0,
+        "fastFail": true
+      },
+      {
+        "id": "reporting",
+        "minStepsForLayers": [
+          "api",
+          "integration",
+          "ui",
+          "e2e",
+          "manual"
+        ],
+        "minAttachmentsForLayers": [
+          "ui",
+          "e2e"
+        ]
+      },
+      {
+        "id": "ciJobs",
+        "maxCiJobFailures": 0
+      }
+    ],
+    "knownIssuesPath": "./known.json",
+    "source": {
+      "configFile": "allurerc.mjs",
+      "rulesFile": "allure/quality-gate.mjs",
+      "knownIssuesFile": "./known.json",
+      "hrefBase": "https://github.com/autotests-ai/autotests-ai-multistack-app/blob/main/tests/java/tests-java-gradle-junit5-allure3-selenium/"
+    }
+  },
+  "labels": {
+    "passed": {
+      "ru": "Allure Quality Gate пройден",
+      "en": "Allure Quality Gate passed"
+    },
+    "failed": {
+      "ru": "Allure Quality Gate не пройден",
+      "en": "Allure Quality Gate failed"
+    }
+  },
+  "lang": "ru"
+}

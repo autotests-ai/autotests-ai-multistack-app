@@ -1,1 +1,0 @@
-{"id":"b1a468ae4a608fea8b11aad2848b6649","fullName":"frontend-typescript-react:src/test/pwa/registerServiceWorker.test.ts#registerServiceWorker registers /sw.js immediately via DS primitive in production","name":"registers /sw.js immediately via DS primitive in production","status":"passed","testResultsByEnv":{"default":"1a9320b8bd8922453f06a0f2258bfb22"}}
