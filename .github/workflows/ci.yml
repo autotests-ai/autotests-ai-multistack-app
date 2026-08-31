@@ -121,11 +121,11 @@ env:
   # backend: java/kotlin → module; python/go/javascript/typescript → family.
   # frontend: typescript/javascript → family.
   # tests: java → module; javascript/python/typescript → family.
-  BACKEND_LANG: java
-  BACKEND_FRAMEWORK: spring
+  BACKEND_LANG: python
+  BACKEND_FRAMEWORK: flask
   BACKEND_PORT: "8800"
-  FRONTEND_LANG: typescript
-  FRONTEND_FRAMEWORK: react
+  FRONTEND_LANG: javascript
+  FRONTEND_FRAMEWORK: angular
   TESTS_LANG: java
   TESTS_BUILDER: gradle
   TESTS_FRAMEWORK: junit5
