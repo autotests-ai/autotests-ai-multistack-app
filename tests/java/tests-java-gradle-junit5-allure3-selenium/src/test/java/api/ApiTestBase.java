@@ -8,7 +8,6 @@ import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
-import org.junit.jupiter.api.BeforeAll;
 
 public class ApiTestBase extends AllureMeta {
 
@@ -16,20 +15,24 @@ public class ApiTestBase extends AllureMeta {
 
     /**
      * JSON request spec for POST/PUT bodies: {@code given(jsonSpec)…}.
-     * Built in {@link #setupRestAssured()} with an explicit base URI — a bare
+     * Built at class load with an explicit base URI — a bare
      * {@code RequestSpecBuilder} spec carries its own default ({@code localhost:8080})
      * and would silently override {@code RestAssured.baseURI}.
      */
     protected static RequestSpecification jsonSpec;
 
-    @BeforeAll
-    static void setupRestAssured() {
+    static {
         RestAssured.baseURI = ConfigReader.resolveApiBaseUrl();
         jsonSpec = new RequestSpecBuilder()
                 .setBaseUri(ConfigReader.resolveApiBaseUrl())
                 .setContentType(ContentType.JSON)
                 .build();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
-        AllureRestAssuredFilters.apply(config);
+        // Once, on class init — not @BeforeAll per parallel test class.
+        // Concurrent RestAssured.filters() from many @BeforeAll left a null
+        // Filter and every request died with "Cannot invoke method filter()".
+        if (AllureRestAssuredFilters.isEnabled(config)) {
+            RestAssured.filters(AllureRestAssuredFilters.create(config));
+        }
     }
 }
