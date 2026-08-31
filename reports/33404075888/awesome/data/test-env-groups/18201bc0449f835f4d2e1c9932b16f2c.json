@@ -1,1 +1,0 @@
-{"id":"18201bc0449f835f4d2e1c9932b16f2c","fullName":"frontend-typescript-react:src/test/pwa/pwa-register.test.ts#pwa-register controllerchange reload does not listen for controllerchange when reload is disabled","name":"does not listen for controllerchange when reload is disabled","status":"passed","testResultsByEnv":{"default":"c52446e2396051cffd30f01c796314a3"}}

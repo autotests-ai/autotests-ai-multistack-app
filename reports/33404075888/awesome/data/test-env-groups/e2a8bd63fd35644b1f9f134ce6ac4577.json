@@ -1,1 +1,0 @@
-{"id":"e2a8bd63fd35644b1f9f134ce6ac4577","fullName":"tests.e2e.LoginTests.shouldShowValidationErrorWhenUsernameIsEmpty","name":"Empty username shows validation error","status":"passed","testResultsByEnv":{"default":"c5769f11c4408715ea16d1302f582337"}}
