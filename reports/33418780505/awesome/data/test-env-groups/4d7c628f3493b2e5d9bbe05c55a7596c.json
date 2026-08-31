@@ -1,1 +1,0 @@
-{"id":"4d7c628f3493b2e5d9bbe05c55a7596c","fullName":"frontend-typescript-react:src/test/lib/auth.test.ts#network failures getToken returns null when localStorage is unavailable","name":"getToken returns null when localStorage is unavailable","status":"passed","testResultsByEnv":{"default":"41f5a39d57f7212faaea4676bd4aded9"}}
