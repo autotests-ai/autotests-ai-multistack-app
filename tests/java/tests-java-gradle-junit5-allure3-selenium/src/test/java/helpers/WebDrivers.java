@@ -12,7 +12,6 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import java.net.URI;
 import java.time.Duration;
 import java.util.HashMap;
-import java.util.Optional;
 
 public final class WebDrivers {
 
@@ -65,6 +64,8 @@ public final class WebDrivers {
         if (!remote.isEmpty()) {
             try {
                 return new RemoteWebDriver(URI.create(remote).toURL(), options);
+            } catch (SessionNotCreatedException hubRefusedSession) {
+                throw hubRefusedSession;
             } catch (Exception e) {
                 throw new IllegalStateException("Cannot open remote WebDriver at " + remote, e);
             }
@@ -97,10 +98,9 @@ public final class WebDrivers {
     }
 
     private static String resolveRemoteUrl(TestConfig config) {
-        var fromEnv = Optional.ofNullable(System.getenv("SELENOID_WEBDRIVER_URL")).orElse("").trim();
-        if (!fromEnv.isEmpty()) {
-            return fromEnv;
-        }
+        // Same contract as Selenide: Owner + -DremoteUrl. Do not read
+        // SELENOID_WEBDRIVER_URL here — CI injects it via Gradle for prod/stage
+        // only. Mock/ci keep an empty remoteUrl and use LocalChromePin.
         return config.remoteUrl().trim();
     }
 
