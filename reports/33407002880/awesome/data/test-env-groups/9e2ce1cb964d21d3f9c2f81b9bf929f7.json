@@ -1,1 +1,0 @@
-{"id":"9e2ce1cb964d21d3f9c2f81b9bf929f7","fullName":"tests.e2e.RegisterTests.shouldShowErrorWhenBothAreEmpty","name":"Empty username and password on register show combined validation error","status":"passed","testResultsByEnv":{"default":"6797e19e37240f8dca45839ecf899ddf"}}
