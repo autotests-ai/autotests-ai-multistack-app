@@ -156,6 +156,11 @@ public final class ScreenshotHelper {
         return "chrome";
     }
 
+    /**
+     * Major segment of the screenshot folder ({@code chrome-148/}). Canon PNG
+     * tree is Chrome for Testing; other browsers are sibling folders and need
+     * {@code SCREENSHOT_BROWSER} — this major still comes from the Chrome pin.
+     */
     static String screenshotBrowserMajor() {
         return LocalChromePin.pinnedVersion().split("\\.")[0];
     }

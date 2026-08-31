@@ -121,11 +121,11 @@ env:
   # backend: java/kotlin → module; python/go/javascript/typescript → family.
   # frontend: typescript/javascript → family.
   # tests: java → module; javascript/python/typescript → family.
-  BACKEND_LANG: java
-  BACKEND_FRAMEWORK: spring
+  BACKEND_LANG: python
+  BACKEND_FRAMEWORK: flask
   BACKEND_PORT: "8800"
-  FRONTEND_LANG: typescript
-  FRONTEND_FRAMEWORK: react
+  FRONTEND_LANG: javascript
+  FRONTEND_FRAMEWORK: angular
   TESTS_LANG: java
   TESTS_BUILDER: gradle
   TESTS_FRAMEWORK: junit5
@@ -380,8 +380,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
-      # vars override. Job-level env cannot nest env.* (GHA parse); default = teaching knobs.
-      SONAR_PROJECT_KEY: ${{ vars.SONAR_BACKEND_PROJECT_KEY || 'autotests-ai-multistack-app-backend-java-spring' }}
+      # Do not set SONAR_PROJECT_KEY here: job env cannot nest env.*, and
+      # vars.SONAR_*_PROJECT_KEY pin the teaching cell (breaks stack probes).
+      # The module action uses APP_SLUG + basename(module_dir).
       CHECKOUT_FETCH_DEPTH: "0"
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
@@ -410,8 +411,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
-      # Job-level `env:` cannot read the env context. Keep in sync with TESTS_LANG + TESTS_UI_LIBRARY.
-      SONAR_PROJECT_KEY: autotests-ai-multistack-app-tests-java-gradle-junit5-allure3-selenide
+      # Key = APP_SLUG + tests cell folder (action fallback). Do not hardcode selenide.
       CHECKOUT_FETCH_DEPTH: "0"
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
@@ -438,7 +438,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
-      SONAR_PROJECT_KEY: ${{ vars.SONAR_FRONTEND_PROJECT_KEY || 'autotests-ai-multistack-app-frontend-typescript-react' }}
+      # Key = APP_SLUG + frontend cell folder. vars.SONAR_FRONTEND_PROJECT_KEY
+      # pins typescript-react and fails quality gate on any other cell.
       CHECKOUT_FETCH_DEPTH: "0"
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       RUN_SONAR: ${{ secrets.SONAR_TOKEN != '' }}

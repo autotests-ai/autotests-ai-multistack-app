@@ -82,7 +82,7 @@ Self-check of the **tests module helpers** before / alongside product layers —
 |-------|------|----|-------|
 | all | `infra` | `infra-tests` | PR · frontend · tests · mixed/`all`; feeds `sonar-tests` |
 | backend-only | `infra-backend` | same job | backend lane — `ConfigReader` only; **skips** `sonar-tests` |
-| frontend helpers | `infra` + `infra-frontend` | inside the all slice | CSS/HAR/`LocalChromePin` — frontend lane runs the **full** infra because UI tests read `ConfigReader` |
+| frontend helpers | `infra` + `infra-frontend` | inside the all slice | CSS/HAR/local browser pin (`LocalChromePin` = local Chrome for Testing; other browsers skip it) — frontend lane runs the **full** infra because UI tests read `ConfigReader` |
 
 ```bash
 ./gradlew test -Denv=ci -DincludeTags=infra-backend   # + JaCoCo on ConfigReader
@@ -297,8 +297,9 @@ to `integration` and do not move deploy HTTP checks into `backend-unit-tests` or
 
 The 100% line-coverage gate (`jacocoTestCoverageVerification`) is java-only and slices by
 `-DincludeTags` (`infra-backend` → `ConfigReader`; `infra-frontend` → `LayoutCss`/`TokensCss`;
-`infra` → all three). `LocalChromePin` is tagged `infra-frontend` (skipped on backend-only CI)
-and is **not** in the JaCoCo class set. It reads `build/jacoco/test.exec`.
+`infra` → all three). `LocalChromePin` (local Chrome for Testing; other browsers skip it) is
+tagged `infra-frontend` (skipped on backend-only CI) and is **not** in the JaCoCo class set.
+It reads `build/jacoco/test.exec`.
 
 ## Why `component` vs `ui` vs `e2e` (not vs integration)?
 
