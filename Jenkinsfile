@@ -19,7 +19,7 @@ pipeline {
       choices: ['selenide', 'selenium', 'playwright'],
       description: 'Java UI cell (one per run, same as GHA tests_ui_library)'
     )
-    booleanParam(name: 'RUN_MOCK', defaultValue: true, description: 'ui-tests: compose mock + ui + screenshot')
+    booleanParam(name: 'RUN_MOCK', defaultValue: false, description: 'ui-tests: compose mock + ui + screenshot (needs Docker; java-jdk21 has no docker.sock)')
     booleanParam(name: 'RUN_API', defaultValue: true, description: 'api-tests-stage and api-tests (prod)')
     booleanParam(name: 'RUN_E2E', defaultValue: true, description: 'e2e flows (exclude screenshot tag)')
     booleanParam(name: 'RUN_SCREENSHOTS', defaultValue: true, description: 'screenshot slice on mock / stage / prod')
