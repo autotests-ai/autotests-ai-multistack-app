@@ -26,6 +26,7 @@ name: CI
 #   publish-allure-report ← layer jobs + sonar-backend → deploy-github-pages
 #
 # Screenshot: ui-tests (PR) · e2e-tests-stage · e2e-tests (prod compare always on).
+# Dispatch `tests_ui_library` selects the Java UI cell (selenide|selenium|playwright).
 # RAG: ci-workflow-app-orchestrator / ci-workflow-ethalon.
 
 on:
@@ -77,6 +78,11 @@ on:
         description: "e2e-tests: add -DexcludeTags independently of include_tags"
         type: string
         default: ""
+      tests_ui_library:
+        description: "Java UI cell: tests-java-gradle-junit5-allure3-{this}. One cell per run (not a matrix). PR/push ignore this and stay on the env default."
+        type: choice
+        options: [selenide, selenium, playwright]
+        default: selenide
       update_mock_screenshots:
         description: "ui-tests: rewrite mock screenshot PNGs (skips compare)"
         type: boolean
@@ -130,7 +136,10 @@ env:
   TESTS_BUILDER: gradle
   TESTS_FRAMEWORK: junit5
   TESTS_REPORT: allure3
-  TESTS_UI_LIBRARY: selenide
+  # Teaching default selenide. Dispatch `tests_ui_library` overrides without a knob commit.
+  # Do not GHA-matrix sibling test modules (same rule as frontends). Probe branches
+  # still flip the literal when the standing cell itself must change.
+  TESTS_UI_LIBRARY: ${{ github.event_name == 'workflow_dispatch' && inputs.tests_ui_library || 'selenide' }}
   APP_SLUG: autotests-ai-multistack-app
   JAVA_VERSION: "21"
   NODE_VERSION: "26"

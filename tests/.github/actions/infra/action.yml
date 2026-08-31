@@ -23,6 +23,7 @@ runs:
       uses: ./.github/actions/resolve-module-dir
       with:
         module_dir: ${{ inputs.module_dir }}
+    # Java adapter lives in the canon selenide module; module_dir is the active cell.
     - if: env.TESTS_LANG == 'java'
       id: module
       uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/infra

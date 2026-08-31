@@ -16,12 +16,13 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @Layer("e2e")
 @Epic("Authentication")
 @Feature("Session")
-@Severity(SeverityLevel.NORMAL)
+@Severity(SeverityLevel.CRITICAL)
 @DisplayName("Session")
 class SessionTests extends TestBase {
 
     @Test
     @Tag("e2e")
+    @Tag("negative")
     @DisplayName("Invalid token clears session and hides welcome")
     void invalidTokenClearsSession() {
         app.home.openWithInvalidToken();
@@ -31,9 +32,10 @@ class SessionTests extends TestBase {
 
     @Test
     @Tag("e2e")
+    @Tag("positive")
     @DisplayName("Session survives a page reload (token in localStorage)")
     void sessionSurvivesReload() {
-        app.login.open().login("user1", "password1");
+        app.home.openWithLocalStorageAuthentication("user1", "password1");
         assertThat(app.home.welcomeMessage).containsText("Welcome, user1!");
         app.home.reload();
         assertThat(app.home.welcomeMessage).containsText("Welcome, user1!");

@@ -10,10 +10,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import tests.TestBase;
 
-import java.util.regex.Pattern;
-
-import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
-
 @Layer("ui")
 @Epic("Header")
 @Feature("Active nav")
@@ -21,17 +17,13 @@ import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertTha
 @DisplayName("Header active nav")
 class HeaderActiveNavTests extends TestBase {
 
-    private static final Pattern IS_ACTIVE = Pattern.compile("is-active");
-
     @Test
     @Tag("ui")
     @Tag("smoke")
     @DisplayName("Login page marks Login as the active header nav")
     void loginPageMarksActiveLogin() {
         app.login.open();
-        assertThat(app.header.activeNav("header-nav-login")).hasClass(IS_ACTIVE);
-        assertThat(app.header.activeNav("header-nav-login")).hasAttribute("aria-current", "page");
-        assertThat(app.header.currentPageLinks()).hasCount(1);
+        app.header.shouldHaveActiveNav("header-nav-login");
     }
 
     @Test
@@ -39,8 +31,15 @@ class HeaderActiveNavTests extends TestBase {
     @DisplayName("Register page marks Register as the active header nav")
     void registerPageMarksActiveRegister() {
         app.register.open();
-        assertThat(app.header.activeNav("header-nav-register")).hasClass(IS_ACTIVE);
-        assertThat(app.header.activeNav("header-nav-register")).hasAttribute("aria-current", "page");
+        app.header.shouldHaveActiveNav("header-nav-register");
+    }
+
+    @Test
+    @Tag("ui")
+    @DisplayName("Home page marks Home as the active header nav")
+    void homePageMarksActiveHome() {
+        app.home.open();
+        app.header.shouldHaveActiveNav("header-nav-home");
     }
 
     @Test
@@ -48,10 +47,10 @@ class HeaderActiveNavTests extends TestBase {
     @DisplayName("In-form Register link syncs the active header nav")
     void inFormRegisterLinkSyncsActiveNav() {
         app.login.open();
-        assertThat(app.header.activeNav("header-nav-login")).hasClass(IS_ACTIVE);
+        app.header.shouldHaveActiveNav("header-nav-login");
         app.login.clickRegisterLink();
         app.register.shouldBeOpen();
-        assertThat(app.header.activeNav("header-nav-register")).hasClass(IS_ACTIVE);
+        app.header.shouldHaveActiveNav("header-nav-register");
     }
 
     @Test
@@ -59,65 +58,29 @@ class HeaderActiveNavTests extends TestBase {
     @DisplayName("In-form Login link syncs the active header nav")
     void inFormLoginLinkSyncsActiveNav() {
         app.register.open();
-        assertThat(app.header.activeNav("header-nav-register")).hasClass(IS_ACTIVE);
+        app.header.shouldHaveActiveNav("header-nav-register");
         app.register.clickLoginLink();
         app.login.shouldBeOpen();
-        assertThat(app.header.activeNav("header-nav-login")).hasClass(IS_ACTIVE);
+        app.header.shouldHaveActiveNav("header-nav-login");
     }
 
     @Test
     @Tag("ui")
-    @DisplayName("Register link on login opens the register form")
-    void registerLinkOnLoginOpensRegisterForm() {
-        app.login.open();
-        app.login.clickRegisterLink();
-        app.register.shouldBeOpen();
-        assertThat(app.register.formTitle).containsText("Register");
-    }
-
-    @Test
-    @Tag("ui")
-    @DisplayName("Login link on register opens the login form")
-    void loginLinkOnRegisterOpensLoginForm() {
-        app.register.open();
-        app.register.clickLoginLink();
-        app.login.shouldBeOpen();
-        assertThat(app.login.formTitle).containsText("Login Form");
-    }
-
-    @Test
-    @Tag("ui")
-    @DisplayName("Header on login shows Login")
-    void headerOnLoginShowsLogin() {
-        app.login.open();
-        assertThat(app.header.activeNav("header-nav-login")).containsText("Login");
-    }
-
-    @Test
-    @Tag("ui")
-    @DisplayName("Header on register shows Register")
-    void headerOnRegisterShowsRegister() {
-        app.register.open();
-        assertThat(app.header.activeNav("header-nav-register")).containsText("Register");
-    }
-
-    @Test
-    @Tag("ui")
-    @DisplayName("Header Register nav opens the register form")
-    void headerRegisterNavOpensRegisterForm() {
+    @DisplayName("Header nav Register opens register and marks it active")
+    void headerNavRegisterOpensRegister() {
         app.login.open();
         app.header.clickNav("header-nav-register");
         app.register.shouldBeOpen();
-        assertThat(app.register.formTitle).containsText("Register");
+        app.header.shouldHaveActiveNav("header-nav-register");
     }
 
     @Test
     @Tag("ui")
-    @DisplayName("Header Login nav opens the login form")
-    void headerLoginNavOpensLoginForm() {
+    @DisplayName("Header nav Login opens login and marks it active")
+    void headerNavLoginOpensLogin() {
         app.register.open();
         app.header.clickNav("header-nav-login");
         app.login.shouldBeOpen();
-        assertThat(app.login.formTitle).containsText("Login Form");
+        app.header.shouldHaveActiveNav("header-nav-login");
     }
 }

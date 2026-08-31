@@ -12,8 +12,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import tests.TestBase;
 
-import java.util.regex.Pattern;
-
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 
 @Layer("ui")
@@ -22,8 +20,6 @@ import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertTha
 @Severity(SeverityLevel.NORMAL)
 @DisplayName("Burger menu")
 class BurgerMenuTests extends TestBase {
-
-    private static final Pattern IS_ACTIVE = Pattern.compile("is-active");
 
     @BeforeEach
     void setMobileViewport() {
@@ -41,8 +37,7 @@ class BurgerMenuTests extends TestBase {
     void menuNavMarksActiveLogin() {
         app.login.open();
         app.header.openMenu();
-        assertThat(app.header.menuNav("header-menu-nav-login")).hasClass(IS_ACTIVE);
-        assertThat(app.header.menuNav("header-menu-nav-login")).hasAttribute("aria-current", "page");
+        app.header.shouldHaveActiveMenuNav("header-menu-nav-login");
     }
 
     @Test
@@ -51,7 +46,7 @@ class BurgerMenuTests extends TestBase {
     void clickingRegisterOpensRegisterAndClosesMenu() {
         app.login.open();
         app.header.openMenu();
-        assertThat(app.header.menuNav("header-menu-nav-login")).hasClass(IS_ACTIVE);
+        app.header.shouldHaveActiveMenuNav("header-menu-nav-login");
         app.header.clickMenuNav("header-menu-nav-register");
         app.register.shouldBeOpen();
         app.header.shouldHaveClosedMenu();

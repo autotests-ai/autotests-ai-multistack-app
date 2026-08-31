@@ -4,6 +4,9 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import io.qameta.allure.Step;
 
+import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import static api.AuthApiClient.login;
+
 public class HomePage {
 
     private final Page page;
@@ -80,6 +83,11 @@ public class HomePage {
         return this;
     }
 
+    @Step("Open home page with local storage authentication")
+    public HomePage openWithLocalStorageAuthentication(String username, String password) {
+        return openWithLocalStorageAuth(login(username, password));
+    }
+
     @Step("Seed localStorage auth token")
     public HomePage openWithLocalStorageAuth(String token) {
         page.navigate("login");
@@ -88,6 +96,15 @@ public class HomePage {
                 "arg => localStorage.setItem(arg.key, arg.token)",
                 java.util.Map.of("key", key, "token", token));
         return open();
+    }
+
+    @Step("Verify session panel offers logout and delete account")
+    public HomePage shouldShowSessionActions() {
+        assertThat(logoutButton).isVisible();
+        assertThat(logoutButton).containsText("Logout");
+        assertThat(deleteAccountButton).isVisible();
+        assertThat(deleteAccountButton).containsText("Delete account");
+        return this;
     }
 
     @Step("Open home with a garbage auth token")

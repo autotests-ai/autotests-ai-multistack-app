@@ -30,21 +30,32 @@ runs:
         cache-encryption-key: ${{ env.GRADLE_ENCRYPTION_KEY }}
       env:
         GRADLE_BUILD_ACTION_CACHE_KEY_JOB: infra-tests
+    - name: Cache Chrome for Testing
+      if: env.TESTS_UI_LIBRARY == 'playwright'
+      continue-on-error: true
+      uses: actions/cache@v6
+      with:
+        path: ${{ runner.tool_cache }}/setup-chrome
+        key: chrome-for-testing-${{ runner.os }}-${{ runner.arch }}-${{ env.CHROME_FOR_TESTING_VERSION }}
+    - name: Install pinned Chrome for Testing
+      if: env.TESTS_UI_LIBRARY == 'playwright'
+      id: setup-chrome
+      uses: browser-actions/setup-chrome@v2.1.2
+      with:
+        chrome-version: ${{ env.CHROME_FOR_TESTING_VERSION }}
+        install-chromedriver: true
     - name: Run manual tests (Gradle)
       shell: bash
       working-directory: ${{ inputs.module_dir }}
       env:
         ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/build/allure-results
         RUN_ENV: ${{ inputs.stand }}
+        CHROME_BINARY_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+        CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
       run: |
         set -euo pipefail
-        if [ -z "${SELENOID_WEBDRIVER_URL:-}" ] && [ -n "${SELENOID_REMOTE_URL:-}" ]; then
-          SELENOID_WEBDRIVER_URL="${SELENOID_REMOTE_URL}"
-        fi
         ARGS=(-Denv="$RUN_ENV" -DincludeTags=manual)
-        if [ -n "${SELENOID_WEBDRIVER_URL:-}" ]; then
-          ARGS+=(-DremoteUrl="${SELENOID_WEBDRIVER_URL}")
-        fi
+        source "${GITHUB_WORKSPACE}/tests/.github/actions/append-java-remote-url.sh"
         source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
         run_with_allurectl ./gradlew test "${ARGS[@]}"
     - name: Publish raw Allure results

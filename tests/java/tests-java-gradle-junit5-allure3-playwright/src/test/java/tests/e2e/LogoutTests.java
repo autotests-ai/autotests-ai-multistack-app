@@ -21,10 +21,22 @@ class LogoutTests extends TestBase {
 
     @Test
     @Tag("e2e")
-    @Tag("smoke")
-    @DisplayName("User can log out after login")
-    void shouldLogoutAfterLogin() {
+    @Tag("positive")
+    @DisplayName("User can logout after form login")
+    void shouldLogoutAfterFormLogin() {
         app.login.open().login("user1", "password1");
+        assertThat(app.home.welcomeMessage).containsText("Welcome, user1!");
+        app.home.logout();
+        assertThat(app.login.formTitle).containsText("Login Form");
+    }
+
+    @Test
+    @Tag("e2e")
+    @Tag("positive")
+    @DisplayName("User can logout after localStorage authentication")
+    void shouldLogoutAfterLocalStorageAuthentication() {
+        app.home.openWithLocalStorageAuthentication("user1", "password1")
+                .shouldShowSessionActions();
         assertThat(app.home.welcomeMessage).containsText("Welcome, user1!");
         app.home.logout();
         assertThat(app.login.formTitle).containsText("Login Form");

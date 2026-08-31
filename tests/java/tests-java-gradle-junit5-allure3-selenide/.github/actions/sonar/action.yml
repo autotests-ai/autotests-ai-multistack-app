@@ -16,7 +16,7 @@ runs:
     - uses: actions/cache@v6
       with:
         path: ${{ inputs.module_dir }}/.gradle/configuration-cache
-        key: gradle-cc-tests-sonar-${{ hashFiles('tests/java/tests-java-gradle-junit5-allure3-selenide/*.gradle*', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle/wrapper/gradle-wrapper.properties', 'tests/java/tests-java-gradle-junit5-allure3-selenide/gradle.properties') }}-${{ github.sha }}
+        key: gradle-cc-tests-sonar-${{ hashFiles(format('{0}/*.gradle*', inputs.module_dir), format('{0}/gradle/wrapper/gradle-wrapper.properties', inputs.module_dir), format('{0}/gradle.properties', inputs.module_dir)) }}-${{ github.sha }}
         restore-keys: |
           gradle-cc-tests-sonar-
     - uses: ./.github/actions/download-artifact

@@ -6,7 +6,13 @@ import com.microsoft.playwright.options.WaitForSelectorState;
 import helpers.ViewportHelper;
 import io.qameta.allure.Step;
 
+import java.util.regex.Pattern;
+
+import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+
 public class HeaderPage {
+
+    private static final Pattern IS_ACTIVE = Pattern.compile("is-active");
 
     private final Page page;
     public final Locator root;
@@ -39,6 +45,25 @@ public class HeaderPage {
 
     public Locator menuNav(String testid) {
         return page.getByTestId(testid);
+    }
+
+    @Step("Desktop nav '{navTestid}' is the active item")
+    public HeaderPage shouldHaveActiveNav(String navTestid) {
+        var item = activeNav(navTestid);
+        assertThat(item).isVisible();
+        assertThat(item).hasClass(IS_ACTIVE);
+        assertThat(item).hasAttribute("aria-current", "page");
+        assertThat(currentPageLinks()).hasCount(1);
+        return this;
+    }
+
+    @Step("Menu nav '{menuNavTestid}' is the active item")
+    public HeaderPage shouldHaveActiveMenuNav(String menuNavTestid) {
+        var item = menuNav(menuNavTestid);
+        assertThat(item).isVisible();
+        assertThat(item).hasClass(IS_ACTIVE);
+        assertThat(item).hasAttribute("aria-current", "page");
+        return this;
     }
 
     @Step("Click header nav {testid}")
