@@ -2,9 +2,12 @@
 // Dispatch equivalent: deploy=tests + run_mock + run_api + run_e2e (screenshots on).
 // Layers: tests/jenkins/gha-tests-path.sh ← selenide .github/actions/{mock,api,e2e}.
 // GHA stays canon for push/PR/CD. Selenoid: credentialsId selenoid-guest-remote-url.
+// Playwright: label java-jdk21-ubuntu (noble) so CFT screenshots match GHA ubuntu-24.04.
 
 pipeline {
-  agent { label 'java-jdk21' }
+  agent {
+    label "${(params.TESTS_UI_LIBRARY ?: 'selenide') == 'playwright' ? 'java-jdk21-ubuntu' : 'java-jdk21'}"
+  }
 
   options {
     disableConcurrentBuilds(abortPrevious: false)
