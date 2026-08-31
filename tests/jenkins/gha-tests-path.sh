@@ -139,7 +139,7 @@ ensure_linux_chrome_runtime() {
     libglib2.0-0t64 \
     libnspr4 \
     libnss3 \
-    libpango-1.0-0t64 \
+    libpango-1.0-0 \
     libx11-6 \
     libx11-xcb1 \
     libxcb1 \
