@@ -1,0 +1,1 @@
+{"id":"d8b1d5ae38dbc15d374e9465d9fe25a8","fullName":"tests.e2e.LoginTests.shouldShowValidationErrorWhenBothAreEmpty","name":"Empty username and password show combined validation error","status":"passed","testResultsByEnv":{"default":"a3aa77922ea72793d7e8632ed9804922"}}

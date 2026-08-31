@@ -1,1 +1,0 @@
-{"id":"557eacc31fb2b1b91aef0e23c418a677","fullName":"frontend-typescript-react:src/test/lib/auth.test.ts#network failures login treats a failed JSON body as an empty object","name":"login treats a failed JSON body as an empty object","status":"passed","testResultsByEnv":{"default":"bf02ca6360756ddb52d6ba907d185f3f"}}

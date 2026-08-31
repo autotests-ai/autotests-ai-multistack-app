@@ -1,1 +1,0 @@
-{"id":"2fd9383e2c2ef0e6037f709df22e0325","fullName":"tests.api.AuthApiTests.loginRejectsEmptyPassword","name":"POST /api/auth/login rejects an empty password with 400","status":"passed","testResultsByEnv":{"default":"527de723bdc3b5d2b2f6d2e488a93268"}}
