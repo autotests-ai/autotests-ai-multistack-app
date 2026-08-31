@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import tests.TestBase;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 @Layer("e2e")
 @Epic("Authentication")
@@ -25,9 +24,9 @@ class SessionTests extends TestBase {
     @Tag("negative")
     @DisplayName("Invalid token clears session and hides welcome")
     void invalidTokenClearsSession() {
-        app.home.openWithInvalidToken();
-        assertThat(app.home.welcomePanel).hasAttribute("hidden", "");
-        assertNull(app.home.authToken());
+        app.home.openWithInvalidToken()
+                .shouldHideWelcomePanel()
+                .shouldClearAuthToken();
     }
 
     @Test

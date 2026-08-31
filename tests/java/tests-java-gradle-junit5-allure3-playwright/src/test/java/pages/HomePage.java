@@ -93,11 +93,30 @@ public class HomePage {
     @Step("Seed localStorage auth token")
     public HomePage openWithLocalStorageAuth(String token) {
         page.navigate("login");
+        page.getByTestId("login-form").waitFor();
         var key = authTokenKey();
         page.evaluate(
                 "arg => localStorage.setItem(arg.key, arg.token)",
                 java.util.Map.of("key", key, "token", token));
         return open();
+    }
+
+    @Step("Verify welcome panel stays hidden")
+    public HomePage shouldHideWelcomePanel() {
+        assertThat(welcomePanel).hasAttribute("hidden", "");
+        return this;
+    }
+
+    @Step("Verify auth token was cleared from localStorage")
+    public HomePage shouldClearAuthToken() {
+        page.waitForFunction("""
+                () => {
+                  const m = location.pathname.match(/\\/(backend-[^/]+)\\//);
+                  const key = m ? `authToken:${m[1]}` : 'authToken';
+                  return localStorage.getItem(key) === null;
+                }
+                """);
+        return this;
     }
 
     @Step("Verify session panel offers logout and delete account")
