@@ -1,0 +1,1 @@
+{"id":"d612ba5c544493982c1fc8736e0164e4","fullName":"tests.e2e.DeleteAccountTests.confirmingDeleteClearsSessionAndNavigatesToLogin","name":"Confirming delete account clears the session and navigates to login","status":"passed","testResultsByEnv":{"default":"9435b942984c1e7a61a0790b09dd1066"}}

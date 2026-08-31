@@ -1,1 +1,0 @@
-{"id":"6f1b5eb818ff7a379dbfc0884f303e14","fullName":"dev.multistack.app.config.CorsConfigTest.apiCorsAllowsOriginPatterns","name":"applies the configured origin patterns on /api/**","status":"passed","testResultsByEnv":{"default":"022fec0d3488966c5ba1aa21b15c12b8"}}
