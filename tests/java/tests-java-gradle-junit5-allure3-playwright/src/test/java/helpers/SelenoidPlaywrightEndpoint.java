@@ -1,7 +1,11 @@
 package helpers;
 
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 /**
  * Selenoid Playwright is a WebSocket ({@code wss://…/playwright/playwright-chromium/…}),
@@ -75,18 +79,20 @@ public final class SelenoidPlaywrightEndpoint {
         }
     }
 
-    /**
-     * Playwright's WS client drops raw {@code \{} {@code \}} in the query.
-     * Percent-encode so nginx still sees the same accessKey.
-     */
-    public static String forConnect(String ws) {
-        var u = ws.trim();
-        var q = u.indexOf('?');
-        if (q < 0) {
-            return u;
-        }
-        return u.substring(0, q + 1) + u.substring(q + 1)
-                .replace("{", "%7B")
-                .replace("}", "%7D");
+    public static String withSessionQuery(String ws, boolean enableVnc, boolean enableVideo) {
+        var base = ws.trim();
+        var extra = new LinkedHashMap<String, String>();
+        extra.put("name", "autotests-ai-multistack-java-pw");
+        extra.put("sessionTimeout", "5m");
+        extra.put("enableVNC", enableVnc ? "true" : "false");
+        extra.put("enableVideo", enableVideo ? "true" : "false");
+        var encoded = extra.entrySet().stream()
+                .map(e -> enc(e.getKey()) + "=" + enc(e.getValue()))
+                .collect(Collectors.joining("&"));
+        return base.contains("?") ? base + "&" + encoded : base + "?" + encoded;
+    }
+
+    private static String enc(String s) {
+        return URLEncoder.encode(s, StandardCharsets.UTF_8);
     }
 }

@@ -58,15 +58,14 @@ class SelenoidPlaywrightEndpointTest extends AllureMeta {
     }
 
     @Test
-    @DisplayName("forConnect percent-encodes braces in the query only")
-    void forConnectEncodesQueryBraces() {
-        var ws = "wss://selenoid.example/playwright/playwright-chromium/1.61.1?accessKey=x}";
-        assertEquals(
-                "wss://selenoid.example/playwright/playwright-chromium/1.61.1?accessKey=x%7D",
-                SelenoidPlaywrightEndpoint.forConnect(ws));
-        assertEquals(
-                "wss://selenoid.example/playwright/playwright-chromium/1.61.1",
-                SelenoidPlaywrightEndpoint.forConnect(
-                        "wss://selenoid.example/playwright/playwright-chromium/1.61.1"));
+    @DisplayName("session query is appended without dropping existing params")
+    void appendsSessionQuery() {
+        var ws = "wss://selenoid.example/playwright/playwright-chromium/1.61.1?accessKey=x";
+        var out = SelenoidPlaywrightEndpoint.withSessionQuery(ws, false, false);
+        assertTrue(out.startsWith(ws + "&"));
+        assertTrue(out.contains("name=autotests-ai-multistack-java-pw"));
+        assertTrue(out.contains("sessionTimeout=5m"));
+        assertTrue(out.contains("enableVNC=false"));
+        assertTrue(out.contains("enableVideo=false"));
     }
 }
