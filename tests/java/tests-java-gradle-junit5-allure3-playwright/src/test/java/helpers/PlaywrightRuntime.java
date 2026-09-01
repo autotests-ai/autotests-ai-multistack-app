@@ -44,7 +44,8 @@ public final class PlaywrightRuntime implements AutoCloseable {
 
         if (SelenoidPlaywrightEndpoint.isWebSocket(remote)) {
             browser = playwright.chromium().connect(
-                    remote, new BrowserType.ConnectOptions().setTimeout(120_000));
+                    SelenoidPlaywrightEndpoint.forConnect(remote),
+                    new BrowserType.ConnectOptions().setTimeout(120_000));
         } else {
             var launch = new BrowserType.LaunchOptions().setHeadless(config.headless());
             if (remote.isEmpty() && "chrome".equalsIgnoreCase(config.browser())) {
