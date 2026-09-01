@@ -19,3 +19,7 @@ SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=mock -DincludeTags=screenshot
 Stand: `-Denv=ci` → gateway [http://localhost:9821/](http://localhost:9821/), API [http://localhost:8800/](http://localhost:8800/). Mock UI: `-Denv=mock` → [http://localhost:9911/](http://localhost:9911/).
 
 Screenshot PNG path: `screenshots/{mock|stage|prod}/{linux|macos|windows}/{chrome-148}/{area}/{viewport}.png`. Do **not** set `SCREENSHOT_OS=linux` on a Mac.
+
+## Remote (Selenoid Playwright)
+
+Same hub as the JS Playwright cell. Live jobs set `SELENOID_PLAYWRIGHT_URL` (`wss://…/playwright/playwright-chromium/…`). Empty → local Chrome for Testing. Do not pass WebDriver `/wd/hub` as `remoteUrl`.

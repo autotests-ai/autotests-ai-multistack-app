@@ -41,7 +41,7 @@ runs:
       env:
         GRADLE_BUILD_ACTION_CACHE_KEY_JOB: infra-tests
     - name: Cache Chrome for Testing
-      if: env.TESTS_UI_LIBRARY == 'playwright'
+      if: env.TESTS_UI_LIBRARY == 'playwright' && env.SELENOID_PLAYWRIGHT_URL == ''
       id: cache-chrome-for-testing
       continue-on-error: true
       uses: actions/cache@v6
@@ -49,7 +49,7 @@ runs:
         path: ${{ runner.tool_cache }}/setup-chrome
         key: chrome-for-testing-${{ runner.os }}-${{ runner.arch }}-${{ env.CHROME_FOR_TESTING_VERSION }}
     - name: Install pinned Chrome for Testing
-      if: env.TESTS_UI_LIBRARY == 'playwright'
+      if: env.TESTS_UI_LIBRARY == 'playwright' && env.SELENOID_PLAYWRIGHT_URL == ''
       id: setup-chrome
       uses: browser-actions/setup-chrome@v2.1.2
       with:

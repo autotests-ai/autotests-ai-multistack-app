@@ -30,19 +30,33 @@ public final class PlaywrightRuntime implements AutoCloseable {
         var parts = config.browserSize().split("x");
         int width = Integer.parseInt(parts[0].trim());
         int height = Integer.parseInt(parts[1].trim());
+        var remote = config.remoteUrl() == null ? "" : config.remoteUrl().trim();
 
-        var launch = new BrowserType.LaunchOptions().setHeadless(config.headless());
-        if (config.remoteUrl().isBlank() && "chrome".equalsIgnoreCase(config.browser())) {
-            LocalChromePin.apply(config.browserVersion());
-            launch.setExecutablePath(LocalChromePin.chromeExecutable());
-            var args = config.headless()
-                    ? List.of("--disable-gpu", "--no-sandbox", "--disable-dev-shm-usage",
-                            "--force-device-scale-factor=1")
-                    : List.of("--force-device-scale-factor=1");
-            launch.setArgs(args);
+        if (SelenoidPlaywrightEndpoint.isHttpUrl(remote)) {
+            throw new IllegalStateException(
+                    "Playwright Java cannot use Selenoid WebDriver "
+                            + SelenoidPlaywrightEndpoint.describe(remote)
+                            + ". Set SELENOID_PLAYWRIGHT_URL (wss://…/playwright/playwright-chromium/…).");
         }
 
-        browser = playwright.chromium().launch(launch);
+        if (SelenoidPlaywrightEndpoint.isWebSocket(remote)) {
+            var endpoint = SelenoidPlaywrightEndpoint.withSessionQuery(
+                    remote, config.enableVnc(), config.enableVideo() || config.attachVideo());
+            browser = playwright.chromium().connect(
+                    endpoint, new BrowserType.ConnectOptions().setTimeout(120_000));
+        } else {
+            var launch = new BrowserType.LaunchOptions().setHeadless(config.headless());
+            if (remote.isEmpty() && "chrome".equalsIgnoreCase(config.browser())) {
+                LocalChromePin.apply(config.browserVersion());
+                launch.setExecutablePath(LocalChromePin.chromeExecutable());
+                var args = config.headless()
+                        ? List.of("--disable-gpu", "--no-sandbox", "--disable-dev-shm-usage",
+                                "--force-device-scale-factor=1")
+                        : List.of("--force-device-scale-factor=1");
+                launch.setArgs(args);
+            }
+            browser = playwright.chromium().launch(launch);
+        }
 
         boolean captureHar = config.enableHar() || config.attachHarLogs();
         Path recordedHar = null;
@@ -77,6 +91,11 @@ public final class PlaywrightRuntime implements AutoCloseable {
             }
         } finally {
             ViewportHelper.unbind();
+            try {
+                browser.close();
+            } catch (RuntimeException ignored) {
+                // disconnect after context.close is best-effort
+            }
             playwright.close();
             if (harPath != null) {
                 try {

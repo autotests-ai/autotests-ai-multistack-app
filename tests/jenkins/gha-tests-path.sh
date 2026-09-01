@@ -2,7 +2,7 @@
 # GHA tests-lane Gradle path (one checkout, sequential layers).
 # Canon: tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/{mock,api,e2e}
 # Do not pass -DremoteUrl on mock (local CFT). E2E: append-java-remote-url.sh
-# (Selenoid for selenide/selenium, empty remoteUrl for playwright).
+# (Selenoid WebDriver for selenide/selenium, Selenoid Playwright WS for playwright).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -97,7 +97,7 @@ need_cft() {
   if is_true "${RUN_MOCK:-false}" && command -v docker >/dev/null; then
     return 0
   fi
-  if [ "$TESTS_UI_LIBRARY" = playwright ] && {
+  if [ "$TESTS_UI_LIBRARY" = playwright ] && [ -z "${SELENOID_PLAYWRIGHT_URL:-}" ] && {
     is_true "${RUN_E2E:-false}" || is_true "${RUN_SCREENSHOTS:-false}"
   }; then
     return 0
@@ -237,7 +237,7 @@ cmd_e2e() {
   echo "==> UI ${url}"
   curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "$url"
 
-  # GHA e2e: source append-java-remote-url.sh (playwright → empty; others → Selenoid).
+  # GHA e2e: source append-java-remote-url.sh (Playwright WS / WebDriver hub).
   run_e2e_gradle() {
     local label="$1"
     shift

@@ -1,13 +1,12 @@
 // GHA tests-lane twin (not the full CI graph: no Sonar, Pages, unit, CD).
 // Dispatch equivalent: deploy=tests + run_mock + run_api + run_e2e (screenshots on).
 // Layers: tests/jenkins/gha-tests-path.sh ← selenide .github/actions/{mock,api,e2e}.
-// GHA stays canon for push/PR/CD. Selenoid: credentialsId selenoid-guest-remote-url.
-// Playwright: label java-jdk21-ubuntu (noble) so CFT screenshots match GHA ubuntu-24.04.
+// GHA stays canon for push/PR/CD.
+// Selenoid: credentialsId selenoid-guest-remote-url (WebDriver) and
+// selenoid-guest-playwright-url (Playwright WS). Mock stays local CFT.
 
 pipeline {
-  agent {
-    label "${(params.TESTS_UI_LIBRARY ?: 'selenide') == 'playwright' ? 'java-jdk21-ubuntu' : 'java-jdk21'}"
-  }
+  agent { label 'java-jdk21' }
 
   options {
     disableConcurrentBuilds(abortPrevious: false)
@@ -58,6 +57,7 @@ pipeline {
     UPDATE_STAGE_SCREENSHOTS = "${params.UPDATE_STAGE_SCREENSHOTS}"
     UPDATE_E2E_SCREENSHOTS = "${params.UPDATE_E2E_SCREENSHOTS}"
     SELENOID_WEBDRIVER_URL = credentials('selenoid-guest-remote-url')
+    SELENOID_PLAYWRIGHT_URL = credentials('selenoid-guest-playwright-url')
   }
 
   stages {
