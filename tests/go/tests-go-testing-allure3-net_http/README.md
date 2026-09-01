@@ -14,6 +14,8 @@ go test ./tests/manual
 go test ./...
 ```
 
+CI `sonar-tests` reads `coverage.out` via [`sonar-project.properties`](sonar-project.properties) (allow-list `config.go`).
+
 Stand is `STAND` (`prod` default) or `BASE_URL` / `API_BASE_URL`. `STAND=ci` → API [http://localhost:8800/](http://localhost:8800/). Packages are slices, not stands.
 
 ## Allure

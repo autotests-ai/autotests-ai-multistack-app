@@ -10,7 +10,7 @@ runs:
       uses: ./.github/actions/resolve-module-dir
       with:
         module_dir: ${{ inputs.module_dir }}
-    - if: env.TESTS_LANG == 'java'
+    - if: env.TESTS_LANG == 'java' || env.TESTS_LANG == 'kotlin'
       uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/sonar
       with:
         module_dir: ${{ steps.dir.outputs.dir }}
@@ -26,11 +26,22 @@ runs:
       uses: ./tests/typescript/.github/actions/sonar
       with:
         module_dir: ${{ steps.dir.outputs.dir }}
+    - if: env.TESTS_LANG == 'go'
+      uses: ./tests/go/.github/actions/sonar
+      with:
+        module_dir: ${{ steps.dir.outputs.dir }}
+    - if: env.TESTS_LANG == 'csharp'
+      uses: ./tests/csharp/.github/actions/sonar
+      with:
+        module_dir: ${{ steps.dir.outputs.dir }}
     - if: >-
         env.TESTS_LANG != 'java' &&
+        env.TESTS_LANG != 'kotlin' &&
         env.TESTS_LANG != 'javascript' &&
         env.TESTS_LANG != 'python' &&
-        env.TESTS_LANG != 'typescript'
+        env.TESTS_LANG != 'typescript' &&
+        env.TESTS_LANG != 'go' &&
+        env.TESTS_LANG != 'csharp'
       shell: bash
       run: |
         echo "STOP: no sonar action for TESTS_LANG=${TESTS_LANG:-unset}" >&2

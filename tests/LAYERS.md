@@ -100,14 +100,15 @@ Self-check of the **tests module helpers** before / alongside product layers —
 
 Living non-JVM cells ship a ConfigReader analog (command on the cell README). Mill `tests-go-cdp` and empty slots do not.
 
-| Cell | Local | Gate |
-|------|-------|------|
-| Java + Kotlin Ktor | `jacocoTestCoverageVerification` | 100% ConfigReader (Selenide/Selenium also CSS helpers on full infra) |
-| JS / TS Playwright | `npm run test:infra` | c8 lcov, **no** fail-under |
-| Python Selenium | `pytest -m infra --cov=config --cov=api_client --cov=har_capture` | report, **no** fail-under |
-| Python httpx | `pytest -m infra --cov=config --cov-fail-under=100` | 100% `config.py` |
-| TS axios | `npx vitest run --tagsFilter infra --coverage` | 100% lines on `config.ts` |
-| Go net/http | `./cover-config.sh` | 100% ConfigReader analog |
+| Cell | Local | Gate | CI `sonar-tests` |
+|------|-------|------|------------------|
+| Java + Kotlin Ktor | `jacocoTestCoverageVerification` | 100% ConfigReader (Selenide/Selenium also CSS helpers on full infra) | Gradle `sonar` + JaCoCo xml |
+| JS / TS Playwright | `npm run test:infra` | c8 lcov, **no** fail-under | `@sonar/scan` + lcov (`sonar-project.properties`) |
+| Python Selenium | `pytest -m infra --cov=config --cov=api_client --cov=har_capture` | report, **no** fail-under | `@sonar/scan` + `coverage.xml` |
+| Python httpx | `pytest -m infra --cov=config --cov-fail-under=100` | 100% `config.py` | same Python action + cell `sonar-project.properties` |
+| TS axios | `npx vitest run --tagsFilter infra --coverage` | 100% lines on `config.ts` | same TS action + cell `sonar-project.properties` |
+| Go net/http | `./cover-config.sh` | 100% ConfigReader analog | `@sonar/scan` + `coverage.out` |
+| C# RestSharp | `dotnet test --filter TestCategory=infra` + coverlet | 100% `Config.ConfigReader` | `@sonar/scan` + opencover |
 
 **Not** application code (that's `backend-unit-tests` on `BACKEND_DIR` / `frontend-unit-tests` on `FRONTEND_DIR`).
 

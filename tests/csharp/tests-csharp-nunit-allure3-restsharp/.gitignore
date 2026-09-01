@@ -4,3 +4,6 @@ obj/
 *.user
 allure-results/
 .env
+coverage.opencover.xml
+coverage.json
+

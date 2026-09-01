@@ -12,4 +12,6 @@ cd tests/kotlin/tests-kotlin-gradle-junit5-allure3-ktor
 ./gradlew test -Denv=prod -DincludeTags=manual
 ```
 
+CI `sonar-tests` uses the Gradle Sonar plugin (JaCoCo xml from `infra-tests`). HTTP-only: no `mock` / `e2e` in this cell.
+
 Stand: `-Denv=ci` → API [http://localhost:8800/](http://localhost:8800/).

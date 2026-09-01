@@ -1,5 +1,5 @@
 name: infra
-description: Tests-module helper checks (Playwright --grep @infra; not a pyramid layer).
+description: Tests-module helper checks (@infra; Playwright+c8 or Vitest coverage).
 inputs:
   module_dir:
     required: true
@@ -23,20 +23,29 @@ runs:
         LANE_BACKEND: ${{ inputs.backend_lane }}
         LANE_FRONTEND: ${{ inputs.frontend_lane }}
         LANE_TESTS: ${{ inputs.tests_lane }}
+        MODULE_DIR: ${{ inputs.module_dir }}
       run: |
         set -euo pipefail
         slice=all
         grep='@infra'
         include='src/helpers/env.ts src/helpers/api.ts src/helpers/har-collect.ts'
+        vitest_tags=infra
         if [ "$LANE_BACKEND" = "true" ] && [ "$LANE_FRONTEND" != "true" ] && [ "$LANE_TESTS" != "true" ]; then
           slice=backend
           grep='@infra_backend'
           include='src/helpers/env.ts src/helpers/api.ts'
+          vitest_tags=infra_backend
+        fi
+        runner=playwright
+        if [ -f "${MODULE_DIR}/vitest.config.ts" ]; then
+          runner=vitest
         fi
         echo "slice=${slice}" >> "$GITHUB_OUTPUT"
         echo "INFRA_GREP=${grep}" >> "$GITHUB_ENV"
         echo "INFRA_INCLUDE=${include}" >> "$GITHUB_ENV"
-        echo "Infra slice=${slice} --grep ${grep}"
+        echo "INFRA_VITEST_TAGS=${vitest_tags}" >> "$GITHUB_ENV"
+        echo "INFRA_RUNNER=${runner}" >> "$GITHUB_ENV"
+        echo "Infra slice=${slice} runner=${runner}"
     - uses: actions/setup-node@v6
       with:
         node-version: ${{ env.NODE_VERSION }}
@@ -46,19 +55,23 @@ runs:
       shell: bash
       working-directory: ${{ inputs.module_dir }}
       run: npm ci
-    - name: Run infra tests (Playwright + c8)
+    - name: Run infra tests (coverage)
       id: run-tests
       shell: bash
       working-directory: ${{ inputs.module_dir }}
       run: |
         set -euo pipefail
-        # Coverage of helpers only — no fail-under (not coverage theatre).
-        include_args=()
-        for f in ${INFRA_INCLUDE}; do
-          include_args+=(--include="$f")
-        done
-        npx c8 "${include_args[@]}" --reporter=lcov --reporter=text --report-dir=coverage \
-          npx playwright test --grep "${INFRA_GREP}"
+        if [ "${INFRA_RUNNER}" = "vitest" ]; then
+          npx vitest run --tagsFilter "${INFRA_VITEST_TAGS}" --coverage
+        else
+          # Coverage of helpers only — no fail-under (not coverage theatre).
+          include_args=()
+          for f in ${INFRA_INCLUDE}; do
+            include_args+=(--include="$f")
+          done
+          npx c8 "${include_args[@]}" --reporter=lcov --reporter=text --report-dir=coverage \
+            npx playwright test --grep "${INFRA_GREP}"
+        fi
     - if: steps.run-tests.outcome == 'success'
       uses: actions/upload-artifact@v7
       with:

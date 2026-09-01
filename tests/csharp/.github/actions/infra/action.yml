@@ -1,0 +1,60 @@
+name: infra
+description: Tests-module helper checks (dotnet ConfigReader analog; not a pyramid layer).
+inputs:
+  module_dir:
+    required: true
+  backend_lane:
+    default: "false"
+  frontend_lane:
+    default: "false"
+  tests_lane:
+    default: "false"
+outputs:
+  slice:
+    description: all or backend
+    value: ${{ steps.slice.outputs.slice }}
+runs:
+  using: composite
+  steps:
+    - name: Select infra slice
+      id: slice
+      shell: bash
+      env:
+        LANE_BACKEND: ${{ inputs.backend_lane }}
+        LANE_FRONTEND: ${{ inputs.frontend_lane }}
+        LANE_TESTS: ${{ inputs.tests_lane }}
+      run: |
+        set -euo pipefail
+        slice=all
+        tags=infra
+        if [ "$LANE_BACKEND" = "true" ] && [ "$LANE_FRONTEND" != "true" ] && [ "$LANE_TESTS" != "true" ]; then
+          slice=backend
+          tags=infra_backend
+        fi
+        echo "slice=${slice}" >> "$GITHUB_OUTPUT"
+        echo "INFRA_FILTER=${tags}" >> "$GITHUB_ENV"
+        echo "Infra slice=${slice} TestCategory=${tags}"
+    - uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    - name: Run infra tests (coverlet)
+      id: run-tests
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      run: |
+        set -euo pipefail
+        # ConfigReader only — 100% line gate (JaCoCo sibling).
+        dotnet test --filter "TestCategory=${INFRA_FILTER}" \
+          /p:CollectCoverage=true \
+          /p:CoverletOutputFormat=opencover \
+          /p:CoverletOutput=coverage.opencover.xml \
+          /p:Include='[*]Config.ConfigReader' \
+          /p:Threshold=100 \
+          /p:ThresholdType=line \
+          /p:ThresholdStat=total
+    - if: steps.run-tests.outcome == 'success'
+      uses: actions/upload-artifact@v7
+      with:
+        name: coverage-infra
+        path: ${{ inputs.module_dir }}/coverage.opencover.xml
+        if-no-files-found: error

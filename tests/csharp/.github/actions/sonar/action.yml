@@ -1,5 +1,5 @@
 name: sonar
-description: Sonar scan + quality gate for the TypeScript tests module.
+description: Sonar scan + quality gate for the C# tests module.
 inputs:
   module_dir:
     required: true
@@ -20,13 +20,12 @@ runs:
         SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
       run: |
         set -euo pipefail
-        COV="${GITHUB_WORKSPACE}/infra/lcov.info"
+        COV="${GITHUB_WORKSPACE}/infra/coverage.opencover.xml"
         if [[ ! -f "$COV" ]]; then
-          echo "ERROR: lcov.info missing: $COV" >&2
+          echo "ERROR: coverage.opencover.xml missing: $COV" >&2
           exit 1
         fi
-        mkdir -p coverage
-        cp "$COV" coverage/lcov.info
+        cp "$COV" coverage.opencover.xml
         if [[ -z "${SONAR_TOKEN:-}" ]]; then
           echo "ERROR: SONAR_TOKEN unset" >&2
           exit 1
@@ -37,7 +36,7 @@ runs:
           -Dsonar.host.url="${SONAR_HOST_URL}" \
           -Dsonar.projectKey="${KEY}" \
           -Dsonar.projectName="${KEY}" \
-          -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info \
+          -Dsonar.cs.opencover.reportsPaths=coverage.opencover.xml \
           -Dsonar.qualitygate.wait=true \
           -Dsonar.qualitygate.timeout="${SONAR_QUALITY_GATE_TIMEOUT}"
     - name: Write Sonar summary

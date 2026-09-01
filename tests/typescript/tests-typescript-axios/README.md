@@ -14,6 +14,8 @@ npx vitest run --tagsFilter api
 npx vitest run --tagsFilter manual
 ```
 
+CI `sonar-tests` reads `coverage/lcov.info` via [`sonar-project.properties`](sonar-project.properties) (allow-list `config.ts`).
+
 Stand is `STAND` (`prod` default) or `BASE_URL` / `API_BASE_URL`. `STAND=ci` → API [http://localhost:8800/](http://localhost:8800/). Tags are slices, not stands.
 
 ## Allure

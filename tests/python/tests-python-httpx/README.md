@@ -16,6 +16,8 @@ pytest -m api
 pytest -m manual
 ```
 
+CI `sonar-tests` reads `coverage.xml` via [`sonar-project.properties`](sonar-project.properties).
+
 Stand is `STAND` (`prod` default) or `BASE_URL` / `API_BASE_URL`. `STAND=ci` → API [http://localhost:8800/](http://localhost:8800/). Markers are slices, not stands.
 
 ## Allure

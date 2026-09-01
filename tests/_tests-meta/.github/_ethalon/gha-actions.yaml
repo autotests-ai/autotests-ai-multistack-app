@@ -15,6 +15,7 @@
 | `setup-go` | `actions/setup-go@v6` | |
 | `setup-node` | `actions/setup-node@v6` | `node-version: 26` — sole pin |
 | `setup-python` | `actions/setup-python@v6` | |
+| `setup-dotnet` | `actions/setup-dotnet@v5` | C# tests cell (`net8.0`) |
 | `setup-gradle` | `gradle/actions/setup-gradle@v6` | owns `~/.gradle`: no `cache: gradle` on `setup-java` in the same job |
 | `upload-artifact` | `actions/upload-artifact@v7` | |
 | `download-artifact` | `./.github/actions/download-artifact` | gh CLI; not `actions/download-artifact@v8` (unzip-stream `Buffer()` / DEP0005) |

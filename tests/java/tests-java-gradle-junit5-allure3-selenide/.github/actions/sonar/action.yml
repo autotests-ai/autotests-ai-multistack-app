@@ -35,7 +35,7 @@ runs:
           echo "ERROR: JaCoCo report missing: $JACOCO_XML" >&2
           exit 1
         fi
-        ./gradlew compileTestJava --no-daemon --no-configuration-cache
+        ./gradlew testClasses --no-daemon --no-configuration-cache
         if [[ -z "${SONAR_TOKEN:-}" ]]; then
           echo "ERROR: SONAR_TOKEN unset" >&2
           exit 1
