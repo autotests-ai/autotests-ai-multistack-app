@@ -36,7 +36,9 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
 **Java HTTP-only living blocks:** `tests-java-gradle-junit5-allure3-restassured` (Rest Assured) and `tests-java-gradle-junit5-allure3-retrofit2` (Retrofit 2) — `layers: [api]`. Same `/api` contract. Combo Selenium+Retrofit = generate, not a third folder.
 
-**HTTP-only slots (other languages):** empty folders, `layers: [api]`, same `/api` contract. Python `tests-python-requests` / `tests-python-httpx` · JS/TS `tests-javascript-axios` / `tests-typescript-axios` · Kotlin `tests-kotlin-gradle-junit5-allure3-ktor` · C# `tests-csharp-nunit-allure3-restsharp`. Go already has living `tests-go-testing-allure3`. Combo with a UI school = generate, not a third folder.
+**Python HTTP-only living block:** `tests-python-httpx` — pytest + httpx, `layers: [api]`. Same `/api` contract as Java Rest Assured. `tests-python-requests` stays a slot. Combo with Selenium = generate, not a third folder.
+
+**HTTP-only slots (other languages):** empty folders, `layers: [api]`, same `/api` contract. Python `tests-python-requests` · JS/TS `tests-javascript-axios` / `tests-typescript-axios` · Kotlin `tests-kotlin-gradle-junit5-allure3-ktor` · C# `tests-csharp-nunit-allure3-restsharp`. Go already has living `tests-go-testing-allure3`. Combo with a UI school = generate, not a third folder.
 
 **JS/TS Playwright living:** api inside `tests-javascript-playwright` / `tests-typescript-playwright` is Playwright **APIRequest** (`request` fixture). Axios is the sibling HTTP-only school, not the client in those folders. Java Playwright uses Rest Assured in-cell (JVM HTTP school).
 

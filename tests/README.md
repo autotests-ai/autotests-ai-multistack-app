@@ -49,7 +49,7 @@ tests/
     tests-python-selene/                             # slot — UI block
     tests-python-playwright/                          # slot — UI block
     tests-python-requests/                            # slot — HTTP block requests
-    tests-python-httpx/                               # slot — HTTP block httpx
+    tests-python-httpx/                               # active — HTTP block httpx
     tests-python-yandex-tank/                         # slot — Yandex.Tank
     tests-python-locust/                             # slot — Locust
   typescript/

@@ -6,7 +6,7 @@
 | `tests-python-selene/` | slot — UI block Selene |
 | `tests-python-playwright/` | slot — UI block Playwright |
 | `tests-python-requests/` | slot — HTTP block requests |
-| `tests-python-httpx/` | slot — HTTP block httpx |
+| `tests-python-httpx/` | **active** — HTTP block httpx (`api` / `infra` / `manual`) |
 | `tests-python-yandex-tank/` | slot — Yandex.Tank (`layers: [performance]`) |
 | `tests-python-locust/` | slot — Locust (`layers: [performance]`) |
 
