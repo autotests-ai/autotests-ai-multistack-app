@@ -201,6 +201,10 @@ test {
     systemProperty 'env', testEnv
     systemProperty 'allureReportMode', allureReportMode
     systemProperty 'allureAgentMode', allureAgentMode
+    def selenoidPlaywrightUrl = System.getenv('SELENOID_PLAYWRIGHT_URL')
+    if (selenoidPlaywrightUrl) {
+        environment 'SELENOID_PLAYWRIGHT_URL', selenoidPlaywrightUrl
+    }
     configKeys.each { key ->
         def override = System.getProperty(key)
         if (override != null) {

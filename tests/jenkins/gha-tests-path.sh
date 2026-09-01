@@ -80,6 +80,16 @@ merge_allure() {
   fi
 }
 
+gradle_test() {
+  # Playwright reads SELENOID_PLAYWRIGHT_URL from the process env. A reused
+  # Gradle daemon keeps the env from the first job on the agent (stale accessKey → nginx 401).
+  if [ "$TESTS_UI_LIBRARY" = playwright ]; then
+    ./gradlew --no-daemon --console=plain test "$@"
+  else
+    ./gradlew --console=plain test "$@"
+  fi
+}
+
 run_gradle() {
   local label="$1"
   shift
@@ -87,7 +97,7 @@ run_gradle() {
   local code=0
   (
     cd "$MODULE"
-    ./gradlew --console=plain test "$@"
+    gradle_test "$@"
   ) || code=$?
   merge_allure
   return "$code"
@@ -159,6 +169,9 @@ cmd_prepare() {
   test -f "${MODULE}/gradlew"
   command -v java >/dev/null
   java -version
+  if [ "$TESTS_UI_LIBRARY" = playwright ]; then
+    (cd "$MODULE" && ./gradlew --stop) || true
+  fi
   if is_true "${RUN_MOCK:-false}"; then
     if ! command -v docker >/dev/null; then
       echo "WARN: no docker on this agent — UI mock will fail; api/e2e still run (Selenoid + live stands)" >&2
@@ -248,7 +261,7 @@ cmd_e2e() {
       ARGS=("$@")
       # shellcheck disable=SC1090
       source "$REMOTE_URL_SH"
-      ./gradlew --console=plain test "${ARGS[@]}"
+      gradle_test "${ARGS[@]}"
     ) || code=$?
     merge_allure
     return "$code"
