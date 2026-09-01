@@ -6,8 +6,14 @@ if [ -z "${SELENOID_WEBDRIVER_URL:-}" ] && [ -n "${SELENOID_REMOTE_URL:-}" ]; th
 fi
 if [ "${TESTS_UI_LIBRARY:-selenide}" = "playwright" ]; then
   # Do not pass the WS URL as -DremoteUrl (query accessKey does not survive Gradle).
-  # PlaywrightRuntime reads SELENOID_PLAYWRIGHT_URL from the environment.
+  # PlaywrightRuntime reads SELENOID_PLAYWRIGHT_URL / the file below.
   ARGS+=(-DremoteUrl=)
+  if [ -n "${SELENOID_PLAYWRIGHT_URL:-}" ]; then
+    mkdir -p build
+    umask 077
+    printf '%s' "${SELENOID_PLAYWRIGHT_URL}" > build/selenoid-playwright.url
+    export SELENOID_PLAYWRIGHT_URL_FILE="$(pwd)/build/selenoid-playwright.url"
+  fi
 elif [ -n "${SELENOID_WEBDRIVER_URL:-}" ]; then
   ARGS+=(-DremoteUrl="${SELENOID_WEBDRIVER_URL}")
 fi
