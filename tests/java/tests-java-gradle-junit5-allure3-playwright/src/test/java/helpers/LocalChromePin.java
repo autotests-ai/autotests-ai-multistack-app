@@ -9,12 +9,11 @@ import java.util.Properties;
 /**
  * Pins <em>local</em> Chrome to the Chrome for Testing build in
  * {@code chrome-for-testing.properties}. Playwright launches that binary via
- * {@code executablePath} — system Chrome and bundled Chromium are never used
- * silently for {@code browser=chrome}.
+ * {@code executablePath} — system Chrome and bundled Chromium are never used.
+ * Chromedriver is not required (Playwright talks CDP).
  * <p>
- * Not a Chrome-only suite. {@link PlaywrightRuntime} calls {@link #apply} only
- * when {@code remoteUrl} is empty and {@code browser=chrome}. Other local
- * browsers skip this class. Chromedriver is not required (Playwright talks CDP).
+ * This cell is Chromium-only. {@link PlaywrightRuntime} calls {@link #apply}
+ * on every local launch. Remote runs use Selenoid {@code playwright-chromium} WS.
  */
 public final class LocalChromePin {
 

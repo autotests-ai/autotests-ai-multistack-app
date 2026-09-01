@@ -5,6 +5,8 @@ import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.Wait;
+import static com.codeborne.selenide.Selenide.confirm;
+import static com.codeborne.selenide.Selenide.dismiss;
 import static com.codeborne.selenide.Selenide.executeJavaScript;
 import static com.codeborne.selenide.Selenide.open;
 
@@ -33,24 +35,6 @@ public class HomePage extends BasePage<HomePage> {
 
     private String authTokenKey() {
         return executeJavaScript(AUTH_TOKEN_KEY_JS);
-    }
-
-    /** Mirrors RTL {@code vi.spyOn(window, 'confirm').mockReturnValue(accepted)}. */
-    private void stubConfirm(boolean accepted) {
-        executeJavaScript(
-                "window.__deleteConfirm = null;"
-                        + "(function(accepted) {"
-                        + "  window.confirm = function(msg) {"
-                        + "    window.__deleteConfirm = msg;"
-                        + "    return accepted;"
-                        + "  };"
-                        + "})(arguments[0]);",
-                accepted);
-    }
-
-    private void shouldHaveConfirmMessage() {
-        Wait().until(driver -> DELETE_ACCOUNT_CONFIRM.equals(
-                executeJavaScript("return window.__deleteConfirm;")));
     }
 
     @Step("Open home page")
@@ -182,17 +166,15 @@ public class HomePage extends BasePage<HomePage> {
 
     @Step("Click delete account and confirm")
     public LoginPage clickDeleteAccountAndConfirm() {
-        stubConfirm(true);
         deleteAccountButton.shouldBe(visible).click();
-        shouldHaveConfirmMessage();
+        confirm(DELETE_ACCOUNT_CONFIRM);
         return new LoginPage();
     }
 
     @Step("Click delete account and cancel the confirm")
     public HomePage clickDeleteAccountAndCancel() {
-        stubConfirm(false);
         deleteAccountButton.shouldBe(visible).click();
-        shouldHaveConfirmMessage();
+        dismiss(DELETE_ACCOUNT_CONFIRM);
         return this;
     }
 

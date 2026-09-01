@@ -1,7 +1,7 @@
 package tests.ui;
 
 import annotations.Layer;
-import helpers.MockScenarios;
+import api.MockScenarios;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;

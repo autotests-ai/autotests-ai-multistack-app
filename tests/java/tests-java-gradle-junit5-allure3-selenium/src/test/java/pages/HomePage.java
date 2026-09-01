@@ -4,9 +4,6 @@ import api.AuthApiClient;
 import helpers.Ui;
 import io.qameta.allure.Step;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-
-import java.time.Duration;
 
 public class HomePage extends BasePage<HomePage> {
 
@@ -19,22 +16,6 @@ public class HomePage extends BasePage<HomePage> {
 
     private String authTokenKey() {
         return String.valueOf(Ui.js(AUTH_TOKEN_KEY_JS));
-    }
-
-    private void stubConfirm(boolean accepted) {
-        Ui.js(
-                "window.__deleteConfirm = null;"
-                        + "(function(accepted) {"
-                        + "  window.confirm = function(msg) {"
-                        + "    window.__deleteConfirm = msg;"
-                        + "    return accepted;"
-                        + "  };"
-                        + "})(arguments[0]);",
-                accepted);
-    }
-
-    private void shouldHaveConfirmMessage() {
-        Ui.waitUntil(driver -> DELETE_ACCOUNT_CONFIRM.equals(Ui.js("return window.__deleteConfirm;")));
     }
 
     @Step("Open home page")
@@ -154,27 +135,20 @@ public class HomePage extends BasePage<HomePage> {
     @Step("Click logout button")
     public LoginPage clickLogoutButton() {
         Ui.click("logout-button");
-        // logout() POSTs /api/auth/logout then navigate('/login') — wait for the
-        // round-trip, not only the click. Selenoid→stand can exceed Ui.TIMEOUT.
-        Ui.waitUntil(
-                ExpectedConditions.visibilityOfElementLocated(Ui.testId("login-form")),
-                Duration.ofSeconds(15));
         return new LoginPage();
     }
 
     @Step("Click delete account and confirm")
     public LoginPage clickDeleteAccountAndConfirm() {
-        stubConfirm(true);
         Ui.click("delete-account-button");
-        shouldHaveConfirmMessage();
+        Ui.confirm(DELETE_ACCOUNT_CONFIRM);
         return new LoginPage();
     }
 
     @Step("Click delete account and cancel the confirm")
     public HomePage clickDeleteAccountAndCancel() {
-        stubConfirm(false);
         Ui.click("delete-account-button");
-        shouldHaveConfirmMessage();
+        Ui.dismiss(DELETE_ACCOUNT_CONFIRM);
         return this;
     }
 

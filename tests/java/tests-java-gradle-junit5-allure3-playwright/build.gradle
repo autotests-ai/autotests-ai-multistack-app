@@ -1,11 +1,12 @@
 /*
  * tests-java — UI+HTTP living block · Playwright for Java · Rest Assured · JUnit 5 · Allure 3
  *
- *   ./gradlew installChromium   # once per machine
  *   ./gradlew test -Denv=ci -DincludeTags=infra
  *   ./gradlew test -Denv=ci -DincludeTags=api
  *   ./gradlew test -Denv=ci -DincludeTags=e2e
  *
+ * Local Chrome is Chrome for Testing (scripts/install-chrome-for-testing.sh), not
+ * Playwright's bundled Chromium.
  * HTTP-only Rest Assured school stays in sibling tests-java-gradle-junit5-allure3-restassured.
  */
 
@@ -172,14 +173,6 @@ tasks.register('healthCheck') {
             )
         }
     }
-}
-
-tasks.register('installChromium', JavaExec) {
-    group = 'verification'
-    description = 'Download Playwright Chromium (once per machine)'
-    classpath = configurations.testRuntimeClasspath
-    mainClass = 'com.microsoft.playwright.CLI'
-    args = ['install', 'chromium']
 }
 
 test {

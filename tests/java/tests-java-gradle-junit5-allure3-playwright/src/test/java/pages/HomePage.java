@@ -9,6 +9,10 @@ import static api.AuthApiClient.login;
 
 public class HomePage {
 
+    /** Mirrors frontend DELETE_ACCOUNT_CONFIRM. */
+    private static final String DELETE_ACCOUNT_CONFIRM =
+            "Delete this account? This cannot be undone.";
+
     private final Page page;
     public final Locator layout;
     public final Locator healthStatus;
@@ -82,16 +86,30 @@ public class HomePage {
 
     @Step("Accept delete-account confirm")
     public HomePage clickDeleteAccountAndConfirm() {
-        page.onceDialog(dialog -> dialog.accept());
+        page.onceDialog(dialog -> {
+            requireConfirmText(dialog.message());
+            dialog.accept();
+        });
         deleteAccountButton.click();
         return this;
     }
 
     @Step("Cancel delete-account confirm")
     public HomePage clickDeleteAccountAndCancel() {
-        page.onceDialog(dialog -> dialog.dismiss());
+        page.onceDialog(dialog -> {
+            requireConfirmText(dialog.message());
+            dialog.dismiss();
+        });
         deleteAccountButton.click();
         return this;
+    }
+
+    private static void requireConfirmText(String actual) {
+        if (!DELETE_ACCOUNT_CONFIRM.equals(actual)) {
+            throw new AssertionError(
+                    "Confirm text: expected <%s> but was <%s>"
+                            .formatted(DELETE_ACCOUNT_CONFIRM, actual));
+        }
     }
 
     @Step("Open home page with local storage authentication")

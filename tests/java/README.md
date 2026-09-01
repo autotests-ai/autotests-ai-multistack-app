@@ -38,7 +38,6 @@ cd tests/java/tests-java-gradle-junit5-allure3-retrofit2
 ./gradlew test -Denv=ci -DincludeTags=api
 
 cd tests/java/tests-java-gradle-junit5-allure3-playwright
-./gradlew installChromium
 ./gradlew test -Denv=ci -DincludeTags=infra
 ./gradlew test -Denv=ci -DincludeTags=api
 ./gradlew test -Denv=ci -DincludeTags=e2e

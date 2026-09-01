@@ -11,10 +11,8 @@ import java.util.Properties;
  * {@code chrome-for-testing.properties}. Bypasses Selenium Manager so system
  * Chrome is never used silently.
  * <p>
- * Not a Chrome-only suite. {@code WebDrivers} calls {@link #apply} only when
- * {@code remoteUrl} is empty and {@code browser=chrome}. A remote hub uses the
- * image tag; other local browsers ({@code -Dbrowser=firefox}) skip this class.
- * Do not generalize until there is a matching pin + installer for that browser.
+ * This cell is Chrome-only. {@code WebDrivers} calls {@link #resolve} whenever
+ * {@code remoteUrl} is empty. A remote hub uses the chrome image tag.
  */
 public final class LocalChromePin {
 

@@ -13,7 +13,6 @@ import config.TestConfig;
 import helpers.BrowserSessionHelper;
 import helpers.HarCapture;
 import helpers.LocalChromePin;
-import helpers.NativeSetValue;
 import pages.HomePage;
 import pages.LoginPage;
 import pages.RegisterPage;
@@ -64,10 +63,6 @@ public class TestBase extends AllureMeta {
         Configuration.browserSize = config.browserSize();
         Configuration.headless = config.headless();
         Configuration.timeout = 5_000;
-        Configuration.fastSetValue = config.fastSetValue();
-        if (config.fastSetValue()) {
-            NativeSetValue.install();
-        }
 
         // enableHar = collect CDP network events in the test process (not a hub capability).
         // attachHarLogs = put that HAR into Allure; implies capture so the attachment is not empty.

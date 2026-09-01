@@ -68,4 +68,33 @@ class SelenoidPlaywrightEndpointTest extends AllureMeta {
         assertTrue(out.contains("enableVNC=false"));
         assertTrue(out.contains("enableVideo=false"));
     }
+
+    @Test
+    @DisplayName("videoName and screenResolution go on the WS query when hub records")
+    void recordsVideoNameOnConnect() {
+        var ws = "wss://selenoid.example/playwright/playwright-chromium/1.61.1?accessKey=x";
+        var out = SelenoidPlaywrightEndpoint.withSessionQuery(
+                ws, true, true, "java-pw-clip.mp4", "1920x1280x24");
+        assertTrue(out.startsWith(ws + "&"));
+        assertTrue(out.contains("enableVideo=true"));
+        assertTrue(out.contains("enableVNC=true"));
+        assertTrue(out.contains("videoName=java-pw-clip.mp4"));
+        assertTrue(out.contains("screenResolution=1920x1280x24"));
+        assertTrue(out.contains("accessKey=x"));
+    }
+
+    @Test
+    @DisplayName("hub video URL is videoFolder + videoName")
+    void videoUrlJoinsFolderAndName() {
+        assertEquals(
+                "https://selenoid.qa.guru/video/java-pw-clip.mp4",
+                SelenoidPlaywrightEndpoint.videoUrl(
+                        "https://selenoid.qa.guru/video/", "java-pw-clip.mp4"));
+        assertEquals(
+                "https://selenoid.qa.guru/video/java-pw-clip.mp4",
+                SelenoidPlaywrightEndpoint.videoUrl(
+                        "https://selenoid.qa.guru/video", "java-pw-clip.mp4"));
+        assertEquals("", SelenoidPlaywrightEndpoint.videoUrl("", "clip.mp4"));
+        assertEquals("", SelenoidPlaywrightEndpoint.videoUrl("https://selenoid.qa.guru/video/", ""));
+    }
 }

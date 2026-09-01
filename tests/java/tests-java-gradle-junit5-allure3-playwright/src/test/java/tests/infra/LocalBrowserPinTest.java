@@ -7,23 +7,28 @@ import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
 import config.ConfigReader;
+import config.TestConfig;
 import helpers.LocalChromePin;
+import helpers.PlaywrightRuntime;
+import org.aeonbits.owner.ConfigFactory;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Local browser pin (infra-frontend): the suite is not Chrome-only.
+ * Local browser pin (infra-frontend): this cell is Chromium-only.
  * <p>
  * Living helper is {@link LocalChromePin} (Chrome for Testing).
- * {@code PlaywrightRuntime} applies it only when {@code remoteUrl} is empty
- * and {@code browser=chrome}. Other local browsers skip the pin.
+ * {@link PlaywrightRuntime} applies it on every local launch. Remote runs use
+ * Selenoid {@code playwright-chromium} WS.
  */
 @Layer("infra")
 @Epic("Test infra")
@@ -68,5 +73,13 @@ class LocalBrowserPinTest extends AllureMeta {
     void applyRejectsBlankBrowserVersion() {
         var error = assertThrows(IllegalStateException.class, () -> LocalChromePin.apply(" "));
         assertTrue(error.getMessage().contains("browserVersion is required"), error.getMessage());
+    }
+
+    @Test
+    @DisplayName("runtime rejects a non-Chromium browser")
+    void requireChromiumRejectsFirefox() {
+        var config = ConfigFactory.create(TestConfig.class, Map.of("browser", "firefox"));
+        var error = assertThrows(IllegalStateException.class, () -> PlaywrightRuntime.requireChromium(config));
+        assertTrue(error.getMessage().contains("Chromium-only"), error.getMessage());
     }
 }

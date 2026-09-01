@@ -30,7 +30,6 @@ public final class ScreenshotHelper {
     public static void captureAndCompare(
             Locator element, String area, int viewport, String attachmentName) {
         element.waitFor();
-        waitForStableLayout();
 
         byte[] actual = element.screenshot(new Locator.ScreenshotOptions()
                 .setAnimations(ScreenshotAnimations.DISABLED));
@@ -87,15 +86,6 @@ public final class ScreenshotHelper {
             return;
         }
         attachPng(attachmentName + "-screenshot-new", actual);
-    }
-
-    private static void waitForStableLayout() {
-        ViewportHelper.page().evaluate("""
-                () => Promise.all([
-                  document.fonts.ready,
-                  new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
-                ])
-                """);
     }
 
     private static void attachPng(String name, byte[] png) {

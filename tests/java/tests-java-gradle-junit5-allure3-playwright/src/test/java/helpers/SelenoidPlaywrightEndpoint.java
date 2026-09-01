@@ -65,16 +65,50 @@ public final class SelenoidPlaywrightEndpoint {
     }
 
     public static String withSessionQuery(String ws, boolean enableVnc, boolean enableVideo) {
+        return withSessionQuery(ws, enableVnc, enableVideo, null, null);
+    }
+
+    /**
+     * Playwright has no WebDriver session id. When the hub records video, pass a unique
+     * {@code videoName} so Allure can link {@code videoFolder}/{videoName} the same way
+     * the TypeScript Playwright cell does.
+     */
+    public static String withSessionQuery(
+            String ws,
+            boolean enableVnc,
+            boolean enableVideo,
+            String videoName,
+            String screenResolution) {
         var base = ws.trim();
         var extra = new LinkedHashMap<String, String>();
         extra.put("name", "autotests-ai-multistack-java-pw");
         extra.put("sessionTimeout", "5m");
         extra.put("enableVNC", enableVnc ? "true" : "false");
         extra.put("enableVideo", enableVideo ? "true" : "false");
+        if (enableVideo) {
+            if (videoName != null && !videoName.isBlank()) {
+                extra.put("videoName", videoName.trim());
+            }
+            if (screenResolution != null && !screenResolution.isBlank()) {
+                extra.put("screenResolution", screenResolution.trim());
+            }
+        }
         var encoded = extra.entrySet().stream()
                 .map(e -> enc(e.getKey()) + "=" + enc(e.getValue()))
                 .collect(Collectors.joining("&"));
         return base.contains("?") ? base + "&" + encoded : base + "?" + encoded;
+    }
+
+    /** Public Selenoid video URL: {@code https://selenoid.qa.guru/video/<file>.mp4}. */
+    public static String videoUrl(String folder, String fileName) {
+        if (folder == null || folder.isBlank() || fileName == null || fileName.isBlank()) {
+            return "";
+        }
+        var base = folder.trim();
+        if (!base.endsWith("/")) {
+            base = base + "/";
+        }
+        return base + fileName.trim();
     }
 
     private static String enc(String s) {

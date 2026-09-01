@@ -58,6 +58,9 @@ public class TestBase extends AllureMeta {
                 if (config.attachLastScreenshot()) {
                     Attachments.screenshot("Last screenshot");
                 }
+                if (config.enableVideo() && config.attachVideo()) {
+                    Attachments.video();
+                }
             }
         } finally {
             try {

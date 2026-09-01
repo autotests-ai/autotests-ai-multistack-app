@@ -7,25 +7,27 @@ import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
 import config.ConfigReader;
+import config.TestConfig;
 import helpers.LocalChromePin;
+import helpers.WebDrivers;
+import org.aeonbits.owner.ConfigFactory;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Local browser pin (infra-frontend): the suite is not Chrome-only.
+ * Local browser pin (infra-frontend): this cell is Chrome-only.
  * <p>
  * Living helper is {@link LocalChromePin} (Chrome for Testing). {@code WebDrivers}
- * applies it only when {@code remoteUrl} is empty and {@code browser=chrome}.
- * Selenoid uses the hub image tag; {@code -Dbrowser=firefox} skips the pin.
- * Do not grow this helper into a multi-browser installer until there is a
- * matching pin + screenshot folder ({@code firefox-140/} beside {@code chrome-148/}).
+ * applies it whenever {@code remoteUrl} is empty. Selenoid uses the chrome image tag.
  */
 @Layer("infra")
 @Epic("Test infra")
@@ -70,5 +72,13 @@ class LocalBrowserPinTest extends AllureMeta {
     void applyRejectsBlankBrowserVersion() {
         var error = assertThrows(IllegalStateException.class, () -> LocalChromePin.apply(" "));
         assertTrue(error.getMessage().contains("browserVersion is required"), error.getMessage());
+    }
+
+    @Test
+    @DisplayName("runtime rejects a non-Chrome browser")
+    void requireChromeRejectsFirefox() {
+        var config = ConfigFactory.create(TestConfig.class, Map.of("browser", "firefox"));
+        var error = assertThrows(IllegalStateException.class, () -> WebDrivers.requireChrome(config));
+        assertTrue(error.getMessage().contains("Chrome-only"), error.getMessage());
     }
 }

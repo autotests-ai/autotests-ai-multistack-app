@@ -2,7 +2,6 @@ package helpers;
 
 import config.ConfigReader;
 import io.qameta.allure.Allure;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.WebElement;
 
@@ -33,7 +32,6 @@ public final class ScreenshotHelper {
         if (element == null || !element.isDisplayed()) {
             throw new AssertionError("Screenshot target is not displayed: " + area);
         }
-        waitForStableLayout();
 
         byte[] actual = element.getScreenshotAs(OutputType.BYTES);
 
@@ -89,14 +87,6 @@ public final class ScreenshotHelper {
             return;
         }
         attachPng(attachmentName + "-screenshot-new", actual);
-    }
-
-    private static void waitForStableLayout() {
-        ((JavascriptExecutor) WebDriverHolder.get()).executeAsyncScript(
-                "const done = arguments[arguments.length - 1];"
-                        + "Promise.all([document.fonts.ready, new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))])"
-                        + ".then(() => done(null)).catch(err => done(err));"
-        );
     }
 
     private static void attachPng(String name, byte[] png) {

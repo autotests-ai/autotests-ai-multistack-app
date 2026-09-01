@@ -58,14 +58,31 @@ public final class Ui {
     }
 
     public static void click(By locator) {
-        var element = waitUntil(ExpectedConditions.elementToBeClickable(locator));
-        // Remote Chrome after a client-side React navigation often swallows a
-        // native click; dispatch a DOM click so onClick always runs.
-        js("arguments[0].click();", element);
+        waitUntil(ExpectedConditions.elementToBeClickable(locator)).click();
     }
 
     public static void click(String testId) {
         click(testId(testId));
+    }
+
+    public static void confirm(String expectedText) {
+        var alert = waitUntil(ExpectedConditions.alertIsPresent());
+        var actual = alert.getText();
+        if (!expectedText.equals(actual)) {
+            throw new AssertionError(
+                    "Confirm text: expected <%s> but was <%s>".formatted(expectedText, actual));
+        }
+        alert.accept();
+    }
+
+    public static void dismiss(String expectedText) {
+        var alert = waitUntil(ExpectedConditions.alertIsPresent());
+        var actual = alert.getText();
+        if (!expectedText.equals(actual)) {
+            throw new AssertionError(
+                    "Confirm text: expected <%s> but was <%s>".formatted(expectedText, actual));
+        }
+        alert.dismiss();
     }
 
     public static void setValue(By locator, String value) {
@@ -130,7 +147,7 @@ public final class Ui {
         waitUntil(driver -> !hasClass(driver.findElements(locator), cssClass));
     }
 
-    private static boolean hasClass(java.util.List<org.openqa.selenium.WebElement> found, String cssClass) {
+    private static boolean hasClass(List<WebElement> found, String cssClass) {
         if (found.isEmpty()) {
             return false;
         }

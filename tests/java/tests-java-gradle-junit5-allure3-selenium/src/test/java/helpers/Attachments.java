@@ -6,6 +6,7 @@ import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.logging.LogType;
+import org.openqa.selenium.remote.RemoteWebDriver;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -46,6 +47,36 @@ public final class Attachments {
     public static void asUtf8(String name, String body) {
         Allure.addAttachment(name, "text/plain", new ByteArrayInputStream(
                 body.getBytes(StandardCharsets.UTF_8)), ".txt");
+    }
+
+    public static void video() {
+        if (!WebDriverHolder.has()) {
+            return;
+        }
+        var folder = ConfigReader.testConfig.videoFolder();
+        if (folder == null || folder.isBlank()) {
+            return;
+        }
+        if (!(WebDriverHolder.get() instanceof RemoteWebDriver remote)) {
+            return;
+        }
+        var sessionId = remote.getSessionId();
+        if (sessionId == null) {
+            return;
+        }
+        try {
+            var base = folder.endsWith("/") ? folder : folder + "/";
+            var videoUrl = base + sessionId + ".mp4";
+            Allure.addAttachment(
+                    "Video",
+                    "text/html",
+                    "<html><body><video width='100%' height='100%' controls autoplay><source src='"
+                            + videoUrl
+                            + "' type='video/mp4'></video></body></html>",
+                    ".html");
+        } catch (RuntimeException ignored) {
+            // dead session — skip, never mask the test failure
+        }
     }
 
     /**

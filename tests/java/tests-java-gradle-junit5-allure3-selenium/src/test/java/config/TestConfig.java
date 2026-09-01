@@ -38,10 +38,6 @@ public interface TestConfig extends Config {
     @DefaultValue("false")
     boolean attachVideo();
 
-    @Key("enableAllureSelenideListener")
-    @DefaultValue("false")
-    boolean enableAllureSelenideListener();
-
     @Key("enableAllureRestAssuredListener")
     @DefaultValue("false")
     boolean enableAllureRestAssuredListener();
@@ -71,6 +67,10 @@ public interface TestConfig extends Config {
     @DefaultValue("")
     String remoteUrl();
 
+    /**
+     * This cell is Chrome-only: local Chrome for Testing, or Selenoid chrome.
+     * {@code firefox} is not a runtime path — that lives in the Selenide cell.
+     */
     @Key("browser")
     @DefaultValue("chrome")
     String browser();
@@ -98,14 +98,6 @@ public interface TestConfig extends Config {
     @Key("skipBlankOpen")
     @DefaultValue("false")
     boolean skipBlankOpen();
-
-    /**
-     * Maps to {@code Configuration.fastSetValue}. Off = Selenide {@code sendKeys}.
-     * On = JS setValue via test {@code set-value.js} (native HTMLInputElement setter).
-     */
-    @Key("fastSetValue")
-    @DefaultValue("false")
-    boolean fastSetValue();
 
     @Key("enableHar")
     @DefaultValue("false")
@@ -138,10 +130,6 @@ public interface TestConfig extends Config {
     @Key("logToConsole")
     @DefaultValue("true")
     boolean logToConsole();
-
-    @Key("selenideLogToConsole")
-    @DefaultValue("true")
-    boolean selenideLogToConsole();
 
     @Key("rootLogLevel")
     @DefaultValue("info")

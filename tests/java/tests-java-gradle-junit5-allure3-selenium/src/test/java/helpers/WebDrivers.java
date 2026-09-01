@@ -12,6 +12,7 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import java.net.URI;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.Locale;
 
 public final class WebDrivers {
 
@@ -59,6 +60,7 @@ public final class WebDrivers {
     }
 
     private static WebDriver create(TestConfig config) {
+        requireChrome(config);
         var remote = resolveRemoteUrl(config);
         var options = chromeOptions(config, remote.isEmpty());
         if (!remote.isEmpty()) {
@@ -95,6 +97,15 @@ public final class WebDrivers {
             options.setCapability("selenoid:options", selenoidOpts);
         }
         return options;
+    }
+
+    public static void requireChrome(TestConfig config) {
+        var browser = config.browser() == null ? "" : config.browser().trim().toLowerCase(Locale.ROOT);
+        if (!browser.equals("chrome") && !browser.equals("chromium")) {
+            throw new IllegalStateException(
+                    "This Selenium cell is Chrome-only: local Chrome for Testing, "
+                            + "or Selenoid chrome. Got browser=" + config.browser());
+        }
     }
 
     private static String resolveRemoteUrl(TestConfig config) {
