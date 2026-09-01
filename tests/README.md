@@ -58,7 +58,7 @@ tests/
     tests-typescript-k6/                             # slot — k6 TypeScript
     tests-typescript-gatling/                       # slot — Gatling TS SDK
   go/
-    tests-go-testing-allure3/                         # active — HTTP block (31 api + 9 ConfigReader + 3 manual)
+    tests-go-testing-allure3-net_http/                         # active — HTTP block (31 api + 9 ConfigReader + 3 manual)
     tests-go-testing-allure3-playwright/             # slot — UI block
     tests-go-cdp/                                    # mill IR (greedy run)
   _deferred/

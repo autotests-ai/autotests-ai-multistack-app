@@ -1,4 +1,4 @@
-module tests-go-testing-allure3
+module tests-go-testing-allure3-net_http
 
 go 1.27
 

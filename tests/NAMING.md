@@ -14,7 +14,7 @@ tests-{language}-{build}-{framework}-{reporting}-{automation}
 | `build` | `gradle`, `maven`, `npm`, `pip`, `mod` | omit when obvious (e.g. JS → npm) |
 | `framework` | `junit4`, `junit5`, `junit6`, `testng`, `pytest`, `vitest`, `testing`, `nunit`, `xunit` | test runner |
 | `reporting` | `allure2`, `allure3`, `no_allure` | underscore in `no_allure` |
-| `automation` | `selenium`, `selenide`, `selene`, `playwright`, `cypress`, `restassured`, `retrofit2`, `requests`, `httpx`, `axios`, `ktor`, `restsharp`, `jmeter`, `gatling`, `k6`, `yandex-tank`, `locust`, `none` | UI/HTTP school or load tool; `none` for api-only when unnamed |
+| `automation` | `selenium`, `selenide`, `selene`, `playwright`, `cypress`, `restassured`, `retrofit2`, `requests`, `httpx`, `axios`, `ktor`, `restsharp`, `net_http`, `jmeter`, `gatling`, `k6`, `yandex-tank`, `locust`, `none` | UI/HTTP school or load tool; `none` for api-only when unnamed |
 
 ## Java (Gradle) — matrix
 
@@ -65,7 +65,7 @@ Full IDs live in hub [`matrix.yaml`](../../matrix.yaml) `tests.modules` (`status
 | `tests-kotlin-gradle-gatling` | slot — Gatling Kotlin DSL |
 | `tests-scala-gatling` | slot — Gatling Scala DSL |
 | `tests-groovy-jmeter` | slot — JMeter JSR223 Groovy |
-| `tests-go-testing-allure3` | **active** — HTTP block (Allure Go + testify) |
+| `tests-go-testing-allure3-net_http` | **active** — HTTP block (`net/http` + Allure Go + testify) |
 | `tests-go-testing-allure3-playwright` | slot — UI block Playwright |
 | `tests-go-cdp` | mill — IR / `greedy run`, not a Selenide peer |
 | `tests-csharp-nunit-allure3-selenium` | slot — UI block |
@@ -78,7 +78,7 @@ tests-javascript-npm-jest-no_allure
 tests-typescript-npm-playwright-allure3
 tests-python-pip-pytest-allure3-selenium
 tests-python-pip-pytest-no_allure-playwright
-tests-go-mod-testing-allure3
+tests-go-mod-testing-allure3-net_http
 ```
 
 ## Suite file stems (cross-language)

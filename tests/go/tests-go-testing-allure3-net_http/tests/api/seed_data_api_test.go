@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	tests "tests-go-testing-allure3"
+	tests "tests-go-testing-allure3-net_http"
 
 	allure "github.com/allure-framework/allure-go/commons/gotest"
 	"github.com/stretchr/testify/require"

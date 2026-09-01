@@ -3,7 +3,7 @@ package manual_test
 import (
 	"testing"
 
-	tests "tests-go-testing-allure3"
+	tests "tests-go-testing-allure3-net_http"
 
 	allure "github.com/allure-framework/allure-go/commons/gotest"
 )

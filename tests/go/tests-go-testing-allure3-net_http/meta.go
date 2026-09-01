@@ -14,7 +14,7 @@ func Wrap(t *testing.T, displayName string, body func(*allure.Context), opts ...
 func commonMeta() []allure.Option {
 	return []allure.Option{
 		allure.WithOwner("stanislav"),
-		allure.WithLabel("module", "tests-go-testing-allure3"),
+		allure.WithLabel("module", "tests-go-testing-allure3-net_http"),
 		allure.WithLabel("language", "go"),
 	}
 }
