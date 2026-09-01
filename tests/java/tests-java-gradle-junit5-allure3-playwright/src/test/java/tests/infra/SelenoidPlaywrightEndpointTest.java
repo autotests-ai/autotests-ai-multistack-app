@@ -48,6 +48,16 @@ class SelenoidPlaywrightEndpointTest extends AllureMeta {
     }
 
     @Test
+    @DisplayName("env WebSocket wins over truncated -DremoteUrl")
+    void envWebSocketWinsOverConfig() {
+        var env = "wss://selenoid.example/playwright/playwright-chromium/1.61.1?accessKey=x";
+        var truncated = "wss://selenoid.example/playwright/playwright-chromium/1.61.1";
+        assertEquals(env, SelenoidPlaywrightEndpoint.preferWebSocket(env, truncated));
+        assertEquals(truncated, SelenoidPlaywrightEndpoint.preferWebSocket("", truncated));
+        assertEquals("", SelenoidPlaywrightEndpoint.preferWebSocket("", ""));
+    }
+
+    @Test
     @DisplayName("session query is appended without dropping existing params")
     void appendsSessionQuery() {
         var ws = "wss://selenoid.example/playwright/playwright-chromium/1.61.1?accessKey=x";

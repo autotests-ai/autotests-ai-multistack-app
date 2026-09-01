@@ -16,6 +16,22 @@ public final class SelenoidPlaywrightEndpoint {
     private SelenoidPlaywrightEndpoint() {
     }
 
+    /**
+     * Prefer {@code SELENOID_PLAYWRIGHT_URL} (Jenkins/GHA env keeps {@code ?accessKey=}).
+     * {@code -DremoteUrl=wss://…?accessKey=} is easy to truncate before the test JVM.
+     */
+    public static String resolve(String configRemoteUrl) {
+        return preferWebSocket(System.getenv("SELENOID_PLAYWRIGHT_URL"), configRemoteUrl);
+    }
+
+    public static String preferWebSocket(String envUrl, String configUrl) {
+        var env = envUrl == null ? "" : envUrl.trim();
+        if (isWebSocket(env)) {
+            return env;
+        }
+        return configUrl == null ? "" : configUrl.trim();
+    }
+
     public static boolean isWebSocket(String url) {
         if (url == null || url.isBlank()) {
             return false;

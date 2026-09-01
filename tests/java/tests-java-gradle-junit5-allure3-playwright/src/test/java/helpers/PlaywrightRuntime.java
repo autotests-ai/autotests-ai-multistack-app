@@ -13,6 +13,7 @@ import pages.App;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
 
 public final class PlaywrightRuntime implements AutoCloseable {
@@ -26,11 +27,13 @@ public final class PlaywrightRuntime implements AutoCloseable {
     private final boolean attachHar;
 
     public PlaywrightRuntime(TestConfig config) {
-        playwright = Playwright.create();
+        var env = new HashMap<>(System.getenv());
+        env.put("PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD", "1");
+        playwright = Playwright.create(new Playwright.CreateOptions().setEnv(env));
         var parts = config.browserSize().split("x");
         int width = Integer.parseInt(parts[0].trim());
         int height = Integer.parseInt(parts[1].trim());
-        var remote = config.remoteUrl() == null ? "" : config.remoteUrl().trim();
+        var remote = SelenoidPlaywrightEndpoint.resolve(config.remoteUrl());
 
         if (SelenoidPlaywrightEndpoint.isHttpUrl(remote)) {
             throw new IllegalStateException(

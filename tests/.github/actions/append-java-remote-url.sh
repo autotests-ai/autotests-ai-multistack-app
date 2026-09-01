@@ -5,11 +5,9 @@ if [ -z "${SELENOID_WEBDRIVER_URL:-}" ] && [ -n "${SELENOID_REMOTE_URL:-}" ]; th
   SELENOID_WEBDRIVER_URL="${SELENOID_REMOTE_URL}"
 fi
 if [ "${TESTS_UI_LIBRARY:-selenide}" = "playwright" ]; then
-  if [ -n "${SELENOID_PLAYWRIGHT_URL:-}" ]; then
-    ARGS+=(-DremoteUrl="${SELENOID_PLAYWRIGHT_URL}")
-  else
-    ARGS+=(-DremoteUrl=)
-  fi
+  # Do not pass the WS URL as -DremoteUrl (query accessKey does not survive Gradle).
+  # PlaywrightRuntime reads SELENOID_PLAYWRIGHT_URL from the environment.
+  ARGS+=(-DremoteUrl=)
 elif [ -n "${SELENOID_WEBDRIVER_URL:-}" ]; then
   ARGS+=(-DremoteUrl="${SELENOID_WEBDRIVER_URL}")
 fi

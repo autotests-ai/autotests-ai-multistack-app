@@ -2,7 +2,7 @@
 // Dispatch equivalent: deploy=tests + run_mock + run_api + run_e2e (screenshots on).
 // Layers: tests/jenkins/gha-tests-path.sh ← selenide .github/actions/{mock,api,e2e}.
 // GHA stays canon for push/PR/CD.
-// Selenoid: credentialsId selenoid-guest-remote-url (WebDriver) and
+// Selenoid: credentialsId selenoid-guest-webdriver-url (/wd/hub) and
 // selenoid-guest-playwright-url (Playwright WS). Mock stays local CFT.
 
 pipeline {
@@ -56,8 +56,9 @@ pipeline {
     UPDATE_MOCK_SCREENSHOTS = "${params.UPDATE_MOCK_SCREENSHOTS}"
     UPDATE_STAGE_SCREENSHOTS = "${params.UPDATE_STAGE_SCREENSHOTS}"
     UPDATE_E2E_SCREENSHOTS = "${params.UPDATE_E2E_SCREENSHOTS}"
-    SELENOID_WEBDRIVER_URL = credentials('selenoid-guest-remote-url')
+    SELENOID_WEBDRIVER_URL = credentials('selenoid-guest-webdriver-url')
     SELENOID_PLAYWRIGHT_URL = credentials('selenoid-guest-playwright-url')
+    PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = '1'
   }
 
   stages {
