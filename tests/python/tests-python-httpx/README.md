@@ -11,6 +11,7 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 cp .env.example .env   # optional; default STAND=prod → autotests.ai
 pytest -m infra
+pytest -m infra --cov=config --cov-fail-under=100 --cov-report=term-missing
 pytest -m api
 pytest -m manual
 ```

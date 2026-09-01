@@ -8,6 +8,7 @@ Sibling UI block: [`tests-go-testing-allure3-playwright`](../tests-go-testing-al
 cd tests/go/tests-go-testing-allure3-net_http
 cp .env.example .env   # optional; default STAND=prod → autotests.ai
 go test ./tests/infra
+./cover-config.sh   # 100% on ConfigReader analog (JaCoCo sibling)
 go test ./tests/api
 go test ./tests/manual
 go test ./...

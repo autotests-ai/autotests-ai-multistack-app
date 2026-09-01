@@ -7,6 +7,7 @@ No browser. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader + 
 ```bash
 cd tests/kotlin/tests-kotlin-gradle-junit5-allure3-ktor
 ./gradlew test -Denv=ci -DincludeTags=infra
+./gradlew test -Denv=ci -DincludeTags=infra jacocoTestCoverageVerification
 ./gradlew test -Denv=ci -DincludeTags=api
 ./gradlew test -Denv=prod -DincludeTags=manual
 ```

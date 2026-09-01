@@ -319,11 +319,13 @@ Classical **integration** (`backend/…/integration/`, job `integration-tests`) 
 Spring context against real PostgreSQL **before** build/deploy. Do not rename Spring slices
 to `integration` and do not move deploy HTTP checks into `backend-unit-tests` or backend integration.
 
-The 100% line-coverage gate (`jacocoTestCoverageVerification`) is java-only and slices by
+The 100% line-coverage gate (`jacocoTestCoverageVerification`) is **JVM** (Java living cells + Kotlin Ktor) and slices by
 `-DincludeTags` (`infra-backend` → `ConfigReader`; `infra-frontend` → `LayoutCss`/`TokensCss`;
 `infra` → all three). `LocalChromePin` (local Chrome for Testing; other browsers skip it) is
 tagged `infra-frontend` (skipped on backend-only CI) and is **not** in the JaCoCo class set.
 It reads `build/jacoco/test.exec`.
+
+Other living HTTP schools report helper coverage without copying JaCoCo: Python `pytest-cov` (CI: no fail-under; httpx can `--cov=config --cov-fail-under=100` locally) · JS/TS Playwright `c8` (no fail-under) · Go `go test -cover` on ConfigReader analog (`./cover-config.sh`) · TypeScript axios Vitest v8 on `config.ts`.
 
 ## Why `component` vs `ui` vs `e2e` (not vs integration)?
 

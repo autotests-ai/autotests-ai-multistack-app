@@ -27,15 +27,12 @@ runs:
         set -euo pipefail
         slice=all
         tags=infra
-        cov="--cov=config --cov=api_client --cov=har_capture"
         if [ "$LANE_BACKEND" = "true" ] && [ "$LANE_FRONTEND" != "true" ] && [ "$LANE_TESTS" != "true" ]; then
           slice=backend
           tags=infra_backend
-          cov="--cov=config --cov=api_client"
         fi
         echo "slice=${slice}" >> "$GITHUB_OUTPUT"
         echo "INFRA_MARKER=${tags}" >> "$GITHUB_ENV"
-        echo "INFRA_COV=${cov}" >> "$GITHUB_ENV"
         echo "Infra slice=${slice} -m ${tags}"
     - uses: actions/setup-python@v6
       with:
@@ -53,8 +50,19 @@ runs:
       run: |
         set -euo pipefail
         # Coverage of helpers only — no fail-under (not coverage theatre).
+        # Skip missing modules so HTTP-only httpx (no har_capture) can reuse this action.
+        cov=()
+        want=(config api_client)
+        if [ "${INFRA_MARKER}" = "infra" ]; then
+          want+=(har_capture)
+        fi
+        for m in "${want[@]}"; do
+          if [ -f "${m}.py" ]; then
+            cov+=(--cov="${m}")
+          fi
+        done
         python -m pytest -m "${INFRA_MARKER}" \
-          ${INFRA_COV} \
+          "${cov[@]}" \
           --cov-report=xml:coverage.xml \
           --cov-report=term-missing \
           --alluredir=allure-results

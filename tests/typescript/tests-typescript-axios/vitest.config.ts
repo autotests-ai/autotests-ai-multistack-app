@@ -17,5 +17,16 @@ export default defineConfig({
       { name: 'negative', description: 'validation / error paths' },
     ],
     reporters: ['default', new AllureReporter({ resultsDir: 'allure-results' })],
+    coverage: {
+      provider: 'v8',
+      include: ['config.ts'],
+      reporter: ['text', 'lcov'],
+      reportsDirectory: 'coverage',
+      thresholds: {
+        lines: 100,
+        statements: 100,
+        functions: 100,
+      },
+    },
   },
 });

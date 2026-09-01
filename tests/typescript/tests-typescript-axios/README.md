@@ -9,6 +9,7 @@ cd tests/typescript/tests-typescript-axios
 npm install
 cp .env.example .env   # optional; default STAND=prod → autotests.ai
 npx vitest run --tagsFilter infra
+npx vitest run --tagsFilter infra --coverage
 npx vitest run --tagsFilter api
 npx vitest run --tagsFilter manual
 ```
