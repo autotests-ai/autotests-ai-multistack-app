@@ -108,7 +108,7 @@ Living non-JVM cells ship a ConfigReader analog (command on the cell README). Mi
 | Python httpx | `pytest -m infra --cov=config --cov-fail-under=100` | 100% `config.py` | same Python action + cell `sonar-project.properties` |
 | TS axios | `npx vitest run --tagsFilter infra --coverage` | 100% lines on `config.ts` | same TS action + cell `sonar-project.properties` |
 | Go net/http | `./cover-config.sh` | 100% ConfigReader analog | `@sonar/scan` + `coverage.out` |
-| C# RestSharp | `dotnet test --filter TestCategory=infra` + coverlet | 100% `Config.ConfigReader` | `@sonar/scan` + opencover |
+| C# RestSharp | `dotnet test --filter TestCategory=infra /p:CollectCoverage=true` | 100% `Config.ConfigReader` | `@sonar/scan` + opencover |
 
 **Not** application code (that's `backend-unit-tests` on `BACKEND_DIR` / `frontend-unit-tests` on `FRONTEND_DIR`).
 

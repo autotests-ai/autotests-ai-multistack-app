@@ -12,5 +12,5 @@ HTTP-only: no `mock` / `e2e` in this family (dispatcher STOP — not a UI cell).
 
 | Verb | Layer |
 |------|-------|
-| `infra` | `dotnet test --filter TestCategory=infra` + coverlet 100% `Config.ConfigReader` |
+| `infra` | `dotnet test --filter TestCategory=infra /p:CollectCoverage=true` — coverlet 100% `Config.ConfigReader` |
 | `sonar` | scan + gate on `coverage.opencover.xml` |

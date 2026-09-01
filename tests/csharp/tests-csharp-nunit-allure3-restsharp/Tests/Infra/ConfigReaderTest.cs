@@ -64,7 +64,7 @@ public sealed class ConfigReaderTest : AllureMeta
     {
         UsingCiStand(() =>
         {
-            Assert.That(ConfigReader.LoadConfig().BaseUrl, Is.EqualTo("http://localhost:9821"));
+            Assert.That(ConfigReader.TestConfig.BaseUrl, Is.EqualTo("http://localhost:9821"));
         });
     }
 
@@ -74,7 +74,7 @@ public sealed class ConfigReaderTest : AllureMeta
     {
         UsingCiStand(() =>
         {
-            Assert.That(ConfigReader.ResolveBaseUrl(ConfigReader.LoadConfig()), Is.EqualTo("http://localhost:9821/"));
+            Assert.That(ConfigReader.ResolveBaseUrl(), Is.EqualTo("http://localhost:9821/"));
         });
     }
 
@@ -84,7 +84,7 @@ public sealed class ConfigReaderTest : AllureMeta
     {
         UsingCiStand(() =>
         {
-            Assert.That(ConfigReader.ResolveApiBaseUrl(ConfigReader.LoadConfig()), Is.EqualTo("http://localhost:8800/"));
+            Assert.That(ConfigReader.ResolveApiBaseUrl(), Is.EqualTo("http://localhost:8800/"));
         });
     }
 

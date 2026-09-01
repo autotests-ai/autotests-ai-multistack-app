@@ -8,13 +8,13 @@ Sibling UI blocks: [`tests-csharp-nunit-allure3-selenium`](../tests-csharp-nunit
 cd tests/csharp/tests-csharp-nunit-allure3-restsharp
 cp .env.example .env   # optional; default STAND=prod → autotests.ai
 dotnet test --filter TestCategory=infra
-dotnet test --filter TestCategory=infra /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=coverage.opencover.xml /p:Include='[*]Config.ConfigReader' /p:Threshold=100 /p:ThresholdType=line
+dotnet test --filter TestCategory=infra /p:CollectCoverage=true
 dotnet test --filter TestCategory=api
 dotnet test --filter TestCategory=manual
 dotnet test
 ```
 
-CI `sonar-tests` reads `coverage.opencover.xml` via [`sonar-project.properties`](sonar-project.properties) (allow-list `ConfigReader.cs`).
+`/p:CollectCoverage=true` is Coverlet fail-under **100%** line on `Config.ConfigReader` (csproj). CI `sonar-tests` reads `coverage.opencover.xml` via [`sonar-project.properties`](sonar-project.properties). HTTP-only: no `mock` / `e2e` in this cell.
 
 Stand is `STAND` (`prod` default) or `BASE_URL` / `API_BASE_URL`. `STAND=ci` → API [http://localhost:8800/](http://localhost:8800/). Categories are slices, not stands.
 

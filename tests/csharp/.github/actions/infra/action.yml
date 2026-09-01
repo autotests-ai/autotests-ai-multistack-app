@@ -43,15 +43,9 @@ runs:
       working-directory: ${{ inputs.module_dir }}
       run: |
         set -euo pipefail
-        # ConfigReader only — 100% line gate (JaCoCo sibling).
+        # ConfigReader only — 100% line gate (JaCoCo sibling). IncludeTestAssembly: helper lives in the test project.
         dotnet test --filter "TestCategory=${INFRA_FILTER}" \
-          /p:CollectCoverage=true \
-          /p:CoverletOutputFormat=opencover \
-          /p:CoverletOutput=coverage.opencover.xml \
-          /p:Include='[*]Config.ConfigReader' \
-          /p:Threshold=100 \
-          /p:ThresholdType=line \
-          /p:ThresholdStat=total
+          /p:CollectCoverage=true
     - if: steps.run-tests.outcome == 'success'
       uses: actions/upload-artifact@v7
       with:
