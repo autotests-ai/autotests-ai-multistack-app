@@ -30,7 +30,7 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 **Not classical either:** Spring `@WebMvcTest` / `@DataJpaTest` — those stay in **unit** (see slices below).  
 **Not a pyramid language:** `tests/go/tests-go-cdp` mills IR via `greedy run` (`layers: [crystal]`, crystal column on `/stack/`). Not `@Layer`.  
 **Not a pyramid layer:** load slots — JMeter (`tests-java-jmeter`, `tests-groovy-jmeter`) · Gatling (`tests-java-gradle-gatling`, `tests-kotlin-gradle-gatling`, `tests-scala-gatling`, `tests-javascript-gatling`, `tests-typescript-gatling`) · k6 (`tests-javascript-k6`, `tests-typescript-k6`) · Locust (`tests-python-locust`) · Yandex.Tank (`tests-python-yandex-tank`). `layers: [performance]` on `/stack/` Tests board. Not `@Layer`.  
-**Go living HTTP block:** `tests/go/tests-go-testing-allure3` — `go test` + official Allure Go + testify, **api** layer only. UI block is slot `tests-go-testing-allure3-playwright`. Mill stays `tests-go-cdp`. Not Gomega.
+**Go living HTTP block:** `tests/go/tests-go-testing-allure3` — `go test` + net/http + testify + official Allure Go, `layers: [api]`. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader + 3 manual). UI block is slot `tests-go-testing-allure3-playwright`. Mill stays `tests-go-cdp`. Not Gomega.
 
 **Java Selenium living block:** `tests/java/tests-java-gradle-junit5-allure3-selenium` — raw WebDriver + Rest Assured, `layers: [api, ui, e2e]`. Not the Selenide default cell.
 
@@ -40,7 +40,7 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
 **TypeScript HTTP-only living block:** `tests-typescript-axios` — Vitest + axios, `layers: [api]`. Same `/api` catalog (5 api + infra + manual). Titles/schemas match `tests-typescript-playwright` `tests/api`. `tests-javascript-axios` stays a slot. Combo with Playwright = generate, not a third folder.
 
-**HTTP-only slots (other languages):** empty folders, `layers: [api]`, same `/api` contract. Python `tests-python-requests` · JS `tests-javascript-axios` · Kotlin `tests-kotlin-gradle-junit5-allure3-ktor` · C# `tests-csharp-nunit-allure3-restsharp`. Go already has living `tests-go-testing-allure3`. Combo with a UI school = generate, not a third folder.
+**HTTP-only slots (other languages):** empty folders, `layers: [api]`, same `/api` contract. Python `tests-python-requests` · JS `tests-javascript-axios` · Kotlin `tests-kotlin-gradle-junit5-allure3-ktor` · C# `tests-csharp-nunit-allure3-restsharp`. Go living catalog is `tests-go-testing-allure3`. Combo with a UI school = generate, not a third folder.
 
 **JS/TS Playwright living:** api inside `tests-javascript-playwright` / `tests-typescript-playwright` is Playwright **APIRequest** (`request` fixture). Axios is the sibling HTTP-only school, not the client in those folders. Java Playwright uses Rest Assured in-cell (JVM HTTP school).
 
@@ -245,6 +245,15 @@ npx playwright test --grep @manual
 For `TESTS_LANG=typescript`, a layer is a **Playwright tag**, a stand is **`UI_URL`** / `STAND` / `API_BASE_URL`
 (from `tests/typescript/tests-typescript-playwright`) — same commands as javascript.
 
+For `TESTS_LANG=go`, a layer is a **package path**, a stand is **`STAND`** / `API_BASE_URL`
+(from `tests/go/tests-go-testing-allure3`):
+
+```bash
+STAND=ci   go test ./tests/infra
+STAND=prod go test ./tests/api
+STAND=prod go test ./tests/manual
+```
+
 ## Layer table
 
 | Layer | Zone | Where | Selector | Run |
@@ -389,7 +398,8 @@ Look under the test/launch **Окружение** block (not Custom fields — t
 | `tests/javascript/tests-javascript-playwright/` | Playwright tags = layers; stand is `UI_URL` / `STAND` (**active**) |
 | `tests/typescript/tests-typescript-playwright/` | Playwright tags = layers; stand is `UI_URL` / `STAND` (**active**, JS etalon typed) |
 | `tests/python/tests-python-selenium/` | pytest markers = layers; stand is `STAND` / `BASE_URL` (**active**) |
-| `kotlin/…`, `go/…`, Cypress, … | slots in [`deploy/matrix.yaml`](../deploy/matrix.yaml) |
+| `tests/go/tests-go-testing-allure3/` | `go test` packages = layers; stand is `STAND` / `API_BASE_URL` (**active**, HTTP-only catalog) |
+| `kotlin/…`, Cypress, … | slots in [`deploy/matrix.yaml`](../deploy/matrix.yaml) |
 
 Same app under test; not separate pyramid layers — parallel teaching stacks ([NAMING.md](NAMING.md)).
 They read env vars, not `-Denv`: Playwright takes `UI_URL`, pytest takes `BASE_URL`.

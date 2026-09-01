@@ -1,19 +1,21 @@
 # tests-go-testing-allure3
 
-Living Go cell: `go test` + [official Allure Go](https://github.com/allure-framework/allure-go) + [testify](https://github.com/stretchr/testify). HTTP contract of the teaching app — same questions as Java `AuthApiTests` / `HealthItemsApiTests`.
+`go test` · **net/http** · [testify](https://github.com/stretchr/testify) · [official Allure Go](https://github.com/allure-framework/allure-go). HTTP-only school — same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader + 3 manual). No browser.
 
-Not Playwright. Browser UI stays in `tests-typescript-playwright` / Selenide. Not the IR mill (`tests-go-cdp`).
+Sibling UI block: [`tests-go-testing-allure3-playwright`](../tests-go-testing-allure3-playwright/). Mill: [`tests-go-cdp`](../tests-go-cdp/). Combo with Playwright = generate, not a third folder.
 
 ```bash
 cd tests/go/tests-go-testing-allure3
-cp .env.example .env   # optional; default STAND=prod
-export ALLURE_RESULTS_DIR=allure-results
+cp .env.example .env   # optional; default STAND=prod → autotests.ai
+go test ./tests/infra
+go test ./tests/api
+go test ./tests/manual
 go test ./...
 ```
 
-Stand is `STAND` (`prod` default) or `API_BASE_URL`. Layers: **api** only.
+Stand is `STAND` (`prod` default) or `BASE_URL` / `API_BASE_URL`. `STAND=ci` → API [http://localhost:8800/](http://localhost:8800/). Packages are slices, not stands.
 
-Allure 3:
+## Allure
 
 ```bash
 npx allure generate ./allure-results
