@@ -21,22 +21,7 @@ public final class SelenoidPlaywrightEndpoint {
      * {@code -DremoteUrl=wss://…?accessKey=} is easy to truncate before the test JVM.
      */
     public static String resolve(String configRemoteUrl) {
-        var fromEnv = preferWebSocket(System.getenv("SELENOID_PLAYWRIGHT_URL"), "");
-        if (!fromEnv.isEmpty()) {
-            return fromEnv;
-        }
-        var path = System.getenv("SELENOID_PLAYWRIGHT_URL_FILE");
-        if (path != null && !path.isBlank()) {
-            try {
-                var fileUrl = java.nio.file.Files.readString(java.nio.file.Path.of(path)).trim();
-                if (isWebSocket(fileUrl)) {
-                    return fileUrl;
-                }
-            } catch (java.io.IOException ignored) {
-                // fall through to -DremoteUrl / properties
-            }
-        }
-        return preferWebSocket("", configRemoteUrl);
+        return preferWebSocket(System.getenv("SELENOID_PLAYWRIGHT_URL"), configRemoteUrl);
     }
 
     public static String preferWebSocket(String envUrl, String configUrl) {

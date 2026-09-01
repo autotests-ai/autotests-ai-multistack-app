@@ -201,14 +201,6 @@ test {
     systemProperty 'env', testEnv
     systemProperty 'allureReportMode', allureReportMode
     systemProperty 'allureAgentMode', allureAgentMode
-    def pwUrlFile = file('build/selenoid-playwright.url')
-    if (pwUrlFile.exists()) {
-        def pwUrl = pwUrlFile.getText('UTF-8').trim()
-        if (pwUrl) {
-            environment 'SELENOID_PLAYWRIGHT_URL', pwUrl
-            environment 'SELENOID_PLAYWRIGHT_URL_FILE', pwUrlFile.absolutePath
-        }
-    }
     configKeys.each { key ->
         def override = System.getProperty(key)
         if (override != null) {
