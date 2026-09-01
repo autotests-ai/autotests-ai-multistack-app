@@ -1,0 +1,103 @@
+package tests.infra
+
+import annotations.Layer
+import config.ConfigReader
+import config.TestConfig
+import io.qameta.allure.Epic
+import io.qameta.allure.Feature
+import io.qameta.allure.Severity
+import io.qameta.allure.SeverityLevel
+import org.aeonbits.owner.ConfigFactory
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
+import tests.AllureMeta
+
+@Layer("infra")
+@Epic("Test infra")
+@Feature("ConfigReader")
+@Severity(SeverityLevel.NORMAL)
+@Tag("infra")
+@Tag("infra-backend")
+@DisplayName("ConfigReader")
+@Execution(ExecutionMode.SAME_THREAD)
+class ConfigReaderTest : AllureMeta() {
+
+    @Test
+    @DisplayName("resolveBaseUrl adds trailing slash to HTTP baseUrl")
+    fun resolveBaseUrlAddsTrailingSlash() {
+        val config = configWith(mapOf("baseUrl" to "http://localhost:3000"))
+        assertEquals("http://localhost:3000/", ConfigReader.resolveBaseUrl(config))
+    }
+
+    @Test
+    @DisplayName("resolveBaseUrl keeps trailing slash on baseUrl")
+    fun resolveBaseUrlKeepsTrailingSlash() {
+        val config = configWith(mapOf("baseUrl" to "http://localhost:3000/"))
+        assertEquals("http://localhost:3000/", ConfigReader.resolveBaseUrl(config))
+    }
+
+    @Test
+    @DisplayName("resolveBaseUrl fails fast when baseUrl is empty")
+    fun resolveBaseUrlFailsWhenEmpty() {
+        val config = configWith(mapOf("baseUrl" to ""))
+        val error = assertThrows(IllegalStateException::class.java) {
+            ConfigReader.resolveBaseUrl(config)
+        }
+        assertTrue(error.message!!.contains("Set baseUrl"))
+    }
+
+    @Test
+    @DisplayName("resolveApiBaseUrl adds trailing slash to HTTP apiBaseUrl")
+    fun resolveApiBaseUrlAddsTrailingSlash() {
+        val config = configWith(mapOf("apiBaseUrl" to "http://api.example.com"))
+        assertEquals("http://api.example.com/", ConfigReader.resolveApiBaseUrl(config))
+    }
+
+    @Test
+    @DisplayName("resolveApiBaseUrl fails fast when apiBaseUrl is empty")
+    fun resolveApiBaseUrlFailsWhenEmpty() {
+        val config = configWith(mapOf("apiBaseUrl" to ""))
+        val error = assertThrows(IllegalStateException::class.java) {
+            ConfigReader.resolveApiBaseUrl(config)
+        }
+        assertTrue(error.message!!.contains("Set apiBaseUrl"))
+    }
+
+    @Test
+    @DisplayName("loaded baseUrl has no trailing slash (Owner file; Ui.open uses resolveBaseUrl)")
+    fun loadedBaseUrlHasNoTrailingSlash() {
+        assertEquals("http://localhost:9821", ConfigReader.testConfig.baseUrl())
+    }
+
+    @Test
+    @DisplayName("resolveBaseUrl uses loaded config")
+    fun resolveBaseUrlUsesLoadedConfig() {
+        assertEquals("http://localhost:9821/", ConfigReader.resolveBaseUrl())
+    }
+
+    @Test
+    @DisplayName("resolveApiBaseUrl uses loaded config")
+    fun resolveApiBaseUrlUsesLoadedConfig() {
+        assertEquals("http://localhost:8800/", ConfigReader.resolveApiBaseUrl())
+    }
+
+    @Test
+    @DisplayName("private constructor keeps utility class closed")
+    fun privateConstructorIsReachable() {
+        val constructor = ConfigReader::class.java.getDeclaredConstructor()
+        constructor.isAccessible = true
+        assertNotNull(constructor.newInstance())
+    }
+
+    companion object {
+        private fun configWith(overrides: Map<String, String>): TestConfig =
+            ConfigFactory.create(TestConfig::class.java, overrides)
+    }
+}

@@ -34,7 +34,7 @@ tests/
     tests-kotlin-gradle-junit5-allure3-selenide/     # slot — UI block
     tests-kotlin-gradle-junit5-allure3-selenium/    # slot — UI block
     tests-kotlin-gradle-junit5-allure3-playwright/   # slot — UI block
-    tests-kotlin-gradle-junit5-allure3-ktor/         # slot — HTTP block Ktor
+    tests-kotlin-gradle-junit5-allure3-ktor/         # active — HTTP block Ktor
     tests-kotlin-gradle-gatling/                     # slot — Gatling Kotlin DSL
   scala/
     tests-scala-gatling/                             # slot — Gatling Scala DSL

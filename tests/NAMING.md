@@ -61,7 +61,7 @@ Full IDs live in hub [`matrix.yaml`](../../matrix.yaml) `tests.modules` (`status
 | `tests-kotlin-gradle-junit5-allure3-selenide` | slot — UI block |
 | `tests-kotlin-gradle-junit5-allure3-selenium` | slot — UI block |
 | `tests-kotlin-gradle-junit5-allure3-playwright` | slot — UI block |
-| `tests-kotlin-gradle-junit5-allure3-ktor` | slot — HTTP block Ktor client |
+| `tests-kotlin-gradle-junit5-allure3-ktor` | **active** — HTTP block Ktor client |
 | `tests-kotlin-gradle-gatling` | slot — Gatling Kotlin DSL |
 | `tests-scala-gatling` | slot — Gatling Scala DSL |
 | `tests-groovy-jmeter` | slot — JMeter JSR223 Groovy |

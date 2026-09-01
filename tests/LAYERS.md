@@ -40,7 +40,9 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
 **TypeScript HTTP-only living block:** `tests-typescript-axios` — Vitest + axios, `layers: [api]`. Same `/api` catalog (5 api + infra + manual). Titles/schemas match `tests-typescript-playwright` `tests/api`. `tests-javascript-axios` stays a slot. Combo with Playwright = generate, not a third folder.
 
-**HTTP-only slots (other languages):** empty folders, `layers: [api]`, same `/api` contract. Python `tests-python-requests` · JS `tests-javascript-axios` · Kotlin `tests-kotlin-gradle-junit5-allure3-ktor` · C# `tests-csharp-nunit-allure3-restsharp`. Go living catalog is `tests-go-testing-allure3-net_http`. Combo with a UI school = generate, not a third folder.
+**Kotlin HTTP-only living block:** `tests-kotlin-gradle-junit5-allure3-ktor` — Gradle + JUnit 5 + Ktor client, `layers: [api]`. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader + 3 manual). UI stays in Selenide / Selenium / Playwright siblings. Kotest+Ktor emit is niche, not a second folder.
+
+**HTTP-only slots (other languages):** empty folders, `layers: [api]`, same `/api` contract. Python `tests-python-requests` · JS `tests-javascript-axios` · C# `tests-csharp-nunit-allure3-restsharp`. Go living catalog is `tests-go-testing-allure3-net_http`. Kotlin living catalog is `tests-kotlin-gradle-junit5-allure3-ktor`. Combo with a UI school = generate, not a third folder.
 
 **JS/TS Playwright living:** api inside `tests-javascript-playwright` / `tests-typescript-playwright` is Playwright **APIRequest** (`request` fixture). Axios is the sibling HTTP-only school, not the client in those folders. Java Playwright uses Rest Assured in-cell (JVM HTTP school).
 
@@ -254,6 +256,15 @@ STAND=prod go test ./tests/api
 STAND=prod go test ./tests/manual
 ```
 
+For `TESTS_LANG=kotlin`, a layer is a **tag filter**, a stand is **`-Denv`**
+(from `tests/kotlin/tests-kotlin-gradle-junit5-allure3-ktor`):
+
+```bash
+./gradlew test -Denv=ci   -DincludeTags=infra
+./gradlew test -Denv=prod -DincludeTags=api
+./gradlew test -Denv=prod -DincludeTags=manual
+```
+
 ## Layer table
 
 | Layer | Zone | Where | Selector | Run |
@@ -399,10 +410,11 @@ Look under the test/launch **Окружение** block (not Custom fields — t
 | `tests/typescript/tests-typescript-playwright/` | Playwright tags = layers; stand is `UI_URL` / `STAND` (**active**, JS etalon typed) |
 | `tests/python/tests-python-selenium/` | pytest markers = layers; stand is `STAND` / `BASE_URL` (**active**) |
 | `tests/go/tests-go-testing-allure3-net_http/` | `go test` packages = layers; stand is `STAND` / `API_BASE_URL` (**active**, HTTP-only catalog) |
-| `kotlin/…`, Cypress, … | slots in [`deploy/matrix.yaml`](../deploy/matrix.yaml) |
+| `tests/kotlin/tests-kotlin-gradle-junit5-allure3-ktor/` | Gradle + JUnit 5 + Ktor client; stand is `-Denv` (**active**, HTTP-only catalog) |
+| Cypress, remaining `kotlin/…` UI slots, … | slots in [`deploy/matrix.yaml`](../deploy/matrix.yaml) |
 
 Same app under test; not separate pyramid layers — parallel teaching stacks ([NAMING.md](NAMING.md)).
-They read env vars, not `-Denv`: Playwright takes `UI_URL`, pytest takes `BASE_URL`.
+Playwright takes `UI_URL`, pytest takes `BASE_URL`, Go takes `STAND` / `API_BASE_URL`, Kotlin HTTP takes `-Denv`.
 
 ## Where the commands live
 
