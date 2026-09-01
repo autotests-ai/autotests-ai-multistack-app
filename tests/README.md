@@ -54,7 +54,7 @@ tests/
     tests-python-locust/                             # slot — Locust
   typescript/
     tests-typescript-playwright/                     # active — UI+HTTP, APIRequest in-cell
-    tests-typescript-axios/                          # slot — HTTP-only Axios (not PW client)
+    tests-typescript-axios/                          # active — HTTP block axios (Vitest)
     tests-typescript-k6/                             # slot — k6 TypeScript
     tests-typescript-gatling/                       # slot — Gatling TS SDK
   go/
