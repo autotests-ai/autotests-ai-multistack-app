@@ -1,1 +1,0 @@
-{"id":"ee4d3889ec02ff45b3ceaff22fcba9c8","fullName":"tests.e2e.RegisterTests.shouldShowValidationErrorWhenUsernameIsTooShort","name":"Short username shows validation error","status":"passed","testResultsByEnv":{"default":"ddc01b1f97253997faf547c8ebb4de06"}}

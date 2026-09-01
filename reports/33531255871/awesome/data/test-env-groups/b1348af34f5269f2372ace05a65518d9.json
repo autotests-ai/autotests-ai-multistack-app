@@ -1,1 +1,0 @@
-{"id":"b1348af34f5269f2372ace05a65518d9","fullName":"tests.api.AuthApiTests.deleteRemovesAccount","name":"DELETE /api/auth/me removes the account: repeated login is rejected","status":"passed","testResultsByEnv":{"default":"39ed781056d03c8d9242af752a5d1853"}}

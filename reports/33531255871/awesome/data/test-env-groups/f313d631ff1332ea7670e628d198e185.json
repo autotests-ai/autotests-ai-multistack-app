@@ -1,1 +1,0 @@
-{"id":"f313d631ff1332ea7670e628d198e185","fullName":"tests.api.AuthApiTests.deleteWithGarbageToken","name":"DELETE /api/auth/me with a garbage token returns 401","status":"passed","testResultsByEnv":{"default":"28c0a09a2b2be21d6aa6bf1c41d0e270"}}
