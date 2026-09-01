@@ -91,10 +91,21 @@ Self-check of the **tests module helpers** before / alongside product layers —
 | frontend helpers | `infra` + `infra-frontend` | inside the all slice | CSS/HAR/local browser pin (`LocalChromePin` = local Chrome for Testing; other browsers skip it) — frontend lane runs the **full** infra because UI tests read `ConfigReader` |
 
 ```bash
-./gradlew test -Denv=ci -DincludeTags=infra-backend   # + JaCoCo on ConfigReader
-./gradlew test -Denv=ci -DincludeTags=infra-frontend  # + JaCoCo on CSS helpers
-./gradlew test -Denv=ci -DincludeTags=infra           # full infra (CI default)
+./gradlew test -Denv=ci -DincludeTags=infra-backend jacocoTestCoverageVerification   # 100% ConfigReader
+./gradlew test -Denv=ci -DincludeTags=infra-frontend jacocoTestCoverageVerification  # 100% CSS helpers
+./gradlew test -Denv=ci -DincludeTags=infra jacocoTestCoverageVerification           # full infra (CI default)
 ```
+
+Living non-JVM cells ship a ConfigReader analog (command on the cell README). Mill `tests-go-cdp` and empty slots do not.
+
+| Cell | Local | Gate |
+|------|-------|------|
+| Java + Kotlin Ktor | `jacocoTestCoverageVerification` | 100% ConfigReader (Selenide/Selenium also CSS helpers on full infra) |
+| JS / TS Playwright | `npm run test:infra` | c8 lcov, **no** fail-under |
+| Python Selenium | `pytest -m infra --cov=config --cov=api_client --cov=har_capture` | report, **no** fail-under |
+| Python httpx | `pytest -m infra --cov=config --cov-fail-under=100` | 100% `config.py` |
+| TS axios | `npx vitest run --tagsFilter infra --coverage` | 100% lines on `config.ts` |
+| Go net/http | `./cover-config.sh` | 100% ConfigReader analog |
 
 **Not** application code (that's `backend-unit-tests` on `BACKEND_DIR` / `frontend-unit-tests` on `FRONTEND_DIR`).
 

@@ -7,6 +7,7 @@ No browser. Same `/api` contract as the Selenide/Selenium living cells. UI stays
 ```bash
 cd tests/java/tests-java-gradle-junit5-allure3-restassured
 ./gradlew test -Denv=ci -DincludeTags=infra
+./gradlew test -Denv=ci -DincludeTags=infra jacocoTestCoverageVerification
 ./gradlew test -Denv=ci -DincludeTags=api
 ```
 

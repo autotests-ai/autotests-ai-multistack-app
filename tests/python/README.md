@@ -2,7 +2,7 @@
 
 | Folder | Runner |
 |--------|--------|
-| `tests-python-selenium/` | **active** — pytest · Selenium · markers (`api` / `e2e` / `mock` / `screenshot` / `manual` / `infra`) |
+| `tests-python-selenium/` | **active** — pytest · Selenium · markers (`api` / `e2e` / `mock` / `screenshot` / `manual` / `infra`); pytest-cov report, no fail-under |
 | `tests-python-selene/` | slot — UI block Selene |
 | `tests-python-playwright/` | slot — UI block Playwright |
 | `tests-python-requests/` | slot — HTTP block requests |

@@ -10,6 +10,7 @@ Local Chrome is **Chrome for Testing** (`LocalChromePin`, same pin file as Selen
 cd tests/java/tests-java-gradle-junit5-allure3-playwright
 ./scripts/install-chrome-for-testing.sh   # once per machine (local Chrome pin)
 ./gradlew test -Denv=ci -DincludeTags=infra
+./gradlew test -Denv=ci -DincludeTags=infra jacocoTestCoverageVerification
 ./gradlew test -Denv=ci -DincludeTags=api
 ./gradlew test -Denv=mock -DincludeTags=ui -DexcludeTags=screenshot
 SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=mock -DincludeTags=screenshot

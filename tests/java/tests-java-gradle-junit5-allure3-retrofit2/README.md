@@ -7,6 +7,7 @@ No browser. Same `/api` contract as the Rest Assured HTTP block and the Selenide
 ```bash
 cd tests/java/tests-java-gradle-junit5-allure3-retrofit2
 ./gradlew test -Denv=ci -DincludeTags=infra
+./gradlew test -Denv=ci -DincludeTags=infra jacocoTestCoverageVerification
 ./gradlew test -Denv=ci -DincludeTags=api
 ```
 

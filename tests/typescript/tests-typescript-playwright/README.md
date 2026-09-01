@@ -13,7 +13,7 @@ npm ci
 npx playwright install chromium   # local only; skip when using SELENOID_PLAYWRIGHT_URL
 npm test                          # @e2e, exclude mock/screenshot
 npm run test:api
-npm run test:infra
+npm run test:infra                 # c8 lcov (JaCoCo analog, no fail-under)
 npm run test:manual
 npm run typecheck
 ```

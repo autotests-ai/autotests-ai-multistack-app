@@ -15,6 +15,8 @@ pytest -m api
 pytest -m 'e2e and not screenshot and not mock'
 pytest -m manual
 pytest -m infra
+pytest -m infra --cov=config --cov=api_client --cov=har_capture --cov-report=term-missing
+# report only — CI has no fail-under (not coverage theatre)
 STAND=mock pytest -m mock   # docker compose --profile mock up -d stand-gateway first
 STAND=mock pytest -m screenshot   # PNG compare vs mock/; omit SCREENSHOT_OS on a Mac
 ```

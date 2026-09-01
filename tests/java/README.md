@@ -21,24 +21,24 @@ Clone folder = teaching **block**. Combo (e.g. Selenium + Retrofit) = generate, 
 
 ```bash
 cd tests/java/tests-java-gradle-junit5-allure3-selenide
-./gradlew test -Denv=ci -DincludeTags=infra
+./gradlew test -Denv=ci -DincludeTags=infra jacocoTestCoverageVerification
 ./gradlew test -Denv=ci -DincludeTags=e2e -DexcludeTags=screenshot
 
 cd tests/java/tests-java-gradle-junit5-allure3-selenium
-./gradlew test -Denv=ci -DincludeTags=infra
+./gradlew test -Denv=ci -DincludeTags=infra jacocoTestCoverageVerification
 ./gradlew test -Denv=ci -DincludeTags=api
 ./gradlew test -Denv=ci -DincludeTags=e2e -DexcludeTags=screenshot
 
 cd tests/java/tests-java-gradle-junit5-allure3-restassured
-./gradlew test -Denv=ci -DincludeTags=infra
+./gradlew test -Denv=ci -DincludeTags=infra jacocoTestCoverageVerification
 ./gradlew test -Denv=ci -DincludeTags=api
 
 cd tests/java/tests-java-gradle-junit5-allure3-retrofit2
-./gradlew test -Denv=ci -DincludeTags=infra
+./gradlew test -Denv=ci -DincludeTags=infra jacocoTestCoverageVerification
 ./gradlew test -Denv=ci -DincludeTags=api
 
 cd tests/java/tests-java-gradle-junit5-allure3-playwright
-./gradlew test -Denv=ci -DincludeTags=infra
+./gradlew test -Denv=ci -DincludeTags=infra jacocoTestCoverageVerification
 ./gradlew test -Denv=ci -DincludeTags=api
 ./gradlew test -Denv=ci -DincludeTags=e2e
 ```
