@@ -42,7 +42,9 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
 **Kotlin HTTP-only living block:** `tests-kotlin-gradle-junit5-allure3-ktor` — Gradle + JUnit 5 + Ktor client, `layers: [api]`. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader + 3 manual). UI stays in Selenide / Selenium / Playwright siblings. Kotest+Ktor emit is niche, not a second folder.
 
-**HTTP-only slots (other languages):** empty folders, `layers: [api]`, same `/api` contract. Python `tests-python-requests` · JS `tests-javascript-axios` · C# `tests-csharp-nunit-allure3-restsharp`. Go living catalog is `tests-go-testing-allure3-net_http`. Kotlin living catalog is `tests-kotlin-gradle-junit5-allure3-ktor`. Combo with a UI school = generate, not a third folder.
+**C# HTTP-only living block:** `tests-csharp-nunit-allure3-restsharp` — NUnit + RestSharp + Allure.NUnit, `layers: [api]`. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader + 3 manual). UI stays in NUnit Selenium / xUnit Playwright siblings. Combo with a UI school = generate, not a third folder.
+
+**HTTP-only slots (other languages):** empty folders, `layers: [api]`, same `/api` contract. Python `tests-python-requests` · JS `tests-javascript-axios`. Go living catalog is `tests-go-testing-allure3-net_http`. Kotlin living catalog is `tests-kotlin-gradle-junit5-allure3-ktor`. C# living catalog is `tests-csharp-nunit-allure3-restsharp`. Combo with a UI school = generate, not a third folder.
 
 **JS/TS Playwright living:** api inside `tests-javascript-playwright` / `tests-typescript-playwright` is Playwright **APIRequest** (`request` fixture). Axios is the sibling HTTP-only school, not the client in those folders. Java Playwright uses Rest Assured in-cell (JVM HTTP school).
 
@@ -274,6 +276,15 @@ For `TESTS_LANG=kotlin`, a layer is a **tag filter**, a stand is **`-Denv`**
 ./gradlew test -Denv=ci   -DincludeTags=infra
 ./gradlew test -Denv=prod -DincludeTags=api
 ./gradlew test -Denv=prod -DincludeTags=manual
+```
+
+For `TESTS_LANG=csharp`, a layer is an **NUnit category**, a stand is **`STAND`** / `API_BASE_URL`
+(from `tests/csharp/tests-csharp-nunit-allure3-restsharp`):
+
+```bash
+STAND=ci   dotnet test --filter TestCategory=infra
+STAND=prod dotnet test --filter TestCategory=api
+STAND=prod dotnet test --filter TestCategory=manual
 ```
 
 ## Layer table
