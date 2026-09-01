@@ -27,6 +27,11 @@ export class LoginPage {
     await this.shouldBeOpen();
   }
 
+  async reload(): Promise<void> {
+    await this.page.reload();
+    await this.shouldBeOpen();
+  }
+
   async shouldBeOpen(): Promise<void> {
     await this.loginForm.waitFor({ state: 'visible' });
   }

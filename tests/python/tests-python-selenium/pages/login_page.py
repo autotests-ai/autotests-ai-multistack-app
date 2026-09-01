@@ -21,6 +21,11 @@ class LoginPage(BasePage):
         self.open_path("/login")
         return self.should_be_open()
 
+    @allure.step("Reload login page")
+    def reload_page(self) -> LoginPage:
+        self.driver.refresh()
+        return self.should_be_open()
+
     @allure.step("Click 'Register' link under the login form")
     def click_register_link(self):
         from pages.register_page import RegisterPage

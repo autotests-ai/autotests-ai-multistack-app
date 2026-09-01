@@ -28,6 +28,9 @@ class BasePage:
     def wait_visible(self, by: By, value: str):
         return self.wait().until(EC.visibility_of_element_located((by, value)))
 
+    def wait_hidden(self, by: By, value: str):
+        return self.wait().until(EC.invisibility_of_element_located((by, value)))
+
     def wait_text_contains(self, by: By, value: str, fragment: str):
         def _has_text(driver: WebDriver) -> bool:
             els = driver.find_elements(by, value)

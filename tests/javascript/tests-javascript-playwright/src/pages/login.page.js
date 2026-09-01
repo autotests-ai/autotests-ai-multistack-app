@@ -19,6 +19,11 @@ exports.LoginPage = class LoginPage {
     await this.shouldBeOpen();
   }
 
+  async reload() {
+    await this.page.reload();
+    await this.shouldBeOpen();
+  }
+
   async shouldBeOpen() {
     await this.loginForm.waitFor({ state: 'visible' });
   }
