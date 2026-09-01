@@ -169,6 +169,8 @@ cmd_prepare() {
   test -f "${MODULE}/gradlew"
   command -v java >/dev/null
   java -version
+  rm -rf "$MERGE"
+  mkdir -p "$MERGE"
   if [ "$TESTS_UI_LIBRARY" = playwright ]; then
     (cd "$MODULE" && ./gradlew --stop) || true
   fi
