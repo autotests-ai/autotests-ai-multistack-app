@@ -41,7 +41,7 @@ Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/N
 | **tests/javascript/** | `tests-javascript-playwright` | Cypress, … |
 | **tests/typescript/** | — | `tests-typescript-playwright` (slot) |
 | **tests/python/** | `tests-python-selenium` | playwright, … |
-| **tests/kotlin/** | — | `tests-kotlin-gradle-junit5-allure3-selenide` (slot) |
+| **tests/kotlin/** | `tests-kotlin-gradle-junit5-allure3-ktor`, `tests-kotlin-gradle-junit5-allure3-selenide`, `tests-kotlin-gradle-junit5-allure3-selenium` | playwright slot |
 | **tests/go/** | `tests-go-testing-allure3-net_http` | playwright slot, mill `tests-go-cdp` |
 
 ### Routing (per-frontend containers × multi-backend)

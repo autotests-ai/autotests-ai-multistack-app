@@ -44,9 +44,11 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
 **TypeScript HTTP-only living block:** `tests-typescript-axios` — Vitest + axios, `layers: [api]`. Same `/api` catalog (5 api + infra + manual). Titles/schemas match `tests-typescript-playwright` `tests/api`. `tests-javascript-axios` stays a slot. Combo with Playwright = generate, not a third folder.
 
-**Kotlin HTTP-only living block:** `tests-kotlin-gradle-junit5-allure3-ktor` — Gradle + JUnit 5 + Ktor client, `layers: [api]`. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader + 3 manual). UI school is living `tests-kotlin-gradle-junit5-allure3-selenide` (Selenide + **in-cell** Ktor, not a second HTTP folder). Selenium / Playwright Kotlin slots stay empty. Kotest+Ktor emit is niche, not a second folder.
+**Kotlin HTTP-only living block:** `tests-kotlin-gradle-junit5-allure3-ktor` — Gradle + JUnit 5 + Ktor client, `layers: [api]`. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader + 3 manual). UI schools are living `tests-kotlin-gradle-junit5-allure3-selenide` (Selenide + **in-cell** Ktor) and `tests-kotlin-gradle-junit5-allure3-selenium` (Selenium + **in-cell** Ktor), not a second HTTP folder. Playwright Kotlin slot stays empty. Kotest+Ktor emit is niche, not a second folder.
 
 **Kotlin Selenide living block:** `tests-kotlin-gradle-junit5-allure3-selenide` — Gradle + JUnit 5 + Selenide + in-cell Ktor, `layers: [api, ui, e2e]`. Same UI `DisplayName` catalog as Java Selenide. JaCoCo 100% `ConfigReader` / `LayoutCss` / `TokensCss`. Default CI cell stays Java Selenide.
+
+**Kotlin Selenium living block:** `tests-kotlin-gradle-junit5-allure3-selenium` — Gradle + JUnit 5 + Selenium 4 + in-cell Ktor, `layers: [api, ui, e2e]`. Same UI `DisplayName` catalog as Java Selenium. JaCoCo 100% `ConfigReader` / `LayoutCss` / `TokensCss`. Default CI cell stays Java Selenide. Not a Selenide/Playwright rewrite. HTTP-only Ktor school stays in the sibling folder.
 
 **C# HTTP-only living block:** `tests-csharp-nunit-allure3-restsharp` — NUnit + RestSharp + Allure.NUnit, `layers: [api]`. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader + 3 manual). UI stays in NUnit Selenium / xUnit Playwright siblings. Combo with a UI school = generate, not a third folder.
 
@@ -108,7 +110,7 @@ Living non-JVM cells ship a ConfigReader analog (command on the cell README). Mi
 
 | Cell | Local | Gate | CI `sonar-tests` |
 |------|-------|------|------------------|
-| Java + Kotlin Ktor + Kotlin Selenide | `jacocoTestCoverageVerification` | 100% ConfigReader (Java/Kotlin Selenide also CSS helpers on full infra) | Gradle `sonar` + JaCoCo xml |
+| Java + Kotlin Ktor + Kotlin Selenide + Kotlin Selenium | `jacocoTestCoverageVerification` | 100% ConfigReader (Java/Kotlin UI cells also CSS helpers on full infra) | Gradle `sonar` + JaCoCo xml |
 | JS / TS Playwright | `npm run test:infra` | c8 lcov, **no** fail-under | `@sonar/scan` + lcov (`sonar-project.properties`) |
 | Python Selenium | `pytest -m infra --cov=config --cov=api_client --cov=har_capture` | report, **no** fail-under | `@sonar/scan` + `coverage.xml` |
 | Python Selene | `pytest -m infra --cov=config --cov-fail-under=100` | 100% `config.py` | same Python action + cell `sonar-project.properties` |
@@ -280,7 +282,8 @@ STAND=prod go test ./tests/manual
 
 For `TESTS_LANG=kotlin`, a layer is a **tag filter**, a stand is **`-Denv`**.
 HTTP-only: `tests/kotlin/tests-kotlin-gradle-junit5-allure3-ktor`. UI+HTTP:
-`tests/kotlin/tests-kotlin-gradle-junit5-allure3-selenide` (clone default `TESTS_*` stays Java Selenide).
+`tests/kotlin/tests-kotlin-gradle-junit5-allure3-selenide` or
+`tests/kotlin/tests-kotlin-gradle-junit5-allure3-selenium` (clone default `TESTS_*` stays Java Selenide).
 
 ```bash
 ./gradlew test -Denv=ci   -DincludeTags=infra jacocoTestCoverageVerification
@@ -353,7 +356,7 @@ Classical **integration** (`backend/…/integration/`, job `integration-tests`) 
 Spring context against real PostgreSQL **before** build/deploy. Do not rename Spring slices
 to `integration` and do not move deploy HTTP checks into `backend-unit-tests` or backend integration.
 
-The 100% line-coverage gate (`jacocoTestCoverageVerification`) is **JVM** (Java living cells + Kotlin Ktor) and slices by
+The 100% line-coverage gate (`jacocoTestCoverageVerification`) is **JVM** (Java living cells + Kotlin Ktor / Selenide / Selenium) and slices by
 `-DincludeTags` (`infra-backend` → `ConfigReader`; `infra-frontend` → `LayoutCss`/`TokensCss`;
 `infra` → all three). `LocalChromePin` (local Chrome for Testing; other browsers skip it) is
 tagged `infra-frontend` (skipped on backend-only CI) and is **not** in the JaCoCo class set.
@@ -450,6 +453,7 @@ Look under the test/launch **Окружение** block (not Custom fields — t
 | `tests/go/tests-go-testing-allure3-net_http/` | `go test` packages = layers; stand is `STAND` / `API_BASE_URL` (**active**, HTTP-only catalog) |
 | `tests/kotlin/tests-kotlin-gradle-junit5-allure3-ktor/` | Gradle + JUnit 5 + Ktor client; stand is `-Denv` (**active**, HTTP-only catalog) |
 | `tests/kotlin/tests-kotlin-gradle-junit5-allure3-selenide/` | Gradle + JUnit 5 + Selenide + in-cell Ktor; stand is `-Denv` (**active**, api+ui+e2e). Not clone default CI |
+| `tests/kotlin/tests-kotlin-gradle-junit5-allure3-selenium/` | Gradle + JUnit 5 + Selenium + in-cell Ktor; stand is `-Denv` (**active**, api+ui+e2e). Not clone default CI |
 | Cypress, remaining `kotlin/…` UI slots, … | slots in [`deploy/matrix.yaml`](../deploy/matrix.yaml) |
 
 Same app under test; not separate pyramid layers — parallel teaching stacks ([NAMING.md](NAMING.md)).

@@ -1,0 +1,20 @@
+.gradle/
+.kotlin/
+build/
+.idea/
+.vscode/
+*.iml
+demo/
+
+# Frontend preview symlink (rule frontend-preview — не e2e config)
+app-path-local
+
+# Env profiles are committed (Owner classpath:config/${env}.properties).
+# Regen locally after changing scripts/gen-env-configs.py: python scripts/gen-env-configs.py
+
+allure-results/
+allure/sonar-quality-gate.json
+bin/
+node_modules/
+notifications/config.runtime.json
+history.jsonl
