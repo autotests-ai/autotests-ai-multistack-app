@@ -1,36 +1,39 @@
-# Multistack — tests-python-selenium (Selenium)
+# tests-python-selenium
 
-Pyramid matching the Java default cell (`tests/LAYERS.md`): markers = layers.
-Fluent page objects, pytest + allure-pytest, `conftest` ≈ `TestBase`.
+pytest · **Selenium** · Allure 3 · in-cell **requests** (`api` + `ui` + `e2e`).
+
+Python UI school (WebDriver). HTTP in this folder is requests, not httpx. Default CI cell stays [`tests-java-gradle-junit5-allure3-selenide`](../../java/tests-java-gradle-junit5-allure3-selenide/). Sibling Selene / Playwright UI blocks stay in their folders. HTTP-only httpx school stays in [`tests-python-httpx`](../tests-python-httpx/).
 
 ## Quick start
 
 ```bash
-cd tests-python-selenium
+cd tests/python/tests-python-selenium
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
-cp .env.example .env
-pytest -m api
-pytest -m 'e2e and not screenshot and not mock'
-pytest -m manual
+cp .env.example .env   # optional; default STAND=prod
 pytest -m infra
-pytest -m infra --cov=config --cov=api_client --cov=har_capture --cov-report=term-missing
-# report only — CI has no fail-under (not coverage theatre)
-STAND=mock pytest -m mock   # docker compose --profile mock up -d stand-gateway first
-STAND=mock pytest -m screenshot   # PNG compare vs mock/; omit SCREENSHOT_OS on a Mac
+pytest -m infra --cov=config --cov-fail-under=100 --cov-report=term-missing
+pytest -m api
+STAND=mock pytest -m 'ui and not screenshot'
+STAND=mock pytest -m screenshot
+pytest -m 'e2e and not screenshot'
+pytest -m manual
 ```
 
 Stand is `STAND` (`prod` default) or `BASE_URL` / `API_BASE_URL`. Markers are slices, not stands.
 
-Screenshot tests are **inside e2e**, not a pyramid layer (`e2e` + `screenshot`, Allure `layer=e2e`). Tree:
+CI `sonar-tests` reads `coverage.xml` via [`sonar-project.properties`](sonar-project.properties)
+(`projectKey` `autotests-ai-multistack-app-tests-python-selenium`, gate `qa-guru-canon`).
+Do not flip clone `TESTS_LANG` / `TESTS_UI_LIBRARY` to selenium.
+
+Screenshot tests are two stages, not a pyramid layer. Tree:
 
 `src/test/resources/screenshots/{mock|stage|prod}/{linux|macos|windows}/chrome-148/{area}/{viewport}.png`
 
-CI writes `linux` (`SCREENSHOT_OS=linux`). On a Mac do **not** set `SCREENSHOT_OS=linux` — that would write Linux-canon PNGs from macOS Chrome. Omit it (writes `macos`) or set `SCREENSHOT_OS=macos`.
+CI writes `linux` (`SCREENSHOT_OS=linux`). On a Mac do **not** set `SCREENSHOT_OS=linux`.
 
 ```bash
-# Local mock refresh (macos folder on Darwin)
 SCREENSHOT_BROWSER=chrome STAND=mock UPDATE_SCREENSHOTS=true HEADLESS=true pytest -m screenshot
 ```
 
@@ -48,5 +51,3 @@ pytest -m e2e
 ```bash
 allure serve allure-results
 ```
-
-Jenkins freestyle: `autotests-ai-multistack-tests-freestyle-python-allure3`.

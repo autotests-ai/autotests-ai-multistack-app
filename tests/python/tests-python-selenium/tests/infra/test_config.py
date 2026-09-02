@@ -1,11 +1,11 @@
-"""ConfigReader analog — java ConfigReaderTest (infra-backend)."""
+"""ConfigReader analog — java ConfigReaderTest (infra-backend). 100% on config.py."""
 
 from __future__ import annotations
 
 import allure
 import pytest
 
-from config import _slash, load_config, resolve_stand
+from config import _bool, _float, _slash, load_config, resolve_stand
 
 pytestmark = [pytest.mark.infra, pytest.mark.infra_backend]
 
@@ -73,3 +73,20 @@ class TestConfig:
     def test_update_screenshots_defaults_false(self, monkeypatch):
         monkeypatch.delenv("UPDATE_SCREENSHOTS", raising=False)
         assert load_config().update_screenshots is False
+
+    def test_bool_true_values(self, monkeypatch):
+        for raw in ("1", "true", "YES", "on"):
+            monkeypatch.setenv("HEADLESS", raw)
+            assert _bool("HEADLESS") is True
+
+    def test_float_default_and_empty(self, monkeypatch):
+        monkeypatch.delenv("SCREENSHOT_DIFF_THRESHOLD", raising=False)
+        assert _float("SCREENSHOT_DIFF_THRESHOLD", 0.015) == 0.015
+        monkeypatch.setenv("SCREENSHOT_DIFF_THRESHOLD", "  ")
+        assert _float("SCREENSHOT_DIFF_THRESHOLD", 0.015) == 0.015
+        monkeypatch.setenv("SCREENSHOT_DIFF_THRESHOLD", "0.02")
+        assert _float("SCREENSHOT_DIFF_THRESHOLD", 0.015) == 0.02
+
+    def test_video_folder_gains_trailing_slash(self, monkeypatch):
+        monkeypatch.setenv("VIDEO_FOLDER", "https://selenoid.qa.guru/video")
+        assert load_config().video_folder.endswith("/")

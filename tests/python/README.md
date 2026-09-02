@@ -2,7 +2,7 @@
 
 | Folder | Runner |
 |--------|--------|
-| `tests-python-selenium/` | **active** — pytest · Selenium · markers (`api` / `e2e` / `mock` / `screenshot` / `manual` / `infra`); pytest-cov report, no fail-under |
+| `tests-python-selenium/` | **active** — pytest · Selenium + in-cell requests (`api` / `ui` / `e2e`); pytest-cov **100%** on `config.py` |
 | `tests-python-selene/` | **active** — pytest · Selene + in-cell httpx (`api` / `ui` / `e2e`); pytest-cov **100%** on `config.py` |
 | `tests-python-playwright/` | **active** — pytest · Playwright + APIRequest (`api` / `ui` / `e2e`); pytest-cov **100%** on `config.py` |
 | `tests-python-requests/` | slot — HTTP block requests |
