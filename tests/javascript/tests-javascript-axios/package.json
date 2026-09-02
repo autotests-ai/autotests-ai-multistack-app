@@ -1,0 +1,28 @@
+{
+  "name": "autotests-ai-multistack-tests-js-axios",
+  "version": "1.0.0",
+  "description": "HTTP-only Axios school for Multistack (Vitest; same /api catalog as Java Rest Assured)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:api": "vitest run --tagsFilter api",
+    "test:infra": "vitest run --tagsFilter infra",
+    "test:infra:coverage": "vitest run --tagsFilter infra --coverage",
+    "test:manual": "vitest run --tagsFilter manual"
+  },
+  "engines": {
+    "node": ">=26"
+  },
+  "dependencies": {
+    "axios": "^1.12.2"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.10",
+    "ajv": "^8.17.1",
+    "allure-js-commons": "^3.10.2",
+    "allure-vitest": "^3.10.2",
+    "dotenv": "^17.4.2",
+    "vitest": "^4.1.10"
+  }
+}

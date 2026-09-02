@@ -41,7 +41,7 @@ tests/
   javascript/
     tests-javascript-playwright/                     # active — UI+HTTP, APIRequest in-cell; c8 + sonar
     tests-javascript-cypress/                       # slot — UI block
-    tests-javascript-axios/                         # slot — HTTP-only Axios (not PW client)
+    tests-javascript-axios/                         # active — HTTP-only Axios (Vitest; not PW client)
     tests-javascript-k6/                             # slot — k6 JavaScript
     tests-javascript-gatling/                       # slot — Gatling JS SDK
   python/

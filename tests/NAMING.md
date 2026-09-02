@@ -44,7 +44,7 @@ Full IDs live in hub [`matrix.yaml`](../../matrix.yaml) `tests.modules` (`status
 |-------------|--------|
 | `tests-javascript-playwright` | **active** — UI+HTTP Playwright (`APIRequest` in-cell); c8 + sonar |
 | `tests-javascript-cypress` | slot — UI block |
-| `tests-javascript-axios` | slot — HTTP-only Axios (not in-cell Playwright) |
+| `tests-javascript-axios` | **active** — HTTP-only Axios (Vitest; not in-cell Playwright) |
 | `tests-javascript-k6` | slot — k6 JavaScript, `layers: [performance]` |
 | `tests-javascript-gatling` | slot — Gatling JS SDK, `layers: [performance]` |
 | `tests-typescript-playwright` | **active** — UI+HTTP Playwright (`APIRequest` in-cell); c8 + sonar |

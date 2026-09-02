@@ -2,7 +2,7 @@
 
 Vitest · **axios** · Allure 3. HTTP-only school — same `/api` catalog as Java Rest Assured (`5` api + infra + manual). No browser.
 
-Titles and JSON schemas match [`tests-typescript-playwright`](../tests-typescript-playwright/) `tests/api` (Playwright **APIRequest** stays there). Sibling UI block is that Playwright cell. Sibling HTTP slot: [`tests-javascript-axios`](../../javascript/tests-javascript-axios/). Combo with Playwright = generate, not a third folder.
+Titles and JSON schemas match [`tests-typescript-playwright`](../tests-typescript-playwright/) `tests/api` (Playwright **APIRequest** stays there). Sibling UI block is that Playwright cell. Sibling HTTP school: [`tests-javascript-axios`](../../javascript/tests-javascript-axios/). Combo with Playwright = generate, not a third folder.
 
 ```bash
 cd tests/typescript/tests-typescript-axios
