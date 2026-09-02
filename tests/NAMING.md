@@ -52,7 +52,7 @@ Full IDs live in hub [`matrix.yaml`](../../matrix.yaml) `tests.modules` (`status
 | `tests-typescript-k6` | slot — k6 TypeScript, `layers: [performance]` |
 | `tests-typescript-gatling` | slot — Gatling TS SDK, `layers: [performance]` |
 | `tests-python-selenium` | **active** |
-| `tests-python-selene` | slot — UI block Selene |
+| `tests-python-selene` | **active** — UI+HTTP Selene + in-cell httpx |
 | `tests-python-playwright` | slot — UI block |
 | `tests-python-requests` | slot — HTTP block requests |
 | `tests-python-httpx` | **active** — HTTP block httpx |

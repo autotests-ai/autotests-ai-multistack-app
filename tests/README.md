@@ -46,7 +46,7 @@ tests/
     tests-javascript-gatling/                       # slot — Gatling JS SDK
   python/
     tests-python-selenium/                            # active
-    tests-python-selene/                             # slot — UI block
+    tests-python-selene/                             # active — UI+HTTP Selene + in-cell httpx
     tests-python-playwright/                          # slot — UI block
     tests-python-requests/                            # slot — HTTP block requests
     tests-python-httpx/                               # active — HTTP block httpx

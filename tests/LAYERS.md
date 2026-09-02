@@ -36,7 +36,9 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
 **Java HTTP-only living blocks:** `tests-java-gradle-junit5-allure3-restassured` (Rest Assured) and `tests-java-gradle-junit5-allure3-retrofit2` (Retrofit 2) — `layers: [api]`. Same `/api` contract. Combo Selenium+Retrofit = generate, not a third folder.
 
-**Python HTTP-only living block:** `tests-python-httpx` — pytest + httpx, `layers: [api]`. Same `/api` contract as Java Rest Assured. `tests-python-requests` stays a slot. Combo with Selenium = generate, not a third folder.
+**Python HTTP-only living block:** `tests-python-httpx` — pytest + httpx, `layers: [api]`. Same `/api` contract as Java Rest Assured. `tests-python-requests` stays a slot. Combo with Selenium = generate, not a third folder. Selene already has httpx in-cell.
+
+**Python Selene living block:** `tests-python-selene` — pytest + Selene + in-cell httpx, `layers: [api, ui, e2e]`. Same UI `DisplayName` catalog as Java Selenide. pytest-cov **100%** on `config.py`. Default CI cell stays Java Selenide. Sibling UI school stays `tests-python-selenium`. HTTP-only httpx school stays in the sibling folder.
 
 **TypeScript HTTP-only living block:** `tests-typescript-axios` — Vitest + axios, `layers: [api]`. Same `/api` catalog (5 api + infra + manual). Titles/schemas match `tests-typescript-playwright` `tests/api`. `tests-javascript-axios` stays a slot. Combo with Playwright = generate, not a third folder.
 
@@ -107,6 +109,7 @@ Living non-JVM cells ship a ConfigReader analog (command on the cell README). Mi
 | Java + Kotlin Ktor + Kotlin Selenide | `jacocoTestCoverageVerification` | 100% ConfigReader (Java/Kotlin Selenide also CSS helpers on full infra) | Gradle `sonar` + JaCoCo xml |
 | JS / TS Playwright | `npm run test:infra` | c8 lcov, **no** fail-under | `@sonar/scan` + lcov (`sonar-project.properties`) |
 | Python Selenium | `pytest -m infra --cov=config --cov=api_client --cov=har_capture` | report, **no** fail-under | `@sonar/scan` + `coverage.xml` |
+| Python Selene | `pytest -m infra --cov=config --cov-fail-under=100` | 100% `config.py` | same Python action + cell `sonar-project.properties` |
 | Python httpx | `pytest -m infra --cov=config --cov-fail-under=100` | 100% `config.py` | same Python action + cell `sonar-project.properties` |
 | TS axios | `npx vitest run --tagsFilter infra --coverage` | 100% lines on `config.ts` | same TS action + cell `sonar-project.properties` |
 | Go net/http | `./cover-config.sh` | 100% ConfigReader analog | `@sonar/scan` + `coverage.out` |
@@ -148,7 +151,7 @@ Local mock screenshot refresh (Linux / CI writes `mock/linux/chrome-148`; on Mac
 # java — tests/java/tests-java-gradle-junit5-allure3-selenide
 SCREENSHOT_BROWSER=chrome ./gradlew test -Denv=mock -DincludeTags=screenshot -DupdateScreenshots=true -Dheadless=true
 
-# python — tests/python/tests-python-selenium
+# python — tests/python/tests-python-selenium · tests-python-selene
 SCREENSHOT_BROWSER=chrome STAND=mock UPDATE_SCREENSHOTS=true HEADLESS=true pytest -m screenshot
 
 # javascript / typescript — tests/{javascript,typescript}/tests-*-playwright
@@ -191,7 +194,7 @@ mappings; they do not call admin.
 ```bash
 docker compose --profile mock up -d stand-gateway   # :9911 + api-mock + react frontend
 ./gradlew test -Denv=mock -DincludeTags=ui
-STAND=mock pytest -m ui        # from tests/python/tests-python-selenium
+STAND=mock pytest -m ui        # from tests/python/tests-python-selenium or tests-python-selene
 STAND=mock pytest -m screenshot
 ```
 
@@ -229,7 +232,7 @@ Anything else — `headless`, `enableHar`, `enableVideo`, `updateScreenshots`, `
 per-run `-D<key>=<value>`. Available keys: `src/test/resources/config/default.properties`.
 
 For `TESTS_LANG=python`, a layer is a **pytest marker**, a stand is **`STAND`** / `BASE_URL`
-(from `tests/python/tests-python-selenium`):
+(from `tests/python/tests-python-selenium` or `tests-python-selene`):
 
 ```bash
 STAND=ci   pytest -m infra_backend
@@ -353,7 +356,7 @@ The 100% line-coverage gate (`jacocoTestCoverageVerification`) is **JVM** (Java 
 tagged `infra-frontend` (skipped on backend-only CI) and is **not** in the JaCoCo class set.
 It reads `build/jacoco/test.exec`.
 
-Other living HTTP schools report helper coverage without copying JaCoCo: Python `pytest-cov` (CI: no fail-under; httpx can `--cov=config --cov-fail-under=100` locally) · JS/TS Playwright `c8` (no fail-under) · Go `go test -cover` on ConfigReader analog (`./cover-config.sh`) · TypeScript axios Vitest v8 on `config.ts`.
+Other living HTTP schools report helper coverage without copying JaCoCo: Python `pytest-cov` (CI: no fail-under; httpx / Selene can `--cov=config --cov-fail-under=100` locally) · JS/TS Playwright `c8` (no fail-under) · Go `go test -cover` on ConfigReader analog (`./cover-config.sh`) · TypeScript axios Vitest v8 on `config.ts`.
 
 ## Why `component` vs `ui` vs `e2e` (not vs integration)?
 
@@ -439,6 +442,7 @@ Look under the test/launch **Окружение** block (not Custom fields — t
 | `tests/javascript/tests-javascript-playwright/` | Playwright tags = layers; stand is `UI_URL` / `STAND` (**active**) |
 | `tests/typescript/tests-typescript-playwright/` | Playwright tags = layers; stand is `UI_URL` / `STAND` (**active**, JS etalon typed) |
 | `tests/python/tests-python-selenium/` | pytest markers = layers; stand is `STAND` / `BASE_URL` (**active**) |
+| `tests/python/tests-python-selene/` | pytest + Selene + in-cell httpx; stand is `STAND` / `BASE_URL` (**active**, api+ui+e2e). Not clone default CI |
 | `tests/go/tests-go-testing-allure3-net_http/` | `go test` packages = layers; stand is `STAND` / `API_BASE_URL` (**active**, HTTP-only catalog) |
 | `tests/kotlin/tests-kotlin-gradle-junit5-allure3-ktor/` | Gradle + JUnit 5 + Ktor client; stand is `-Denv` (**active**, HTTP-only catalog) |
 | `tests/kotlin/tests-kotlin-gradle-junit5-allure3-selenide/` | Gradle + JUnit 5 + Selenide + in-cell Ktor; stand is `-Denv` (**active**, api+ui+e2e). Not clone default CI |

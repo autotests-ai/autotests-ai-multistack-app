@@ -3,7 +3,7 @@
 | Folder | Runner |
 |--------|--------|
 | `tests-python-selenium/` | **active** — pytest · Selenium · markers (`api` / `e2e` / `mock` / `screenshot` / `manual` / `infra`); pytest-cov report, no fail-under |
-| `tests-python-selene/` | slot — UI block Selene |
+| `tests-python-selene/` | **active** — pytest · Selene + in-cell httpx (`api` / `ui` / `e2e`); pytest-cov **100%** on `config.py` |
 | `tests-python-playwright/` | slot — UI block Playwright |
 | `tests-python-requests/` | slot — HTTP block requests |
 | `tests-python-httpx/` | **active** — HTTP block httpx (`api` / `infra` / `manual`); `sonar-tests` on `config.py` |
@@ -11,4 +11,5 @@
 | `tests-python-locust/` | slot — Locust (`layers: [performance]`) |
 
 Live CI verbs: `tests/python/.github/actions/{infra,api,mock,e2e,manual,sonar}`.
-Short `module_dir`: `tests/python/tests-python-selenium` or `tests/python/tests-python-httpx`.
+Short `module_dir`: `tests/python/tests-python-selenium`, `tests/python/tests-python-selene`, or `tests/python/tests-python-httpx`.
+Default clone `TESTS_UI_LIBRARY` stays `selenide` (Java).
