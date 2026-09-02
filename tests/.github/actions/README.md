@@ -11,7 +11,7 @@ GitHub does not interpolate `uses:`. This adapter dispatches on `TESTS_LANG`:
 | `javascript` | `./tests/javascript/.github/actions/<verb>` | short `tests/javascript/tests-javascript-{ui}` (live: `playwright`) |
 | `python` | `./tests/python/.github/actions/<verb>` | short `tests/python/tests-python-{ui}` (live: `selenium` or `httpx`) |
 | `typescript` | `./tests/typescript/.github/actions/<verb>` | short `tests/typescript/tests-typescript-{ui}` (live: `playwright` or `axios`) |
-| `csharp` | `./tests/csharp/.github/actions/<verb>` (`infra` / `sonar`) | 4-segment `tests/csharp/tests-csharp-{framework}-{report}-{ui}` (live: `nunit` · `allure3` · `restsharp`) |
+| `csharp` | `./tests/csharp/.github/actions/<verb>` (`infra` / `sonar`) | 4-segment `tests/csharp/tests-csharp-{framework}-{report}-{ui}` (live: `nunit` · `allure3` · `restsharp` or `selenium`) |
 | `go` | `./tests/go/.github/actions/<verb>` (`infra` / `sonar`) | 4-segment `tests/go/tests-go-{framework}-{report}-{ui}` (live: `testing` · `allure3` · `net_http`) |
 | other | STOP | never a foreign / Java action |
 

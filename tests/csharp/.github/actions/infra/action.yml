@@ -43,9 +43,16 @@ runs:
       working-directory: ${{ inputs.module_dir }}
       run: |
         set -euo pipefail
-        # ConfigReader only — 100% line gate (JaCoCo sibling). IncludeTestAssembly: helper lives in the test project.
+        # Coverlet 100% line (JaCoCo sibling). IncludeTestAssembly: helpers live in the test project.
+        # Backend-only lane: ConfigReader. Full infra uses the cell csproj Include
+        # (RestSharp = ConfigReader; Selenium = ConfigReader + LayoutCss + TokensCss).
+        include_arg=()
+        if [ "$INFRA_FILTER" = "infra_backend" ]; then
+          include_arg=(/p:Include='[*]Config.ConfigReader')
+        fi
         dotnet test --filter "TestCategory=${INFRA_FILTER}" \
-          /p:CollectCoverage=true
+          /p:CollectCoverage=true \
+          "${include_arg[@]}"
     - if: steps.run-tests.outcome == 'success'
       uses: actions/upload-artifact@v7
       with:

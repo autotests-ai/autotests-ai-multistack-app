@@ -25,7 +25,7 @@ tests/
     tests-java-jmeter/                               # slot — JMeter JMX
     tests-java-gradle-gatling/                       # slot — Gatling Java DSL
   csharp/
-    tests-csharp-nunit-allure3-selenium/              # slot — UI block
+    tests-csharp-nunit-allure3-selenium/              # active — UI+HTTP Selenium + in-cell RestSharp
     tests-csharp-nunit-allure3-restsharp/             # active — HTTP block RestSharp (31 api + 9 ConfigReader + 3 manual)
     tests-csharp-xunit-allure3-playwright/           # slot — UI block
   groovy/
