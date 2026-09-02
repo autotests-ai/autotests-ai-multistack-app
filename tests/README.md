@@ -27,13 +27,13 @@ tests/
   csharp/
     tests-csharp-nunit-allure3-selenium/              # active — UI+HTTP Selenium + in-cell RestSharp
     tests-csharp-nunit-allure3-restsharp/             # active — HTTP block RestSharp (31 api + 9 ConfigReader + 3 manual)
-    tests-csharp-xunit-allure3-playwright/           # slot — UI block
+    tests-csharp-xunit-allure3-playwright/           # active — UI+HTTP Playwright + in-cell RestSharp
   groovy/
     tests-groovy-jmeter/                             # slot — JMeter JSR223
   kotlin/
     tests-kotlin-gradle-junit5-allure3-selenide/     # active — UI+HTTP Selenide + in-cell Ktor
     tests-kotlin-gradle-junit5-allure3-selenium/    # active — UI+HTTP Selenium + in-cell Ktor
-    tests-kotlin-gradle-junit5-allure3-playwright/   # slot — UI block
+    tests-kotlin-gradle-junit5-allure3-playwright/   # active — UI+HTTP Playwright + in-cell Ktor
     tests-kotlin-gradle-junit5-allure3-ktor/         # active — HTTP block Ktor
     tests-kotlin-gradle-gatling/                     # slot — Gatling Kotlin DSL
   scala/
@@ -47,19 +47,19 @@ tests/
   python/
     tests-python-selenium/                            # active
     tests-python-selene/                             # active — UI+HTTP Selene + in-cell httpx
-    tests-python-playwright/                          # slot — UI block
+    tests-python-playwright/                          # active — UI+HTTP Playwright + APIRequest
     tests-python-requests/                            # slot — HTTP block requests
     tests-python-httpx/                               # active — HTTP block httpx
     tests-python-yandex-tank/                         # slot — Yandex.Tank
     tests-python-locust/                             # slot — Locust
   typescript/
-    tests-typescript-playwright/                     # active — UI+HTTP, APIRequest in-cell
+    tests-typescript-playwright/                     # active — UI+HTTP, APIRequest in-cell; c8 + sonar
     tests-typescript-axios/                          # active — HTTP block axios (Vitest)
     tests-typescript-k6/                             # slot — k6 TypeScript
     tests-typescript-gatling/                       # slot — Gatling TS SDK
   go/
     tests-go-testing-allure3-net_http/                         # active — HTTP block (31 api + 9 ConfigReader + 3 manual)
-    tests-go-testing-allure3-playwright/             # slot — UI block
+    tests-go-testing-allure3-playwright/             # active — UI+HTTP Playwright + in-cell net/http
     tests-go-cdp/                                    # mill IR (greedy run)
   _deferred/
 ```
