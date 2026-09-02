@@ -1,1 +1,0 @@
-{"id":"2e3b8bfe286a8c7f209ed1882827e4a7","fullName":"tests.e2e.DeleteAccountTests.cancellingConfirmKeepsSession","name":"Cancelling the confirm keeps the session and sends no delete request","status":"passed","testResultsByEnv":{"default":"5497f91dc100332d62194d1cbdfdccd5"}}
