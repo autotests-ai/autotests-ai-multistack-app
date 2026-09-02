@@ -474,7 +474,7 @@ Look under the test/launch **Окружение** block (not Custom fields — t
 | `tests/csharp/tests-csharp-nunit-allure3-restsharp/` | NUnit + RestSharp; stand is `STAND` / `API_BASE_URL` (**active**, HTTP-only catalog) |
 | `tests/csharp/tests-csharp-nunit-allure3-selenium/` | NUnit + Selenium 4 + in-cell RestSharp; stand is `STAND` / `BASE_URL` (**active**, api+ui+e2e). Not clone default CI |
 | `tests/csharp/tests-csharp-xunit-allure3-playwright/` | xUnit + Playwright + in-cell RestSharp; stand is `STAND` / `BASE_URL` (**active**, api+ui+e2e). Not clone default CI |
-| Cypress, remaining `kotlin/…` slots, … | slots in [`deploy/matrix.yaml`](../deploy/matrix.yaml) |
+| Cypress, remaining HTTP slots (`javascript-axios`, `python-requests`), … | slots in [`deploy/matrix.yaml`](../deploy/matrix.yaml) |
 
 Same app under test; not separate pyramid layers — parallel teaching stacks ([NAMING.md](NAMING.md)).
 Playwright takes `UI_URL`, pytest takes `BASE_URL`, Go takes `STAND` / `API_BASE_URL`, Kotlin HTTP takes `-Denv`.

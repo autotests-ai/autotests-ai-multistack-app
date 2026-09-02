@@ -37,12 +37,13 @@ Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/N
 | **backend/go/** | `backend-go-gin`, `backend-go-stdlib` (active) | — |
 | **backend/javascript/** | `backend-javascript-express`, `backend-javascript-nest` (active) | — |
 | **backend/typescript/** | `backend-typescript-express`, `backend-typescript-nest` (active) | — |
-| **tests/java/** | `tests-java-gradle-junit5-allure3-selenide` | junit4, testng, allure2, selenium, maven, … — [tests/NAMING.md](tests/NAMING.md) · matrix slots |
+| **tests/java/** | `tests-java-gradle-junit5-allure3-selenide`, `selenium`, `playwright`, `restassured`, `retrofit2` (active) | junit4, testng, allure2, maven, … — [tests/NAMING.md](tests/NAMING.md) · matrix slots |
 | **tests/javascript/** | `tests-javascript-playwright` | Cypress, … |
-| **tests/typescript/** | — | `tests-typescript-playwright` (slot) |
-| **tests/python/** | `tests-python-selenium` | playwright, … |
-| **tests/kotlin/** | `tests-kotlin-gradle-junit5-allure3-ktor`, `tests-kotlin-gradle-junit5-allure3-selenide`, `tests-kotlin-gradle-junit5-allure3-selenium` | playwright slot |
-| **tests/go/** | `tests-go-testing-allure3-net_http` | playwright slot, mill `tests-go-cdp` |
+| **tests/typescript/** | `tests-typescript-playwright`, `tests-typescript-axios` | — |
+| **tests/python/** | `tests-python-selenium`, `selene`, `playwright`, `httpx` | requests, … |
+| **tests/kotlin/** | `tests-kotlin-gradle-junit5-allure3-ktor`, `selenide`, `selenium`, `playwright` | — |
+| **tests/go/** | `tests-go-testing-allure3-net_http`, `playwright`; mill `tests-go-cdp` | — |
+| **tests/csharp/** | `tests-csharp-nunit-allure3-selenium`, `restsharp`, `tests-csharp-xunit-allure3-playwright` | — |
 
 ### Routing (per-frontend containers × multi-backend)
 

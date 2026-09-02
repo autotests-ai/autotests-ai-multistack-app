@@ -42,31 +42,31 @@ Full IDs live in hub [`matrix.yaml`](../../matrix.yaml) `tests.modules` (`status
 
 | Folder / id | Status |
 |-------------|--------|
-| `tests-javascript-playwright` | **active** |
+| `tests-javascript-playwright` | **active** — UI+HTTP Playwright (`APIRequest` in-cell); c8 + sonar |
 | `tests-javascript-cypress` | slot — UI block |
 | `tests-javascript-axios` | slot — HTTP-only Axios (not in-cell Playwright) |
 | `tests-javascript-k6` | slot — k6 JavaScript, `layers: [performance]` |
 | `tests-javascript-gatling` | slot — Gatling JS SDK, `layers: [performance]` |
-| `tests-typescript-playwright` | **active** |
+| `tests-typescript-playwright` | **active** — UI+HTTP Playwright (`APIRequest` in-cell); c8 + sonar |
 | `tests-typescript-axios` | **active** — HTTP-only Axios (Vitest; not in-cell Playwright) |
 | `tests-typescript-k6` | slot — k6 TypeScript, `layers: [performance]` |
 | `tests-typescript-gatling` | slot — Gatling TS SDK, `layers: [performance]` |
 | `tests-python-selenium` | **active** |
 | `tests-python-selene` | **active** — UI+HTTP Selene + in-cell httpx |
-| `tests-python-playwright` | slot — UI block |
+| `tests-python-playwright` | **active** — UI+HTTP Playwright + APIRequest |
 | `tests-python-requests` | slot — HTTP block requests |
 | `tests-python-httpx` | **active** — HTTP block httpx |
 | `tests-python-yandex-tank` | slot — Yandex.Tank, `layers: [performance]` |
 | `tests-python-locust` | slot — Locust, `layers: [performance]` |
 | `tests-kotlin-gradle-junit5-allure3-selenide` | **active** — UI+HTTP Selenide + in-cell Ktor |
 | `tests-kotlin-gradle-junit5-allure3-selenium` | **active** — UI+HTTP Selenium + in-cell Ktor |
-| `tests-kotlin-gradle-junit5-allure3-playwright` | slot — UI block |
+| `tests-kotlin-gradle-junit5-allure3-playwright` | **active** — UI+HTTP Playwright + in-cell Ktor |
 | `tests-kotlin-gradle-junit5-allure3-ktor` | **active** — HTTP block Ktor client |
 | `tests-kotlin-gradle-gatling` | slot — Gatling Kotlin DSL |
 | `tests-scala-gatling` | slot — Gatling Scala DSL |
 | `tests-groovy-jmeter` | slot — JMeter JSR223 Groovy |
 | `tests-go-testing-allure3-net_http` | **active** — HTTP block (`net/http` + Allure Go + testify) |
-| `tests-go-testing-allure3-playwright` | slot — UI block Playwright |
+| `tests-go-testing-allure3-playwright` | **active** — UI+HTTP Playwright + in-cell net/http |
 | `tests-go-cdp` | mill — IR / `greedy run`, not a Selenide peer |
 | `tests-csharp-nunit-allure3-selenium` | **active** — UI+HTTP Selenium + in-cell RestSharp |
 | `tests-csharp-nunit-allure3-restsharp` | **active** — HTTP block RestSharp |

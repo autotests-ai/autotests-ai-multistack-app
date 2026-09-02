@@ -39,7 +39,7 @@ tests/
   scala/
     tests-scala-gatling/                             # slot — Gatling Scala DSL
   javascript/
-    tests-javascript-playwright/                     # active — UI+HTTP, APIRequest in-cell
+    tests-javascript-playwright/                     # active — UI+HTTP, APIRequest in-cell; c8 + sonar
     tests-javascript-cypress/                       # slot — UI block
     tests-javascript-axios/                         # slot — HTTP-only Axios (not PW client)
     tests-javascript-k6/                             # slot — k6 JavaScript
