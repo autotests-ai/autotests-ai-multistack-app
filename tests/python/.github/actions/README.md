@@ -4,8 +4,8 @@ Same job names as `ci.yml`. Implementations live here because GitHub does not
 interpolate `uses:`.
 
 `tests/.github/actions/<verb>` dispatches here when `TESTS_LANG=python`.
-Live modules (short folder): `tests-python-selenium`, `tests-python-selene`, or `tests-python-httpx`.
-`TESTS_UI_LIBRARY` selects that suffix (`selenium` / `selene` / `httpx`), not the Java 5-segment name.
+Live modules (short folder): `tests-python-selenium`, `tests-python-selene`, `tests-python-playwright`, or `tests-python-httpx`.
+`TESTS_UI_LIBRARY` selects that suffix (`selenium` / `selene` / `playwright` / `httpx`), not the Java 5-segment name.
 Default clone stays Java Selenide — do not flip `TESTS_LANG` to python for this cell.
 
 Local (from the module): `pytest -m api` · `pytest -m 'e2e and not screenshot and not mock'` ·
@@ -19,4 +19,4 @@ Stand is `STAND` / `BASE_URL`, not a marker. Screenshot and mock also carry `e2e
 | `mock` | compose mock stand + pytest `-m mock`, then `-m screenshot` (compare; rewrite if `update_screenshots`) |
 | `e2e` | pytest vs live stand (`-m e2e`, exclude mock/screenshot); screenshot compare like Java |
 | `manual` | exploratory stubs in code |
-| `sonar` | scan + gate on infra coverage.xml (`sonar-project.properties` in the cell: selenium, selene, or httpx) |
+| `sonar` | scan + gate on infra coverage.xml (`sonar-project.properties` in the cell: selenium, selene, playwright, or httpx) |
