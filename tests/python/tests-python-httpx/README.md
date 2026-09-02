@@ -2,7 +2,7 @@
 
 pytest · **httpx** · Allure 3. HTTP-only school — same `/api` catalog as Java Rest Assured (`5` api + infra + manual). No browser.
 
-Sibling UI block: [`tests-python-selenium`](../tests-python-selenium/). Sibling HTTP slot: [`tests-python-requests`](../tests-python-requests/). Combo with Selenium = generate, not a third folder.
+Sibling UI block: [`tests-python-selenium`](../tests-python-selenium/). Sibling HTTP school: [`tests-python-requests`](../tests-python-requests/). Combo with Selenium = generate, not a third folder.
 
 ```bash
 cd tests/python/tests-python-httpx

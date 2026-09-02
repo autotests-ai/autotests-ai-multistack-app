@@ -48,7 +48,7 @@ tests/
     tests-python-selenium/                            # active
     tests-python-selene/                             # active — UI+HTTP Selene + in-cell httpx
     tests-python-playwright/                          # active — UI+HTTP Playwright + APIRequest
-    tests-python-requests/                            # slot — HTTP block requests
+    tests-python-requests/                            # active — HTTP block requests (31 api + 9 ConfigReader + 3 manual)
     tests-python-httpx/                               # active — HTTP block httpx
     tests-python-yandex-tank/                         # slot — Yandex.Tank
     tests-python-locust/                             # slot — Locust

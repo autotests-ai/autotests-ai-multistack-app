@@ -38,7 +38,7 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
 **Java HTTP-only living blocks:** `tests-java-gradle-junit5-allure3-restassured` (Rest Assured) and `tests-java-gradle-junit5-allure3-retrofit2` (Retrofit 2) — `layers: [api]`. Same `/api` contract. Combo Selenium+Retrofit = generate, not a third folder.
 
-**Python HTTP-only living block:** `tests-python-httpx` — pytest + httpx, `layers: [api]`. Same `/api` contract as Java Rest Assured. `tests-python-requests` stays a slot. Combo with Selenium = generate, not a third folder. Selene already has httpx in-cell. Playwright Python uses APIRequest in-cell, not httpx.
+**Python HTTP-only living blocks:** `tests-python-httpx` (pytest + httpx) and `tests-python-requests` (pytest + requests) — `layers: [api]`. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader + 3 manual). Combo with Selenium = generate, not a third folder. Selene already has httpx in-cell. Selenium Python already has requests in-cell. Playwright Python uses APIRequest in-cell, not httpx/requests.
 
 **Python Selene living block:** `tests-python-selene` — pytest + Selene + in-cell httpx, `layers: [api, ui, e2e]`. Same UI `DisplayName` catalog as Java Selenide. pytest-cov **100%** on `config.py`. Default CI cell stays Java Selenide. Sibling UI school stays `tests-python-selenium`. HTTP-only httpx school stays in the sibling folder.
 
@@ -62,7 +62,7 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
 **C# Playwright living block:** `tests-csharp-xunit-allure3-playwright` — xUnit + Playwright + in-cell RestSharp, `layers: [api, ui, e2e]`. Same UI `DisplayName` catalog as Java Playwright (PNG tree from Java Playwright). Coverlet 100% `ConfigReader` / `LayoutCss` / `TokensCss`. Default CI cell stays Java Selenide. Not an NUnit/Selenium rewrite. HTTP-only RestSharp school stays in the sibling folder.
 
-**HTTP-only slots (other languages):** empty folders, `layers: [api]`, same `/api` contract. Python `tests-python-requests`. Go living catalog is `tests-go-testing-allure3-net_http`. Kotlin living catalog is `tests-kotlin-gradle-junit5-allure3-ktor`. C# living catalog is `tests-csharp-nunit-allure3-restsharp`. JS/TS living catalogs are `tests-javascript-axios` / `tests-typescript-axios`. Combo with a UI school = generate, not a third folder.
+**HTTP-only living catalogs:** Python `tests-python-httpx` / `tests-python-requests`. Go `tests-go-testing-allure3-net_http`. Kotlin `tests-kotlin-gradle-junit5-allure3-ktor`. C# `tests-csharp-nunit-allure3-restsharp`. JS/TS `tests-javascript-axios` / `tests-typescript-axios`. Combo with a UI school = generate, not a third folder.
 
 **JS/TS Playwright living:** api inside `tests-javascript-playwright` / `tests-typescript-playwright` is Playwright **APIRequest** (`request` fixture). Axios is the sibling HTTP-only school, not the client in those folders. Java Playwright uses Rest Assured in-cell (JVM HTTP school). Kotlin Playwright uses Ktor in-cell. Python Playwright uses APIRequest in-cell (not httpx). C# Playwright uses RestSharp in-cell. Go Playwright uses net/http in-cell.
 
@@ -126,6 +126,7 @@ Living non-JVM cells ship a ConfigReader analog (command on the cell README). Mi
 | Python Selene | `pytest -m infra --cov=config --cov-fail-under=100` | 100% `config.py` | same Python action + cell `sonar-project.properties` |
 | Python Playwright | `pytest -m infra --cov=config --cov-fail-under=100` | 100% `config.py` | same Python action + cell `sonar-project.properties` |
 | Python httpx | `pytest -m infra --cov=config --cov-fail-under=100` | 100% `config.py` | same Python action + cell `sonar-project.properties` |
+| Python requests | `pytest -m infra --cov=config --cov-fail-under=100` | 100% `config.py` | same Python action + cell `sonar-project.properties` |
 | TS axios | `npx vitest run --tagsFilter infra --coverage` | 100% lines on `config.ts` | same TS action + cell `sonar-project.properties` |
 | JS axios | `npx vitest run --tagsFilter infra --coverage` | 100% lines on `config.js` | same JS action + cell `sonar-project.properties` |
 | Go net/http | `./cover-config.sh` | 100% ConfigReader analog | `@sonar/scan` + `coverage.out` |
@@ -471,6 +472,8 @@ Look under the test/launch **Окружение** block (not Custom fields — t
 | `tests/python/tests-python-selenium/` | pytest markers = layers; stand is `STAND` / `BASE_URL` (**active**) |
 | `tests/python/tests-python-selene/` | pytest + Selene + in-cell httpx; stand is `STAND` / `BASE_URL` (**active**, api+ui+e2e). Not clone default CI |
 | `tests/python/tests-python-playwright/` | pytest + Playwright + in-cell APIRequest; stand is `STAND` / `BASE_URL` (**active**, api+ui+e2e). Not clone default CI |
+| `tests/python/tests-python-httpx/` | pytest + httpx; stand is `STAND` / `API_BASE_URL` (**active**, HTTP-only catalog) |
+| `tests/python/tests-python-requests/` | pytest + requests; stand is `STAND` / `API_BASE_URL` (**active**, HTTP-only catalog) |
 | `tests/go/tests-go-testing-allure3-net_http/` | `go test` packages = layers; stand is `STAND` / `API_BASE_URL` (**active**, HTTP-only catalog) |
 | `tests/kotlin/tests-kotlin-gradle-junit5-allure3-ktor/` | Gradle + JUnit 5 + Ktor client; stand is `-Denv` (**active**, HTTP-only catalog) |
 | `tests/kotlin/tests-kotlin-gradle-junit5-allure3-selenide/` | Gradle + JUnit 5 + Selenide + in-cell Ktor; stand is `-Denv` (**active**, api+ui+e2e). Not clone default CI |
@@ -479,7 +482,7 @@ Look under the test/launch **Окружение** block (not Custom fields — t
 | `tests/csharp/tests-csharp-nunit-allure3-restsharp/` | NUnit + RestSharp; stand is `STAND` / `API_BASE_URL` (**active**, HTTP-only catalog) |
 | `tests/csharp/tests-csharp-nunit-allure3-selenium/` | NUnit + Selenium 4 + in-cell RestSharp; stand is `STAND` / `BASE_URL` (**active**, api+ui+e2e). Not clone default CI |
 | `tests/csharp/tests-csharp-xunit-allure3-playwright/` | xUnit + Playwright + in-cell RestSharp; stand is `STAND` / `BASE_URL` (**active**, api+ui+e2e). Not clone default CI |
-| Cypress, remaining HTTP slots (`python-requests`), … | slots in [`deploy/matrix.yaml`](../deploy/matrix.yaml) |
+| Cypress, remaining performance slots, … | slots in [`deploy/matrix.yaml`](../deploy/matrix.yaml) |
 
 Same app under test; not separate pyramid layers — parallel teaching stacks ([NAMING.md](NAMING.md)).
 Playwright takes `UI_URL`, pytest takes `BASE_URL`, Go takes `STAND` / `API_BASE_URL`, Kotlin HTTP takes `-Denv`.
