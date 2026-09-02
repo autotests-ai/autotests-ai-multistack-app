@@ -30,7 +30,9 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 **Not classical either:** Spring `@WebMvcTest` / `@DataJpaTest` — those stay in **unit** (see slices below).  
 **Not a pyramid language:** `tests/go/tests-go-cdp` mills IR via `greedy run` (`layers: [crystal]`, crystal column on `/stack/`). Not `@Layer`.  
 **Not a pyramid layer:** load slots — JMeter (`tests-java-jmeter`, `tests-groovy-jmeter`) · Gatling (`tests-java-gradle-gatling`, `tests-kotlin-gradle-gatling`, `tests-scala-gatling`, `tests-javascript-gatling`, `tests-typescript-gatling`) · k6 (`tests-javascript-k6`, `tests-typescript-k6`) · Locust (`tests-python-locust`) · Yandex.Tank (`tests-python-yandex-tank`). `layers: [performance]` on `/stack/` Tests board. Not `@Layer`.  
-**Go living HTTP block:** `tests/go/tests-go-testing-allure3-net_http` — `go test` + net/http + testify + official Allure Go, `layers: [api]`. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader + 3 manual). UI block is slot `tests-go-testing-allure3-playwright`. Mill stays `tests-go-cdp`. Not Gomega.
+**Go living HTTP block:** `tests/go/tests-go-testing-allure3-net_http` — `go test` + net/http + testify + official Allure Go, `layers: [api]`. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader + 3 manual). UI school is living `tests-go-testing-allure3-playwright` (Playwright + **in-cell** net/http), not a second HTTP folder. Mill stays `tests-go-cdp`. Not Gomega.
+
+**Go Playwright living block:** `tests/go/tests-go-testing-allure3-playwright` — `go test` + playwright-go + in-cell net/http, `layers: [api, ui, e2e]`. Same UI `DisplayName` catalog as Java Playwright (PNG tree from Java Playwright). `cover-config.sh` 100% on `config.go`. Default CI cell stays Java Selenide. Not a mill rewrite. HTTP-only net/http school stays in the sibling folder.
 
 **Java Selenium living block:** `tests/java/tests-java-gradle-junit5-allure3-selenium` — raw WebDriver + Rest Assured, `layers: [api, ui, e2e]`. Not the Selenide default cell.
 
@@ -60,7 +62,7 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
 **HTTP-only slots (other languages):** empty folders, `layers: [api]`, same `/api` contract. Python `tests-python-requests` · JS `tests-javascript-axios`. Go living catalog is `tests-go-testing-allure3-net_http`. Kotlin living catalog is `tests-kotlin-gradle-junit5-allure3-ktor`. C# living catalog is `tests-csharp-nunit-allure3-restsharp`. Combo with a UI school = generate, not a third folder.
 
-**JS/TS Playwright living:** api inside `tests-javascript-playwright` / `tests-typescript-playwright` is Playwright **APIRequest** (`request` fixture). Axios is the sibling HTTP-only school, not the client in those folders. Java Playwright uses Rest Assured in-cell (JVM HTTP school). Kotlin Playwright uses Ktor in-cell. Python Playwright uses APIRequest in-cell (not httpx). C# Playwright uses RestSharp in-cell.
+**JS/TS Playwright living:** api inside `tests-javascript-playwright` / `tests-typescript-playwright` is Playwright **APIRequest** (`request` fixture). Axios is the sibling HTTP-only school, not the client in those folders. Java Playwright uses Rest Assured in-cell (JVM HTTP school). Kotlin Playwright uses Ktor in-cell. Python Playwright uses APIRequest in-cell (not httpx). C# Playwright uses RestSharp in-cell. Go Playwright uses net/http in-cell.
 
 **Java Playwright living block:** `tests-java-gradle-junit5-allure3-playwright` — Playwright for Java + Rest Assured, `layers: [api, ui, e2e]`. Same `data-testid` as the TS Playwright cell; screenshot PNG tree matches Selenide (`@Tag("screenshot")` slice). HTTP-only Rest Assured school stays in `tests-java-gradle-junit5-allure3-restassured`.
 
@@ -124,6 +126,7 @@ Living non-JVM cells ship a ConfigReader analog (command on the cell README). Mi
 | Python httpx | `pytest -m infra --cov=config --cov-fail-under=100` | 100% `config.py` | same Python action + cell `sonar-project.properties` |
 | TS axios | `npx vitest run --tagsFilter infra --coverage` | 100% lines on `config.ts` | same TS action + cell `sonar-project.properties` |
 | Go net/http | `./cover-config.sh` | 100% ConfigReader analog | `@sonar/scan` + `coverage.out` |
+| Go Playwright | `./cover-config.sh` | 100% ConfigReader analog | `@sonar/scan` + `coverage.out` |
 | C# RestSharp | `dotnet test --filter TestCategory=infra /p:CollectCoverage=true` | 100% `Config.ConfigReader` | `@sonar/scan` + opencover |
 | C# Selenium | `dotnet test --filter TestCategory=infra /p:CollectCoverage=true` | 100% `Config.ConfigReader` + `LayoutCss` + `TokensCss` | `@sonar/scan` + opencover |
 | C# Playwright | `dotnet test --filter TestCategory=infra /p:CollectCoverage=true` | 100% `Config.ConfigReader` + `LayoutCss` + `TokensCss` | `@sonar/scan` + opencover |

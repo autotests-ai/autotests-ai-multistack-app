@@ -1,0 +1,6 @@
+allure-results/
+.env
+*.test
+coverage.out
+coverage.html
+build/
