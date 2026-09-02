@@ -58,7 +58,7 @@ Full IDs live in hub [`matrix.yaml`](../../matrix.yaml) `tests.modules` (`status
 | `tests-python-httpx` | **active** — HTTP block httpx |
 | `tests-python-yandex-tank` | slot — Yandex.Tank, `layers: [performance]` |
 | `tests-python-locust` | slot — Locust, `layers: [performance]` |
-| `tests-kotlin-gradle-junit5-allure3-selenide` | slot — UI block |
+| `tests-kotlin-gradle-junit5-allure3-selenide` | **active** — UI+HTTP Selenide + in-cell Ktor |
 | `tests-kotlin-gradle-junit5-allure3-selenium` | slot — UI block |
 | `tests-kotlin-gradle-junit5-allure3-playwright` | slot — UI block |
 | `tests-kotlin-gradle-junit5-allure3-ktor` | **active** — HTTP block Ktor client |

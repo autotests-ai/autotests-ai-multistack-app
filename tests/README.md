@@ -31,7 +31,7 @@ tests/
   groovy/
     tests-groovy-jmeter/                             # slot — JMeter JSR223
   kotlin/
-    tests-kotlin-gradle-junit5-allure3-selenide/     # slot — UI block
+    tests-kotlin-gradle-junit5-allure3-selenide/     # active — UI+HTTP Selenide + in-cell Ktor
     tests-kotlin-gradle-junit5-allure3-selenium/    # slot — UI block
     tests-kotlin-gradle-junit5-allure3-playwright/   # slot — UI block
     tests-kotlin-gradle-junit5-allure3-ktor/         # active — HTTP block Ktor
