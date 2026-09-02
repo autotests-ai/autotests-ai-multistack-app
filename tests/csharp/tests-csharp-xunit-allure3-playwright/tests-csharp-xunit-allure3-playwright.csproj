@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace />
+    <RunSettingsFilePath>$(MSBuildProjectDirectory)\allure.runsettings</RunSettingsFilePath>
+    <!-- Coverlet opt-in: /p:CollectCoverage=true. ConfigReader + CSS helpers (JaCoCo analog). -->
+    <IncludeTestAssembly>true</IncludeTestAssembly>
+    <CoverletOutputFormat>opencover</CoverletOutputFormat>
+    <CoverletOutput>coverage.opencover.xml</CoverletOutput>
+    <Include>[*]Config.ConfigReader,[*]Helpers.LayoutCss,[*]Helpers.TokensCss</Include>
+    <Threshold>100</Threshold>
+    <ThresholdType>line</ThresholdType>
+    <ThresholdStat>total</ThresholdStat>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Allure.Xunit" Version="2.15.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="Microsoft.Playwright" Version="1.61.0" />
+    <PackageReference Include="NJsonSchema" Version="11.3.2" />
+    <PackageReference Include="RestSharp" Version="112.1.0" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.assert" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.msbuild" Version="6.0.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="allureConfig.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="allure.runsettings">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="chrome-for-testing.properties">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="config\*.properties">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="schemas\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="screenshots\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

@@ -6,5 +6,5 @@ Pattern: `tests-csharp-{framework}-{reporting}-{automation}` — see [../NAMING.
 |--------|--------|
 | `tests-csharp-nunit-allure3-selenium` | **active** — UI+HTTP NUnit · Selenium + in-cell RestSharp; coverlet + `sonar-tests` |
 | `tests-csharp-nunit-allure3-restsharp` | **active** — HTTP block NUnit · RestSharp; coverlet + `sonar-tests` |
-| `tests-csharp-xunit-allure3-playwright` | slot — UI block xUnit · Playwright |
+| `tests-csharp-xunit-allure3-playwright` | **active** — UI+HTTP xUnit · Playwright + in-cell RestSharp; coverlet + `sonar-tests` |
 

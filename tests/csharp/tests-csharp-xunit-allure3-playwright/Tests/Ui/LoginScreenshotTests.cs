@@ -1,0 +1,34 @@
+using Allure.Net.Commons;
+using Allure.Net.Commons.Attributes;
+using Helpers;
+using Tests;
+
+namespace Tests.Ui;
+
+[AllureLabel("layer", "ui")]
+[AllureSeverity(SeverityLevel.minor)]
+[AllureEpic("Authentication")]
+[AllureFeature("Login form")]
+[AllureSuite("Login")]
+[AllureSubSuite("screenshot")]
+public sealed class LoginScreenshotTests : TestBase
+{
+    private const int ViewportHeight = 900;
+
+    [InlineData(390)]
+    [InlineData(768)]
+    [InlineData(1280)]
+    [Trait("TestCategory", "ui")]
+    [Trait("TestCategory", "screenshot")]
+    [Theory(DisplayName = "Login form matches screenshot")]
+    public void LoginFormMatchesScreenshot(int viewportWidth)
+    {
+        ViewportHelper.SetViewport(viewportWidth, ViewportHeight);
+        LoginPage.OpenPage();
+        ScreenshotHelper.CaptureAndCompare(
+            LoginPage.LoginFormPanel(),
+            "login",
+            viewportWidth,
+            "login-" + viewportWidth);
+    }
+}

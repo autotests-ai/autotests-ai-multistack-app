@@ -45,7 +45,7 @@ runs:
         set -euo pipefail
         # Coverlet 100% line (JaCoCo sibling). IncludeTestAssembly: helpers live in the test project.
         # Backend-only lane: ConfigReader. Full infra uses the cell csproj Include
-        # (RestSharp = ConfigReader; Selenium = ConfigReader + LayoutCss + TokensCss).
+        # (RestSharp = ConfigReader; Selenium/Playwright = ConfigReader + LayoutCss + TokensCss).
         include_arg=()
         if [ "$INFRA_FILTER" = "infra_backend" ]; then
           include_arg=(/p:Include='[*]Config.ConfigReader')

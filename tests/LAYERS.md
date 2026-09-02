@@ -52,13 +52,15 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
 **Kotlin Playwright living block:** `tests-kotlin-gradle-junit5-allure3-playwright` — Gradle + JUnit 5 + Playwright + in-cell Ktor, `layers: [api, ui, e2e]`. Same UI `DisplayName` catalog as Java Playwright (no invented PNG). JaCoCo 100% `ConfigReader` / `LayoutCss` / `TokensCss`. Default CI cell stays Java Selenide. Not a Selenide/Selenium rewrite. HTTP-only Ktor school stays in the sibling folder.
 
-**C# HTTP-only living block:** `tests-csharp-nunit-allure3-restsharp` — NUnit + RestSharp + Allure.NUnit, `layers: [api]`. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader + 3 manual). UI school is living `tests-csharp-nunit-allure3-selenium` (Selenium + **in-cell** RestSharp), not a second HTTP folder. Combo with xUnit Playwright = generate, not a third folder.
+**C# HTTP-only living block:** `tests-csharp-nunit-allure3-restsharp` — NUnit + RestSharp + Allure.NUnit, `layers: [api]`. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader + 3 manual). UI schools are living `tests-csharp-nunit-allure3-selenium` (Selenium + **in-cell** RestSharp) and `tests-csharp-xunit-allure3-playwright` (Playwright + **in-cell** RestSharp), not a second HTTP folder.
 
 **C# Selenium living block:** `tests-csharp-nunit-allure3-selenium` — NUnit + Selenium 4 + in-cell RestSharp, `layers: [api, ui, e2e]`. Same UI `DisplayName` catalog as Java Selenium. Coverlet 100% `ConfigReader` / `LayoutCss` / `TokensCss`. Default CI cell stays Java Selenide. Not an xUnit/Playwright rewrite. HTTP-only RestSharp school stays in the sibling folder.
 
+**C# Playwright living block:** `tests-csharp-xunit-allure3-playwright` — xUnit + Playwright + in-cell RestSharp, `layers: [api, ui, e2e]`. Same UI `DisplayName` catalog as Java Playwright (PNG tree from Java Playwright). Coverlet 100% `ConfigReader` / `LayoutCss` / `TokensCss`. Default CI cell stays Java Selenide. Not an NUnit/Selenium rewrite. HTTP-only RestSharp school stays in the sibling folder.
+
 **HTTP-only slots (other languages):** empty folders, `layers: [api]`, same `/api` contract. Python `tests-python-requests` · JS `tests-javascript-axios`. Go living catalog is `tests-go-testing-allure3-net_http`. Kotlin living catalog is `tests-kotlin-gradle-junit5-allure3-ktor`. C# living catalog is `tests-csharp-nunit-allure3-restsharp`. Combo with a UI school = generate, not a third folder.
 
-**JS/TS Playwright living:** api inside `tests-javascript-playwright` / `tests-typescript-playwright` is Playwright **APIRequest** (`request` fixture). Axios is the sibling HTTP-only school, not the client in those folders. Java Playwright uses Rest Assured in-cell (JVM HTTP school). Kotlin Playwright uses Ktor in-cell. Python Playwright uses APIRequest in-cell (not httpx).
+**JS/TS Playwright living:** api inside `tests-javascript-playwright` / `tests-typescript-playwright` is Playwright **APIRequest** (`request` fixture). Axios is the sibling HTTP-only school, not the client in those folders. Java Playwright uses Rest Assured in-cell (JVM HTTP school). Kotlin Playwright uses Ktor in-cell. Python Playwright uses APIRequest in-cell (not httpx). C# Playwright uses RestSharp in-cell.
 
 **Java Playwright living block:** `tests-java-gradle-junit5-allure3-playwright` — Playwright for Java + Rest Assured, `layers: [api, ui, e2e]`. Same `data-testid` as the TS Playwright cell; screenshot PNG tree matches Selenide (`@Tag("screenshot")` slice). HTTP-only Rest Assured school stays in `tests-java-gradle-junit5-allure3-restassured`.
 
@@ -124,6 +126,7 @@ Living non-JVM cells ship a ConfigReader analog (command on the cell README). Mi
 | Go net/http | `./cover-config.sh` | 100% ConfigReader analog | `@sonar/scan` + `coverage.out` |
 | C# RestSharp | `dotnet test --filter TestCategory=infra /p:CollectCoverage=true` | 100% `Config.ConfigReader` | `@sonar/scan` + opencover |
 | C# Selenium | `dotnet test --filter TestCategory=infra /p:CollectCoverage=true` | 100% `Config.ConfigReader` + `LayoutCss` + `TokensCss` | `@sonar/scan` + opencover |
+| C# Playwright | `dotnet test --filter TestCategory=infra /p:CollectCoverage=true` | 100% `Config.ConfigReader` + `LayoutCss` + `TokensCss` | `@sonar/scan` + opencover |
 
 **Not** application code (that's `backend-unit-tests` on `BACKEND_DIR` / `frontend-unit-tests` on `FRONTEND_DIR`).
 
@@ -299,9 +302,10 @@ HTTP-only: `tests/kotlin/tests-kotlin-gradle-junit5-allure3-ktor`. UI+HTTP:
 ./gradlew test -Denv=prod -DincludeTags=manual
 ```
 
-For `TESTS_LANG=csharp`, a layer is an **NUnit category**, a stand is **`STAND`** / `API_BASE_URL`.
+For `TESTS_LANG=csharp`, a layer is an **NUnit category** or **xUnit `TestCategory` trait**, a stand is **`STAND`** / `API_BASE_URL`.
 HTTP-only: `tests/csharp/tests-csharp-nunit-allure3-restsharp`. UI+HTTP:
-`tests/csharp/tests-csharp-nunit-allure3-selenium` (clone default `TESTS_*` stays Java Selenide).
+`tests/csharp/tests-csharp-nunit-allure3-selenium` or
+`tests/csharp/tests-csharp-xunit-allure3-playwright` (clone default `TESTS_*` stays Java Selenide).
 
 ```bash
 STAND=ci   dotnet test --filter TestCategory=infra
@@ -464,6 +468,9 @@ Look under the test/launch **Окружение** block (not Custom fields — t
 | `tests/kotlin/tests-kotlin-gradle-junit5-allure3-selenide/` | Gradle + JUnit 5 + Selenide + in-cell Ktor; stand is `-Denv` (**active**, api+ui+e2e). Not clone default CI |
 | `tests/kotlin/tests-kotlin-gradle-junit5-allure3-selenium/` | Gradle + JUnit 5 + Selenium + in-cell Ktor; stand is `-Denv` (**active**, api+ui+e2e). Not clone default CI |
 | `tests/kotlin/tests-kotlin-gradle-junit5-allure3-playwright/` | Gradle + JUnit 5 + Playwright + in-cell Ktor; stand is `-Denv` (**active**, api+ui+e2e). Not clone default CI |
+| `tests/csharp/tests-csharp-nunit-allure3-restsharp/` | NUnit + RestSharp; stand is `STAND` / `API_BASE_URL` (**active**, HTTP-only catalog) |
+| `tests/csharp/tests-csharp-nunit-allure3-selenium/` | NUnit + Selenium 4 + in-cell RestSharp; stand is `STAND` / `BASE_URL` (**active**, api+ui+e2e). Not clone default CI |
+| `tests/csharp/tests-csharp-xunit-allure3-playwright/` | xUnit + Playwright + in-cell RestSharp; stand is `STAND` / `BASE_URL` (**active**, api+ui+e2e). Not clone default CI |
 | Cypress, remaining `kotlin/…` slots, … | slots in [`deploy/matrix.yaml`](../deploy/matrix.yaml) |
 
 Same app under test; not separate pyramid layers — parallel teaching stacks ([NAMING.md](NAMING.md)).

@@ -70,7 +70,7 @@ Full IDs live in hub [`matrix.yaml`](../../matrix.yaml) `tests.modules` (`status
 | `tests-go-cdp` | mill — IR / `greedy run`, not a Selenide peer |
 | `tests-csharp-nunit-allure3-selenium` | **active** — UI+HTTP Selenium + in-cell RestSharp |
 | `tests-csharp-nunit-allure3-restsharp` | **active** — HTTP block RestSharp |
-| `tests-csharp-xunit-allure3-playwright` | slot — UI block |
+| `tests-csharp-xunit-allure3-playwright` | **active** — UI+HTTP xUnit · Playwright + in-cell RestSharp |
 
 ```
 tests-javascript-npm-playwright-no_allure
