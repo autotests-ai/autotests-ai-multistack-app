@@ -14,7 +14,7 @@ runs:
       with:
         module_dir: ${{ inputs.module_dir }}
     - if: env.TESTS_LANG == 'java'
-      uses: ./tests/java/tests-java-junit5-rest_assured-selenide/.github/actions/manual
+      uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/manual
       with:
         module_dir: ${{ steps.dir.outputs.dir }}
         stand: ${{ inputs.stand }}

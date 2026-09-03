@@ -29,7 +29,7 @@ runs:
         module_dir: ${{ inputs.module_dir }}
     # Java adapter lives in the canon selenide module; module_dir is the active cell.
     - if: env.TESTS_LANG == 'java'
-      uses: ./tests/java/tests-java-junit5-rest_assured-selenide/.github/actions/e2e
+      uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/e2e
       with:
         module_dir: ${{ steps.dir.outputs.dir }}
         stand: ${{ inputs.stand }}
