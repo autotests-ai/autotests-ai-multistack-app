@@ -1,0 +1,69 @@
+name: manual
+description: Manual-tagged stubs against a live stand.
+inputs:
+  module_dir:
+    required: true
+  stand:
+    default: prod
+runs:
+  using: composite
+  steps:
+    - name: Wait for live UI
+      shell: bash
+      run: |
+        set -euo pipefail
+        if [ -n "${APP_URL:-}" ]; then
+          ui="${APP_URL}"
+        else
+          ui="https://${PUBLIC_HOST}/${STACK_MOUNT}/backend-${BACKEND_LANG}-${BACKEND_FRAMEWORK}/frontend-${FRONTEND_LANG}-${FRONTEND_FRAMEWORK}/"
+        fi
+        echo "==> UI ${ui}"
+        curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${ui}"
+    - uses: ./.github/actions/setup-allurectl
+    - uses: actions/setup-java@v5
+      with:
+        distribution: temurin
+        java-version: ${{ env.JAVA_VERSION }}
+    - uses: gradle/actions/setup-gradle@v6
+      with:
+        cache-read-only: true
+        cache-encryption-key: ${{ env.GRADLE_ENCRYPTION_KEY }}
+      env:
+        GRADLE_BUILD_ACTION_CACHE_KEY_JOB: infra-tests
+    - name: Cache Chrome for Testing
+      if: env.TESTS_UI_LIBRARY == 'playwright'
+      continue-on-error: true
+      uses: actions/cache@v6
+      with:
+        path: ${{ runner.tool_cache }}/setup-chrome
+        key: chrome-for-testing-${{ runner.os }}-${{ runner.arch }}-${{ env.CHROME_FOR_TESTING_VERSION }}
+    - name: Install pinned Chrome for Testing
+      if: env.TESTS_UI_LIBRARY == 'playwright'
+      id: setup-chrome
+      uses: browser-actions/setup-chrome@v2.1.2
+      with:
+        chrome-version: ${{ env.CHROME_FOR_TESTING_VERSION }}
+        install-chromedriver: true
+    - name: Run manual tests (Gradle)
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/build/allure-results
+        RUN_ENV: ${{ inputs.stand }}
+        CHROME_BINARY_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+        CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
+      run: |
+        set -euo pipefail
+        ARGS=(-Denv="$RUN_ENV" -DincludeTags=manual)
+        source "${GITHUB_WORKSPACE}/tests/.github/actions/append-java-remote-url.sh"
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
+        run_with_allurectl ./gradlew test "${ARGS[@]}"
+    - name: Publish raw Allure results
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: allure-results-manual
+        path: ${{ inputs.module_dir }}/build/allure-results/**
+        if-no-files-found: ignore
+        retention-days: 1

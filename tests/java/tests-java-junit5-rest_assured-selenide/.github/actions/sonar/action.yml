@@ -1,0 +1,56 @@
+name: sonar
+description: Sonar scan + quality gate for the tests module.
+inputs:
+  module_dir:
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-java@v5
+      with:
+        distribution: temurin
+        java-version: ${{ env.JAVA_VERSION }}
+    - uses: gradle/actions/setup-gradle@v6
+      with:
+        cache-encryption-key: ${{ env.GRADLE_ENCRYPTION_KEY }}
+    - uses: actions/cache@v6
+      with:
+        path: ${{ inputs.module_dir }}/.gradle/configuration-cache
+        key: gradle-cc-tests-sonar-${{ inputs.module_dir }}-${{ hashFiles(format('{0}/*.gradle*', inputs.module_dir), format('{0}/gradle/wrapper/gradle-wrapper.properties', inputs.module_dir), format('{0}/gradle.properties', inputs.module_dir)) }}-${{ github.sha }}
+        restore-keys: |
+          gradle-cc-tests-sonar-${{ inputs.module_dir }}-
+    - uses: ./.github/actions/download-artifact
+      with:
+        name: coverage-infra
+        path: infra
+    - name: Sonar scan + gate (tests)
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+      run: |
+        set -euo pipefail
+        JACOCO_XML="${GITHUB_WORKSPACE}/infra/reports/jacoco/test/jacocoTestReport.xml"
+        if [[ ! -f "$JACOCO_XML" ]]; then
+          echo "ERROR: JaCoCo report missing: $JACOCO_XML" >&2
+          exit 1
+        fi
+        ./gradlew testClasses --no-daemon --no-configuration-cache
+        if [[ -z "${SONAR_TOKEN:-}" ]]; then
+          echo "ERROR: SONAR_TOKEN unset" >&2
+          exit 1
+        fi
+        KEY="${SONAR_PROJECT_KEY:-autotests-ai-multistack-app-$(basename "${{ inputs.module_dir }}")}"
+        echo "==> sonar scan (infra coverage artifact) → ${SONAR_HOST_URL} (${KEY})"
+        ./gradlew sonar --no-daemon \
+          -Dsonar.host.url="${SONAR_HOST_URL}" \
+          -Dsonar.projectKey="${KEY}" \
+          -Dsonar.projectName="${KEY}" \
+          -Dsonar.coverage.jacoco.xmlReportPaths="${JACOCO_XML}" \
+          -Dsonar.qualitygate.wait=true \
+          -Dsonar.qualitygate.timeout="${SONAR_QUALITY_GATE_TIMEOUT}"
+    - name: Write Sonar summary
+      if: always()
+      shell: bash
+      run: |
+        bash "${GITHUB_WORKSPACE}/tests/.github/actions/sonar/write-sonar-summary.sh"

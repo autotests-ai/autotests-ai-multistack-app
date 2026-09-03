@@ -26,7 +26,7 @@ runs:
     # JVM adapter lives in the canon selenide module; module_dir is the active cell (Java or Kotlin).
     - if: env.TESTS_LANG == 'java' || env.TESTS_LANG == 'kotlin'
       id: module
-      uses: ./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/infra
+      uses: ./tests/java/tests-java-junit5-rest_assured-selenide/.github/actions/infra
       with:
         module_dir: ${{ steps.dir.outputs.dir }}
         backend_lane: ${{ inputs.backend_lane }}

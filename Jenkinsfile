@@ -151,7 +151,11 @@ pipeline {
         """
         catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
           script {
-            def cell = "tests/java/tests-java-gradle-junit5-allure3-${params.TESTS_UI_LIBRARY}"
+            def cell = [
+              selenide   : 'tests/java/tests-java-junit5-rest_assured-selenide',
+              selenium   : 'tests/java/tests-java-junit5-rest_assured-selenium',
+              playwright : 'tests/java/tests-java-junit5-api_request-playwright',
+            ][params.TESTS_UI_LIBRARY]
             allure(
               allureVersion: '3',
               includeProperties: false,

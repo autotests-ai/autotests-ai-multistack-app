@@ -1,0 +1,163 @@
+name: e2e
+description: Browser layer against a live stand.
+inputs:
+  module_dir:
+    required: true
+  stand:
+    required: true
+  include_tags:
+    default: ""
+  exclude_tags:
+    default: ""
+  run_e2e:
+    default: "false"
+  run_screenshot:
+    default: "false"
+  update_screenshots:
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - name: Wait for live UI
+      shell: bash
+      run: |
+        set -euo pipefail
+        if [ -n "${APP_URL:-}" ]; then
+          ui="${APP_URL}"
+        else
+          ui="https://${PUBLIC_HOST}/${STACK_MOUNT}/backend-${BACKEND_LANG}-${BACKEND_FRAMEWORK}/frontend-${FRONTEND_LANG}-${FRONTEND_FRAMEWORK}/"
+        fi
+        echo "==> UI ${ui}"
+        curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${ui}"
+    - uses: ./.github/actions/setup-allurectl
+    - uses: actions/setup-java@v5
+      with:
+        distribution: temurin
+        java-version: ${{ env.JAVA_VERSION }}
+    - uses: gradle/actions/setup-gradle@v6
+      with:
+        cache-read-only: true
+        cache-encryption-key: ${{ env.GRADLE_ENCRYPTION_KEY }}
+      env:
+        GRADLE_BUILD_ACTION_CACHE_KEY_JOB: infra-tests
+    - name: Cache Chrome for Testing
+      if: env.TESTS_UI_LIBRARY == 'playwright' && env.SELENOID_PLAYWRIGHT_URL == ''
+      id: cache-chrome-for-testing
+      continue-on-error: true
+      uses: actions/cache@v6
+      with:
+        path: ${{ runner.tool_cache }}/setup-chrome
+        key: chrome-for-testing-${{ runner.os }}-${{ runner.arch }}-${{ env.CHROME_FOR_TESTING_VERSION }}
+    - name: Install pinned Chrome for Testing
+      if: env.TESTS_UI_LIBRARY == 'playwright' && env.SELENOID_PLAYWRIGHT_URL == ''
+      id: setup-chrome
+      uses: browser-actions/setup-chrome@v2.1.2
+      with:
+        chrome-version: ${{ env.CHROME_FOR_TESTING_VERSION }}
+        install-chromedriver: true
+    - name: Run e2e tests (Gradle with tag filters)
+      if: >-
+        github.event_name == 'push' ||
+        inputs.run_e2e == 'true' ||
+        inputs.include_tags != '' ||
+        inputs.exclude_tags != '' ||
+        github.event_name != 'workflow_dispatch'
+      id: run-tests
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/build/allure-results
+        RUN_ENV: ${{ inputs.stand }}
+        INCLUDE_TAGS: ${{ inputs.include_tags }}
+        EXCLUDE_TAGS: ${{ inputs.exclude_tags }}
+        CHROME_BINARY_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+        CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
+      run: |
+        set -euo pipefail
+        ARGS=(-Denv="$RUN_ENV")
+        # shellcheck source=tests/.github/actions/append-java-remote-url.sh
+        source "${GITHUB_WORKSPACE}/tests/.github/actions/append-java-remote-url.sh"
+        if [ -n "${INCLUDE_TAGS}" ]; then
+          ARGS+=(-DincludeTags="${INCLUDE_TAGS}")
+        else
+          ARGS+=(-DincludeTags=e2e)
+        fi
+        if [ -n "${EXCLUDE_TAGS}" ]; then
+          ARGS+=(-DexcludeTags="${EXCLUDE_TAGS}")
+        else
+          ARGS+=(-DexcludeTags=screenshot)
+        fi
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
+        run_with_allurectl ./gradlew test "${ARGS[@]}"
+    - name: Stash e2e Allure results
+      if: always()
+      continue-on-error: true
+      shell: bash
+      run: |
+        set -euo pipefail
+        STASH="${{ inputs.module_dir }}/build/allure-results-e2e-stash"
+        SRC="${{ inputs.module_dir }}/build/allure-results"
+        mkdir -p "$STASH"
+        if [ -d "$SRC" ]; then cp -R "$SRC/." "$STASH/"; fi
+    - name: Run screenshot compare (Gradle)
+      if: always() && !cancelled() && inputs.update_screenshots != 'true'
+      id: run-screenshot-tests
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/build/allure-results
+        RUN_ENV: ${{ inputs.stand }}
+        SCREENSHOT_OS: linux
+        SCREENSHOT_BROWSER: chrome
+        CHROME_BINARY_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+        CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
+      run: |
+        set -euo pipefail
+        ARGS=(-Denv="$RUN_ENV" -DincludeTags=screenshot)
+        source "${GITHUB_WORKSPACE}/tests/.github/actions/append-java-remote-url.sh"
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
+        run_with_allurectl ./gradlew test "${ARGS[@]}"
+    - name: Update screenshots
+      if: always() && !cancelled() && inputs.update_screenshots == 'true'
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/build/allure-results
+        RUN_ENV: ${{ inputs.stand }}
+        SCREENSHOT_OS: linux
+        SCREENSHOT_BROWSER: chrome
+        CHROME_BINARY_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+        CHROMEDRIVER_PATH: ${{ steps.setup-chrome.outputs.chromedriver-path }}
+      run: |
+        set -euo pipefail
+        ARGS=(-Denv="$RUN_ENV" -DincludeTags=screenshot -DupdateScreenshots=true)
+        source "${GITHUB_WORKSPACE}/tests/.github/actions/append-java-remote-url.sh"
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
+        run_with_allurectl ./gradlew test "${ARGS[@]}"
+    - name: Merge Allure results
+      if: always()
+      continue-on-error: true
+      shell: bash
+      run: |
+        set -euo pipefail
+        STASH="${{ inputs.module_dir }}/build/allure-results-e2e-stash"
+        DEST="${{ inputs.module_dir }}/build/allure-results"
+        mkdir -p "$DEST"
+        if [ -d "$STASH" ]; then cp -R "$STASH/." "$DEST/"; fi
+    - name: Publish screenshot PNGs
+      if: always() && inputs.update_screenshots == 'true'
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ inputs.stand }}-screenshot-pngs
+        path: ${{ inputs.module_dir }}/src/test/resources/screenshots/
+        if-no-files-found: ignore
+    - name: Publish raw Allure results
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: allure-results-e2e${{ inputs.stand == 'stage' && '-stage' || '' }}
+        path: ${{ inputs.module_dir }}/build/allure-results/**
+        if-no-files-found: ignore
+        retention-days: 1

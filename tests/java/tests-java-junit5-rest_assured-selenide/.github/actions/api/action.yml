@@ -1,0 +1,47 @@
+name: api
+description: Rest Assured layer against a live stand.
+inputs:
+  module_dir:
+    required: true
+  stand:
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Wait for live API
+      shell: bash
+      run: |
+        set -euo pipefail
+        backend="backend-${BACKEND_LANG}-${BACKEND_FRAMEWORK}"
+        url="https://${PUBLIC_HOST}/${STACK_MOUNT}/${backend}/api/health"
+        echo "==> API ${url}"
+        curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${url}"
+    - uses: ./.github/actions/setup-allurectl
+    - uses: actions/setup-java@v5
+      with:
+        distribution: temurin
+        java-version: ${{ env.JAVA_VERSION }}
+    - uses: gradle/actions/setup-gradle@v6
+      with:
+        cache-read-only: true
+        cache-encryption-key: ${{ env.GRADLE_ENCRYPTION_KEY }}
+      env:
+        GRADLE_BUILD_ACTION_CACHE_KEY_JOB: infra-tests
+    - name: Run API tests (Gradle)
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/build/allure-results
+        STAND: ${{ inputs.stand }}
+      run: |
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
+        run_with_allurectl ./gradlew test -Denv="${STAND}" -DincludeTags=api
+    - name: Publish raw Allure results
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: allure-results-api${{ inputs.stand == 'stage' && '-stage' || '' }}
+        path: ${{ inputs.module_dir }}/build/allure-results/**
+        if-no-files-found: ignore
+        retention-days: 1
