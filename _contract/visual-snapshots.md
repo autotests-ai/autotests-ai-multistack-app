@@ -22,7 +22,7 @@ Folders: **mode first, then OS** (Java adds `{browser}-{major}` after OS).
 Target:
 
 ```
-projects/autotests-ai-multistack-home/autotests-ai-multistack-app/tests/java/tests-java-gradle-junit5-allure3-selenide/src/test/resources/screenshots/{mock|stage|prod}/{linux|macos|windows}/{chrome-148}/{area}/{viewport}.png
+projects/autotests-ai-multistack-home/autotests-ai-multistack-app/tests/java/tests-java-junit5-rest_assured-selenide/src/test/resources/screenshots/{mock|stage|prod}/{linux|macos|windows}/{chrome-148}/{area}/{viewport}.png
 ```
 
 Living today: `screenshots/{mock|stage|prod}/{os}/{chrome-148}/{area}/` — same `@Tag("screenshot")` tests, folder from `-Denv` (`mock` → `mock/`, `stage` → `stage/`, `prod` and `ci` → `prod/`). Browser-major folders sit side by side (`chrome-148/` next to a future `firefox-140/`). Write mode: `-DupdateScreenshots=true`. OS/browser folder env: `SCREENSHOT_OS` / `SCREENSHOT_BROWSER` (default `chrome`).

@@ -20,11 +20,11 @@ default:
 stacks:
   java-spring:
     unit: backend/java/backend-java-spring/src/test/java
-    unit_tests_helpers: tests/java/tests-java-gradle-junit5-allure3-selenide/src/test/java/helpers  # *Test + config.*Test via testUnit
+    unit_tests_helpers: tests/java/tests-java-junit5-rest_assured-selenide/src/test/java/helpers  # *Test + config.*Test via testUnit
     integration: backend/java/backend-java-spring/src/test
     component: frontend/typescript/frontend-typescript-react/src  # Vitest + RTL; CI job component-tests
-    ui: tests/java/tests-java-gradle-junit5-allure3-selenide/src/test/java/tests/ui
-    e2e: tests/java/tests-java-gradle-junit5-allure3-selenide/src/test/java/tests/e2e
+    ui: tests/java/tests-java-junit5-rest_assured-selenide/src/test/java/tests/ui
+    e2e: tests/java/tests-java-junit5-rest_assured-selenide/src/test/java/tests/e2e
     testRunner: gradle
     browser: selenide
     frontendTestRunner: vitest

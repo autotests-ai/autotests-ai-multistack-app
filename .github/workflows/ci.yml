@@ -127,7 +127,7 @@ env:
   # backend: java/kotlin → module; python/go/javascript/typescript/csharp/rust → family.
   # frontend: typescript/javascript → family.
   # tests: java/kotlin living → short combo/HTTP id; runner slots stay 5-segment;
-  # go/csharp living → short combo/HTTP id; javascript/python/typescript → family.
+  # go/csharp/rust living → short combo/HTTP id; javascript/python/typescript → family.
   BACKEND_LANG: java
   BACKEND_FRAMEWORK: spring
   BACKEND_PORT: "8800"
@@ -345,7 +345,7 @@ jobs:
       - id: infra
         uses: ./tests/.github/actions/infra
         with:
-          module_dir: ${{ (env.TESTS_LANG == 'java' || env.TESTS_LANG == 'kotlin') && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || (env.TESTS_LANG == 'go' || env.TESTS_LANG == 'csharp') && format('tests/{0}/tests-{0}-{1}-{2}-{3}', env.TESTS_LANG, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
+          module_dir: ${{ (env.TESTS_LANG == 'java' || env.TESTS_LANG == 'kotlin') && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || (env.TESTS_LANG == 'go' || env.TESTS_LANG == 'csharp' || env.TESTS_LANG == 'rust') && format('tests/{0}/tests-{0}-{1}-{2}-{3}', env.TESTS_LANG, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
           backend_lane: ${{ needs.trigger.outputs.backend }}
           frontend_lane: ${{ needs.trigger.outputs.frontend }}
           tests_lane: ${{ needs.trigger.outputs.tests }}
@@ -379,7 +379,7 @@ jobs:
       - *checkout
       - uses: ./tests/.github/actions/mock
         with:
-          module_dir: ${{ (env.TESTS_LANG == 'java' || env.TESTS_LANG == 'kotlin') && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || (env.TESTS_LANG == 'go' || env.TESTS_LANG == 'csharp') && format('tests/{0}/tests-{0}-{1}-{2}-{3}', env.TESTS_LANG, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
+          module_dir: ${{ (env.TESTS_LANG == 'java' || env.TESTS_LANG == 'kotlin') && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || (env.TESTS_LANG == 'go' || env.TESTS_LANG == 'csharp' || env.TESTS_LANG == 'rust') && format('tests/{0}/tests-{0}-{1}-{2}-{3}', env.TESTS_LANG, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
           frontend_dir: ${{ format('frontend/{0}/frontend-{0}-{1}', env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
           update_screenshots: ${{ inputs.update_mock_screenshots || false }}
 
@@ -439,7 +439,7 @@ jobs:
       - if: env.RUN_SONAR == 'true'
         uses: ./tests/.github/actions/sonar
         with:
-          module_dir: ${{ (env.TESTS_LANG == 'java' || env.TESTS_LANG == 'kotlin') && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || (env.TESTS_LANG == 'go' || env.TESTS_LANG == 'csharp') && format('tests/{0}/tests-{0}-{1}-{2}-{3}', env.TESTS_LANG, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
+          module_dir: ${{ (env.TESTS_LANG == 'java' || env.TESTS_LANG == 'kotlin') && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || (env.TESTS_LANG == 'go' || env.TESTS_LANG == 'csharp' || env.TESTS_LANG == 'rust') && format('tests/{0}/tests-{0}-{1}-{2}-{3}', env.TESTS_LANG, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
 
   sonar-frontend:
     needs: [frontend-unit-tests, ui-tests]
@@ -699,7 +699,7 @@ jobs:
       - *checkout
       - uses: ./tests/.github/actions/api
         with:
-          module_dir: ${{ (env.TESTS_LANG == 'java' || env.TESTS_LANG == 'kotlin') && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || (env.TESTS_LANG == 'go' || env.TESTS_LANG == 'csharp') && format('tests/{0}/tests-{0}-{1}-{2}-{3}', env.TESTS_LANG, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
+          module_dir: ${{ (env.TESTS_LANG == 'java' || env.TESTS_LANG == 'kotlin') && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || (env.TESTS_LANG == 'go' || env.TESTS_LANG == 'csharp' || env.TESTS_LANG == 'rust') && format('tests/{0}/tests-{0}-{1}-{2}-{3}', env.TESTS_LANG, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
           stand: prod
 
   e2e-tests:
@@ -734,7 +734,7 @@ jobs:
       - *checkout
       - uses: ./tests/.github/actions/e2e
         with:
-          module_dir: ${{ (env.TESTS_LANG == 'java' || env.TESTS_LANG == 'kotlin') && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || (env.TESTS_LANG == 'go' || env.TESTS_LANG == 'csharp') && format('tests/{0}/tests-{0}-{1}-{2}-{3}', env.TESTS_LANG, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
+          module_dir: ${{ (env.TESTS_LANG == 'java' || env.TESTS_LANG == 'kotlin') && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || (env.TESTS_LANG == 'go' || env.TESTS_LANG == 'csharp' || env.TESTS_LANG == 'rust') && format('tests/{0}/tests-{0}-{1}-{2}-{3}', env.TESTS_LANG, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
           stand: prod
           include_tags: ${{ inputs.include_tags || '' }}
           exclude_tags: ${{ inputs.exclude_tags || '' }}
@@ -768,7 +768,7 @@ jobs:
       - *checkout
       - uses: ./tests/.github/actions/api
         with:
-          module_dir: ${{ (env.TESTS_LANG == 'java' || env.TESTS_LANG == 'kotlin') && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || (env.TESTS_LANG == 'go' || env.TESTS_LANG == 'csharp') && format('tests/{0}/tests-{0}-{1}-{2}-{3}', env.TESTS_LANG, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
+          module_dir: ${{ (env.TESTS_LANG == 'java' || env.TESTS_LANG == 'kotlin') && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || (env.TESTS_LANG == 'go' || env.TESTS_LANG == 'csharp' || env.TESTS_LANG == 'rust') && format('tests/{0}/tests-{0}-{1}-{2}-{3}', env.TESTS_LANG, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
           stand: stage
 
   e2e-tests-stage:
@@ -806,7 +806,7 @@ jobs:
       - *checkout
       - uses: ./tests/.github/actions/e2e
         with:
-          module_dir: ${{ (env.TESTS_LANG == 'java' || env.TESTS_LANG == 'kotlin') && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || (env.TESTS_LANG == 'go' || env.TESTS_LANG == 'csharp') && format('tests/{0}/tests-{0}-{1}-{2}-{3}', env.TESTS_LANG, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
+          module_dir: ${{ (env.TESTS_LANG == 'java' || env.TESTS_LANG == 'kotlin') && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || (env.TESTS_LANG == 'go' || env.TESTS_LANG == 'csharp' || env.TESTS_LANG == 'rust') && format('tests/{0}/tests-{0}-{1}-{2}-{3}', env.TESTS_LANG, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
           stand: stage
           include_tags: ${{ inputs.include_tags || '' }}
           exclude_tags: ${{ inputs.exclude_tags || '' }}
@@ -836,7 +836,7 @@ jobs:
       - *checkout
       - uses: ./tests/.github/actions/manual
         with:
-          module_dir: ${{ (env.TESTS_LANG == 'java' || env.TESTS_LANG == 'kotlin') && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || (env.TESTS_LANG == 'go' || env.TESTS_LANG == 'csharp') && format('tests/{0}/tests-{0}-{1}-{2}-{3}', env.TESTS_LANG, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
+          module_dir: ${{ (env.TESTS_LANG == 'java' || env.TESTS_LANG == 'kotlin') && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || (env.TESTS_LANG == 'go' || env.TESTS_LANG == 'csharp' || env.TESTS_LANG == 'rust') && format('tests/{0}/tests-{0}-{1}-{2}-{3}', env.TESTS_LANG, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
           stand: prod
 
   # Gating Allure generate after e2e. Lock pins + npm ci live here (not extra
@@ -886,7 +886,7 @@ jobs:
       - id: publish
         uses: ./.github/actions/publish-allure-report
         with:
-          tests_dir: ${{ (env.TESTS_LANG == 'java' || env.TESTS_LANG == 'kotlin') && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || (env.TESTS_LANG == 'go' || env.TESTS_LANG == 'csharp') && format('tests/{0}/tests-{0}-{1}-{2}-{3}', env.TESTS_LANG, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
+          tests_dir: ${{ (env.TESTS_LANG == 'java' || env.TESTS_LANG == 'kotlin') && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || (env.TESTS_LANG == 'go' || env.TESTS_LANG == 'csharp' || env.TESTS_LANG == 'rust') && format('tests/{0}/tests-{0}-{1}-{2}-{3}', env.TESTS_LANG, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
         env:
           CI_LAYER_JOBS: ${{ toJSON(needs) }}
           TRIGGER_ENABLED: ${{ needs.trigger.outputs.enabled }}

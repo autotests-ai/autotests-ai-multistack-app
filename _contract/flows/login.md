@@ -76,7 +76,7 @@ implementation:
   canon: projects/autotests-ai-multistack-home/autotests-ai-multistack-app/
   frontend: projects/autotests-ai-multistack-home/autotests-ai-multistack-app/frontend/typescript/frontend-typescript-react/
   react: projects/autotests-ai-multistack-home/autotests-ai-multistack-app/frontend/typescript/frontend-typescript-react/
-  tests: projects/autotests-ai-multistack-home/autotests-ai-multistack-app/tests/java/tests-java-gradle-junit5-allure3-selenide/
+  tests: projects/autotests-ai-multistack-home/autotests-ai-multistack-app/tests/java/tests-java-junit5-rest_assured-selenide/
 
 design-system:
   embedHeader: true

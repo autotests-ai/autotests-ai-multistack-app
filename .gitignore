@@ -14,6 +14,7 @@ backend/kotlin/backend-kotlin-spring/build/
 backend/kotlin/backend-kotlin-spring/.gradle/
 backend/kotlin/backend-kotlin-spring/bin/
 backend/rust/backend-rust-axum/target/
+tests/rust/**/target/
 tests/java/tests-java-junit5-rest_assured-selenide/build/
 tests/java/tests-java-junit5-rest_assured-selenide/.gradle/
 tests/java/tests-java-junit5-rest_assured-selenide/bin/
@@ -51,6 +52,8 @@ playwright-report/
 .coverage.*
 coverage.xml
 coverage.out
+coverage.lcov
+coverage.json
 coverage/
 htmlcov/
 .pytest_cache/

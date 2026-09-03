@@ -15,6 +15,6 @@ SSOT for **behavior** — not language-specific code.
 **Layer disambiguation:** `component` = Vitest + React Testing Library in `frontend/typescript/frontend-typescript-react/` (CI job `component-tests`, do not rename). `integration` = backend `src/test` (`@Tag("integration")`). Rest Assured against a stand is the **api** layer in `tests/…/tests/api`. Living contract gate = OpenAPI.
 
 Live teaching product: `projects/autotests-ai-multistack-home/autotests-ai-multistack-app/` (nested clone).
-Runnable ethalon: `projects/autotests-ai-multistack-home/autotests-ai-multistack-app/` (`backend/java/backend-java-spring`, `frontend/typescript/frontend-typescript-react`, `tests/java/tests-java-gradle-junit5-allure3-selenide`).
+Runnable ethalon: `projects/autotests-ai-multistack-home/autotests-ai-multistack-app/` (`backend/java/backend-java-spring`, `frontend/typescript/frontend-typescript-react`, `tests/java/tests-java-junit5-rest_assured-selenide`).
 
 `derive-from-etalon.sh` pushes ethalon → live clone modules.
