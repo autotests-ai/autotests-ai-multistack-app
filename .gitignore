@@ -18,6 +18,9 @@ tests/rust/**/target/
 tests/java/tests-java-junit5-rest_assured-selenide/build/
 tests/java/tests-java-junit5-rest_assured-selenide/.gradle/
 tests/java/tests-java-junit5-rest_assured-selenide/bin/
+tests/java/tests-java-gatling/build/
+tests/java/tests-java-gatling/.gradle/
+tests/java/tests-java-gatling/bin/
 tests/_deferred/java-gradle-junit5-selenium/build/
 tests/_deferred/java-gradle-junit5-selenium/.gradle/
 tests/_deferred/java-gradle-junit5-selenium/bin/
