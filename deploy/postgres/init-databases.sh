@@ -26,4 +26,8 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres <<-EOSQL
     WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'multistack_app_typescript_express')\gexec
   SELECT 'CREATE DATABASE multistack_app_typescript_nest'
     WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'multistack_app_typescript_nest')\gexec
+  SELECT 'CREATE DATABASE multistack_app_csharp_aspnet'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'multistack_app_csharp_aspnet')\gexec
+  SELECT 'CREATE DATABASE multistack_app_rust_axum'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'multistack_app_rust_axum')\gexec
 EOSQL

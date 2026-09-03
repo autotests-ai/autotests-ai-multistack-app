@@ -21,7 +21,7 @@ autotests-ai-multistack-app/
 ### Naming convention
 
 `{zone}-{language}-{stack}` — hyphens between segments.  
-Underscore **only** in compound tool names, e.g. `tests-java-gradle-junit5-no_allure-selenide`.
+Underscore **only** in compound tool names, e.g. `tests-java-junit5-no_allure-selenide`.
 
 Frontend layout: language → product module (stack in the name); component tests in `src/test/`.  
 Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/NAMING.md) · **routing SSOT:** [deploy/matrix.yaml](deploy/matrix.yaml).
@@ -37,13 +37,16 @@ Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/N
 | **backend/go/** | `backend-go-gin`, `backend-go-stdlib` (active) | — |
 | **backend/javascript/** | `backend-javascript-express`, `backend-javascript-nest` (active) | — |
 | **backend/typescript/** | `backend-typescript-express`, `backend-typescript-nest` (active) | — |
-| **tests/java/** | `tests-java-gradle-junit5-allure3-selenide`, `selenium`, `playwright`, `restassured`, `retrofit2` (active) | junit4, testng, allure2, maven, … — [tests/NAMING.md](tests/NAMING.md) · matrix slots |
-| **tests/javascript/** | `tests-javascript-playwright` | Cypress, … |
-| **tests/typescript/** | `tests-typescript-playwright`, `tests-typescript-axios` | — |
-| **tests/python/** | `tests-python-selenium`, `selene`, `playwright`, `httpx` | requests, … |
-| **tests/kotlin/** | `tests-kotlin-gradle-junit5-allure3-ktor`, `selenide`, `selenium`, `playwright` | — |
-| **tests/go/** | `tests-go-testing-allure3-net_http`, `playwright`; mill `tests-go-cdp` | — |
-| **tests/csharp/** | `tests-csharp-nunit-allure3-selenium`, `restsharp`, `tests-csharp-xunit-allure3-playwright` | — |
+| **backend/csharp/** | `backend-csharp-aspnet` (active) | — |
+| **backend/rust/** | — | `backend-rust-axum` slot (Axum, port 8870) |
+| **tests/java/** | `tests-java-junit5-rest_assured-selenide`, `selenium`, `playwright`, `restassured`, `retrofit2` (active) | junit4, testng, allure2, maven, … — [tests/NAMING.md](tests/NAMING.md) · matrix slots |
+| **tests/javascript/** | `tests-javascript-api_request-playwright` (active combo), `tests-javascript-axios` | `tests-javascript-playwright` UI-only slot, Cypress, … |
+| **tests/typescript/** | `tests-typescript-api_request-playwright` (active combo), `tests-typescript-axios` | `tests-typescript-playwright` UI-only slot |
+| **tests/python/** | `tests-python-pytest-requests-selenium`, `requests-selene`, `api_request-playwright`, `httpx`, `requests` | UI-only `tests-python-pytest-{selenium,selene,playwright}` |
+| **tests/kotlin/** | `tests-kotlin-junit5-ktor`, `selenide`, `selenium`, `playwright` | — |
+| **tests/go/** | `tests-go-testing-net_http`, `playwright`; mill `tests-go-cdp` | — |
+| **tests/csharp/** | `tests-csharp-nunit-restsharp-selenium`, `restsharp`, `tests-csharp-xunit-api_request-playwright` | — |
+| **tests/rust/** | — | `tests-rust-testing-reqwest`, UI-only `selenium`, combo `reqwest-selenium` |
 
 ### Routing (per-frontend containers × multi-backend)
 
@@ -166,6 +169,8 @@ SSOT: [`deploy/matrix.yaml`](deploy/matrix.yaml). Language base **+10**, stack w
 | **8841** | `backend-javascript-nest` | |
 | **8850** | `backend-typescript-express` | |
 | **8851** | `backend-typescript-nest` | |
+| **8860** | `backend-csharp-aspnet` | |
+| **8870** | `backend-rust-axum` | slot · not in compose |
 | **9800** | `frontend-javascript-vanilla` | compose publish |
 | **9801** | `frontend-javascript-react` | compose publish |
 | **9802** | `frontend-javascript-angular` | compose publish |
@@ -177,7 +182,7 @@ SSOT: [`deploy/matrix.yaml`](deploy/matrix.yaml). Language base **+10**, stack w
 | **9813** | `frontend-typescript-vue` | compose publish |
 | **9814** | `frontend-typescript-jquery` | compose publish |
 
-Next backend language → **8860+**. Next frontend language → **9820+**.  
+Next backend language → **8880+**. Next frontend language → **9820+**.  
 Container-internal: backends `:8080`, frontends `:80`.  
 Path routing (`/{backend}/api`, `/{backend}/{frontend}`) — **host nginx** ([`deploy/nginx/`](deploy/nginx/)); local compose exposes published ports only.
 
@@ -191,6 +196,7 @@ curl -fsS http://localhost:8810/api/health
 curl -fsS http://localhost:8820/api/health
 curl -fsS http://localhost:8821/api/health
 curl -fsS http://localhost:8822/api/health
+curl -fsS http://localhost:8860/api/health
 curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:9811/
 curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:9800/
 # prod path shape — host nginx only

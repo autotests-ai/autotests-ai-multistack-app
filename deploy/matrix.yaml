@@ -9,7 +9,7 @@
 #
 # Port canon (local publish = prod host upstream; same numbers):
 #   backend: language base +10 · stack +1 within language
-#     8800 java · 8810 kotlin · 8820 python · 8830 go · 8840 javascript · 8850 typescript · next lang 8860…
+#     8800 java · 8810 kotlin · 8820 python · 8830 go · 8840 javascript · 8850 typescript · 8860 csharp · 8870 rust · next lang 8880…
 #   frontend (compose publish = host nginx upstream): language base +10 · stack +1
 #     9800 javascript · 9810 typescript · next lang 9820…
 # Container-internal listen stays 8080 (backends) / 80 (frontends).
@@ -157,6 +157,30 @@ backends:
     publish_port: 8851
     db_name: multistack_app_typescript_nest
     health_service: backend-typescript-nest
+
+  - id: backend-csharp-aspnet
+    status: active
+    language: csharp
+    module: backend/csharp/backend-csharp-aspnet
+    compose_service: backend-csharp-aspnet
+    compose_profile: null
+    image: autotests-ai-multistack-app-backend-csharp-aspnet:latest
+    internal_port: 8080
+    publish_port: 8860
+    db_name: multistack_app_csharp_aspnet
+    health_service: backend-csharp-aspnet
+
+  - id: backend-rust-axum
+    status: active
+    language: rust
+    module: backend/rust/backend-rust-axum
+    compose_service: backend-rust-axum
+    compose_profile: null
+    image: autotests-ai-multistack-app-backend-rust-axum:latest
+    internal_port: 8080
+    publish_port: 8870
+    db_name: multistack_app_rust_axum
+    health_service: backend-rust-axum
 
 frontends:
   - id: frontend-javascript-vanilla

@@ -12,7 +12,8 @@ for db in multistack_app_java_spring multistack_app_python_flask \
           multistack_app_kotlin_spring multistack_app_go_gin \
           multistack_app_go_stdlib multistack_app_javascript_express \
           multistack_app_javascript_nest multistack_app_typescript_express \
-          multistack_app_typescript_nest; do
+          multistack_app_typescript_nest multistack_app_csharp_aspnet \
+          multistack_app_rust_axum; do
   exists="$(psql -h "$HOST" -U "$USER" -d postgres -tAc \
     "SELECT 1 FROM pg_database WHERE datname='${db}'")"
   if [[ "$exists" != "1" ]]; then

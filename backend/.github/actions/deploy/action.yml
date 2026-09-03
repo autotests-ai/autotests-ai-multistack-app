@@ -42,13 +42,19 @@ runs:
       with:
         module_dir: ${{ steps.dir.outputs.dir }}
         stand: ${{ inputs.stand }}
+    - if: env.BACKEND_LANG == 'csharp'
+      uses: ./backend/csharp/.github/actions/deploy
+      with:
+        module_dir: ${{ steps.dir.outputs.dir }}
+        stand: ${{ inputs.stand }}
     - if: >-
         env.BACKEND_LANG != 'java' &&
         env.BACKEND_LANG != 'kotlin' &&
         env.BACKEND_LANG != 'python' &&
         env.BACKEND_LANG != 'go' &&
         env.BACKEND_LANG != 'javascript' &&
-        env.BACKEND_LANG != 'typescript'
+        env.BACKEND_LANG != 'typescript' &&
+        env.BACKEND_LANG != 'csharp'
       shell: bash
       run: |
         echo "STOP: no deploy action for BACKEND_LANG=${BACKEND_LANG:-unset}" >&2

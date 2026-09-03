@@ -1,0 +1,65 @@
+name: integration
+description: dotnet test against real PostgreSQL (TEST_DATABASE_URL) for a C# backend module.
+inputs:
+  module_dir:
+    required: true
+  allure_artifact:
+    required: false
+    default: allure-results-integration
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/setup-allurectl
+    - uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    - name: Start scratch PostgreSQL
+      id: pg
+      shell: bash
+      run: |
+        set -euo pipefail
+        NAME="ci-pg-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+        echo "container=${NAME}" >> "$GITHUB_OUTPUT"
+        docker run -d --name "${NAME}" \
+          -e POSTGRES_USER=test \
+          -e POSTGRES_PASSWORD=test \
+          -e POSTGRES_DB=test \
+          -p 127.0.0.1:5432:5432 \
+          --health-cmd="pg_isready -U test -d test" \
+          --health-interval=1s \
+          --health-timeout=3s \
+          --health-retries=30 \
+          postgres:16-alpine
+        for _ in $(seq 1 40); do
+          status="$(docker inspect -f '{{.State.Health.Status}}' "${NAME}")"
+          if [[ "${status}" == "healthy" ]]; then
+            echo "PostgreSQL is healthy"
+            exit 0
+          fi
+          sleep 1
+        done
+        echo "ERROR: PostgreSQL did not become healthy" >&2
+        docker logs "${NAME}" >&2 || true
+        exit 1
+    - name: Run integration tests (dotnet test + PostgreSQL)
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        TEST_DATABASE_URL: postgres://test:test@127.0.0.1:5432/test?sslmode=disable
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/allure-results
+      run: |
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
+        run_with_allurectl dotnet test --configuration Release
+    - name: Stop scratch PostgreSQL
+      if: always()
+      shell: bash
+      run: docker rm -f "${{ steps.pg.outputs.container }}" >/dev/null 2>&1 || true
+    - name: Publish raw Allure results
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ inputs.allure_artifact }}
+        path: ${{ inputs.module_dir }}/allure-results/**
+        if-no-files-found: ignore
+        retention-days: 1

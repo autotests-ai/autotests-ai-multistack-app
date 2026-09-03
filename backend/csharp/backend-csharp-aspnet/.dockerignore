@@ -1,0 +1,13 @@
+git
+.gitignore
+*.md
+.env
+.env.*
+bin/
+obj/
+.vs/
+*.user
+tests/
+coverage.opencover.xml
+TestResults/
+allure-results/

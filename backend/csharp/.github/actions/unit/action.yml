@@ -1,0 +1,42 @@
+name: unit
+description: dotnet test + coverlet (JaCoCo analog) for a C# backend module.
+inputs:
+  module_dir:
+    required: true
+  coverage_artifact:
+    required: false
+    default: coverage-backend
+  allure_artifact:
+    required: false
+    default: allure-results-unit
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/setup-allurectl
+    - uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    - name: Unit tests (dotnet test + coverlet)
+      id: run-tests
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/allure-results
+      run: |
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
+        run_with_allurectl dotnet test --configuration Release /p:CollectCoverage=true
+    - if: steps.run-tests.outcome == 'success'
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ inputs.coverage_artifact }}
+        path: ${{ inputs.module_dir }}/coverage.opencover.xml
+        if-no-files-found: error
+    - name: Publish raw Allure results
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ inputs.allure_artifact }}
+        path: ${{ inputs.module_dir }}/allure-results/**
+        if-no-files-found: ignore
+        retention-days: 1

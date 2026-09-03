@@ -1,0 +1,21 @@
+name: deploy
+description: SSH compose up for this backend module (pull or --build via DEPLOY_MODE).
+inputs:
+  module_dir:
+    required: true
+  stand:
+    required: true
+runs:
+  using: composite
+  steps:
+    - id: id
+      shell: bash
+      run: |
+        set -euo pipefail
+        service="$(basename "${{ inputs.module_dir }}")"
+        echo "service=${service}" >> "$GITHUB_OUTPUT"
+        if [ -z "${DEPLOY_COMPOSE_SERVICES:-}" ]; then
+          echo "DEPLOY_COMPOSE_SERVICES=postgres ${service}" >> "$GITHUB_ENV"
+        fi
+    - name: Deploy backend
+      uses: ./.github/actions/deploy-host

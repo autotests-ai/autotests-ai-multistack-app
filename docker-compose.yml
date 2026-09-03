@@ -354,6 +354,64 @@ services:
     ports:
       - "${BACKEND_TS_NEST_PORT:-8851}:8080"
 
+  backend-csharp-aspnet:
+    image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-csharp-aspnet:${IMAGE_TAG:-latest}
+    build:
+      labels:
+        org.opencontainers.image.title: autotests-ai-multistack-app-backend-csharp-aspnet
+        org.opencontainers.image.description: autotests-ai-multistack-app · backend-csharp-aspnet
+        org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor: autotests-ai
+      context: ./backend/csharp/backend-csharp-aspnet
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: multistack_app_csharp_aspnet
+      DB_USER: multistack
+      DB_PASSWORD: multistack
+      SERVER_PORT: 8080
+      JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      postgres-ensure-dbs:
+        condition: service_completed_successfully
+    networks:
+      - autotests_ai_multistack_internal
+    ports:
+      - "${BACKEND_CSHARP_ASPNET_PORT:-8860}:8080"
+
+  backend-rust-axum:
+    image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-rust-axum:${IMAGE_TAG:-latest}
+    build:
+      labels:
+        org.opencontainers.image.title: autotests-ai-multistack-app-backend-rust-axum
+        org.opencontainers.image.description: autotests-ai-multistack-app · backend-rust-axum
+        org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor: autotests-ai
+      context: ./backend/rust/backend-rust-axum
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: multistack_app_rust_axum
+      DB_USER: multistack
+      DB_PASSWORD: multistack
+      SERVER_PORT: 8080
+      JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      postgres-ensure-dbs:
+        condition: service_completed_successfully
+    networks:
+      - autotests_ai_multistack_internal
+    ports:
+      - "${BACKEND_RUST_AXUM_PORT:-8870}:8080"
+
   frontend-javascript-vanilla:
     image: ghcr.io/autotests-ai/autotests-ai-multistack-app-frontend-javascript-vanilla:${IMAGE_TAG:-latest}
     build:
