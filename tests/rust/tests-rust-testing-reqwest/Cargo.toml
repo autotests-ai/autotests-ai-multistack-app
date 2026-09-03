@@ -1,0 +1,33 @@
+[package]
+name = "tests-rust-testing-reqwest"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "HTTP-only cargo test · reqwest · allure-cargotest + allure-reqwest"
+publish = false
+
+[dependencies]
+# allure-reqwest is not on crates.io yet; pin the official workspace tag with siblings.
+allure-reqwest = { git = "https://github.com/allure-framework/allure-rust", tag = "v1.5.0" }
+allure-rust-commons = { git = "https://github.com/allure-framework/allure-rust", tag = "v1.5.0" }
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"] }
+serde_json = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+
+[dev-dependencies]
+allure-cargotest = { git = "https://github.com/allure-framework/allure-rust", tag = "v1.5.0" }
+
+[package.metadata.allure]
+log_asserts = true
+
+[[package.metadata.allure.modules]]
+path = "tests/api/"
+labels = { layer = "api" }
+
+[[package.metadata.allure.modules]]
+path = "tests/infra/"
+labels = { layer = "infra" }
+
+[[package.metadata.allure.modules]]
+path = "tests/manual/"
+labels = { layer = "manual" }

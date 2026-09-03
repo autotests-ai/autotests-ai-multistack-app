@@ -1,0 +1,47 @@
+name: sonar
+description: Sonar scan + quality gate for the Rust tests module.
+inputs:
+  module_dir:
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v6
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+    - uses: ./.github/actions/download-artifact
+      with:
+        name: coverage-infra
+        path: infra
+    - name: Sonar scan + gate (tests)
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+      run: |
+        set -euo pipefail
+        COV="${GITHUB_WORKSPACE}/infra/coverage.lcov"
+        if [[ ! -f "$COV" ]]; then
+          echo "ERROR: coverage.lcov missing: $COV" >&2
+          exit 1
+        fi
+        cp "$COV" coverage.lcov
+        if [[ -z "${SONAR_TOKEN:-}" ]]; then
+          echo "ERROR: SONAR_TOKEN unset" >&2
+          exit 1
+        fi
+        KEY="${SONAR_PROJECT_KEY:-autotests-ai-multistack-app-$(basename "${{ inputs.module_dir }}")}"
+        echo "==> sonar scan (infra coverage artifact) → ${SONAR_HOST_URL} (${KEY})"
+        npx --yes "@sonar/scan@${SONAR_SCANNER_NPM_VERSION}" \
+          -Dsonar.host.url="${SONAR_HOST_URL}" \
+          -Dsonar.projectKey="${KEY}" \
+          -Dsonar.projectName="${KEY}" \
+          -Dsonar.rust.lcov.reportPaths=coverage.lcov \
+          -Dsonar.coverageReportPaths=coverage.lcov \
+          -Dsonar.qualitygate.wait=true \
+          -Dsonar.qualitygate.timeout="${SONAR_QUALITY_GATE_TIMEOUT}"
+    - name: Write Sonar summary
+      if: always()
+      shell: bash
+      run: |
+        bash "${GITHUB_WORKSPACE}/tests/.github/actions/sonar/write-sonar-summary.sh"

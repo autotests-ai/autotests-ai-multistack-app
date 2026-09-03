@@ -1,0 +1,48 @@
+name: infra
+description: Tests-module helper checks (cargo llvm-cov ConfigReader analog; not a pyramid layer).
+inputs:
+  module_dir:
+    required: true
+  backend_lane:
+    default: "false"
+  frontend_lane:
+    default: "false"
+  tests_lane:
+    default: "false"
+outputs:
+  slice:
+    description: all or backend
+    value: ${{ steps.slice.outputs.slice }}
+runs:
+  using: composite
+  steps:
+    - name: Select infra slice
+      id: slice
+      shell: bash
+      env:
+        LANE_BACKEND: ${{ inputs.backend_lane }}
+        LANE_FRONTEND: ${{ inputs.frontend_lane }}
+        LANE_TESTS: ${{ inputs.tests_lane }}
+      run: |
+        set -euo pipefail
+        slice=all
+        if [ "$LANE_BACKEND" = "true" ] && [ "$LANE_FRONTEND" != "true" ] && [ "$LANE_TESTS" != "true" ]; then
+          slice=backend
+        fi
+        echo "slice=${slice}" >> "$GITHUB_OUTPUT"
+        echo "Infra slice=${slice} (cover-config.sh)"
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: ${{ env.RUST_VERSION }}
+        components: llvm-tools-preview
+    - name: Run infra tests (cover-config)
+      id: run-tests
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      run: ./cover-config.sh
+    - if: steps.run-tests.outcome == 'success'
+      uses: actions/upload-artifact@v7
+      with:
+        name: coverage-infra
+        path: ${{ inputs.module_dir }}/coverage.lcov
+        if-no-files-found: error

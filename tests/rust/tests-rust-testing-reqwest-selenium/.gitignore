@@ -1,0 +1,7 @@
+/target/
+allure-results/
+screenshot-diff/
+.env
+coverage.lcov
+coverage.json
+coverage.html

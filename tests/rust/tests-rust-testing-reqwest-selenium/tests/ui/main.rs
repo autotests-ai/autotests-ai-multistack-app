@@ -1,0 +1,12 @@
+mod burger_menu_screenshot_tests;
+mod burger_menu_tests;
+mod header_active_nav_tests;
+mod header_screenshot_tests;
+mod header_tests;
+mod home_error_state_tests;
+mod home_layout_screenshot_tests;
+mod home_layout_tests;
+mod login_embed_tests;
+mod login_form_tests;
+mod login_screenshot_tests;
+mod register_form_tests;

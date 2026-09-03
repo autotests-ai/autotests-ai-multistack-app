@@ -1,0 +1,35 @@
+[package]
+name = "tests-rust-testing-selenium"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "UI-only cargo test · thirtyfour Selenium · allure-cargotest"
+publish = false
+
+[dependencies]
+# reqwest + allure-reqwest: e2e/ui fixtures only (register/login/mock admin), not an HTTP school.
+allure-reqwest = { git = "https://github.com/allure-framework/allure-rust", tag = "v1.5.0" }
+allure-rust-commons = { git = "https://github.com/allure-framework/allure-rust", tag = "v1.5.0" }
+image = { version = "0.25", default-features = false, features = ["png"] }
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"] }
+serde_json = "1"
+thirtyfour = "0.35"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync", "process", "time"] }
+
+[dev-dependencies]
+allure-cargotest = { git = "https://github.com/allure-framework/allure-rust", tag = "v1.5.0" }
+
+[package.metadata.allure]
+log_asserts = true
+
+[[package.metadata.allure.modules]]
+path = "tests/infra/"
+labels = { layer = "infra" }
+
+[[package.metadata.allure.modules]]
+path = "tests/ui/"
+labels = { layer = "ui" }
+
+[[package.metadata.allure.modules]]
+path = "tests/e2e/"
+labels = { layer = "e2e" }
