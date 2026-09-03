@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { envNavItems } from '../../vendor/ds/js/env-hosts.js';
 
 // Canonical design-system header from lean runtime (committed; works in
 // standalone checkout without monorepo design-system symlink).
@@ -38,6 +39,7 @@ const REFERENCE_HEADER_CONFIG = {
       active: false,
       testid: 'header-nav-stack',
     },
+    ...envNavItems(),
   ],
   lang: { default: 'en' as const },
   theme: { default: 'dark' as const },
@@ -81,8 +83,8 @@ async function mountAt(path: string): Promise<void> {
   vi.resetModules();
   await import(/* @vite-ignore */ HEADER_JS);
   await vi.waitFor(() => {
-    expect(navLinks().length).toBe(4);
-    expect(menuNavLinks().length).toBe(4);
+    expect(navLinks().length).toBe(6);
+    expect(menuNavLinks().length).toBe(6);
   });
 }
 
@@ -187,6 +189,8 @@ describe('canonical header.js — mobile burger menu', () => {
       'header-menu-nav-login',
       'header-menu-nav-register',
       'header-menu-nav-stack',
+      'header-menu-nav-stage',
+      'header-menu-nav-prod',
     ]);
     expect(document.querySelector('[data-testid="header-menu-search-input"]')).not.toBeNull();
     expect(document.querySelector('[data-testid="header-menu-github"]')).not.toBeNull();

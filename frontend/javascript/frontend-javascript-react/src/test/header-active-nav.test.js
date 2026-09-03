@@ -57,8 +57,8 @@ async function mountAt(path) {
   window.headerConfig = structuredClone(headerConfig);
   await import(/* @vite-ignore */ HEADER_JS);
   await vi.waitFor(() => {
-    expect(navLinks().length).toBe(4);
-    expect(menuNavLinks().length).toBe(4);
+    expect(navLinks().length).toBe(6);
+    expect(menuNavLinks().length).toBe(6);
   });
 }
 
@@ -163,6 +163,8 @@ describe('canonical header.js — mobile burger menu', () => {
       'header-menu-nav-login',
       'header-menu-nav-register',
       'header-menu-nav-stack',
+      'header-menu-nav-stage',
+      'header-menu-nav-prod',
     ]);
     expect(document.querySelector('[data-testid="header-menu-search-input"]')).not.toBeNull();
     expect(document.querySelector('[data-testid="header-menu-github"]')).not.toBeNull();

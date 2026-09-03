@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { envNavItems } from '../../../vendor/ds/js/env-hosts.js';
 import { loadScript } from '../helpers/page.js';
 
 function loadI18n() {
@@ -91,6 +92,7 @@ describe('headerConfig nav labels', () => {
   it('retitles nav from the dictionary and keeps testids', () => {
     loadScript('js/app-base.js');
     loadI18n();
+    window.envNavItems = envNavItems;
     loadScript('js/header-config.js');
     const enConfig = window.buildHeaderConfig('en');
     const ruConfig = window.buildHeaderConfig('ru');
@@ -99,13 +101,24 @@ describe('headerConfig nav labels', () => {
       'header-nav-login',
       'header-nav-register',
       'header-nav-stack',
+      'header-nav-stage',
+      'header-nav-prod',
     ]);
-    expect(enConfig.nav.map((item) => item.label)).toEqual(['Home', 'Login', 'Register', 'Stack']);
+    expect(enConfig.nav.map((item) => item.label)).toEqual([
+      'Home',
+      'Login',
+      'Register',
+      'Stack',
+      'Stage',
+      'Prod',
+    ]);
     expect(ruConfig.nav.map((item) => item.label)).toEqual([
       'Главная',
       'Вход',
       'Регистрация',
       'Стек',
+      'Stage',
+      'Prod',
     ]);
     expect(enConfig.lang.default).toBe('en');
     expect(enConfig.theme.default).toBe('dark');

@@ -216,6 +216,8 @@ describe('home', () => {
       ['header-nav-login', false],
       ['header-nav-register', false],
       ['header-nav-stack', false],
+      ['header-nav-stage', undefined],
+      ['header-nav-prod', undefined],
     ]);
     expect(document.querySelector('script[data-header-embed]')).toHaveProperty(
       'type',

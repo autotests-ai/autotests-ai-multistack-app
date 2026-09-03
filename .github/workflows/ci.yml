@@ -495,7 +495,21 @@ jobs:
       needs.ui-tests.result == 'success' &&
       needs.trigger.outputs.frontend == 'true'
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        module_dir:
+          - frontend/javascript/frontend-javascript-vanilla
+          - frontend/javascript/frontend-javascript-react
+          - frontend/javascript/frontend-javascript-angular
+          - frontend/javascript/frontend-javascript-vue
+          - frontend/javascript/frontend-javascript-jquery
+          - frontend/typescript/frontend-typescript-vanilla
+          - frontend/typescript/frontend-typescript-react
+          - frontend/typescript/frontend-typescript-angular
+          - frontend/typescript/frontend-typescript-vue
+          - frontend/typescript/frontend-typescript-jquery
     permissions:
       contents: read
       packages: write
@@ -504,9 +518,9 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - *checkout
-      - uses: ./frontend/.github/actions/build
+      - uses: ./.github/actions/docker-build
         with:
-          module_dir: ${{ format('frontend/{0}/frontend-{0}-{1}', env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
+          module_dir: ${{ matrix.module_dir }}
 
   deploy-backend:
     needs: [build-backend, sonar-backend, trigger, e2e-tests-stage]
@@ -555,7 +569,7 @@ jobs:
       (needs.e2e-tests-stage.result == 'success' ||
        (needs.e2e-tests-stage.result == 'skipped' && vars.STAGE_APP_DIR == ''))
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     environment:
       name: ${{ vars.DEPLOY_ENVIRONMENT || 'multistack-production' }}
       url: ${{ vars.APP_URL || needs.trigger.outputs.app_url }}
@@ -569,6 +583,7 @@ jobs:
       DEPLOY_APP_DIR: ${{ vars.DEPLOY_APP_DIR || '/home/autotests_ai_multistack/autotests-ai-multistack-app' }}
       DEPLOY_COMPOSE_PROJECT: ${{ vars.DEPLOY_COMPOSE_PROJECT || 'autotests-ai-multistack-app' }}
       DEPLOY_COMPOSE_ENV_FILE: ${{ vars.DEPLOY_COMPOSE_ENV_FILE || '' }}
+      DEPLOY_COMPOSE_SERVICES: frontend-javascript-vanilla frontend-javascript-react frontend-javascript-angular frontend-javascript-vue frontend-javascript-jquery frontend-typescript-vanilla frontend-typescript-react frontend-typescript-angular frontend-typescript-vue frontend-typescript-jquery
       DEPLOY_HEALTH_URL: ${{ vars.DEPLOY_FRONTEND_HEALTH_URL || '' }}
       DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
       DEPLOY_USER: ${{ vars.DEPLOY_USER }}
@@ -631,7 +646,7 @@ jobs:
       (needs.preempt-develop-cd.result == 'success' || needs.preempt-develop-cd.result == 'skipped') &&
       (needs.yield-to-main-cd.result == 'success' || needs.yield-to-main-cd.result == 'skipped')
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     environment:
       name: ${{ vars.STAGE_ENVIRONMENT || 'multistack-stage' }}
       url: ${{ vars.STAGE_APP_URL || needs.trigger.outputs.stage_app_url }}
@@ -645,6 +660,7 @@ jobs:
       DEPLOY_APP_DIR: ${{ vars.STAGE_APP_DIR }}
       DEPLOY_COMPOSE_PROJECT: ${{ vars.STAGE_COMPOSE_PROJECT || 'autotests-ai-multistack-app-stage' }}
       DEPLOY_COMPOSE_ENV_FILE: ${{ vars.STAGE_COMPOSE_ENV_FILE || 'deploy/stage.env' }}
+      DEPLOY_COMPOSE_SERVICES: frontend-javascript-vanilla frontend-javascript-react frontend-javascript-angular frontend-javascript-vue frontend-javascript-jquery frontend-typescript-vanilla frontend-typescript-react frontend-typescript-angular frontend-typescript-vue frontend-typescript-jquery
       DEPLOY_HEALTH_URL: ${{ vars.STAGE_FRONTEND_HEALTH_URL || vars.DEPLOY_FRONTEND_HEALTH_URL || '' }}
       DEPLOY_HOST: ${{ vars.STAGE_HOST || vars.DEPLOY_HOST }}
       DEPLOY_USER: ${{ vars.STAGE_USER || vars.DEPLOY_USER }}

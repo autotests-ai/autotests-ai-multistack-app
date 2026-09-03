@@ -1,3 +1,4 @@
+import { envNavItems } from '../vendor/ds/js/env-hosts.js';
 import { appPath } from './appBase';
 import {
   dictionaries,
@@ -12,6 +13,7 @@ export interface HeaderNavItem {
   label: string;
   active?: boolean;
   testid?: string;
+  match?: 'path' | 'host';
 }
 
 /** Minimal header contract matching design-system `window.headerConfig`. */
@@ -43,7 +45,8 @@ function navLabelsKey(config: HeaderConfig): string {
  * Nav hrefs are mount-prefixed so design-system `header.js` matches the live
  * route. `active` is only the fallback highlight — header.js prefers the real
  * location, which differs here when a page is opened as `/login.html`.
- * Labels follow the page dictionary; testids and hrefs stay stable.
+ * Stage/Prod come from `js/env-hosts.js`. Labels follow the page dictionary;
+ * testids and hrefs stay stable.
  */
 export function headerConfigFor(route: HeaderRoute, lang: Lang = readStoredLang()): HeaderConfig {
   const nav = dictionaries[lang].nav;
@@ -64,6 +67,7 @@ export function headerConfigFor(route: HeaderRoute, lang: Lang = readStoredLang(
         testid: 'header-nav-register',
       },
       { href: STACK_INDEX_HREF, label: nav.stack, testid: 'header-nav-stack' },
+      ...envNavItems(),
     ],
     lang: { default: 'en' },
     theme: { default: 'dark' },

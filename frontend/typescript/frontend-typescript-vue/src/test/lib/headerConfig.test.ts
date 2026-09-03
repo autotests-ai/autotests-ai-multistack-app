@@ -19,6 +19,8 @@ describe('buildHeaderConfig', () => {
     expect(enNav.find((item) => item.testid === 'header-nav-home')?.label).toBe('Home');
     expect(ruNav.find((item) => item.testid === 'header-nav-home')?.label).toBe(ru.nav.home);
     expect(enNav.find((item) => item.testid === 'header-nav-stack')?.href).toBe(STACK_INDEX_HREF);
+    expect(enNav.find((item) => item.testid === 'header-nav-stage')?.label).toBe('Stage');
+    expect(enNav.find((item) => item.testid === 'header-nav-prod')?.label).toBe('Prod');
     expect(headerConfig.lang?.default).toBe('en');
     expect(headerConfig.theme?.default).toBe('dark');
   });

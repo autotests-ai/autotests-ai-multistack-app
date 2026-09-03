@@ -30,6 +30,8 @@ describe('buildHeaderConfig', () => {
     expect(enCfg.nav.find((item) => item.testid === 'header-nav-home')?.label).toBe('Home');
     expect(ruCfg.nav.find((item) => item.testid === 'header-nav-home')?.label).toBe(ru.nav.home);
     expect(enCfg.nav.find((item) => item.testid === 'header-nav-stack')?.href).toBe(STACK_INDEX_HREF);
+    expect(enCfg.nav.find((item) => item.testid === 'header-nav-stage')?.label).toBe('Stage');
+    expect(enCfg.nav.find((item) => item.testid === 'header-nav-prod')?.label).toBe('Prod');
     expect(enCfg.lang).toEqual({ default: 'en' });
     expect(enCfg.theme).toEqual({ default: 'dark' });
   });

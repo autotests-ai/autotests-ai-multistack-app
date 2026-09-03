@@ -4,6 +4,7 @@ import { provideRouter, Router } from '@angular/router';
 import { screen, waitFor } from '@testing-library/dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HEADER_LANG_CHANGE, ru } from '../app/i18n/index.js';
+import { envNavItems } from '../../vendor/ds/js/env-hosts.js';
 import { AppComponent } from '../app/app.component.js';
 import { routes } from '../app/app.routes.js';
 
@@ -91,6 +92,7 @@ describe('AppComponent', () => {
         { href: '/login', label: 'Login', testid: 'header-nav-login' },
         { href: '/register', label: 'Register', testid: 'header-nav-register' },
         { href: '/stack/', label: 'Stack', testid: 'header-nav-stack' },
+        ...envNavItems(),
       ],
       lang: { default: 'en' },
       theme: { default: 'dark' },

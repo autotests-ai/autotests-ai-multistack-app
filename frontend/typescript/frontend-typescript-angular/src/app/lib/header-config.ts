@@ -1,3 +1,4 @@
+import { envNavItems } from '../../../vendor/ds/js/env-hosts.js';
 import { dictionaries, type Lang } from '../../i18n';
 import { appPath } from './app-base';
 
@@ -6,6 +7,7 @@ export interface HeaderNavItem {
   label: string;
   active?: boolean;
   testid?: string;
+  match?: 'path' | 'host';
 }
 
 /** Minimal header contract matching design-system `window.headerConfig`. */
@@ -27,6 +29,7 @@ function navLabelsKey(config: HeaderConfig | undefined): string {
  * Canonical header config for the Multistack SPA. Nav hrefs are mount-prefixed
  * so design-system `header.js` (real location) matches the live route under
  * `/stack/{backend}/{frontend}/`. Omit `active` — header.js derives it from location.
+ * Stage/Prod come from `js/env-hosts.js` (current product host; matrix `public_host` on loopback).
  * Nav *labels* follow the SPA dictionary; testids and hrefs stay stable.
  * Theme stays in header.js — this only retitles nav after `header:lang-change`.
  */
@@ -39,6 +42,7 @@ export function buildHeaderConfig(lang: Lang = 'en'): HeaderConfig {
       { href: appPath('/login'), label: nav.login, testid: 'header-nav-login' },
       { href: appPath('/register'), label: nav.register, testid: 'header-nav-register' },
       { href: STACK_INDEX_HREF, label: nav.stack, testid: 'header-nav-stack' },
+      ...envNavItems(),
     ],
     lang: { default: 'en' },
     theme: { default: 'dark' },

@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppComponent } from '../app/app.component';
 import { routes } from '../app/app.routes';
 import { HEADER_LANG_CHANGE, ru } from '../i18n';
+import { PROD_ORIGIN, STAGE_ORIGIN } from '../../vendor/ds/js/env-hosts.js';
 
 function jsonResponse(body: unknown): Response {
   return { ok: true, status: 200, json: async () => body } as Response;
@@ -89,12 +90,16 @@ describe('AppComponent', () => {
       'header-nav-login',
       'header-nav-register',
       'header-nav-stack',
+      'header-nav-stage',
+      'header-nav-prod',
     ]);
     expect(window.headerConfig?.nav?.map((item) => item.href)).toEqual([
       '/',
       '/login',
       '/register',
       '/stack/',
+      `${STAGE_ORIGIN}/`,
+      `${PROD_ORIGIN}/`,
     ]);
     expect(window.headerConfig?.lang?.default).toBe('en');
     expect(window.headerConfig?.theme?.default).toBe('dark');

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { headerConfigFor, mountHeader } from '../../header';
+import { PROD_ORIGIN, STAGE_ORIGIN } from '../../../vendor/ds/js/env-hosts.js';
 import { restoreLocation, stubLocation } from '../harness';
 
 /** The mount is resolved once at appBase import, so a new mount needs a new module. */
@@ -26,6 +27,8 @@ describe('headerConfigFor', () => {
       'header-nav-login',
       'header-nav-register',
       'header-nav-stack',
+      'header-nav-stage',
+      'header-nav-prod',
     ]);
   });
 
@@ -46,6 +49,8 @@ describe('headerConfigFor', () => {
       '/login',
       '/register',
       '/stack/',
+      `${STAGE_ORIGIN}/`,
+      `${PROD_ORIGIN}/`,
     ]);
   });
 
@@ -55,6 +60,8 @@ describe('headerConfigFor', () => {
       'Вход',
       'Регистрация',
       'Стек',
+      'Stage',
+      'Prod',
     ]);
   });
 
@@ -68,6 +75,8 @@ describe('headerConfigFor', () => {
       '/stack/backend-java-spring/frontend-typescript-vanilla/login',
       '/stack/backend-java-spring/frontend-typescript-vanilla/register',
       '/stack/',
+      `${STAGE_ORIGIN}/`,
+      `${PROD_ORIGIN}/`,
     ]);
   });
 });

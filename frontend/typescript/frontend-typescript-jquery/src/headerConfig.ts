@@ -1,3 +1,4 @@
+import { envNavItems } from '../vendor/ds/js/env-hosts.js';
 import { appPath } from './appBase';
 import {
   dictionaries,
@@ -14,6 +15,7 @@ export interface HeaderNavItem {
   label: string;
   active?: boolean;
   testid?: string;
+  match?: 'path' | 'host';
 }
 
 /** Minimal header contract matching design-system `window.headerConfig`. */
@@ -48,7 +50,8 @@ function navLabelsKey(config: HeaderConfig): string {
  * Canonical header config for the Multistack pages. Nav hrefs are mount-prefixed
  * so design-system `header.js` matches the live document under
  * `/{backend}/frontend-typescript-jquery/`. Omit theme logic — `header.js` owns
- * `zds-theme`. Nav *labels* follow the page dictionary; testids and hrefs stay stable.
+ * `zds-theme`. Stage/Prod come from `js/env-hosts.js`.
+ * Nav *labels* follow the page dictionary; testids and hrefs stay stable.
  */
 export function buildHeaderConfig(
   current: HeaderNavId,
@@ -77,6 +80,7 @@ export function buildHeaderConfig(
         testid: 'header-nav-register',
       },
       { href: STACK_INDEX_HREF, label: nav.stack, active: false, testid: 'header-nav-stack' },
+      ...envNavItems(),
     ],
     lang: { default: 'en' },
     theme: { default: 'dark' },

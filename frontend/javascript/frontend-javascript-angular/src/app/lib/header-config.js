@@ -1,3 +1,4 @@
+import { envNavItems } from '../../../vendor/ds/js/env-hosts.js';
 import { dictionaries } from '../i18n/index.js';
 import { appPath } from './app-base.js';
 
@@ -12,6 +13,7 @@ function navLabelsKey(config) {
  * Canonical header config for the Multistack SPA. Nav hrefs are mount-prefixed
  * so design-system `header.js` matches the live route under
  * `/frontend-javascript-angular/`. Omit `active` — header.js derives it from location.
+ * Stage/Prod come from `js/env-hosts.js` (current product host; matrix `public_host` on loopback).
  * Nav *labels* follow the SPA dictionary; testids and hrefs stay stable.
  *
  * @param {'en' | 'ru'} [lang]
@@ -25,6 +27,7 @@ export function buildHeaderConfig(lang = 'en') {
       { href: appPath('/login'), label: nav.login, testid: 'header-nav-login' },
       { href: appPath('/register'), label: nav.register, testid: 'header-nav-register' },
       { href: STACK_INDEX_HREF, label: nav.stack, testid: 'header-nav-stack' },
+      ...envNavItems(),
     ],
     lang: { default: 'en' },
     theme: { default: 'dark' },
