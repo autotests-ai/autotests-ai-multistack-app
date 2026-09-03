@@ -124,7 +124,7 @@ env:
   # jobs pass module_dir via format() below. Adapters dispatch on
   # BACKEND_LANG / FRONTEND_LANG / TESTS_LANG (GitHub does not interpolate uses:).
   # Unknown or unwired *_LANG → STOP (never skip, never a foreign action).
-  # backend: java/kotlin → module; python/go/javascript/typescript/csharp → family.
+  # backend: java/kotlin → module; python/go/javascript/typescript/csharp/rust → family.
   # frontend: typescript/javascript → family.
   # tests: java/kotlin living → short combo/HTTP id; runner slots stay 5-segment;
   # go/csharp living → short combo/HTTP id; javascript/python/typescript → family.
@@ -149,6 +149,7 @@ env:
   CHECKOUT_FETCH_DEPTH: "1"
   GRADLE_CACHE_READ_ONLY: "false"
   GO_VERSION: "1.27"
+  RUST_VERSION: "1.88"
   CHROME_FOR_TESTING_VERSION: "148.0.7778.178"
   ALLURECTL_VERSION: "2.22.0"
   ALLURE_JOB_RUN_ID: ${{ inputs.ALLURE_JOB_RUN_ID || '' }}

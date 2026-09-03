@@ -1,0 +1,33 @@
+name: unit
+description: cargo test for a Rust backend module.
+inputs:
+  module_dir:
+    required: true
+  allure_artifact:
+    required: false
+    default: allure-results-unit
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/setup-allurectl
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: ${{ env.RUST_VERSION }}
+    - name: Unit tests (cargo test)
+      id: run-tests
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/allure-results
+      run: |
+        source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
+        run_with_allurectl cargo test --locked
+    - name: Publish raw Allure results
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ inputs.allure_artifact }}
+        path: ${{ inputs.module_dir }}/allure-results/**
+        if-no-files-found: ignore
+        retention-days: 1

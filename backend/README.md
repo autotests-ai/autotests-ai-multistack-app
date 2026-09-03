@@ -24,7 +24,7 @@ backend/
   csharp/
     backend-csharp-aspnet/        # ASP.NET Core + Postgres — JSON API (active)
   rust/
-    backend-rust-axum/            # slot — Axum + Tokio (port 8870)
+    backend-rust-axum/            # Axum + Postgres — JSON API (active)
   scripts/                     # CI helpers (Sonar, env profiles, paths.sh)
 ```
 
@@ -45,7 +45,7 @@ Language base **+10**, stack **+1** from **8800** — see root [README](../READM
 | 8840–8841 | javascript express / nest |
 | 8850–8851 | typescript express / nest |
 | 8860 | `backend-csharp-aspnet` |
-| 8870 | `backend-rust-axum` (slot) |
+| 8870 | `backend-rust-axum` |
 
 Container listen stays `:8080`. Backend does not host HTML/JS.
 
@@ -59,6 +59,7 @@ implementation. `service` in `GET /api/health` equals the module id and must mat
 `backend/kotlin/backend-kotlin-spring/src/test/kotlin/` — JaCoCo gate, `./gradlew test`.  
 `backend/python/backend-python-*/tests/` — `python -m pytest`.  
 `backend/go/backend-go-*/` — `go test ./...`.  
+`backend/rust/backend-rust-axum/` — `cargo test`.  
 `backend/csharp/backend-csharp-aspnet/` — `dotnet test` (Coverlet).  
 `backend/{javascript,typescript}/backend-*/` — `npm test`.
 

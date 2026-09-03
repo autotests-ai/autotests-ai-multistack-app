@@ -14,6 +14,7 @@ GitHub does not interpolate `uses:`. This adapter dispatches on `BACKEND_LANG`:
 | `javascript` | `./backend/javascript/.github/actions/<verb>` | same family (Docker context = `module_dir`) |
 | `typescript` | `./backend/typescript/.github/actions/<verb>` | same family (Docker context = `module_dir`) |
 | `csharp` | `./backend/csharp/.github/actions/<verb>` | same family (Docker context = `module_dir`) |
+| `rust` | `./backend/rust/.github/actions/<verb>` | same family (Docker context = `module_dir`) |
 | other | STOP | STOP |
 
 Unknown `BACKEND_LANG` never runs a foreign module action. Nested module paths

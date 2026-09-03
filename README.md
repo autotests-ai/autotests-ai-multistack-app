@@ -38,7 +38,7 @@ Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/N
 | **backend/javascript/** | `backend-javascript-express`, `backend-javascript-nest` (active) | — |
 | **backend/typescript/** | `backend-typescript-express`, `backend-typescript-nest` (active) | — |
 | **backend/csharp/** | `backend-csharp-aspnet` (active) | — |
-| **backend/rust/** | — | `backend-rust-axum` slot (Axum, port 8870) |
+| **backend/rust/** | `backend-rust-axum` (active) | — |
 | **tests/java/** | `tests-java-junit5-rest_assured-selenide`, `selenium`, `playwright`, `restassured`, `retrofit2` (active) | junit4, testng, allure2, maven, … — [tests/NAMING.md](tests/NAMING.md) · matrix slots |
 | **tests/javascript/** | `tests-javascript-api_request-playwright` (active combo), `tests-javascript-axios` | `tests-javascript-playwright` UI-only slot, Cypress, … |
 | **tests/typescript/** | `tests-typescript-api_request-playwright` (active combo), `tests-typescript-axios` | `tests-typescript-playwright` UI-only slot |
@@ -170,7 +170,7 @@ SSOT: [`deploy/matrix.yaml`](deploy/matrix.yaml). Language base **+10**, stack w
 | **8850** | `backend-typescript-express` | |
 | **8851** | `backend-typescript-nest` | |
 | **8860** | `backend-csharp-aspnet` | |
-| **8870** | `backend-rust-axum` | slot · not in compose |
+| **8870** | `backend-rust-axum` | compose publish |
 | **9800** | `frontend-javascript-vanilla` | compose publish |
 | **9801** | `frontend-javascript-react` | compose publish |
 | **9802** | `frontend-javascript-angular` | compose publish |

@@ -1,0 +1,26 @@
+[package]
+name = "backend-rust-axum"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Axum JSON API — same contract as backend-java-spring"
+
+[dependencies]
+axum = { version = "0.8", features = ["macros"] }
+tokio = { version = "1", features = ["full"] }
+sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "postgres"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+jsonwebtoken = "9"
+bcrypt = "0.16"
+tower = "0.5"
+tower-http = { version = "0.6", features = ["trace"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+thiserror = "2"
+async-trait = "0.1"
+
+[dev-dependencies]
+http-body-util = "0.1"
+tower = { version = "0.5", features = ["util"] }
+hyper = "1"

@@ -12,6 +12,7 @@ BACKEND_PYTHON_FASTAPI="$REPO_ROOT/backend/python/backend-python-fastapi"
 BACKEND_PYTHON_DJANGO="$REPO_ROOT/backend/python/backend-python-django"
 BACKEND_GO_GIN="$REPO_ROOT/backend/go/backend-go-gin"
 BACKEND_GO_STDLIB="$REPO_ROOT/backend/go/backend-go-stdlib"
+BACKEND_RUST_AXUM="$REPO_ROOT/backend/rust/backend-rust-axum"
 
 # Deploy routing SSOT (Host × path)
 DEPLOY_MATRIX="$REPO_ROOT/deploy/matrix.yaml"
@@ -34,12 +35,13 @@ FRONTEND_TS_VUE="$REPO_ROOT/frontend/typescript/frontend-typescript-vue"
 # Component tests (jsdom) live in product module: $FRONTEND_TS_REACT/src/test/ (component_rtl)
 FRONTEND_TS_VANILLA="$REPO_ROOT/frontend/typescript/frontend-typescript-vanilla"
 
-# Active Java automation module (Gradle · JUnit 5 · Allure 3 · Selenide)
-TESTS_JAVA_GRADLE_JUNIT5_ALLURE3_SELENIDE="$REPO_ROOT/tests/java/tests-java-gradle-junit5-allure3-selenide"
-TESTS_JAVA="$TESTS_JAVA_GRADLE_JUNIT5_ALLURE3_SELENIDE"
+# Active Java automation module (JUnit 5 · Allure 3 · Selenide + Rest Assured)
+TESTS_JAVA_JUNIT5_REST_ASSURED_SELENIDE="$REPO_ROOT/tests/java/tests-java-junit5-rest_assured-selenide"
+TESTS_JAVA="$TESTS_JAVA_JUNIT5_REST_ASSURED_SELENIDE"
 
-TESTS_JS_PLAYWRIGHT="$REPO_ROOT/tests/javascript/tests-javascript-playwright"
-TESTS_PYTHON_SELENIUM="$REPO_ROOT/tests/python/tests-python-selenium"
+TESTS_JS_PLAYWRIGHT="$REPO_ROOT/tests/javascript/tests-javascript-api_request-playwright"
+TESTS_PYTHON_SELENIUM="$REPO_ROOT/tests/python/tests-python-pytest-requests-selenium"
+TESTS_PYTHON_PLAYWRIGHT="$REPO_ROOT/tests/python/tests-python-pytest-api_request-playwright"
 
 MONOREPO_ROOT="$(cd "$REPO_ROOT/../../.." && pwd)"
 while [[ "$MONOREPO_ROOT" != "/" && ! -f "$MONOREPO_ROOT/generators/matrix.yaml" ]]; do

@@ -38,6 +38,10 @@ runs:
       uses: ./backend/csharp/.github/actions/build
       with:
         module_dir: ${{ steps.dir.outputs.dir }}
+    - if: env.BACKEND_LANG == 'rust'
+      uses: ./backend/rust/.github/actions/build
+      with:
+        module_dir: ${{ steps.dir.outputs.dir }}
     - if: >-
         env.BACKEND_LANG != 'java' &&
         env.BACKEND_LANG != 'kotlin' &&
@@ -45,7 +49,8 @@ runs:
         env.BACKEND_LANG != 'go' &&
         env.BACKEND_LANG != 'javascript' &&
         env.BACKEND_LANG != 'typescript' &&
-        env.BACKEND_LANG != 'csharp'
+        env.BACKEND_LANG != 'csharp' &&
+        env.BACKEND_LANG != 'rust'
       shell: bash
       run: |
         echo "STOP: no build action for BACKEND_LANG=${BACKEND_LANG:-unset}" >&2
