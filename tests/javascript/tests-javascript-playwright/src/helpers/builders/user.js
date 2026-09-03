@@ -1,5 +1,9 @@
 const { faker } = require('@faker-js/faker');
 
+function username() {
+  return `user_${faker.string.alphanumeric(10).toLowerCase()}`;
+}
+
 class User {
   constructor(username, password) {
     this.username = username;
@@ -12,6 +16,7 @@ class User {
 }
 
 exports.User = User;
+exports.username = username;
 
 exports.UserBuilder = class UserBuilder {
   constructor() {

@@ -55,8 +55,14 @@ runs:
         # Coverage of helpers only — no fail-under (not coverage theatre).
         include_args=()
         for f in ${INFRA_INCLUDE}; do
-          include_args+=(--include="$f")
+          if [ -f "$f" ]; then
+            include_args+=(--include="$f")
+          fi
         done
+        if [ ${#include_args[@]} -eq 0 ]; then
+          echo "STOP: no infra include files under ${PWD}" >&2
+          exit 1
+        fi
         npx c8 "${include_args[@]}" --reporter=lcov --reporter=text --report-dir=coverage \
           npx playwright test --grep "${INFRA_GREP}"
     - if: steps.run-tests.outcome == 'success'

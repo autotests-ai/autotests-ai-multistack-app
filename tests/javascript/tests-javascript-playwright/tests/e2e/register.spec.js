@@ -1,7 +1,6 @@
 const { expect } = require('@playwright/test');
 const { test } = require('../../src/helpers/fixtures/fixture');
 const { UserBuilder } = require('../../src/helpers/builders');
-const { deleteAccountQuietly } = require('../../src/helpers/api');
 
 const LOGIN_REQUIRED = 'Login is required (minimum 3 characters)';
 const LOGIN_MIN_LENGTH = 'Login must be at least 3 characters';
@@ -10,14 +9,14 @@ const BOTH_REQUIRED = 'Login and password are required (minimum 3 and 6 characte
 const REGISTER_PASSWORD = 'password123';
 
 test.describe('Register', { tag: ['@e2e'] }, () => {
-  test('Новый пользователь может зарегистрироваться', async ({ webApp, request }) => {
+  test('Новый пользователь может зарегистрироваться', async ({ webApp }) => {
     const user = new UserBuilder().withUsername().withPassword().build();
     try {
       await webApp.register.open();
       await webApp.register.signup(user.username, user.password);
       await expect(webApp.home.getWelcomeText()).toContainText(user.welcomeMessage());
     } finally {
-      await deleteAccountQuietly(request, user.username, user.password);
+      await webApp.home.deleteAccountQuietly();
     }
   });
 

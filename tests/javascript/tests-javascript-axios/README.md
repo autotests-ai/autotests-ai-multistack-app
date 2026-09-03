@@ -2,7 +2,7 @@
 
 Vitest · **axios** · Allure 3. HTTP-only school — same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader + 3 manual). No browser.
 
-Titles and JSON schemas match [`tests-typescript-axios`](../../typescript/tests-typescript-axios/). Sibling UI block is [`tests-javascript-playwright`](../tests-javascript-playwright/) (Playwright **APIRequest**, not Axios). Combo with Playwright = generate, not a third folder.
+Titles and JSON schemas match [`tests-typescript-axios`](../../typescript/tests-typescript-axios/). Sibling UI+HTTP block is [`tests-javascript-api_request-playwright`](../tests-javascript-api_request-playwright/) (Playwright **APIRequest**, not Axios). Axios+Playwright clone folder is [`tests-javascript-axios-playwright`](../tests-javascript-axios-playwright/) (`bad-practice`). Do not put Axios inside the living Playwright folder.
 
 ```bash
 cd tests/javascript/tests-javascript-axios

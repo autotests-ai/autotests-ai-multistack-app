@@ -80,6 +80,16 @@ exports.HomePage = class HomePage {
     await this.deleteAccountButton.click();
   }
 
+  /** Best-effort UI cleanup after a throwaway register. Must not mask the test result. */
+  async deleteAccountQuietly() {
+    try {
+      await this.deleteAccountButton.waitFor({ state: 'visible', timeout: 3000 });
+      await this.clickDeleteAccountAndConfirm();
+    } catch {
+      // not logged in / already gone
+    }
+  }
+
   async authToken() {
     const key = await this.authTokenKey();
     return this.page.evaluate((k) => localStorage.getItem(k), key);

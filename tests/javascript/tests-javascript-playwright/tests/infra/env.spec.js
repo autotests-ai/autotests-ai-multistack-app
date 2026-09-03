@@ -1,6 +1,6 @@
 const { test, expect } = require('@playwright/test');
 const { slash, apiRootFrom } = require('../../src/helpers/env');
-const { username } = require('../../src/helpers/api');
+const { username } = require('../../src/helpers/builders');
 
 test.describe('env helpers', { tag: ['@infra', '@infra_backend'] }, () => {
   test('slash adds trailing slash', () => {

@@ -1,0 +1,31 @@
+{
+  "name": "autotests-ai-multistack-tests-js",
+  "version": "1.0.0",
+  "description": "Playwright UI smoke for Multistack (RealWorld-style App facade)",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "npx playwright test --grep @e2e --grep-invert @screenshot",
+    "test:api": "npx playwright test --grep @api",
+    "test:infra": "npx c8 --include=src/helpers/env.js --include=src/helpers/api.js --include=src/helpers/har-collect.js --reporter=lcov --reporter=text --report-dir=coverage npx playwright test --grep @infra",
+    "test:ui": "npx playwright test --grep @ui --grep-invert @screenshot",
+    "test:mock": "npx playwright test --grep @ui --grep-invert @screenshot",
+    "test:screenshot": "npx playwright test --grep @screenshot",
+    "test:manual": "npx playwright test --grep @manual",
+    "t:headed": "npx playwright test --headed --grep @e2e --grep-invert @screenshot",
+    "t:chrome": "npx playwright test --project=chromium --grep @e2e --grep-invert @screenshot",
+    "code": "npx playwright codegen",
+    "allureG": "npx allure generate ./allure-results -o ./allure-report --clean",
+    "allureO": "npx allure open ./allure-report"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^10.4.0",
+    "@playwright/test": "^1.60.0",
+    "allure-playwright": "^3.10.2",
+    "ajv": "^8.17.1",
+    "c8": "^10.1.3",
+    "dotenv": "^17.4.2",
+    "pixelmatch": "^5.3.0",
+    "pngjs": "^7.0.0"
+  }
+}

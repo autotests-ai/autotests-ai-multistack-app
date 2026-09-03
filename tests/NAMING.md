@@ -1,84 +1,122 @@
 # Test module naming (SSOT)
 
-Folder name = stacked dimensions, **`-` between segments**, **`_` only in compound tokens** (`no_allure`, `react_testing_library`).
+Folder name = stacked dimensions, **`-` between segments**, **`_` only in compound tokens** (`rest_assured`, `api_request`, `net_http`, `react_testing_library`).
 
 ## Pattern
 
 ```
-tests-{language}-{build}-{framework}-{reporting}-{automation}
+tests-{language}-{framework}-{automation}
 ```
+
+Do **not** put `gradle`, `maven`, `allure2`, `allure3`, or `no_allure` in the folder id **or** the profile id. Default JVM build is Gradle. Allure is a library / CI knob, not a path segment. Profile id = module id without the `tests-` prefix (`java-junit5-rest_assured-selenide` ↔ `tests-java-junit5-rest_assured-selenide`).
 
 | Segment | Examples | Notes |
 |---------|----------|-------|
-| `language` | `java`, `kotlin`, `scala`, `groovy`, `javascript`, `typescript`, `python`, `go`, `csharp` | top-level under `tests/` |
-| `build` | `gradle`, `maven`, `npm`, `pip`, `mod` | omit when obvious (e.g. JS → npm) |
+| `language` | `java`, `kotlin`, `scala`, `groovy`, `javascript`, `typescript`, `python`, `go`, `csharp`, `rust` | top-level under `tests/` |
 | `framework` | `junit4`, `junit5`, `junit6`, `testng`, `pytest`, `vitest`, `testing`, `nunit`, `xunit` | test runner |
-| `reporting` | `allure2`, `allure3`, `no_allure` | underscore in `no_allure` |
-| `automation` | `selenium`, `selenide`, `selene`, `playwright`, `cypress`, `restassured`, `retrofit2`, `requests`, `httpx`, `axios`, `ktor`, `restsharp`, `net_http`, `jmeter`, `gatling`, `k6`, `yandex-tank`, `locust`, `none` | UI/HTTP school or load tool; `none` for api-only when unnamed |
+| `automation` | `selenium`, `selenide`, `selene`, `playwright`, `cypress`, `rest_assured`, `retrofit2`, `requests`, `httpx`, `axios`, `ktor`, `restsharp`, `net_http`, `reqwest`, `api_request`, `jmeter`, `gatling`, `k6`, `yandex_tank`, `locust`, `none` | UI/HTTP school or load tool; `api_request` = Playwright `APIRequest` in combo ids; `_` in compounds (`rest_assured`, `yandex_tank`); `none` for api-only when unnamed |
 
-## Java (Gradle) — matrix
+## Java — matrix
 
 | Folder | Status |
 |--------|--------|
-| `tests-java-gradle-junit5-allure3-selenide` | **active** — block 2 CI target |
-| `tests-java-gradle-junit5-allure3-selenium` | **active** — UI+HTTP block Selenium 4 + Rest Assured |
-| `tests-java-gradle-junit5-allure3-playwright` | **active** — UI+HTTP Playwright for Java + Rest Assured |
-| `tests-java-gradle-junit5-allure3-restassured` | **active** — HTTP block Rest Assured |
-| `tests-java-gradle-junit5-allure3-retrofit2` | **active** — HTTP block Retrofit 2 |
-| `tests-java-gradle-junit5-allure2-selenide` | slot |
-| `tests-java-gradle-junit5-no_allure-selenide` | slot |
-| `tests-java-gradle-junit4-allure2-selenium` | slot |
-| `tests-java-gradle-testng-allure3-selenium` | slot |
-| `tests-java-maven-junit5-allure3-selenide` | slot |
+| `tests-java-junit5-rest_assured-selenide` | **active** — block 2 CI target |
+| `tests-java-junit5-rest_assured-selenium` | **active** — UI+HTTP block Selenium 4 + Rest Assured |
+| `tests-java-junit5-api_request-playwright` | **active** — UI+HTTP Playwright for Java + APIRequest |
+| `tests-java-junit5-rest_assured` | **active** — HTTP block Rest Assured |
+| `tests-java-junit5-retrofit2` | **active** — HTTP block Retrofit 2 |
+| `tests-java-junit5-selenide` | slot — **UI-only** Selenide (no REST) |
+| `tests-java-junit5-selenium` | slot — **UI-only** Selenium (no REST) |
+| `tests-java-junit5-playwright` | slot — **UI-only** Playwright (no REST) |
+| `tests-java-junit4-selenium` | slot — JUnit 4 |
+| `tests-java-testng-selenium` | slot — TestNG |
 | `tests-java-jmeter` | slot — JMeter JMX, `layers: [performance]` |
-| `tests-java-gradle-gatling` | slot — Gatling Java DSL, `layers: [performance]` |
+| `tests-java-gatling` | slot — Gatling Java DSL, `layers: [performance]` |
 
-Only one module is the CI default (Selenide). Selenium living block has api+ui+e2e; Rest Assured and Retrofit 2 are living HTTP-only (`layers: [api]`). Java Playwright is living UI+HTTP (`layers: [api, ui, e2e]`, Rest Assured for HTTP — same as Selenide/Selenium). Other folders are teaching slots / generator outputs.
+Only one module is the CI default (Selenide). Selenium living block has api+ui+e2e; Rest Assured and Retrofit 2 are living HTTP-only (`layers: [api]`). Java Playwright is living UI+HTTP (`layers: [api, ui, e2e]`, Playwright `APIRequest` for HTTP). **UI-only slots** (no REST): `tests-java-junit5-{selenide,selenium,playwright}` (`layers: [ui, e2e]`). Other folders are teaching slots / generator outputs.
 
-## JavaScript / TypeScript / Python / Go / Kotlin / C#
+## UI-only vs combo vs HTTP-only
 
-Living folders may shorten when dimensions are obvious (`tests-javascript-playwright`).
+One clone folder = one teaching block. Students who are not on REST yet get a **UI-only** slot (`layers: [ui, e2e]`, no HTTP client). Combo living cells stay as they are (in-cell HTTP). HTTP-only siblings stay separate.
+
+Target folder grammar:
+
+```
+tests-{language}-{framework}-{automation}              # UI-only
+tests-{language}-{framework}-{http-client}-{automation}  # combo (HTTP first, then UI)
+tests-{language}-{framework}-{http-client}             # HTTP-only
+tests-{language}-{tool}                               # jmeter, gatling
+```
+
+| Kind | Example folder | Layers |
+|------|----------------|--------|
+| UI-only slot | `tests-java-junit5-selenide` | `ui`, `e2e` |
+| Combo living (current) | `tests-java-junit5-rest_assured-selenide` | `api`, `ui`, `e2e` |
+| HTTP-only living | `tests-java-junit5-rest_assured` | `api` |
+
+JS/TS Playwright combo living is `tests-{javascript,typescript}-api_request-playwright` (native **APIRequest**). Python Playwright combo is `tests-python-pytest-api_request-playwright`. Java/Kotlin/C#/Go living PW folders use the same id tail `api_request-playwright` and the same in-cell HTTP (**APIRequest**). Short `tests-javascript-playwright` is living **UI-only**. Other short `tests-*-playwright` (Python: `tests-python-pytest-playwright`) stay the **UI-only** slot. JS Axios+Playwright is `tests-javascript-axios-playwright` (**bad-practice**, do not fill). There is no HTTP-only `tests-*-api_request` school. Cypress remains an empty JS UI school.
+
+Python Selenium/Selene combos use **requests** in-cell (`tests-python-pytest-requests-selenium`, `tests-python-pytest-requests-selene`). Python Playwright combo uses **APIRequest** (`tests-python-pytest-api_request-playwright`), same tail as JS/TS. httpx stays HTTP-only (`tests-python-pytest-httpx`), not a UI in-cell client.
+
+Short profile id without an HTTP client **is** UI-only (`csharp-nunit-selenium`, `go-testing-playwright`, `javascript-playwright`, `typescript-playwright`, `python-pytest-selene`). Combo living keeps HTTP-then-UI in the profile (`csharp-nunit-restsharp-selenium`, `go-testing-api_request-playwright`, `javascript-api_request-playwright`, `typescript-api_request-playwright`, `python-pytest-requests-selene`, `python-pytest-api_request-playwright`). JS `javascript-playwright` is living UI-only; other short Playwright ids stay slots.
+
+## JavaScript / TypeScript / Python / Go / Kotlin / C# / Rust
+
+JS/TS living folders may shorten when the runner is obvious (`tests-javascript-axios`). Python always keeps `pytest` in the folder and profile id — HTTP-only, combo, and UI-only (`tests-python-pytest-httpx`, `tests-python-pytest-requests-selenium`, `tests-python-pytest-selene`). Load tools stay without pytest (`tests-python-locust`, `tests-python-yandex_tank`).
 Full IDs live in hub [`matrix.yaml`](../../matrix.yaml) `tests.modules` (`status: active|slot`).
 
 | Folder / id | Status |
 |-------------|--------|
-| `tests-javascript-playwright` | **active** — UI+HTTP Playwright (`APIRequest` in-cell); c8 + sonar |
+| `tests-javascript-api_request-playwright` | **active** — UI+HTTP Playwright (`APIRequest` in-cell); c8 + sonar |
+| `tests-javascript-playwright` | **active** — **UI-only** Playwright (no REST) |
+| `tests-javascript-axios-playwright` | **bad-practice** — Axios + Playwright; do not fill (living combo stays APIRequest) |
 | `tests-javascript-cypress` | slot — UI block |
 | `tests-javascript-axios` | **active** — HTTP-only Axios (Vitest; not in-cell Playwright) |
 | `tests-javascript-k6` | slot — k6 JavaScript, `layers: [performance]` |
 | `tests-javascript-gatling` | slot — Gatling JS SDK, `layers: [performance]` |
-| `tests-typescript-playwright` | **active** — UI+HTTP Playwright (`APIRequest` in-cell); c8 + sonar |
+| `tests-typescript-api_request-playwright` | **active** — UI+HTTP Playwright (`APIRequest` in-cell); c8 + sonar |
+| `tests-typescript-playwright` | slot — **UI-only** Playwright (no REST) |
 | `tests-typescript-axios` | **active** — HTTP-only Axios (Vitest; not in-cell Playwright) |
 | `tests-typescript-k6` | slot — k6 TypeScript, `layers: [performance]` |
 | `tests-typescript-gatling` | slot — Gatling TS SDK, `layers: [performance]` |
-| `tests-python-selenium` | **active** |
-| `tests-python-selene` | **active** — UI+HTTP Selene + in-cell httpx |
-| `tests-python-playwright` | **active** — UI+HTTP Playwright + APIRequest |
-| `tests-python-requests` | **active** — HTTP block requests (31 api + 9 ConfigReader + 3 manual) |
-| `tests-python-httpx` | **active** — HTTP block httpx |
-| `tests-python-yandex-tank` | slot — Yandex.Tank, `layers: [performance]` |
+| `tests-python-pytest-requests-selenium` | **active** — UI+HTTP Selenium + in-cell requests |
+| `tests-python-pytest-requests-selene` | **active** — UI+HTTP Selene + in-cell requests |
+| `tests-python-pytest-api_request-playwright` | **active** — UI+HTTP Playwright (`APIRequest` in-cell) |
+| `tests-python-pytest-selenium` | slot — **UI-only** Selenium (no REST) |
+| `tests-python-pytest-selene` | slot — **UI-only** Selene (no REST) |
+| `tests-python-pytest-playwright` | slot — **UI-only** Playwright (no REST) |
+| `tests-python-pytest-requests` | **active** — HTTP block requests (31 api + 9 ConfigReader + 3 manual) |
+| `tests-python-pytest-httpx` | **active** — HTTP block httpx (HTTP-only; not a UI in-cell client) |
+| `tests-python-yandex_tank` | slot — Yandex.Tank, `layers: [performance]` |
 | `tests-python-locust` | slot — Locust, `layers: [performance]` |
-| `tests-kotlin-gradle-junit5-allure3-selenide` | **active** — UI+HTTP Selenide + in-cell Ktor |
-| `tests-kotlin-gradle-junit5-allure3-selenium` | **active** — UI+HTTP Selenium + in-cell Ktor |
-| `tests-kotlin-gradle-junit5-allure3-playwright` | **active** — UI+HTTP Playwright + in-cell Ktor |
-| `tests-kotlin-gradle-junit5-allure3-ktor` | **active** — HTTP block Ktor client |
-| `tests-kotlin-gradle-gatling` | slot — Gatling Kotlin DSL |
+| `tests-kotlin-junit5-ktor-selenide` | **active** — UI+HTTP Selenide + in-cell Ktor |
+| `tests-kotlin-junit5-ktor-selenium` | **active** — UI+HTTP Selenium + in-cell Ktor |
+| `tests-kotlin-junit5-api_request-playwright` | **active** — UI+HTTP Playwright + in-cell APIRequest |
+| `tests-kotlin-junit5-selenide` | slot — **UI-only** Selenide (no REST) |
+| `tests-kotlin-junit5-selenium` | slot — **UI-only** Selenium (no REST) |
+| `tests-kotlin-junit5-playwright` | slot — **UI-only** Playwright (no REST) |
+| `tests-kotlin-junit5-ktor` | **active** — HTTP block Ktor client |
+| `tests-kotlin-gatling` | slot — Gatling Kotlin DSL |
 | `tests-scala-gatling` | slot — Gatling Scala DSL |
 | `tests-groovy-jmeter` | slot — JMeter JSR223 Groovy |
-| `tests-go-testing-allure3-net_http` | **active** — HTTP block (`net/http` + Allure Go + testify) |
-| `tests-go-testing-allure3-playwright` | **active** — UI+HTTP Playwright + in-cell net/http |
+| `tests-go-testing-net_http` | **active** — HTTP block (`net/http` + Allure Go + testify) |
+| `tests-go-testing-api_request-playwright` | **active** — UI+HTTP Playwright + in-cell APIRequest |
+| `tests-go-testing-playwright` | slot — **UI-only** Playwright (no REST) |
 | `tests-go-cdp` | mill — IR / `greedy run`, not a Selenide peer |
-| `tests-csharp-nunit-allure3-selenium` | **active** — UI+HTTP Selenium + in-cell RestSharp |
-| `tests-csharp-nunit-allure3-restsharp` | **active** — HTTP block RestSharp |
-| `tests-csharp-xunit-allure3-playwright` | **active** — UI+HTTP xUnit · Playwright + in-cell RestSharp |
+| `tests-csharp-nunit-restsharp-selenium` | **active** — UI+HTTP Selenium + in-cell RestSharp |
+| `tests-csharp-nunit-selenium` | slot — **UI-only** NUnit · Selenium (no REST) |
+| `tests-csharp-nunit-restsharp` | **active** — HTTP block RestSharp |
+| `tests-csharp-xunit-api_request-playwright` | **active** — UI+HTTP xUnit · Playwright + in-cell APIRequest |
+| `tests-csharp-xunit-playwright` | slot — **UI-only** xUnit · Playwright (no REST) |
+| `tests-rust-testing-reqwest` | **active** — HTTP block reqwest |
+| `tests-rust-testing-selenium` | **active** — **UI-only** `cargo test` · Selenium / thirtyfour (no REST catalog) |
+| `tests-rust-testing-reqwest-selenium` | **active** — UI+HTTP reqwest + Selenium |
 
 ```
-tests-javascript-npm-playwright-no_allure
-tests-javascript-npm-jest-no_allure
-tests-typescript-npm-playwright-allure3
-tests-python-pip-pytest-allure3-selenium
-tests-python-pip-pytest-no_allure-playwright
-tests-go-mod-testing-allure3-net_http
+tests-javascript-api_request-playwright
+tests-python-pytest-requests-selenium
+tests-go-testing-net_http
+tests-java-junit4-selenium
 ```
 
 ## Suite file stems (cross-language)
@@ -111,7 +149,7 @@ API lives under `tests/api/` in every language. Playwright names the **file** af
 
 `test.describe('Login')` / `@allure.title("Login")` / `@DisplayName("Login")` share the Java display name. Tags stay language-native (`@Tag("e2e")` · `@e2e` · `pytest.mark.e2e`).
 
-Java Playwright living (`tests-java-gradle-junit5-allure3-playwright`) covers the same functional UI stems as TypeScript Playwright, including `header-active-nav`, plus the same `tests/api/` stems as the Java HTTP cells. Screenshot PNG compare is **not in this school yet** (Playwright Chromium baselines ≠ CFT Chrome SSOT). Burger/header-screenshot stay Java Selenide/Selenium-only, as in the table.
+Java Playwright living (`tests-java-junit5-api_request-playwright`) covers the same functional UI stems as TypeScript Playwright, including `header-active-nav`, plus the same `tests/api/` stems as the Java HTTP cells, with Playwright `APIRequest` for HTTP. Screenshot PNG compare is **not in this school yet** (Playwright Chromium baselines ≠ CFT Chrome SSOT). Burger/header-screenshot stay Java Selenide/Selenium-only, as in the table.
 
 ### Page objects — keep stack convention
 

@@ -6,13 +6,14 @@ GitHub does not interpolate `uses:`. This adapter dispatches on `TESTS_LANG`:
 
 | LANG | Action | `module_dir` |
 |------|--------|----------------|
-| `java` | `./tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/<verb>` | 5-segment `tests/java/tests-java-{builder}-{framework}-{report}-{ui}` |
-| `kotlin` | same JVM infra/sonar adapter; other verbs STOP (HTTP-only Ktor has no UI) | 5-segment `tests/kotlin/tests-kotlin-{builder}-{framework}-{report}-{ui}` (live: `ktor`) |
-| `javascript` | `./tests/javascript/.github/actions/<verb>` | short `tests/javascript/tests-javascript-{ui}` (live: `playwright`) |
-| `python` | `./tests/python/.github/actions/<verb>` | short `tests/python/tests-python-{ui}` (live: `selenium` or `httpx`) |
-| `typescript` | `./tests/typescript/.github/actions/<verb>` | short `tests/typescript/tests-typescript-{ui}` (live: `playwright` or `axios`) |
-| `csharp` | `./tests/csharp/.github/actions/<verb>` (`infra` / `sonar`) | 4-segment `tests/csharp/tests-csharp-{framework}-{report}-{ui}` (live: `nunit` · `allure3` · `restsharp` or `selenium`; `xunit` · `allure3` · `playwright`) |
-| `go` | `./tests/go/.github/actions/<verb>` (`infra` / `sonar`) | 4-segment `tests/go/tests-go-{framework}-{report}-{ui}` (live: `testing` · `allure3` · `net_http`) |
+| `java` | `./tests/java/tests-java-junit5-rest_assured-selenide/.github/actions/<verb>` | living: `junit5-rest_assured-{selenide,selenium}`, `junit5-api_request-playwright`, `junit5-rest_assured`, `junit5-retrofit2`; runner: `{framework}-{ui}`, `gatling` |
+| `kotlin` | same JVM infra/sonar adapter | living: `junit5-ktor-{selenide,selenium}`, `junit5-api_request-playwright`, `junit5-ktor` |
+| `javascript` | `./tests/javascript/.github/actions/<verb>` | short `tests/javascript/tests-javascript-{ui}`; `playwright` → UI-only living, `api_request-playwright` → combo |
+| `python` | `./tests/python/.github/actions/<verb>` | short `tests/python/tests-python-{ui}`; `selenium` → `requests-selenium`, `selene` → `requests-selene`, `playwright` → `api_request-playwright` |
+| `typescript` | `./tests/typescript/.github/actions/<verb>` | short `tests/typescript/tests-typescript-{ui}`; `playwright` → living `api_request-playwright` or `axios` |
+| `csharp` | `./tests/csharp/.github/actions/<verb>` (`infra` / `sonar`) | living: `nunit-restsharp-selenium`, `xunit-api_request-playwright`, `nunit-restsharp` |
+| `go` | `./tests/go/.github/actions/<verb>` (`infra` / `sonar`) | living: `testing-api_request-playwright`, `testing-net_http` |
+| `rust` | `./tests/rust/.github/actions/<verb>` (`infra` / `sonar`) | living: `testing-reqwest`, `testing-selenium`, `testing-reqwest-selenium` |
 | other | STOP | never a foreign / Java action |
 
 A verb with no layer in the live JS module STOPs inside that family action (not `uses:` on Selenide).

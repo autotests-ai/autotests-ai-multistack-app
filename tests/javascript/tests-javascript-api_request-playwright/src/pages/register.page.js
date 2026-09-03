@@ -1,0 +1,62 @@
+exports.RegisterPage = class RegisterPage {
+  /**
+   * @param {import('@playwright/test').Page} page
+   */
+  constructor(page) {
+    this.page = page;
+    this.registerForm = page.getByTestId('register-form');
+    this.loginInput = page.getByTestId('register-login-input');
+    this.passwordInput = page.getByTestId('register-password-input');
+    this.confirmPasswordInput = page.getByTestId('confirm-password-input');
+    this.submitButton = page.getByTestId('register-submit-button');
+    this.formTitle = page.getByTestId('register-form-title');
+    this.errorMessage = page.getByTestId('register-error-message');
+    this.loginLink = page.getByTestId('login-link');
+  }
+
+  async open() {
+    // Relative to baseURL (ends with '/') — stays inside path-mounted deploys.
+    await this.page.goto('register');
+    await this.shouldBeOpen();
+  }
+
+  async shouldBeOpen() {
+    await this.registerForm.waitFor({ state: 'visible' });
+  }
+
+  async shouldShowRegisterForm() {
+    await this.formTitle.waitFor({ state: 'visible' });
+    await this.loginInput.waitFor({ state: 'visible' });
+    await this.passwordInput.waitFor({ state: 'visible' });
+    await this.confirmPasswordInput.waitFor({ state: 'visible' });
+    await this.submitButton.waitFor({ state: 'visible' });
+  }
+
+  async signup(username, password, confirmPassword = password) {
+    await this.loginInput.fill(username);
+    await this.passwordInput.fill(password);
+    await this.confirmPasswordInput.fill(confirmPassword);
+    await this.submitButton.click();
+  }
+
+  async typeUsername(username) {
+    await this.loginInput.fill(username);
+  }
+
+  async typePassword(password) {
+    await this.passwordInput.fill(password);
+  }
+
+  async typeConfirmPassword(password) {
+    await this.confirmPasswordInput.fill(password);
+  }
+
+  async submitExpectingError() {
+    await this.submitButton.click();
+    await this.errorMessage.waitFor({ state: 'visible' });
+  }
+
+  async clickLoginLink() {
+    await this.loginLink.click();
+  }
+};

@@ -2,65 +2,81 @@
 
 Automation outside backend unit / frontend RTL — by **language** → **stack dimensions**.
 
-Clone folder = **teaching block** (UI school, HTTP client, runner/build variant, or load). Client combo (Selenium+Retrofit) = generate, not a cartesian extra folder.
+Clone folder = **teaching block** (UI school, HTTP client, runner/build variant, or load). Client combo (Selenium+Retrofit) = generate, not a cartesian extra folder. **UI-only** slots (no REST) use short ids — see [NAMING.md](NAMING.md).
 
 | Doc | Role |
 |-----|------|
 | **[LAYERS.md](LAYERS.md)** | Pyramid layers → paths → Gradle/npm → CI jobs |
-| **[NAMING.md](NAMING.md)** | Module folder pattern `tests-{lang}-{build}-{framework}-{reporting}-{automation}` |
+| **[NAMING.md](NAMING.md)** | Module folder pattern (no `gradle` / `maven` / `allure2` / `allure3` / `no_allure` in the id) |
 
 ```
 tests/
   java/
-    tests-java-gradle-junit5-allure3-selenide/     # active — default cell (Selenide + Rest Assured)
-    tests-java-gradle-junit5-allure3-selenium/       # active — UI+HTTP Selenium 4 + Rest Assured
-    tests-java-gradle-junit5-allure3-playwright/     # active — UI+HTTP Playwright for Java + Rest Assured
-    tests-java-gradle-junit5-allure3-restassured/   # active — HTTP block Rest Assured
-    tests-java-gradle-junit5-allure3-retrofit2/    # active — HTTP block Retrofit 2
-    tests-java-gradle-junit5-allure2-selenide/       # slot — Allure 2
-    tests-java-gradle-junit5-no_allure-selenide/    # slot — no Allure
-    tests-java-gradle-junit4-allure2-selenium/        # slot — JUnit 4
-    tests-java-gradle-testng-allure3-selenium/       # slot — TestNG
-    tests-java-maven-junit5-allure3-selenide/       # slot — Maven
+    tests-java-junit5-rest_assured-selenide/     # active — default cell (Selenide + Rest Assured)
+    tests-java-junit5-rest_assured-selenium/       # active — UI+HTTP Selenium 4 + Rest Assured
+    tests-java-junit5-api_request-playwright/     # active — UI+HTTP Playwright for Java + APIRequest
+    tests-java-junit5-selenide/                      # slot — UI-only Selenide (no REST)
+    tests-java-junit5-selenium/                      # slot — UI-only Selenium (no REST)
+    tests-java-junit5-playwright/                    # slot — UI-only Playwright (no REST)
+    tests-java-junit5-rest_assured/   # active — HTTP block Rest Assured
+    tests-java-junit5-retrofit2/    # active — HTTP block Retrofit 2
+    tests-java-junit4-selenium/        # slot — JUnit 4
+    tests-java-testng-selenium/       # slot — TestNG
     tests-java-jmeter/                               # slot — JMeter JMX
-    tests-java-gradle-gatling/                       # slot — Gatling Java DSL
+    tests-java-gatling/                       # slot — Gatling Java DSL
   csharp/
-    tests-csharp-nunit-allure3-selenium/              # active — UI+HTTP Selenium + in-cell RestSharp
-    tests-csharp-nunit-allure3-restsharp/             # active — HTTP block RestSharp (31 api + 9 ConfigReader + 3 manual)
-    tests-csharp-xunit-allure3-playwright/           # active — UI+HTTP Playwright + in-cell RestSharp
+    tests-csharp-nunit-restsharp-selenium/              # active — UI+HTTP Selenium + in-cell RestSharp
+    tests-csharp-nunit-selenium/                      # slot — UI-only Selenium (no REST)
+    tests-csharp-nunit-restsharp/             # active — HTTP block RestSharp (31 api + 9 ConfigReader + 3 manual)
+    tests-csharp-xunit-api_request-playwright/           # active — UI+HTTP Playwright + in-cell APIRequest
+    tests-csharp-xunit-playwright/                   # slot — UI-only Playwright (no REST)
   groovy/
     tests-groovy-jmeter/                             # slot — JMeter JSR223
   kotlin/
-    tests-kotlin-gradle-junit5-allure3-selenide/     # active — UI+HTTP Selenide + in-cell Ktor
-    tests-kotlin-gradle-junit5-allure3-selenium/    # active — UI+HTTP Selenium + in-cell Ktor
-    tests-kotlin-gradle-junit5-allure3-playwright/   # active — UI+HTTP Playwright + in-cell Ktor
-    tests-kotlin-gradle-junit5-allure3-ktor/         # active — HTTP block Ktor
-    tests-kotlin-gradle-gatling/                     # slot — Gatling Kotlin DSL
+    tests-kotlin-junit5-ktor-selenide/     # active — UI+HTTP Selenide + in-cell Ktor
+    tests-kotlin-junit5-ktor-selenium/    # active — UI+HTTP Selenium + in-cell Ktor
+    tests-kotlin-junit5-api_request-playwright/   # active — UI+HTTP Playwright + in-cell APIRequest
+    tests-kotlin-junit5-selenide/                    # slot — UI-only Selenide (no REST)
+    tests-kotlin-junit5-selenium/                    # slot — UI-only Selenium (no REST)
+    tests-kotlin-junit5-playwright/                  # slot — UI-only Playwright (no REST)
+    tests-kotlin-junit5-ktor/         # active — HTTP block Ktor
+    tests-kotlin-gatling/                     # slot — Gatling Kotlin DSL
   scala/
     tests-scala-gatling/                             # slot — Gatling Scala DSL
   javascript/
-    tests-javascript-playwright/                     # active — UI+HTTP, APIRequest in-cell; c8 + sonar
+    tests-javascript-api_request-playwright/         # active — UI+HTTP, APIRequest in-cell; c8 + sonar
+    tests-javascript-playwright/                     # active — UI-only Playwright (no REST)
+    tests-javascript-axios-playwright/               # bad-practice — Axios + Playwright (do not fill)
     tests-javascript-cypress/                       # slot — UI block
     tests-javascript-axios/                         # active — HTTP-only Axios (Vitest; not PW client)
     tests-javascript-k6/                             # slot — k6 JavaScript
     tests-javascript-gatling/                       # slot — Gatling JS SDK
   python/
-    tests-python-selenium/                            # active
-    tests-python-selene/                             # active — UI+HTTP Selene + in-cell httpx
-    tests-python-playwright/                          # active — UI+HTTP Playwright + APIRequest
-    tests-python-requests/                            # active — HTTP block requests (31 api + 9 ConfigReader + 3 manual)
-    tests-python-httpx/                               # active — HTTP block httpx
-    tests-python-yandex-tank/                         # slot — Yandex.Tank
+    tests-python-pytest-requests-selenium/                   # active — UI+HTTP Selenium + in-cell requests
+    tests-python-pytest-requests-selene/                     # active — UI+HTTP Selene + in-cell requests
+    tests-python-pytest-api_request-playwright/              # active — UI+HTTP Playwright + APIRequest
+    tests-python-pytest-selenium/                            # slot — UI-only Selenium (no REST)
+    tests-python-pytest-selene/                             # slot — UI-only Selene (no REST)
+    tests-python-pytest-playwright/                          # slot — UI-only Playwright (no REST)
+    tests-python-pytest-requests/                            # active — HTTP block requests (31 api + 9 ConfigReader + 3 manual)
+    tests-python-pytest-httpx/                               # active — HTTP block httpx
+    tests-python-yandex_tank/                         # slot — Yandex.Tank
     tests-python-locust/                             # slot — Locust
   typescript/
-    tests-typescript-playwright/                     # active — UI+HTTP, APIRequest in-cell; c8 + sonar
+    tests-typescript-api_request-playwright/         # active — UI+HTTP, APIRequest in-cell; c8 + sonar
+    tests-typescript-playwright/                     # slot — UI-only Playwright (no REST)
     tests-typescript-axios/                          # active — HTTP block axios (Vitest)
     tests-typescript-k6/                             # slot — k6 TypeScript
     tests-typescript-gatling/                       # slot — Gatling TS SDK
   go/
-    tests-go-testing-allure3-net_http/                         # active — HTTP block (31 api + 9 ConfigReader + 3 manual)
-    tests-go-testing-allure3-playwright/             # active — UI+HTTP Playwright + in-cell net/http
+    tests-go-testing-net_http/                         # active — HTTP block (31 api + 9 ConfigReader + 3 manual)
+    tests-go-testing-api_request-playwright/             # active — UI+HTTP Playwright + in-cell APIRequest
+    tests-go-testing-playwright/                     # slot — UI-only Playwright (no REST)
     tests-go-cdp/                                    # mill IR (greedy run)
+  rust/
+    tests-rust-testing-reqwest/                      # active — HTTP block reqwest
+    tests-rust-testing-selenium/                     # active — UI-only Selenium / thirtyfour
+    tests-rust-testing-reqwest-selenium/              # active — UI+HTTP reqwest + Selenium
   _deferred/
 ```
 

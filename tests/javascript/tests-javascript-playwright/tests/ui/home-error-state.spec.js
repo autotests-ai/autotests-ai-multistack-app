@@ -8,7 +8,9 @@ test.describe('Home error states', { tag: ['@ui', '@mock'] }, () => {
   });
 
   test.afterEach(async () => {
-    await mock.resetAll();
+    if (await mock.available()) {
+      await mock.resetAll();
+    }
   });
 
   test('Items API failure shows a readable error, not a blank page', async ({ webApp }) => {

@@ -40,13 +40,13 @@ Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/N
 | **backend/csharp/** | `backend-csharp-aspnet` (active) | — |
 | **backend/rust/** | `backend-rust-axum` (active) | — |
 | **tests/java/** | `tests-java-junit5-rest_assured-selenide`, `selenium`, `playwright`, `restassured`, `retrofit2` (active) | junit4, testng, allure2, maven, … — [tests/NAMING.md](tests/NAMING.md) · matrix slots |
-| **tests/javascript/** | `tests-javascript-api_request-playwright` (active combo), `tests-javascript-axios` | `tests-javascript-playwright` UI-only slot, Cypress, … |
+| **tests/javascript/** | `tests-javascript-api_request-playwright` (active combo), `tests-javascript-playwright` (active UI-only), `tests-javascript-axios` | `tests-javascript-axios-playwright` **bad-practice**, Cypress, … |
 | **tests/typescript/** | `tests-typescript-api_request-playwright` (active combo), `tests-typescript-axios` | `tests-typescript-playwright` UI-only slot |
 | **tests/python/** | `tests-python-pytest-requests-selenium`, `requests-selene`, `api_request-playwright`, `httpx`, `requests` | UI-only `tests-python-pytest-{selenium,selene,playwright}` |
 | **tests/kotlin/** | `tests-kotlin-junit5-ktor`, `selenide`, `selenium`, `playwright` | — |
 | **tests/go/** | `tests-go-testing-net_http`, `playwright`; mill `tests-go-cdp` | — |
 | **tests/csharp/** | `tests-csharp-nunit-restsharp-selenium`, `restsharp`, `tests-csharp-xunit-api_request-playwright` | — |
-| **tests/rust/** | — | `tests-rust-testing-reqwest`, UI-only `selenium`, combo `reqwest-selenium` |
+| **tests/rust/** | `tests-rust-testing-reqwest`, UI-only `selenium`, combo `reqwest-selenium` | — |
 
 ### Routing (per-frontend containers × multi-backend)
 

@@ -8,7 +8,19 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Detect API layer
+      id: layer
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      run: |
+        if [ -d tests/api ]; then
+          echo "run=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "run=false" >> "$GITHUB_OUTPUT"
+          echo "No tests/api — skip API layer (UI-only cell)"
+        fi
     - name: Wait for live API
+      if: steps.layer.outputs.run == 'true'
       shell: bash
       run: |
         set -euo pipefail
@@ -16,17 +28,21 @@ runs:
         url="https://${PUBLIC_HOST}/${STACK_MOUNT}/${backend}/api/health"
         echo "==> API ${url}"
         curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${url}"
-    - uses: ./.github/actions/setup-allurectl
-    - uses: actions/setup-node@v6
+    - if: steps.layer.outputs.run == 'true'
+      uses: ./.github/actions/setup-allurectl
+    - if: steps.layer.outputs.run == 'true'
+      uses: actions/setup-node@v6
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: npm
         cache-dependency-path: ${{ inputs.module_dir }}/package-lock.json
     - name: Install npm dependencies
+      if: steps.layer.outputs.run == 'true'
       shell: bash
       working-directory: ${{ inputs.module_dir }}
       run: npm ci
     - name: Run API tests (Playwright)
+      if: steps.layer.outputs.run == 'true'
       id: run-tests
       shell: bash
       working-directory: ${{ inputs.module_dir }}
@@ -39,7 +55,7 @@ runs:
         source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
         run_with_allurectl npx playwright test --grep @api
     - name: Publish raw Allure results
-      if: always()
+      if: always() && steps.layer.outputs.run == 'true'
       continue-on-error: true
       uses: actions/upload-artifact@v7
       with:

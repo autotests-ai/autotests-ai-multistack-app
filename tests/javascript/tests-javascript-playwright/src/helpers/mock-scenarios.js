@@ -7,7 +7,11 @@ function admin(path) {
 async function available() {
   try {
     const response = await fetch(admin('/__admin/scenarios'), { signal: AbortSignal.timeout(5000) });
-    return response.status === 200;
+    if (response.status !== 200) {
+      return false;
+    }
+    const type = response.headers.get('content-type') || '';
+    return type.includes('json');
   } catch {
     return false;
   }
