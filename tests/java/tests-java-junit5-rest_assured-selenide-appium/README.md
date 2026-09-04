@@ -33,8 +33,8 @@ cd mobile/swift/mobile-swift-swiftui && scripts/build-sim.sh
 
 Overrides: `-DdeviceHost=` · `-Dplatform=` · `APPIUM_URL` · `ANDROID_APP` · `IOS_APP` · `ANDROID_UDID` · `IOS_UDID` · `ANDROID_APP_URL`.
 
-Selenoid default APK: [android-debug `multistack-app.apk`](https://github.com/autotests-ai/autotests-ai-multistack-app/releases/download/android-debug/multistack-app.apk)
-(`gh release upload android-debug multistack-app.apk --clobber` when the UI changes).
+Selenoid default APK: [`multistack-app.apk`](https://github.com/autotests-ai/autotests-ai-multistack-app/releases/download/apk/multistack-app.apk)
+(`gh release upload apk multistack-app.apk --clobber` when the UI changes).
 
 Seed `user1` / `password1` → `Welcome, user1!` against
 `https://autotests.ai/stack/backend-java-spring/api`.

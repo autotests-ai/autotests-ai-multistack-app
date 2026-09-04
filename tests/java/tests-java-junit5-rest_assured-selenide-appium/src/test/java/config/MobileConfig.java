@@ -53,7 +53,7 @@ public final class MobileConfig {
 
     /** GitHub Release asset — selenoid.qa.guru fetches this, not a laptop path. */
     static final String ANDROID_APK_URL =
-            "https://github.com/autotests-ai/autotests-ai-multistack-app/releases/download/android-debug/multistack-app.apk";
+            "https://github.com/autotests-ai/autotests-ai-multistack-app/releases/download/apk/multistack-app.apk";
 
     public static String androidAppUrl() {
         return optional("ANDROID_APP_URL", ANDROID_APK_URL);
