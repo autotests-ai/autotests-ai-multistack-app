@@ -5,6 +5,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 FROM python:3.12-alpine
+LABEL org.opencontainers.image.source=https://github.com/autotests-ai/autotests-ai-multistack-app
 RUN apk add --no-cache wget libffi \
     && addgroup -S app && adduser -S app -G app
 WORKDIR /app

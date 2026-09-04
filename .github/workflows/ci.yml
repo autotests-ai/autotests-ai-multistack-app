@@ -20,6 +20,7 @@ name: CI
 #   sonar-frontend ← frontend-unit-tests + ui-tests
 #   build-backend ← backend-unit-tests + integration-tests (backend lane)
 #   build-backend-kotlin ← same needs (GHCR sibling for the load SUT; not a matrix)
+#   build-backend-python ← same needs (GHCR flask+fastapi+django; one job, three uses; not a matrix)
 #   build-frontend ← ui-tests (frontend lane)
 #   deploy-*-stage ← matching build + sonar-backend / sonar-frontend + preempt/yield (STAGE_APP_DIR, cd_stage)
 #   api-tests-stage ← deploy-backend-stage + infra-tests (STAGE_APP_DIR, run_api_stage)
@@ -27,7 +28,13 @@ name: CI
 #   jmeter-smoke ← deploy-backend-load (etalon JMX vs java cell; not Gatling)
 #   deploy-backend-load-kotlin ← jmeter-smoke + build-backend-kotlin (stop java, up kotlin)
 #   jmeter-kotlin-cell ← deploy-backend-load-kotlin (java/kotlin/groovy JMeter vs kotlin origin)
-#   deploy-backend-load-restore ← jmeter-kotlin-cell (always bring java back)
+#   deploy-backend-load-flask ← jmeter-kotlin-cell + build-backend-python (stop kotlin, up flask)
+#   jmeter-flask-cell ← deploy-backend-load-flask
+#   deploy-backend-load-fastapi ← jmeter-flask-cell (stop flask, up fastapi)
+#   jmeter-fastapi-cell ← deploy-backend-load-fastapi
+#   deploy-backend-load-django ← jmeter-fastapi-cell (stop fastapi, up django)
+#   jmeter-django-cell ← deploy-backend-load-django
+#   deploy-backend-load-restore ← python chain (always bring java back)
 #   e2e-tests-stage ← api-tests-stage + deploy-frontend-stage + infra-tests (STAGE_APP_DIR, run_e2e_stage)
 #   (load jobs run parallel with e2e-tests-stage; prod deploy-* must NOT need them)
 #   deploy-* ← matching build + sonar-backend / sonar-frontend + e2e-tests-stage (cd_production)
@@ -527,6 +534,37 @@ jobs:
         with:
           module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
 
+  # Load-SUT python sibling images. Not a GHA matrix: one named job, three
+  # sequential uses. Stage/prod CD still publishes only the default cell.
+  # Do not add these services to DEPLOY_COMPOSE_SERVICES on the java load job.
+  build-backend-python:
+    needs: [backend-unit-tests, integration-tests, trigger]
+    if: >-
+      !cancelled() &&
+      needs.backend-unit-tests.result == 'success' &&
+      (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped') &&
+      needs.trigger.outputs.backend == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+      actions: write
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BACKEND_LANG: python
+    steps:
+      - *checkout
+      - uses: ./backend/.github/actions/build
+        with:
+          module_dir: backend/python/backend-python-flask
+      - uses: ./backend/.github/actions/build
+        with:
+          module_dir: backend/python/backend-python-fastapi
+      - uses: ./backend/.github/actions/build
+        with:
+          module_dir: backend/python/backend-python-django
+
   build-frontend:
     needs: [ui-tests, trigger]
     if: >-
@@ -931,14 +969,264 @@ jobs:
         with:
           module_dir: tests/groovy/tests-groovy-jmeter
 
-  # Standing SUT is java-spring. Restore even if kotlin JMeter failed (java was stopped).
+  # Swap the load VM to python-flask (stop kotlin). Same SSH concurrency group.
+  deploy-backend-load-flask:
+    needs: [jmeter-kotlin-cell, build-backend-python]
+    if: >-
+      always() && !cancelled() &&
+      vars.LOAD_APP_DIR != '' &&
+      needs.jmeter-kotlin-cell.result == 'success' &&
+      needs.build-backend-python.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: ${{ vars.LOAD_ENVIRONMENT || 'multistack-load' }}
+      url: https://load.autotests.ai/backend-python-flask
+    concurrency:
+      group: deploy-autotests-ai-multistack-app-load
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+    env:
+      BACKEND_LANG: python
+      BACKEND_FRAMEWORK: flask
+      DEPLOY_APP_DIR: ${{ vars.LOAD_APP_DIR }}
+      DEPLOY_COMPOSE_PROJECT: ${{ vars.LOAD_COMPOSE_PROJECT || 'autotests-ai-multistack-app-load' }}
+      DEPLOY_COMPOSE_ENV_FILE: ${{ vars.LOAD_COMPOSE_ENV_FILE || '' }}
+      DEPLOY_COMPOSE_SERVICES: postgres backend-python-flask
+      DEPLOY_SINGLE_BACKEND: "true"
+      DEPLOY_HEALTH_URL: http://127.0.0.1:8820/api/health
+      DEPLOY_HOST: ${{ vars.LOAD_HOST }}
+      DEPLOY_USER: ${{ vars.LOAD_USER }}
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - *checkout
+      - uses: ./backend/.github/actions/deploy
+        with:
+          module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
+          stand: load
+
+  jmeter-flask-cell:
+    needs: [deploy-backend-load-flask]
+    if: >-
+      always() && !cancelled() &&
+      vars.LOAD_APP_DIR != '' &&
+      needs.deploy-backend-load-flask.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      API_BASE_URL: ${{ vars.LOAD_API_URL }}
+      JMETER_ALLOW_PUBLIC: "true"
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+    steps:
+      - *checkout
+      - name: Point JMeter at python-flask
+        shell: bash
+        run: |
+          set -euo pipefail
+          src="${API_BASE_URL%/}"
+          case "$src" in
+            *backend-java-spring*) ;;
+            *)
+              echo "STOP: LOAD_API_URL must contain backend-java-spring so the cell can switch: ${src}" >&2
+              exit 1
+              ;;
+          esac
+          dst="${src/backend-java-spring/backend-python-flask}"
+          echo "API_BASE_URL=${dst}" >> "${GITHUB_ENV}"
+          echo "==> JMeter origin ${src} → ${dst}"
+      - uses: ./tests/.github/actions/performance
+        with:
+          module_dir: tests/java/tests-java-jmeter
+      - uses: ./tests/.github/actions/performance
+        with:
+          module_dir: tests/kotlin/tests-kotlin-jmeter
+      - uses: ./tests/.github/actions/performance
+        with:
+          module_dir: tests/groovy/tests-groovy-jmeter
+
+  deploy-backend-load-fastapi:
+    needs: [deploy-backend-load-flask, jmeter-flask-cell, build-backend-python]
+    if: >-
+      always() && !cancelled() &&
+      vars.LOAD_APP_DIR != '' &&
+      needs.deploy-backend-load-flask.result == 'success' &&
+      (needs.jmeter-flask-cell.result == 'success' ||
+       needs.jmeter-flask-cell.result == 'failure') &&
+      needs.build-backend-python.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: ${{ vars.LOAD_ENVIRONMENT || 'multistack-load' }}
+      url: https://load.autotests.ai/backend-python-fastapi
+    concurrency:
+      group: deploy-autotests-ai-multistack-app-load
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+    env:
+      BACKEND_LANG: python
+      BACKEND_FRAMEWORK: fastapi
+      DEPLOY_APP_DIR: ${{ vars.LOAD_APP_DIR }}
+      DEPLOY_COMPOSE_PROJECT: ${{ vars.LOAD_COMPOSE_PROJECT || 'autotests-ai-multistack-app-load' }}
+      DEPLOY_COMPOSE_ENV_FILE: ${{ vars.LOAD_COMPOSE_ENV_FILE || '' }}
+      DEPLOY_COMPOSE_SERVICES: postgres backend-python-fastapi
+      DEPLOY_SINGLE_BACKEND: "true"
+      DEPLOY_HEALTH_URL: http://127.0.0.1:8821/api/health
+      DEPLOY_HOST: ${{ vars.LOAD_HOST }}
+      DEPLOY_USER: ${{ vars.LOAD_USER }}
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - *checkout
+      - uses: ./backend/.github/actions/deploy
+        with:
+          module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
+          stand: load
+
+  jmeter-fastapi-cell:
+    needs: [deploy-backend-load-fastapi]
+    if: >-
+      always() && !cancelled() &&
+      vars.LOAD_APP_DIR != '' &&
+      needs.deploy-backend-load-fastapi.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      API_BASE_URL: ${{ vars.LOAD_API_URL }}
+      JMETER_ALLOW_PUBLIC: "true"
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+    steps:
+      - *checkout
+      - name: Point JMeter at python-fastapi
+        shell: bash
+        run: |
+          set -euo pipefail
+          src="${API_BASE_URL%/}"
+          case "$src" in
+            *backend-java-spring*) ;;
+            *)
+              echo "STOP: LOAD_API_URL must contain backend-java-spring so the cell can switch: ${src}" >&2
+              exit 1
+              ;;
+          esac
+          dst="${src/backend-java-spring/backend-python-fastapi}"
+          echo "API_BASE_URL=${dst}" >> "${GITHUB_ENV}"
+          echo "==> JMeter origin ${src} → ${dst}"
+      - uses: ./tests/.github/actions/performance
+        with:
+          module_dir: tests/java/tests-java-jmeter
+      - uses: ./tests/.github/actions/performance
+        with:
+          module_dir: tests/kotlin/tests-kotlin-jmeter
+      - uses: ./tests/.github/actions/performance
+        with:
+          module_dir: tests/groovy/tests-groovy-jmeter
+
+  deploy-backend-load-django:
+    needs: [deploy-backend-load-fastapi, jmeter-fastapi-cell, build-backend-python]
+    if: >-
+      always() && !cancelled() &&
+      vars.LOAD_APP_DIR != '' &&
+      needs.deploy-backend-load-fastapi.result == 'success' &&
+      (needs.jmeter-fastapi-cell.result == 'success' ||
+       needs.jmeter-fastapi-cell.result == 'failure') &&
+      needs.build-backend-python.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: ${{ vars.LOAD_ENVIRONMENT || 'multistack-load' }}
+      url: https://load.autotests.ai/backend-python-django
+    concurrency:
+      group: deploy-autotests-ai-multistack-app-load
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+    env:
+      BACKEND_LANG: python
+      BACKEND_FRAMEWORK: django
+      DEPLOY_APP_DIR: ${{ vars.LOAD_APP_DIR }}
+      DEPLOY_COMPOSE_PROJECT: ${{ vars.LOAD_COMPOSE_PROJECT || 'autotests-ai-multistack-app-load' }}
+      DEPLOY_COMPOSE_ENV_FILE: ${{ vars.LOAD_COMPOSE_ENV_FILE || '' }}
+      DEPLOY_COMPOSE_SERVICES: postgres backend-python-django
+      DEPLOY_SINGLE_BACKEND: "true"
+      DEPLOY_HEALTH_URL: http://127.0.0.1:8822/api/health
+      DEPLOY_HOST: ${{ vars.LOAD_HOST }}
+      DEPLOY_USER: ${{ vars.LOAD_USER }}
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - *checkout
+      - uses: ./backend/.github/actions/deploy
+        with:
+          module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
+          stand: load
+
+  jmeter-django-cell:
+    needs: [deploy-backend-load-django]
+    if: >-
+      always() && !cancelled() &&
+      vars.LOAD_APP_DIR != '' &&
+      needs.deploy-backend-load-django.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      API_BASE_URL: ${{ vars.LOAD_API_URL }}
+      JMETER_ALLOW_PUBLIC: "true"
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+    steps:
+      - *checkout
+      - name: Point JMeter at python-django
+        shell: bash
+        run: |
+          set -euo pipefail
+          src="${API_BASE_URL%/}"
+          case "$src" in
+            *backend-java-spring*) ;;
+            *)
+              echo "STOP: LOAD_API_URL must contain backend-java-spring so the cell can switch: ${src}" >&2
+              exit 1
+              ;;
+          esac
+          dst="${src/backend-java-spring/backend-python-django}"
+          echo "API_BASE_URL=${dst}" >> "${GITHUB_ENV}"
+          echo "==> JMeter origin ${src} → ${dst}"
+      - uses: ./tests/.github/actions/performance
+        with:
+          module_dir: tests/java/tests-java-jmeter
+      - uses: ./tests/.github/actions/performance
+        with:
+          module_dir: tests/kotlin/tests-kotlin-jmeter
+      - uses: ./tests/.github/actions/performance
+        with:
+          module_dir: tests/groovy/tests-groovy-jmeter
+
+  # Standing SUT is java-spring. Restore even if kotlin/python JMeter failed (java was stopped).
   deploy-backend-load-restore:
-    needs: [deploy-backend-load-kotlin, jmeter-kotlin-cell]
+    needs:
+      - deploy-backend-load-kotlin
+      - jmeter-kotlin-cell
+      - deploy-backend-load-flask
+      - jmeter-flask-cell
+      - deploy-backend-load-fastapi
+      - jmeter-fastapi-cell
+      - deploy-backend-load-django
+      - jmeter-django-cell
     if: >-
       always() && !cancelled() &&
       vars.LOAD_APP_DIR != '' &&
       (needs.deploy-backend-load-kotlin.result == 'success' ||
-       needs.deploy-backend-load-kotlin.result == 'failure')
+       needs.deploy-backend-load-kotlin.result == 'failure' ||
+       needs.deploy-backend-load-flask.result == 'success' ||
+       needs.deploy-backend-load-flask.result == 'failure' ||
+       needs.deploy-backend-load-fastapi.result == 'success' ||
+       needs.deploy-backend-load-fastapi.result == 'failure' ||
+       needs.deploy-backend-load-django.result == 'success' ||
+       needs.deploy-backend-load-django.result == 'failure')
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment:
