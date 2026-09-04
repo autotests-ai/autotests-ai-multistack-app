@@ -71,13 +71,21 @@ public final class MobileCapabilities {
     }
 
     private static MutableCapabilities androidSelenoid() {
-        MutableCapabilities caps = baseAndroid();
+        // Selenoid picks the android image by browserName + browserVersion.
+        // The Appium 1.x inside qaguru/android rejects appPackage together with
+        // browserName, so the APK's launcher activity is the wait target.
+        MutableCapabilities caps = new MutableCapabilities();
         String version = MobileConfig.androidVersion();
+        caps.setCapability("platformName", "Android");
         caps.setCapability("browserName", "android");
         caps.setCapability("browserVersion", version);
-        caps.setCapability("version", version);
+        caps.setCapability("appium:automationName", "UiAutomator2");
         caps.setCapability("appium:deviceName", "android");
         caps.setCapability("appium:app", MobileConfig.androidAppUrl());
+        caps.setCapability("appium:appWaitActivity", "*");
+        caps.setCapability("appium:autoGrantPermissions", true);
+        caps.setCapability("appium:noReset", false);
+        caps.setCapability("appium:newCommandTimeout", 120);
         Map<String, Object> selenoid = new HashMap<>();
         selenoid.put("enableVNC", true);
         selenoid.put("enableVideo", true);
