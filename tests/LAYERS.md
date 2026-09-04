@@ -601,3 +601,6 @@ It runs after `infra-tests` on **PR** and **main**, except the backend-only lane
 `ui-tests` (success or skipped — backend-only lane still scans). There is no
 `build-frontend` → `ui-tests` edge (mock does not wait for the GHCR image) and no
 deploy → `integration-tests` edge.
+`build-frontend` is **one** knob cell (`FRONTEND_LANG` + `FRONTEND_FRAMEWORK`). Do not
+add `strategy.matrix` / a ten-SPA `DEPLOY_COMPOSE_SERVICES` list — job `trigger` runs
+`.github/actions/assert-teaching-ci`. Sibling images stay on host compose (`/stack/`).

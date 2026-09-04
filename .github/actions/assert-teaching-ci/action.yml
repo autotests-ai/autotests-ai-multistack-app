@@ -1,0 +1,10 @@
+name: assert-teaching-ci
+description: >-
+  Fail if teaching ci.yml grows jobs.*.strategy / sibling frontend matrix.
+  One cell from knobs; other SPAs stay on host compose.
+runs:
+  using: composite
+  steps:
+    - name: Assert teaching CI is one cell
+      shell: bash
+      run: python3 "${GITHUB_ACTION_PATH}/assert_teaching_ci.py" "${GITHUB_WORKSPACE}/.github/workflows/ci.yml"
