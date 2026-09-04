@@ -171,9 +171,9 @@ Playwright groups pages behind a facade (`App` / `webApp`) — common in Playwri
 |------|------|----------------|
 | Backend unit | `backend/java/backend-java-spring/src/test/` | JaCoCo gate |
 | RTL (TS React) | `frontend/typescript/frontend-typescript-react/src/test/` | Vitest + RTL |
-| RTL (JS React) | `frontend/javascript/frontend-javascript-react/src/test/` | Vitest + RTL (slot) |
-| Angular (slot) | `frontend/<lang>/frontend-*-angular/` (+ `src/test/`) | component tests TBD |
-| Vue (slot) | `frontend/<lang>/frontend-*-vue/` (+ `src/test/`) | component tests TBD |
+| RTL (JS React) | `frontend/javascript/frontend-javascript-react/src/test/` | Vitest + RTL (living) |
+| Angular | `frontend/<lang>/frontend-*-angular/` (+ `src/test/`) | living SPA · component tests |
+| Vue | `frontend/<lang>/frontend-*-vue/` (+ `src/test/`) | living SPA · component tests |
 | Product UI | `frontend/<lang>/frontend-*` | served under `/{frontend}/` |
 
 Paths SSOT: `backend/scripts/paths.sh` · layout: [frontend/README.md](../frontend/README.md)
