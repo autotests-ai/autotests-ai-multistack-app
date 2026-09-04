@@ -1,0 +1,51 @@
+name: smoke
+description: Gatling JVM smoke (1 VU) against API_BASE_URL. No Allure.
+inputs:
+  module_dir:
+    required: true
+    default: tests/java/tests-java-gatling
+  artifact_name:
+    required: false
+    default: gatling-smoke
+runs:
+  using: composite
+  steps:
+    - name: Wait for live API
+      shell: bash
+      run: |
+        set -euo pipefail
+        base="${API_BASE_URL%/}"
+        if [ -z "$base" ]; then
+          echo "STOP: API_BASE_URL is empty" >&2
+          exit 1
+        fi
+        url="${base}/api/health"
+        echo "==> Gatling smoke ${url}"
+        curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${url}"
+    - uses: actions/setup-java@v5
+      with:
+        distribution: temurin
+        java-version: ${{ env.JAVA_VERSION }}
+    - uses: gradle/actions/setup-gradle@v6
+      with:
+        cache-read-only: true
+        cache-encryption-key: ${{ env.GRADLE_ENCRYPTION_KEY }}
+      env:
+        GRADLE_BUILD_ACTION_CACHE_KEY_JOB: gatling-smoke
+    - name: Run Gatling smoke (Gradle)
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        API_BASE_URL: ${{ env.API_BASE_URL }}
+        GATLING_ALLOW_PUBLIC: ${{ env.GATLING_ALLOW_PUBLIC }}
+      run: ./gradlew gatlingRun
+    - name: Publish Gatling report
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ inputs.artifact_name }}
+        path: |
+          ${{ inputs.module_dir }}/build/reports/gatling/**
+        if-no-files-found: ignore
+        retention-days: 7

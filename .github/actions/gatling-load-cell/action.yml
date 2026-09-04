@@ -1,0 +1,44 @@
+name: gatling-load-cell
+description: >-
+  Point living Gatling (Java DSL + Kotlin DSL) at one load-SUT nginx mount.
+  Rewrites API_BASE_URL (LOAD_API_URL) in bash — GitHub expressions have no
+  replace(). Fail-closed if the origin does not contain backend-java-spring.
+  Not a matrix; the job graph still names each cell. Not k6 / Locust / Tank /
+  Scala / JS Gatling.
+inputs:
+  cell:
+    required: true
+    description: Compose service / public mount (backend-java-spring, backend-kotlin-spring)
+runs:
+  using: composite
+  steps:
+    - name: Point Gatling at the live cell
+      shell: bash
+      env:
+        LOAD_CELL: ${{ inputs.cell }}
+      run: |
+        set -euo pipefail
+        case "${LOAD_CELL}" in
+          backend-*) ;;
+          *)
+            echo "STOP: cell must be a backend-* compose service, got ${LOAD_CELL}" >&2
+            exit 1
+            ;;
+        esac
+        src="${API_BASE_URL%/}"
+        case "$src" in
+          *backend-java-spring*) ;;
+          *)
+            echo "STOP: LOAD_API_URL must contain backend-java-spring so the cell can switch: ${src}" >&2
+            exit 1
+            ;;
+        esac
+        dst="${src/backend-java-spring/${LOAD_CELL}}"
+        echo "API_BASE_URL=${dst}" >> "${GITHUB_ENV}"
+        echo "==> Gatling origin ${src} → ${dst}"
+    - uses: ./tests/.github/actions/gatling
+      with:
+        module_dir: tests/java/tests-java-gatling
+    - uses: ./tests/.github/actions/gatling
+      with:
+        module_dir: tests/kotlin/tests-kotlin-gatling

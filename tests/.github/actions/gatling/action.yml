@@ -1,0 +1,21 @@
+name: gatling
+description: >-
+  Dispatch load smoke to a living Gatling JVM DSL cell (Java / Kotlin).
+  Not JMeter. Not Scala / JS / TS Gatling slots.
+inputs:
+  module_dir:
+    required: false
+    default: tests/java/tests-java-gatling
+runs:
+  using: composite
+  steps:
+    # GitHub Actions expressions have no replace(); basename is the artifact id.
+    - id: art
+      shell: bash
+      run: echo "name=gatling-$(basename "${{ inputs.module_dir }}")" >> "$GITHUB_OUTPUT"
+    # GitHub does not interpolate `uses:`; the Java smoke action is the runner.
+    # It only `cd`s into module_dir and runs `./gradlew gatlingRun`.
+    - uses: ./tests/java/tests-java-gatling/.github/actions/smoke
+      with:
+        module_dir: ${{ inputs.module_dir }}
+        artifact_name: ${{ steps.art.outputs.name }}

@@ -25,11 +25,13 @@ name: CI
 #   deploy-*-stage ← matching build + sonar-backend / sonar-frontend + preempt/yield (STAGE_APP_DIR, cd_stage)
 #   api-tests-stage ← deploy-backend-stage + infra-tests (STAGE_APP_DIR, run_api_stage)
 #   deploy-backend-load ← api-tests-stage + build-backend (LOAD_APP_DIR; skip if unset; one live backend)
-#   jmeter-smoke ← deploy-backend-load (etalon JMX vs java cell; not Gatling)
-#   deploy-backend-load-kotlin ← jmeter-smoke + build-backend-kotlin (stop java, up kotlin)
+#   jmeter-smoke ← deploy-backend-load (etalon JMX vs java cell)
+#   gatling-java-cell ← jmeter-smoke (./.github/actions/gatling-load-cell; java+kotlin DSL vs java)
+#   deploy-backend-load-kotlin ← gatling-java-cell + build-backend-kotlin (stop java, up kotlin)
 #   jmeter-kotlin-cell ← deploy-backend-load-kotlin (./.github/actions/jmeter-load-cell)
-#   deploy-backend-load-flask ← jmeter-kotlin-cell + build-backend-python (stop kotlin, up flask)
-#   jmeter-flask-cell ← deploy-backend-load-flask (same composite, cell=backend-python-flask)
+#   gatling-kotlin-cell ← jmeter-kotlin-cell (same gatling composite vs kotlin)
+#   deploy-backend-load-flask ← gatling-kotlin-cell + build-backend-python (stop kotlin, up flask)
+#   jmeter-flask-cell ← deploy-backend-load-flask (jmeter-load-cell, cell=backend-python-flask)
 #   deploy-backend-load-fastapi ← jmeter-flask-cell (stop flask, up fastapi)
 #   jmeter-fastapi-cell ← deploy-backend-load-fastapi
 #   deploy-backend-load-django ← jmeter-fastapi-cell (stop fastapi, up django)
@@ -888,14 +890,37 @@ jobs:
         with:
           module_dir: tests/java/tests-java-jmeter
 
+  # Host is on java-spring. gatling-load-cell rewrites LOAD_API_URL
+  # (bash; GHA has no replace()) so pathPrefix matches the live nginx mount.
+  gatling-java-cell:
+    needs: [jmeter-smoke]
+    if: >-
+      always() && !cancelled() &&
+      vars.LOAD_APP_DIR != '' &&
+      needs.jmeter-smoke.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      API_BASE_URL: ${{ vars.LOAD_API_URL }}
+      GATLING_ALLOW_PUBLIC: "true"
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+    steps:
+      - *checkout
+      - uses: ./.github/actions/gatling-load-cell
+        with:
+          cell: backend-java-spring
+
   # Swap the load VM to kotlin-spring (stop java). Same SSH concurrency group as
-  # deploy-backend-load so the two deploys cannot overlap.
+  # deploy-backend-load so the two deploys cannot overlap. Waits for Gatling on
+  # java so two injectors do not share the 2 vCPU VM.
   deploy-backend-load-kotlin:
-    needs: [jmeter-smoke, build-backend-kotlin]
+    needs: [jmeter-smoke, gatling-java-cell, build-backend-kotlin]
     if: >-
       always() && !cancelled() &&
       vars.LOAD_APP_DIR != '' &&
       needs.jmeter-smoke.result == 'success' &&
+      (needs.gatling-java-cell.result == 'success' ||
+       needs.gatling-java-cell.result == 'failure') &&
       needs.build-backend-kotlin.result == 'success'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -948,13 +973,33 @@ jobs:
         with:
           cell: backend-kotlin-spring
 
+  gatling-kotlin-cell:
+    needs: [jmeter-kotlin-cell]
+    if: >-
+      always() && !cancelled() &&
+      vars.LOAD_APP_DIR != '' &&
+      needs.jmeter-kotlin-cell.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      API_BASE_URL: ${{ vars.LOAD_API_URL }}
+      GATLING_ALLOW_PUBLIC: "true"
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+    steps:
+      - *checkout
+      - uses: ./.github/actions/gatling-load-cell
+        with:
+          cell: backend-kotlin-spring
+
   # Swap the load VM to python-flask (stop kotlin). Same SSH concurrency group.
   deploy-backend-load-flask:
-    needs: [jmeter-kotlin-cell, build-backend-python]
+    needs: [jmeter-kotlin-cell, gatling-kotlin-cell, build-backend-python]
     if: >-
       always() && !cancelled() &&
       vars.LOAD_APP_DIR != '' &&
       needs.jmeter-kotlin-cell.result == 'success' &&
+      (needs.gatling-kotlin-cell.result == 'success' ||
+       needs.gatling-kotlin-cell.result == 'failure') &&
       needs.build-backend-python.result == 'success'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -1121,11 +1166,14 @@ jobs:
         with:
           cell: backend-python-django
 
-  # Standing SUT is java-spring. Restore even if kotlin/python JMeter failed (java was stopped).
+  # Standing SUT is java-spring. Restore even if kotlin/python JMeter or Gatling
+  # failed (java was stopped). One backend at a time (stop, not pause).
   deploy-backend-load-restore:
     needs:
+      - gatling-java-cell
       - deploy-backend-load-kotlin
       - jmeter-kotlin-cell
+      - gatling-kotlin-cell
       - deploy-backend-load-flask
       - jmeter-flask-cell
       - deploy-backend-load-fastapi

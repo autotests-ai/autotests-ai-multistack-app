@@ -15,4 +15,4 @@ Stand: `apiBaseUrl` / `API_BASE_URL` → [http://localhost:8800](http://localhos
 
 Isolated public SUT (Grafana VM, not shared prod): `-Dgatling.allowPublic=true`.
 
-Report: `build/reports/gatling/`. JMeter JMX is the **etalon living** cell: [`tests-java-jmeter`](../../java/tests-java-jmeter/). Java DSL sibling: [`tests-java-gatling`](../../java/tests-java-gatling/). Scala / JS / TS SDKs stay slots. This folder stays a living Kotlin DSL sibling (not CI). Student emit: `kotlin-gatling` (templates still planned — do not copy this folder).
+Report: `build/reports/gatling/`. JMeter JMX is the **etalon living** cell: [`tests-java-jmeter`](../../java/tests-java-jmeter/). Java DSL sibling: [`tests-java-gatling`](../../java/tests-java-gatling/). Scala / JS / TS SDKs stay slots. CI: named jobs `gatling-java-cell` / `gatling-kotlin-cell` (`gatling-load-cell`, not a matrix) against `load.autotests.ai` java/kotlin Spring mounts. Student emit: `kotlin-gatling` (templates still planned — do not copy this folder).
