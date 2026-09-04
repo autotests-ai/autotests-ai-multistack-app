@@ -1,1 +1,1 @@
-{"id":"29ddddd4f6a0ac9c51f8aab8108ab60a","fullName":"tests.e2e.LogoutTests.shouldLogoutAfterFormLogin","name":"User can logout after form login","status":"passed","testResultsByEnv":{"default":"5f63326985bf622d03ef5291fbbeb259"}}
+{"id":"29ddddd4f6a0ac9c51f8aab8108ab60a","fullName":"tests.e2e.LogoutTests.shouldLogoutAfterFormLogin","name":"User can logout after form login","status":"passed","testResultsByEnv":{"default":"ea16ce4a3cd0d2e85fda18fee29aa3d6"}}

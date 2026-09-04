@@ -1,1 +1,1 @@
-{"id":"12c2c77f48fdcc29a9b633d8108432b8","fullName":"dev.multistack.app.repository.FlywayMigrationTest.migrationsSeedItems","name":"migrations apply and seed the items catalogue (V1)","status":"passed","testResultsByEnv":{"default":"7c0eb0a4c2e4e8bc92923a9eb46e7c0d"}}
+{"id":"12c2c77f48fdcc29a9b633d8108432b8","fullName":"dev.multistack.app.repository.FlywayMigrationTest.migrationsSeedItems","name":"migrations apply and seed the items catalogue (V1)","status":"passed","testResultsByEnv":{"default":"110f986dff2600d273cca499f9b65872"}}

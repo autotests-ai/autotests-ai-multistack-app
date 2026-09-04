@@ -1,1 +1,1 @@
-{"id":"0d5424d189a075ccf39acf9e9b2d3080","fullName":"frontend-typescript-react:src/test/lib/auth.test.ts#fetchProfile fetches /auth/me with the bearer token","name":"fetches /auth/me with the bearer token","status":"passed","testResultsByEnv":{"default":"b464f2796e210e8b91f9f0354a70963b"}}
+{"id":"0d5424d189a075ccf39acf9e9b2d3080","fullName":"frontend-typescript-react:src/test/lib/auth.test.ts#fetchProfile fetches /auth/me with the bearer token","name":"fetches /auth/me with the bearer token","status":"passed","testResultsByEnv":{"default":"6c064c94341e61c03bee32a781175b6a"}}

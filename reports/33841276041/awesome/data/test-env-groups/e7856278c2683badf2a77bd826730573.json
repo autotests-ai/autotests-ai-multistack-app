@@ -1,1 +1,1 @@
-{"id":"e7856278c2683badf2a77bd826730573","fullName":"tests.api.AuthApiTests.profileWithGarbageToken","name":"GET /api/auth/me with a garbage token returns 401","status":"passed","testResultsByEnv":{"default":"bd0eff4e39c98019a067c95be0483527"}}
+{"id":"e7856278c2683badf2a77bd826730573","fullName":"tests.api.AuthApiTests.profileWithGarbageToken","name":"GET /api/auth/me with a garbage token returns 401","status":"passed","testResultsByEnv":{"default":"c1752900d4be000481f71f69795a99cf"}}

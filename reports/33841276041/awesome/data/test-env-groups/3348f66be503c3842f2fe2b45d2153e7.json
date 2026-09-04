@@ -1,1 +1,1 @@
-{"id":"3348f66be503c3842f2fe2b45d2153e7","fullName":"tests.api.AuthApiTests.loginWithValidCredentials","name":"POST /api/auth/login returns the auth contract for a seeded user","status":"passed","testResultsByEnv":{"default":"5eee06541ebd87cc6ca7d63ebae5ea7d"}}
+{"id":"3348f66be503c3842f2fe2b45d2153e7","fullName":"tests.api.AuthApiTests.loginWithValidCredentials","name":"POST /api/auth/login returns the auth contract for a seeded user","status":"passed","testResultsByEnv":{"default":"bba57d9e66648b673d8de123e5151110"}}

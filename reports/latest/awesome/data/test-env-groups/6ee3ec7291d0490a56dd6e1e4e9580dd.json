@@ -1,1 +1,1 @@
-{"id":"6ee3ec7291d0490a56dd6e1e4e9580dd","fullName":"dev.multistack.app.service.ItemServiceTest.listItemsMapsRows","name":"listItems maps repository rows to DTOs ordered by id","status":"passed","testResultsByEnv":{"default":"9d8288b523c11e76b901073f06a95fec"}}
+{"id":"6ee3ec7291d0490a56dd6e1e4e9580dd","fullName":"dev.multistack.app.service.ItemServiceTest.listItemsMapsRows","name":"listItems maps repository rows to DTOs ordered by id","status":"passed","testResultsByEnv":{"default":"9d9ab11046fbbb457baee2eef4989cfb"}}

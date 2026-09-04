@@ -1,1 +1,1 @@
-{"id":"c74235539e499c118fc6c870fb44a85a","fullName":"dev.multistack.app.config.SecurityChainTest.actuatorPrometheusNotOkOnApiPort","name":"GET /actuator/prometheus on the API port is not 200","status":"passed","testResultsByEnv":{"default":"90542b23f83e7d225f6b607832eacea8"}}
+{"id":"c74235539e499c118fc6c870fb44a85a","fullName":"dev.multistack.app.config.SecurityChainTest.actuatorPrometheusNotOkOnApiPort","name":"GET /actuator/prometheus on the API port is not 200","status":"passed","testResultsByEnv":{"default":"85fb91affb8640368e10a5f3eda6feaf"}}

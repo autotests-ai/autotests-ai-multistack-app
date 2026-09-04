@@ -1,1 +1,1 @@
-{"id":"b9ad8b9a38eb876def451025a5aa0a87","fullName":"tests.e2e.RegisterTests.shouldRegisterNewUser","name":"New user can register and land on home","status":"passed","testResultsByEnv":{"default":"06e96eeeb4510d3ae0ab674deb08de7a"}}
+{"id":"b9ad8b9a38eb876def451025a5aa0a87","fullName":"tests.e2e.RegisterTests.shouldRegisterNewUser","name":"New user can register and land on home","status":"passed","testResultsByEnv":{"default":"95838e419b9e505872d4d308c65d5dcd"}}
