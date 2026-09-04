@@ -1,1 +1,0 @@
-{"id":"cc9afc431a65c67d7c4be9df2e1ef861","fullName":"frontend-typescript-react:src/test/lib/auth.test.ts#network failures logout is a no-op when there is no session","name":"logout is a no-op when there is no session","status":"passed","testResultsByEnv":{"default":"e8199437561cac3f0c5bc3194078aa80"}}
