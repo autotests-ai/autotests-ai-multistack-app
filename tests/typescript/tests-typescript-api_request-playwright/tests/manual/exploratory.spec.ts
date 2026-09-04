@@ -1,4 +1,4 @@
-const { test } = require('@playwright/test');
+import { test } from '@playwright/test';
 
 test.describe('Exploratory manual', { tag: ['@manual'] }, () => {
   test('Home residual: 390px viewport and offline error', async () => {
