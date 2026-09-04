@@ -31,7 +31,7 @@ tests/
     tests-csharp-xunit-api_request-playwright/           # active — UI+HTTP Playwright + in-cell APIRequest
     tests-csharp-xunit-playwright/                   # slot — UI-only Playwright (no REST)
   groovy/
-    tests-groovy-jmeter/                             # slot — JMeter JSR223
+    tests-groovy-jmeter/                             # active — JMeter JSR223 Groovy sibling
   kotlin/
     tests-kotlin-junit5-ktor-selenide/     # active — UI+HTTP Selenide + in-cell Ktor
     tests-kotlin-junit5-ktor-selenium/    # active — UI+HTTP Selenium + in-cell Ktor

@@ -99,7 +99,7 @@ Full IDs live in hub [`matrix.yaml`](../../matrix.yaml) `tests.modules` (`status
 | `tests-kotlin-gatling` | **active** — Gatling Kotlin DSL sibling, `layers: [performance]` |
 | `tests-kotlin-jmeter` | **active** — JMeter Kotlin TreeBuilder sibling, `layers: [performance]` |
 | `tests-scala-gatling` | slot — Gatling Scala DSL |
-| `tests-groovy-jmeter` | slot — JMeter JSR223 Groovy |
+| `tests-groovy-jmeter` | **active** — JMeter JSR223 Groovy sibling, `layers: [performance]` |
 | `tests-go-testing-net_http` | **active** — HTTP block (`net/http` + Allure Go + testify) |
 | `tests-go-testing-api_request-playwright` | **active** — UI+HTTP Playwright + in-cell APIRequest |
 | `tests-go-testing-playwright` | slot — **UI-only** Playwright (no REST) |

@@ -2,4 +2,4 @@
 
 | Folder | Role |
 |--------|------|
-| `tests-groovy-jmeter/` | slot — JMeter JSR223 Groovy (`layers: [performance]`) |
+| `tests-groovy-jmeter/` | **active** — JMeter JSR223 Groovy sibling (`layers: [performance]`) |

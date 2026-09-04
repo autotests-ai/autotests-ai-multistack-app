@@ -4,7 +4,7 @@ Gradle · Apache JMeter **Kotlin TreeBuilder DSL** (5.6+) · `layers: [performan
 
 Smoke is **1 thread / 1 loop** against the local Java Spring API. This is not a load against [autotests.ai](https://autotests.ai/) or Box2.
 
-Source of truth is Kotlin (`src/main/kotlin/load/AuthApiPlan.kt`) — Apache JMeter 5.6 [TreeBuilder DSL](https://jmeter.apache.org/usermanual/build-programmatic-test-plan.html) (experimental; GUI **Copy Code**). Not abstracta `jmeter-java-dsl`. `./gradlew writeJmx` materializes JMX for the stock CLI. The JMX etalon stays [`tests-java-jmeter`](../../java/tests-java-jmeter/). Groovy JSR223 stays the slot [`tests-groovy-jmeter`](../../groovy/tests-groovy-jmeter/).
+Source of truth is Kotlin (`src/main/kotlin/load/AuthApiPlan.kt`) — Apache JMeter 5.6 [TreeBuilder DSL](https://jmeter.apache.org/usermanual/build-programmatic-test-plan.html) (experimental; GUI **Copy Code**). Not abstracta `jmeter-java-dsl`. `./gradlew writeJmx` materializes JMX for the stock CLI. The JMX etalon stays [`tests-java-jmeter`](../../java/tests-java-jmeter/). Groovy JSR223 sibling stays [`tests-groovy-jmeter`](../../groovy/tests-groovy-jmeter/).
 
 ```bash
 cd tests/kotlin/tests-kotlin-jmeter

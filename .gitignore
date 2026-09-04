@@ -27,6 +27,9 @@ tests/kotlin/tests-kotlin-gatling/bin/
 tests/kotlin/tests-kotlin-jmeter/build/
 tests/kotlin/tests-kotlin-jmeter/.gradle/
 tests/kotlin/tests-kotlin-jmeter/bin/
+tests/groovy/tests-groovy-jmeter/build/
+tests/groovy/tests-groovy-jmeter/.gradle/
+tests/groovy/tests-groovy-jmeter/bin/
 tests/_tests-meta/_ethalon/.gradle/
 
 # IDE

@@ -1,0 +1,242 @@
+/*
+ * tests-groovy — load block · Apache JMeter JSR223 Groovy (sibling)
+ *
+ *   ./gradlew jmeterSmoke
+ *   ./gradlew jmeterSmoke -DapiBaseUrl=http://localhost:8800
+ *   ./gradlew jmeter -Dthreads=10 -Dloops=-1 -Dduration=30
+ *
+ * Default is 1 thread / 1 loop against the local Java Spring API (:8800).
+ * Isolated stand: -Djmeter.allowPublic=true -DapiBaseUrl=https://…
+ */
+
+buildscript {
+    ext {
+        javaVersion = 21
+        jmeterVersion = '5.6.3'
+        jmeterSha512 = '5978a1a35edb5a7d428e270564ff49d2b1b257a65e17a759d259a9283fc17093e522fe46f474a043864aea6910683486340706d745fcdf3db1505fd71e689083'
+        defaultApiBaseUrl = 'http://localhost:8800'
+    }
+}
+
+plugins {
+    id 'java'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(javaVersion)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+def pass = { String key, String envName, String fallback = '' ->
+    def fromProp = System.getProperty(key)
+    if (fromProp != null && !fromProp.isBlank()) {
+        return fromProp.trim()
+    }
+    def fromEnv = System.getenv(envName)
+    if (fromEnv != null && !fromEnv.isBlank()) {
+        return fromEnv.trim()
+    }
+    return fallback
+}
+
+def stripTrailingSlash = { String url ->
+    url.endsWith('/') ? url.substring(0, url.length() - 1) : url
+}
+
+def parseApiBase = { String raw ->
+    def uri = new URI(raw)
+    def protocol = uri.scheme ?: 'http'
+    def host = uri.host ?: 'localhost'
+    def port = uri.port
+    if (port < 0) {
+        port = 'https'.equalsIgnoreCase(protocol) ? 443 : 80
+    }
+    def pathPrefix = (uri.path ?: '').replaceAll(/\/+$/, '')
+    return [
+            protocol   : protocol,
+            serverName : host,
+            port       : String.valueOf(port),
+            pathPrefix : pathPrefix,
+    ]
+}
+
+def allowPublic = {
+    Boolean.parseBoolean(pass('jmeter.allowPublic', 'JMETER_ALLOW_PUBLIC', 'false'))
+}
+
+def refuseSharedProd = { String baseUrl ->
+    def lower = baseUrl.toLowerCase()
+    def shared = lower.contains('autotests.ai') || lower.contains('qa.guru')
+    if (shared && !allowPublic()) {
+        throw new GradleException(
+                "Refusing ${baseUrl} — isolated SUT only. Pass -Djmeter.allowPublic=true when the host is a dedicated load stand.")
+    }
+}
+
+def apiBaseUrl = stripTrailingSlash(pass('apiBaseUrl', 'API_BASE_URL', defaultApiBaseUrl))
+def username = pass('username', 'LOAD_USERNAME', 'user1')
+def password = pass('password', 'LOAD_PASSWORD', 'password1')
+def threads = pass('threads', 'JMETER_THREADS', '1')
+def loops = pass('loops', 'JMETER_LOOPS', '1')
+def ramp = pass('ramp', 'JMETER_RAMP', '0')
+def duration = pass('duration', 'JMETER_DURATION', '0')
+
+def jmeterArchiveName = "apache-jmeter-${jmeterVersion}.tgz"
+def jmeterUrl = "https://archive.apache.org/dist/jmeter/binaries/${jmeterArchiveName}"
+def jmeterCacheDir = file("${gradle.gradleUserHomeDir}/caches/apache-jmeter/${jmeterVersion}")
+def jmeterArchive = new File(jmeterCacheDir, jmeterArchiveName)
+def jmeterHomeDir = layout.buildDirectory.dir("jmeter-home/apache-jmeter-${jmeterVersion}")
+def jmxFile = layout.projectDirectory.file('src/jmeter/auth-api.jmx')
+def scriptDir = layout.projectDirectory.dir('src/jmeter/scripts').asFile.absolutePath
+def resultsDir = layout.buildDirectory.dir('jmeter')
+
+tasks.register('downloadJMeter') {
+    outputs.file(jmeterArchive)
+    doLast {
+        jmeterCacheDir.mkdirs()
+        if (jmeterArchive.exists() && jmeterArchive.length() > 1_000_000) {
+            verifyJmeterSha(jmeterArchive, jmeterSha512)
+            return
+        }
+        logger.lifecycle("Downloading Apache JMeter ${jmeterVersion}")
+        jmeterArchive.withOutputStream { output ->
+            new URI(jmeterUrl).toURL().openStream().withStream { input ->
+                output << input
+            }
+        }
+        verifyJmeterSha(jmeterArchive, jmeterSha512)
+    }
+}
+
+tasks.register('extractJMeter') {
+    dependsOn downloadJMeter
+    outputs.dir(jmeterHomeDir)
+    doLast {
+        def dest = jmeterHomeDir.get().asFile
+        def marker = new File(dest, 'bin/jmeter')
+        if (marker.exists()) {
+            return
+        }
+        dest.parentFile.mkdirs()
+        copy {
+            from tarTree(resources.gzip(jmeterArchive))
+            into dest.parentFile
+        }
+        if (!marker.exists()) {
+            throw new GradleException("JMeter extract missing ${marker}")
+        }
+        marker.setExecutable(true)
+    }
+}
+
+def runJmeter = { String taskThreads, String taskLoops, String taskRamp, String taskDuration ->
+    refuseSharedProd(apiBaseUrl)
+    def parsed = parseApiBase(apiBaseUrl)
+    def home = jmeterHomeDir.get().asFile
+    def binName = System.getProperty('os.name', '').toLowerCase().contains('windows') ? 'jmeter.bat' : 'jmeter'
+    def bin = new File(home, "bin/${binName}")
+    def out = resultsDir.get().asFile
+    delete out
+    out.mkdirs()
+    def jtl = new File(out, 'results.jtl')
+    def report = new File(out, 'report')
+    def logFile = new File(out, 'jmeter.log')
+    def javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(javaVersion)
+    }.get()
+    def execOps = project.services.get(org.gradle.process.ExecOperations)
+    execOps.exec {
+        workingDir home
+        executable bin
+        environment 'JAVA_HOME', javaLauncher.metadata.installationPath.asFile.absolutePath
+        args '-n',
+                '-t', jmxFile.asFile.absolutePath,
+                '-l', jtl.absolutePath,
+                '-j', logFile.absolutePath,
+                '-e', '-o', report.absolutePath,
+                "-JapiBaseUrl=${apiBaseUrl}",
+                "-Jprotocol=${parsed.protocol}",
+                "-JserverName=${parsed.serverName}",
+                "-Jport=${parsed.port}",
+                "-JpathPrefix=${parsed.pathPrefix}",
+                "-Jusername=${username}",
+                "-Jpassword=${password}",
+                "-Jthreads=${taskThreads}",
+                "-Jloops=${taskLoops}",
+                "-Jramp=${taskRamp}",
+                "-Jduration=${taskDuration}",
+                "-Jscheduler=${Integer.parseInt(taskDuration) > 0}",
+                "-JscriptDir=${scriptDir}"
+    }
+    assertJtlOk(jtl)
+}
+
+tasks.register('jmeter') {
+    group = 'verification'
+    description = 'Run JSR223 Groovy plan (default 1 thread / 1 loop).'
+    dependsOn extractJMeter
+    doLast {
+        runJmeter(threads, loops, ramp, duration)
+    }
+}
+
+tasks.register('jmeterSmoke') {
+    group = 'verification'
+    description = 'JMeter Groovy JSR223 smoke: 1 thread, 1 loop, ramp 0.'
+    dependsOn extractJMeter
+    doLast {
+        runJmeter('1', '1', '0', '0')
+    }
+}
+
+static void verifyJmeterSha(File archive, String expectedHex) {
+    def actual = java.security.MessageDigest.getInstance('SHA-512').digest(archive.bytes)
+            .collect { String.format('%02x', it) }.join('')
+    if (actual != expectedHex) {
+        archive.delete()
+        throw new GradleException("JMeter archive SHA-512 mismatch: ${actual}")
+    }
+}
+
+static void assertJtlOk(File jtl) {
+    if (!jtl.exists() || jtl.length() == 0) {
+        throw new GradleException("JMeter produced no results at ${jtl}")
+    }
+    def lines = jtl.readLines()
+    if (lines.size() < 2) {
+        throw new GradleException("JMeter JTL has no samples: ${jtl}")
+    }
+    def header = lines[0].split(',', -1)
+    def successIdx = header.findIndexOf { it == 'success' }
+    def labelIdx = header.findIndexOf { it == 'label' }
+    def codeIdx = header.findIndexOf { it == 'responseCode' }
+    if (successIdx < 0) {
+        throw new GradleException("JMeter JTL missing success column: ${lines[0]}")
+    }
+    def failed = []
+    def total = 0
+    lines.drop(1).each { line ->
+        if (line.isBlank()) {
+            return
+        }
+        def cols = line.split(',', -1)
+        total += 1
+        if (cols.size() <= successIdx || cols[successIdx] != 'true') {
+            def label = labelIdx >= 0 && cols.size() > labelIdx ? cols[labelIdx] : '?'
+            def code = codeIdx >= 0 && cols.size() > codeIdx ? cols[codeIdx] : '?'
+            failed << "${label} (${code})"
+        }
+    }
+    if (total == 0) {
+        throw new GradleException("JMeter JTL has no samples: ${jtl}")
+    }
+    if (!failed.isEmpty()) {
+        throw new GradleException("JMeter sample errors ${failed.size()}/${total}: ${failed.join(', ')}")
+    }
+    println "JMeter OK ${total}/${total}"
+}
