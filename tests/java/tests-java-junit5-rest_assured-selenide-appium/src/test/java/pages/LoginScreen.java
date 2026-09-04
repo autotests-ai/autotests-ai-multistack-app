@@ -1,10 +1,7 @@
 package pages;
 
 import com.codeborne.selenide.SelenideElement;
-import com.codeborne.selenide.WebDriverRunner;
-import config.AppPlatform;
-import io.appium.java_client.AppiumBy;
-import io.appium.java_client.HidesKeyboard;
+import helpers.NativeInput;
 import io.qameta.allure.Step;
 
 import static com.codeborne.selenide.Condition.text;
@@ -19,6 +16,7 @@ public class LoginScreen {
     private final SelenideElement passwordInput = $(id("password-input"));
     private final SelenideElement submitButton = $(id("submit-button"));
     private final SelenideElement errorMessage = $(id("error-message"));
+    private final SelenideElement formTitle = $(id("login-form-title"));
 
     @Step("Login screen is open")
     public LoginScreen shouldBeOpen() {
@@ -38,26 +36,26 @@ public class LoginScreen {
 
     @Step("Type username: {username}")
     public LoginScreen typeUsername(String username) {
-        typeInto(loginInput, username);
+        NativeInput.typeInto(loginInput, username);
         return this;
     }
 
     @Step("Type password")
     public LoginScreen typePassword(String password) {
-        typeInto(passwordInput, password);
+        NativeInput.typeInto(passwordInput, password);
         return this;
     }
 
     @Step("Submit login form")
     public HomeScreen submit() {
-        hideKeyboard();
+        NativeInput.hideKeyboard();
         submitButton.shouldBe(visible).click();
         return new HomeScreen();
     }
 
     @Step("Submit login form expecting validation error")
     public LoginScreen submitExpectingError() {
-        hideKeyboard();
+        NativeInput.hideKeyboard();
         submitButton.shouldBe(visible).click();
         errorMessage.shouldBe(visible);
         return this;
@@ -69,31 +67,16 @@ public class LoginScreen {
         return this;
     }
 
-    /**
-     * Compose puts {@code contentDescription} on the semantics node, which
-     * UiAutomator will not treat as an {@code EditText}. Click the testid, then
-     * type into the focused field (the same string works as iOS identifier).
-     */
-    private static void typeInto(SelenideElement field, String value) {
-        field.shouldBe(visible).click();
-        if (AppPlatform.current() == AppPlatform.ANDROID) {
-            $(AppiumBy.androidUIAutomator(
-                    "new UiSelector().className(\"android.widget.EditText\").focused(true)"))
-                    .shouldBe(visible)
-                    .sendKeys(value);
-            return;
-        }
-        field.sendKeys(value);
+    @Step("Verify form title: {message}")
+    public LoginScreen shouldHaveFormTitle(String message) {
+        formTitle.shouldHave(text(message));
+        return this;
     }
 
-    private static void hideKeyboard() {
-        var driver = WebDriverRunner.getWebDriver();
-        if (driver instanceof HidesKeyboard hides) {
-            try {
-                hides.hideKeyboard();
-            } catch (Exception ignored) {
-                // iOS software keyboard, or already hidden
-            }
-        }
+    @Step("Open register from the login footer link")
+    public RegisterScreen clickRegisterLink() {
+        NativeInput.hideKeyboard();
+        $(id("register-link")).shouldBe(visible).click();
+        return new RegisterScreen();
     }
 }

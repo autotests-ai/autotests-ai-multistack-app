@@ -33,6 +33,15 @@ public final class AuthSetup {
         }
     }
 
+    @Step("API: login as {username}")
+    public static void login(String username, String password) {
+        HttpResponse<String> response = send("POST", "/auth/login", json(username, password), null);
+        if (response.statusCode() != 200) {
+            throw new IllegalStateException(
+                    "login failed: " + response.statusCode() + " " + response.body());
+        }
+    }
+
     /** Best-effort cleanup: must not mask the original test failure. */
     public static void deleteAccountQuietly(String username, String password) {
         try {
