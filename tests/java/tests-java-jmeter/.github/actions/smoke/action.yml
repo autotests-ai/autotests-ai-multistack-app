@@ -4,6 +4,9 @@ inputs:
   module_dir:
     required: true
     default: tests/java/tests-java-jmeter
+  artifact_name:
+    required: false
+    default: jmeter-smoke
 runs:
   using: composite
   steps:
@@ -41,7 +44,7 @@ runs:
       continue-on-error: true
       uses: actions/upload-artifact@v7
       with:
-        name: jmeter-${{ replace(inputs.module_dir, '/', '-') }}
+        name: ${{ inputs.artifact_name }}
         path: |
           ${{ inputs.module_dir }}/build/jmeter/results.jtl
           ${{ inputs.module_dir }}/build/jmeter/report/**

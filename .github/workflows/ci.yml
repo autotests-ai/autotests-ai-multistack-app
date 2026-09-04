@@ -18,12 +18,16 @@ name: CI
 #   sonar-tests ← infra-tests (slice≠backend); does not gate deploy or publish
 #   ui-tests ← frontend-unit-tests + infra-tests (PR; frontend lane; dispatch run_mock)
 #   sonar-frontend ← frontend-unit-tests + ui-tests
-#   build-backend ← backend-unit-tests + integration-tests (backend lane) · build-frontend ← ui-tests (frontend lane)
+#   build-backend ← backend-unit-tests + integration-tests (backend lane)
+#   build-backend-kotlin ← same needs (GHCR sibling for the load SUT; not a matrix)
+#   build-frontend ← ui-tests (frontend lane)
 #   deploy-*-stage ← matching build + sonar-backend / sonar-frontend + preempt/yield (STAGE_APP_DIR, cd_stage)
 #   api-tests-stage ← deploy-backend-stage + infra-tests (STAGE_APP_DIR, run_api_stage)
-#   deploy-backend-load ← api-tests-stage + build-backend (LOAD_APP_DIR; skip if unset)
+#   deploy-backend-load ← api-tests-stage + build-backend (LOAD_APP_DIR; skip if unset; one live backend)
 #   jmeter-smoke ← deploy-backend-load (etalon JMX vs java cell; not Gatling)
-#   jmeter-kotlin-cell ← jmeter-smoke (rewrite URL to kotlin-spring; java-jmeter + kotlin-jmeter + groovy-jmeter)
+#   deploy-backend-load-kotlin ← jmeter-smoke + build-backend-kotlin (stop java, up kotlin)
+#   jmeter-kotlin-cell ← deploy-backend-load-kotlin (java/kotlin/groovy JMeter vs kotlin origin)
+#   deploy-backend-load-restore ← jmeter-kotlin-cell (always bring java back)
 #   e2e-tests-stage ← api-tests-stage + deploy-frontend-stage + infra-tests (STAGE_APP_DIR, run_e2e_stage)
 #   (load jobs run parallel with e2e-tests-stage; prod deploy-* must NOT need them)
 #   deploy-* ← matching build + sonar-backend / sonar-frontend + e2e-tests-stage (cd_production)
@@ -498,6 +502,31 @@ jobs:
         with:
           module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
 
+  # Load-SUT sibling image. Not a GHA matrix: one extra named job, same knobs
+  # overridden on the job. Stage/prod CD still publishes only the default cell.
+  build-backend-kotlin:
+    needs: [backend-unit-tests, integration-tests, trigger]
+    if: >-
+      !cancelled() &&
+      needs.backend-unit-tests.result == 'success' &&
+      (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped') &&
+      needs.trigger.outputs.backend == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+      actions: write
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BACKEND_LANG: kotlin
+      BACKEND_FRAMEWORK: spring
+    steps:
+      - *checkout
+      - uses: ./backend/.github/actions/build
+        with:
+          module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
+
   build-frontend:
     needs: [ui-tests, trigger]
     if: >-
@@ -790,6 +819,7 @@ jobs:
       DEPLOY_COMPOSE_PROJECT: ${{ vars.LOAD_COMPOSE_PROJECT || 'autotests-ai-multistack-app-load' }}
       DEPLOY_COMPOSE_ENV_FILE: ${{ vars.LOAD_COMPOSE_ENV_FILE || '' }}
       DEPLOY_COMPOSE_SERVICES: postgres backend-java-spring
+      DEPLOY_SINGLE_BACKEND: "true"
       DEPLOY_HEALTH_URL: ${{ vars.LOAD_HEALTH_URL || 'http://127.0.0.1:8800/api/health' }}
       DEPLOY_HOST: ${{ vars.LOAD_HOST }}
       DEPLOY_USER: ${{ vars.LOAD_USER }}
@@ -820,14 +850,54 @@ jobs:
         with:
           module_dir: tests/java/tests-java-jmeter
 
-  # Same isolated SUT, second cell. No GHA matrix: rewrite java-spring → kotlin-spring
-  # in LOAD_API_URL, then the three living JMeter cells against that origin.
-  jmeter-kotlin-cell:
-    needs: [jmeter-smoke]
+  # Swap the load VM to kotlin-spring (stop java). Same SSH concurrency group as
+  # deploy-backend-load so the two deploys cannot overlap.
+  deploy-backend-load-kotlin:
+    needs: [jmeter-smoke, build-backend-kotlin]
     if: >-
       always() && !cancelled() &&
       vars.LOAD_APP_DIR != '' &&
-      needs.jmeter-smoke.result == 'success'
+      needs.jmeter-smoke.result == 'success' &&
+      needs.build-backend-kotlin.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: ${{ vars.LOAD_ENVIRONMENT || 'multistack-load' }}
+      url: https://load.autotests.ai/backend-kotlin-spring
+    concurrency:
+      group: deploy-autotests-ai-multistack-app-load
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+    env:
+      BACKEND_LANG: kotlin
+      BACKEND_FRAMEWORK: spring
+      DEPLOY_APP_DIR: ${{ vars.LOAD_APP_DIR }}
+      DEPLOY_COMPOSE_PROJECT: ${{ vars.LOAD_COMPOSE_PROJECT || 'autotests-ai-multistack-app-load' }}
+      DEPLOY_COMPOSE_ENV_FILE: ${{ vars.LOAD_COMPOSE_ENV_FILE || '' }}
+      DEPLOY_COMPOSE_SERVICES: postgres backend-kotlin-spring
+      DEPLOY_SINGLE_BACKEND: "true"
+      DEPLOY_HEALTH_URL: http://127.0.0.1:8810/api/health
+      DEPLOY_HOST: ${{ vars.LOAD_HOST }}
+      DEPLOY_USER: ${{ vars.LOAD_USER }}
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - *checkout
+      - uses: ./backend/.github/actions/deploy
+        with:
+          module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
+          stand: load
+
+  # Host is already on kotlin-spring. Rewrite LOAD_API_URL so JMeter pathPrefix
+  # matches the live nginx mount. No GHA matrix.
+  jmeter-kotlin-cell:
+    needs: [deploy-backend-load-kotlin]
+    if: >-
+      always() && !cancelled() &&
+      vars.LOAD_APP_DIR != '' &&
+      needs.deploy-backend-load-kotlin.result == 'success'
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     env:
@@ -836,7 +906,7 @@ jobs:
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     steps:
       - *checkout
-      - name: Switch load cell to kotlin-spring
+      - name: Point JMeter at kotlin-spring
         shell: bash
         run: |
           set -euo pipefail
@@ -850,7 +920,7 @@ jobs:
           esac
           dst="${src/backend-java-spring/backend-kotlin-spring}"
           echo "API_BASE_URL=${dst}" >> "${GITHUB_ENV}"
-          echo "==> switched load cell ${src} → ${dst}"
+          echo "==> JMeter origin ${src} → ${dst}"
       - uses: ./tests/.github/actions/performance
         with:
           module_dir: tests/java/tests-java-jmeter
@@ -860,6 +930,43 @@ jobs:
       - uses: ./tests/.github/actions/performance
         with:
           module_dir: tests/groovy/tests-groovy-jmeter
+
+  # Standing SUT is java-spring. Restore even if kotlin JMeter failed (java was stopped).
+  deploy-backend-load-restore:
+    needs: [deploy-backend-load-kotlin, jmeter-kotlin-cell]
+    if: >-
+      always() && !cancelled() &&
+      vars.LOAD_APP_DIR != '' &&
+      (needs.deploy-backend-load-kotlin.result == 'success' ||
+       needs.deploy-backend-load-kotlin.result == 'failure')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: ${{ vars.LOAD_ENVIRONMENT || 'multistack-load' }}
+      url: ${{ vars.LOAD_API_URL }}
+    concurrency:
+      group: deploy-autotests-ai-multistack-app-load
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+    env:
+      DEPLOY_APP_DIR: ${{ vars.LOAD_APP_DIR }}
+      DEPLOY_COMPOSE_PROJECT: ${{ vars.LOAD_COMPOSE_PROJECT || 'autotests-ai-multistack-app-load' }}
+      DEPLOY_COMPOSE_ENV_FILE: ${{ vars.LOAD_COMPOSE_ENV_FILE || '' }}
+      DEPLOY_COMPOSE_SERVICES: postgres backend-java-spring
+      DEPLOY_SINGLE_BACKEND: "true"
+      DEPLOY_HEALTH_URL: ${{ vars.LOAD_HEALTH_URL || 'http://127.0.0.1:8800/api/health' }}
+      DEPLOY_HOST: ${{ vars.LOAD_HOST }}
+      DEPLOY_USER: ${{ vars.LOAD_USER }}
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - *checkout
+      - uses: ./backend/.github/actions/deploy
+        with:
+          module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
+          stand: load
 
   e2e-tests-stage:
     needs: [api-tests-stage, deploy-frontend-stage, trigger, infra-tests]

@@ -15,7 +15,7 @@ runs:
         username: ${{ env.DEPLOY_USER }}
         key: ${{ env.DEPLOY_SSH_KEY }}
         command_timeout: 15m
-        envs: IMAGE_TAG,GHCR_TOKEN,GITHUB_ACTOR,DEPLOY_MODE,DEPLOY_COMPOSE_SERVICES,DEPLOY_HEALTH_URL,DEPLOY_APP_DIR,DEPLOY_COMPOSE_PROJECT,DEPLOY_COMPOSE_ENV_FILE
+        envs: IMAGE_TAG,GHCR_TOKEN,GITHUB_ACTOR,DEPLOY_MODE,DEPLOY_COMPOSE_SERVICES,DEPLOY_HEALTH_URL,DEPLOY_APP_DIR,DEPLOY_COMPOSE_PROJECT,DEPLOY_COMPOSE_ENV_FILE,DEPLOY_SINGLE_BACKEND
         script: |
           set -euo pipefail
           APP_DIR="${DEPLOY_APP_DIR:?DEPLOY_APP_DIR is required}"
@@ -45,7 +45,25 @@ runs:
               exit 1
             fi
           fi
-          if [ "${DEPLOY_MODE:-ghcr}" = "compose" ]; then
+          if [ "${DEPLOY_SINGLE_BACKEND:-}" = "true" ]; then
+            if [ ! -f deploy/stop-sibling-services.sh ]; then
+              echo "STOP: DEPLOY_SINGLE_BACKEND requires deploy/stop-sibling-services.sh" >&2
+              exit 1
+            fi
+            # Pull/build first while the previous cell still serves, then stop
+            # every other service so two backends never run at once.
+            if [ "${DEPLOY_MODE:-ghcr}" != "compose" ]; then
+              echo "$GHCR_TOKEN" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
+              $COMPOSE pull ${DEPLOY_COMPOSE_SERVICES}
+            fi
+            bash deploy/stop-sibling-services.sh postgres postgres-ensure-dbs ${DEPLOY_COMPOSE_SERVICES}
+            if [ "${DEPLOY_MODE:-ghcr}" = "compose" ]; then
+              $COMPOSE up -d --build --remove-orphans ${DEPLOY_COMPOSE_SERVICES}
+            else
+              $COMPOSE up -d --remove-orphans ${DEPLOY_COMPOSE_SERVICES}
+              docker logout ghcr.io
+            fi
+          elif [ "${DEPLOY_MODE:-ghcr}" = "compose" ]; then
             $COMPOSE up -d --build --remove-orphans ${DEPLOY_COMPOSE_SERVICES}
           else
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
