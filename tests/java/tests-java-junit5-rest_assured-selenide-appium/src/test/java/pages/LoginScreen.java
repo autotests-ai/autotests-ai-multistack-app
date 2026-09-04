@@ -7,6 +7,7 @@ import io.appium.java_client.AppiumBy;
 import io.appium.java_client.HidesKeyboard;
 import io.qameta.allure.Step;
 
+import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.$;
 import static helpers.TestIds.id;
@@ -17,6 +18,7 @@ public class LoginScreen {
     private final SelenideElement loginInput = $(id("login-input"));
     private final SelenideElement passwordInput = $(id("password-input"));
     private final SelenideElement submitButton = $(id("submit-button"));
+    private final SelenideElement errorMessage = $(id("error-message"));
 
     @Step("Login screen is open")
     public LoginScreen shouldBeOpen() {
@@ -29,11 +31,42 @@ public class LoginScreen {
 
     @Step("Fill and submit login form")
     public HomeScreen fillAndSubmitForm(String username, String password) {
+        typeUsername(username);
+        typePassword(password);
+        return submit();
+    }
+
+    @Step("Type username: {username}")
+    public LoginScreen typeUsername(String username) {
         typeInto(loginInput, username);
+        return this;
+    }
+
+    @Step("Type password")
+    public LoginScreen typePassword(String password) {
         typeInto(passwordInput, password);
+        return this;
+    }
+
+    @Step("Submit login form")
+    public HomeScreen submit() {
         hideKeyboard();
         submitButton.shouldBe(visible).click();
         return new HomeScreen();
+    }
+
+    @Step("Submit login form expecting validation error")
+    public LoginScreen submitExpectingError() {
+        hideKeyboard();
+        submitButton.shouldBe(visible).click();
+        errorMessage.shouldBe(visible);
+        return this;
+    }
+
+    @Step("Verify error message: {message}")
+    public LoginScreen shouldHaveErrorMessage(String message) {
+        errorMessage.shouldHave(text(message));
+        return this;
     }
 
     /**
