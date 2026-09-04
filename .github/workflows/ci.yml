@@ -27,9 +27,9 @@ name: CI
 #   deploy-backend-load ← api-tests-stage + build-backend (LOAD_APP_DIR; skip if unset; one live backend)
 #   jmeter-smoke ← deploy-backend-load (etalon JMX vs java cell; not Gatling)
 #   deploy-backend-load-kotlin ← jmeter-smoke + build-backend-kotlin (stop java, up kotlin)
-#   jmeter-kotlin-cell ← deploy-backend-load-kotlin (java/kotlin/groovy JMeter vs kotlin origin)
+#   jmeter-kotlin-cell ← deploy-backend-load-kotlin (./.github/actions/jmeter-load-cell)
 #   deploy-backend-load-flask ← jmeter-kotlin-cell + build-backend-python (stop kotlin, up flask)
-#   jmeter-flask-cell ← deploy-backend-load-flask
+#   jmeter-flask-cell ← deploy-backend-load-flask (same composite, cell=backend-python-flask)
 #   deploy-backend-load-fastapi ← jmeter-flask-cell (stop flask, up fastapi)
 #   jmeter-fastapi-cell ← deploy-backend-load-fastapi
 #   deploy-backend-load-django ← jmeter-fastapi-cell (stop fastapi, up django)
@@ -928,8 +928,8 @@ jobs:
           module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
           stand: load
 
-  # Host is already on kotlin-spring. Rewrite LOAD_API_URL so JMeter pathPrefix
-  # matches the live nginx mount. No GHA matrix.
+  # Host is already on kotlin-spring. jmeter-load-cell rewrites LOAD_API_URL
+  # (bash; GHA has no replace()) so pathPrefix matches the live nginx mount.
   jmeter-kotlin-cell:
     needs: [deploy-backend-load-kotlin]
     if: >-
@@ -944,30 +944,9 @@ jobs:
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     steps:
       - *checkout
-      - name: Point JMeter at kotlin-spring
-        shell: bash
-        run: |
-          set -euo pipefail
-          src="${API_BASE_URL%/}"
-          case "$src" in
-            *backend-java-spring*) ;;
-            *)
-              echo "STOP: LOAD_API_URL must contain backend-java-spring so the cell can switch: ${src}" >&2
-              exit 1
-              ;;
-          esac
-          dst="${src/backend-java-spring/backend-kotlin-spring}"
-          echo "API_BASE_URL=${dst}" >> "${GITHUB_ENV}"
-          echo "==> JMeter origin ${src} → ${dst}"
-      - uses: ./tests/.github/actions/performance
+      - uses: ./.github/actions/jmeter-load-cell
         with:
-          module_dir: tests/java/tests-java-jmeter
-      - uses: ./tests/.github/actions/performance
-        with:
-          module_dir: tests/kotlin/tests-kotlin-jmeter
-      - uses: ./tests/.github/actions/performance
-        with:
-          module_dir: tests/groovy/tests-groovy-jmeter
+          cell: backend-kotlin-spring
 
   # Swap the load VM to python-flask (stop kotlin). Same SSH concurrency group.
   deploy-backend-load-flask:
@@ -1022,30 +1001,9 @@ jobs:
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     steps:
       - *checkout
-      - name: Point JMeter at python-flask
-        shell: bash
-        run: |
-          set -euo pipefail
-          src="${API_BASE_URL%/}"
-          case "$src" in
-            *backend-java-spring*) ;;
-            *)
-              echo "STOP: LOAD_API_URL must contain backend-java-spring so the cell can switch: ${src}" >&2
-              exit 1
-              ;;
-          esac
-          dst="${src/backend-java-spring/backend-python-flask}"
-          echo "API_BASE_URL=${dst}" >> "${GITHUB_ENV}"
-          echo "==> JMeter origin ${src} → ${dst}"
-      - uses: ./tests/.github/actions/performance
+      - uses: ./.github/actions/jmeter-load-cell
         with:
-          module_dir: tests/java/tests-java-jmeter
-      - uses: ./tests/.github/actions/performance
-        with:
-          module_dir: tests/kotlin/tests-kotlin-jmeter
-      - uses: ./tests/.github/actions/performance
-        with:
-          module_dir: tests/groovy/tests-groovy-jmeter
+          cell: backend-python-flask
 
   deploy-backend-load-fastapi:
     needs: [deploy-backend-load-flask, jmeter-flask-cell, build-backend-python]
@@ -1101,30 +1059,9 @@ jobs:
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     steps:
       - *checkout
-      - name: Point JMeter at python-fastapi
-        shell: bash
-        run: |
-          set -euo pipefail
-          src="${API_BASE_URL%/}"
-          case "$src" in
-            *backend-java-spring*) ;;
-            *)
-              echo "STOP: LOAD_API_URL must contain backend-java-spring so the cell can switch: ${src}" >&2
-              exit 1
-              ;;
-          esac
-          dst="${src/backend-java-spring/backend-python-fastapi}"
-          echo "API_BASE_URL=${dst}" >> "${GITHUB_ENV}"
-          echo "==> JMeter origin ${src} → ${dst}"
-      - uses: ./tests/.github/actions/performance
+      - uses: ./.github/actions/jmeter-load-cell
         with:
-          module_dir: tests/java/tests-java-jmeter
-      - uses: ./tests/.github/actions/performance
-        with:
-          module_dir: tests/kotlin/tests-kotlin-jmeter
-      - uses: ./tests/.github/actions/performance
-        with:
-          module_dir: tests/groovy/tests-groovy-jmeter
+          cell: backend-python-fastapi
 
   deploy-backend-load-django:
     needs: [deploy-backend-load-fastapi, jmeter-fastapi-cell, build-backend-python]
@@ -1180,30 +1117,9 @@ jobs:
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     steps:
       - *checkout
-      - name: Point JMeter at python-django
-        shell: bash
-        run: |
-          set -euo pipefail
-          src="${API_BASE_URL%/}"
-          case "$src" in
-            *backend-java-spring*) ;;
-            *)
-              echo "STOP: LOAD_API_URL must contain backend-java-spring so the cell can switch: ${src}" >&2
-              exit 1
-              ;;
-          esac
-          dst="${src/backend-java-spring/backend-python-django}"
-          echo "API_BASE_URL=${dst}" >> "${GITHUB_ENV}"
-          echo "==> JMeter origin ${src} → ${dst}"
-      - uses: ./tests/.github/actions/performance
+      - uses: ./.github/actions/jmeter-load-cell
         with:
-          module_dir: tests/java/tests-java-jmeter
-      - uses: ./tests/.github/actions/performance
-        with:
-          module_dir: tests/kotlin/tests-kotlin-jmeter
-      - uses: ./tests/.github/actions/performance
-        with:
-          module_dir: tests/groovy/tests-groovy-jmeter
+          cell: backend-python-django
 
   # Standing SUT is java-spring. Restore even if kotlin/python JMeter failed (java was stopped).
   deploy-backend-load-restore:
