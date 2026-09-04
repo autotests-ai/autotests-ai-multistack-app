@@ -11,7 +11,7 @@ public sealed class AppConfigTests
         foreach (var key in new[]
                  {
                      "DATABASE_URL", "DB_HOST", "DB_PORT", "DB_NAME", "DB_USER", "DB_PASSWORD",
-                     "SERVER_PORT", "JWT_SECRET", "JWT_EXPIRATION_MS",
+                     "SERVER_PORT", "MANAGEMENT_PORT", "JWT_SECRET", "JWT_EXPIRATION_MS",
                  })
         {
             Environment.SetEnvironmentVariable(key, null);
@@ -25,6 +25,7 @@ public sealed class AppConfigTests
         var cfg = AppConfig.Load();
         Assert.Equal("backend-csharp-aspnet", cfg.ServiceName);
         Assert.Equal("8080", cfg.ServerPort);
+        Assert.Equal("8081", cfg.ManagementPort);
         Assert.Equal(
             "postgres://multistack:multistack@localhost:5432/multistack_app_csharp_aspnet?sslmode=disable",
             cfg.DatabaseUrl);
@@ -42,10 +43,12 @@ public sealed class AppConfigTests
         Environment.SetEnvironmentVariable("DB_USER", "someone");
         Environment.SetEnvironmentVariable("DB_PASSWORD", "p@ss word");
         Environment.SetEnvironmentVariable("SERVER_PORT", "18860");
+        Environment.SetEnvironmentVariable("MANAGEMENT_PORT", "18861");
         Environment.SetEnvironmentVariable("JWT_SECRET", "custom");
         Environment.SetEnvironmentVariable("JWT_EXPIRATION_MS", "1000");
         var cfg = AppConfig.Load();
         Assert.Equal("18860", cfg.ServerPort);
+        Assert.Equal("18861", cfg.ManagementPort);
         Assert.Equal("custom", cfg.JwtSecret);
         Assert.Equal(TimeSpan.FromSeconds(1), cfg.JwtExpiration);
         Assert.Equal(

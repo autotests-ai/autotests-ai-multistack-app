@@ -135,6 +135,16 @@ class SecurityChainTest {
         mockMvc.perform(get("/login")).andExpect(status().isUnauthorized)
     }
 
+    @Test
+    @DisplayName("GET /actuator/prometheus on the API port is not 200")
+    fun actuatorPrometheusNotOkOnApiPort() {
+        val status = mockMvc.perform(get("/actuator/prometheus"))
+            .andReturn()
+            .response
+            .status
+        org.junit.jupiter.api.Assertions.assertNotEquals(200, status)
+    }
+
     companion object {
         private const val SECRET = "security-chain-test-secret-at-least-32-chars"
         private const val ONE_HOUR_MS = 3_600_000L

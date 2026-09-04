@@ -14,6 +14,7 @@ export const TEST_SECRET = 'test-secret-key-at-least-32-characters-long';
 export const TEST_CONFIG: AppConfig = {
   serviceName: SERVICE_NAME,
   serverPort: 8080,
+  managementPort: 8081,
   databaseUrl: 'postgresql://unused',
   jwtSecret: TEST_SECRET,
   jwtExpirationMs: 86_400_000,

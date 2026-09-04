@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"dev.multistack/backend-go-stdlib/internal/observability"
 )
 
 // NewRouter mounts the API contract on a plain ServeMux. Frontends stay on
@@ -24,7 +26,7 @@ func NewRouter(h *Handler) http.Handler {
 	// only sees the paths and methods that no route claims.
 	mux.HandleFunc("/api/", h.APIFallback)
 
-	return logging(CORS(mux))
+	return observability.Middleware(logging(CORS(mux)))
 }
 
 // logging is the framework-free stand-in for gin.Logger.

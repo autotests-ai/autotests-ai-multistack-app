@@ -5,6 +5,7 @@ const yaml = require('js-yaml');
 const { SwaggerModule } = require('@nestjs/swagger');
 
 const { ApiExceptionFilter } = require('./api-exception.filter');
+const { HttpMetricsInterceptor } = require('./http-metrics.interceptor');
 const { lenientJson } = require('./json-body');
 const { readOpenApiResource } = require('./openapi-resources');
 
@@ -31,6 +32,7 @@ function setupOpenApiUi(app) {
 function configureApp(app) {
   app.use('/api', cors(CORS_OPTIONS));
   app.use(lenientJson());
+  app.useGlobalInterceptors(new HttpMetricsInterceptor());
   app.useGlobalFilters(new ApiExceptionFilter());
   setupOpenApiUi(app);
   return app;

@@ -87,6 +87,7 @@ services:
       DB_USER: multistack
       DB_PASSWORD: multistack
       SERVER_PORT: 8080
+      MANAGEMENT_PORT: 8081
       JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
@@ -97,6 +98,10 @@ services:
       - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_KOTLIN_PORT:-8810}:8080"
+      # Prometheus scrape (loopback). Docker publish bypasses ufw.
+      # Host 89xx = API 88xx + 100 so packed cells (flask/fastapi, gin/stdlib, …)
+      # do not collide. Java stays 8801 (already live on the load VM).
+      - "${BACKEND_KOTLIN_MANAGEMENT_PORT:-127.0.0.1:8910}:8081"
 
   backend-python-flask:
     image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-python-flask:${IMAGE_TAG:-latest}
@@ -116,6 +121,7 @@ services:
       DB_USER: multistack
       DB_PASSWORD: multistack
       SERVER_PORT: 8080
+      MANAGEMENT_PORT: 8081
       JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
@@ -126,6 +132,10 @@ services:
       - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_FLASK_PORT:-8820}:8080"
+      # Prometheus scrape (loopback). Docker publish bypasses ufw.
+      # Host 89xx = API 88xx + 100 so packed cells (flask/fastapi, gin/stdlib, …)
+      # do not collide. Java stays 8801 (already live on the load VM).
+      - "${BACKEND_FLASK_MANAGEMENT_PORT:-127.0.0.1:8920}:8081"
 
   backend-python-fastapi:
     image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-python-fastapi:${IMAGE_TAG:-latest}
@@ -145,6 +155,7 @@ services:
       DB_USER: multistack
       DB_PASSWORD: multistack
       SERVER_PORT: 8080
+      MANAGEMENT_PORT: 8081
       JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
@@ -155,6 +166,10 @@ services:
       - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_FASTAPI_PORT:-8821}:8080"
+      # Prometheus scrape (loopback). Docker publish bypasses ufw.
+      # Host 89xx = API 88xx + 100 so packed cells (flask/fastapi, gin/stdlib, …)
+      # do not collide. Java stays 8801 (already live on the load VM).
+      - "${BACKEND_FASTAPI_MANAGEMENT_PORT:-127.0.0.1:8921}:8081"
 
   backend-python-django:
     image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-python-django:${IMAGE_TAG:-latest}
@@ -174,6 +189,7 @@ services:
       DB_USER: multistack
       DB_PASSWORD: multistack
       SERVER_PORT: 8080
+      MANAGEMENT_PORT: 8081
       JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
@@ -184,6 +200,10 @@ services:
       - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_DJANGO_PORT:-8822}:8080"
+      # Prometheus scrape (loopback). Docker publish bypasses ufw.
+      # Host 89xx = API 88xx + 100 so packed cells (flask/fastapi, gin/stdlib, …)
+      # do not collide. Java stays 8801 (already live on the load VM).
+      - "${BACKEND_DJANGO_MANAGEMENT_PORT:-127.0.0.1:8922}:8081"
 
   backend-go-gin:
     image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-go-gin:${IMAGE_TAG:-latest}
@@ -203,6 +223,7 @@ services:
       DB_USER: multistack
       DB_PASSWORD: multistack
       SERVER_PORT: 8080
+      MANAGEMENT_PORT: 8081
       JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
@@ -213,6 +234,10 @@ services:
       - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_GO_GIN_PORT:-8830}:8080"
+      # Prometheus scrape (loopback). Docker publish bypasses ufw.
+      # Host 89xx = API 88xx + 100 so packed cells (flask/fastapi, gin/stdlib, …)
+      # do not collide. Java stays 8801 (already live on the load VM).
+      - "${BACKEND_GO_GIN_MANAGEMENT_PORT:-127.0.0.1:8930}:8081"
 
   backend-go-stdlib:
     image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-go-stdlib:${IMAGE_TAG:-latest}
@@ -232,6 +257,7 @@ services:
       DB_USER: multistack
       DB_PASSWORD: multistack
       SERVER_PORT: 8080
+      MANAGEMENT_PORT: 8081
       JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
@@ -242,6 +268,10 @@ services:
       - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_GO_STDLIB_PORT:-8831}:8080"
+      # Prometheus scrape (loopback). Docker publish bypasses ufw.
+      # Host 89xx = API 88xx + 100 so packed cells (flask/fastapi, gin/stdlib, …)
+      # do not collide. Java stays 8801 (already live on the load VM).
+      - "${BACKEND_GO_STDLIB_MANAGEMENT_PORT:-127.0.0.1:8931}:8081"
 
   backend-javascript-express:
     image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-javascript-express:${IMAGE_TAG:-latest}
@@ -261,6 +291,7 @@ services:
       DB_USER: multistack
       DB_PASSWORD: multistack
       SERVER_PORT: 8080
+      MANAGEMENT_PORT: 8081
       JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
@@ -271,6 +302,10 @@ services:
       - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_JS_EXPRESS_PORT:-8840}:8080"
+      # Prometheus scrape (loopback). Docker publish bypasses ufw.
+      # Host 89xx = API 88xx + 100 so packed cells (flask/fastapi, gin/stdlib, …)
+      # do not collide. Java stays 8801 (already live on the load VM).
+      - "${BACKEND_JS_EXPRESS_MANAGEMENT_PORT:-127.0.0.1:8940}:8081"
 
   backend-javascript-nest:
     image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-javascript-nest:${IMAGE_TAG:-latest}
@@ -290,6 +325,7 @@ services:
       DB_USER: multistack
       DB_PASSWORD: multistack
       SERVER_PORT: 8080
+      MANAGEMENT_PORT: 8081
       JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
@@ -300,6 +336,10 @@ services:
       - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_JS_NEST_PORT:-8841}:8080"
+      # Prometheus scrape (loopback). Docker publish bypasses ufw.
+      # Host 89xx = API 88xx + 100 so packed cells (flask/fastapi, gin/stdlib, …)
+      # do not collide. Java stays 8801 (already live on the load VM).
+      - "${BACKEND_JS_NEST_MANAGEMENT_PORT:-127.0.0.1:8941}:8081"
 
   backend-typescript-express:
     image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-typescript-express:${IMAGE_TAG:-latest}
@@ -319,6 +359,7 @@ services:
       DB_USER: multistack
       DB_PASSWORD: multistack
       SERVER_PORT: 8080
+      MANAGEMENT_PORT: 8081
       JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
@@ -329,6 +370,10 @@ services:
       - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_TS_EXPRESS_PORT:-8850}:8080"
+      # Prometheus scrape (loopback). Docker publish bypasses ufw.
+      # Host 89xx = API 88xx + 100 so packed cells (flask/fastapi, gin/stdlib, …)
+      # do not collide. Java stays 8801 (already live on the load VM).
+      - "${BACKEND_TS_EXPRESS_MANAGEMENT_PORT:-127.0.0.1:8950}:8081"
 
   backend-typescript-nest:
     image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-typescript-nest:${IMAGE_TAG:-latest}
@@ -348,6 +393,7 @@ services:
       DB_USER: multistack
       DB_PASSWORD: multistack
       SERVER_PORT: 8080
+      MANAGEMENT_PORT: 8081
       JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
@@ -358,6 +404,10 @@ services:
       - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_TS_NEST_PORT:-8851}:8080"
+      # Prometheus scrape (loopback). Docker publish bypasses ufw.
+      # Host 89xx = API 88xx + 100 so packed cells (flask/fastapi, gin/stdlib, …)
+      # do not collide. Java stays 8801 (already live on the load VM).
+      - "${BACKEND_TS_NEST_MANAGEMENT_PORT:-127.0.0.1:8951}:8081"
 
   backend-csharp-aspnet:
     image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-csharp-aspnet:${IMAGE_TAG:-latest}
@@ -377,6 +427,7 @@ services:
       DB_USER: multistack
       DB_PASSWORD: multistack
       SERVER_PORT: 8080
+      MANAGEMENT_PORT: 8081
       JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
@@ -387,6 +438,10 @@ services:
       - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_CSHARP_ASPNET_PORT:-8860}:8080"
+      # Prometheus scrape (loopback). Docker publish bypasses ufw.
+      # Host 89xx = API 88xx + 100 so packed cells (flask/fastapi, gin/stdlib, …)
+      # do not collide. Java stays 8801 (already live on the load VM).
+      - "${BACKEND_CSHARP_ASPNET_MANAGEMENT_PORT:-127.0.0.1:8960}:8081"
 
   backend-rust-axum:
     image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-rust-axum:${IMAGE_TAG:-latest}
@@ -406,6 +461,7 @@ services:
       DB_USER: multistack
       DB_PASSWORD: multistack
       SERVER_PORT: 8080
+      MANAGEMENT_PORT: 8081
       JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
@@ -416,6 +472,10 @@ services:
       - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_RUST_AXUM_PORT:-8870}:8080"
+      # Prometheus scrape (loopback). Docker publish bypasses ufw.
+      # Host 89xx = API 88xx + 100 so packed cells (flask/fastapi, gin/stdlib, …)
+      # do not collide. Java stays 8801 (already live on the load VM).
+      - "${BACKEND_RUST_AXUM_MANAGEMENT_PORT:-127.0.0.1:8970}:8081"
 
   frontend-javascript-vanilla:
     image: ghcr.io/autotests-ai/autotests-ai-multistack-app-frontend-javascript-vanilla:${IMAGE_TAG:-latest}

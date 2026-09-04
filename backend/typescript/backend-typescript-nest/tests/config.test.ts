@@ -6,6 +6,7 @@ describe('config', () => {
 
     expect(config.serviceName).toBe('backend-typescript-nest');
     expect(config.serverPort).toBe(8080);
+    expect(config.managementPort).toBe(8081);
     expect(config.databaseUrl).toBe(
       `postgresql://multistack:multistack@localhost:5432/${DEFAULT_DB_NAME}`,
     );
@@ -34,9 +35,15 @@ describe('config', () => {
   });
 
   it('reads the server port and jwt settings from the environment', () => {
-    const config = loadConfig({ SERVER_PORT: '18851', JWT_SECRET: 's', JWT_EXPIRATION_MS: '1000' });
+    const config = loadConfig({
+      SERVER_PORT: '18851',
+      MANAGEMENT_PORT: '8951',
+      JWT_SECRET: 's',
+      JWT_EXPIRATION_MS: '1000',
+    });
 
     expect(config.serverPort).toBe(18_851);
+    expect(config.managementPort).toBe(8951);
     expect(config.jwtSecret).toBe('s');
     expect(config.jwtExpirationMs).toBe(1000);
   });

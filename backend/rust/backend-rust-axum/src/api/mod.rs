@@ -43,6 +43,7 @@ pub fn router(state: Arc<AppState>) -> Router {
     Router::new()
         .nest("/api", api)
         .layer(TraceLayer::new_for_http())
+        .layer(middleware::from_fn(crate::management::observe_middleware))
 }
 
 pub fn test_router(store: Arc<dyn Store>, tokens: Arc<TokenService>) -> Router {

@@ -4,6 +4,7 @@ import { createApp } from './app';
 import { PostgresStore } from './db/postgres-store';
 import { applySchema } from './db/schema';
 import { loadConfig } from './config';
+import { createManagementServer } from './management';
 import { JwtService } from './security/jwt';
 import { seedData } from './seed';
 
@@ -25,9 +26,16 @@ async function main(): Promise<void> {
     console.log(`${config.serviceName} listening on 0.0.0.0:${config.serverPort}`);
   });
 
+  const management = createManagementServer();
+  management.listen(config.managementPort, '0.0.0.0', () => {
+    console.log(`${config.serviceName} management on 0.0.0.0:${config.managementPort}`);
+  });
+
   const shutdown = (): void => {
     server.close(() => {
-      void pool.end().then(() => process.exit(0));
+      management.close(() => {
+        void pool.end().then(() => process.exit(0));
+      });
     });
   };
   process.on('SIGTERM', shutdown);

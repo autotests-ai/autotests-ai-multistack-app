@@ -10,7 +10,11 @@ from app.seed import seed_data
 
 
 def create_app(*, init_db: bool = True) -> Flask:
+    # Imported lazily so `python -m app.observability` does not load this module twice.
+    from app.observability import apply_http_metrics
+
     app = Flask(__name__)
+    apply_http_metrics(app)
     apply_cors(app)
     app.register_blueprint(api_bp, url_prefix="/api")
     app.register_blueprint(auth_bp, url_prefix="/api/auth")

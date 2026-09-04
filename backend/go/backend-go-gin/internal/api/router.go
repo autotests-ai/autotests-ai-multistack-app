@@ -1,6 +1,10 @@
 package api
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+
+	"dev.multistack/backend-go-gin/internal/observability"
+)
 
 // NewRouter mounts the API contract. Frontends stay on separate nginx containers;
 // Swagger UI is under /api/docs so the gateway /api/ proxy reaches it.
@@ -8,7 +12,7 @@ func NewRouter(h *Handler) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 
 	engine := gin.New()
-	engine.Use(gin.Logger(), gin.Recovery(), CORS())
+	engine.Use(observability.Middleware(), gin.Logger(), gin.Recovery(), CORS())
 
 	// NoMethod stays dormant until gin is told to tell 405 apart from 404.
 	engine.HandleMethodNotAllowed = true

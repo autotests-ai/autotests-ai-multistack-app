@@ -12,7 +12,8 @@ WORKDIR /app
 COPY --from=build /out/backend-go-gin ./backend-go-gin
 USER app
 ENV SERVER_PORT=8080
-EXPOSE 8080
+ENV MANAGEMENT_PORT=8081
+EXPOSE 8080 8081
 HEALTHCHECK --interval=10s --timeout=3s --start-period=20s --retries=3 \
     CMD wget -qO- "http://127.0.0.1:${SERVER_PORT}/api/health" >/dev/null || exit 1
 CMD ["./backend-go-gin"]

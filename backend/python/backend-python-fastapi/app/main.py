@@ -14,6 +14,7 @@ from app.cors_policy import CorsPolicyMiddleware
 from app.db import SessionLocal, apply_schema
 from app.jwt_util import create_token
 from app.models import Item, User
+from app.observability import HttpMetricsMiddleware, start_if_configured
 from app.schemas import (
     AuthResponse,
     Credentials,
@@ -43,6 +44,7 @@ def create_app(*, init_db: bool = True) -> FastAPI:
         openapi_url=None,
     )
     app.add_middleware(CorsPolicyMiddleware)
+    app.add_middleware(HttpMetricsMiddleware)
 
     @app.exception_handler(StarletteHTTPException)
     async def http_exception_handler(_request: Request, exc: StarletteHTTPException):
@@ -155,6 +157,7 @@ def create_app(*, init_db: bool = True) -> FastAPI:
         apply_schema()
         seed_data()
 
+    start_if_configured()
     return app
 
 

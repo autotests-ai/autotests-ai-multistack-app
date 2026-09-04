@@ -23,7 +23,10 @@ import org.testcontainers.containers.PostgreSQLContainer
 @Tag("integration")
 @Module("backend-kotlin-spring")
 @Language("kotlin")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = ["management.server.port=0"],
+)
 abstract class IntegrationTestBase {
 
     @Autowired

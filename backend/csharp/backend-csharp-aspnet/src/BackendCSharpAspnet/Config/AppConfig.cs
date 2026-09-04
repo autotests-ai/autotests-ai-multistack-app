@@ -6,6 +6,7 @@ namespace Dev.Multistack.App.Config;
 public sealed record AppConfig(
     string ServiceName,
     string ServerPort,
+    string ManagementPort,
     string DatabaseUrl,
     string JwtSecret,
     TimeSpan JwtExpiration)
@@ -15,12 +16,14 @@ public sealed record AppConfig(
 
     public const string DefaultDatabaseName = "multistack_app_csharp_aspnet";
     public const string DefaultServerPort = "8080";
+    public const string DefaultManagementPort = "8081";
     public const string DefaultJwtSecret = "multistack-dev-secret-change-in-production-min-32-chars";
     public const long DefaultExpirationMs = 86_400_000;
 
     public static AppConfig Load() => new(
         ServiceNameValue,
         Env("SERVER_PORT", DefaultServerPort),
+        Env("MANAGEMENT_PORT", DefaultManagementPort),
         DatabaseUrlFromEnvironment(),
         Env("JWT_SECRET", DefaultJwtSecret),
         JwtExpirationFromEnvironment());

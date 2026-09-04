@@ -2,6 +2,7 @@ using System.Text.Json;
 using Dev.Multistack.App.Api;
 using Dev.Multistack.App.Security;
 using Dev.Multistack.App.Store;
+using Prometheus;
 
 namespace Dev.Multistack.App;
 
@@ -33,6 +34,7 @@ public static class WebApp
         var app = builder.Build();
         var handler = new ApiHandler(store, tokens, serviceName, app.Logger);
 
+        app.UseMiddleware<HttpMetricsMiddleware>();
         app.UseMiddleware<CorsMiddleware>();
         app.UseStatusCodePages(async status =>
         {
@@ -60,6 +62,26 @@ public static class WebApp
         app.MapGet("/api/auth/me", (Delegate)((HttpContext ctx) => handler.Me(ctx))).AddEndpointFilter(AuthFilter(handler));
         app.MapDelete("/api/auth/me", (Delegate)(async (HttpContext ctx) => await handler.DeleteAccount(ctx))).AddEndpointFilter(AuthFilter(handler));
 
+        return app;
+    }
+
+    /// <summary>
+    /// Separate Kestrel listener, Spring-style: health + Prometheus scrape only.
+    /// API port stays deny-by-absence — /actuator/* is not mapped there.
+    /// </summary>
+    public static WebApplication CreateManagement(string listenUrl)
+    {
+        var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+        {
+            EnvironmentName = Environments.Production,
+        });
+        builder.WebHost.UseUrls(listenUrl);
+        builder.Logging.ClearProviders();
+        builder.Logging.AddConsole();
+
+        var app = builder.Build();
+        app.MapGet("/actuator/health", () => Results.Content("""{"status":"UP"}""", "application/json"));
+        app.MapMetrics("/actuator/prometheus");
         return app;
     }
 

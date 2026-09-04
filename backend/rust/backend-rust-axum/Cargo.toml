@@ -19,6 +19,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 thiserror = "2"
 async-trait = "0.1"
+prometheus = "0.14"
 
 [dev-dependencies]
 http-body-util = "0.1"

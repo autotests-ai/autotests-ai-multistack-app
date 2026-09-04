@@ -4,6 +4,7 @@ const { config } = require('./config');
 const { createPgStore } = require('./store');
 const { seedData } = require('./seed');
 const { createApp } = require('./app');
+const { createManagementServer } = require('./management');
 
 async function main() {
   const settings = config();
@@ -20,10 +21,20 @@ async function main() {
     );
   });
 
+  const management = createManagementServer();
+  management.listen(settings.managementPort, '0.0.0.0', () => {
+    // eslint-disable-next-line no-console
+    console.log(
+      `${settings.serviceName} management on 0.0.0.0:${settings.managementPort}`
+    );
+  });
+
   for (const signal of ['SIGINT', 'SIGTERM']) {
     process.on(signal, () => {
       server.close(() => {
-        store.close().finally(() => process.exit(0));
+        management.close(() => {
+          store.close().finally(() => process.exit(0));
+        });
       });
     });
   }

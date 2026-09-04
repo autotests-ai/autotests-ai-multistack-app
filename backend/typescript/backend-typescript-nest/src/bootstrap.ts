@@ -3,6 +3,7 @@ import { SwaggerModule, type OpenAPIObject } from '@nestjs/swagger';
 import { load } from 'js-yaml';
 
 import { MessageExceptionFilter } from './common/message.filter';
+import { HttpMetricsInterceptor } from './common/http-metrics.interceptor';
 import { readOpenApiResource } from './openapi-resources';
 
 /** Creation options `main.ts` and the tests share: `rawBody` is what `@JsonBody()` reads. */
@@ -21,6 +22,7 @@ function setupOpenApiUi(app: INestApplication): void {
 /** Shared by `main.ts` and the tests so both exercise the same HTTP surface. */
 export function configureApp(app: INestApplication): INestApplication {
   app.setGlobalPrefix('api');
+  app.useGlobalInterceptors(new HttpMetricsInterceptor());
   app.useGlobalFilters(new MessageExceptionFilter());
   app.enableCors({
     origin: '*',

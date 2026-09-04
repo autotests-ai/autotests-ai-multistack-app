@@ -5,6 +5,7 @@ export const POST_AUTH_REDIRECT = '/';
 export interface AppConfig {
   serviceName: string;
   serverPort: number;
+  managementPort: number;
   databaseUrl: string;
   jwtSecret: string;
   jwtExpirationMs: number;
@@ -29,6 +30,7 @@ export function loadConfig(env: Env = process.env): AppConfig {
   return {
     serviceName: SERVICE_NAME,
     serverPort: Number(env.SERVER_PORT ?? '8080'),
+    managementPort: Number(env.MANAGEMENT_PORT ?? '8081'),
     databaseUrl: databaseUrl(env),
     jwtSecret:
       env.JWT_SECRET ?? 'multistack-dev-secret-change-in-production-min-32-chars',

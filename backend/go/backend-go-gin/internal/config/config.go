@@ -17,29 +17,32 @@ const (
 	// PostAuthRedirect is where the frontends navigate after login/register.
 	PostAuthRedirect = "/"
 
-	defaultDatabaseName = "multistack_app_go_gin"
-	defaultServerPort   = "8080"
-	defaultJWTSecret    = "multistack-dev-secret-change-in-production-min-32-chars"
-	defaultExpirationMS = int64(86_400_000)
+	defaultDatabaseName   = "multistack_app_go_gin"
+	defaultServerPort     = "8080"
+	defaultManagementPort = "8081"
+	defaultJWTSecret      = "multistack-dev-secret-change-in-production-min-32-chars"
+	defaultExpirationMS   = int64(86_400_000)
 )
 
 // Config holds everything main needs to wire the service.
 type Config struct {
-	ServiceName   string
-	ServerPort    string
-	DatabaseURL   string
-	JWTSecret     string
-	JWTExpiration time.Duration
+	ServiceName    string
+	ServerPort     string
+	ManagementPort string
+	DatabaseURL    string
+	JWTSecret      string
+	JWTExpiration  time.Duration
 }
 
 // Load reads the environment and falls back to the shared reference defaults.
 func Load() Config {
 	return Config{
-		ServiceName:   ServiceName,
-		ServerPort:    env("SERVER_PORT", defaultServerPort),
-		DatabaseURL:   DatabaseURL(),
-		JWTSecret:     env("JWT_SECRET", defaultJWTSecret),
-		JWTExpiration: JWTExpiration(),
+		ServiceName:    ServiceName,
+		ServerPort:     env("SERVER_PORT", defaultServerPort),
+		ManagementPort: env("MANAGEMENT_PORT", defaultManagementPort),
+		DatabaseURL:    DatabaseURL(),
+		JWTSecret:      env("JWT_SECRET", defaultJWTSecret),
+		JWTExpiration:  JWTExpiration(),
 	}
 }
 

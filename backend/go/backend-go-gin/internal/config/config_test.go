@@ -11,7 +11,7 @@ func clearEnv(t *testing.T) {
 	t.Helper()
 	for _, key := range []string{
 		"DATABASE_URL", "DB_HOST", "DB_PORT", "DB_NAME", "DB_USER", "DB_PASSWORD",
-		"SERVER_PORT", "JWT_SECRET", "JWT_EXPIRATION_MS",
+		"SERVER_PORT", "MANAGEMENT_PORT", "JWT_SECRET", "JWT_EXPIRATION_MS",
 	} {
 		t.Setenv(key, "")
 	}
@@ -27,6 +27,9 @@ func TestLoadDefaults(t *testing.T) {
 	}
 	if cfg.ServerPort != "8080" {
 		t.Fatalf("ServerPort = %q, want 8080", cfg.ServerPort)
+	}
+	if cfg.ManagementPort != "8081" {
+		t.Fatalf("ManagementPort = %q, want 8081", cfg.ManagementPort)
 	}
 	want := "postgres://multistack:multistack@localhost:5432/multistack_app_go_gin?sslmode=disable"
 	if cfg.DatabaseURL != want {
@@ -48,12 +51,13 @@ func TestLoadFromEnvironment(t *testing.T) {
 	t.Setenv("DB_USER", "someone")
 	t.Setenv("DB_PASSWORD", "p@ss word")
 	t.Setenv("SERVER_PORT", "18830")
+	t.Setenv("MANAGEMENT_PORT", "18081")
 	t.Setenv("JWT_SECRET", "custom")
 	t.Setenv("JWT_EXPIRATION_MS", "1000")
 
 	cfg := config.Load()
 
-	if cfg.ServerPort != "18830" || cfg.JWTSecret != "custom" {
+	if cfg.ServerPort != "18830" || cfg.ManagementPort != "18081" || cfg.JWTSecret != "custom" {
 		t.Fatalf("cfg = %+v", cfg)
 	}
 	if cfg.JWTExpiration != time.Second {

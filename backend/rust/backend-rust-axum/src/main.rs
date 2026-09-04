@@ -16,17 +16,39 @@ async fn main() {
         }
     };
 
-    let addr = format!("0.0.0.0:{}", config.server_port);
-    let listener = tokio::net::TcpListener::bind(&addr)
+    let api_addr = format!("0.0.0.0:{}", config.server_port);
+    let api_listener = tokio::net::TcpListener::bind(&api_addr)
         .await
         .unwrap_or_else(|err| {
-            tracing::error!("{}: bind {addr}: {err}", config.service_name);
+            tracing::error!("{}: bind {api_addr}: {err}", config.service_name);
             std::process::exit(1);
         });
 
-    tracing::info!("{} listening on {addr}", config.service_name);
-    if let Err(err) = backend_rust_axum::run(state, listener).await {
-        tracing::error!("{}: {err}", config.service_name);
-        std::process::exit(1);
+    let management_addr = format!("0.0.0.0:{}", config.management_port);
+    let management_listener = tokio::net::TcpListener::bind(&management_addr)
+        .await
+        .unwrap_or_else(|err| {
+            tracing::error!("{}: bind {management_addr}: {err}", config.service_name);
+            std::process::exit(1);
+        });
+
+    tracing::info!("{} listening on {api_addr}", config.service_name);
+    tracing::info!("{} management on {management_addr}", config.service_name);
+    tokio::select! {
+        err = backend_rust_axum::run(state, api_listener) => {
+            if let Err(err) = err {
+                tracing::error!("{}: {err}", config.service_name);
+                std::process::exit(1);
+            }
+        }
+        err = axum::serve(
+            management_listener,
+            backend_rust_axum::management_router(),
+        ) => {
+            if let Err(err) = err {
+                tracing::error!("{}: {err}", config.service_name);
+                std::process::exit(1);
+            }
+        }
     }
 }

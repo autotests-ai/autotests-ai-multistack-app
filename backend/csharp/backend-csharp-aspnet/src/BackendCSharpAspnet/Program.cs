@@ -14,4 +14,5 @@ var app = WebApp.Create(
     new TokenService(cfg.JwtSecret, cfg.JwtExpiration),
     cfg.ServiceName,
     $"http://0.0.0.0:{cfg.ServerPort}");
-await app.RunAsync();
+var management = WebApp.CreateManagement($"http://0.0.0.0:{cfg.ManagementPort}");
+await Task.WhenAll(app.RunAsync(), management.RunAsync());

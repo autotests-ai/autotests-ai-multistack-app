@@ -8,6 +8,7 @@ const { createJwt } = require('./jwt');
 const { createAuthService } = require('./auth-service');
 const { lenientJson } = require('./json-body');
 const { ApiError } = require('./errors');
+const { httpMetricsMiddleware } = require('./metrics');
 const { readOpenApiResource } = require('./openapi-resources');
 
 const CORS_OPTIONS = {
@@ -27,6 +28,7 @@ function createApp({ store, settings = config(), jwt } = {}) {
 
   const app = express();
   app.disable('x-powered-by');
+  app.use(httpMetricsMiddleware);
   app.use('/api', cors(CORS_OPTIONS));
   app.use('/api', lenientJson());
 

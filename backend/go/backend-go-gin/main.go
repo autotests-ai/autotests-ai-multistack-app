@@ -14,6 +14,7 @@ import (
 
 	"dev.multistack/backend-go-gin/internal/api"
 	"dev.multistack/backend-go-gin/internal/config"
+	"dev.multistack/backend-go-gin/internal/observability"
 	"dev.multistack/backend-go-gin/internal/security"
 	"dev.multistack/backend-go-gin/internal/store"
 )
@@ -61,6 +62,18 @@ func main() {
 		Handler:           api.NewRouter(handler),
 		ReadHeaderTimeout: readHeaderTimeout,
 	}
+	management := &http.Server{
+		Addr:              net.JoinHostPort("0.0.0.0", cfg.ManagementPort),
+		Handler:           observability.NewMux(),
+		ReadHeaderTimeout: readHeaderTimeout,
+	}
+
+	go func() {
+		log.Printf("%s management listening on %s", cfg.ServiceName, management.Addr)
+		if err := management.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("%s: management: %v", cfg.ServiceName, err)
+		}
+	}()
 
 	go func() {
 		<-ctx.Done()
@@ -68,6 +81,9 @@ func main() {
 		defer cancel()
 		if err := server.Shutdown(shutdownCtx); err != nil {
 			log.Printf("%s: shutdown: %v", cfg.ServiceName, err)
+		}
+		if err := management.Shutdown(shutdownCtx); err != nil {
+			log.Printf("%s: management shutdown: %v", cfg.ServiceName, err)
 		}
 	}()
 

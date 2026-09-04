@@ -21,6 +21,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "api.observability.HttpMetricsMiddleware",
     "django.middleware.common.CommonMiddleware",
     # Cookie CSRF still runs for any view that is not jwt_csrf_exempt. JSON auth
     # views skip it — Bearer JWT, stateless, same as Java SecurityConfig.

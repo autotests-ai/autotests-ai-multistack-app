@@ -26,6 +26,7 @@ function config() {
     serviceName: SERVICE_NAME,
     databaseUrl: databaseUrl(),
     serverPort: Number(env('SERVER_PORT', '8080')),
+    managementPort: Number(env('MANAGEMENT_PORT', '8081')),
     jwtSecret: env(
       'JWT_SECRET',
       'multistack-dev-secret-change-in-production-min-32-chars'

@@ -5,6 +5,7 @@ branch = false
 relative_files = true
 omit =
     wsgi.py
+    gunicorn.conf.py
     tests/*
     */test_*.py
 

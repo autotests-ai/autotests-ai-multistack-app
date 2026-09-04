@@ -1,5 +1,6 @@
 pub mod api;
 pub mod config;
+pub mod management;
 pub mod security;
 pub mod store;
 
@@ -10,6 +11,8 @@ use axum::Router;
 use crate::api::AppState;
 use crate::security::TokenService;
 use crate::store::{Postgres, Store};
+
+pub use management::{management_router, observe_middleware};
 
 pub fn build_router(state: Arc<AppState>) -> Router {
     api::router(state)

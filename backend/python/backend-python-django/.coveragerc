@@ -6,6 +6,7 @@ relative_files = true
 omit =
     config/wsgi.py
     config/asgi.py
+    gunicorn.conf.py
     manage.py
     */migrations/*
     tests/*

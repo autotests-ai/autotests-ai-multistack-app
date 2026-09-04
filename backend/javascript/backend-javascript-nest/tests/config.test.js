@@ -8,6 +8,7 @@ const ENV_KEYS = [
   'DB_USER',
   'DB_PASSWORD',
   'SERVER_PORT',
+  'MANAGEMENT_PORT',
   'JWT_SECRET',
   'JWT_EXPIRATION_MS',
 ];
@@ -37,6 +38,7 @@ describe('config', () => {
       'postgresql://multistack:multistack@localhost:5432/multistack_app_javascript_nest'
     );
     expect(settings.serverPort).toBe(8080);
+    expect(settings.managementPort).toBe(8081);
     expect(settings.jwtSecret).toBe(
       'multistack-dev-secret-change-in-production-min-32-chars'
     );
@@ -68,11 +70,13 @@ describe('config', () => {
   it('reads the port and token lifetime as numbers', () => {
     const { config } = loadConfig({
       SERVER_PORT: '18841',
+      MANAGEMENT_PORT: '8941',
       JWT_EXPIRATION_MS: '60000',
     });
     const settings = config();
 
     expect(settings.serverPort).toBe(18841);
+    expect(settings.managementPort).toBe(8941);
     expect(settings.jwtExpirationMs).toBe(60000);
   });
 });

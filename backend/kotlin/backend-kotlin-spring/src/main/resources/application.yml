@@ -15,6 +15,27 @@ spring:
 server:
   port: ${SERVER_PORT:8080}
 
+# Actuator lives on a separate port so API :8080 stays denyAll (no /actuator permit).
+# Compose publishes this to host loopback only; nginx does not proxy it.
+management:
+  server:
+    port: ${MANAGEMENT_PORT:8081}
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    prometheus:
+      enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+
 auth:
   jwt:
     secret: ${JWT_SECRET:multistack-dev-secret-change-in-production-min-32-chars}

@@ -4,6 +4,7 @@ import { SERVICE_NAME } from './config';
 import { corsMiddleware } from './middleware/cors';
 import { apiFallbackHandler, errorHandler, notFoundHandler } from './middleware/errors';
 import { jsonBodyParser } from './middleware/json';
+import { httpMetricsMiddleware } from './metrics';
 import { createApiRouter } from './routes/api';
 import { createAuthRouter } from './routes/auth';
 import type { JwtService } from './security/jwt';
@@ -20,6 +21,7 @@ export function createApp(deps: AppDeps): Express {
   const app = express();
   app.disable('x-powered-by');
 
+  app.use(httpMetricsMiddleware);
   app.use('/api', corsMiddleware);
   app.use(jsonBodyParser);
 

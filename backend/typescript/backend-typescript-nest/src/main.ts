@@ -6,6 +6,7 @@ import { Pool } from 'pg';
 import { AppModule } from './app.module';
 import { APP_OPTIONS, configureApp } from './bootstrap';
 import { loadConfig } from './config';
+import { createManagementServer } from './management';
 import { PostgresStore } from './store/postgres-store';
 import { applySchema } from './store/schema';
 import { seedData } from './store/seed';
@@ -24,11 +25,22 @@ async function main(): Promise<void> {
   await app.listen(config.serverPort, '0.0.0.0');
   console.log(`${config.serviceName} listening on 0.0.0.0:${config.serverPort}`);
 
+  const management = createManagementServer();
+  await new Promise<void>((resolve, reject) => {
+    management.once('error', reject);
+    management.listen(config.managementPort, '0.0.0.0', () => {
+      console.log(`${config.serviceName} management on 0.0.0.0:${config.managementPort}`);
+      resolve();
+    });
+  });
+
   const shutdown = (): void => {
-    void app
-      .close()
-      .then(() => pool.end())
-      .then(() => process.exit(0));
+    management.close(() => {
+      void app
+        .close()
+        .then(() => pool.end())
+        .then(() => process.exit(0));
+    });
   };
   process.on('SIGTERM', shutdown);
   process.on('SIGINT', shutdown);

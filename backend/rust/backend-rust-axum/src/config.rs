@@ -5,6 +5,7 @@ pub const POST_AUTH_REDIRECT: &str = "/";
 
 const DEFAULT_DATABASE_NAME: &str = "multistack_app_rust_axum";
 const DEFAULT_SERVER_PORT: &str = "8080";
+const DEFAULT_MANAGEMENT_PORT: &str = "8081";
 const DEFAULT_JWT_SECRET: &str = "multistack-dev-secret-change-in-production-min-32-chars";
 const DEFAULT_EXPIRATION_MS: i64 = 86_400_000;
 
@@ -12,6 +13,7 @@ const DEFAULT_EXPIRATION_MS: i64 = 86_400_000;
 pub struct Config {
     pub service_name: String,
     pub server_port: String,
+    pub management_port: String,
     pub database_url: String,
     pub jwt_secret: String,
     pub jwt_expiration: Duration,
@@ -21,6 +23,7 @@ pub fn load() -> Config {
     Config {
         service_name: SERVICE_NAME.to_string(),
         server_port: env("SERVER_PORT", DEFAULT_SERVER_PORT),
+        management_port: env("MANAGEMENT_PORT", DEFAULT_MANAGEMENT_PORT),
         database_url: database_url(),
         jwt_secret: env("JWT_SECRET", DEFAULT_JWT_SECRET),
         jwt_expiration: jwt_expiration(),
@@ -83,6 +86,7 @@ mod tests {
             "DB_USER",
             "DB_PASSWORD",
             "SERVER_PORT",
+            "MANAGEMENT_PORT",
             "JWT_SECRET",
             "JWT_EXPIRATION_MS",
         ] {
@@ -97,6 +101,7 @@ mod tests {
         let cfg = load();
         assert_eq!(cfg.service_name, "backend-rust-axum");
         assert_eq!(cfg.server_port, "8080");
+        assert_eq!(cfg.management_port, "8081");
         assert_eq!(
             cfg.database_url,
             "postgres://multistack:multistack@localhost:5432/multistack_app_rust_axum?sslmode=disable"
@@ -116,11 +121,13 @@ mod tests {
             std::env::set_var("DB_USER", "someone");
             std::env::set_var("DB_PASSWORD", "p@ss word");
             std::env::set_var("SERVER_PORT", "18830");
+            std::env::set_var("MANAGEMENT_PORT", "18831");
             std::env::set_var("JWT_SECRET", "custom");
             std::env::set_var("JWT_EXPIRATION_MS", "1000");
         }
         let cfg = load();
         assert_eq!(cfg.server_port, "18830");
+        assert_eq!(cfg.management_port, "18831");
         assert_eq!(cfg.jwt_secret, "custom");
         assert_eq!(cfg.jwt_expiration, Duration::from_secs(1));
         assert_eq!(

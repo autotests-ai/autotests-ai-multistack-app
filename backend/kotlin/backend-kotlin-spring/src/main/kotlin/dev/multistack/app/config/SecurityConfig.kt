@@ -1,8 +1,10 @@
 package dev.multistack.app.config
 
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.annotation.Order
 import org.springframework.http.HttpMethod
 import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -19,6 +21,27 @@ class SecurityConfig(
     private val jwtAuthFilter: JwtAuthFilter,
 ) {
     /**
+     * Management port reuses this FilterChainProxy (Boot copies `springSecurityFilterChain`
+     * into the child context). [EndpointRequest] resolves mappings from the request's
+     * servlet context: actuator paths match on :8081 and miss on API :8080, so denyAll below
+     * stays intact. CSRF is off: scrape is GET, no cookie session — same as the API chain.
+     */
+    @Bean
+    @Order(0)
+    @Suppress("kotlin:S4502")
+    fun managementSecurityFilterChain(http: HttpSecurity): SecurityFilterChain {
+        http
+            .securityMatcher(EndpointRequest.toAnyEndpoint())
+            .authorizeHttpRequests { auth ->
+                auth
+                    .requestMatchers(EndpointRequest.to("health", "prometheus")).permitAll()
+                    .anyRequest().denyAll()
+            }
+            .csrf { it.disable() }
+        return http.build()
+    }
+
+    /**
      * CSRF is disabled on purpose: auth is Bearer JWT ([JwtAuthFilter]) with
      * [SessionCreationPolicy.STATELESS] — no ambient cookie credential for CSRF to exploit.
      * Enabling CSRF would break JSON API clients that do not echo an XSRF token.
@@ -27,6 +50,7 @@ class SecurityConfig(
      * (host nginx path-routes `/{backend}/{frontend}/`).
      */
     @Bean
+    @Order(1)
     @Suppress("kotlin:S4502")
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
