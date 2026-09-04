@@ -51,13 +51,12 @@ public final class MobileConfig {
         return optional("IOS_BUNDLE_ID", "dev.multistack.swiftui");
     }
 
+    /** GitHub Release asset — selenoid.qa.guru fetches this, not a laptop path. */
+    static final String ANDROID_DEBUG_APK_URL =
+            "https://github.com/autotests-ai/autotests-ai-multistack-app/releases/download/android-debug/app-debug.apk";
+
     public static String androidAppUrl() {
-        String url = System.getenv("ANDROID_APP_URL");
-        if (url == null || url.isBlank()) {
-            throw new IllegalStateException(
-                    "Selenoid needs ANDROID_APP_URL (HTTP APK). A local file path will not install.");
-        }
-        return url;
+        return optional("ANDROID_APP_URL", ANDROID_DEBUG_APK_URL);
     }
 
     public static String androidVersion() {

@@ -26,12 +26,15 @@ cd mobile/swift/mobile-swift-swiftui && scripts/build-sim.sh
 |------|------|--------|
 | emulator | `./gradlew emulator` | Appium 2 · AVD · `app-debug.apk` |
 | real | `./gradlew real` | USB debugging · APK |
-| selenoid | `./gradlew selenoid` | `ANDROID_APP_URL` (HTTP APK, not a file path) |
+| selenoid | `./gradlew selenoid` | GitHub Release APK by default; override with `ANDROID_APP_URL` |
 | browserstack | `./gradlew browserstack` | `BROWSERSTACK_USERNAME` / `ACCESS_KEY` / `BROWSERSTACK_APP_ID` |
 | simulator | `./gradlew iosSimulator` | Xcode · `Multistack.app` |
 | ios real | `./gradlew iosReal` | signing · `IOS_UDID` |
 
-Overrides: `-DdeviceHost=` · `-Dplatform=` · `APPIUM_URL` · `ANDROID_APP` · `IOS_APP` · `ANDROID_UDID` · `IOS_UDID`.
+Overrides: `-DdeviceHost=` · `-Dplatform=` · `APPIUM_URL` · `ANDROID_APP` · `IOS_APP` · `ANDROID_UDID` · `IOS_UDID` · `ANDROID_APP_URL`.
+
+Selenoid default APK: [android-debug `app-debug.apk`](https://github.com/autotests-ai/autotests-ai-multistack-app/releases/download/android-debug/app-debug.apk)
+(`gh release upload android-debug app-debug.apk --clobber` when the UI changes).
 
 Seed `user1` / `password1` → `Welcome, user1!` against
 `https://autotests.ai/stack/backend-java-spring/api`.
