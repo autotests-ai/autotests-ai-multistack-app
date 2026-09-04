@@ -9,7 +9,7 @@ public final class MobileConfig {
     static final Path ANDROID_APK = Paths.get(
             "..", "..", "..",
             "mobile", "kotlin", "mobile-kotlin-compose",
-            "app", "build", "outputs", "apk", "debug", "app-debug.apk");
+            "app", "build", "outputs", "apk", "debug", "multistack-app.apk");
 
     static final Path IOS_SIM_APP = Paths.get(
             "..", "..", "..",
@@ -52,11 +52,11 @@ public final class MobileConfig {
     }
 
     /** GitHub Release asset — selenoid.qa.guru fetches this, not a laptop path. */
-    static final String ANDROID_DEBUG_APK_URL =
-            "https://github.com/autotests-ai/autotests-ai-multistack-app/releases/download/android-debug/app-debug.apk";
+    static final String ANDROID_APK_URL =
+            "https://github.com/autotests-ai/autotests-ai-multistack-app/releases/download/android-debug/multistack-app.apk";
 
     public static String androidAppUrl() {
-        return optional("ANDROID_APP_URL", ANDROID_DEBUG_APK_URL);
+        return optional("ANDROID_APP_URL", ANDROID_APK_URL);
     }
 
     public static String androidVersion() {

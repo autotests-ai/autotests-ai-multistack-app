@@ -6,7 +6,7 @@ testids appear natively, so **one Appium suite drives both platforms**.
 
 | Cell | Path | Artifact | Id |
 |------|------|----------|----|
-| `mobile-kotlin-compose` | [`../mobile/kotlin/mobile-kotlin-compose/`](../mobile/kotlin/mobile-kotlin-compose/) | `app-debug.apk` | package `dev.multistack.compose`, activity `.MainActivity` |
+| `mobile-kotlin-compose` | [`../mobile/kotlin/mobile-kotlin-compose/`](../mobile/kotlin/mobile-kotlin-compose/) | `multistack-app.apk` | package `dev.multistack.compose`, activity `.MainActivity` |
 | `mobile-swift-swiftui` | [`../mobile/swift/mobile-swift-swiftui/`](../mobile/swift/mobile-swift-swiftui/) | `Multistack.app` / `.ipa` | bundle `dev.multistack.swiftui` |
 
 ## Locator mapping

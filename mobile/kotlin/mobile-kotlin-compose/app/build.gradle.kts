@@ -66,6 +66,13 @@ android {
     }
 }
 
+android.applicationVariants.configureEach {
+    outputs.configureEach {
+        (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl)
+            .outputFileName = "multistack-app.apk"
+    }
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

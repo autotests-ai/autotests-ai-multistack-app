@@ -9,8 +9,8 @@ Not a WebView wrapper and not a mock: the app talks to a real matrix backend
 `GET /api/health`) exactly like the React SPA.
 
 ```bash
-./gradlew :app:assembleDebug                 # app/build/outputs/apk/debug/app-debug.apk
-adb install -r app/build/outputs/apk/debug/app-debug.apk
+./gradlew :app:assembleDebug                 # app/build/outputs/apk/debug/multistack-app.apk
+adb install -r app/build/outputs/apk/debug/multistack-app.apk
 adb shell am start -n dev.multistack.compose/.MainActivity
 ```
 
@@ -90,7 +90,7 @@ driver.findElement(AppiumBy.id("login-input"));
   "appium:automationName": "UiAutomator2",
   "appium:appPackage": "dev.multistack.compose",
   "appium:appActivity": "dev.multistack.compose.MainActivity",
-  "appium:app": "<path>/app-debug.apk"
+  "appium:app": "<path>/multistack-app.apk"
 }
 ```
 
