@@ -29,10 +29,11 @@ public class SecurityConfig {
      * Management port reuses this FilterChainProxy (Boot copies {@code springSecurityFilterChain}
      * into the child context). {@link EndpointRequest} resolves mappings from the request's
      * servlet context: actuator paths match on :8081 and miss on API :8080, so denyAll below
-     * stays intact.
+     * stays intact. CSRF is off: scrape is GET, no cookie session — same as the API chain.
      */
     @Bean
     @Order(0)
+    @SuppressWarnings("java:S4502")
     SecurityFilterChain managementSecurityFilterChain(HttpSecurity http) throws Exception {
         http
                 .securityMatcher(EndpointRequest.toAnyEndpoint())
