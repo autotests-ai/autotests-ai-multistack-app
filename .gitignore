@@ -21,6 +21,9 @@ tests/java/tests-java-junit5-rest_assured-selenide/bin/
 tests/java/tests-java-gatling/build/
 tests/java/tests-java-gatling/.gradle/
 tests/java/tests-java-gatling/bin/
+tests/kotlin/tests-kotlin-gatling/build/
+tests/kotlin/tests-kotlin-gatling/.gradle/
+tests/kotlin/tests-kotlin-gatling/bin/
 tests/_tests-meta/_ethalon/.gradle/
 
 # IDE

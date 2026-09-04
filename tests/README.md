@@ -40,7 +40,7 @@ tests/
     tests-kotlin-junit5-selenium/                    # slot — UI-only Selenium (no REST)
     tests-kotlin-junit5-playwright/                  # slot — UI-only Playwright (no REST)
     tests-kotlin-junit5-ktor/         # active — HTTP block Ktor
-    tests-kotlin-gatling/                     # slot — Gatling Kotlin DSL
+    tests-kotlin-gatling/                     # active — Gatling Kotlin DSL sibling
   scala/
     tests-scala-gatling/                             # slot — Gatling Scala DSL
   javascript/
