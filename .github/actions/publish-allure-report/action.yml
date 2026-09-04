@@ -13,15 +13,21 @@ outputs:
 runs:
   using: composite
   steps:
+    # ci.yml still formats the 5-segment java/kotlin slot; living cells are shorter.
+    - id: dir
+      uses: ./.github/actions/resolve-module-dir
+      with:
+        module_dir: ${{ inputs.tests_dir }}
+
     - uses: actions/setup-node@v6
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: npm
-        cache-dependency-path: ${{ inputs.tests_dir }}/package-lock.json
+        cache-dependency-path: ${{ steps.dir.outputs.dir }}/package-lock.json
 
     - name: package.json pins must match package-lock.json
       shell: bash
-      working-directory: ${{ inputs.tests_dir }}
+      working-directory: ${{ steps.dir.outputs.dir }}
       run: node scripts/check-package-lock.mjs
 
     - name: Load Allure history
@@ -39,8 +45,8 @@ runs:
       continue-on-error: true
       uses: actions/cache@v6
       with:
-        path: ${{ inputs.tests_dir }}/node_modules
-        key: allure-nm-${{ runner.os }}-${{ hashFiles(format('{0}/package-lock.json', inputs.tests_dir)) }}
+        path: ${{ steps.dir.outputs.dir }}/node_modules
+        key: allure-nm-${{ runner.os }}-${{ hashFiles(format('{0}/package-lock.json', steps.dir.outputs.dir)) }}
 
     - name: Skip npm ci on node_modules cache hit
       if: steps.cache-allure-nm.outcome == 'success' && steps.cache-allure-nm.outputs.cache-hit == 'true'
@@ -51,7 +57,7 @@ runs:
       if: env.NPM_CI_IF == 'true'
       shell: bash
       run: npm ci
-      working-directory: ${{ inputs.tests_dir }}
+      working-directory: ${{ steps.dir.outputs.dir }}
 
     - name: Download merged raw Allure results
       id: results
@@ -59,7 +65,7 @@ runs:
       uses: ./.github/actions/download-artifact
       with:
         pattern: allure-results-*
-        path: ${{ inputs.tests_dir }}/build/allure-results
+        path: ${{ steps.dir.outputs.dir }}/build/allure-results
         merge-multiple: true
 
     - name: Verify merged Allure results
@@ -67,7 +73,7 @@ runs:
       if: steps.results.outcome == 'success'
       shell: bash
       env:
-        ALLURE_RESULTS: ${{ inputs.tests_dir }}/build/allure-results
+        ALLURE_RESULTS: ${{ steps.dir.outputs.dir }}/build/allure-results
       run: |
         if [ -n "$(find "${ALLURE_RESULTS}" -type f 2>/dev/null | head -1)" ]; then
           echo "has_results=true" >> "$GITHUB_OUTPUT"
@@ -80,7 +86,7 @@ runs:
       if: steps.merged-results.outputs.has_results == 'true'
       shell: bash
       env:
-        ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.tests_dir }}/build/allure-results
+        ALLURE_RESULTS: ${{ github.workspace }}/${{ steps.dir.outputs.dir }}/build/allure-results
       run: |
         source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
         write_allure_environment
@@ -89,7 +95,7 @@ runs:
       if: steps.merged-results.outputs.has_results == 'true'
       shell: bash
       env:
-        TESTS_DIR: ${{ inputs.tests_dir }}
+        TESTS_DIR: ${{ steps.dir.outputs.dir }}
       run: |
         if [ -f gh-pages/history.jsonl ]; then
           cp gh-pages/history.jsonl "${TESTS_DIR}/history.jsonl"
@@ -106,7 +112,7 @@ runs:
       if: steps.merged-results.outputs.has_results == 'true'
       shell: bash
       env:
-        ALLURE_RESULTS: ${{ inputs.tests_dir }}/build/allure-results
+        ALLURE_RESULTS: ${{ steps.dir.outputs.dir }}/build/allure-results
       run: |
         mkdir -p "${ALLURE_RESULTS}"
         BUILD_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
@@ -132,7 +138,7 @@ runs:
         env.ALLURE_PROJECT_ID != ''
       continue-on-error: true
       id: testops-upload
-      working-directory: ${{ inputs.tests_dir }}
+      working-directory: ${{ steps.dir.outputs.dir }}
       shell: bash
       env:
         ALLURE_TOKEN: ${{ env.ALLURE_TOKEN }}
@@ -208,7 +214,7 @@ runs:
     - name: Attach live Sonar quality gate
       if: steps.merged-results.outputs.has_results == 'true'
       continue-on-error: true
-      working-directory: ${{ inputs.tests_dir }}
+      working-directory: ${{ steps.dir.outputs.dir }}
       shell: bash
       env:
         SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
@@ -232,7 +238,7 @@ runs:
     - name: Allure quality gate + report
       if: always() && steps.merged-results.outputs.has_results == 'true'
       id: allure-report
-      working-directory: ${{ inputs.tests_dir }}
+      working-directory: ${{ steps.dir.outputs.dir }}
       shell: bash
       run: |
         set +e
@@ -259,7 +265,7 @@ runs:
       uses: actions/upload-artifact@v7
       with:
         name: allure-report-ci
-        path: ${{ inputs.tests_dir }}/build/reports/allure-report/allureReport/
+        path: ${{ steps.dir.outputs.dir }}/build/reports/allure-report/allureReport/
         if-no-files-found: ignore
         retention-days: 14
 
@@ -273,10 +279,10 @@ runs:
       continue-on-error: true
       shell: bash
       env:
-        TESTS_DIR: ${{ inputs.tests_dir }}
-        ALLURE_REPORT_ROOT: ${{ inputs.tests_dir }}/build/reports/allure-report/allureReport
-        ALLURE_AWESOME: ${{ inputs.tests_dir }}/build/reports/allure-report/allureReport/awesome
-        ALLURE_RESULTS: ${{ inputs.tests_dir }}/build/allure-results
+        TESTS_DIR: ${{ steps.dir.outputs.dir }}
+        ALLURE_REPORT_ROOT: ${{ steps.dir.outputs.dir }}/build/reports/allure-report/allureReport
+        ALLURE_AWESOME: ${{ steps.dir.outputs.dir }}/build/reports/allure-report/allureReport/awesome
+        ALLURE_RESULTS: ${{ steps.dir.outputs.dir }}/build/allure-results
       run: |
         if [ ! -f "${ALLURE_AWESOME}/index.html" ]; then
           echo "No ${ALLURE_AWESOME}/index.html — skip GitHub Pages"
@@ -336,14 +342,14 @@ runs:
     - name: Send Allure Telegram notification
       if: always() && steps.allure-report.outcome == 'success'
       continue-on-error: true
-      working-directory: ${{ inputs.tests_dir }}
+      working-directory: ${{ steps.dir.outputs.dir }}
       shell: bash
       env:
         NOTIFICATION_PROJECT: "${{ env.APP_SLUG }} CI #${{ github.run_number }}"
         BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         TESTOPS_LAUNCH_URL: ${{ steps.resolve-testops-url.outputs.launch_url }}
-        ALLURE_FOLDER: ${{ github.workspace }}/${{ inputs.tests_dir }}/build/reports/allure-report/allureReport/awesome
-        ALLURE_RESULTS_FOLDER: ${{ github.workspace }}/${{ inputs.tests_dir }}/build/allure-results
+        ALLURE_FOLDER: ${{ github.workspace }}/${{ steps.dir.outputs.dir }}/build/reports/allure-report/allureReport/awesome
+        ALLURE_RESULTS_FOLDER: ${{ github.workspace }}/${{ steps.dir.outputs.dir }}/build/allure-results
         NOTIFICATION_MODE: ${{ github.event_name != 'pull_request' && 'live' || 'dry-run' }}
         PAGES_OUTCOME: ${{ steps.gh-pages-deploy.outcome }}
       run: |
@@ -378,7 +384,7 @@ runs:
       if: always()
       shell: bash
       env:
-        ALLURE_AWESOME: ${{ inputs.tests_dir }}/build/reports/allure-report/allureReport/awesome
+        ALLURE_AWESOME: ${{ steps.dir.outputs.dir }}/build/reports/allure-report/allureReport/awesome
         PAGES_OUTCOME: ${{ steps.gh-pages-deploy.outcome }}
       run: |
         {
