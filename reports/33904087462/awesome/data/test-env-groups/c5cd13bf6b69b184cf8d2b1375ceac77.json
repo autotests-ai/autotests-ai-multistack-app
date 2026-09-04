@@ -1,1 +1,0 @@
-{"id":"c5cd13bf6b69b184cf8d2b1375ceac77","fullName":"tests.e2e.RegisterTests.shouldShowValidationErrorWhenPasswordIsEmpty","name":"Empty password shows validation error","status":"passed","testResultsByEnv":{"default":"ac4f7d87ee4ce52c27a365bf009f651f"}}
