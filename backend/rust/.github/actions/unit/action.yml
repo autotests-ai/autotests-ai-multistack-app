@@ -1,8 +1,11 @@
 name: unit
-description: cargo test for a Rust backend module.
+description: cargo llvm-cov (JaCoCo analog) for a Rust backend module.
 inputs:
   module_dir:
     required: true
+  coverage_artifact:
+    required: false
+    default: coverage-backend
   allure_artifact:
     required: false
     default: allure-results-unit
@@ -13,7 +16,8 @@ runs:
     - uses: dtolnay/rust-toolchain@stable
       with:
         toolchain: ${{ env.RUST_VERSION }}
-    - name: Unit tests (cargo test)
+        components: llvm-tools-preview
+    - name: Unit tests (cargo llvm-cov)
       id: run-tests
       shell: bash
       working-directory: ${{ inputs.module_dir }}
@@ -21,7 +25,13 @@ runs:
         ALLURE_RESULTS: ${{ github.workspace }}/${{ inputs.module_dir }}/allure-results
       run: |
         source "${GITHUB_WORKSPACE}/.github/actions/setup-allurectl/allurectl-run.sh"
-        run_with_allurectl cargo test --locked
+        run_with_allurectl ./cover.sh
+    - if: steps.run-tests.outcome == 'success'
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ inputs.coverage_artifact }}
+        path: ${{ inputs.module_dir }}/coverage.lcov
+        if-no-files-found: error
     - name: Publish raw Allure results
       if: always()
       continue-on-error: true
