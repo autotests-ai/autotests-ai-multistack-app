@@ -24,19 +24,19 @@ name: CI
 #   build-frontend ← ui-tests (frontend lane)
 #   deploy-*-stage ← matching build + sonar-backend / sonar-frontend + preempt/yield (STAGE_APP_DIR, cd_stage)
 #   api-tests-stage ← deploy-backend-stage + infra-tests (STAGE_APP_DIR, run_api_stage)
-#   deploy-backend-load ← api-tests-stage + build-backend (LOAD_APP_DIR; skip if unset; one live backend)
+#   deploy-backend-load ← api-tests-stage + build-backend (LOAD_APP_DIR; skip if unset; stop all backends, up this SHA)
 #   jmeter-smoke ← deploy-backend-load (etalon JMX vs java cell)
 #   gatling-java-cell ← jmeter-smoke (./.github/actions/gatling-load-cell; java+kotlin DSL vs java)
-#   deploy-backend-load-kotlin ← gatling-java-cell + build-backend-kotlin (stop java, up kotlin)
+#   deploy-backend-load-kotlin ← gatling-java-cell + build-backend-kotlin (stop all backends, up this SHA's kotlin)
 #   jmeter-kotlin-cell ← deploy-backend-load-kotlin (./.github/actions/jmeter-load-cell)
 #   gatling-kotlin-cell ← jmeter-kotlin-cell (same gatling composite vs kotlin)
-#   deploy-backend-load-flask ← gatling-kotlin-cell + build-backend-python (stop kotlin, up flask)
+#   deploy-backend-load-flask ← gatling-kotlin-cell + build-backend-python (stop all backends, up this SHA's flask)
 #   jmeter-flask-cell ← deploy-backend-load-flask (jmeter-load-cell, cell=backend-python-flask)
-#   deploy-backend-load-fastapi ← jmeter-flask-cell (stop flask, up fastapi)
+#   deploy-backend-load-fastapi ← jmeter-flask-cell (stop all backends, up this SHA's fastapi)
 #   jmeter-fastapi-cell ← deploy-backend-load-fastapi
-#   deploy-backend-load-django ← jmeter-fastapi-cell (stop fastapi, up django)
+#   deploy-backend-load-django ← jmeter-fastapi-cell (stop all backends, up this SHA's django)
 #   jmeter-django-cell ← deploy-backend-load-django
-#   deploy-backend-load-restore ← python chain (always bring java back)
+#   (no restore-to-java: last successful load deploy stays)
 #   e2e-tests-stage ← api-tests-stage + deploy-frontend-stage + infra-tests (STAGE_APP_DIR, run_e2e_stage)
 #   (load jobs run parallel with e2e-tests-stage; prod deploy-* must NOT need them)
 #   deploy-* ← matching build + sonar-backend / sonar-frontend + e2e-tests-stage (cd_production)
@@ -835,7 +835,8 @@ jobs:
 
   # Isolated load stand after stage API is green. Skip until repo var LOAD_APP_DIR
   # is set. Does not share STAGE_APP_DIR / DEPLOY_APP_DIR. Prod deploy-* must not
-  # need this job. Parallel with e2e-tests-stage.
+  # need this job. Parallel with e2e-tests-stage. Each load deploy stops every
+  # backend-* and force-recreates this SHA's cell. No trailing restore-to-java.
   deploy-backend-load:
     needs: [api-tests-stage, build-backend, trigger]
     if: >-
@@ -910,9 +911,9 @@ jobs:
         with:
           cell: backend-java-spring
 
-  # Swap the load VM to kotlin-spring (stop java). Same SSH concurrency group as
-  # deploy-backend-load so the two deploys cannot overlap. Waits for Gatling on
-  # java so two injectors do not share the 2 vCPU VM.
+  # Stop every backend-*, up kotlin-spring from this SHA. Same SSH concurrency
+  # group as deploy-backend-load so the two deploys cannot overlap. Waits for
+  # Gatling on java so two injectors do not share the 2 vCPU VM.
   deploy-backend-load-kotlin:
     needs: [jmeter-smoke, gatling-java-cell, build-backend-kotlin]
     if: >-
@@ -991,7 +992,7 @@ jobs:
         with:
           cell: backend-kotlin-spring
 
-  # Swap the load VM to python-flask (stop kotlin). Same SSH concurrency group.
+  # Stop every backend-*, up python-flask from this SHA. Same SSH concurrency group.
   deploy-backend-load-flask:
     needs: [jmeter-kotlin-cell, gatling-kotlin-cell, build-backend-python]
     if: >-
@@ -1165,60 +1166,6 @@ jobs:
       - uses: ./.github/actions/jmeter-load-cell
         with:
           cell: backend-python-django
-
-  # Standing SUT is java-spring. Restore even if kotlin/python JMeter or Gatling
-  # failed (java was stopped). One backend at a time (stop, not pause).
-  deploy-backend-load-restore:
-    needs:
-      - gatling-java-cell
-      - deploy-backend-load-kotlin
-      - jmeter-kotlin-cell
-      - gatling-kotlin-cell
-      - deploy-backend-load-flask
-      - jmeter-flask-cell
-      - deploy-backend-load-fastapi
-      - jmeter-fastapi-cell
-      - deploy-backend-load-django
-      - jmeter-django-cell
-    if: >-
-      always() && !cancelled() &&
-      vars.LOAD_APP_DIR != '' &&
-      (needs.deploy-backend-load-kotlin.result == 'success' ||
-       needs.deploy-backend-load-kotlin.result == 'failure' ||
-       needs.deploy-backend-load-flask.result == 'success' ||
-       needs.deploy-backend-load-flask.result == 'failure' ||
-       needs.deploy-backend-load-fastapi.result == 'success' ||
-       needs.deploy-backend-load-fastapi.result == 'failure' ||
-       needs.deploy-backend-load-django.result == 'success' ||
-       needs.deploy-backend-load-django.result == 'failure')
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    environment:
-      name: ${{ vars.LOAD_ENVIRONMENT || 'multistack-load' }}
-      url: ${{ vars.LOAD_API_URL }}
-    concurrency:
-      group: deploy-autotests-ai-multistack-app-load
-      cancel-in-progress: false
-    permissions:
-      contents: read
-      packages: read
-    env:
-      DEPLOY_APP_DIR: ${{ vars.LOAD_APP_DIR }}
-      DEPLOY_COMPOSE_PROJECT: ${{ vars.LOAD_COMPOSE_PROJECT || 'autotests-ai-multistack-app-load' }}
-      DEPLOY_COMPOSE_ENV_FILE: ${{ vars.LOAD_COMPOSE_ENV_FILE || '' }}
-      DEPLOY_COMPOSE_SERVICES: postgres backend-java-spring
-      DEPLOY_SINGLE_BACKEND: "true"
-      DEPLOY_HEALTH_URL: ${{ vars.LOAD_HEALTH_URL || 'http://127.0.0.1:8800/api/health' }}
-      DEPLOY_HOST: ${{ vars.LOAD_HOST }}
-      DEPLOY_USER: ${{ vars.LOAD_USER }}
-      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    steps:
-      - *checkout
-      - uses: ./backend/.github/actions/deploy
-        with:
-          module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
-          stand: load
 
   e2e-tests-stage:
     needs: [api-tests-stage, deploy-frontend-stage, trigger, infra-tests]

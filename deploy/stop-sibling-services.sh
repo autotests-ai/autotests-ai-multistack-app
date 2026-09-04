@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Load SUT only. Stop every compose service except the keep-list (args).
 # postgres is never stopped even if omitted from the keep-list.
+# Callers must NOT pass the target backend-* — it is stopped so the following
+# `compose up --force-recreate` rolls this SHA, not a leftover container.
 # Do not call from stage/prod — those stands run more than one cell.
 set -euo pipefail
 
