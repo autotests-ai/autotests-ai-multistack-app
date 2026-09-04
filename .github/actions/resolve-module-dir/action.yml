@@ -24,6 +24,16 @@ runs:
           echo "dir=" >> "$GITHUB_OUTPUT"
           exit 0
         fi
+        # Living Java cells dropped builder/report from the folder id (NAMING.md).
+        # ci.yml still formats the old 5-segment path from TESTS_BUILDER/TESTS_REPORT.
+        case "${nested}" in
+          tests/java/tests-java-gradle-junit5-allure3-selenide)
+            nested=tests/java/tests-java-junit5-rest_assured-selenide ;;
+          tests/java/tests-java-gradle-junit5-allure3-selenium)
+            nested=tests/java/tests-java-junit5-rest_assured-selenium ;;
+          tests/java/tests-java-gradle-junit5-allure3-playwright)
+            nested=tests/java/tests-java-junit5-api_request-playwright ;;
+        esac
         if [ -d "${nested}" ]; then
           echo "dir=${nested}" >> "$GITHUB_OUTPUT"
           exit 0
