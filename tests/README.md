@@ -13,6 +13,7 @@ Clone folder = **teaching block** (UI school, HTTP client, runner/build variant,
 tests/
   java/
     tests-java-junit5-rest_assured-selenide/     # active — default cell (Selenide + Rest Assured)
+    tests-java-junit5-rest_assured-selenide-appium/ # active — native e2e (Selenide + Appium)
     tests-java-junit5-rest_assured-selenium/       # active — UI+HTTP Selenium 4 + Rest Assured
     tests-java-junit5-api_request-playwright/     # active — UI+HTTP Playwright for Java + APIRequest
     tests-java-junit5-selenide/                      # slot — UI-only Selenide (no REST)

@@ -76,6 +76,8 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
 **Java Playwright living block:** `tests-java-junit5-api_request-playwright` — Playwright for Java + APIRequest, `layers: [api, ui, e2e]`. Same `data-testid` as the TS Playwright cell; screenshot PNG tree matches Selenide (`@Tag("screenshot")` slice). HTTP-only Rest Assured school stays in `tests-java-junit5-rest_assured`.
 
+**Java Appium living block:** `tests-java-junit5-rest_assured-selenide-appium` — Selenide + Appium, `layers: [e2e]`. Native login against `mobile-kotlin-compose` / `mobile-swift-swiftui` (live `/api/auth`). Web UI and the `/api` catalog stay in the default Selenide cell. Burger e2e stays in `design-system-home`. Default CI stays Java Selenide web. Not a BrowserStack SDK cell.
+
 **UI-only slots** (no REST): empty folders `layers: [ui, e2e]` for students not yet on HTTP. Java `tests-java-junit5-{selenide,selenium,playwright}`; Kotlin `tests-kotlin-junit5-{selenide,selenium,playwright}`; Python `tests-python-pytest-{selenium,selene,playwright}`; C# `tests-csharp-nunit-selenium` / `tests-csharp-xunit-playwright`; Go `tests-go-testing-playwright`; TS `tests-typescript-playwright`. JS Axios+Playwright is **bad-practice** `tests-javascript-axios-playwright`. JS Playwright UI-only is **living** (`tests-javascript-playwright`). Rust UI-only is **living** (`tests-rust-testing-selenium`). Combo living cells keep in-cell HTTP (`tests-{javascript,typescript}-api_request-playwright` and `tests-python-pytest-api_request-playwright`; `tests-python-pytest-requests-{selenium,selene}` for Python Selenium/Selene; `tests-rust-testing-reqwest-selenium` for Rust Selenium). Cypress remains an extra empty JS UI school.
 
 ## integration vs api — intent, not tag

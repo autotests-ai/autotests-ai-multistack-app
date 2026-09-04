@@ -7,6 +7,7 @@ Clone folder = teaching **block**. Combo (e.g. Selenium + Retrofit) = generate, 
 | Folder | Stack | Status |
 |--------|--------|--------|
 | `tests-java-junit5-rest_assured-selenide` | JUnit 5 · Selenide (+ Rest Assured in this default cell) | **active** |
+| `tests-java-junit5-rest_assured-selenide-appium` | native e2e · Selenide + Appium | **active** |
 | `tests-java-junit5-rest_assured-selenium` | UI+HTTP block · Selenium 4 + Rest Assured | **active** |
 | `tests-java-junit5-api_request-playwright` | UI+HTTP block · Playwright for Java + APIRequest | **active** |
 | `tests-java-junit5-selenide` | **UI-only** · JUnit 5 · Selenide (no REST) | slot |
@@ -23,6 +24,9 @@ Clone folder = teaching **block**. Combo (e.g. Selenium + Retrofit) = generate, 
 cd tests/java/tests-java-junit5-rest_assured-selenide
 ./gradlew test -Denv=ci -DincludeTags=infra jacocoTestCoverageVerification
 ./gradlew test -Denv=ci -DincludeTags=e2e -DexcludeTags=screenshot
+
+cd tests/java/tests-java-junit5-rest_assured-selenide-appium
+./gradlew emulator
 
 cd tests/java/tests-java-junit5-rest_assured-selenium
 ./gradlew test -Denv=ci -DincludeTags=infra jacocoTestCoverageVerification

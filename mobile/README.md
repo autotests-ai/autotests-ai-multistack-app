@@ -40,3 +40,5 @@ design-system CSS (monorepo ADR 007).
 cd kotlin/mobile-kotlin-compose && ./gradlew :app:assembleDebug
 cd swift/mobile-swift-swiftui  && scripts/build-sim.sh     # needs full Xcode
 ```
+
+Appium login lives in [`../tests/java/tests-java-junit5-rest_assured-selenide-appium/`](../tests/java/tests-java-junit5-rest_assured-selenide-appium/) (`./gradlew emulator`).

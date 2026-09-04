@@ -68,3 +68,16 @@ Same cell as the web pair — no mock UI. Default API base
 
 Token storage mirrors the SPA key `authToken:<backendId>` —
 `SharedPreferences` on Android, `UserDefaults` on iOS.
+
+## Tests
+
+Living cell: [`../tests/java/tests-java-junit5-rest_assured-selenide-appium/`](../tests/java/tests-java-junit5-rest_assured-selenide-appium/).
+One suite, both apps — `AppiumBy.accessibilityId("login-input")`. Web UI and
+`/api` stay in `tests-java-junit5-rest_assured-selenide`. Default CI stays that
+web cell.
+
+```bash
+cd tests/java/tests-java-junit5-rest_assured-selenide-appium
+./gradlew emulator          # Android AVD + local Appium :4723
+./gradlew iosSimulator      # needs full Xcode + Multistack.app
+```

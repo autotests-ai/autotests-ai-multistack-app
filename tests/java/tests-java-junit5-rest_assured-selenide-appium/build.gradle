@@ -1,0 +1,135 @@
+/*
+ * tests-java — native e2e · Selenide + Appium
+ *
+ *   ./gradlew emulator
+ *   ./gradlew iosSimulator
+ *
+ * Same school as tests-java-junit5-rest_assured-selenide; web UI and /api
+ * catalog stay in that folder. This cell drives mobile-kotlin-compose and
+ * mobile-swift-swiftui. Default CI stays the web Selenide cell.
+ */
+
+buildscript {
+    ext {
+        javaVersion         = 21
+        junitVersion        = '5.11.4'
+        slf4jVersion        = '2.0.17'
+        allurePluginVersion = '4.1.0'
+        allureVersion       = '3.13.0'
+        allureBomVersion    = '2.35.2'
+        sonarPluginVersion  = '6.2.0.5505'
+        selenideVersion     = '7.17.0'
+        appiumVersion       = '10.0.0'
+        testParallelForks   = 1
+    }
+}
+
+plugins {
+    id 'java-library'
+    id 'jacoco'
+    id 'io.qameta.allure' version "${allurePluginVersion}"
+    id 'org.sonarqube' version "${sonarPluginVersion}"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(javaVersion)
+    }
+}
+
+sonar {
+    properties {
+        property 'sonar.projectKey', System.getenv('SONAR_PROJECT_KEY') ?: 'autotests-ai-multistack-app-tests-java-junit5-rest_assured-selenide-appium'
+        property 'sonar.projectName', System.getenv('SONAR_PROJECT_KEY') ?: 'autotests-ai-multistack-app-tests-java-junit5-rest_assured-selenide-appium'
+        property 'sonar.host.url', System.getenv('SONAR_HOST_URL') ?: 'https://sonar.qa.guru'
+        property 'sonar.sources', 'src/test/java'
+        property 'sonar.tests', ''
+        property 'sonar.java.binaries', 'build/classes/java/test'
+    }
+}
+
+def allureReportMode = System.getProperty('allureReportMode', 'allure3')
+
+repositories {
+    mavenCentral()
+}
+
+allure {
+    version = allureVersion
+    adapter {
+        allureJavaVersion = allureBomVersion
+        resultsDir.set(layout.buildDirectory.dir('allure-results'))
+        autoconfigure.set(allureReportMode != 'none')
+        aspectjWeaver.set(allureReportMode != 'none')
+        frameworks {
+            junit5 {
+                enabled.set(allureReportMode != 'none')
+                autoconfigureListeners.set(allureReportMode != 'none')
+            }
+        }
+    }
+}
+
+dependencies {
+    testImplementation platform("io.qameta.allure:allure-bom:${allureBomVersion}")
+    testImplementation (
+            'io.qameta.allure:allure-jupiter',
+            'io.qameta.allure:allure-selenide',
+            "com.codeborne:selenide:${selenideVersion}",
+            "io.appium:java-client:${appiumVersion}",
+            "org.junit.jupiter:junit-jupiter:${junitVersion}")
+    testRuntimeOnly (
+            'org.junit.platform:junit-platform-launcher',
+            "org.slf4j:slf4j-simple:${slf4jVersion}")
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+def applyMobileSystemProperties = { Test task ->
+    task.systemProperties(System.getProperties())
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform {
+        def includeTagsProp = System.getProperty('includeTags')
+        if (includeTagsProp) {
+            includeTags(*(includeTagsProp.split(',')*.trim()))
+        }
+        def excludeTagsProp = System.getProperty('excludeTags')
+        if (excludeTagsProp) {
+            excludeTags(*(excludeTagsProp.split(',')*.trim()))
+        }
+    }
+    applyMobileSystemProperties(it)
+    maxParallelForks = testParallelForks
+    testLogging {
+        events 'started', 'skipped', 'failed', 'standard_error'
+        exceptionFormat 'full'
+    }
+}
+
+tasks.named('test', Test).configure {
+    systemProperty 'deviceHost', System.getProperty('deviceHost', 'emulator')
+    systemProperty 'platform', System.getProperty('platform', 'android')
+}
+
+def hostTask = { String name, String host, String platform ->
+    tasks.register(name, Test) {
+        group = 'verification'
+        description = "Native e2e on ${host} (${platform})"
+        testClassesDirs = sourceSets.test.output.classesDirs
+        classpath = sourceSets.test.runtimeClasspath
+        systemProperty 'deviceHost', host
+        systemProperty 'platform', platform
+    }
+}
+
+hostTask('emulator', 'emulator', 'android')
+hostTask('real', 'real', 'android')
+hostTask('browserstack', 'browserstack', 'android')
+hostTask('selenoid', 'selenoid', 'android')
+hostTask('iosSimulator', 'simulator', 'ios')
+hostTask('iosReal', 'real', 'ios')
+hostTask('iosBrowserstack', 'browserstack', 'ios')

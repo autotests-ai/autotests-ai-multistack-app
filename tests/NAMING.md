@@ -14,13 +14,14 @@ Do **not** put `gradle`, `maven`, `allure2`, `allure3`, or `no_allure` in the fo
 |---------|----------|-------|
 | `language` | `java`, `kotlin`, `scala`, `groovy`, `javascript`, `typescript`, `python`, `go`, `csharp`, `rust` | top-level under `tests/` |
 | `framework` | `junit4`, `junit5`, `junit6`, `testng`, `pytest`, `vitest`, `testing`, `nunit`, `xunit` | test runner |
-| `automation` | `selenium`, `selenide`, `selene`, `playwright`, `cypress`, `rest_assured`, `retrofit2`, `requests`, `httpx`, `axios`, `ktor`, `restsharp`, `net_http`, `reqwest`, `api_request`, `jmeter`, `gatling`, `k6`, `yandex_tank`, `locust`, `none` | UI/HTTP school or load tool; `api_request` = Playwright `APIRequest` in combo ids; `_` in compounds (`rest_assured`, `yandex_tank`); `none` for api-only when unnamed |
+| `automation` | `selenium`, `selenide`, `selene`, `playwright`, `cypress`, `appium`, `rest_assured`, `retrofit2`, `requests`, `httpx`, `axios`, `ktor`, `restsharp`, `net_http`, `reqwest`, `api_request`, `jmeter`, `gatling`, `k6`, `yandex_tank`, `locust`, `none` | UI/HTTP school or load tool; `api_request` = Playwright `APIRequest` in combo ids; `_` in compounds (`rest_assured`, `yandex_tank`); `none` for api-only when unnamed; `appium` tails the default Java school as `rest_assured-selenide-appium` |
 
 ## Java — matrix
 
 | Folder | Status |
 |--------|--------|
 | `tests-java-junit5-rest_assured-selenide` | **active** — block 2 CI target |
+| `tests-java-junit5-rest_assured-selenide-appium` | **active** — native e2e · Selenide + Appium (web/API stay in the default cell) |
 | `tests-java-junit5-rest_assured-selenium` | **active** — UI+HTTP block Selenium 4 + Rest Assured |
 | `tests-java-junit5-api_request-playwright` | **active** — UI+HTTP Playwright for Java + APIRequest |
 | `tests-java-junit5-rest_assured` | **active** — HTTP block Rest Assured |
@@ -33,7 +34,7 @@ Do **not** put `gradle`, `maven`, `allure2`, `allure3`, or `no_allure` in the fo
 | `tests-java-jmeter` | **active** — JMeter JMX etalon, `layers: [performance]` |
 | `tests-java-gatling` | **active** — Gatling Java DSL sibling, `layers: [performance]` |
 
-Only one module is the CI default (Selenide). Selenium living block has api+ui+e2e; Rest Assured and Retrofit 2 are living HTTP-only (`layers: [api]`). Java Playwright is living UI+HTTP (`layers: [api, ui, e2e]`, Playwright `APIRequest` for HTTP). **UI-only slots** (no REST): `tests-java-junit5-{selenide,selenium,playwright}` (`layers: [ui, e2e]`). Other folders are teaching slots / generator outputs.
+Only one module is the CI default (Selenide). Selenium living block has api+ui+e2e; Rest Assured and Retrofit 2 are living HTTP-only (`layers: [api]`). Java Playwright is living UI+HTTP (`layers: [api, ui, e2e]`, Playwright `APIRequest` for HTTP). Native e2e is living `tests-java-junit5-rest_assured-selenide-appium` (`layers: [e2e]`). **UI-only slots** (no REST): `tests-java-junit5-{selenide,selenium,playwright}` (`layers: [ui, e2e]`). Other folders are teaching slots / generator outputs.
 
 ## UI-only vs combo vs HTTP-only
 
