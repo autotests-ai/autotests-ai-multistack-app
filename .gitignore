@@ -7,13 +7,13 @@ frontend/_shared/frontend-javascript-embed/templates
 backend/java/backend-java-spring/src/main/resources/static/
 
 # Build
-frontend/kotlin/frontend-kotlin-compose/local.properties
-frontend/kotlin/frontend-kotlin-compose/build/
-frontend/kotlin/frontend-kotlin-compose/app/build/
-frontend/kotlin/frontend-kotlin-compose/.gradle/
-frontend/kotlin/frontend-kotlin-compose/.kotlin/
-frontend/swift/frontend-swift-swiftui/build/
-frontend/swift/frontend-swift-swiftui/**/xcuserdata/
+mobile/kotlin/mobile-kotlin-compose/local.properties
+mobile/kotlin/mobile-kotlin-compose/build/
+mobile/kotlin/mobile-kotlin-compose/app/build/
+mobile/kotlin/mobile-kotlin-compose/.gradle/
+mobile/kotlin/mobile-kotlin-compose/.kotlin/
+mobile/swift/mobile-swift-swiftui/build/
+mobile/swift/mobile-swift-swiftui/**/xcuserdata/
 backend/java/backend-java-spring/build/
 backend/java/backend-java-spring/.gradle/
 backend/java/backend-java-spring/bin/

@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "frontend-kotlin-compose"
+rootProject.name = "mobile-kotlin-compose"
 include(":app")

@@ -13,7 +13,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 /** Product mount id, reported by the Health panel (SPA `UI_MOUNT`). */
-const val UI_MOUNT = "frontend-kotlin-compose"
+const val UI_MOUNT = "mobile-kotlin-compose"
 
 /** The SPA routes, minus the note screen: `/`, `/login`, `/register`. */
 enum class Screen { HOME, LOGIN, REGISTER }

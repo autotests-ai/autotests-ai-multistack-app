@@ -1,8 +1,8 @@
-# frontend-swift-swiftui
+# mobile-swift-swiftui
 
 Product UI — Swift + SwiftUI, **native iOS** cell of the same Multistack
-frontend slot. `frontend-kotlin-compose/` is the Android twin: same screens,
-same testids, same auth API.
+product the ten web frontends serve. `mobile-kotlin-compose/` is the Android
+twin: same screens, same testids, same auth API.
 
 Not a WebView wrapper and not a mock: the app talks to a real matrix backend
 (`POST /api/auth/login`, `/register`, `/logout`, `GET`/`DELETE /api/auth/me`,

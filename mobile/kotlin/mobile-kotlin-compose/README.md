@@ -1,8 +1,8 @@
-# frontend-kotlin-compose
+# mobile-kotlin-compose
 
 Product UI — Kotlin + Jetpack Compose, **native Android** cell of the same
-Multistack frontend slot. `frontend-swift-swiftui/` is the iOS twin: same
-screens, same testids, same auth API.
+Multistack product the ten web frontends serve. `mobile-swift-swiftui/` is the
+iOS twin: same screens, same testids, same auth API.
 
 Not a WebView wrapper and not a mock: the app talks to a real matrix backend
 (`POST /api/auth/login`, `/register`, `/logout`, `GET`/`DELETE /api/auth/me`,

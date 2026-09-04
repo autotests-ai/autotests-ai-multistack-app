@@ -1,7 +1,7 @@
 import Foundation
 
 /// Product mount id, reported by the Health panel (SPA `UI_MOUNT`).
-let uiMount = "frontend-swift-swiftui"
+let uiMount = "mobile-swift-swiftui"
 
 /// Runtime wiring for the matrix backend cell. Precedence: launch environment
 /// (Appium `processArguments.env`) → Info.plist (build setting) → live pair.

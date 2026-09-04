@@ -1,13 +1,13 @@
 # Native shell contract (Android + iOS)
 
-SSOT for the **native** frontend cells of the Multistack slot. Behaviour and API
-stay `flows/login.md`; this file only says how the web testids appear on a
-device, so **one Appium suite drives both platforms**.
+SSOT for the **`mobile/` zone** — the same Multistack product on a device.
+Behaviour and API stay `flows/login.md`; this file only says how the web
+testids appear natively, so **one Appium suite drives both platforms**.
 
 | Cell | Path | Artifact | Id |
 |------|------|----------|----|
-| `frontend-kotlin-compose` | [`../frontend/kotlin/frontend-kotlin-compose/`](../frontend/kotlin/frontend-kotlin-compose/) | `app-debug.apk` | package `dev.multistack.compose`, activity `.MainActivity` |
-| `frontend-swift-swiftui` | [`../frontend/swift/frontend-swift-swiftui/`](../frontend/swift/frontend-swift-swiftui/) | `Multistack.app` / `.ipa` | bundle `dev.multistack.swiftui` |
+| `mobile-kotlin-compose` | [`../mobile/kotlin/mobile-kotlin-compose/`](../mobile/kotlin/mobile-kotlin-compose/) | `app-debug.apk` | package `dev.multistack.compose`, activity `.MainActivity` |
+| `mobile-swift-swiftui` | [`../mobile/swift/mobile-swift-swiftui/`](../mobile/swift/mobile-swift-swiftui/) | `Multistack.app` / `.ipa` | bundle `dev.multistack.swiftui` |
 
 ## Locator mapping
 

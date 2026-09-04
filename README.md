@@ -24,15 +24,17 @@ autotests-ai-multistack-app/
 Underscore **only** in compound tool names, e.g. `tests-java-junit5-no_allure-selenide`.
 
 Frontend layout: language → product module (stack in the name); component tests in `src/test/`.  
-Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/NAMING.md) · **routing SSOT:** [deploy/matrix.yaml](deploy/matrix.yaml).
+`mobile` is a zone of its own, not a frontend language: the artifact is an app bundle, so the
+id carries that zone (`mobile-kotlin-compose`) and the module never enters the served matrix.  
+Full maps: [frontend/README.md](frontend/README.md) · [mobile/README.md](mobile/README.md) · [tests/NAMING.md](tests/NAMING.md) · **routing SSOT:** [deploy/matrix.yaml](deploy/matrix.yaml).
 
 | Zone | Current modules | Future slots |
 |------|-----------------|--------------|
 | **frontend/javascript/** | `frontend-javascript-vanilla`, `react`, `angular`, `vue`, `jquery` (all active) | — |
 | **frontend/typescript/** | `frontend-typescript-vanilla`, `react` (+ RTL), `angular`, `vue` (+ VTU), `jquery` (all active) | — |
-| **frontend/kotlin/** | `frontend-kotlin-compose` (active) — native Android, APK | — |
-| **frontend/swift/** | `frontend-swift-swiftui` (active) — native iOS, IPA / sim `.app` | — |
 | **frontend/_shared/** | `frontend-javascript-app`, `frontend-javascript-embed`, `frontend-react-ui` | — |
+| **mobile/kotlin/** | `mobile-kotlin-compose` (active) — native Android, APK | — |
+| **mobile/swift/** | `mobile-swift-swiftui` (active) — native iOS, IPA / sim `.app` | — |
 | **backend/java/** | `backend-java-spring` (active) | — |
 | **backend/kotlin/** | `backend-kotlin-spring` (active) | — |
 | **backend/python/** | `backend-python-flask`, `backend-python-fastapi`, `backend-python-django` (active) | — |
@@ -209,7 +211,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:9800/
 |---------|------|
 | `frontend-*` (ten) | one nginx image per stack, `:9800`–`:9814` — same screens, independent source trees |
 | `frontend-typescript-react` | React SPA (`:9811`) — the module CI builds and deploys |
-| `frontend-kotlin-compose` · `frontend-swift-swiftui` | native cells — no port, no container: the artifact is an APK / IPA for one Appium suite ([`_contract/native-shell.md`](_contract/native-shell.md)) |
+| `mobile-kotlin-compose` · `mobile-swift-swiftui` | own zone, no port and no container: the artifact is an APK / IPA for one Appium suite ([`_contract/native-shell.md`](_contract/native-shell.md)) |
 | `backend-java-spring` | Spring JSON API (`:8800`) |
 | `backend-kotlin-spring` | Spring Kotlin JSON API (`:8810`) |
 | `backend-python-flask` | Flask JSON API (`:8820`) |
