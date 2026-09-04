@@ -30,7 +30,7 @@ Screens, testids, shell edge and Appium capabilities: [`../_contract/native-shel
 Flow and API stay [`../_contract/flows/login.md`](../_contract/flows/login.md).
 
 The design-system header is markup **plus** `js/header.js`, which a native app cannot load, so
-each cell reimplements that chrome (40dp/pt bar, brand `Multistack`, lang + theme toggles,
+each cell reimplements that chrome (40dp/pt bar, brand text `QA.GURU`, lang + theme toggles,
 burger ≤768 / inline nav ≥769) against the same CSS and JS SSOT — never a second copy of the
 design-system CSS (monorepo ADR 007).
 

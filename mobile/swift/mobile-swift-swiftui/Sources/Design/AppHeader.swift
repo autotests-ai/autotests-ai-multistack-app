@@ -17,7 +17,7 @@ struct HeaderNavItem: Identifiable {
 
 /// Native reimplementation of the design-system header (`templates/header.html`
 /// + `js/header.js` + `css/header.css`). Native cannot load that JS, so the
-/// chrome is rebuilt: 40pt bar, brand `Multistack`, the same testids, lang and
+/// chrome is rebuilt: 40pt bar, brand text `QA.GURU` (no SVG), the same testids, lang and
 /// theme toggles, and the burger menu.
 ///
 /// Shell edge (rule `layout-standard`): `wide == false` → burger only,
@@ -45,7 +45,7 @@ struct AppHeader: View {
         VStack(spacing: 0) {
             HStack(spacing: Space.x4) {
                 Button(action: onBrand) {
-                    Text("Multistack")
+                    Text("QA.GURU")
                         .font(.system(size: FontSize.sm, weight: .semibold))
                         .foregroundColor(palette.text)
                 }

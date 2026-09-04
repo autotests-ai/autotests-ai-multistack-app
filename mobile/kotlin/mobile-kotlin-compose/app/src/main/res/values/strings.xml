@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Screen copy lives in i18n/Dictionaries.kt (en/ru, mirrors the SPA). -->
-    <string name="app_name">Multistack</string>
+    <!-- Launcher / recents label. Screen copy lives in i18n/Dictionaries.kt. -->
+    <string name="app_name">QA.GURU</string>
 </resources>

@@ -2,7 +2,8 @@ import Foundation
 
 /// Mirrors `frontend-typescript-react/src/i18n/{en,ru}.ts` minus the note/items
 /// copy this cell does not ship. Keys and wording stay identical to the Compose
-/// cell so one Appium suite can assert the same strings everywhere.
+/// cell so one Appium suite can assert the same strings everywhere — except
+/// `home.title`, which is the native brand `QA.GURU` (header + launcher).
 enum Lang: String {
     case en
     case ru
@@ -89,7 +90,7 @@ extension CopyBook {
     static let en = CopyBook(
         nav: NavCopy(home: "Home", login: "Login", register: "Register", stack: "Stack"),
         home: HomeCopy(
-            title: "Multistack",
+            title: "QA.GURU",
             blurb: "Swift SwiftUI native app — session from {api}.",
             session: "Session",
             welcome: "Welcome, {username}!",
@@ -144,7 +145,7 @@ extension CopyBook {
     static let ru = CopyBook(
         nav: NavCopy(home: "Главная", login: "Вход", register: "Регистрация", stack: "Стек"),
         home: HomeCopy(
-            title: "Multistack",
+            title: "QA.GURU",
             blurb: "Нативное приложение Swift SwiftUI — сессия из {api}.",
             session: "Сессия",
             welcome: "Добро пожаловать, {username}!",

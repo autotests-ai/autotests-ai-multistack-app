@@ -44,7 +44,7 @@ Cancel keeps the session (contract acceptance).
 The design-system header is markup plus `js/header.js`; a native app cannot load
 that JS. `ui/AppHeader.kt` rebuilds the same chrome against the same SSOT
 (`design-system/templates/header.html`, `css/header.css`, `js/header.js`):
-40dp bar, brand `Multistack`, lang and theme toggles, burger menu.
+40dp bar, brand text `QA.GURU`, lang and theme toggles, burger menu.
 
 | Width | Nav | Search | Burger |
 |-------|-----|--------|--------|

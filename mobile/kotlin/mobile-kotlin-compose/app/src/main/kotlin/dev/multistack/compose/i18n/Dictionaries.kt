@@ -3,7 +3,8 @@ package dev.multistack.compose.i18n
 /**
  * Mirrors `frontend-typescript-react/src/i18n/{en,ru}.ts` minus the note/items
  * copy this cell does not ship. Keys and wording stay identical so one Appium
- * suite can assert the same strings on web, Android and iOS.
+ * suite can assert the same strings on web, Android and iOS — except
+ * `home.title`, which is the native brand `QA.GURU` (header + launcher).
  */
 enum class Lang(val code: String) {
     EN("en"),
@@ -87,7 +88,7 @@ data class Dictionary(
 private val EN = Dictionary(
     nav = NavCopy(home = "Home", login = "Login", register = "Register", stack = "Stack"),
     home = HomeCopy(
-        title = "Multistack",
+        title = "QA.GURU",
         blurb = "Kotlin Compose native app — session from {api}.",
         session = "Session",
         welcome = "Welcome, {username}!",
@@ -142,7 +143,7 @@ private val EN = Dictionary(
 private val RU = Dictionary(
     nav = NavCopy(home = "Главная", login = "Вход", register = "Регистрация", stack = "Стек"),
     home = HomeCopy(
-        title = "Multistack",
+        title = "QA.GURU",
         blurb = "Нативное приложение Kotlin Compose — сессия из {api}.",
         session = "Сессия",
         welcome = "Добро пожаловать, {username}!",

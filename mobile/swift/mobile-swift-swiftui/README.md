@@ -52,7 +52,7 @@ acceptance).
 The design-system header is markup plus `js/header.js`; a native app cannot load
 that JS. `Sources/Design/AppHeader.swift` rebuilds the same chrome against the
 same SSOT (`design-system/templates/header.html`, `css/header.css`,
-`js/header.js`): 40pt bar, brand `Multistack`, lang and theme toggles, burger
+`js/header.js`): 40pt bar, brand text `QA.GURU`, lang and theme toggles, burger
 menu.
 
 | Width | Nav | Search | Burger |
