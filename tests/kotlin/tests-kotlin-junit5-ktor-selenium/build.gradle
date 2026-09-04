@@ -1,0 +1,310 @@
+/*
+ * tests-kotlin — UI+HTTP living block · Selenium 4 + in-cell Ktor · JUnit 5 · Allure 3
+ *
+ *   ./gradlew test -Denv=mock -DincludeTags=ui -DexcludeTags=screenshot
+ *   ./gradlew test -Denv=ci -DincludeTags=api
+ *   ./gradlew test -Denv=ci -DincludeTags=infra jacocoTestCoverageVerification
+ *
+ * Default CI cell stays Java Selenide. Java Selenium canon is the sibling
+ * tests-java-junit5-rest_assured-selenium. HTTP-only Ktor school is
+ * tests-kotlin-junit5-ktor — not a second folder inside this cell.
+ */
+
+buildscript {
+    ext {
+        javaVersion         = 21
+        kotlinVersion       = '2.4.10'
+        junitVersion        = '5.11.4'
+        slf4jVersion        = '2.0.17'
+        allurePluginVersion = '4.1.0'
+        allureVersion       = '3.13.0'
+        allureBomVersion    = '2.35.2'
+        sonarPluginVersion  = '6.2.0.5505'
+        seleniumVersion     = '4.33.0'
+        ktorVersion         = '3.5.2'
+        jacksonVersion      = '2.18.2'
+        ownerVersion        = '1.0.12'
+        datafakerVersion    = '2.4.4'
+        jsonSchemaVersion   = '1.5.8'
+        testParallelForks   = 1
+        defaultEnv          = 'ci'
+    }
+}
+
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '2.4.10'
+    id 'java-library'
+    id 'jacoco'
+    id 'io.qameta.allure' version "${allurePluginVersion}"
+    id 'org.sonarqube' version "${sonarPluginVersion}"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(javaVersion)
+    }
+}
+
+kotlin {
+    jvmToolchain(Integer.parseInt(javaVersion.toString()))
+}
+
+sonar {
+    properties {
+        property 'sonar.projectKey', System.getenv('SONAR_PROJECT_KEY') ?: 'autotests-ai-multistack-app-tests-kotlin-junit5-ktor-selenium'
+        property 'sonar.projectName', System.getenv('SONAR_PROJECT_KEY') ?: 'autotests-ai-multistack-app-tests-kotlin-junit5-ktor-selenium'
+        property 'sonar.host.url', System.getenv('SONAR_HOST_URL') ?: 'https://sonar.qa.guru'
+        property 'sonar.sources', 'src/test/java,src/test/kotlin'
+        property 'sonar.tests', ''
+        property 'sonar.java.binaries', 'build/classes/java/test,build/classes/kotlin/test'
+        property 'sonar.coverage.jacoco.xmlReportPaths',
+                "${layout.buildDirectory.get()}/reports/jacoco/test/jacocoTestReport.xml"
+        property 'sonar.inclusions', '**/config/ConfigReader.java,**/helpers/LayoutCss.java,**/helpers/TokensCss.java'
+    }
+}
+
+def allureReportMode = System.getProperty('allureReportMode', 'allure3')
+def allureAgentMode = System.getProperty('allureAgentMode', 'none')
+def allureQualityGateHook = System.getProperty('allureQualityGate', 'false') == 'true'
+
+repositories {
+    mavenCentral()
+}
+
+allure {
+    version = allureVersion
+    adapter {
+        allureJavaVersion = allureBomVersion
+        resultsDir.set(layout.buildDirectory.dir('allure-results'))
+        autoconfigure.set(allureReportMode != 'none')
+        aspectjWeaver.set(allureReportMode != 'none')
+        frameworks {
+            junit5 {
+                enabled.set(allureReportMode != 'none')
+                autoconfigureListeners.set(allureReportMode != 'none')
+            }
+        }
+    }
+    report {
+        configFile.set(layout.projectDirectory.file('allurerc.mjs'))
+    }
+}
+
+dependencies {
+    testImplementation platform("io.qameta.allure:allure-bom:${allureBomVersion}")
+    testImplementation platform("io.ktor:ktor-bom:${ktorVersion}")
+    testImplementation platform("org.seleniumhq.selenium:selenium-bom:${seleniumVersion}")
+    testImplementation (
+            'io.qameta.allure:allure-jupiter',
+            'org.seleniumhq.selenium:selenium-java',
+            "org.aeonbits.owner:owner:${ownerVersion}",
+            "org.junit.jupiter:junit-jupiter:${junitVersion}",
+            'io.ktor:ktor-client-core',
+            'io.ktor:ktor-client-java',
+            "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}",
+            "com.networknt:json-schema-validator:${jsonSchemaVersion}",
+            "net.datafaker:datafaker:${datafakerVersion}")
+    testRuntimeOnly (
+            'org.junit.platform:junit-platform-launcher',
+            "org.slf4j:slf4j-simple:${slf4jVersion}")
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+def testEnv = System.getProperty('env', defaultEnv)
+
+def configKeys = new Properties().with { props ->
+    file('src/test/resources/config/default.properties').withInputStream { props.load(it) }
+    props.stringPropertyNames()
+}
+
+def resolveConfiguredBaseUrl = { String env ->
+    def props = new Properties()
+    def configFile = file("src/test/resources/config/${env}.properties")
+    if (configFile.exists()) {
+        configFile.withInputStream { props.load(it) }
+    }
+    def baseUrl = (System.getProperty('baseUrl') ?: props.getProperty('baseUrl', '')).trim()
+    if (baseUrl) {
+        return baseUrl.endsWith('/') ? baseUrl : baseUrl + '/'
+    }
+    throw new GradleException("Set baseUrl in config/${env}.properties")
+}
+
+def infraJacocoTags = ['infra', 'infra-backend', 'infra-frontend'] as Set
+
+def jacocoEnabledForCurrentRun = {
+    def tags = (System.getProperty('includeTags') ?: '').split(',').collect { it.trim() }.findAll { it } as Set
+    return tags.isEmpty() || tags.any { infraJacocoTags.contains(it) }
+}
+
+def browserlessTags = ['infra', 'infra-backend', 'infra-frontend', 'api', 'integration', 'manual'] as Set
+
+def shouldSkipHealthCheck = {
+    if (System.getProperty('skipHealthCheck', 'false') == 'true') {
+        return true
+    }
+    def includeTags = System.getProperty('includeTags', '').split(',').collect { it.trim() }.findAll { it }
+    return !includeTags.isEmpty() && includeTags.every { browserlessTags.contains(it) }
+}
+
+def healthCheckUrl = shouldSkipHealthCheck() ? null : resolveConfiguredBaseUrl(testEnv)
+
+tasks.register('healthCheck') {
+    group = 'verification'
+    description = 'GET baseUrl/ — auto-skip for -DincludeTags=infra*|api|integration|manual and -DskipHealthCheck=true'
+    String url = healthCheckUrl
+    onlyIf { url != null && url.startsWith('http') }
+    doLast {
+        def client = java.net.http.HttpClient.newBuilder()
+                .connectTimeout(java.time.Duration.ofMillis(5000))
+                .build()
+        def request = java.net.http.HttpRequest.newBuilder()
+                .uri(java.net.URI.create(url))
+                .timeout(java.time.Duration.ofMillis(5000))
+                .GET()
+                .build()
+        try {
+            def code = client.send(request, java.net.http.HttpResponse.BodyHandlers.discarding()).statusCode()
+            if (code != 200) {
+                throw new GradleException(
+                        "App health check failed: GET ${url} returned HTTP ${code}. " +
+                        'Start stack: docker compose up -d (or cd backend && ./gradlew bootRun)'
+                )
+            }
+        } catch (java.net.ConnectException | java.net.http.HttpTimeoutException e) {
+            throw new GradleException(
+                    "App health check failed: cannot reach ${url} (${e.class.simpleName}). " +
+                    'Start stack: docker compose up -d (or cd backend && ./gradlew bootRun)',
+                    e
+            )
+        }
+    }
+}
+
+test {
+    dependsOn healthCheck
+    description = 'Run tests: -Denv=<stand> -DincludeTags=<tags> -DexcludeTags=<tags>'
+    jacoco {
+        enabled = jacocoEnabledForCurrentRun()
+    }
+    useJUnitPlatform {
+        def includeTagsProp = System.getProperty('includeTags')
+        if (includeTagsProp) {
+            includeTags(*(includeTagsProp.split(',')*.trim()))
+        }
+        def excludeTagsProp = System.getProperty('excludeTags')
+        if (excludeTagsProp) {
+            excludeTags(*(excludeTagsProp.split(',')*.trim()))
+        }
+    }
+    systemProperty 'env', testEnv
+    systemProperty 'allureReportMode', allureReportMode
+    systemProperty 'allureAgentMode', allureAgentMode
+    configKeys.each { key ->
+        def override = System.getProperty(key)
+        if (override != null) {
+            systemProperty key, override
+        }
+    }
+    [
+            'junit.jupiter.execution.parallel.enabled',
+            'junit.jupiter.execution.parallel.mode.default',
+            'junit.jupiter.execution.parallel.mode.classes.default',
+            'junit.jupiter.execution.parallel.config.strategy',
+            'junit.jupiter.execution.parallel.config.fixed.parallelism',
+    ].each { key ->
+        def override = System.getProperty(key)
+        if (override != null) {
+            systemProperty key, override
+        }
+    }
+    maxParallelForks = testParallelForks
+}
+
+def allureResultsDir = layout.buildDirectory.dir('allure-results').get().asFile
+
+def hasAllureResults = {
+    allureResultsDir.exists() && (allureResultsDir.listFiles()?.length ?: 0) > 0
+}
+
+tasks.register('allureQualityGate', Exec) {
+    group = 'verification'
+    description = 'Allure 3 quality gate on build/allure-results (default rules)'
+    onlyIf {
+        System.getProperty('allureReportMode', 'allure3') != 'none' && hasAllureResults()
+    }
+    def resultsDir = allureResultsDir.path
+    commandLine 'npx', '--yes', "allure@${allureVersion}", 'quality-gate', resultsDir
+}
+
+if (allureReportMode == 'none') {
+    tasks.named('test', Test).configure {
+        systemProperties.remove('allure.results.directory')
+        def allureResultsToDelete = layout.buildDirectory.dir('allure-results')
+        doLast {
+            allureResultsToDelete.get().asFile.deleteDir()
+        }
+    }
+}
+
+if (allureQualityGateHook && allureReportMode != 'none') {
+    tasks.named('test', Test).configure {
+        finalizedBy 'allureQualityGate'
+    }
+}
+
+def infraCoverageIncludes = {
+    def tags = (System.getProperty('includeTags') ?: '').split(',').collect { it.trim() }.findAll { it } as Set
+    def backendOnly = tags.contains('infra-backend') && !tags.contains('infra-frontend') && !tags.contains('infra')
+    def frontendOnly = tags.contains('infra-frontend') && !tags.contains('infra-backend') && !tags.contains('infra')
+    if (backendOnly) {
+        return ['config/ConfigReader.class']
+    }
+    if (frontendOnly) {
+        return ['helpers/LayoutCss.class', 'helpers/TokensCss.class']
+    }
+    return [
+            'config/ConfigReader.class',
+            'helpers/LayoutCss.class',
+            'helpers/TokensCss.class',
+    ]
+}
+
+def infraCoverageSlice = {
+    def includes = infraCoverageIncludes()
+    sourceSets.test.output.classesDirs.collect { classDir ->
+        fileTree(dir: classDir, include: includes)
+    }
+}
+
+tasks.named('jacocoTestReport', JacocoReport).configure {
+    group = 'verification'
+    description = 'JaCoCo report for test-infra config + CSS helpers'
+    dependsOn tasks.named('test')
+    reports {
+        xml.required = true
+        html.required = true
+    }
+    classDirectories.setFrom(files(infraCoverageSlice()))
+    sourceDirectories.setFrom(files(sourceSets.test.java.srcDirs))
+    executionData.setFrom(layout.buildDirectory.file('jacoco/test.exec'))
+}
+
+tasks.named('jacocoTestCoverageVerification', JacocoCoverageVerification).configure {
+    group = 'verification'
+    description = 'Fail when test-infra helpers/config drop below 100% line coverage'
+    dependsOn tasks.named('jacocoTestReport')
+    violationRules {
+        rule {
+            limit {
+                counter = 'LINE'
+                minimum = 1.0
+            }
+        }
+    }
+    classDirectories.setFrom(files(infraCoverageSlice()))
+    executionData.setFrom(layout.buildDirectory.file('jacoco/test.exec'))
+}

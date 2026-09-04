@@ -1,6 +1,6 @@
 # tests-javascript-axios
 
-Vitest · **axios** · Allure 3. HTTP-only school — same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader + 3 manual). No browser.
+Vitest · **axios** · Allure 3. HTTP-only school — same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader). No browser, no manual layer.
 
 Titles and JSON schemas match [`tests-typescript-axios`](../../typescript/tests-typescript-axios/). Sibling UI+HTTP block is [`tests-javascript-api_request-playwright`](../tests-javascript-api_request-playwright/) (Playwright **APIRequest**, not Axios). Axios+Playwright clone folder is [`tests-javascript-axios-playwright`](../tests-javascript-axios-playwright/) (`bad-practice`). Do not put Axios inside the living Playwright folder.
 
@@ -11,7 +11,6 @@ cp .env.example .env   # optional; default STAND=prod → autotests.ai
 npx vitest run --tagsFilter infra
 npx vitest run --tagsFilter infra --coverage
 npx vitest run --tagsFilter api
-npx vitest run --tagsFilter manual
 ```
 
 CI `sonar-tests` reads `coverage/lcov.info` via [`sonar-project.properties`](sonar-project.properties) (allow-list `config.js`).

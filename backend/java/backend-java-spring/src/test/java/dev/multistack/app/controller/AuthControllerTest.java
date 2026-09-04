@@ -85,6 +85,30 @@ class AuthControllerTest extends SliceTestBase {
     }
 
     @Test
+    @DisplayName("POST /api/auth/login accepts 3-character username and 6-character password")
+    void loginAcceptsMinimumLengthCredentials() throws Exception {
+        when(authService.login(any(LoginRequest.class)))
+                .thenReturn(new AuthResponse("jwt-token", "abc", "/"));
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"abc\",\"password\":\"123456\"}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/register accepts 3-character username and 6-character password")
+    void registerAcceptsMinimumLengthCredentials() throws Exception {
+        when(authService.register(any(RegisterRequest.class)))
+                .thenReturn(new AuthResponse("jwt-token", "abc", "/"));
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"abc\",\"password\":\"123456\"}"))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
     @DisplayName("POST /api/auth/logout returns 204")
     void logoutReturnsNoContent() throws Exception {
         mockMvc.perform(post("/api/auth/logout"))

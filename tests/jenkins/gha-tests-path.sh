@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # GHA tests-lane Gradle path (one checkout, sequential layers).
-# Canon: tests/java/tests-java-gradle-junit5-allure3-selenide/.github/actions/{mock,api,e2e}
+# Canon: tests/java/tests-java-junit5-rest_assured-selenide/.github/actions/{mock,api,e2e}
 # Do not pass -DremoteUrl on mock (local CFT). E2E: append-java-remote-url.sh
 # (Selenoid WebDriver for selenide/selenium, Selenoid Playwright WS for playwright).
 set -euo pipefail
@@ -13,7 +13,11 @@ BACKEND_LANG="${BACKEND_LANG:-java}"
 BACKEND_FRAMEWORK="${BACKEND_FRAMEWORK:-spring}"
 FRONTEND_LANG="${FRONTEND_LANG:-typescript}"
 FRONTEND_FRAMEWORK="${FRONTEND_FRAMEWORK:-react}"
-MODULE="${ROOT}/tests/java/tests-java-gradle-junit5-allure3-${TESTS_UI_LIBRARY}"
+case "$TESTS_UI_LIBRARY" in
+  selenium) MODULE="${ROOT}/tests/java/tests-java-junit5-rest_assured-selenium" ;;
+  playwright) MODULE="${ROOT}/tests/java/tests-java-junit5-api_request-playwright" ;;
+  *) MODULE="${ROOT}/tests/java/tests-java-junit5-rest_assured-selenide" ;;
+esac
 FRONTEND_DIR="${ROOT}/frontend/${FRONTEND_LANG}/frontend-${FRONTEND_LANG}-${FRONTEND_FRAMEWORK}"
 FRONTEND_IMAGE="ghcr.io/autotests-ai/autotests-ai-multistack-app-frontend-${FRONTEND_LANG}-${FRONTEND_FRAMEWORK}:mock-local"
 MERGE="${ROOT}/allure-results-ci"

@@ -8,8 +8,7 @@
     "test": "vitest run",
     "test:api": "vitest run --tagsFilter api",
     "test:infra": "vitest run --tagsFilter infra",
-    "test:infra:coverage": "vitest run --tagsFilter infra --coverage",
-    "test:manual": "vitest run --tagsFilter manual"
+    "test:infra:coverage": "vitest run --tagsFilter infra --coverage"
   },
   "engines": {
     "node": ">=26"

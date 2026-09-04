@@ -4,12 +4,13 @@ Same job names as `ci.yml`. Implementations live here because GitHub does not
 interpolate `uses:`.
 
 `tests/.github/actions/<verb>` dispatches here when `TESTS_LANG=csharp`.
-Living modules: `tests-csharp-nunit-allure3-restsharp` (HTTP-only),
-`tests-csharp-nunit-allure3-selenium` (Selenium + in-cell RestSharp), and
-`tests-csharp-xunit-allure3-playwright` (Playwright + in-cell RestSharp). Default
+Living modules: `tests-csharp-nunit-restsharp` (HTTP-only),
+`tests-csharp-nunit-restsharp-selenium` (Selenium + in-cell RestSharp), and
+`tests-csharp-xunit-api_request-playwright` (Playwright + in-cell APIRequest). Default
 clone `TESTS_*` stays Java Selenide.
-`module_dir` is 4-segment: `tests/csharp/tests-csharp-{framework}-{report}-{ui}`
-(`nunit` · `allure3` · `restsharp` | `selenium`; `xunit` · `allure3` · `playwright`).
+Folder id has no report segment (`TESTS_REPORT` stays a CI knob):
+`tests-csharp-nunit-restsharp` · `tests-csharp-nunit-restsharp-selenium` ·
+`tests-csharp-xunit-api_request-playwright`.
 
 HTTP-only RestSharp: no `mock` / `e2e` in that cell. Selenium and Playwright cells
 have ui+e2e locally; clone CI verbs for mock/e2e still STOP until wired (not default CI).

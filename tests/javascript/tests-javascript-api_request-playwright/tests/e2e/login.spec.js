@@ -1,5 +1,7 @@
 const { expect } = require('@playwright/test');
 const { test } = require('../../src/helpers/fixtures/fixture');
+const { UserBuilder } = require('../../src/helpers/builders');
+const { deleteAccountQuietly, apiRequest } = require('../../src/helpers/api');
 
 const LOGIN_REQUIRED = 'Login is required (minimum 3 characters)';
 const LOGIN_MIN_LENGTH = 'Login must be at least 3 characters';
@@ -13,6 +15,23 @@ test.describe('Login', { tag: ['@e2e'] }, () => {
     await webApp.login.open();
     await webApp.login.login('user1', 'password1');
     await expect(webApp.home.getWelcomeText()).toContainText('Welcome, user1!');
+  });
+
+  test('Пользователь входит с логином из 3 символов и паролем из 6', async ({ webApp, request }) => {
+    const user = new UserBuilder().withMinLengthCredentials().build();
+    try {
+      const created = await apiRequest('POST', '/api/auth/register', {
+        json: { username: user.username, password: user.password },
+      });
+      if (!created.ok) {
+        throw new Error(`register ${user.username}: ${created.status}`);
+      }
+      await webApp.login.open();
+      await webApp.login.login(user.username, user.password);
+      await expect(webApp.home.getWelcomeText()).toContainText(user.welcomeMessage());
+    } finally {
+      await deleteAccountQuietly(request, user.username, user.password);
+    }
   });
 
   test('Пустой логин показывает ошибку валидации', async ({ webApp }) => {

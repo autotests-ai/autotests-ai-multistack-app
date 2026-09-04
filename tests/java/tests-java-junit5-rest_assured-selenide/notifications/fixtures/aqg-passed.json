@@ -1,0 +1,36 @@
+{
+  "kind": "allure",
+  "testId": "quality-gate",
+  "passed": true,
+  "rules": [
+    {
+      "id": "maxFailures",
+      "passed": true,
+      "message": "Failed tests 0 within threshold 0",
+      "actual": 0,
+      "expected": 0,
+      "knownExcluded": 0
+    }
+  ],
+  "title": "Allure Quality Gate",
+  "barTitle": "Allure Quality Gate",
+  "config": {
+    "rules": [{ "maxFailures": 0 }],
+    "source": {
+      "configFile": "allurerc.mjs",
+      "rulesFile": "allure/quality-gate.mjs",
+      "hrefBase": "https://github.com/autotests-ai/autotests-ai-multistack-app/blob/main/tests/java/tests-java-junit5-rest_assured-selenide/"
+    }
+  },
+  "labels": {
+    "passed": {
+      "ru": "Allure Quality Gate пройден",
+      "en": "Allure Quality Gate passed"
+    },
+    "failed": {
+      "ru": "Allure Quality Gate не пройден",
+      "en": "Allure Quality Gate failed"
+    }
+  },
+  "lang": "ru"
+}

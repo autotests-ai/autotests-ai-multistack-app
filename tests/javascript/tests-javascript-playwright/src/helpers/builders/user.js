@@ -34,6 +34,12 @@ exports.UserBuilder = class UserBuilder {
     return this;
   }
 
+  withMinLengthCredentials() {
+    this.username = faker.string.alphanumeric(3).toLowerCase();
+    this.password = '123456';
+    return this;
+  }
+
   build() {
     return new User(this.username, this.password);
   }

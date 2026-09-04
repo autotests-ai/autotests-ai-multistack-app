@@ -1,6 +1,6 @@
 import { epic, severity } from 'allure-js-commons';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { WRONG_CREDENTIALS_MESSAGE, request, username } from '../../api-client.js';
+import { WRONG_CREDENTIALS_MESSAGE, passwordAtMinLength, request, username, usernameAtMinLength } from '../../api-client.js';
 import { loadConfig } from '../../config.js';
 import { assertSchema } from '../../schema.js';
 
@@ -134,6 +134,28 @@ describe('Auth API', { tags: ['api'] }, () => {
     expect(body.username).toBe(name);
     expect(body.redirectUrl).toBe('/');
     await request(config(), 'DELETE', '/api/auth/me', { token: String(body.token) });
+  });
+
+  test('POST /api/auth/register accepts a 3-character username and 6-character password', async () => {
+    const name = usernameAtMinLength();
+    const response = await request(config(), 'POST', '/api/auth/register', {
+      json: { username: name, password: passwordAtMinLength() },
+    });
+    expect(response.status).toBe(201);
+    const body = response.data;
+    assertSchema(body, 'auth-response.json');
+    expect(body.username).toBe(name);
+    await request(config(), 'DELETE', '/api/auth/me', { token: String(body.token) });
+  });
+
+  test('POST /api/auth/login with min-length unknown user is 401, not 400', async () => {
+    const response = await request(config(), 'POST', '/api/auth/login', {
+      json: { username: usernameAtMinLength(), password: passwordAtMinLength() },
+    });
+    expect(response.status).toBe(401);
+    const body = response.data;
+    assertSchema(body, 'error.json');
+    expect(body.message).toBe(WRONG_CREDENTIALS_MESSAGE);
   });
 
   test('POST /api/auth/register rejects a duplicate username with 409', async () => {

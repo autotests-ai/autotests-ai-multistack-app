@@ -84,6 +84,23 @@ describe('LoginPage', () => {
     );
   });
 
+  it('submits 3-character login and 6-character password without client min-length errors', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve(jsonResponse({ token: 'tok-min', username: 'abc', redirectUrl: '/' })),
+      ),
+    );
+
+    renderLogin();
+    await user.type(screen.getByTestId('login-input'), 'abc');
+    await user.type(screen.getByTestId('password-input'), '123456');
+    await user.click(screen.getByTestId('submit-button'));
+
+    expect(await screen.findByTestId('home-landed')).toBeInTheDocument();
+  });
+
   it('navigates to / when login succeeds without redirectUrl', async () => {
     const user = userEvent.setup();
     vi.stubGlobal(

@@ -7,6 +7,7 @@
 #   api           = HTTP against a running stand (tests/.../tests/api) — Rest Assured or Retrofit 2
 #   ui            = browser SPA on stub API (tests/.../tests/ui) — mock stand
 #   e2e           = browser through live backend (tests/.../tests/e2e)
+#   manual        = browser residual a human executes (tests/.../tests/manual) — own tree, not e2e
 #   contracts     = OpenAPI SSOT + openapi-diff
 
 default:
@@ -15,7 +16,7 @@ default:
   component: null  # RTL when SPA present — never tests/component
   e2e: tests/e2e
   ui: tests/ui
-  manual: tests/e2e  # @Manual on method, same tree as e2e
+  manual: tests/manual  # own tree; only cells with a browser layer carry it
 
 stacks:
   java-spring:
@@ -25,6 +26,7 @@ stacks:
     component: frontend/typescript/frontend-typescript-react/src  # Vitest + RTL; CI job component-tests
     ui: tests/java/tests-java-junit5-rest_assured-selenide/src/test/java/tests/ui
     e2e: tests/java/tests-java-junit5-rest_assured-selenide/src/test/java/tests/e2e
+    manual: tests/java/tests-java-junit5-rest_assured-selenide/src/test/java/tests/manual
     testRunner: gradle
     browser: selenide
     frontendTestRunner: vitest
@@ -72,8 +74,9 @@ layers:
     description: Browser journeys through a live backend
     required: true
   manual:
-    description: Exploratory, @Manual tag
+    description: Browser residual a human executes — @Manual tag, own tests/manual tree; HTTP-only cells (layers [api]) have none
     required: false
+    living_canon: projects/autotests-ai-multistack-home/autotests-ai-multistack-app/tests/java/tests-java-junit5-rest_assured-selenide/src/test/java/tests/manual
   contracts_openapi:
     description: Spec lint / drift — OpenAPI SSOT + openapi-diff script
     required: false

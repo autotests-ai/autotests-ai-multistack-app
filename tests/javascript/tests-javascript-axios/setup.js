@@ -15,9 +15,6 @@ beforeEach(async (ctx) => {
   const tags = tagNames(ctx);
   if (tags.includes('api')) {
     await label('layer', 'api');
-  } else if (tags.includes('manual')) {
-    await label('layer', 'manual');
-    await label('ALLURE_MANUAL', 'true');
   } else if (tags.includes('infra') || tags.includes('infra_backend')) {
     await label('layer', 'infra');
   }

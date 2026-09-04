@@ -21,6 +21,14 @@ export function username(): string {
   return `user_${randomBytes(5).toString('hex')}`;
 }
 
+export function usernameAtMinLength(): string {
+  return randomBytes(2).toString('hex').slice(0, 3);
+}
+
+export function passwordAtMinLength(): string {
+  return '123456';
+}
+
 function pathOf(path: string): string {
   return path.startsWith('/') ? path : `/${path}`;
 }

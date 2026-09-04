@@ -2,6 +2,8 @@ const { test, expect } = require('@playwright/test');
 const {
   WRONG_CREDENTIALS_MESSAGE,
   username,
+  usernameAtMinLength,
+  passwordAtMinLength,
   apiRequest,
 } = require('../../src/helpers/api');
 const { assertSchema } = require('../../src/helpers/schema');
@@ -109,6 +111,28 @@ test.describe('Auth API', { tag: ['@api'] }, () => {
     expect(body.username).toBe(name);
     expect(body.redirectUrl).toBe('/');
     await apiRequest('DELETE', '/api/auth/me', { token: body.token });
+  });
+
+  test('POST /api/auth/register accepts a 3-character username and 6-character password', async () => {
+    const name = usernameAtMinLength();
+    const response = await apiRequest('POST', '/api/auth/register', {
+      json: { username: name, password: passwordAtMinLength() },
+    });
+    expect(response.status).toBe(201);
+    const body = await json(response);
+    assertSchema(body, 'auth-response.json');
+    expect(body.username).toBe(name);
+    await apiRequest('DELETE', '/api/auth/me', { token: body.token });
+  });
+
+  test('POST /api/auth/login with min-length unknown user is 401, not 400', async () => {
+    const response = await apiRequest('POST', '/api/auth/login', {
+      json: { username: usernameAtMinLength(), password: passwordAtMinLength() },
+    });
+    expect(response.status).toBe(401);
+    const body = await json(response);
+    assertSchema(body, 'error.json');
+    expect(body.message).toBe(WRONG_CREDENTIALS_MESSAGE);
   });
 
   test('POST /api/auth/register rejects a duplicate username with 409', async () => {

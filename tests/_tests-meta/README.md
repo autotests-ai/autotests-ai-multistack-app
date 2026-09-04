@@ -2,7 +2,7 @@
 
 SSOT for e2e test **metadata** (keys, Allure structure, Gradle shape, GHA pins) — **not** the runnable Selenide project.
 
-Runnable tests: `../java/tests-java-gradle-junit5-allure3-selenide/`.  
+Runnable tests: `../java/tests-java-junit5-rest_assured-selenide/`.  
 README badges / dashboard blocks: monorepo `generators/ethalon/readme/` (not this kit). Consumer repos keep runnable copies only (`allurerc.mjs` + `allure/`, env profiles, workflows, `scripts/gen-env-configs.py`).
 
 | Path | Role |
@@ -35,4 +35,4 @@ Validate etalon config:
 node projects/autotests-ai-multistack-home/autotests-ai-multistack-app/tests/_tests-meta/scripts/validate-allurerc.mjs
 ```
 
-**Owner (runnable tests):** `../java/tests-java-gradle-junit5-allure3-selenide/`. Live clone: push via `derive-from-etalon.sh`. Student takeaway: `ai-first-student-workspace/` (`render.sh --preset singlestack`). Products (`autotests-ai-app`, `one-page-form-app`) — runnable only, no `_ethalon` inbox in product trees.
+**Owner (runnable tests):** `../java/tests-java-junit5-rest_assured-selenide/`. Live clone: push via `derive-from-etalon.sh`. Student takeaway: `ai-first-student-workspace/` (`render.sh --preset singlestack`). Products (`autotests-ai-app`, `one-page-form-app`) — runnable only, no `_ethalon` inbox in product trees.

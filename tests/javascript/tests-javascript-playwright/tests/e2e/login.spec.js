@@ -1,5 +1,6 @@
 const { expect } = require('@playwright/test');
 const { test } = require('../../src/helpers/fixtures/fixture');
+const { UserBuilder } = require('../../src/helpers/builders');
 
 const LOGIN_REQUIRED = 'Login is required (minimum 3 characters)';
 const LOGIN_MIN_LENGTH = 'Login must be at least 3 characters';
@@ -13,6 +14,21 @@ test.describe('Login', { tag: ['@e2e'] }, () => {
     await webApp.login.open();
     await webApp.login.login('user1', 'password1');
     await expect(webApp.home.getWelcomeText()).toContainText('Welcome, user1!');
+  });
+
+  test('Пользователь входит с логином из 3 символов и паролем из 6', async ({ webApp }) => {
+    const user = new UserBuilder().withMinLengthCredentials().build();
+    try {
+      await webApp.register.open();
+      await webApp.register.signup(user.username, user.password);
+      await expect(webApp.home.getWelcomeText()).toContainText(user.welcomeMessage());
+      await webApp.home.logout();
+      await webApp.login.open();
+      await webApp.login.login(user.username, user.password);
+      await expect(webApp.home.getWelcomeText()).toContainText(user.welcomeMessage());
+    } finally {
+      await webApp.home.deleteAccountQuietly();
+    }
   });
 
   test('Пустой логин показывает ошибку валидации', async ({ webApp }) => {

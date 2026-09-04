@@ -9,7 +9,6 @@ export default defineConfig({
     testTimeout: 15_000,
     tags: [
       { name: 'api', description: 'HTTP contract against a live stand (LAYERS.md)' },
-      { name: 'manual', description: 'exploratory stubs in code' },
       { name: 'infra', description: 'tests-module helpers (not a pyramid layer)' },
       { name: 'infra_backend', description: 'ConfigReader analog' },
       { name: 'smoke', description: 'smoke scenarios' },

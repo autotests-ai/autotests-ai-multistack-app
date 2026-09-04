@@ -4,8 +4,8 @@ Same job names as `ci.yml`. Implementations live here because GitHub does not
 interpolate `uses:`.
 
 `tests/.github/actions/<verb>` dispatches here when `TESTS_LANG=python`.
-Live modules (short folder): `tests-python-selenium`, `tests-python-selene`, `tests-python-playwright`, `tests-python-httpx`, or `tests-python-requests`.
-`TESTS_UI_LIBRARY` selects that suffix (`selenium` / `selene` / `playwright` / `httpx` / `requests`), not the Java 5-segment name.
+Live modules (combo folders): `tests-python-pytest-requests-selenium`, `tests-python-pytest-requests-selene`, `tests-python-pytest-api_request-playwright`, `tests-python-pytest-httpx`, or `tests-python-pytest-requests`.
+`TESTS_UI_LIBRARY` selects the UI school (`selenium` / `selene` / `playwright` / `httpx` / `requests`); CI maps `selenium` → `pytest-requests-selenium`, `selene` → `pytest-requests-selene`, `playwright` → `pytest-api_request-playwright`, `httpx` → `pytest-httpx`, `requests` → `pytest-requests`. httpx is HTTP-only, not a UI in-cell client.
 Default clone stays Java Selenide — do not flip `TESTS_LANG` to python for this cell.
 
 Local (from the module): `pytest -m api` · `pytest -m 'e2e and not screenshot and not mock'` ·

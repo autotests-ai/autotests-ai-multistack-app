@@ -20,6 +20,17 @@ test.describe('Register', { tag: ['@e2e'] }, () => {
     }
   });
 
+  test('Пользователь регистрируется с логином из 3 символов и паролем из 6', async ({ webApp }) => {
+    const user = new UserBuilder().withMinLengthCredentials().build();
+    try {
+      await webApp.register.open();
+      await webApp.register.signup(user.username, user.password);
+      await expect(webApp.home.getWelcomeText()).toContainText(user.welcomeMessage());
+    } finally {
+      await webApp.home.deleteAccountQuietly();
+    }
+  });
+
   test('Несовпадение паролей на регистрации показывает ошибку', async ({ webApp }) => {
     await webApp.register.open();
     await webApp.register.typeUsername('newuser');

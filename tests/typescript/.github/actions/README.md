@@ -4,8 +4,8 @@ Same job names as `ci.yml`. Implementations live here because GitHub does not
 interpolate `uses:`.
 
 `tests/.github/actions/<verb>` dispatches here when `TESTS_LANG=typescript`.
-Live modules (short folder): `tests-typescript-playwright` or `tests-typescript-axios`.
-`TESTS_UI_LIBRARY` selects that suffix (`playwright` / `axios`), not the Java 5-segment name.
+Live modules: `tests-typescript-api_request-playwright` (combo) or `tests-typescript-axios`.
+`TESTS_UI_LIBRARY=playwright` still resolves to the combo (CI maps JS/TS `playwright` → `api_request-playwright`). UI-only slot is `tests-typescript-playwright`.
 
 Local Playwright: `npx playwright test --grep @api` ·
 `npx playwright test --grep @e2e --grep-invert @screenshot` ·

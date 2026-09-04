@@ -7,6 +7,14 @@ function username() {
   return `user_${faker.string.alphanumeric(10)}`;
 }
 
+function usernameAtMinLength() {
+  return faker.string.alphanumeric(3).toLowerCase();
+}
+
+function passwordAtMinLength() {
+  return '123456';
+}
+
 async function apiRequest(method, path, { token, json, raw } = {}) {
   const headers = {};
   if (json !== undefined || raw !== undefined) {
@@ -68,6 +76,8 @@ async function deleteAccountQuietly(request, username, password) {
 module.exports = {
   WRONG_CREDENTIALS_MESSAGE,
   username,
+  usernameAtMinLength,
+  passwordAtMinLength,
   apiRequest,
   loginToken,
   deleteAccountQuietly,

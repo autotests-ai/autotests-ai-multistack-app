@@ -27,7 +27,7 @@ tests/
   csharp/
     tests-csharp-nunit-restsharp-selenium/              # active — UI+HTTP Selenium + in-cell RestSharp
     tests-csharp-nunit-selenium/                      # slot — UI-only Selenium (no REST)
-    tests-csharp-nunit-restsharp/             # active — HTTP block RestSharp (31 api + 9 ConfigReader + 3 manual)
+    tests-csharp-nunit-restsharp/             # active — HTTP block RestSharp (31 api + 9 ConfigReader)
     tests-csharp-xunit-api_request-playwright/           # active — UI+HTTP Playwright + in-cell APIRequest
     tests-csharp-xunit-playwright/                   # slot — UI-only Playwright (no REST)
   groovy/
@@ -58,7 +58,7 @@ tests/
     tests-python-pytest-selenium/                            # slot — UI-only Selenium (no REST)
     tests-python-pytest-selene/                             # slot — UI-only Selene (no REST)
     tests-python-pytest-playwright/                          # slot — UI-only Playwright (no REST)
-    tests-python-pytest-requests/                            # active — HTTP block requests (31 api + 9 ConfigReader + 3 manual)
+    tests-python-pytest-requests/                            # active — HTTP block requests (31 api + 9 ConfigReader)
     tests-python-pytest-httpx/                               # active — HTTP block httpx
     tests-python-yandex_tank/                         # slot — Yandex.Tank
     tests-python-locust/                             # slot — Locust
@@ -69,7 +69,7 @@ tests/
     tests-typescript-k6/                             # slot — k6 TypeScript
     tests-typescript-gatling/                       # slot — Gatling TS SDK
   go/
-    tests-go-testing-net_http/                         # active — HTTP block (31 api + 9 ConfigReader + 3 manual)
+    tests-go-testing-net_http/                         # active — HTTP block (31 api + 9 ConfigReader)
     tests-go-testing-api_request-playwright/             # active — UI+HTTP Playwright + in-cell APIRequest
     tests-go-testing-playwright/                     # slot — UI-only Playwright (no REST)
     tests-go-cdp/                                    # mill IR (greedy run)

@@ -30,7 +30,7 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 **Not classical either:** Spring `@WebMvcTest` / `@DataJpaTest` — those stay in **unit** (see slices below).  
 **Not a pyramid language:** `tests/go/tests-go-cdp` mills IR via `greedy run` (`layers: [crystal]`, crystal column on `/stack/`). Not `@Layer`.  
 **Not a pyramid layer:** load slots — JMeter (`tests-java-jmeter`, `tests-groovy-jmeter`) · Gatling (`tests-java-gatling`, `tests-kotlin-gatling`, `tests-scala-gatling`, `tests-javascript-gatling`, `tests-typescript-gatling`) · k6 (`tests-javascript-k6`, `tests-typescript-k6`) · Locust (`tests-python-locust`) · Yandex.Tank (`tests-python-yandex_tank`). `layers: [performance]` on `/stack/` Tests board. Not `@Layer`.  
-**Go living HTTP block:** `tests/go/tests-go-testing-net_http` — `go test` + net/http + testify + official Allure Go, `layers: [api]`. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader + 3 manual). UI school is living `tests-go-testing-api_request-playwright` (Playwright + **in-cell** APIRequest), not a second HTTP folder. Mill stays `tests-go-cdp`. Not Gomega.
+**Go living HTTP block:** `tests/go/tests-go-testing-net_http` — `go test` + net/http + testify + official Allure Go, `layers: [api]`. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader). UI school is living `tests-go-testing-api_request-playwright` (Playwright + **in-cell** APIRequest), not a second HTTP folder. Mill stays `tests-go-cdp`. Not Gomega.
 
 **Go Playwright living block:** `tests/go/tests-go-testing-api_request-playwright` — `go test` + playwright-go + in-cell APIRequest, `layers: [api, ui, e2e]`. Same UI `DisplayName` catalog as Java Playwright (PNG tree from Java Playwright). `cover-config.sh` 100% on `config.go`. Default CI cell stays Java Selenide. Not a mill rewrite. HTTP-only net/http school stays in the sibling folder.
 
@@ -38,19 +38,19 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
 **Java HTTP-only living blocks:** `tests-java-junit5-rest_assured` (Rest Assured) and `tests-java-junit5-retrofit2` (Retrofit 2) — `layers: [api]`. Same `/api` contract. Combo Selenium+Retrofit = generate, not a third folder.
 
-**Python HTTP-only living blocks:** `tests-python-pytest-httpx` (pytest + httpx) and `tests-python-pytest-requests` (pytest + requests) — `layers: [api]`. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader + 3 manual). Combo with a UI school = generate, not a third folder. Selenium and Selene Python have **requests** in-cell. Playwright Python has **APIRequest** in-cell. httpx is HTTP-only — not a UI in-cell client.
+**Python HTTP-only living blocks:** `tests-python-pytest-httpx` (pytest + httpx) and `tests-python-pytest-requests` (pytest + requests) — `layers: [api]`. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader). Combo with a UI school = generate, not a third folder. Selenium and Selene Python have **requests** in-cell. Playwright Python has **APIRequest** in-cell. httpx is HTTP-only — not a UI in-cell client.
 
 **Python Selene living block:** `tests-python-pytest-requests-selene` — pytest + Selene + in-cell **requests**, `layers: [api, ui, e2e]`. Same UI `DisplayName` catalog as Java Selenide. pytest-cov **100%** on `config.py`. Default CI cell stays Java Selenide. Sibling UI school stays `tests-python-pytest-requests-selenium`. HTTP-only requests school stays in the sibling folder. HTTP-only httpx stays `tests-python-pytest-httpx`.
 
 **Python Playwright living block:** `tests-python-pytest-api_request-playwright` — pytest + Playwright + in-cell **APIRequest**, `layers: [api, ui, e2e]`. Same UI `DisplayName` catalog as Java Playwright. pytest-cov **100%** on `config.py`. Default CI cell stays Java Selenide. Not a Selenium/Selene rewrite. HTTP-only requests school stays in the sibling folder. Same id tail as JS/TS (`api_request-playwright`).
 
-**TypeScript HTTP-only living block:** `tests-typescript-axios` — Vitest + axios, `layers: [api]`. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader + 3 manual). Titles/schemas match `tests-typescript-api_request-playwright` `tests/api`. Combo with Playwright = generate, not a third folder. There is no HTTP-only `api_request` school.
+**TypeScript HTTP-only living block:** `tests-typescript-axios` — Vitest + axios, `layers: [api]`. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader). Titles/schemas match `tests-typescript-api_request-playwright` `tests/api`. Combo with Playwright = generate, not a third folder. There is no HTTP-only `api_request` school.
 
-**JavaScript HTTP-only living block:** `tests-javascript-axios` — Vitest + axios, `layers: [api]`. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader + 3 manual). Titles/schemas match `tests-typescript-axios`. Playwright JS already has api in-cell via **APIRequest** in `tests-javascript-api_request-playwright` — do not put Axios inside that folder. Axios+Playwright clone folder is `tests-javascript-axios-playwright` (`status: bad-practice`). Short `tests-javascript-playwright` is living **UI-only**. There is no HTTP-only `api_request` school.
+**JavaScript HTTP-only living block:** `tests-javascript-axios` — Vitest + axios, `layers: [api]`. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader). Titles/schemas match `tests-typescript-axios`. Playwright JS already has api in-cell via **APIRequest** in `tests-javascript-api_request-playwright` — do not put Axios inside that folder. Axios+Playwright clone folder is `tests-javascript-axios-playwright` (`status: bad-practice`). Short `tests-javascript-playwright` is living **UI-only**. There is no HTTP-only `api_request` school.
 
 **JavaScript Playwright UI-only living block:** `tests-javascript-playwright` — Playwright, `layers: [ui, e2e]`. Same UI stems as the combo. No `/api` catalog. Register/delete cleanup is UI. Default CI cell stays Java Selenide. Combo stays `tests-javascript-api_request-playwright`.
 
-**Kotlin HTTP-only living block:** `tests-kotlin-junit5-ktor` — Gradle + JUnit 5 + Ktor client, `layers: [api]`. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader + 3 manual). UI schools are living `tests-kotlin-junit5-ktor-selenide` (Selenide + **in-cell** Ktor), `tests-kotlin-junit5-ktor-selenium` (Selenium + **in-cell** Ktor), and `tests-kotlin-junit5-api_request-playwright` (Playwright + **in-cell** APIRequest), not a second HTTP folder. Kotest+Ktor emit is niche, not a second folder.
+**Kotlin HTTP-only living block:** `tests-kotlin-junit5-ktor` — Gradle + JUnit 5 + Ktor client, `layers: [api]`. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader). UI schools are living `tests-kotlin-junit5-ktor-selenide` (Selenide + **in-cell** Ktor), `tests-kotlin-junit5-ktor-selenium` (Selenium + **in-cell** Ktor), and `tests-kotlin-junit5-api_request-playwright` (Playwright + **in-cell** APIRequest), not a second HTTP folder. Kotest+Ktor emit is niche, not a second folder.
 
 **Kotlin Selenide living block:** `tests-kotlin-junit5-ktor-selenide` — Gradle + JUnit 5 + Selenide + in-cell Ktor, `layers: [api, ui, e2e]`. Same UI `DisplayName` catalog as Java Selenide. JaCoCo 100% `ConfigReader` / `LayoutCss` / `TokensCss`. Default CI cell stays Java Selenide.
 
@@ -58,13 +58,13 @@ DS catalog Selenide checks live in `design-system-home` — not duplicated here.
 
 **Kotlin Playwright living block:** `tests-kotlin-junit5-api_request-playwright` — Gradle + JUnit 5 + Playwright + in-cell APIRequest, `layers: [api, ui, e2e]`. Same UI `DisplayName` catalog as Java Playwright (no invented PNG). JaCoCo 100% `ConfigReader` / `LayoutCss` / `TokensCss`. Default CI cell stays Java Selenide. Not a Selenide/Selenium rewrite. HTTP-only Ktor school stays in the sibling folder.
 
-**C# HTTP-only living block:** `tests-csharp-nunit-restsharp` — NUnit + RestSharp + Allure.NUnit, `layers: [api]`. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader + 3 manual). UI schools are living `tests-csharp-nunit-restsharp-selenium` (Selenium + **in-cell** RestSharp) and `tests-csharp-xunit-api_request-playwright` (Playwright + **in-cell** APIRequest), not a second HTTP folder.
+**C# HTTP-only living block:** `tests-csharp-nunit-restsharp` — NUnit + RestSharp + Allure.NUnit, `layers: [api]`. Same `/api` catalog as Java Rest Assured (31 api + 9 ConfigReader). UI schools are living `tests-csharp-nunit-restsharp-selenium` (Selenium + **in-cell** RestSharp) and `tests-csharp-xunit-api_request-playwright` (Playwright + **in-cell** APIRequest), not a second HTTP folder.
 
 **C# Selenium living block:** `tests-csharp-nunit-restsharp-selenium` — NUnit + Selenium 4 + in-cell RestSharp, `layers: [api, ui, e2e]`. Same UI `DisplayName` catalog as Java Selenium. Coverlet 100% `ConfigReader` / `LayoutCss` / `TokensCss`. Default CI cell stays Java Selenide. Not an xUnit/Playwright rewrite. HTTP-only RestSharp school stays in the sibling folder.
 
 **C# Playwright living block:** `tests-csharp-xunit-api_request-playwright` — xUnit + Playwright + in-cell APIRequest, `layers: [api, ui, e2e]`. Same UI `DisplayName` catalog as Java Playwright (PNG tree from Java Playwright). Coverlet 100% `ConfigReader` / `LayoutCss` / `TokensCss`. Default CI cell stays Java Selenide. Not an NUnit/Selenium rewrite. HTTP-only RestSharp school stays in the sibling folder.
 
-**Rust HTTP-only living block:** `tests-rust-testing-reqwest` — `cargo test` + reqwest + allure-cargotest / allure-reqwest, `layers: [api]`. Same `/api` catalog as Go net/http and Java Rest Assured (31 api + 9 ConfigReader + 3 manual). UI schools are living `tests-rust-testing-reqwest-selenium` (Selenium/thirtyfour + **in-cell** reqwest) and `tests-rust-testing-selenium` (UI-only thirtyfour), not a second HTTP folder. Playwright-on-Rust is not a cell.
+**Rust HTTP-only living block:** `tests-rust-testing-reqwest` — `cargo test` + reqwest + allure-cargotest / allure-reqwest, `layers: [api]`. Same `/api` catalog as Go net/http and Java Rest Assured (31 api + 9 ConfigReader). UI schools are living `tests-rust-testing-reqwest-selenium` (Selenium/thirtyfour + **in-cell** reqwest) and `tests-rust-testing-selenium` (UI-only thirtyfour), not a second HTTP folder. Playwright-on-Rust is not a cell.
 
 **Rust Selenium UI-only living block:** `tests-rust-testing-selenium` — `cargo test` + thirtyfour WebDriver, `layers: [ui, e2e]`. Same UI `DisplayName` catalog as the combo (PNG tree from C# Selenium). No `/api` catalog. `cover-config.sh` 100% ConfigReader / LayoutCss / TokensCss. Default CI cell stays Java Selenide. Combo with HTTP stays `tests-rust-testing-reqwest-selenium`.
 
@@ -100,9 +100,12 @@ Repository → Postgres and Flyway seed — not HTTP against a live stand.
 ## Manual lives in code (canon)
 
 Manual / exploratory cases are **first-class sources in the test module**, not spreadsheets
-or TestOps-only drafts outside git:
+or TestOps-only drafts outside git. Manual is **browser residual only** — charters a human runs
+because no automated layer can assert them (viewport, offline reload, second tab, token expiry).
+Cells with `layers: [api]` (HTTP-only schools) have **no** `tests/manual/`: an HTTP charter is
+either an api test or nothing. Auth happy path, catalogue order, reload and garbage token are e2e.
 
-- Package: `…/tests/manual/` (e.g. `ExploratoryManualTests`)
+- Package: `…/tests/manual/` (e.g. `ExploratoryManualTests`) — cells with a browser layer only
 - Markers: `@Layer("manual")` · `@Tag("manual")` · `@Manual` (`ALLURE_MANUAL=true` for TestOps)
 - Body: Allure `step("…")` checklist lines — human executes; CI can still upload the stub launch
 - Run: `./gradlew test -Denv=prod -DincludeTags=manual` · job `manual-tests` (dispatch)
@@ -304,8 +307,9 @@ For `TESTS_LANG=go`, a layer is a **package path**, a stand is **`STAND`** / `AP
 ```bash
 STAND=ci   go test ./tests/infra
 STAND=prod go test ./tests/api
-STAND=prod go test ./tests/manual
 ```
+
+`./tests/manual` exists only in the Playwright sibling `tests/go/tests-go-testing-api_request-playwright`.
 
 For `TESTS_LANG=kotlin`, a layer is a **tag filter**, a stand is **`-Denv`**.
 HTTP-only: `tests/kotlin/tests-kotlin-junit5-ktor`. UI+HTTP:
@@ -358,7 +362,7 @@ STAND=prod cargo test --test e2e -- --test-threads=1
 | api | tests | `…/tests/api/` (`AuthApiTests`, `ReferenceApiTests`, `BackendWiringApiTests`, `SeedDataApiTests`, `AuthRoundTripApiTests`) — HTTP contract + deployed-stand facts | `@Tag("api")` | java → `-DincludeTags=api` via `api-tests-stage` (`-Denv=stage`) and `api-tests` (`-Denv=prod`); retarget any backend with `-DapiBaseUrl` / `-DapiHealthService` |
 | ui | tests | `…/tests/ui/` (layout, header, form chrome, error injection, chrome screenshots) | `@Tag("ui")` (+ optional `mock` / `screenshot`) | `ui-tests` (`-Denv=mock -DincludeTags=ui`; screenshot compare is a second step) |
 | e2e | tests | `…/tests/e2e/` (login, register, session, home load, welcome-panel screenshot) | `@Tag("e2e")` (+ optional `screenshot`) | `e2e-tests-stage` (`-Denv=stage` after `api-tests-stage` + `deploy-frontend-stage`); `e2e-tests` (`-Denv=prod -DincludeTags=e2e` after `api-tests` + `deploy-frontend`; screenshot excluded on default push) |
-| manual | tests | `…/tests/manual/` **in code** | `@Tag("manual")` + `@Manual` | java → `-DincludeTags=manual` via `manual-tests` (after `e2e-tests`, dispatch) |
+| manual | tests | `…/tests/manual/` **in code** — browser cells only, none in `layers: [api]` | `@Tag("manual")` + `@Manual` | java → `-DincludeTags=manual` via `manual-tests` (after `e2e-tests`, dispatch) |
 
 ### Frontend reference modules (not interchangeable)
 

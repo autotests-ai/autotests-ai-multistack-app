@@ -73,6 +73,26 @@ describe('RegisterPage', () => {
     );
   });
 
+  it('submits 3-character login and 6-character password without client min-length errors', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve(
+          jsonResponse({ token: 'tok-min', username: 'abc', redirectUrl: '/' }, true, 201),
+        ),
+      ),
+    );
+
+    renderRegister();
+    await user.type(screen.getByTestId('register-login-input'), 'abc');
+    await user.type(screen.getByTestId('register-password-input'), '123456');
+    await user.type(screen.getByTestId('confirm-password-input'), '123456');
+    await user.click(screen.getByTestId('register-submit-button'));
+
+    expect(await screen.findByTestId('home-landed')).toBeInTheDocument();
+  });
+
   it('shows the exact mismatch error when passwords differ', async () => {
     const user = userEvent.setup();
     renderRegister();

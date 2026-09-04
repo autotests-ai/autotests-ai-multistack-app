@@ -1,43 +1,43 @@
 # Java tests
 
-Pattern: `tests-java-{build}-{framework}-{reporting}-{automation}` — see [../NAMING.md](../NAMING.md).
+Pattern: see [../NAMING.md](../NAMING.md). **UI-only** slots: `tests-java-junit5-{selenide,selenium,playwright}`. Living Playwright combo: `tests-java-junit5-api_request-playwright`. Do not put `gradle` / `maven` / `allure2` / `allure3` / `no_allure` in the folder id.
 
 Clone folder = teaching **block**. Combo (e.g. Selenium + Retrofit) = generate, not a third folder.
 
 | Folder | Stack | Status |
 |--------|--------|--------|
-| `tests-java-gradle-junit5-allure3-selenide` | Gradle · JUnit 5 · Allure 3 · Selenide (+ Rest Assured in this default cell) | **active** |
-| `tests-java-gradle-junit5-allure3-selenium` | UI+HTTP block · Selenium 4 + Rest Assured | **active** |
-| `tests-java-gradle-junit5-allure3-playwright` | UI+HTTP block · Playwright for Java + Rest Assured | **active** |
-| `tests-java-gradle-junit5-allure3-restassured` | HTTP block · Rest Assured | **active** |
-| `tests-java-gradle-junit5-allure3-retrofit2` | HTTP block · Retrofit 2 | **active** |
-| `tests-java-gradle-junit5-allure2-selenide` | Gradle · JUnit 5 · Allure 2 · Selenide | slot |
-| `tests-java-gradle-junit5-no_allure-selenide` | Gradle · JUnit 5 · no Allure · Selenide | slot |
-| `tests-java-gradle-junit4-allure2-selenium` | Gradle · JUnit 4 · Allure 2 · Selenium | slot |
-| `tests-java-gradle-testng-allure3-selenium` | Gradle · TestNG · Allure 3 · Selenium | slot |
-| `tests-java-maven-junit5-allure3-selenide` | Maven · JUnit 5 · Allure 3 · Selenide | slot |
+| `tests-java-junit5-rest_assured-selenide` | JUnit 5 · Selenide (+ Rest Assured in this default cell) | **active** |
+| `tests-java-junit5-rest_assured-selenium` | UI+HTTP block · Selenium 4 + Rest Assured | **active** |
+| `tests-java-junit5-api_request-playwright` | UI+HTTP block · Playwright for Java + APIRequest | **active** |
+| `tests-java-junit5-selenide` | **UI-only** · JUnit 5 · Selenide (no REST) | slot |
+| `tests-java-junit5-selenium` | **UI-only** · JUnit 5 · Selenium (no REST) | slot |
+| `tests-java-junit5-playwright` | **UI-only** · JUnit 5 · Playwright (no REST) | slot |
+| `tests-java-junit5-rest_assured` | HTTP block · Rest Assured | **active** |
+| `tests-java-junit5-retrofit2` | HTTP block · Retrofit 2 | **active** |
+| `tests-java-junit4-selenium` | JUnit 4 · Selenium | slot |
+| `tests-java-testng-selenium` | TestNG · Selenium | slot |
 | `tests-java-jmeter` | Apache JMeter (JMX) | slot — `layers: [performance]` |
-| `tests-java-gradle-gatling` | Gradle · Gatling Java DSL | slot — `layers: [performance]` |
+| `tests-java-gatling` | Gatling Java DSL | slot — `layers: [performance]` |
 
 ```bash
-cd tests/java/tests-java-gradle-junit5-allure3-selenide
+cd tests/java/tests-java-junit5-rest_assured-selenide
 ./gradlew test -Denv=ci -DincludeTags=infra jacocoTestCoverageVerification
 ./gradlew test -Denv=ci -DincludeTags=e2e -DexcludeTags=screenshot
 
-cd tests/java/tests-java-gradle-junit5-allure3-selenium
+cd tests/java/tests-java-junit5-rest_assured-selenium
 ./gradlew test -Denv=ci -DincludeTags=infra jacocoTestCoverageVerification
 ./gradlew test -Denv=ci -DincludeTags=api
 ./gradlew test -Denv=ci -DincludeTags=e2e -DexcludeTags=screenshot
 
-cd tests/java/tests-java-gradle-junit5-allure3-restassured
+cd tests/java/tests-java-junit5-rest_assured
 ./gradlew test -Denv=ci -DincludeTags=infra jacocoTestCoverageVerification
 ./gradlew test -Denv=ci -DincludeTags=api
 
-cd tests/java/tests-java-gradle-junit5-allure3-retrofit2
+cd tests/java/tests-java-junit5-retrofit2
 ./gradlew test -Denv=ci -DincludeTags=infra jacocoTestCoverageVerification
 ./gradlew test -Denv=ci -DincludeTags=api
 
-cd tests/java/tests-java-gradle-junit5-allure3-playwright
+cd tests/java/tests-java-junit5-api_request-playwright
 ./gradlew test -Denv=ci -DincludeTags=infra jacocoTestCoverageVerification
 ./gradlew test -Denv=ci -DincludeTags=api
 ./gradlew test -Denv=ci -DincludeTags=e2e
