@@ -64,7 +64,9 @@ services:
       - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_JAVA_PORT:-8800}:8080"
-      # Prometheus scrape only. Default bind is loopback — docker publish bypasses ufw.
+      # Prometheus scrape (loopback). Docker publish bypasses ufw.
+      # Default 8801 is for isolated hosts (load VM). Stage on Box3 must override
+      # (deploy/stage.env → 18801) — same host as prod, which also uses 8801.
       - "${BACKEND_JAVA_MANAGEMENT_PORT:-127.0.0.1:8801}:8081"
 
   backend-kotlin-spring:
