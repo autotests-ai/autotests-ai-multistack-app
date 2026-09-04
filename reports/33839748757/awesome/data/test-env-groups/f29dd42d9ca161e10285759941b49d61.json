@@ -1,1 +1,0 @@
-{"id":"f29dd42d9ca161e10285759941b49d61","fullName":"dev.multistack.app.integration.ActuatorPrometheusIntegrationTest.healthOnManagementPort","name":"GET /actuator/health on the management port is 200","status":"passed","testResultsByEnv":{"default":"8a6b85b491c2f8335e97896e1cc80568"}}
