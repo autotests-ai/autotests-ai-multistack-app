@@ -41,6 +41,7 @@ tests/
     tests-kotlin-junit5-playwright/                  # slot — UI-only Playwright (no REST)
     tests-kotlin-junit5-ktor/         # active — HTTP block Ktor
     tests-kotlin-gatling/                     # active — Gatling Kotlin DSL sibling
+    tests-kotlin-jmeter/                      # active — JMeter Kotlin TreeBuilder sibling
   scala/
     tests-scala-gatling/                             # slot — Gatling Scala DSL
   javascript/

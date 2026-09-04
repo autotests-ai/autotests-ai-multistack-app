@@ -4,7 +4,7 @@ Etalon load cell · Apache JMeter **JMX** · `layers: [performance]` (not pyrami
 
 Smoke is **1 thread / 1 loop** against the local Java Spring API. This is not a load against [autotests.ai](https://autotests.ai/) or Box2.
 
-Sibling Gatling Java DSL stays living: [`tests-java-gatling`](../tests-java-gatling/). Groovy JSR223 stays the slot [`tests-groovy-jmeter`](../../groovy/tests-groovy-jmeter/). Students open `src/jmeter/auth-api.jmx` in JMeter GUI like the course.
+Sibling Gatling Java DSL stays living: [`tests-java-gatling`](../tests-java-gatling/). Kotlin TreeBuilder sibling stays living: [`tests-kotlin-jmeter`](../../kotlin/tests-kotlin-jmeter/). Groovy JSR223 stays the slot [`tests-groovy-jmeter`](../../groovy/tests-groovy-jmeter/). Students open `src/jmeter/auth-api.jmx` in JMeter GUI like the course.
 
 ```bash
 cd tests/java/tests-java-jmeter

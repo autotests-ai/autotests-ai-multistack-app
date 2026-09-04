@@ -12,3 +12,4 @@ Pattern: see [../NAMING.md](../NAMING.md). **UI-only** slots: `tests-kotlin-juni
 | `tests-kotlin-junit5-playwright` | slot — **UI-only** Playwright (no REST) |
 | `tests-kotlin-junit5-ktor` | **active** — HTTP block Ktor client; JaCoCo + `sonar-tests` |
 | `tests-kotlin-gatling` | **active** — Gatling Kotlin DSL sibling (`layers: [performance]`) |
+| `tests-kotlin-jmeter` | **active** — JMeter Kotlin TreeBuilder sibling (`layers: [performance]`) |
