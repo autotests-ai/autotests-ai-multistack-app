@@ -7,6 +7,7 @@ COPY src ./src
 RUN chmod +x gradlew && ./gradlew bootJar --no-daemon
 
 FROM eclipse-temurin:21-jre-alpine
+LABEL org.opencontainers.image.source=https://github.com/autotests-ai/autotests-ai-multistack-app
 RUN apk add --no-cache wget \
     && addgroup -S app && adduser -S app -G app
 WORKDIR /app

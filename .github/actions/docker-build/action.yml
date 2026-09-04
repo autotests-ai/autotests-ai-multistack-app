@@ -29,6 +29,7 @@ runs:
         context: ${{ inputs.module_dir }}
         file: ${{ inputs.module_dir }}/Dockerfile
         tags: ghcr.io/${{ github.repository_owner }}/autotests-ai-multistack-app-${{ steps.id.outputs.service }}:${{ github.sha }}
+        labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
         load: true
         cache-from: type=gha,scope=autotests-ai-multistack-app-docker-${{ steps.id.outputs.service }}
         cache-to: type=gha,mode=max,scope=autotests-ai-multistack-app-docker-${{ steps.id.outputs.service }}
