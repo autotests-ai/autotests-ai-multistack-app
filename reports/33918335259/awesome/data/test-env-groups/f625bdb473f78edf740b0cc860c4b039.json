@@ -1,1 +1,0 @@
-{"id":"f625bdb473f78edf740b0cc860c4b039","fullName":"tests.api.AuthApiTests.loginWithInvalidPassword","name":"POST /api/auth/login rejects a wrong password with 401","status":"passed","testResultsByEnv":{"default":"07c5ba7bc6522ce6e6a0977a0dbdc73a"}}

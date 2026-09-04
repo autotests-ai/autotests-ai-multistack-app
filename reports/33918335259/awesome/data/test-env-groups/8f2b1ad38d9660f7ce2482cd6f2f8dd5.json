@@ -1,1 +1,0 @@
-{"id":"8f2b1ad38d9660f7ce2482cd6f2f8dd5","fullName":"tests.api.AuthApiTests.registerAcceptsMinimumLengthCredentials","name":"POST /api/auth/register accepts a 3-character username and 6-character password","status":"passed","testResultsByEnv":{"default":"8c76c5d7b4a57c0dfea51f0f3e10bc72"}}

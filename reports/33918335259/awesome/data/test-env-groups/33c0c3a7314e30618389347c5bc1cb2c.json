@@ -1,1 +1,0 @@
-{"id":"33c0c3a7314e30618389347c5bc1cb2c","fullName":"dev.multistack.app.controller.AuthControllerTest.loginAcceptsMinimumLengthCredentials","name":"POST /api/auth/login accepts 3-character username and 6-character password","status":"passed","testResultsByEnv":{"default":"1eebca027b7e0a3c4ed475a7af00a4ea"}}
