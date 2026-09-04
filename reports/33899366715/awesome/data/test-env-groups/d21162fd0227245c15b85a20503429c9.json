@@ -1,1 +1,0 @@
-{"id":"d21162fd0227245c15b85a20503429c9","fullName":"dev.multistack.app.integration.ActuatorPrometheusIntegrationTest.actuatorOnApiPortIsNotOk","name":"GET /actuator/prometheus on the API port is not 200","status":"passed","testResultsByEnv":{"default":"aa0d67c807a9dbf70fb5563b5bf218d3"}}

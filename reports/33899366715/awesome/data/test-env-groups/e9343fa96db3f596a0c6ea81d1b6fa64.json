@@ -1,1 +1,0 @@
-{"id":"e9343fa96db3f596a0c6ea81d1b6fa64","fullName":"dev.multistack.app.service.AuthServiceTest.registerDuplicateUsername","name":"register rejects duplicate username","status":"passed","testResultsByEnv":{"default":"c8ffe18fb254ee3a6fe472e55a6720a0"}}

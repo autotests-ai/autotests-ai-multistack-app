@@ -1,1 +1,0 @@
-{"id":"7788eac4caa1e94c34c0d3669e1b77f6","fullName":"dev.multistack.app.repository.UserRepositoryTest.duplicateUsernameViolatesUniqueConstraint","name":"duplicate username violates the real unique constraint (V2)","status":"passed","testResultsByEnv":{"default":"047b753b7940dbc624584a9d1f5f2f51"}}
