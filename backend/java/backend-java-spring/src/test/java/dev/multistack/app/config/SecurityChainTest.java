@@ -23,6 +23,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
@@ -142,5 +143,12 @@ class SecurityChainTest extends SliceTestBase {
     @DisplayName("non-API paths are denied")
     void nonApiDenied() throws Exception {
         mockMvc.perform(get("/login")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("GET /actuator/prometheus on the API port is not 200")
+    void actuatorPrometheusNotOkOnApiPort() throws Exception {
+        mockMvc.perform(get("/actuator/prometheus"))
+                .andExpect(result -> assertNotEquals(200, result.getResponse().getStatus()));
     }
 }

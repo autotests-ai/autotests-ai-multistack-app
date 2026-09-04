@@ -23,7 +23,9 @@ import org.testcontainers.containers.PostgreSQLContainer;
 @Tag("integration")
 @Module("backend-java-spring")
 @Language("java")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = "management.server.port=0")
 public abstract class IntegrationTestBase {
 
     @ServiceConnection

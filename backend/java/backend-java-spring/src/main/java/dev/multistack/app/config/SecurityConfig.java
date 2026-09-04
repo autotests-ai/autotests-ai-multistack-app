@@ -1,8 +1,10 @@
 package dev.multistack.app.config;
 
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -24,6 +26,24 @@ public class SecurityConfig {
     }
 
     /**
+     * Management port reuses this FilterChainProxy (Boot copies {@code springSecurityFilterChain}
+     * into the child context). {@link EndpointRequest} resolves mappings from the request's
+     * servlet context: actuator paths match on :8081 and miss on API :8080, so denyAll below
+     * stays intact.
+     */
+    @Bean
+    @Order(0)
+    SecurityFilterChain managementSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .securityMatcher(EndpointRequest.toAnyEndpoint())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(EndpointRequest.to("health", "prometheus")).permitAll()
+                        .anyRequest().denyAll())
+                .csrf(csrf -> csrf.disable());
+        return http.build();
+    }
+
+    /**
      * CSRF is disabled on purpose: auth is Bearer JWT ({@link JwtAuthFilter}) with
      * {@link SessionCreationPolicy#STATELESS} — no ambient cookie credential for CSRF to exploit.
      * Enabling CSRF would break JSON API clients that do not echo an XSRF token.
@@ -32,6 +52,7 @@ public class SecurityConfig {
      * (host nginx path-routes {@code /{backend}/{frontend}/}).
      */
     @Bean
+    @Order(1)
     @SuppressWarnings("java:S4502")
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http

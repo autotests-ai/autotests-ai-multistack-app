@@ -53,6 +53,7 @@ services:
       DB_USER: multistack
       DB_PASSWORD: multistack
       SERVER_PORT: 8080
+      MANAGEMENT_PORT: 8081
       JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
     depends_on:
       postgres:
@@ -63,6 +64,8 @@ services:
       - autotests_ai_multistack_internal
     ports:
       - "${BACKEND_JAVA_PORT:-8800}:8080"
+      # Prometheus scrape only. Default bind is loopback — docker publish bypasses ufw.
+      - "${BACKEND_JAVA_MANAGEMENT_PORT:-127.0.0.1:8801}:8081"
 
   backend-kotlin-spring:
     image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-kotlin-spring:${IMAGE_TAG:-latest}
