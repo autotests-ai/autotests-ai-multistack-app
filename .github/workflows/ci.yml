@@ -18,7 +18,10 @@ name: CI
 #   build-backend ← backend-unit-tests + integration-tests (backend lane) · build-frontend ← ui-tests (frontend lane)
 #   deploy-*-stage ← matching build + sonar-backend / sonar-frontend + preempt/yield (STAGE_APP_DIR, cd_stage)
 #   api-tests-stage ← deploy-backend-stage + infra-tests (STAGE_APP_DIR, run_api_stage)
+#   deploy-backend-load ← api-tests-stage + build-backend (LOAD_APP_DIR; skip if unset)
+#   jmeter-smoke ← deploy-backend-load (etalon JMX, 1 thread; not Gatling)
 #   e2e-tests-stage ← api-tests-stage + deploy-frontend-stage + infra-tests (STAGE_APP_DIR, run_e2e_stage)
+#   (load jobs run parallel with e2e-tests-stage; prod deploy-* must NOT need them)
 #   deploy-* ← matching build + sonar-backend / sonar-frontend + e2e-tests-stage (cd_production)
 #   api-tests ← deploy-backend + infra-tests (run_api_prod)
 #   e2e-tests ← api-tests + deploy-frontend + infra-tests (run_e2e_prod)
@@ -770,6 +773,62 @@ jobs:
         with:
           module_dir: ${{ (env.TESTS_LANG == 'java' || env.TESTS_LANG == 'kotlin') && format('tests/{0}/tests-{0}-{1}-{2}-{3}-{4}', env.TESTS_LANG, env.TESTS_BUILDER, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || (env.TESTS_LANG == 'go' || env.TESTS_LANG == 'csharp' || env.TESTS_LANG == 'rust') && format('tests/{0}/tests-{0}-{1}-{2}-{3}', env.TESTS_LANG, env.TESTS_FRAMEWORK, env.TESTS_REPORT, env.TESTS_UI_LIBRARY) || format('tests/{0}/tests-{0}-{1}', env.TESTS_LANG, env.TESTS_UI_LIBRARY) }}
           stand: stage
+
+  # Isolated load stand after stage API is green. Skip until repo var LOAD_APP_DIR
+  # is set. Does not share STAGE_APP_DIR / DEPLOY_APP_DIR. Prod deploy-* must not
+  # need this job. Parallel with e2e-tests-stage.
+  deploy-backend-load:
+    needs: [api-tests-stage, build-backend, trigger]
+    if: >-
+      always() && !cancelled() &&
+      vars.LOAD_APP_DIR != '' &&
+      needs.api-tests-stage.result == 'success' &&
+      needs.build-backend.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: ${{ vars.LOAD_ENVIRONMENT || 'multistack-load' }}
+      url: ${{ vars.LOAD_API_URL }}
+    concurrency:
+      group: deploy-autotests-ai-multistack-app-load
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+    env:
+      DEPLOY_APP_DIR: ${{ vars.LOAD_APP_DIR }}
+      DEPLOY_COMPOSE_PROJECT: ${{ vars.LOAD_COMPOSE_PROJECT || 'autotests-ai-multistack-app-load' }}
+      DEPLOY_COMPOSE_ENV_FILE: ${{ vars.LOAD_COMPOSE_ENV_FILE || '' }}
+      DEPLOY_COMPOSE_SERVICES: postgres backend-java-spring
+      DEPLOY_HEALTH_URL: ${{ vars.LOAD_HEALTH_URL || 'http://127.0.0.1:8800/api/health' }}
+      DEPLOY_HOST: ${{ vars.LOAD_HOST }}
+      DEPLOY_USER: ${{ vars.LOAD_USER }}
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - *checkout
+      - uses: ./backend/.github/actions/deploy
+        with:
+          module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
+          stand: load
+
+  jmeter-smoke:
+    needs: [deploy-backend-load]
+    if: >-
+      always() && !cancelled() &&
+      vars.LOAD_APP_DIR != '' &&
+      needs.deploy-backend-load.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      API_BASE_URL: ${{ vars.LOAD_API_URL }}
+      JMETER_ALLOW_PUBLIC: "true"
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+    steps:
+      - *checkout
+      - uses: ./tests/.github/actions/performance
+        with:
+          module_dir: tests/java/tests-java-jmeter
 
   e2e-tests-stage:
     needs: [api-tests-stage, deploy-frontend-stage, trigger, infra-tests]

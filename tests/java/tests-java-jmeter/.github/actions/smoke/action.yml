@@ -1,0 +1,50 @@
+name: smoke
+description: JMeter JMX smoke (1 thread) against API_BASE_URL. No Allure.
+inputs:
+  module_dir:
+    required: true
+    default: tests/java/tests-java-jmeter
+runs:
+  using: composite
+  steps:
+    - name: Wait for live API
+      shell: bash
+      run: |
+        set -euo pipefail
+        base="${API_BASE_URL%/}"
+        if [ -z "$base" ]; then
+          echo "STOP: API_BASE_URL is empty" >&2
+          exit 1
+        fi
+        url="${base}/api/health"
+        echo "==> JMeter smoke ${url}"
+        curl -fsS --retry 30 --retry-delay 2 --retry-all-errors "${url}"
+    - uses: actions/setup-java@v5
+      with:
+        distribution: temurin
+        java-version: ${{ env.JAVA_VERSION }}
+    - uses: gradle/actions/setup-gradle@v6
+      with:
+        cache-read-only: true
+        cache-encryption-key: ${{ env.GRADLE_ENCRYPTION_KEY }}
+      env:
+        GRADLE_BUILD_ACTION_CACHE_KEY_JOB: jmeter-smoke
+    - name: Run JMeter smoke (Gradle)
+      shell: bash
+      working-directory: ${{ inputs.module_dir }}
+      env:
+        API_BASE_URL: ${{ env.API_BASE_URL }}
+        JMETER_ALLOW_PUBLIC: ${{ env.JMETER_ALLOW_PUBLIC }}
+      run: ./gradlew jmeterSmoke
+    - name: Publish JMeter results
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: jmeter-smoke
+        path: |
+          ${{ inputs.module_dir }}/build/jmeter/results.jtl
+          ${{ inputs.module_dir }}/build/jmeter/report/**
+          ${{ inputs.module_dir }}/build/jmeter/jmeter.log
+        if-no-files-found: ignore
+        retention-days: 7

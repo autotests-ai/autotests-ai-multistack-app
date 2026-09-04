@@ -22,8 +22,8 @@ tests/
     tests-java-junit5-retrofit2/    # active — HTTP block Retrofit 2
     tests-java-junit4-selenium/        # slot — JUnit 4
     tests-java-testng-selenium/       # slot — TestNG
-    tests-java-jmeter/                               # slot — JMeter JMX
-    tests-java-gatling/                       # slot — Gatling Java DSL
+    tests-java-jmeter/                               # active — JMeter JMX etalon
+    tests-java-gatling/                       # active — Gatling Java DSL sibling
   csharp/
     tests-csharp-nunit-restsharp-selenium/              # active — UI+HTTP Selenium + in-cell RestSharp
     tests-csharp-nunit-selenium/                      # slot — UI-only Selenium (no REST)

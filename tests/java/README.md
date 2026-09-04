@@ -16,8 +16,8 @@ Clone folder = teaching **block**. Combo (e.g. Selenium + Retrofit) = generate, 
 | `tests-java-junit5-retrofit2` | HTTP block · Retrofit 2 | **active** |
 | `tests-java-junit4-selenium` | JUnit 4 · Selenium | slot |
 | `tests-java-testng-selenium` | TestNG · Selenium | slot |
-| `tests-java-jmeter` | Apache JMeter (JMX) | slot — `layers: [performance]` |
-| `tests-java-gatling` | Gatling Java DSL | slot — `layers: [performance]` |
+| `tests-java-jmeter` | Apache JMeter (JMX) | **active etalon** — `layers: [performance]` |
+| `tests-java-gatling` | Gatling Java DSL | **active** sibling — `layers: [performance]` |
 
 ```bash
 cd tests/java/tests-java-junit5-rest_assured-selenide

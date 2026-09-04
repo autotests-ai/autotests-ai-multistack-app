@@ -30,8 +30,8 @@ Do **not** put `gradle`, `maven`, `allure2`, `allure3`, or `no_allure` in the fo
 | `tests-java-junit5-playwright` | slot — **UI-only** Playwright (no REST) |
 | `tests-java-junit4-selenium` | slot — JUnit 4 |
 | `tests-java-testng-selenium` | slot — TestNG |
-| `tests-java-jmeter` | slot — JMeter JMX, `layers: [performance]` |
-| `tests-java-gatling` | slot — Gatling Java DSL, `layers: [performance]` |
+| `tests-java-jmeter` | **active** — JMeter JMX etalon, `layers: [performance]` |
+| `tests-java-gatling` | **active** — Gatling Java DSL sibling, `layers: [performance]` |
 
 Only one module is the CI default (Selenide). Selenium living block has api+ui+e2e; Rest Assured and Retrofit 2 are living HTTP-only (`layers: [api]`). Java Playwright is living UI+HTTP (`layers: [api, ui, e2e]`, Playwright `APIRequest` for HTTP). **UI-only slots** (no REST): `tests-java-junit5-{selenide,selenium,playwright}` (`layers: [ui, e2e]`). Other folders are teaching slots / generator outputs.
 
