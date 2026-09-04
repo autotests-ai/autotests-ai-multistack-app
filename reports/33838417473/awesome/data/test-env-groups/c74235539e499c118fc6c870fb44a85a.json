@@ -1,0 +1,1 @@
+{"id":"c74235539e499c118fc6c870fb44a85a","fullName":"dev.multistack.app.config.SecurityChainTest.actuatorPrometheusNotOkOnApiPort","name":"GET /actuator/prometheus on the API port is not 200","status":"passed","testResultsByEnv":{"default":"4bf687156316b4b0f8915529b6757002"}}
