@@ -22,7 +22,8 @@ name: CI
 #   deploy-*-stage ← matching build + sonar-backend / sonar-frontend + preempt/yield (STAGE_APP_DIR, cd_stage)
 #   api-tests-stage ← deploy-backend-stage + infra-tests (STAGE_APP_DIR, run_api_stage)
 #   deploy-backend-load ← api-tests-stage + build-backend (LOAD_APP_DIR; skip if unset)
-#   jmeter-smoke ← deploy-backend-load (etalon JMX, 1 thread; not Gatling)
+#   jmeter-smoke ← deploy-backend-load (etalon JMX vs java cell; not Gatling)
+#   jmeter-kotlin-cell ← jmeter-smoke (rewrite URL to kotlin-spring; java-jmeter + kotlin-jmeter + groovy-jmeter)
 #   e2e-tests-stage ← api-tests-stage + deploy-frontend-stage + infra-tests (STAGE_APP_DIR, run_e2e_stage)
 #   (load jobs run parallel with e2e-tests-stage; prod deploy-* must NOT need them)
 #   deploy-* ← matching build + sonar-backend / sonar-frontend + e2e-tests-stage (cd_production)
@@ -818,6 +819,47 @@ jobs:
       - uses: ./tests/.github/actions/performance
         with:
           module_dir: tests/java/tests-java-jmeter
+
+  # Same isolated SUT, second cell. No GHA matrix: rewrite java-spring → kotlin-spring
+  # in LOAD_API_URL, then the three living JMeter cells against that origin.
+  jmeter-kotlin-cell:
+    needs: [jmeter-smoke]
+    if: >-
+      always() && !cancelled() &&
+      vars.LOAD_APP_DIR != '' &&
+      needs.jmeter-smoke.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      API_BASE_URL: ${{ vars.LOAD_API_URL }}
+      JMETER_ALLOW_PUBLIC: "true"
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+    steps:
+      - *checkout
+      - name: Switch load cell to kotlin-spring
+        shell: bash
+        run: |
+          set -euo pipefail
+          src="${API_BASE_URL%/}"
+          case "$src" in
+            *backend-java-spring*) ;;
+            *)
+              echo "STOP: LOAD_API_URL must contain backend-java-spring so the cell can switch: ${src}" >&2
+              exit 1
+              ;;
+          esac
+          dst="${src/backend-java-spring/backend-kotlin-spring}"
+          echo "API_BASE_URL=${dst}" >> "${GITHUB_ENV}"
+          echo "==> switched load cell ${src} → ${dst}"
+      - uses: ./tests/.github/actions/performance
+        with:
+          module_dir: tests/java/tests-java-jmeter
+      - uses: ./tests/.github/actions/performance
+        with:
+          module_dir: tests/kotlin/tests-kotlin-jmeter
+      - uses: ./tests/.github/actions/performance
+        with:
+          module_dir: tests/groovy/tests-groovy-jmeter
 
   e2e-tests-stage:
     needs: [api-tests-stage, deploy-frontend-stage, trigger, infra-tests]

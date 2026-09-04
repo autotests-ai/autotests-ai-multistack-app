@@ -41,7 +41,7 @@ runs:
       continue-on-error: true
       uses: actions/upload-artifact@v7
       with:
-        name: jmeter-smoke
+        name: jmeter-${{ replace(inputs.module_dir, '/', '-') }}
         path: |
           ${{ inputs.module_dir }}/build/jmeter/results.jtl
           ${{ inputs.module_dir }}/build/jmeter/report/**

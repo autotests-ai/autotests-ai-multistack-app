@@ -6,7 +6,7 @@ GitHub does not interpolate `uses:`. This adapter dispatches on `TESTS_LANG`:
 
 | LANG | Action | `module_dir` |
 |------|--------|----------------|
-| `java` | `./tests/java/tests-java-junit5-rest_assured-selenide/.github/actions/<verb>` | living: `junit5-rest_assured-{selenide,selenium}`, `junit5-api_request-playwright`, `junit5-rest_assured`, `junit5-retrofit2`; load etalon: `jmeter` (`performance` adapter); runner: `{framework}-{ui}`, `gatling` |
+| `java` | `./tests/java/tests-java-junit5-rest_assured-selenide/.github/actions/<verb>` | living: `junit5-rest_assured-{selenide,selenium}`, `junit5-api_request-playwright`, `junit5-rest_assured`, `junit5-retrofit2`; load: `performance` adapter → `tests-*-jmeter` via `module_dir` (Java smoke action is the runner; GitHub does not interpolate `uses:`); runner: `{framework}-{ui}`, `gatling` |
 | `kotlin` | same JVM infra/sonar adapter | living: `junit5-ktor-{selenide,selenium}`, `junit5-api_request-playwright`, `junit5-ktor` |
 | `javascript` | `./tests/javascript/.github/actions/<verb>` | short `tests/javascript/tests-javascript-{ui}`; `playwright` → UI-only living, `api_request-playwright` → combo |
 | `python` | `./tests/python/.github/actions/<verb>` | short `tests/python/tests-python-{ui}`; `selenium` → `requests-selenium`, `selene` → `requests-selene`, `playwright` → `api_request-playwright` |

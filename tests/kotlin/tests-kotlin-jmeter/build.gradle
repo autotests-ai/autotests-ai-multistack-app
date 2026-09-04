@@ -184,6 +184,8 @@ def runJmeter = { String taskThreads, String taskLoops, String taskRamp, String 
     def binName = System.getProperty('os.name', '').toLowerCase().contains('windows') ? 'jmeter.bat' : 'jmeter'
     def bin = new File(home, "bin/${binName}")
     def out = resultsDir.get().asFile
+    delete out
+    out.mkdirs()
     def jtl = new File(out, 'results.jtl')
     def report = new File(out, 'report')
     def logFile = new File(out, 'jmeter.log')
