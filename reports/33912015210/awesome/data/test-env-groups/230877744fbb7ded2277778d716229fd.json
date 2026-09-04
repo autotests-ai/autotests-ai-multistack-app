@@ -1,1 +1,0 @@
-{"id":"230877744fbb7ded2277778d716229fd","fullName":"tests.e2e.LoginTests.shouldLoginWithMinimumLengthCredentials","name":"User is logged in with 3-character login and 6-character password","status":"passed","testResultsByEnv":{"default":"5369d9143d994fb70198ea9ac1d11f87"}}

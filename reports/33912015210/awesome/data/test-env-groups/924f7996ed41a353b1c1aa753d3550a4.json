@@ -1,1 +1,0 @@
-{"id":"924f7996ed41a353b1c1aa753d3550a4","fullName":"tests.api.AuthApiTests.loginMinLengthUnknownUserIsUnauthorized","name":"POST /api/auth/login with min-length unknown user is 401, not 400","status":"passed","testResultsByEnv":{"default":"1c48b9c6191bb7dd07511c964c3ef879"}}
