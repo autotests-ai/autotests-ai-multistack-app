@@ -22,12 +22,28 @@ frontend/
     frontend-typescript-angular/   # product + src/test/; vendor/ds
     frontend-typescript-vue/       # product + src/test/ (component_vue); vendor/ds
     frontend-typescript-jquery/    # product + src/test/ (multi-page); vendor/ds
+  kotlin/
+    frontend-kotlin-compose/       # native Android (Jetpack Compose) — APK, no container
+  swift/
+    frontend-swift-swiftui/        # native iOS (SwiftUI) — IPA / sim .app, no container
 ```
 
-All ten are `status: active` in [`deploy/matrix.yaml`](../deploy/matrix.yaml) — there are no
-frontend slots left. Each is an **independent copy**: same screens, same `data-testid`
-contract, same auth surface, no shared application code. A change to the contract is a
-change in ten places, on purpose.
+All ten **web** cells are `status: active` in [`deploy/matrix.yaml`](../deploy/matrix.yaml) —
+there are no frontend slots left there. Each is an **independent copy**: same screens, same
+`data-testid` contract, same auth surface, no shared application code. A change to the
+contract is a change in ten places, on purpose.
+
+## Native cells
+
+`kotlin/` and `swift/` are the same frontend slot on a device: same screens minus the note
+surface, same testid strings, same `/api/auth/*` backend. They are hub-`matrix.yaml`-only
+(`kind: android` / `ios`) — an app bundle has no port, compose service or vhost, so they
+carry no runtime row and no `/stack/` tile.
+
+The design-system header is markup **plus** `js/header.js`, which native cannot load, so both
+cells reimplement that chrome (40dp/pt bar, brand `Multistack`, lang + theme toggles, burger
+≤768 / inline nav ≥769) against the same CSS and JS SSOT. Locator mapping and the shell-edge
+invariant: [`../_contract/native-shell.md`](../_contract/native-shell.md).
 
 ## Toolchain — why the configs look like this in 2026
 

@@ -1,0 +1,38 @@
+# XcodeGen spec — regeneration path for Multistack.xcodeproj.
+#
+#   brew install xcodegen && xcodegen generate
+#
+# The committed .xcodeproj is the SSOT for CI (`scripts/build-sim.sh`); this
+# spec exists so the project can be rebuilt from scratch without Xcode UI.
+name: Multistack
+options:
+  bundleIdPrefix: dev.multistack
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MULTISTACK_API_BASE: https://autotests.ai/stack/backend-java-spring/api
+    MULTISTACK_BACKEND_ID: backend-java-spring
+    MULTISTACK_STACK_INDEX_URL: https://autotests.ai/stack/
+
+targets:
+  Multistack:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+    info:
+      path: Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.multistack.swiftui
+        PRODUCT_NAME: Multistack
+        MARKETING_VERSION: 0.1.0
+        CURRENT_PROJECT_VERSION: 1
+        TARGETED_DEVICE_FAMILY: "1,2"
+        INFOPLIST_FILE: Info.plist
+        GENERATE_INFOPLIST_FILE: false
+        CODE_SIGN_STYLE: Automatic

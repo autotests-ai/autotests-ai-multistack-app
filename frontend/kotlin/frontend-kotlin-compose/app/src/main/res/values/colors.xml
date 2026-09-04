@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- design-system css/tokens.css — dark default -->
+    <color name="surface_dark">#151414</color>
+    <color name="header_surface_dark">#21201F</color>
+</resources>

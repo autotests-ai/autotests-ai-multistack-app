@@ -8,6 +8,7 @@ SSOT for **behavior** — not language-specific code.
 | UI manifest | `ui.manifest.yaml` | active — `designSystem.path` only (no HTML `screens`; `wire-ui.sh` STOPs if `SCREENS` is set) |
 | UI visual snapshots | `visual-snapshots.md` | stand folders (Java: mock + stage + prod; others: mock + e2e) × native runner × `{os}/` |
 | Login flow | `flows/login.md` | active |
+| Native shell (Android + iOS) | `native-shell.md` | active — testid ↔ `contentDescription` / `accessibilityIdentifier`, shell edge, native-only confirm ids |
 | OpenAPI | `openapi.yaml` | active — matches `AuthController` + `ApiController` · lint `scripts/openapi-diff.py` |
 | DB schema | [`../backend/java/backend-java-spring/src/main/resources/db/migration/`](../backend/java/backend-java-spring/src/main/resources/db/migration/) | active — Flyway |
 | Matrix catalog | [`../../matrix.yaml`](../../matrix.yaml) | **v0.5.2** — backends / frontends / tests + cells + `generation_gates` · index [`docs/testing/MATRIX-CATALOG.md`](../../../../docs/testing/MATRIX-CATALOG.md) |

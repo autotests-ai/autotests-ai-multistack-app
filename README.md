@@ -30,6 +30,8 @@ Full maps: [frontend/README.md](frontend/README.md) · [tests/NAMING.md](tests/N
 |------|-----------------|--------------|
 | **frontend/javascript/** | `frontend-javascript-vanilla`, `react`, `angular`, `vue`, `jquery` (all active) | — |
 | **frontend/typescript/** | `frontend-typescript-vanilla`, `react` (+ RTL), `angular`, `vue` (+ VTU), `jquery` (all active) | — |
+| **frontend/kotlin/** | `frontend-kotlin-compose` (active) — native Android, APK | — |
+| **frontend/swift/** | `frontend-swift-swiftui` (active) — native iOS, IPA / sim `.app` | — |
 | **frontend/_shared/** | `frontend-javascript-app`, `frontend-javascript-embed`, `frontend-react-ui` | — |
 | **backend/java/** | `backend-java-spring` (active) | — |
 | **backend/kotlin/** | `backend-kotlin-spring` (active) | — |
@@ -207,6 +209,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:9800/
 |---------|------|
 | `frontend-*` (ten) | one nginx image per stack, `:9800`–`:9814` — same screens, independent source trees |
 | `frontend-typescript-react` | React SPA (`:9811`) — the module CI builds and deploys |
+| `frontend-kotlin-compose` · `frontend-swift-swiftui` | native cells — no port, no container: the artifact is an APK / IPA for one Appium suite ([`_contract/native-shell.md`](_contract/native-shell.md)) |
 | `backend-java-spring` | Spring JSON API (`:8800`) |
 | `backend-kotlin-spring` | Spring Kotlin JSON API (`:8810`) |
 | `backend-python-flask` | Flask JSON API (`:8820`) |

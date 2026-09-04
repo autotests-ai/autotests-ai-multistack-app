@@ -77,6 +77,9 @@ implementation:
   frontend: projects/autotests-ai-multistack-home/autotests-ai-multistack-app/frontend/typescript/frontend-typescript-react/
   react: projects/autotests-ai-multistack-home/autotests-ai-multistack-app/frontend/typescript/frontend-typescript-react/
   tests: projects/autotests-ai-multistack-home/autotests-ai-multistack-app/tests/java/tests-java-junit5-rest_assured-selenide/
+  # Native cells — same flow, same testids, no note screen. See ../native-shell.md.
+  android: projects/autotests-ai-multistack-home/autotests-ai-multistack-app/frontend/kotlin/frontend-kotlin-compose/
+  ios: projects/autotests-ai-multistack-home/autotests-ai-multistack-app/frontend/swift/frontend-swift-swiftui/
 
 design-system:
   embedHeader: true

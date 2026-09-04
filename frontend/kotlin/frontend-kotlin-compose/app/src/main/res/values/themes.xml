@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Boot window matches the design-system dark surface (#151414) so the
+         launch flash does not go white before Compose paints. -->
+    <style name="Theme.Multistack" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/surface_dark</item>
+        <item name="android:statusBarColor">@color/header_surface_dark</item>
+        <item name="android:navigationBarColor">@color/surface_dark</item>
+    </style>
+</resources>
