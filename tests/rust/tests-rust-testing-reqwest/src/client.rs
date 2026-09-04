@@ -62,6 +62,20 @@ pub fn username() -> String {
     format!("user_{nanos:x}")
 }
 
+/// Exactly `@Size(min = 3)` — unique hex slice.
+pub fn username_at_min_length() -> String {
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
+    format!("{:03x}", (nanos % 4096) as u16)
+}
+
+/// Exactly `@Size(min = 6)`.
+pub fn password_at_min_length() -> String {
+    "123456".into()
+}
+
 pub async fn request(allure: AllureFacade, method: Method, path: &str, opt: RequestOpt) -> HttpResult {
     ensure_allure_results_dir();
     let base = must_api_base_url().trim_end_matches('/').to_string();

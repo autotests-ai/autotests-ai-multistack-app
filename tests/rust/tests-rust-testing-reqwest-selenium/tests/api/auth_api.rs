@@ -207,6 +207,51 @@ async fn register_new_user() {
     tests::delete_account(allure.clone(), token).await;
 }
 
+#[allure_test(name = "POST /api/auth/register accepts a 3-character username and 6-character password")]
+#[tokio::test]
+async fn register_accepts_minimum_length_credentials() {
+    tests::layer_api("Auth API", "Authentication", "Authentication", "critical");
+    let name = tests::username_at_min_length();
+    let res = tests::request(
+        allure.clone(),
+        Method::POST,
+        "/api/auth/register",
+        tests::RequestOpt {
+            json: Some(json!({"username": name, "password": tests::password_at_min_length()})),
+            ..Default::default()
+        },
+    )
+    .await;
+    assert_eq!(res.status, 201);
+    tests::assert_schema(&res.raw, "auth-response.json");
+    let body = res.map();
+    assert_eq!(body.get("username").and_then(|v| v.as_str()), Some(name.as_str()));
+    let token = body.get("token").and_then(|v| v.as_str()).unwrap_or("");
+    tests::delete_account(allure.clone(), token).await;
+}
+
+#[allure_test(name = "POST /api/auth/login with min-length unknown user is 401, not 400")]
+#[tokio::test]
+async fn login_min_length_unknown_user_is_unauthorized() {
+    tests::layer_api("Auth API", "Authentication", "Authentication", "critical");
+    let res = tests::request(
+        allure.clone(),
+        Method::POST,
+        "/api/auth/login",
+        tests::RequestOpt {
+            json: Some(json!({
+                "username": tests::username_at_min_length(),
+                "password": tests::password_at_min_length()
+            })),
+            ..Default::default()
+        },
+    )
+    .await;
+    assert_eq!(res.status, 401);
+    tests::assert_schema(&res.raw, "error.json");
+    assert_eq!(tests::message(&res.map()), tests::WRONG_CREDENTIALS_MESSAGE);
+}
+
 #[allure_test(name = "POST /api/auth/register rejects a duplicate username with 409")]
 #[tokio::test]
 async fn register_duplicate_username() {

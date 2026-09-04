@@ -39,6 +39,30 @@ async fn should_register_new_user() {
     tests::delete_account_quietly(allure.clone(), &user.username, &user.password).await;
 }
 
+#[allure_test(name = "New user can register with 3-character login and 6-character password")]
+#[tokio::test]
+async fn should_register_with_minimum_length_credentials() {
+    layer();
+    allure_rust_commons::tag("positive");
+    let user = tests::UserBuilder::new().with_min_length_credentials().build();
+    tests::with_browser({
+        let username = user.username.clone();
+        let password = user.password.clone();
+        let welcome = user.welcome_message();
+        move || async move {
+            tests::RegisterPage::default()
+                .open_page()
+                .await
+                .fill_and_submit_form(&username, &password, &password)
+                .await
+                .should_have_welcome_message(&welcome)
+                .await;
+        }
+    })
+    .await;
+    tests::delete_account_quietly(allure.clone(), &user.username, &user.password).await;
+}
+
 #[allure_test(name = "Password mismatch shows validation error")]
 #[tokio::test]
 async fn should_show_error_when_passwords_do_not_match() {

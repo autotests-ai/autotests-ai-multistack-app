@@ -33,6 +33,12 @@ impl UserBuilder {
         self
     }
 
+    pub fn with_min_length_credentials(mut self) -> Self {
+        self.username = crate::username_at_min_length();
+        self.password = crate::password_at_min_length();
+        self
+    }
+
     pub fn build(self) -> User {
         User {
             username: self.username,

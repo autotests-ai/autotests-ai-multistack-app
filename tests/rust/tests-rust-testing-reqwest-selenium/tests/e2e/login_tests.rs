@@ -31,6 +31,34 @@ async fn should_login_with_valid_credentials() {
     .await;
 }
 
+#[allure_test(name = "User is logged in with 3-character login and 6-character password")]
+#[tokio::test]
+async fn should_login_with_minimum_length_credentials() {
+    layer();
+    allure_rust_commons::tag("positive");
+    let user = tests::User {
+        username: tests::username_at_min_length(),
+        password: tests::password_at_min_length(),
+    };
+    tests::register(allure.clone(), &user.username, &user.password).await;
+    tests::with_browser({
+        let username = user.username.clone();
+        let password = user.password.clone();
+        let welcome = user.welcome_message();
+        move || async move {
+            tests::LoginPage::default()
+                .open_page()
+                .await
+                .fill_and_submit_form(&username, &password)
+                .await
+                .should_have_welcome_message(&welcome)
+                .await;
+        }
+    })
+    .await;
+    tests::delete_account_quietly(allure.clone(), &user.username, &user.password).await;
+}
+
 #[allure_test(name = "Empty username shows validation error")]
 #[tokio::test]
 async fn should_show_validation_error_when_username_is_empty() {

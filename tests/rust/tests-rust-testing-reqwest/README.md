@@ -1,6 +1,6 @@
 # tests-rust-testing-reqwest
 
-`cargo test` · **reqwest** · [allure-cargotest](https://crates.io/crates/allure-cargotest) + [allure-reqwest](https://github.com/allure-framework/allure-rust/tree/main/crates/allure-reqwest). HTTP-only school — same `/api` catalog as Go net/http and Java Rest Assured (31 api + 9 ConfigReader + 3 manual). No browser.
+`cargo test` · **reqwest** · [allure-cargotest](https://crates.io/crates/allure-cargotest) + [allure-reqwest](https://github.com/allure-framework/allure-rust/tree/main/crates/allure-reqwest). HTTP-only school — same `/api` catalog as Go net/http and Java Rest Assured (31 api + 9 ConfigReader). No browser, no manual layer.
 
 Combo (UI+HTTP): [`tests-rust-testing-reqwest-selenium`](../tests-rust-testing-reqwest-selenium/). UI-only sibling: [`tests-rust-testing-selenium`](../tests-rust-testing-selenium/). Playwright-on-Rust is not a cell.
 
@@ -10,7 +10,6 @@ cp .env.example .env   # optional; default STAND=prod → autotests.ai
 cargo test --test infra
 ./cover-config.sh   # 100% on ConfigReader analog (JaCoCo sibling)
 cargo test --test api
-cargo test --test manual
 cargo test
 ```
 

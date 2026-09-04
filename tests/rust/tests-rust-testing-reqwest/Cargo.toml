@@ -27,7 +27,3 @@ labels = { layer = "api" }
 [[package.metadata.allure.modules]]
 path = "tests/infra/"
 labels = { layer = "infra" }
-
-[[package.metadata.allure.modules]]
-path = "tests/manual/"
-labels = { layer = "manual" }

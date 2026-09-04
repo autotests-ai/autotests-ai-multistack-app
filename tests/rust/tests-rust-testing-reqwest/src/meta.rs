@@ -32,14 +32,3 @@ pub fn layer_infra(suite_name: &str, epic_name: &str, feature_name: &str, severi
     tag("infra");
     tag("infra-backend");
 }
-
-pub fn layer_manual(suite_name: &str, epic_name: &str, feature_name: &str, severity_name: &str) {
-    common_meta();
-    suite(suite_name);
-    epic(epic_name);
-    feature(feature_name);
-    severity(severity_name);
-    label("layer", "manual");
-    tag("manual");
-    label("ALLURE_MANUAL", "true");
-}
