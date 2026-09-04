@@ -1,1 +1,0 @@
-{"id":"922b0dae950c8fad2b2a1f35e1736561","fullName":"tests.api.AuthApiTests.registerNewUser","name":"POST /api/auth/register creates a user, returns the auth contract, and cleans up","status":"passed","testResultsByEnv":{"default":"be125ba11e2aa765a64f55670cdc5ce1"}}
