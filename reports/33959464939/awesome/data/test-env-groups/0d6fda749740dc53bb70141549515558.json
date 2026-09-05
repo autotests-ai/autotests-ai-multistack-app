@@ -1,1 +1,0 @@
-{"id":"0d6fda749740dc53bb70141549515558","fullName":"dev.multistack.app.controller.AuthControllerTest.registerDuplicateUsername","name":"POST /api/auth/register maps duplicate username to 409","status":"passed","testResultsByEnv":{"default":"a5fac72b875c800d6a1b0b9ae76dd38e"}}

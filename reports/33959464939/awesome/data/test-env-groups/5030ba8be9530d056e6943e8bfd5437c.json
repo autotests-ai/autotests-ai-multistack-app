@@ -1,1 +1,0 @@
-{"id":"5030ba8be9530d056e6943e8bfd5437c","fullName":"tests.api.AuthApiTests.registerRejectsMalformedJson","name":"POST /api/auth/register answers a malformed JSON body with 400, not 401","status":"passed","testResultsByEnv":{"default":"d32d64b1132e5e747a63f33343f9aa46"}}
