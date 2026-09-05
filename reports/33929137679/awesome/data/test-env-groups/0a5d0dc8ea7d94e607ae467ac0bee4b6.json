@@ -1,1 +1,0 @@
-{"id":"0a5d0dc8ea7d94e607ae467ac0bee4b6","fullName":"dev.multistack.app.integration.ActuatorPrometheusIntegrationTest.prometheusScrapeOnManagementPort","name":"GET /actuator/prometheus on the management port is 200 and includes jvm_memory_*","status":"passed","testResultsByEnv":{"default":"f32ed02f6d4527e7da44bcead7986ed8"}}

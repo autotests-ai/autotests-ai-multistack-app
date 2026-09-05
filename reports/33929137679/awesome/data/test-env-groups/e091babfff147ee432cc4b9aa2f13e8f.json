@@ -1,1 +1,0 @@
-{"id":"e091babfff147ee432cc4b9aa2f13e8f","fullName":"dev.multistack.app.config.SecurityChainTest.openapiYamlPermitAll","name":"GET /api/openapi.yaml is public","status":"passed","testResultsByEnv":{"default":"26a2a79db5e85b8eb883cf8534e952be"}}
