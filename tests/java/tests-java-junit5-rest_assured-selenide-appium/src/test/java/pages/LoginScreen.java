@@ -17,6 +17,7 @@ public class LoginScreen {
     private final SelenideElement submitButton = $(id("submit-button"));
     private final SelenideElement errorMessage = $(id("error-message"));
     private final SelenideElement formTitle = $(id("login-form-title"));
+    private final SelenideElement registerLink = $(id("register-link"));
 
     @Step("Login screen is open")
     public LoginScreen shouldBeOpen() {
@@ -76,7 +77,7 @@ public class LoginScreen {
     @Step("Open register from the login footer link")
     public RegisterScreen clickRegisterLink() {
         NativeInput.dismissIme(formTitle);
-        $(id("register-link")).shouldBe(visible).click();
+        registerLink.shouldBe(visible).click();
         return new RegisterScreen();
     }
 }
