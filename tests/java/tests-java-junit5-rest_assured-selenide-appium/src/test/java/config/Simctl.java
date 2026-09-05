@@ -1,14 +1,16 @@
 package config;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import org.openqa.selenium.json.Json;
+import org.openqa.selenium.json.JsonException;
+
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Simulator twin of {@link Adb}. Without {@code appium:udid} the XCUITest
@@ -17,10 +19,7 @@ import java.util.regex.Pattern;
  */
 final class Simctl {
 
-    private static final Pattern IOS_RUNTIME = Pattern.compile("^-- iOS .+ --$");
-    private static final Pattern OTHER_RUNTIME = Pattern.compile("^-- .+ --$");
-    private static final Pattern DEVICE = Pattern.compile(
-            "^(?<name>.+) \\((?<udid>[0-9A-Fa-f-]{36})\\) \\((?<state>[^()]+)\\)$");
+    private static final String IOS_RUNTIME = "com.apple.CoreSimulator.SimRuntime.iOS-";
 
     private Simctl() {
     }
@@ -30,61 +29,98 @@ final class Simctl {
         if (explicit != null && !explicit.isBlank()) {
             return explicit;
         }
-        List<Simulator> booted = bootedSimulators();
-        if (booted.isEmpty()) {
-            throw new IllegalStateException(
-                    "No booted iOS simulator in `xcrun simctl list devices`. Boot one "
-                            + "(`xcrun simctl boot \"" + deviceName + "\"` or Simulator.app), "
-                            + "then retry. IOS_UDID= pins a specific device.");
-        }
+        List<Simulator> booted = bootedIosSimulators();
+        // Falling back to any booted simulator is the throwaway-runtime bug wearing
+        // a different hat: the suite would pass on a device nobody asked for.
         return booted.stream()
                 .filter(simulator -> simulator.name().equals(deviceName))
                 .findFirst()
-                .orElse(booted.get(0))
+                .orElseThrow(() -> notBooted(deviceName, booted))
                 .udid();
     }
 
-    private static List<Simulator> bootedSimulators() {
+    private static IllegalStateException notBooted(String deviceName, List<Simulator> booted) {
+        String boot = "xcrun simctl boot \"" + deviceName + "\"";
+        if (booted.isEmpty()) {
+            return new IllegalStateException(
+                    "No booted iOS simulator. Boot the one this suite expects — " + boot
+                            + " — or Simulator.app, then retry.");
+        }
+        return new IllegalStateException(
+                "No booted iOS simulator named \"" + deviceName + "\". Booted now:\n"
+                        + booted.stream().map(Simulator::describe)
+                                .collect(Collectors.joining("\n"))
+                        + "\nBoot it (" + boot + "), or point the suite at one of the above "
+                        + "with IOS_DEVICE_NAME= / IOS_UDID=.");
+    }
+
+    /**
+     * The {@code --json} shape, not the human table: a device name repeats across
+     * runtimes ({@code iPhone 16} on both 18.3 and 18.4), and only the runtime key
+     * says which one is booted.
+     */
+    private static List<Simulator> bootedIosSimulators() {
+        String json = run("xcrun", "simctl", "list", "devices", "--json");
+        Map<?, ?> root;
+        try {
+            root = new Json().toType(json, Map.class);
+        } catch (JsonException e) {
+            throw new IllegalStateException("`simctl list devices --json` is not JSON: " + json, e);
+        }
+        if (!(root.get("devices") instanceof Map<?, ?> byRuntime)) {
+            throw new IllegalStateException("`simctl list devices --json` has no devices: " + json);
+        }
         List<Simulator> booted = new ArrayList<>();
-        boolean ios = false;
-        for (String line : run("xcrun", "simctl", "list", "devices", "available")) {
-            String trimmed = line.strip();
-            if (OTHER_RUNTIME.matcher(trimmed).matches()) {
-                // watchOS and tvOS devices carry udids too, and cannot run the app.
-                ios = IOS_RUNTIME.matcher(trimmed).matches();
+        for (Map.Entry<?, ?> runtime : byRuntime.entrySet()) {
+            String identifier = String.valueOf(runtime.getKey());
+            // watchOS and tvOS simulators carry udids too, and cannot run the app.
+            if (!identifier.startsWith(IOS_RUNTIME)
+                    || !(runtime.getValue() instanceof List<?> devices)) {
                 continue;
             }
-            Matcher device = DEVICE.matcher(trimmed);
-            if (ios && device.matches() && "Booted".equals(device.group("state"))) {
-                booted.add(new Simulator(device.group("name"), device.group("udid")));
+            for (Object device : devices) {
+                if (device instanceof Map<?, ?> fields && "Booted".equals(fields.get("state"))) {
+                    booted.add(new Simulator(
+                            String.valueOf(fields.get("name")),
+                            String.valueOf(fields.get("udid")),
+                            iosVersion(identifier)));
+                }
             }
         }
         return booted;
     }
 
-    private static List<String> run(String... command) {
-        ProcessBuilder builder = new ProcessBuilder(command).redirectErrorStream(true);
+    /** Stderr inherits the console so a warning cannot land inside the JSON. */
+    private static String run(String... command) {
+        ProcessBuilder builder = new ProcessBuilder(command)
+                .redirectError(ProcessBuilder.Redirect.INHERIT);
         String developerDir = developerDir();
         if (developerDir != null) {
             builder.environment().put("DEVELOPER_DIR", developerDir);
         }
         try {
             Process process = builder.start();
-            List<String> lines = new ArrayList<>();
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    lines.add(line);
-                }
+            String output = new String(
+                    process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            int status = process.waitFor();
+            if (status != 0) {
+                throw new IllegalStateException(
+                        String.join(" ", command) + " exited " + status + " (see stderr above).");
             }
-            process.waitFor();
-            return lines;
-        } catch (Exception e) {
+            return output;
+        } catch (IOException e) {
             throw new IllegalStateException(
                     "xcrun simctl is not available. This cell needs full Xcode, not "
                             + "CommandLineTools; DEVELOPER_DIR= overrides the lookup.", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted waiting for " + String.join(" ", command), e);
         }
+    }
+
+    /** {@code …SimRuntime.iOS-18-3} the way {@code simctl list runtimes} prints it. */
+    private static String iosVersion(String runtimeIdentifier) {
+        return "iOS " + runtimeIdentifier.substring(IOS_RUNTIME.length()).replace('-', '.');
     }
 
     /** CommandLineTools carries no simctl, so `xcode-select -p` may point nowhere useful. */
@@ -97,6 +133,10 @@ final class Simctl {
         return Files.isDirectory(xcodeApp) ? xcodeApp.toString() : null;
     }
 
-    private record Simulator(String name, String udid) {
+    private record Simulator(String name, String udid, String runtime) {
+
+        String describe() {
+            return "  " + name + " (" + runtime + ") " + udid;
+        }
     }
 }

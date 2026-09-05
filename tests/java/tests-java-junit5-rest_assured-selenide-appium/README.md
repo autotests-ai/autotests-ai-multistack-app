@@ -53,10 +53,14 @@ cd ../../../tests/java/tests-java-junit5-rest_assured-selenide-appium
 Host tasks are Android shorthands only; iOS travels on the two flags.
 
 The udid is resolved before the session — `adb devices` for Android,
-`xcrun simctl list devices` for iOS — so neither driver picks a device on its
-own. A booted simulator is required: left to itself, XCUITest creates a
-throwaway one on the newest SDK Xcode carries, where `SecureField` silently
-drops typed text and every login lands on the password validation error.
+`xcrun simctl list devices --json` for iOS — so neither driver picks a device on
+its own. A booted simulator is required, and one whose name matches
+`IOS_DEVICE_NAME`: the suite fails with the booted list rather than falling back
+to a neighbour, because `iPhone 16` exists on several runtimes at once. Left to
+itself, XCUITest creates a throwaway simulator on the newest runtime Xcode
+carries, and on iOS 26 SwiftUI no longer backs `TextField` / `SecureField` with a
+UIKit `UITextField` — typed text reaches no editable responder and every login
+lands on the password validation error. `_contract/native-shell.md` has the detail.
 
 Overrides: `-Denv=` · `-DdeviceHost=` · `-Dplatform=` · `APPIUM_URL` · `ANDROID_APP` · `IOS_APP` · `ANDROID_UDID` · `IOS_UDID` · `IOS_DEVICE_NAME` · `ANDROID_APP_URL` · `DEVELOPER_DIR`.
 

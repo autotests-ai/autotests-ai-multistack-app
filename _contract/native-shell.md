@@ -21,7 +21,7 @@ the only strategy that needs no per-platform branch.
 ## Surface
 
 Screens are the teaching SPA **minus the note surface**: no items list, no
-`GET /api/items`, no `note-form` / `note-title-input`.
+`GET /api/items`, no `note-*` ids.
 
 | Screen | Testids |
 |--------|---------|
@@ -29,94 +29,90 @@ Screens are the teaching SPA **minus the note surface**: no items list, no
 | Register | `register-panel`, `register-form-title`, `register-form`, `register-login-input`, `register-password-input`, `confirm-password-input`, `register-error-message`, `register-submit-button`, `login-link` |
 | Home | `multistack-layout`, `welcome-panel`, `welcome-message`, `logout-button`, `delete-account-button`, `health-status` |
 | Header bar | `header`, `header-brand-link`, `header-tools`, `header-lang-toggle`, `header-lang-label`, `header-theme-toggle`, `header-burger`, `header-nav`, `header-nav-{home,login,register,stack}`, `header-search-input` |
-| Header menu | `header-menu`, `header-menu-nav`, `header-menu-nav-{home,login,register,stack}`, `header-menu-search`, `header-menu-search-input`, `header-menu-tools`, `header-menu-lang-toggle`, `header-menu-lang-label`, `header-menu-theme-toggle` |
+| Header menu | `header-menu` plus the bar ids again under that prefix: `-nav`, `-nav-{home,login,register,stack}`, `-search`, `-search-input`, `-tools`, `-lang-toggle`, `-lang-label`, `-theme-toggle` |
 
 Native-only ids — `window.confirm` has no native twin, so account deletion is an
-in-app dialog instead of a browser one:
-
-`delete-confirm-dialog`, `delete-confirm-message`,
+in-app dialog: `delete-confirm-dialog`, `delete-confirm-message`,
 `delete-confirm-button`, `delete-cancel-button`. Cancel keeps the session.
 
 ## Shell edge
 
-`≤768` burger · `≥769` inline nav · `≥1024` inline search. On both platforms the
-two branches are exclusive in the UI tree, so a suite can assert
-"burger XOR nav" as a hard invariant, not a visibility check:
+`≤768` burger · `≥769` inline nav · `≥1024` inline search. The two branches are
+exclusive in the UI tree, so a suite can assert "burger XOR nav" as a hard
+invariant, not a visibility check:
 
 | Viewport | `header-nav` | `header-burger` | `header-search-input` |
 |----------|--------------|-----------------|-----------------------|
 | phone | absent | present | absent |
 | tablet / landscape ≥769 | present | absent | absent below 1024 |
 
-Menu closes on: nav item tap · Escape (`pressKeyCode(111)` on Android,
-hardware Escape on iOS) · system back (Android) · widening past the shell edge.
-
-Burger e2e itself lives in `design-system-home/tests` `HeaderBurgerMenuTests`;
-native cells implement the menu without duplicating those tests in the Java
-pyramid.
+Menu closes on: nav item tap · Escape (`pressKeyCode(111)` on Android, hardware
+Escape on iOS) · system back (Android) · widening past the shell edge. Burger
+e2e itself lives in `design-system-home/tests` `HeaderBurgerMenuTests`; native
+cells implement the menu without duplicating those tests in the Java pyramid.
 
 ## Backend
 
-Same cell as the web pair — no mock UI, no screenshot stand. The API the
-app talks to is **`env`**, the same axis as web `TestConfig.apiBaseUrl`.
-Where Appium runs the session is **`deviceHost`**. Do not substitute one
-for the other.
-
-Default — and the GitHub Release APK — is the **prod live pair**
-`https://autotests.ai/stack/backend-java-spring/api`. That is not CI
-(`localhost:8800`) and not the `/stack/` board (`stackIndexUrl`).
+Same cell as the web pair — no mock UI, no screenshot stand. Two axes that are
+never substitutes for each other:
 
 | Flag | Meaning | Values |
 |------|---------|--------|
 | `-Denv=` / Android `-Penv=` / iOS `MULTISTACK_ENV=` | which API (`apiBase`) | `ci` · `stage` · `prod` |
 | `-DdeviceHost=` | where the session runs | `emulator` · `real` · `selenoid` · `browserstack` · `simulator` |
 
-| env | Host / AuthSetup (`apiBase`) | Android APK (`-Penv=` → `BuildConfig.API_BASE`) | iOS (`MULTISTACK_API_BASE` / Info.plist) |
-|-----|-------------------------------|--------------------------------------------------|------------------------------------------|
-| `prod` | `https://autotests.ai/stack/backend-java-spring/api` | same | same |
-| `stage` | `https://stage.autotests.ai/stack/backend-java-spring/api` | same | same |
-| `ci` | `http://localhost:8800/api` | `http://10.0.2.2:8800/api` | `http://127.0.0.1:8800/api` |
+| env | `apiBase` — host, AuthSetup and both apps |
+|-----|--------------------------------------------|
+| `prod` — default, and the GitHub Release APK | `https://autotests.ai/stack/backend-java-spring/api` |
+| `stage` | `https://stage.autotests.ai/stack/backend-java-spring/api` |
+| `ci` | `http://localhost:8800/api`, reached as `10.0.2.2` from the AVD and `127.0.0.1` from the simulator |
 
-`ci` is laptop compose. Selenoid and BrowserStack cannot reach it — use
-`prod` (GitHub APK) or `stage`. `-PapiBase=` / `MULTISTACK_API_BASE=` still
-win over the env name.
+`ci` is laptop compose, so Selenoid and BrowserStack cannot reach it — they need
+`prod` or `stage`. `-PapiBase=` / `MULTISTACK_API_BASE=` still win over the env
+name. Android bakes the value into `BuildConfig.API_BASE` at assemble time
+(`./gradlew :app:assembleDebug -Penv=ci`); iOS takes it from
+`MULTISTACK_ENV=ci scripts/build-sim.sh`, Appium `processArguments.env`, or the
+matching `Info.plist` build setting.
 
-| Cell | How `apiBase` is set |
-|------|----------------------|
-| Android | Baked at assemble: `./gradlew :app:assembleDebug -Penv=ci` (or `-PapiBase=… -PbackendId=…`) |
-| iOS | `MULTISTACK_ENV=ci scripts/build-sim.sh`, or Appium `processArguments.env`, or the matching `Info.plist` build setting |
-
-Token storage mirrors the SPA key `authToken:<backendId>` —
-`SharedPreferences` on Android, `UserDefaults` on iOS.
-
-Seed `user1` / `password1` → `Welcome, user1!`.
+Token storage mirrors the SPA key `authToken:<backendId>` — `SharedPreferences`
+on Android, `UserDefaults` on iOS. Seed `user1` / `password1` → `Welcome, user1!`.
 
 ## Tests
 
 Living cell: [`../tests/java/tests-java-junit5-rest_assured-selenide-appium/`](../tests/java/tests-java-junit5-rest_assured-selenide-appium/).
 One suite, both apps — `AppiumBy.accessibilityId("login-input")`. Web UI and
-`/api` stay in `tests-java-junit5-rest_assured-selenide`. Default CI stays that
-web cell.
+`/api` stay in `tests-java-junit5-rest_assured-selenide`, which is also default CI.
 
 ```bash
 cd tests/java/tests-java-junit5-rest_assured-selenide-appium
-./gradlew emulator                 # deviceHost=emulator, env=prod (GitHub-pair default)
+./gradlew emulator                        # deviceHost=emulator, env=prod
 ./gradlew assembleApp emulator -Denv=ci   # bake APK for compose, then AVD
-./gradlew real -DincludeTags=smoke  # USB phone in adb (not an emulator)
-./gradlew selenoid -Denv=prod      # GitHub APK; do not pass -Denv=ci
+./gradlew real -DincludeTags=smoke        # USB phone in adb, not an emulator
+./gradlew selenoid -Denv=prod             # GitHub APK; do not pass -Denv=ci
 ./gradlew test -Dplatform=ios -DdeviceHost=simulator -DincludeTags=smoke
 ```
 
-Host tasks are Android shorthands. iOS has none — the platform and the host are
+Host tasks are Android shorthands. **iOS has no task** — platform and host are
 flags on `test`: `-Dplatform=ios` with `-DdeviceHost=simulator|real|browserstack`.
 `processArguments` still come from `-Denv` (default `prod`).
 
-Both platforms resolve the device before the session — Android from
-`adb devices`, iOS from `xcrun simctl list devices`. A **booted** simulator is a
-precondition, exactly as `emulator` needs a running AVD: with no `appium:udid`
-the XCUITest driver creates a throwaway simulator on the newest SDK Xcode
-carries, and on that runtime a SwiftUI `SecureField` never receives the typed
-password. `IOS_DEVICE_NAME` (default `iPhone 16`) chooses among booted
-simulators, `IOS_UDID` pins one, and full Xcode must be reachable —
-CommandLineTools carries no `simctl`, so the Appium stand and the suite both
-fall back to `/Applications/Xcode.app` unless `DEVELOPER_DIR` says otherwise.
+### Pinning the simulator
+
+The device is resolved before the session — Android from `adb devices`, iOS from
+`xcrun simctl list devices --json`. A **booted** simulator is a precondition,
+exactly as `emulator` needs a running AVD, and `Simctl` fails with the booted
+list rather than substituting a neighbour: `iPhone 16` exists on several
+runtimes, so the name identifies a device only together with its `Booted` state.
+
+Without `appium:udid` XCUITest creates a throwaway simulator on the newest
+runtime Xcode carries — today iOS 26.5, which ships the iPhone 17 family and no
+`iPhone 16` at all. iOS 26 is also where SwiftUI stopped backing `TextField` /
+`SecureField` with a UIKit `UITextField`, leaving automation no editable
+responder: the typed password never lands. The artifact is not the variable —
+built against the 26.5 SDK with `MinimumOSVersion 17.0`, it installs and renders
+on 26.5 fine.
+
+`IOS_DEVICE_NAME` (default `iPhone 16`) picks among booted simulators, `IOS_UDID`
+pins one outright. Full Xcode must be reachable: CommandLineTools carries no
+`simctl`, so stand and suite both fall back to `/Applications/Xcode.app` unless
+`DEVELOPER_DIR` says otherwise.
