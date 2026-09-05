@@ -17,7 +17,8 @@ Two axes — do not mix them:
 | Flag | Meaning | Default |
 |------|---------|---------|
 | `-Denv=` | which API (`apiBase`, like web `apiBaseUrl`) | `prod` (GitHub APK live pair) |
-| `-DdeviceHost=` | where the session runs | task name (`emulator`, `selenoid`, …) |
+| `-DdeviceHost=` | where the session runs | host task name; `emulator` on plain `test` |
+| `-Dplatform=` | which app cell | `android` on plain `test`; `ios` is explicit |
 
 ```bash
 # Android emulator, prod live pair (APK default / GitHub pair)
@@ -31,22 +32,33 @@ cd tests/java/tests-java-junit5-rest_assured-selenide-appium
 # compose CI: bake APK for 10.0.2.2:8800, then AVD (deviceHost stays emulator)
 ./gradlew assembleApp emulator -Denv=ci
 
-# iOS simulator (full Xcode, license accepted)
+# iOS simulator (full Xcode, license accepted). No host task — flags only.
 cd mobile/swift/mobile-swift-swiftui && scripts/build-sim.sh
-./gradlew iosSimulator
+xcrun simctl boot "iPhone 16"        # a booted sim is a precondition, like an AVD
+cd ../../../tests/java/tests-java-junit5-rest_assured-selenide-appium
+./gradlew test -Dplatform=ios -DdeviceHost=simulator -DincludeTags=smoke
 # -Denv=ci injects MULTISTACK_API_BASE at session start (no rebuild)
 ```
 
-| Host | Task | Needs |
-|------|------|--------|
+| Host | Run | Needs |
+|------|-----|--------|
 | emulator | `./gradlew emulator` | Appium 2 · AVD · `multistack-app.apk` |
 | real | `./gradlew real` | USB debugging · APK |
 | selenoid | `./gradlew selenoid` | GitHub Release APK by default; override with `ANDROID_APP_URL` |
 | browserstack | `./gradlew browserstack` | `BROWSERSTACK_USERNAME` / `ACCESS_KEY` / `BROWSERSTACK_APP_ID` |
-| simulator | `./gradlew iosSimulator` | Xcode license · `multistack-app.app` |
-| ios real | `./gradlew iosReal` | signing · `IOS_UDID` |
+| simulator | `./gradlew test -Dplatform=ios -DdeviceHost=simulator` | Xcode license · booted sim · `multistack-app.app` |
+| ios real | `./gradlew test -Dplatform=ios -DdeviceHost=real` | signing · `IOS_UDID` |
+| ios browserstack | `./gradlew test -Dplatform=ios -DdeviceHost=browserstack` | `BROWSERSTACK_IOS_APP_ID` |
 
-Overrides: `-Denv=` · `-DdeviceHost=` · `-Dplatform=` · `APPIUM_URL` · `ANDROID_APP` · `IOS_APP` · `ANDROID_UDID` · `IOS_UDID` · `ANDROID_APP_URL`.
+Host tasks are Android shorthands only; iOS travels on the two flags.
+
+The udid is resolved before the session — `adb devices` for Android,
+`xcrun simctl list devices` for iOS — so neither driver picks a device on its
+own. A booted simulator is required: left to itself, XCUITest creates a
+throwaway one on the newest SDK Xcode carries, where `SecureField` silently
+drops typed text and every login lands on the password validation error.
+
+Overrides: `-Denv=` · `-DdeviceHost=` · `-Dplatform=` · `APPIUM_URL` · `ANDROID_APP` · `IOS_APP` · `ANDROID_UDID` · `IOS_UDID` · `IOS_DEVICE_NAME` · `ANDROID_APP_URL` · `DEVELOPER_DIR`.
 
 Selenoid is **android only** (`qaguru/android`). No iOS image, no `./gradlew selenoid` with `-Dplatform=ios`. `-Denv=ci` on selenoid/BrowserStack is rejected — those hosts cannot reach laptop compose.
 

@@ -104,5 +104,19 @@ cd tests/java/tests-java-junit5-rest_assured-selenide-appium
 ./gradlew assembleApp emulator -Denv=ci   # bake APK for compose, then AVD
 ./gradlew real -DincludeTags=smoke  # USB phone in adb (not an emulator)
 ./gradlew selenoid -Denv=prod      # GitHub APK; do not pass -Denv=ci
-./gradlew iosSimulator              # processArguments from -Denv (default prod)
+./gradlew test -Dplatform=ios -DdeviceHost=simulator -DincludeTags=smoke
 ```
+
+Host tasks are Android shorthands. iOS has none — the platform and the host are
+flags on `test`: `-Dplatform=ios` with `-DdeviceHost=simulator|real|browserstack`.
+`processArguments` still come from `-Denv` (default `prod`).
+
+Both platforms resolve the device before the session — Android from
+`adb devices`, iOS from `xcrun simctl list devices`. A **booted** simulator is a
+precondition, exactly as `emulator` needs a running AVD: with no `appium:udid`
+the XCUITest driver creates a throwaway simulator on the newest SDK Xcode
+carries, and on that runtime a SwiftUI `SecureField` never receives the typed
+password. `IOS_DEVICE_NAME` (default `iPhone 16`) chooses among booted
+simulators, `IOS_UDID` pins one, and full Xcode must be reachable —
+CommandLineTools carries no `simctl`, so the Appium stand and the suite both
+fall back to `/Applications/Xcode.app` unless `DEVELOPER_DIR` says otherwise.

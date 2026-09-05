@@ -5,6 +5,7 @@
  *   ./gradlew assembleApp emulator -Denv=ci
  *   ./gradlew real -DincludeTags=smoke
  *   ./gradlew selenoid -Denv=prod
+ *   ./gradlew test -Dplatform=ios -DdeviceHost=simulator -DincludeTags=smoke
  *
  * Same school as tests-java-junit5-rest_assured-selenide; web UI and /api
  * catalog stay in that folder. This cell drives mobile-kotlin-compose and
@@ -139,13 +140,11 @@ def hostTask = { String name, String host, String platform ->
     }
 }
 
+// Android hosts only. iOS is an axis, not a task: -Dplatform=ios -DdeviceHost=.
 hostTask('emulator', 'emulator', 'android')
 hostTask('real', 'real', 'android')
 hostTask('browserstack', 'browserstack', 'android')
 hostTask('selenoid', 'selenoid', 'android')
-hostTask('iosSimulator', 'simulator', 'ios')
-hostTask('iosReal', 'real', 'ios')
-hostTask('iosBrowserstack', 'browserstack', 'ios')
 
 tasks.register('assembleApp', Exec) {
     group = 'build'

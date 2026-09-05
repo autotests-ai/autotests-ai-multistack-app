@@ -132,8 +132,8 @@ pyramid keeps its own scope.
 | `ci` | `http://127.0.0.1:8800/api` |
 
 `MULTISTACK_API_BASE=` still wins over `MULTISTACK_ENV=`. Appium
-`./gradlew iosSimulator -Denv=ci` injects the ci URL at session start
-without a rebuild.
+`./gradlew test -Dplatform=ios -DdeviceHost=simulator -Denv=ci` injects the ci
+URL at session start without a rebuild.
 
 `backendId` scopes the stored token as `authToken:<backendId>` in
 `UserDefaults`, mirroring `localStorage` in `lib/appBase.ts`.

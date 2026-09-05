@@ -114,16 +114,17 @@ public final class MobileCapabilities {
     private static MutableCapabilities iosLocal() {
         MutableCapabilities caps = baseIos();
         caps.setCapability("appium:app", MobileConfig.localIosApp());
-        String udid = MobileConfig.iosUdid();
-        if (udid != null && !udid.isBlank()) {
-            caps.setCapability("appium:udid", udid);
-        }
         if (DeviceHost.current() == DeviceHost.SIMULATOR) {
-            caps.setCapability("appium:deviceName",
-                    MobileConfig.optional("IOS_DEVICE_NAME", "iPhone 16"));
-        } else if (udid == null || udid.isBlank()) {
+            String deviceName = MobileConfig.iosDeviceName();
+            caps.setCapability("appium:deviceName", deviceName);
+            caps.setCapability("appium:udid", Simctl.udid(deviceName));
+            return caps;
+        }
+        String udid = MobileConfig.iosUdid();
+        if (udid == null || udid.isBlank()) {
             throw new IllegalStateException("Set IOS_UDID for a real iPhone");
         }
+        caps.setCapability("appium:udid", udid);
         return caps;
     }
 

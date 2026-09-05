@@ -51,6 +51,10 @@ public final class MobileConfig {
         return optional("IOS_BUNDLE_ID", "dev.multistack.swiftui");
     }
 
+    public static String iosDeviceName() {
+        return optional("IOS_DEVICE_NAME", "iPhone 16");
+    }
+
     /** GitHub Release asset — selenoid.qa.guru fetches this, not a laptop path. */
     static final String ANDROID_APK_URL =
             "https://github.com/autotests-ai/autotests-ai-multistack-app/releases/download/apk/multistack-app.apk";
