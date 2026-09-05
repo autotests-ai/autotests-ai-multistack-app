@@ -129,11 +129,16 @@ struct PlaqueField: View {
                 .focused($focused)
                 .onSubmit(onSubmit)
                 .padding(.trailing, Metrics.plaqueControlTrail)
+                .id(testId)
                 .testId(testId)
                 #if os(iOS)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-                .textContentType(.none)
+                // Two SecureFields on Register otherwise summon iOS Password
+                // AutoFill, which intercepts XCUITest key events and leaves
+                // the first password short. `.oneTimeCode` opts the field out
+                // without pulling in UIKit.
+                .textContentType(secure ? .oneTimeCode : .none)
                 .submitLabel(.go)
                 #endif
         }

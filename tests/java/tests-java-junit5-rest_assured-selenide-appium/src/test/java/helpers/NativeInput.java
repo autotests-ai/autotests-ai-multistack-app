@@ -20,15 +20,20 @@ public final class NativeInput {
     }
 
     public static void typeInto(SelenideElement field, String value) {
-        field.shouldBe(visible).click();
-        if (AppPlatform.current() == AppPlatform.ANDROID) {
-            $(AppiumBy.androidUIAutomator(
-                    "new UiSelector().className(\"android.widget.EditText\").focused(true)"))
-                    .shouldBe(visible)
-                    .sendKeys(value);
+        if (AppPlatform.current() == AppPlatform.IOS) {
+            // Keyboard covers the lower Register plaques (password + confirm).
+            // A click then sendKeys hits the keyboard, not the field — password
+            // stays short and the suite sees "must be at least 6 characters".
+            dismissIosKeyboard();
+            field.shouldBe(visible).click();
+            field.sendKeys(value);
             return;
         }
-        field.sendKeys(value);
+        field.shouldBe(visible).click();
+        $(AppiumBy.androidUIAutomator(
+                "new UiSelector().className(\"android.widget.EditText\").focused(true)"))
+                .shouldBe(visible)
+                .sendKeys(value);
     }
 
     /**
@@ -42,6 +47,21 @@ public final class NativeInput {
             return;
         }
         hideKeyboard();
+    }
+
+    /**
+     * Tap the form title (empty action) — same as {@link #dismissIme}. Do not
+     * call Appium {@code hideKeyboard}: with {@code submitLabel(.go)} that
+     * presses Go and submits the form.
+     */
+    private static void dismissIosKeyboard() {
+        for (String testId : new String[] {"register-form-title", "login-form-title"}) {
+            SelenideElement title = $(AppiumBy.accessibilityId(testId));
+            if (title.exists()) {
+                title.click();
+                return;
+            }
+        }
     }
 
     public static void hideKeyboard() {

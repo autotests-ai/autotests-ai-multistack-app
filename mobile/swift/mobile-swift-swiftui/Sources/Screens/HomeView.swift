@@ -80,6 +80,7 @@ struct DeleteConfirmDialog: View {
         ZStack {
             Color.black.opacity(0.45)
                 .ignoresSafeArea()
+                .contentShape(Rectangle())
                 .onTapGesture(perform: onCancel)
 
             VStack(alignment: .leading, spacing: Space.x3) {
@@ -113,6 +114,7 @@ struct DeleteConfirmDialog: View {
                     .stroke(palette.border, lineWidth: 1)
             )
             .padding(.horizontal, Space.pageX)
+            .contentShape(Rectangle())
             .containerTestId("delete-confirm-dialog")
         }
     }

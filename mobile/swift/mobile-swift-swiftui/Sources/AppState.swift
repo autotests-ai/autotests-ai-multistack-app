@@ -168,7 +168,12 @@ final class AppState: ObservableObject {
 
     func requestDeleteAccount() { confirmingDelete = true }
 
-    func cancelDelete() { confirmingDelete = false }
+    func cancelDelete() {
+        // Next run-loop turn, not this touch. Removing the overlay
+        // synchronously lets the same tap fall through onto Logout (the
+        // cancel control sits over it) and the session panel disappears.
+        DispatchQueue.main.async { self.confirmingDelete = false }
+    }
 
     func confirmDeleteAccount() {
         confirmingDelete = false

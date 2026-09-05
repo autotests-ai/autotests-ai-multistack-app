@@ -56,6 +56,9 @@ public final class MobileCapabilities {
         caps.setCapability("appium:noReset", false);
         caps.setCapability("appium:newCommandTimeout", 120);
         caps.setCapability("appium:wdaLaunchTimeout", 120_000);
+        caps.setCapability("appium:sendKeyStrategy", "setValue");
+        caps.setCapability("appium:keyboardAutocorrection", false);
+        caps.setCapability("appium:keyboardPrediction", false);
         Map<String, Object> processArguments = new HashMap<>();
         Map<String, String> env = new HashMap<>();
         env.put("MULTISTACK_API_BASE", ConfigReader.iosApiBase());
