@@ -27,6 +27,8 @@ cd tests/java/tests-java-junit5-rest_assured-selenide
 
 cd tests/java/tests-java-junit5-rest_assured-selenide-appium
 ./gradlew emulator
+./gradlew assembleApp emulator -Denv=ci
+./gradlew selenoid -Denv=prod
 
 cd tests/java/tests-java-junit5-rest_assured-selenium
 ./gradlew test -Denv=ci -DincludeTags=infra jacocoTestCoverageVerification

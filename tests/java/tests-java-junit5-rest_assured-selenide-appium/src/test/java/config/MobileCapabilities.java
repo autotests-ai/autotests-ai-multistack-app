@@ -58,10 +58,8 @@ public final class MobileCapabilities {
         caps.setCapability("appium:wdaLaunchTimeout", 120_000);
         Map<String, Object> processArguments = new HashMap<>();
         Map<String, String> env = new HashMap<>();
-        env.put("MULTISTACK_API_BASE", MobileConfig.optional(
-                "API_BASE", "https://autotests.ai/stack/backend-java-spring/api"));
-        env.put("MULTISTACK_BACKEND_ID", MobileConfig.optional(
-                "BACKEND_ID", "backend-java-spring"));
+        env.put("MULTISTACK_API_BASE", ConfigReader.iosApiBase());
+        env.put("MULTISTACK_BACKEND_ID", ConfigReader.backendId());
         processArguments.put("env", env);
         caps.setCapability("appium:processArguments", processArguments);
         String org = MobileConfig.xcodeOrgId();

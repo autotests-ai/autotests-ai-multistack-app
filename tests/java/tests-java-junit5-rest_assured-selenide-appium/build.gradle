@@ -1,8 +1,9 @@
 /*
  * tests-java — native e2e · Selenide + Appium
  *
- *   ./gradlew emulator
- *   ./gradlew iosSimulator
+ *   ./gradlew emulator                 # deviceHost=emulator, env=prod
+ *   ./gradlew assembleApp emulator -Denv=ci
+ *   ./gradlew selenoid -Denv=prod
  *
  * Same school as tests-java-junit5-rest_assured-selenide; web UI and /api
  * catalog stay in that folder. This cell drives mobile-kotlin-compose and
@@ -20,7 +21,9 @@ buildscript {
         sonarPluginVersion  = '6.2.0.5505'
         selenideVersion     = '7.17.0'
         appiumVersion       = '10.0.0'
+        ownerVersion        = '1.0.12'
         testParallelForks   = 1
+        defaultEnv          = 'prod'
     }
 }
 
@@ -77,6 +80,7 @@ dependencies {
             'io.qameta.allure:allure-selenide',
             "com.codeborne:selenide:${selenideVersion}",
             "io.appium:java-client:${appiumVersion}",
+            "org.aeonbits.owner:owner:${ownerVersion}",
             "org.junit.jupiter:junit-jupiter:${junitVersion}")
     testRuntimeOnly (
             'org.junit.platform:junit-platform-launcher',
@@ -87,8 +91,16 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
+def testEnv = System.getProperty('env', defaultEnv)
+if (!(testEnv in ['ci', 'stage', 'prod'])) {
+    throw new GradleException(
+            "Native -Denv=${testEnv} is not ci|stage|prod (no mock). " +
+            "-DdeviceHost= is where the session runs, not which API.")
+}
+
 def applyMobileSystemProperties = { Test task ->
     task.systemProperties(System.getProperties())
+    task.systemProperty 'env', testEnv
 }
 
 tasks.withType(Test).configureEach {
@@ -133,3 +145,10 @@ hostTask('selenoid', 'selenoid', 'android')
 hostTask('iosSimulator', 'simulator', 'ios')
 hostTask('iosReal', 'real', 'ios')
 hostTask('iosBrowserstack', 'browserstack', 'ios')
+
+tasks.register('assembleApp', Exec) {
+    group = 'build'
+    description = "Assemble debug APK with -Penv=${testEnv} (apiBase, not deviceHost)"
+    workingDir = file("${project.projectDir}/../../../mobile/kotlin/mobile-kotlin-compose")
+    commandLine './gradlew', ':app:assembleDebug', "-Penv=${testEnv}"
+}

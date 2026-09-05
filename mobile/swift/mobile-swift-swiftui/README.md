@@ -9,8 +9,9 @@ Not a WebView wrapper and not a mock: the app talks to a real matrix backend
 `GET /api/health`) exactly like the React SPA.
 
 ```bash
-scripts/build-sim.sh        # simulator .app — the Appium artifact
-scripts/build-ipa.sh        # unsigned device payload (resign to install)
+scripts/build-sim.sh                     # prod live pair (GitHub-pair default)
+MULTISTACK_ENV=ci scripts/build-sim.sh  # compose :8800 via 127.0.0.1
+scripts/build-ipa.sh                     # unsigned device payload (resign to install)
 TEAM_ID=ABCDE12345 scripts/build-ipa.sh signed
 ```
 
@@ -114,14 +115,25 @@ pyramid keeps its own scope.
 
 ## Backend wiring
 
-Precedence: launch environment (Appium `processArguments.env`) → `Info.plist`
-build setting → compiled fallback.
+`apiBase` is the same axis as web `-Denv` / `apiBaseUrl`, not Appium
+`deviceHost`. Precedence: launch environment (Appium `processArguments.env`) →
+`Info.plist` build setting → compiled fallback (prod live pair).
 
 | Env / plist key | Build setting | Default |
 |-----------------|---------------|---------|
 | `MULTISTACK_API_BASE` / `MultistackApiBase` | `MULTISTACK_API_BASE` | `https://autotests.ai/stack/backend-java-spring/api` |
 | `MULTISTACK_BACKEND_ID` / `MultistackBackendId` | `MULTISTACK_BACKEND_ID` | `backend-java-spring` |
-| `MULTISTACK_STACK_INDEX_URL` / `MultistackStackIndexUrl` | `MULTISTACK_STACK_INDEX_URL` | `https://autotests.ai/stack/` |
+| `MULTISTACK_STACK_INDEX_URL` / `MultistackStackIndexUrl` | `MULTISTACK_STACK_INDEX_URL` | `https://autotests.ai/stack/` (board, not the API) |
+
+| `MULTISTACK_ENV=` | Baked / injected `MULTISTACK_API_BASE` |
+|-------------------|------------------------------------------|
+| `prod` | `https://autotests.ai/stack/backend-java-spring/api` |
+| `stage` | `https://stage.autotests.ai/stack/backend-java-spring/api` |
+| `ci` | `http://127.0.0.1:8800/api` |
+
+`MULTISTACK_API_BASE=` still wins over `MULTISTACK_ENV=`. Appium
+`./gradlew iosSimulator -Denv=ci` injects the ci URL at session start
+without a rebuild.
 
 `backendId` scopes the stored token as `authToken:<backendId>` in
 `UserDefaults`, mirroring `localStorage` in `lib/appBase.ts`.

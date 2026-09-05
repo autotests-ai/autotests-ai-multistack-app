@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Simulator .app — the Appium artifact for this cell.
 #
-#   scripts/build-sim.sh                       # default API base (live pair)
+#   scripts/build-sim.sh                       # default API base (prod live pair)
+#   MULTISTACK_ENV=ci scripts/build-sim.sh    # compose :8800 via 127.0.0.1
 #   MULTISTACK_API_BASE=http://127.0.0.1:8080/api scripts/build-sim.sh
 #
 # Needs full Xcode: Command Line Tools alone carry no iOS SDK.
@@ -9,7 +10,10 @@
 # (`sudo xcodebuild -license`). This script will not hang on sudo.
 set -euo pipefail
 
-cd "$(dirname "$0")/.."
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=multistack-env.sh
+. "$SCRIPT_DIR/multistack-env.sh"
+cd "$SCRIPT_DIR/.."
 
 if [ -z "${DEVELOPER_DIR:-}" ]; then
   developer_dir="$(xcode-select -p 2>/dev/null || true)"

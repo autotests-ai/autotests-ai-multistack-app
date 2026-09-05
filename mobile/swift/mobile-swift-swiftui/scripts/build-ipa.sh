@@ -2,6 +2,7 @@
 # Device .ipa.
 #
 #   scripts/build-ipa.sh                 # unsigned payload (resign before install)
+#   MULTISTACK_ENV=ci scripts/build-ipa.sh
 #   TEAM_ID=ABCDE12345 scripts/build-ipa.sh signed
 #
 # Unsigned output installs only on a device that accepts it (resign with your
@@ -9,7 +10,10 @@
 # does not need any of this — use scripts/build-sim.sh.
 set -euo pipefail
 
-cd "$(dirname "$0")/.."
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=multistack-env.sh
+. "$SCRIPT_DIR/multistack-env.sh"
+cd "$SCRIPT_DIR/.."
 mode="${1:-unsigned}"
 
 if [ -z "${DEVELOPER_DIR:-}" ]; then
@@ -34,12 +38,26 @@ fi
 rm -rf build/ipa
 mkdir -p build/ipa
 
+xcode_settings=()
+if [ -n "${MULTISTACK_API_BASE:-}" ]; then
+  xcode_settings+=("MULTISTACK_API_BASE=${MULTISTACK_API_BASE}")
+fi
+if [ -n "${MULTISTACK_BACKEND_ID:-}" ]; then
+  xcode_settings+=("MULTISTACK_BACKEND_ID=${MULTISTACK_BACKEND_ID}")
+fi
+
 if [ "$mode" = "signed" ]; then
   : "${TEAM_ID:?set TEAM_ID for a signed archive}"
-  xcodebuild -project Multistack.xcodeproj -scheme Multistack \
-    -configuration Release -sdk iphoneos -derivedDataPath build \
-    -archivePath build/ipa/Multistack.xcarchive \
-    DEVELOPMENT_TEAM="$TEAM_ID" -allowProvisioningUpdates archive
+  signed_args=(
+    -project Multistack.xcodeproj -scheme Multistack
+    -configuration Release -sdk iphoneos -derivedDataPath build
+    -archivePath build/ipa/Multistack.xcarchive
+    DEVELOPMENT_TEAM="$TEAM_ID" -allowProvisioningUpdates
+  )
+  if [ ${#xcode_settings[@]} -gt 0 ]; then
+    signed_args+=("${xcode_settings[@]}")
+  fi
+  xcodebuild "${signed_args[@]}" archive
   xcodebuild -exportArchive -archivePath build/ipa/Multistack.xcarchive \
     -exportPath build/ipa -exportOptionsPlist scripts/export-options.plist \
     -allowProvisioningUpdates
@@ -47,9 +65,15 @@ if [ "$mode" = "signed" ]; then
   exit 0
 fi
 
-xcodebuild -project Multistack.xcodeproj -scheme Multistack \
-  -configuration Release -sdk iphoneos -derivedDataPath build \
-  CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+unsigned_args=(
+  -project Multistack.xcodeproj -scheme Multistack
+  -configuration Release -sdk iphoneos -derivedDataPath build
+  CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+)
+if [ ${#xcode_settings[@]} -gt 0 ]; then
+  unsigned_args+=("${xcode_settings[@]}")
+fi
+xcodebuild "${unsigned_args[@]}" build
 
 app="build/Build/Products/Release-iphoneos/multistack-app.app"
 mkdir -p build/ipa/Payload

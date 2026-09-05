@@ -1,5 +1,9 @@
 package config;
 
+/**
+ * Where the Appium session runs. Not which API — that is {@code -Denv}
+ * ({@link NativeEnv} / {@link ConfigReader#apiBase()}).
+ */
 public enum DeviceHost {
     BROWSERSTACK,
     EMULATOR,

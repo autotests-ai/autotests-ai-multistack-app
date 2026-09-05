@@ -4,7 +4,8 @@ import Foundation
 let uiMount = "mobile-swift-swiftui"
 
 /// Runtime wiring for the matrix backend cell. Precedence: launch environment
-/// (Appium `processArguments.env`) → Info.plist (build setting) → live pair.
+/// (Appium `processArguments.env`, tests `-Denv`) → Info.plist (build
+/// setting / `MULTISTACK_ENV` at xcodebuild) → prod live pair. Not deviceHost.
 enum Config {
     static let apiBase = value(
         env: "MULTISTACK_API_BASE",

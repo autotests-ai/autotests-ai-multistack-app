@@ -9,7 +9,8 @@ Not a WebView wrapper and not a mock: the app talks to a real matrix backend
 `GET /api/health`) exactly like the React SPA.
 
 ```bash
-./gradlew :app:assembleDebug                 # app/build/outputs/apk/debug/multistack-app.apk
+./gradlew :app:assembleDebug                 # prod live pair (GitHub Release APK)
+./gradlew :app:assembleDebug -Penv=ci       # compose :8800 via 10.0.2.2
 adb install -r app/build/outputs/apk/debug/multistack-app.apk
 adb shell am start -n dev.multistack.compose/.MainActivity
 ```
@@ -100,14 +101,26 @@ pyramid keeps its own scope.
 
 ## Backend wiring
 
+`apiBase` is baked into the APK (`BuildConfig.API_BASE`). It is the same
+axis as web `-Denv` / `apiBaseUrl`, not Appium `deviceHost`.
+
 | Property | Default | Meaning |
 |----------|---------|---------|
-| `apiBase` | `https://autotests.ai/stack/backend-java-spring/api` | API origin, already ending at `/api` |
+| `apiBase` | `https://autotests.ai/stack/backend-java-spring/api` | API origin, already ending at `/api` (prod live pair) |
 | `backendId` | `backend-java-spring` | scopes the stored token as `authToken:<backendId>`, like `lib/appBase.ts` |
-| `stackIndexUrl` | `https://autotests.ai/stack/` | board opened by `header-nav-stack` |
+| `stackIndexUrl` | `https://autotests.ai/stack/` | board opened by `header-nav-stack` (not the API) |
+
+| `-Penv=` | Baked `apiBase` |
+|----------|-----------------|
+| `prod` | `https://autotests.ai/stack/backend-java-spring/api` |
+| `stage` | `https://stage.autotests.ai/stack/backend-java-spring/api` |
+| `ci` | `http://10.0.2.2:8800/api` (emulator → compose) |
 
 ```bash
-# emulator against a local backend cell
+# compose CI on the emulator (Appium: ./gradlew emulator -Denv=ci)
+./gradlew :app:assembleDebug -Penv=ci
+
+# raw Spring bootRun on the host :8080 (explicit URL still wins)
 ./gradlew :app:assembleDebug -PapiBase=http://10.0.2.2:8080/api -PbackendId=backend-java-spring
 ```
 

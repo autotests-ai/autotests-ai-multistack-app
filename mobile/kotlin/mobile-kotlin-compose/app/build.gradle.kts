@@ -7,6 +7,32 @@ plugins {
 fun stringProp(name: String, fallback: String): String =
     (project.findProperty(name) as String?)?.takeIf { it.isNotBlank() } ?: fallback
 
+/**
+ * `-Penv=ci|stage|prod` is the API stand (web `-Denv` / `apiBaseUrl`), not
+ * deviceHost. CLI `-PapiBase=` still wins. Default is gradle.properties (prod).
+ */
+val envApiBases = mapOf(
+    "ci" to "http://10.0.2.2:8800/api",
+    "stage" to "https://stage.autotests.ai/stack/backend-java-spring/api",
+    "prod" to "https://autotests.ai/stack/backend-java-spring/api",
+)
+
+fun cliProp(name: String): String? =
+    gradle.startParameter.projectProperties[name]?.takeIf { it.isNotBlank() }
+
+fun resolvedApiBase(): String {
+    cliProp("apiBase")?.let { return it }
+    val envName = cliProp("env")
+    if (envName != null) {
+        return envApiBases[envName]
+            ?: error(
+                "Unknown -Penv=$envName. Use ci, stage or prod — or pass -PapiBase=. " +
+                    "No mock stand. -Penv is apiBase, not deviceHost.",
+            )
+    }
+    return stringProp("apiBase", "https://autotests.ai/stack/backend-java-spring/api")
+}
+
 android {
     namespace = "dev.multistack.compose"
     compileSdk = 34
@@ -21,7 +47,7 @@ android {
         buildConfigField(
             "String",
             "API_BASE",
-            "\"${stringProp("apiBase", "https://autotests.ai/stack/backend-java-spring/api")}\"",
+            "\"${resolvedApiBase()}\"",
         )
         buildConfigField(
             "String",

@@ -4,6 +4,7 @@ import annotations.Framework;
 import annotations.Scope;
 import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.logevents.SelenideLogger;
+import config.NativeEnv;
 import drivers.MobileDriver;
 import io.qameta.allure.selenide.AllureSelenide;
 import org.junit.jupiter.api.AfterEach;
@@ -22,6 +23,7 @@ public class TestBase {
 
     @BeforeAll
     static void beforeAll() {
+        NativeEnv.requireCompatibleHost();
         Configuration.browser = MobileDriver.class.getName();
         Configuration.browserSize = null;
         Configuration.timeout = 30_000;

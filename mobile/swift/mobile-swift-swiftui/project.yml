@@ -14,6 +14,9 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.0"
+    # Prod live pair (GitHub-pair default). Override at bake:
+    #   MULTISTACK_ENV=ci scripts/build-sim.sh
+    # or xcodebuild MULTISTACK_API_BASE=…  — same axis as Android -Penv=, not deviceHost.
     MULTISTACK_API_BASE: https://autotests.ai/stack/backend-java-spring/api
     MULTISTACK_BACKEND_ID: backend-java-spring
     MULTISTACK_STACK_INDEX_URL: https://autotests.ai/stack/

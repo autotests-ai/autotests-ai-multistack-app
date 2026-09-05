@@ -57,17 +57,39 @@ pyramid.
 
 ## Backend
 
-Same cell as the web pair — no mock UI. Default API base
-`https://autotests.ai/stack/backend-java-spring/api`; seed `user1` /
-`password1` → `Welcome, user1!`.
+Same cell as the web pair — no mock UI, no screenshot stand. The API the
+app talks to is **`env`**, the same axis as web `TestConfig.apiBaseUrl`.
+Where Appium runs the session is **`deviceHost`**. Do not substitute one
+for the other.
 
-| Cell | Override |
-|------|----------|
-| Android | `./gradlew :app:assembleDebug -PapiBase=… -PbackendId=…` |
-| iOS | `MULTISTACK_API_BASE` env (Appium `processArguments.env`) or the matching `Info.plist` build setting |
+Default — and the GitHub Release APK — is the **prod live pair**
+`https://autotests.ai/stack/backend-java-spring/api`. That is not CI
+(`localhost:8800`) and not the `/stack/` board (`stackIndexUrl`).
+
+| Flag | Meaning | Values |
+|------|---------|--------|
+| `-Denv=` / Android `-Penv=` / iOS `MULTISTACK_ENV=` | which API (`apiBase`) | `ci` · `stage` · `prod` |
+| `-DdeviceHost=` | where the session runs | `emulator` · `real` · `selenoid` · `browserstack` · `simulator` |
+
+| env | Host / AuthSetup (`apiBase`) | Android APK (`-Penv=` → `BuildConfig.API_BASE`) | iOS (`MULTISTACK_API_BASE` / Info.plist) |
+|-----|-------------------------------|--------------------------------------------------|------------------------------------------|
+| `prod` | `https://autotests.ai/stack/backend-java-spring/api` | same | same |
+| `stage` | `https://stage.autotests.ai/stack/backend-java-spring/api` | same | same |
+| `ci` | `http://localhost:8800/api` | `http://10.0.2.2:8800/api` | `http://127.0.0.1:8800/api` |
+
+`ci` is laptop compose. Selenoid and BrowserStack cannot reach it — use
+`prod` (GitHub APK) or `stage`. `-PapiBase=` / `MULTISTACK_API_BASE=` still
+win over the env name.
+
+| Cell | How `apiBase` is set |
+|------|----------------------|
+| Android | Baked at assemble: `./gradlew :app:assembleDebug -Penv=ci` (or `-PapiBase=… -PbackendId=…`) |
+| iOS | `MULTISTACK_ENV=ci scripts/build-sim.sh`, or Appium `processArguments.env`, or the matching `Info.plist` build setting |
 
 Token storage mirrors the SPA key `authToken:<backendId>` —
 `SharedPreferences` on Android, `UserDefaults` on iOS.
+
+Seed `user1` / `password1` → `Welcome, user1!`.
 
 ## Tests
 
@@ -78,6 +100,8 @@ web cell.
 
 ```bash
 cd tests/java/tests-java-junit5-rest_assured-selenide-appium
-./gradlew emulator          # Android AVD + local Appium :4723
-./gradlew iosSimulator      # needs full Xcode + multistack-app.app
+./gradlew emulator                 # deviceHost=emulator, env=prod (GitHub-pair default)
+./gradlew assembleApp emulator -Denv=ci   # bake APK for compose, then AVD
+./gradlew selenoid -Denv=prod      # GitHub APK; do not pass -Denv=ci
+./gradlew iosSimulator              # processArguments from -Denv (default prod)
 ```

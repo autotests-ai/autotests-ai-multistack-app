@@ -1,5 +1,6 @@
 package helpers;
 
+import config.ConfigReader;
 import io.qameta.allure.Step;
 
 import java.net.URI;
@@ -11,7 +12,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Fixture calls against the same live {@code /api} the APK talks to.
+ * Fixture calls against the same {@code /api} the app talks to
+ * ({@link ConfigReader#apiBase()} from {@code -Denv}).
  * Not the 31-test API catalog — that stays in the web Selenide cell.
  */
 public final class AuthSetup {
@@ -60,11 +62,7 @@ public final class AuthSetup {
     }
 
     private static String apiBase() {
-        String fromEnv = System.getenv("API_BASE");
-        if (fromEnv != null && !fromEnv.isBlank()) {
-            return stripSlash(fromEnv);
-        }
-        return "https://autotests.ai/stack/backend-java-spring/api";
+        return ConfigReader.apiBase();
     }
 
     private static HttpResponse<String> send(String method, String path, String body, String token) {
@@ -94,9 +92,5 @@ public final class AuthSetup {
 
     private static String quote(String value) {
         return "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
-    }
-
-    private static String stripSlash(String value) {
-        return value.endsWith("/") ? value.substring(0, value.length() - 1) : value;
     }
 }
