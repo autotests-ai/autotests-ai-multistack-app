@@ -48,14 +48,14 @@ public class LoginScreen {
 
     @Step("Submit login form")
     public HomeScreen submit() {
-        NativeInput.hideKeyboard();
+        NativeInput.dismissIme(formTitle);
         submitButton.shouldBe(visible).click();
         return new HomeScreen();
     }
 
     @Step("Submit login form expecting validation error")
     public LoginScreen submitExpectingError() {
-        NativeInput.hideKeyboard();
+        NativeInput.dismissIme(formTitle);
         submitButton.shouldBe(visible).click();
         errorMessage.shouldBe(visible);
         return this;
@@ -75,7 +75,7 @@ public class LoginScreen {
 
     @Step("Open register from the login footer link")
     public RegisterScreen clickRegisterLink() {
-        NativeInput.hideKeyboard();
+        NativeInput.dismissIme(formTitle);
         $(id("register-link")).shouldBe(visible).click();
         return new RegisterScreen();
     }

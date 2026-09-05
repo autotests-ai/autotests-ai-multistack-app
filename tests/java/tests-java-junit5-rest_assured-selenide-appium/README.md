@@ -28,13 +28,22 @@ cd mobile/swift/mobile-swift-swiftui && scripts/build-sim.sh
 | real | `./gradlew real` | USB debugging · APK |
 | selenoid | `./gradlew selenoid` | GitHub Release APK by default; override with `ANDROID_APP_URL` |
 | browserstack | `./gradlew browserstack` | `BROWSERSTACK_USERNAME` / `ACCESS_KEY` / `BROWSERSTACK_APP_ID` |
-| simulator | `./gradlew iosSimulator` | Xcode · `Multistack.app` |
+| simulator | `./gradlew iosSimulator` | Xcode license · `multistack-app.app` |
 | ios real | `./gradlew iosReal` | signing · `IOS_UDID` |
 
 Overrides: `-DdeviceHost=` · `-Dplatform=` · `APPIUM_URL` · `ANDROID_APP` · `IOS_APP` · `ANDROID_UDID` · `IOS_UDID` · `ANDROID_APP_URL`.
 
+Selenoid is **android only** (`qaguru/android`). No iOS image, no `./gradlew selenoid` with `-Dplatform=ios`.
+
 Selenoid default APK: [`multistack-app.apk`](https://github.com/autotests-ai/autotests-ai-multistack-app/releases/download/apk/multistack-app.apk)
 (`gh release upload apk multistack-app.apk --clobber` when the UI changes).
+
+iOS simulator bundle for GitHub (`.app` is a directory, so the asset is a zip;
+tag `ios`, never `android-debug`):
+
+```bash
+gh release upload ios multistack-app.app.zip --clobber
+```
 
 Seed `user1` / `password1` → `Welcome, user1!` against
 `https://autotests.ai/stack/backend-java-spring/api`.

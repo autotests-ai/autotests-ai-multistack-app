@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "AB12CD34EF56000000000040"
-               BuildableName = "Multistack.app"
+               BuildableName = "multistack-app.app"
                BlueprintName = "Multistack"
                ReferencedContainer = "container:Multistack.xcodeproj">
             </BuildableReference>
@@ -45,7 +45,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "AB12CD34EF56000000000040"
-            BuildableName = "Multistack.app"
+            BuildableName = "multistack-app.app"
             BlueprintName = "Multistack"
             ReferencedContainer = "container:Multistack.xcodeproj">
          </BuildableReference>
@@ -62,7 +62,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "AB12CD34EF56000000000040"
-            BuildableName = "Multistack.app"
+            BuildableName = "multistack-app.app"
             BlueprintName = "Multistack"
             ReferencedContainer = "container:Multistack.xcodeproj">
          </BuildableReference>

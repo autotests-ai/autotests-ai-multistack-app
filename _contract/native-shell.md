@@ -7,7 +7,7 @@ testids appear natively, so **one Appium suite drives both platforms**.
 | Cell | Path | Artifact | Id |
 |------|------|----------|----|
 | `mobile-kotlin-compose` | [`../mobile/kotlin/mobile-kotlin-compose/`](../mobile/kotlin/mobile-kotlin-compose/) | `multistack-app.apk` | package `dev.multistack.compose`, activity `.MainActivity` |
-| `mobile-swift-swiftui` | [`../mobile/swift/mobile-swift-swiftui/`](../mobile/swift/mobile-swift-swiftui/) | `Multistack.app` / `.ipa` | bundle `dev.multistack.swiftui` |
+| `mobile-swift-swiftui` | [`../mobile/swift/mobile-swift-swiftui/`](../mobile/swift/mobile-swift-swiftui/) | `multistack-app.app` / `.ipa` | bundle `dev.multistack.swiftui` |
 
 ## Locator mapping
 
@@ -31,10 +31,10 @@ Screens are the teaching SPA **minus the note surface**: no items list, no
 | Header bar | `header`, `header-brand-link`, `header-tools`, `header-lang-toggle`, `header-lang-label`, `header-theme-toggle`, `header-burger`, `header-nav`, `header-nav-{home,login,register,stack}`, `header-search-input` |
 | Header menu | `header-menu`, `header-menu-nav`, `header-menu-nav-{home,login,register,stack}`, `header-menu-search`, `header-menu-search-input`, `header-menu-tools`, `header-menu-lang-toggle`, `header-menu-lang-label`, `header-menu-theme-toggle` |
 
-Native-only ids — `window.confirm` has no native twin, so account deletion is a
-platform dialog instead of a browser one:
+Native-only ids — `window.confirm` has no native twin, so account deletion is an
+in-app dialog instead of a browser one:
 
-`delete-confirm-dialog` (Android), `delete-confirm-message`,
+`delete-confirm-dialog`, `delete-confirm-message`,
 `delete-confirm-button`, `delete-cancel-button`. Cancel keeps the session.
 
 ## Shell edge
@@ -79,5 +79,5 @@ web cell.
 ```bash
 cd tests/java/tests-java-junit5-rest_assured-selenide-appium
 ./gradlew emulator          # Android AVD + local Appium :4723
-./gradlew iosSimulator      # needs full Xcode + Multistack.app
+./gradlew iosSimulator      # needs full Xcode + multistack-app.app
 ```

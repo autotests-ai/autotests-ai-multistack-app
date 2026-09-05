@@ -15,9 +15,13 @@ TEAM_ID=ABCDE12345 scripts/build-ipa.sh signed
 ```
 
 Toolchain: **full Xcode** (Command Line Tools carry no iOS SDK), iOS 17
-deployment target, Swift 5 language mode. `Multistack.xcodeproj` is committed
-(synchronized `Sources` group, so new files need no project edit);
-[`project.yml`](project.yml) regenerates it with XcodeGen.
+deployment target, Swift 5 language mode. A human must accept the Xcode license
+once (`sudo xcodebuild -license`) before `scripts/build-sim.sh`.
+`Multistack.xcodeproj` is committed (synchronized `Sources` group, so new files
+need no project edit); [`project.yml`](project.yml) regenerates it with XcodeGen.
+The Appium artifact is `multistack-app.app` (bundle `dev.multistack.swiftui`
+unchanged). GitHub cannot host a `.app` directory — zip it and upload to tag
+`ios`, never `android-debug`.
 
 The sources are UIKit-free, which makes them typecheckable without Xcode:
 
@@ -42,10 +46,10 @@ Routes are `Screen` states, not URLs: `AppState.navigate(to:)` reproduces the
 SPA guards — `/login` and `/register` bounce to Home while a token is stored,
 and a failing `GET /auth/me` clears the session.
 
-`window.confirm` has no native equivalent, so account deletion opens an
-`.alert` whose buttons carry `delete-confirm-button` / `delete-cancel-button`
-(message: `delete-confirm-message`). Cancel keeps the session (contract
-acceptance).
+`window.confirm` has no native equivalent, so account deletion opens an in-app
+dialog (not SwiftUI `.alert` — XCUITest does not see those identifiers) with
+`delete-confirm-dialog`, `delete-confirm-message`, `delete-confirm-button`,
+`delete-cancel-button`. Cancel keeps the session (contract acceptance).
 
 ## Header — reimplemented, not embedded
 
@@ -97,7 +101,7 @@ driver.findElement(AppiumBy.accessibilityId("login-input")).sendKeys("user1");
   "platformName": "iOS",
   "appium:automationName": "XCUITest",
   "appium:bundleId": "dev.multistack.swiftui",
-  "appium:app": "<path>/Multistack.app",
+  "appium:app": "<path>/multistack-app.app",
   "appium:processArguments": {
     "env": { "MULTISTACK_API_BASE": "https://autotests.ai/stack/backend-java-spring/api" }
   }

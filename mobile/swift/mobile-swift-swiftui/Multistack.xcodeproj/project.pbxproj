@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		AB12CD34EF56000000000001 /* Multistack.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Multistack.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AB12CD34EF56000000000001 /* multistack-app.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "multistack-app.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AB12CD34EF56000000000002 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -38,7 +38,7 @@
 		AB12CD34EF56000000000031 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				AB12CD34EF56000000000001 /* Multistack.app */,
+				AB12CD34EF56000000000001 /* multistack-app.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -63,7 +63,7 @@
 			);
 			name = Multistack;
 			productName = Multistack;
-			productReference = AB12CD34EF56000000000001 /* Multistack.app */;
+			productReference = AB12CD34EF56000000000001 /* multistack-app.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -189,7 +189,7 @@
 				);
 				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.multistack.swiftui;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "multistack-app";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -209,7 +209,7 @@
 				);
 				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.multistack.swiftui;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "multistack-app";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

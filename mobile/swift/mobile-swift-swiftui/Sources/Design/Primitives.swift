@@ -18,11 +18,10 @@ struct Panel<Content: View>: View {
                     dot(palette.dotMinimize)
                     dot(palette.dotMaximize)
                 }
-                Text(title)
+                titleLabel
                     .font(.system(size: FontSize.xs, weight: .semibold))
                     .foregroundColor(palette.textMuted)
                     .lineLimit(1)
-                    .optionalTestId(titleTestId)
                 Spacer(minLength: 0)
             }
             .padding(.leading, Space.x3)
@@ -46,6 +45,21 @@ struct Panel<Content: View>: View {
             RoundedRectangle(cornerRadius: Metrics.radiusSm)
                 .stroke(palette.border, lineWidth: 1)
         )
+    }
+
+    /// Title is a control when it carries a testid so Appium can tap it to
+    /// resign the focused field. `hideKeyboard` is not used on iOS — on
+    /// Android that call sends Back and leaves Register.
+    @ViewBuilder private var titleLabel: some View {
+        if let titleTestId {
+            Button(action: {}) {
+                Text(title)
+            }
+            .buttonStyle(.plain)
+            .testId(titleTestId)
+        } else {
+            Text(title)
+        }
     }
 
     private func dot(_ color: Color) -> some View {
@@ -113,10 +127,15 @@ struct PlaqueField: View {
                 .multilineTextAlignment(.trailing)
                 .textFieldStyle(.plain)
                 .focused($focused)
-                .submitLabel(.go)
                 .onSubmit(onSubmit)
                 .padding(.trailing, Metrics.plaqueControlTrail)
                 .testId(testId)
+                #if os(iOS)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .textContentType(.none)
+                .submitLabel(.go)
+                #endif
         }
         .padding(.horizontal, Space.x2)
         .frame(height: Metrics.plaqueHeight)

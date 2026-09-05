@@ -63,20 +63,57 @@ struct HomeView: View {
             .padding(.vertical, Space.x4)
         }
         .containerTestId("multistack-layout")
-        // Native stand-in for `window.confirm` — the web suite answers a
-        // browser dialog, Appium taps these ids instead.
-        .alert(copy.home.deleteAccount, isPresented: $state.confirmingDelete) {
-            Button(copy.home.deleteConfirmCancel, role: .cancel) {
-                state.cancelDelete()
+    }
+}
+
+/// In-app twin of the Compose `AlertDialog`. SwiftUI `.alert` does not
+/// reliably expose `accessibilityIdentifier` to XCUITest, so Appium would
+/// miss `delete-confirm-button`. Cancel (and a scrim tap) keep the session.
+struct DeleteConfirmDialog: View {
+    let copy: HomeCopy
+    let onConfirm: () -> Void
+    let onCancel: () -> Void
+
+    @Environment(\.palette) private var palette
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.45)
+                .ignoresSafeArea()
+                .onTapGesture(perform: onCancel)
+
+            VStack(alignment: .leading, spacing: Space.x3) {
+                Text(copy.deleteAccount)
+                    .font(.system(size: FontSize.base, weight: .semibold))
+                    .foregroundColor(palette.text)
+                Text(copy.deleteConfirm)
+                    .font(.system(size: FontSize.sm))
+                    .foregroundColor(palette.text)
+                    .testId("delete-confirm-message")
+                HStack(spacing: Space.x2) {
+                    Btn(
+                        label: copy.deleteConfirmCancel,
+                        testId: "delete-cancel-button",
+                        action: onCancel
+                    )
+                    Btn(
+                        label: copy.deleteConfirmOk,
+                        testId: "delete-confirm-button",
+                        variant: .danger,
+                        action: onConfirm
+                    )
+                    Spacer(minLength: 0)
+                }
             }
-            .testId("delete-cancel-button")
-            Button(copy.home.deleteConfirmOk, role: .destructive) {
-                state.confirmDeleteAccount()
-            }
-            .testId("delete-confirm-button")
-        } message: {
-            Text(copy.home.deleteConfirm)
-                .testId("delete-confirm-message")
+            .padding(Space.x4)
+            .background(palette.surfaceSoft)
+            .clipShape(RoundedRectangle(cornerRadius: Metrics.radiusSm))
+            .overlay(
+                RoundedRectangle(cornerRadius: Metrics.radiusSm)
+                    .stroke(palette.border, lineWidth: 1)
+            )
+            .padding(.horizontal, Space.pageX)
+            .containerTestId("delete-confirm-dialog")
         }
     }
 }

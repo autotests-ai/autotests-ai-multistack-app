@@ -52,9 +52,18 @@ public final class MobileCapabilities {
         caps.setCapability("platformName", "iOS");
         caps.setCapability("appium:automationName", "XCUITest");
         caps.setCapability("appium:bundleId", MobileConfig.iosBundleId());
-        caps.setCapability("appium:autoAcceptAlerts", true);
+        caps.setCapability("appium:autoAcceptAlerts", false);
+        caps.setCapability("appium:noReset", false);
         caps.setCapability("appium:newCommandTimeout", 120);
         caps.setCapability("appium:wdaLaunchTimeout", 120_000);
+        Map<String, Object> processArguments = new HashMap<>();
+        Map<String, String> env = new HashMap<>();
+        env.put("MULTISTACK_API_BASE", MobileConfig.optional(
+                "API_BASE", "https://autotests.ai/stack/backend-java-spring/api"));
+        env.put("MULTISTACK_BACKEND_ID", MobileConfig.optional(
+                "BACKEND_ID", "backend-java-spring"));
+        processArguments.put("env", env);
+        caps.setCapability("appium:processArguments", processArguments);
         String org = MobileConfig.xcodeOrgId();
         if (org != null && !org.isBlank()) {
             caps.setCapability("appium:xcodeOrgId", org);

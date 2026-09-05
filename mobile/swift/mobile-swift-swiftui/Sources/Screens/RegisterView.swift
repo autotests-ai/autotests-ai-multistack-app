@@ -69,5 +69,8 @@ struct RegisterView: View {
             .padding(.horizontal, Space.pageX)
             .padding(.vertical, Space.x6)
         }
+        #if os(iOS)
+        .scrollDismissesKeyboard(.interactively)
+        #endif
     }
 }

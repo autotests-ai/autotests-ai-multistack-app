@@ -12,13 +12,24 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 mode="${1:-unsigned}"
 
-developer_dir="$(xcode-select -p 2>/dev/null || true)"
-case "$developer_dir" in
-  *CommandLineTools*|"")
-    echo "STOP: full Xcode required (current: ${developer_dir:-none})." >&2
-    exit 1
-    ;;
-esac
+if [ -z "${DEVELOPER_DIR:-}" ]; then
+  developer_dir="$(xcode-select -p 2>/dev/null || true)"
+  case "$developer_dir" in
+    *CommandLineTools*|"")
+      if [ -d /Applications/Xcode.app/Contents/Developer ]; then
+        export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+      else
+        echo "STOP: full Xcode required (current: ${developer_dir:-none})." >&2
+        exit 1
+      fi
+      ;;
+  esac
+fi
+
+if ! xcodebuild -license check >/dev/null 2>&1; then
+  echo "STOP: Xcode license not accepted (needs a human): sudo xcodebuild -license" >&2
+  exit 69
+fi
 
 rm -rf build/ipa
 mkdir -p build/ipa
@@ -40,7 +51,7 @@ xcodebuild -project Multistack.xcodeproj -scheme Multistack \
   -configuration Release -sdk iphoneos -derivedDataPath build \
   CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
 
-app="build/Build/Products/Release-iphoneos/Multistack.app"
+app="build/Build/Products/Release-iphoneos/multistack-app.app"
 mkdir -p build/ipa/Payload
 cp -R "$app" build/ipa/Payload/
 (cd build/ipa && zip -qry Multistack-unsigned.ipa Payload)

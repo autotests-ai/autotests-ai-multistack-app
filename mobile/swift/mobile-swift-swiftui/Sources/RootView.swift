@@ -42,6 +42,14 @@ struct RootView: View {
                         item.action()
                     }
                 )
+
+                if state.confirmingDelete {
+                    DeleteConfirmDialog(
+                        copy: state.copy.home,
+                        onConfirm: state.confirmDeleteAccount,
+                        onCancel: state.cancelDelete
+                    )
+                }
             }
             // `js/header.js` closes the menu once the burger stops being visible.
             .onChange(of: wide) { _, isWide in

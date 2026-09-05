@@ -31,13 +31,29 @@ public final class NativeInput {
         field.sendKeys(value);
     }
 
+    /**
+     * Dismiss IME without leaving the screen. Android {@code hideKeyboard}
+     * sends Back; on Register that is {@code AppState.back()} → login.
+     * iOS never uses that call — tap a non-nav control (the form title) instead.
+     */
+    public static void dismissIme(SelenideElement blurTarget) {
+        if (AppPlatform.current() == AppPlatform.IOS) {
+            blurTarget.shouldBe(visible).click();
+            return;
+        }
+        hideKeyboard();
+    }
+
     public static void hideKeyboard() {
+        if (AppPlatform.current() != AppPlatform.ANDROID) {
+            return;
+        }
         var driver = WebDriverRunner.getWebDriver();
         if (driver instanceof HidesKeyboard hides) {
             try {
                 hides.hideKeyboard();
             } catch (Exception ignored) {
-                // iOS software keyboard, or already hidden
+                // already hidden
             }
         }
     }

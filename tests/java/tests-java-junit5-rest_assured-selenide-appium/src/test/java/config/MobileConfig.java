@@ -14,7 +14,7 @@ public final class MobileConfig {
     static final Path IOS_SIM_APP = Paths.get(
             "..", "..", "..",
             "mobile", "swift", "mobile-swift-swiftui",
-            "build", "Build", "Products", "Debug-iphonesimulator", "Multistack.app");
+            "build", "Build", "Products", "Debug-iphonesimulator", "multistack-app.app");
 
     private MobileConfig() {
     }
