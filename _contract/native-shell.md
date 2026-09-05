@@ -102,6 +102,7 @@ web cell.
 cd tests/java/tests-java-junit5-rest_assured-selenide-appium
 ./gradlew emulator                 # deviceHost=emulator, env=prod (GitHub-pair default)
 ./gradlew assembleApp emulator -Denv=ci   # bake APK for compose, then AVD
+./gradlew real -DincludeTags=smoke  # USB phone in adb (not an emulator)
 ./gradlew selenoid -Denv=prod      # GitHub APK; do not pass -Denv=ci
 ./gradlew iosSimulator              # processArguments from -Denv (default prod)
 ```

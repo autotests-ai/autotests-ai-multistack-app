@@ -3,6 +3,7 @@
  *
  *   ./gradlew emulator                 # deviceHost=emulator, env=prod
  *   ./gradlew assembleApp emulator -Denv=ci
+ *   ./gradlew real -DincludeTags=smoke
  *   ./gradlew selenoid -Denv=prod
  *
  * Same school as tests-java-junit5-rest_assured-selenide; web UI and /api

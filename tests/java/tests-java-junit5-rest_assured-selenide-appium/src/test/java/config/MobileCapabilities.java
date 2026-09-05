@@ -74,6 +74,8 @@ public final class MobileCapabilities {
         MutableCapabilities caps = baseAndroid();
         caps.setCapability("appium:app", MobileConfig.localAndroidApp());
         caps.setCapability("appium:udid", Adb.udid(DeviceHost.current()));
+        // Android 9+ (Samsung included) often blocks hidden API; emulator ignores it.
+        caps.setCapability("appium:ignoreHiddenApiPolicyError", true);
         return caps;
     }
 

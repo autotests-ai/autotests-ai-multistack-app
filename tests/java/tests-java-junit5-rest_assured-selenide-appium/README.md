@@ -25,6 +25,9 @@ cd mobile/kotlin/mobile-kotlin-compose && ./gradlew :app:assembleDebug
 cd tests/java/tests-java-junit5-rest_assured-selenide-appium
 ./gradlew emulator
 
+# USB phone (adb serial is not emulator-*). Same prod APK as emulator.
+./gradlew real -DincludeTags=smoke
+
 # compose CI: bake APK for 10.0.2.2:8800, then AVD (deviceHost stays emulator)
 ./gradlew assembleApp emulator -Denv=ci
 
