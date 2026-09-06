@@ -10,18 +10,14 @@ import org.aeonbits.owner.Config;
 })
 public interface TestConfig extends Config {
 
-    @Key("apiBase")
     String apiBase();
 
-    @Key("backendId")
     @DefaultValue("backend-java-spring")
     String backendId();
 
-    @Key("appiumUrl")
     @DefaultValue("http://127.0.0.1:4723/wd/hub")
     String appiumUrl();
 
-    @Key("selenoidUrl")
     @DefaultValue("https://user1:1234@selenoid.qa.guru/wd/hub")
     String selenoidUrl();
 
@@ -37,19 +33,15 @@ public interface TestConfig extends Config {
     @DefaultValue("https://github.com/autotests-ai/autotests-ai-multistack-app/releases/download/apk/multistack-app.apk")
     String androidAppUrl();
 
-    @Key("udid")
     @DefaultValue("")
     String udid();
 
-    @Key("deviceName")
     @DefaultValue("")
     String deviceName();
 
-    @Key("platformVersion")
     @DefaultValue("")
     String platformVersion();
 
-    @Key("browserstackUrl")
     @DefaultValue("https://hub.browserstack.com/wd/hub")
     String browserstackUrl();
 
