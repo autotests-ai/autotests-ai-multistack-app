@@ -37,31 +37,31 @@ public class RegisterScreen {
 
     @Step("Type username: {username}")
     public RegisterScreen typeUsername(String username) {
-        loginInput.shouldBe(visible).sendKeys(username);
+        loginInput.setValue(username);
         return this;
     }
 
     @Step("Type password")
     public RegisterScreen typePassword(String password) {
-        passwordInput.shouldBe(visible).sendKeys(password);
+        passwordInput.setValue(password);
         return this;
     }
 
     @Step("Type confirm password")
     public RegisterScreen typeConfirmPassword(String confirmPassword) {
-        confirmPasswordInput.shouldBe(visible).sendKeys(confirmPassword);
+        confirmPasswordInput.setValue(confirmPassword);
         return this;
     }
 
     @Step("Submit register form")
     public HomeScreen submit() {
-        submitButton.shouldBe(visible).click();
+        submitButton.click();
         return new HomeScreen();
     }
 
     @Step("Submit register form expecting validation or API error")
     public RegisterScreen submitExpectingError() {
-        submitButton.shouldBe(visible).click();
+        submitButton.click();
         errorMessage.shouldBe(visible);
         return this;
     }

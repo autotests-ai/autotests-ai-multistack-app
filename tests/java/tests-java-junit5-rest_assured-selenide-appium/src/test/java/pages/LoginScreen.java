@@ -36,25 +36,25 @@ public class LoginScreen {
 
     @Step("Type username: {username}")
     public LoginScreen typeUsername(String username) {
-        loginInput.shouldBe(visible).sendKeys(username);
+        loginInput.setValue(username);
         return this;
     }
 
     @Step("Type password")
     public LoginScreen typePassword(String password) {
-        passwordInput.shouldBe(visible).sendKeys(password);
+        passwordInput.setValue(password);
         return this;
     }
 
     @Step("Submit login form")
     public HomeScreen submit() {
-        submitButton.shouldBe(visible).click();
+        submitButton.click();
         return new HomeScreen();
     }
 
     @Step("Submit login form expecting validation error")
     public LoginScreen submitExpectingError() {
-        submitButton.shouldBe(visible).click();
+        submitButton.click();
         errorMessage.shouldBe(visible);
         return this;
     }
@@ -73,7 +73,7 @@ public class LoginScreen {
 
     @Step("Open register from the login footer link")
     public RegisterScreen clickRegisterLink() {
-        registerLink.shouldBe(visible).click();
+        registerLink.click();
         return new RegisterScreen();
     }
 }

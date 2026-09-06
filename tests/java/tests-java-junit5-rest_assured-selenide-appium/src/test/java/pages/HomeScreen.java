@@ -33,21 +33,21 @@ public class HomeScreen {
 
     @Step("Click logout")
     public LoginScreen clickLogoutButton() {
-        logoutButton.shouldBe(visible).click();
+        logoutButton.click();
         return new LoginScreen();
     }
 
     @Step("Click delete account and confirm")
     public LoginScreen clickDeleteAccountAndConfirm() {
-        deleteAccountButton.shouldBe(visible).click();
-        deleteConfirmButton.shouldBe(visible).click();
+        deleteAccountButton.click();
+        deleteConfirmButton.click();
         return new LoginScreen();
     }
 
     @Step("Click delete account and cancel")
     public HomeScreen clickDeleteAccountAndCancel() {
-        deleteAccountButton.shouldBe(visible).click();
-        deleteCancelButton.shouldBe(visible).click();
+        deleteAccountButton.click();
+        deleteCancelButton.click();
         return this;
     }
 }

@@ -82,7 +82,7 @@ dependencies {
     testImplementation (
             'io.qameta.allure:allure-jupiter',
             'io.qameta.allure:allure-selenide',
-            "com.codeborne:selenide:${selenideVersion}",
+            "com.codeborne:selenide-appium:${selenideVersion}",
             "io.appium:java-client:${appiumVersion}",
             "org.aeonbits.owner:owner:${ownerVersion}",
             "io.rest-assured:rest-assured:${restAssuredVersion}",
