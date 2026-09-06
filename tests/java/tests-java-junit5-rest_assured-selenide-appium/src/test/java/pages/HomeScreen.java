@@ -1,21 +1,21 @@
 package pages;
 
 import com.codeborne.selenide.SelenideElement;
+import io.appium.java_client.AppiumBy;
 import io.qameta.allure.Step;
 
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.$;
-import static helpers.TestIds.id;
 
 public class HomeScreen {
 
-    private final SelenideElement welcomePanel = $(id("welcome-panel"));
-    private final SelenideElement welcomeMessage = $(id("welcome-message"));
-    private final SelenideElement logoutButton = $(id("logout-button"));
-    private final SelenideElement deleteAccountButton = $(id("delete-account-button"));
-    private final SelenideElement deleteConfirmButton = $(id("delete-confirm-button"));
-    private final SelenideElement deleteCancelButton = $(id("delete-cancel-button"));
+    private final SelenideElement welcomePanel = $(AppiumBy.accessibilityId("welcome-panel"));
+    private final SelenideElement welcomeMessage = $(AppiumBy.accessibilityId("welcome-message"));
+    private final SelenideElement logoutButton = $(AppiumBy.accessibilityId("logout-button"));
+    private final SelenideElement deleteAccountButton = $(AppiumBy.accessibilityId("delete-account-button"));
+    private final SelenideElement deleteConfirmButton = $(AppiumBy.accessibilityId("delete-confirm-button"));
+    private final SelenideElement deleteCancelButton = $(AppiumBy.accessibilityId("delete-cancel-button"));
 
     @Step("Welcome message is {expected}")
     public HomeScreen shouldHaveWelcomeMessage(String expected) {

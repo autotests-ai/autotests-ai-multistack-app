@@ -1,21 +1,21 @@
 package pages;
 
 import com.codeborne.selenide.SelenideElement;
+import io.appium.java_client.AppiumBy;
 import io.qameta.allure.Step;
 
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.$;
-import static helpers.TestIds.id;
 
 public class RegisterScreen {
 
-    private final SelenideElement registerForm = $(id("register-form"));
-    private final SelenideElement loginInput = $(id("register-login-input"));
-    private final SelenideElement passwordInput = $(id("register-password-input"));
-    private final SelenideElement confirmPasswordInput = $(id("confirm-password-input"));
-    private final SelenideElement submitButton = $(id("register-submit-button"));
-    private final SelenideElement errorMessage = $(id("register-error-message"));
+    private final SelenideElement registerForm = $(AppiumBy.accessibilityId("register-form"));
+    private final SelenideElement loginInput = $(AppiumBy.accessibilityId("register-login-input"));
+    private final SelenideElement passwordInput = $(AppiumBy.accessibilityId("register-password-input"));
+    private final SelenideElement confirmPasswordInput = $(AppiumBy.accessibilityId("confirm-password-input"));
+    private final SelenideElement submitButton = $(AppiumBy.accessibilityId("register-submit-button"));
+    private final SelenideElement errorMessage = $(AppiumBy.accessibilityId("register-error-message"));
 
     @Step("Register screen is open")
     public RegisterScreen shouldBeOpen() {
