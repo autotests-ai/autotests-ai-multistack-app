@@ -49,7 +49,7 @@ public interface TestConfig extends Config {
     @DefaultValue("")
     String platformVersion();
 
-    @Key("browserstack.url")
+    @Key("browserstackUrl")
     @DefaultValue("https://hub.browserstack.com/wd/hub")
     String browserstackUrl();
 
