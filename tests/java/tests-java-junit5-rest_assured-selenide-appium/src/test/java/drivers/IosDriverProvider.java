@@ -1,7 +1,6 @@
 package drivers;
 
 import com.codeborne.selenide.WebDriverProvider;
-import config.BrowserstackConfig;
 import config.TestConfig;
 import io.appium.java_client.ios.IOSDriver;
 import org.aeonbits.owner.ConfigFactory;
@@ -44,7 +43,7 @@ public class IosDriverProvider implements WebDriverProvider {
                             "-Denv=ci is laptop compose. browserstack cannot reach it. Use -Denv=prod.");
                 }
                 caps = browserstackCaps(config);
-                hub = "https://hub.browserstack.com/wd/hub";
+                hub = config.browserstackUrl();
             }
             default -> throw new IllegalArgumentException(
                     "iOS deviceHost: simulator, real, browserstack. Got: " + host);
@@ -73,14 +72,13 @@ public class IosDriverProvider implements WebDriverProvider {
     }
 
     private static MutableCapabilities browserstackCaps(TestConfig config) {
-        BrowserstackConfig bs = ConfigFactory.create(BrowserstackConfig.class, System.getProperties());
         MutableCapabilities caps = iosCaps(config);
-        caps.setCapability("appium:app", required("browserstack.ios.app", bs.iosApp()));
-        caps.setCapability("appium:deviceName", bs.iosDevice());
-        caps.setCapability("appium:platformVersion", bs.iosOsVersion());
+        caps.setCapability("appium:app", required("browserstack.ios.app", config.browserstackIosApp()));
+        caps.setCapability("appium:deviceName", config.browserstackIosDevice());
+        caps.setCapability("appium:platformVersion", config.browserstackIosOsVersion());
         Map<String, Object> bstack = new HashMap<>();
-        bstack.put("userName", required("browserstack.user", bs.user()));
-        bstack.put("accessKey", required("browserstack.key", bs.key()));
+        bstack.put("userName", required("browserstack.user", config.browserstackUser()));
+        bstack.put("accessKey", required("browserstack.key", config.browserstackKey()));
         bstack.put("projectName", "Multistack native");
         bstack.put("buildName", "native-e2e");
         bstack.put("sessionName", "ios");
@@ -141,7 +139,7 @@ public class IosDriverProvider implements WebDriverProvider {
     private static String required(String key, String value) {
         if (value == null || value.isBlank() || value.startsWith("${")) {
             throw new IllegalStateException(
-                    "Set " + key + " in browserstack.properties or -D" + key + "=");
+                    "Set " + key + " in config/default.properties or -D" + key + "=");
         }
         return value;
     }

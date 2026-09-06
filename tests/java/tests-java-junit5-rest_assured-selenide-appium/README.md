@@ -38,12 +38,10 @@ cannot reach it — use `prod` or `stage`. Android bakes the URL at
 `./gradlew assembleApp` (`-Penv=`). iOS gets `MULTISTACK_API_BASE` from
 `processArguments` (localhost → 127.0.0.1).
 
-BrowserStack: `browserstack.properties` (Owner). Env
-`BROWSERSTACK_USERNAME` / `ACCESS_KEY` / `BROWSERSTACK_APP_ID` (iOS:
-`BROWSERSTACK_IOS_APP_ID`), or `-Dbrowserstack.user=` etc.
-
-iOS simulator: pin `deviceName` + `platformVersion` (defaults iPhone 16 / 18.4)
-so XCUITest does not spawn a throwaway sim on the newest Xcode runtime.
-Override with `-DdeviceName=` / `-DplatformVersion=` / `-Dudid=`.
-
+Farms (Selenoid + BrowserStack) are in `config/default.properties` with
+local Appium. Secrets: `BROWSERSTACK_USERNAME` / `ACCESS_KEY` /
+`BROWSERSTACK_APP_ID` (iOS: `BROWSERSTACK_IOS_APP_ID`), or `-Dbrowserstack.user=`.
 Selenoid is Android only (`qaguru/android`).
+
+iOS simulator: pin `-DdeviceName=` / `-DplatformVersion=` / `-Dudid=`
+(defaults iPhone 16 / 18.4) so XCUITest does not spawn a throwaway runtime.

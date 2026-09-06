@@ -48,4 +48,36 @@ public interface TestConfig extends Config {
     @Key("platformVersion")
     @DefaultValue("")
     String platformVersion();
+
+    @Key("browserstack.url")
+    @DefaultValue("https://hub.browserstack.com/wd/hub")
+    String browserstackUrl();
+
+    @Key("browserstack.user")
+    String browserstackUser();
+
+    @Key("browserstack.key")
+    String browserstackKey();
+
+    @Key("browserstack.app")
+    String browserstackApp();
+
+    @Key("browserstack.ios.app")
+    String browserstackIosApp();
+
+    @Key("browserstack.device")
+    @DefaultValue("Google Pixel 7")
+    String browserstackDevice();
+
+    @Key("browserstack.osVersion")
+    @DefaultValue("13.0")
+    String browserstackOsVersion();
+
+    @Key("browserstack.ios.device")
+    @DefaultValue("iPhone 15")
+    String browserstackIosDevice();
+
+    @Key("browserstack.ios.osVersion")
+    @DefaultValue("17")
+    String browserstackIosOsVersion();
 }

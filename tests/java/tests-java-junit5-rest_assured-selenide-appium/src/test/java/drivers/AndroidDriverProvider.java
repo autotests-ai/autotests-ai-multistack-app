@@ -1,7 +1,6 @@
 package drivers;
 
 import com.codeborne.selenide.WebDriverProvider;
-import config.BrowserstackConfig;
 import config.TestConfig;
 import io.appium.java_client.android.AndroidDriver;
 import org.aeonbits.owner.ConfigFactory;
@@ -45,8 +44,8 @@ public class AndroidDriverProvider implements WebDriverProvider {
             }
             case "browserstack" -> {
                 requireNotCi(host);
-                caps = browserstackCaps();
-                hub = "https://hub.browserstack.com/wd/hub";
+                caps = browserstackCaps(config);
+                hub = config.browserstackUrl();
             }
             default -> throw new IllegalArgumentException(
                     "Android deviceHost: emulator, real, selenoid, browserstack. Got: " + host);
@@ -88,15 +87,14 @@ public class AndroidDriverProvider implements WebDriverProvider {
         return caps;
     }
 
-    private static MutableCapabilities browserstackCaps() {
-        BrowserstackConfig bs = ConfigFactory.create(BrowserstackConfig.class, System.getProperties());
+    private static MutableCapabilities browserstackCaps(TestConfig config) {
         MutableCapabilities caps = androidCaps();
-        caps.setCapability("appium:app", required("browserstack.app", bs.app()));
-        caps.setCapability("appium:deviceName", bs.device());
-        caps.setCapability("appium:platformVersion", bs.osVersion());
+        caps.setCapability("appium:app", required("browserstack.app", config.browserstackApp()));
+        caps.setCapability("appium:deviceName", config.browserstackDevice());
+        caps.setCapability("appium:platformVersion", config.browserstackOsVersion());
         Map<String, Object> bstack = new HashMap<>();
-        bstack.put("userName", required("browserstack.user", bs.user()));
-        bstack.put("accessKey", required("browserstack.key", bs.key()));
+        bstack.put("userName", required("browserstack.user", config.browserstackUser()));
+        bstack.put("accessKey", required("browserstack.key", config.browserstackKey()));
         bstack.put("projectName", "Multistack native");
         bstack.put("buildName", "native-e2e");
         bstack.put("sessionName", "android");
@@ -148,7 +146,7 @@ public class AndroidDriverProvider implements WebDriverProvider {
     private static String required(String key, String value) {
         if (value == null || value.isBlank() || value.startsWith("${")) {
             throw new IllegalStateException(
-                    "Set " + key + " in browserstack.properties or -D" + key + "=");
+                    "Set " + key + " in config/default.properties or -D" + key + "=");
         }
         return value;
     }
