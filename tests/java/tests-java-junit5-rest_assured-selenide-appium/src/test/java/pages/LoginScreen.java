@@ -2,7 +2,6 @@ package pages;
 
 import com.codeborne.selenide.SelenideElement;
 import io.qameta.allure.Step;
-import org.openqa.selenium.WebElement;
 
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
@@ -37,32 +36,24 @@ public class LoginScreen {
 
     @Step("Type username: {username}")
     public LoginScreen typeUsername(String username) {
-        blurIme();
-        WebElement el = loginInput.shouldBe(visible).toWebElement();
-        el.click();
-        el.sendKeys(username);
+        loginInput.shouldBe(visible).sendKeys(username);
         return this;
     }
 
     @Step("Type password")
     public LoginScreen typePassword(String password) {
-        blurIme();
-        WebElement el = passwordInput.shouldBe(visible).toWebElement();
-        el.click();
-        el.sendKeys(password);
+        passwordInput.shouldBe(visible).sendKeys(password);
         return this;
     }
 
     @Step("Submit login form")
     public HomeScreen submit() {
-        blurIme();
         submitButton.shouldBe(visible).click();
         return new HomeScreen();
     }
 
     @Step("Submit login form expecting validation error")
     public LoginScreen submitExpectingError() {
-        blurIme();
         submitButton.shouldBe(visible).click();
         errorMessage.shouldBe(visible);
         return this;
@@ -82,12 +73,7 @@ public class LoginScreen {
 
     @Step("Open register from the login footer link")
     public RegisterScreen clickRegisterLink() {
-        blurIme();
         registerLink.shouldBe(visible).click();
         return new RegisterScreen();
-    }
-
-    private void blurIme() {
-        formTitle.shouldBe(visible).toWebElement().click();
     }
 }

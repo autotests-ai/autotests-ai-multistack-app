@@ -2,7 +2,6 @@ package pages;
 
 import com.codeborne.selenide.SelenideElement;
 import io.qameta.allure.Step;
-import org.openqa.selenium.WebElement;
 
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
@@ -17,7 +16,6 @@ public class RegisterScreen {
     private final SelenideElement confirmPasswordInput = $(id("confirm-password-input"));
     private final SelenideElement submitButton = $(id("register-submit-button"));
     private final SelenideElement errorMessage = $(id("register-error-message"));
-    private final SelenideElement formTitle = $(id("register-form-title"));
 
     @Step("Register screen is open")
     public RegisterScreen shouldBeOpen() {
@@ -39,41 +37,30 @@ public class RegisterScreen {
 
     @Step("Type username: {username}")
     public RegisterScreen typeUsername(String username) {
-        blurIme();
-        WebElement el = loginInput.shouldBe(visible).toWebElement();
-        el.click();
-        el.sendKeys(username);
+        loginInput.shouldBe(visible).sendKeys(username);
         return this;
     }
 
     @Step("Type password")
     public RegisterScreen typePassword(String password) {
-        blurIme();
-        WebElement el = passwordInput.shouldBe(visible).toWebElement();
-        el.click();
-        el.sendKeys(password);
+        passwordInput.shouldBe(visible).sendKeys(password);
         return this;
     }
 
     @Step("Type confirm password")
     public RegisterScreen typeConfirmPassword(String confirmPassword) {
-        blurIme();
-        WebElement el = confirmPasswordInput.shouldBe(visible).toWebElement();
-        el.click();
-        el.sendKeys(confirmPassword);
+        confirmPasswordInput.shouldBe(visible).sendKeys(confirmPassword);
         return this;
     }
 
     @Step("Submit register form")
     public HomeScreen submit() {
-        blurIme();
         submitButton.shouldBe(visible).click();
         return new HomeScreen();
     }
 
     @Step("Submit register form expecting validation or API error")
     public RegisterScreen submitExpectingError() {
-        blurIme();
         submitButton.shouldBe(visible).click();
         errorMessage.shouldBe(visible);
         return this;
@@ -83,9 +70,5 @@ public class RegisterScreen {
     public RegisterScreen shouldHaveErrorMessage(String message) {
         errorMessage.shouldHave(text(message));
         return this;
-    }
-
-    private void blurIme() {
-        formTitle.shouldBe(visible).toWebElement().click();
     }
 }
