@@ -23,8 +23,7 @@ struct LoginView: View {
                             label: copy.login.passwordLabel,
                             value: $state.loginPassword,
                             testId: "password-input",
-                            secure: true,
-                            onSubmit: state.submitLogin
+                            secure: true
                         )
                         Text(state.loginError)
                             .font(.system(size: FontSize.sm))

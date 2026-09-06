@@ -78,8 +78,7 @@ fun RegisterScreen(
                     onValueChange = onConfirmPasswordChange,
                     testId = "confirm-password-input",
                     password = true,
-                    imeAction = ImeAction.Go,
-                    onImeAction = onSubmit,
+                    imeAction = ImeAction.Done,
                 )
                 Text(
                     text = error,

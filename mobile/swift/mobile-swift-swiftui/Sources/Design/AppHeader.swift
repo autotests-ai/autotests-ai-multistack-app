@@ -223,6 +223,7 @@ private struct HeaderSearch: View {
 
     var body: some View {
         TextField("", text: $value, prompt: Text(placeholder).foregroundColor(palette.textMuted))
+            .testId(testId)
             .textFieldStyle(.plain)
             .font(.system(size: FontSize.sm))
             .foregroundColor(palette.text)
@@ -234,6 +235,5 @@ private struct HeaderSearch: View {
                 RoundedRectangle(cornerRadius: Metrics.radiusSm)
                     .stroke(palette.border, lineWidth: 1)
             )
-            .testId(testId)
     }
 }

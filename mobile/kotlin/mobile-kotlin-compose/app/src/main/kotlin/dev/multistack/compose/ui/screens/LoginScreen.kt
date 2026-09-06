@@ -77,8 +77,7 @@ fun LoginScreen(
                     onValueChange = onPasswordChange,
                     testId = "password-input",
                     password = true,
-                    imeAction = ImeAction.Go,
-                    onImeAction = onSubmit,
+                    imeAction = ImeAction.Done,
                 )
                 Text(
                     text = error,

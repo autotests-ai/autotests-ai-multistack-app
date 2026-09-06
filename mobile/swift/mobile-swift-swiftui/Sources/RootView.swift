@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 /// The whole cell: fixed 40pt header on top, the active screen offset below it,
 /// and the burger menu overlaying the content the way `.header__menu` does
@@ -56,6 +59,16 @@ struct RootView: View {
                 if isWide {
                     state.closeMenu()
                 }
+            }
+            .onChange(of: state.screen) { _, _ in
+                #if os(iOS)
+                UIApplication.shared.sendAction(
+                    #selector(UIResponder.resignFirstResponder),
+                    to: nil,
+                    from: nil,
+                    for: nil
+                )
+                #endif
             }
         }
         .environment(\.palette, palette)

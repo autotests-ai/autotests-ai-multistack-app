@@ -99,6 +99,7 @@ public class IosDriverProvider implements WebDriverProvider {
         caps.setCapability("appium:wdaLaunchTimeout", 120_000);
         caps.setCapability("appium:keyboardAutocorrection", false);
         caps.setCapability("appium:keyboardPrediction", false);
+        caps.setCapability("appium:sendKeyStrategy", "setValue");
         Map<String, Object> processArguments = new HashMap<>();
         Map<String, String> env = new HashMap<>();
         env.put("MULTISTACK_API_BASE", deviceApiBase(config.apiBase()));

@@ -1,8 +1,8 @@
 package pages;
 
 import com.codeborne.selenide.SelenideElement;
-import helpers.NativeInput;
 import io.qameta.allure.Step;
+import org.openqa.selenium.WebElement;
 
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
@@ -37,26 +37,32 @@ public class LoginScreen {
 
     @Step("Type username: {username}")
     public LoginScreen typeUsername(String username) {
-        NativeInput.typeInto(loginInput, username);
+        blurIme();
+        WebElement el = loginInput.shouldBe(visible).toWebElement();
+        el.click();
+        el.sendKeys(username);
         return this;
     }
 
     @Step("Type password")
     public LoginScreen typePassword(String password) {
-        NativeInput.typeInto(passwordInput, password);
+        blurIme();
+        WebElement el = passwordInput.shouldBe(visible).toWebElement();
+        el.click();
+        el.sendKeys(password);
         return this;
     }
 
     @Step("Submit login form")
     public HomeScreen submit() {
-        NativeInput.dismissIme(formTitle);
+        blurIme();
         submitButton.shouldBe(visible).click();
         return new HomeScreen();
     }
 
     @Step("Submit login form expecting validation error")
     public LoginScreen submitExpectingError() {
-        NativeInput.dismissIme(formTitle);
+        blurIme();
         submitButton.shouldBe(visible).click();
         errorMessage.shouldBe(visible);
         return this;
@@ -76,8 +82,12 @@ public class LoginScreen {
 
     @Step("Open register from the login footer link")
     public RegisterScreen clickRegisterLink() {
-        NativeInput.dismissIme(formTitle);
+        blurIme();
         registerLink.shouldBe(visible).click();
         return new RegisterScreen();
+    }
+
+    private void blurIme() {
+        formTitle.shouldBe(visible).toWebElement().click();
     }
 }

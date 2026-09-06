@@ -289,7 +289,7 @@ private fun HeaderSearch(
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth().testId(testId),
+            modifier = Modifier.fillMaxWidth().inputTestId(testId, value, onValueChange),
             singleLine = true,
             textStyle = TextStyle(color = palette.text, fontSize = FontSize.sm),
             cursorBrush = SolidColor(palette.primary),

@@ -1,7 +1,6 @@
 package pages;
 
 import com.codeborne.selenide.SelenideElement;
-import helpers.NativeInput;
 import io.qameta.allure.Step;
 
 import static com.codeborne.selenide.Condition.text;
@@ -34,14 +33,12 @@ public class HomeScreen {
 
     @Step("Click logout")
     public LoginScreen clickLogoutButton() {
-        NativeInput.hideKeyboard();
         logoutButton.shouldBe(visible).click();
         return new LoginScreen();
     }
 
     @Step("Click delete account and confirm")
     public LoginScreen clickDeleteAccountAndConfirm() {
-        NativeInput.hideKeyboard();
         deleteAccountButton.shouldBe(visible).click();
         deleteConfirmButton.shouldBe(visible).click();
         return new LoginScreen();
@@ -49,7 +46,6 @@ public class HomeScreen {
 
     @Step("Click delete account and cancel")
     public HomeScreen clickDeleteAccountAndCancel() {
-        NativeInput.hideKeyboard();
         deleteAccountButton.shouldBe(visible).click();
         deleteCancelButton.shouldBe(visible).click();
         return this;

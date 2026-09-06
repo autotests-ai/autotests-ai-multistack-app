@@ -27,8 +27,7 @@ struct RegisterView: View {
                             label: copy.register.confirmLabel,
                             value: $state.registerConfirmPassword,
                             testId: "confirm-password-input",
-                            secure: true,
-                            onSubmit: state.submitRegister
+                            secure: true
                         )
                         Text(state.registerError)
                             .font(.system(size: FontSize.sm))

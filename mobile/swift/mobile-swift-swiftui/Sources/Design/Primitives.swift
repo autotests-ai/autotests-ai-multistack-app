@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 /// `css/panel.css` `.panel.panel--content` — 1px shell, 8pt radius, 26pt bar
 /// with the three decorative dots and an 11pt/600 muted title.
@@ -109,10 +112,55 @@ struct PlaqueField: View {
     @Binding var value: String
     let testId: String
     var secure: Bool = false
-    var onSubmit: () -> Void = {}
 
     @Environment(\.palette) private var palette
-    @FocusState private var focused: Bool
+    @FocusState private var textFocused: Bool
+    @State private var secureFocused = false
+
+    private var focused: Bool { textFocused || secureFocused }
+
+    @ViewBuilder private var field: some View {
+        if secure {
+            #if os(iOS)
+            PlaqueSecureUIField(
+                text: $value,
+                testId: testId,
+                textColor: .clear,
+                caretColor: UIColor(palette.primary),
+                onFocused: { secureFocused = $0 }
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .overlay(alignment: .trailing) {
+                Text(String(repeating: "•", count: value.count))
+                    .font(.system(size: FontSize.sm, design: .monospaced))
+                    .foregroundColor(palette.text)
+                    .accessibilityHidden(true)
+                    .allowsHitTesting(false)
+            }
+            #else
+            SecureField("", text: $value)
+                .font(.system(size: FontSize.sm))
+                .foregroundColor(palette.text)
+                .multilineTextAlignment(.trailing)
+                .textFieldStyle(.plain)
+                .focused($textFocused)
+                .testId(testId)
+            #endif
+        } else {
+            TextField("", text: $value)
+                .font(.system(size: FontSize.sm))
+                .foregroundColor(palette.text)
+                .multilineTextAlignment(.trailing)
+                .textFieldStyle(.plain)
+                .focused($textFocused)
+                #if os(iOS)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .textContentType(.none)
+                #endif
+                .testId(testId)
+        }
+    }
 
     var body: some View {
         HStack(spacing: Space.x2) {
@@ -122,25 +170,7 @@ struct PlaqueField: View {
                 .lineLimit(1)
             PlaqueDivider()
             field
-                .font(.system(size: FontSize.sm))
-                .foregroundColor(palette.text)
-                .multilineTextAlignment(.trailing)
-                .textFieldStyle(.plain)
-                .focused($focused)
-                .onSubmit(onSubmit)
-                .padding(.trailing, Metrics.plaqueControlTrail)
-                .id(testId)
-                .testId(testId)
-                #if os(iOS)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                // Two SecureFields on Register otherwise summon iOS Password
-                // AutoFill, which intercepts XCUITest key events and leaves
-                // the first password short. `.oneTimeCode` opts the field out
-                // without pulling in UIKit.
-                .textContentType(secure ? .oneTimeCode : .none)
-                .submitLabel(.go)
-                #endif
+            Color.clear.frame(width: Metrics.plaqueControlTrail)
         }
         .padding(.horizontal, Space.x2)
         .frame(height: Metrics.plaqueHeight)
@@ -151,15 +181,99 @@ struct PlaqueField: View {
                 .stroke(focused ? palette.primary : palette.border, lineWidth: 1)
         )
     }
+}
 
-    @ViewBuilder private var field: some View {
-        if secure {
-            SecureField("", text: $value)
-        } else {
-            TextField("", text: $value)
+#if os(iOS)
+/// SwiftUI `SecureField` / `isSecureTextEntry` swallow XCUITest `sendKeys`
+/// (empty Binding, "Password must be at least 6 characters"). A plain
+/// `UITextField` with the leaf testid accepts typing; bullets are painted
+/// on top. `.oneTimeCode` keeps Password AutoFill off on Register.
+private struct PlaqueSecureUIField: UIViewRepresentable {
+    @Binding var text: String
+    var testId: String
+    var textColor: UIColor
+    var caretColor: UIColor
+    var onFocused: (Bool) -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(text: $text, onFocused: onFocused)
+    }
+
+    func makeUIView(context: Context) -> UITextField {
+        let field = UITextField()
+        field.isSecureTextEntry = false
+        field.accessibilityIdentifier = testId
+        field.textContentType = .oneTimeCode
+        field.autocorrectionType = .no
+        field.autocapitalizationType = .none
+        field.spellCheckingType = .no
+        field.smartQuotesType = .no
+        field.smartDashesType = .no
+        field.borderStyle = .none
+        field.backgroundColor = .clear
+        field.textAlignment = .right
+        field.font = UIFont.systemFont(ofSize: FontSize.sm)
+        field.textColor = textColor
+        field.tintColor = caretColor
+        field.returnKeyType = .done
+        field.delegate = context.coordinator
+        field.addTarget(
+            context.coordinator,
+            action: #selector(Coordinator.editingChanged(_:)),
+            for: .editingChanged
+        )
+        field.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        field.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        return field
+    }
+
+    func updateUIView(_ field: UITextField, context: Context) {
+        context.coordinator.text = $text
+        context.coordinator.onFocused = onFocused
+        field.accessibilityIdentifier = testId
+        field.textColor = textColor
+        field.tintColor = caretColor
+        let viewText = field.text ?? ""
+        // XCUITest setValue/typeText can change `text` without `editingChanged`.
+        // Never clobber a first-responder field from an empty Binding.
+        if field.isFirstResponder {
+            if viewText != text {
+                context.coordinator.text.wrappedValue = viewText
+            }
+        } else if viewText != text {
+            field.text = text
+        }
+    }
+
+    final class Coordinator: NSObject, UITextFieldDelegate {
+        var text: Binding<String>
+        var onFocused: (Bool) -> Void
+
+        init(text: Binding<String>, onFocused: @escaping (Bool) -> Void) {
+            self.text = text
+            self.onFocused = onFocused
+        }
+
+        @objc func editingChanged(_ sender: UITextField) {
+            text.wrappedValue = sender.text ?? ""
+        }
+
+        func textFieldDidBeginEditing(_ textField: UITextField) {
+            onFocused(true)
+        }
+
+        func textFieldDidEndEditing(_ textField: UITextField) {
+            text.wrappedValue = textField.text ?? ""
+            onFocused(false)
+        }
+
+        func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+            textField.resignFirstResponder()
+            return true
         }
     }
 }
+#endif
 
 /// `css/plaque-divider.css` — fixed 1px rule, height `--font-size-sm * 1.35`.
 struct PlaqueDivider: View {

@@ -1,8 +1,8 @@
 package pages;
 
 import com.codeborne.selenide.SelenideElement;
-import helpers.NativeInput;
 import io.qameta.allure.Step;
+import org.openqa.selenium.WebElement;
 
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
@@ -39,19 +39,28 @@ public class RegisterScreen {
 
     @Step("Type username: {username}")
     public RegisterScreen typeUsername(String username) {
-        NativeInput.typeInto(loginInput, username);
+        blurIme();
+        WebElement el = loginInput.shouldBe(visible).toWebElement();
+        el.click();
+        el.sendKeys(username);
         return this;
     }
 
     @Step("Type password")
     public RegisterScreen typePassword(String password) {
-        NativeInput.typeInto(passwordInput, password);
+        blurIme();
+        WebElement el = passwordInput.shouldBe(visible).toWebElement();
+        el.click();
+        el.sendKeys(password);
         return this;
     }
 
     @Step("Type confirm password")
     public RegisterScreen typeConfirmPassword(String confirmPassword) {
-        NativeInput.typeInto(confirmPasswordInput, confirmPassword);
+        blurIme();
+        WebElement el = confirmPasswordInput.shouldBe(visible).toWebElement();
+        el.click();
+        el.sendKeys(confirmPassword);
         return this;
     }
 
@@ -76,12 +85,7 @@ public class RegisterScreen {
         return this;
     }
 
-    /**
-     * Appium {@code hideKeyboard} sends Back. On this screen Back is
-     * {@code AppState.back()} → login, so the submit button disappears.
-     * Tap the title instead: it blurs the focused field without leaving.
-     */
     private void blurIme() {
-        formTitle.shouldBe(visible).click();
+        formTitle.shouldBe(visible).toWebElement().click();
     }
 }

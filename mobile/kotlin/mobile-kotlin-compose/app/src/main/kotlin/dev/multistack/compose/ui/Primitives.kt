@@ -3,6 +3,7 @@ package dev.multistack.compose.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -31,13 +32,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -61,6 +65,7 @@ fun Panel(
     body: @Composable ColumnScope.() -> Unit,
 ) {
     val palette = LocalPalette.current
+    val focusManager = LocalFocusManager.current
     Column(
         modifier = modifier
             .border(1.dp, palette.border, RoundedCornerShape(Metrics.radiusSm))
@@ -87,7 +92,14 @@ fun Panel(
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = titleTestId?.let { Modifier.testId(it) } ?: Modifier,
+                modifier = titleTestId?.let { id ->
+                    Modifier
+                        .testId(id)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) { focusManager.clearFocus() }
+                } ?: Modifier,
             )
         }
         Box(Modifier.fillMaxWidth().height(1.dp).background(palette.border))
@@ -154,9 +166,9 @@ fun PlaqueField(
     modifier: Modifier = Modifier,
     password: Boolean = false,
     imeAction: ImeAction = ImeAction.Next,
-    onImeAction: () -> Unit = {},
 ) {
     val palette = LocalPalette.current
+    val focusManager = LocalFocusManager.current
     var focused by remember { mutableStateOf(false) }
     Row(
         modifier = modifier
@@ -188,7 +200,7 @@ fun PlaqueField(
                 // `input.plaque-field__control` reserves the select-chevron trail.
                 .padding(end = 30.dp)
                 .onFocusChanged { focused = it.isFocused }
-                .testId(testId),
+                .inputTestId(testId, value, onValueChange, isPassword = password),
             singleLine = true,
             textStyle = TextStyle(
                 color = palette.text,
@@ -202,13 +214,15 @@ fun PlaqueField(
                 VisualTransformation.None
             },
             keyboardOptions = KeyboardOptions(
+                capitalization = KeyboardCapitalization.None,
+                autoCorrectEnabled = false,
                 keyboardType = if (password) KeyboardType.Password else KeyboardType.Text,
                 imeAction = imeAction,
             ),
             keyboardActions = KeyboardActions(
-                onDone = { onImeAction() },
-                onGo = { onImeAction() },
-                onNext = { onImeAction() },
+                onDone = { focusManager.clearFocus() },
+                onGo = { focusManager.clearFocus() },
+                onNext = { focusManager.moveFocus(FocusDirection.Down) },
             ),
         )
     }
