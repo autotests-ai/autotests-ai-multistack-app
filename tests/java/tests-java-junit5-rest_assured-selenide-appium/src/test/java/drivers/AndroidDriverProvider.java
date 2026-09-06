@@ -24,7 +24,8 @@ public class AndroidDriverProvider implements WebDriverProvider {
 
     @Override
     public WebDriver createDriver(Capabilities ignored) {
-        TestConfig config = ConfigFactory.create(TestConfig.class, System.getProperties());
+        TestConfig config = ConfigFactory.create(
+                TestConfig.class, System.getProperties(), System.getenv());
         String host = System.getProperty("deviceHost", "emulator");
         MutableCapabilities caps;
         String hub;

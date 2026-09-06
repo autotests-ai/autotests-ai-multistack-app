@@ -107,6 +107,17 @@ if (!(testEnv in ['ci', 'stage', 'prod'])) {
 def applyMobileSystemProperties = { Test task ->
     task.systemProperties(System.getProperties())
     task.systemProperty 'env', testEnv
+    [
+            'BROWSERSTACK_USERNAME'   : 'browserstack.user',
+            'BROWSERSTACK_ACCESS_KEY' : 'browserstack.key',
+            'BROWSERSTACK_APP_ID'     : 'browserstack.app',
+            'BROWSERSTACK_IOS_APP_ID' : 'browserstack.ios.app',
+    ].each { envName, key ->
+        def value = System.getenv(envName)
+        if (value) {
+            task.systemProperty key, value
+        }
+    }
 }
 
 tasks.withType(Test).configureEach {

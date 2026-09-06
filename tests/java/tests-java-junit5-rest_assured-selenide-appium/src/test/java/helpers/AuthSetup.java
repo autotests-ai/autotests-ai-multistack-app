@@ -61,7 +61,8 @@ public final class AuthSetup {
     }
 
     private static void useApi() {
-        TestConfig config = ConfigFactory.create(TestConfig.class, System.getProperties());
+        TestConfig config = ConfigFactory.create(
+                TestConfig.class, System.getProperties(), System.getenv());
         String apiBase = config.apiBase();
         if (apiBase == null || apiBase.isBlank()) {
             throw new IllegalStateException("Set apiBase in config/${env}.properties");

@@ -24,7 +24,8 @@ public class IosDriverProvider implements WebDriverProvider {
 
     @Override
     public WebDriver createDriver(Capabilities ignored) {
-        TestConfig config = ConfigFactory.create(TestConfig.class, System.getProperties());
+        TestConfig config = ConfigFactory.create(
+                TestConfig.class, System.getProperties(), System.getenv());
         String host = System.getProperty("deviceHost", "simulator");
         MutableCapabilities caps;
         String hub;
@@ -96,7 +97,6 @@ public class IosDriverProvider implements WebDriverProvider {
         caps.setCapability("appium:noReset", false);
         caps.setCapability("appium:newCommandTimeout", 120);
         caps.setCapability("appium:wdaLaunchTimeout", 120_000);
-        caps.setCapability("appium:sendKeyStrategy", "setValue");
         caps.setCapability("appium:keyboardAutocorrection", false);
         caps.setCapability("appium:keyboardPrediction", false);
         Map<String, Object> processArguments = new HashMap<>();

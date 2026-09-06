@@ -4,6 +4,7 @@ import com.codeborne.selenide.SelenideElement;
 import com.codeborne.selenide.WebDriverRunner;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.HidesKeyboard;
+import org.openqa.selenium.WebElement;
 
 import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.$;
@@ -20,12 +21,12 @@ public final class NativeInput {
 
     public static void typeInto(SelenideElement field, String value) {
         if (ios()) {
-            // Keyboard covers the lower Register plaques (password + confirm).
-            // A click then sendKeys hits the keyboard, not the field — password
-            // stays short and the suite sees "must be at least 6 characters".
+            // Selenide click() can hit the IME, not the SecureField. W3C
+            // click+value is what actually updates the SwiftUI binding.
             dismissIosKeyboard();
-            field.shouldBe(visible).click();
-            field.sendKeys(value);
+            WebElement el = field.shouldBe(visible).toWebElement();
+            el.click();
+            el.sendKeys(value);
             return;
         }
         field.shouldBe(visible).click();
@@ -42,7 +43,7 @@ public final class NativeInput {
      */
     public static void dismissIme(SelenideElement blurTarget) {
         if (ios()) {
-            blurTarget.shouldBe(visible).click();
+            blurTarget.shouldBe(visible).toWebElement().click();
             return;
         }
         hideKeyboard();
@@ -57,7 +58,7 @@ public final class NativeInput {
         for (String testId : new String[] {"register-form-title", "login-form-title"}) {
             SelenideElement title = $(AppiumBy.accessibilityId(testId));
             if (title.exists()) {
-                title.click();
+                title.toWebElement().click();
                 return;
             }
         }
