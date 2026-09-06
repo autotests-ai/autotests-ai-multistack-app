@@ -3,6 +3,7 @@ package tests.e2e
 import tests.TestBase
 import annotations.Layer
 import api.AuthApiClient
+import com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat
 import helpers.User
 import helpers.UserBuilder
 import helpers.DataFaker
@@ -42,10 +43,9 @@ class RegisterTests : TestBase() {
 
     @AfterEach
     fun cleanupRegisteredUser() {
-        if (registeredUser != null) {
-            AuthApiClient.deleteAccountQuietly(registeredUser!!.username(), registeredUser!!.password())
-            registeredUser = null
-        }
+        val user = registeredUser ?: return
+        AuthApiClient.deleteAccountQuietly(user.username(), user.password())
+        registeredUser = null
     }
 
     @Test
@@ -53,13 +53,10 @@ class RegisterTests : TestBase() {
     @Tag("positive")
     @DisplayName("New user can register and land on home")
     fun shouldRegisterNewUser() {
-        registeredUser = UserBuilder().withUsername().withPassword().build()
-        registerPage.openPage()
-                .fillAndSubmitForm(
-                        registeredUser!!.username(),
-                        registeredUser!!.password(),
-                        registeredUser!!.password())
-                .shouldHaveWelcomeMessage(registeredUser!!.welcomeMessage())
+        val user = UserBuilder().withUsername().withPassword().build()
+        registeredUser = user
+        app.register.open().signup(user.username(), user.password())
+        assertThat(app.home.welcomeMessage).containsText(user.welcomeMessage())
     }
 
     @Test
@@ -67,13 +64,10 @@ class RegisterTests : TestBase() {
     @Tag("positive")
     @DisplayName("New user can register with 3-character login and 6-character password")
     fun shouldRegisterWithMinimumLengthCredentials() {
-        registeredUser = User(DataFaker.usernameAtMinLength(), DataFaker.passwordAtMinLength())
-        registerPage.openPage()
-                .fillAndSubmitForm(
-                        registeredUser!!.username(),
-                        registeredUser!!.password(),
-                        registeredUser!!.password())
-                .shouldHaveWelcomeMessage(registeredUser!!.welcomeMessage())
+        val user = User(DataFaker.usernameAtMinLength(), DataFaker.passwordAtMinLength())
+        registeredUser = user
+        app.register.open().signup(user.username(), user.password())
+        assertThat(app.home.welcomeMessage).containsText(user.welcomeMessage())
     }
 
     @Test
@@ -81,12 +75,12 @@ class RegisterTests : TestBase() {
     @Tag("negative")
     @DisplayName("Password mismatch shows validation error")
     fun shouldShowErrorWhenPasswordsDoNotMatch() {
-        registerPage.openPage()
-                .typeUsername("newuser")
-                .typePassword("password123")
-                .typeConfirmPassword("password124")
-                .submitExpectingError()
-                .shouldHaveErrorMessage(PASSWORD_MISMATCH_MESSAGE)
+        app.register.open()
+            .typeUsername("newuser")
+            .typePassword("password123")
+            .typeConfirmPassword("password124")
+            .submitExpectingError()
+        assertThat(app.register.errorMessage).containsText(PASSWORD_MISMATCH_MESSAGE)
     }
 
     @Test
@@ -94,12 +88,12 @@ class RegisterTests : TestBase() {
     @Tag("negative")
     @DisplayName("Short password shows validation error")
     fun shouldShowErrorWhenPasswordIsTooShort() {
-        registerPage.openPage()
-                .typeUsername("newuser")
-                .typePassword("abc")
-                .typeConfirmPassword("abc")
-                .submitExpectingError()
-                .shouldHaveErrorMessage(PASSWORD_MIN_LENGTH_MESSAGE)
+        app.register.open()
+            .typeUsername("newuser")
+            .typePassword("abc")
+            .typeConfirmPassword("abc")
+            .submitExpectingError()
+        assertThat(app.register.errorMessage).containsText(PASSWORD_MIN_LENGTH_MESSAGE)
     }
 
     @Test
@@ -107,12 +101,12 @@ class RegisterTests : TestBase() {
     @Tag("negative")
     @DisplayName("Duplicate username shows readable error")
     fun shouldShowErrorWhenUsernameIsTaken() {
-        registerPage.openPage()
-                .typeUsername("user1")
-                .typePassword(REGISTER_PASSWORD)
-                .typeConfirmPassword(REGISTER_PASSWORD)
-                .submitExpectingError()
-                .shouldHaveErrorMessage(DUPLICATE_USERNAME_MESSAGE)
+        app.register.open()
+            .typeUsername("user1")
+            .typePassword(REGISTER_PASSWORD)
+            .typeConfirmPassword(REGISTER_PASSWORD)
+            .submitExpectingError()
+        assertThat(app.register.errorMessage).containsText(DUPLICATE_USERNAME_MESSAGE)
     }
 
     @Test
@@ -120,12 +114,12 @@ class RegisterTests : TestBase() {
     @Tag("negative")
     @DisplayName("Short username shows validation error")
     fun shouldShowValidationErrorWhenUsernameIsTooShort() {
-        registerPage.openPage()
-                .typeUsername("ab")
-                .typePassword("password123")
-                .typeConfirmPassword("password123")
-                .submitExpectingError()
-                .shouldHaveErrorMessage(LOGIN_MIN_LENGTH_MESSAGE)
+        app.register.open()
+            .typeUsername("ab")
+            .typePassword("password123")
+            .typeConfirmPassword("password123")
+            .submitExpectingError()
+        assertThat(app.register.errorMessage).containsText(LOGIN_MIN_LENGTH_MESSAGE)
     }
 
     @Test
@@ -133,11 +127,11 @@ class RegisterTests : TestBase() {
     @Tag("negative")
     @DisplayName("Empty username shows validation error")
     fun shouldShowValidationErrorWhenUsernameIsEmpty() {
-        registerPage.openPage()
-                .typePassword("password123")
-                .typeConfirmPassword("password123")
-                .submitExpectingError()
-                .shouldHaveErrorMessage(LOGIN_REQUIRED_MESSAGE)
+        app.register.open()
+            .typePassword("password123")
+            .typeConfirmPassword("password123")
+            .submitExpectingError()
+        assertThat(app.register.errorMessage).containsText(LOGIN_REQUIRED_MESSAGE)
     }
 
     @Test
@@ -145,10 +139,10 @@ class RegisterTests : TestBase() {
     @Tag("negative")
     @DisplayName("Empty password shows validation error")
     fun shouldShowValidationErrorWhenPasswordIsEmpty() {
-        registerPage.openPage()
-                .typeUsername("newuser")
-                .submitExpectingError()
-                .shouldHaveErrorMessage(PASSWORD_REQUIRED_MESSAGE)
+        app.register.open()
+            .typeUsername("newuser")
+            .submitExpectingError()
+        assertThat(app.register.errorMessage).containsText(PASSWORD_REQUIRED_MESSAGE)
     }
 
     @Test
@@ -156,8 +150,7 @@ class RegisterTests : TestBase() {
     @Tag("negative")
     @DisplayName("Empty username and password show validation error")
     fun shouldShowValidationErrorWhenCredentialsAreEmpty() {
-        registerPage.openPage()
-                .submitExpectingError()
-                .shouldHaveErrorMessage(BOTH_REQUIRED_MESSAGE)
+        app.register.open().submitExpectingError()
+        assertThat(app.register.errorMessage).containsText(BOTH_REQUIRED_MESSAGE)
     }
 }

@@ -15,6 +15,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+
 @Layer("e2e")
 @Epic("Authentication")
 @Feature("Register")
@@ -54,13 +56,10 @@ class RegisterTests extends TestBase {
     @DisplayName("New user can register and land on home")
     void shouldRegisterNewUser() {
         registeredUser = new UserBuilder().withUsername().withPassword().build();
-
-        registerPage.openPage()
-                .fillAndSubmitForm(
-                        registeredUser.username(),
-                        registeredUser.password(),
-                        registeredUser.password())
-                .shouldHaveWelcomeMessage(registeredUser.welcomeMessage());
+        app.register.open().signup(
+                registeredUser.username(),
+                registeredUser.password());
+        assertThat(app.home.welcomeMessage).containsText(registeredUser.welcomeMessage());
     }
 
     @Test
@@ -69,13 +68,10 @@ class RegisterTests extends TestBase {
     @DisplayName("New user can register with 3-character login and 6-character password")
     void shouldRegisterWithMinimumLengthCredentials() {
         registeredUser = new User(DataFaker.usernameAtMinLength(), DataFaker.passwordAtMinLength());
-
-        registerPage.openPage()
-                .fillAndSubmitForm(
-                        registeredUser.username(),
-                        registeredUser.password(),
-                        registeredUser.password())
-                .shouldHaveWelcomeMessage(registeredUser.welcomeMessage());
+        app.register.open().signup(
+                registeredUser.username(),
+                registeredUser.password());
+        assertThat(app.home.welcomeMessage).containsText(registeredUser.welcomeMessage());
     }
 
     @Test
@@ -83,12 +79,12 @@ class RegisterTests extends TestBase {
     @Tag("negative")
     @DisplayName("Password mismatch shows validation error")
     void shouldShowErrorWhenPasswordsDoNotMatch() {
-        registerPage.openPage()
+        app.register.open()
                 .typeUsername("newuser")
                 .typePassword("password123")
                 .typeConfirmPassword("password124")
-                .submitExpectingError()
-                .shouldHaveErrorMessage(PASSWORD_MISMATCH_MESSAGE);
+                .submitExpectingError();
+        assertThat(app.register.errorMessage).containsText(PASSWORD_MISMATCH_MESSAGE);
     }
 
     @Test
@@ -96,12 +92,12 @@ class RegisterTests extends TestBase {
     @Tag("negative")
     @DisplayName("Short password shows validation error")
     void shouldShowErrorWhenPasswordIsTooShort() {
-        registerPage.openPage()
+        app.register.open()
                 .typeUsername("newuser")
                 .typePassword("abc")
                 .typeConfirmPassword("abc")
-                .submitExpectingError()
-                .shouldHaveErrorMessage(PASSWORD_MIN_LENGTH_MESSAGE);
+                .submitExpectingError();
+        assertThat(app.register.errorMessage).containsText(PASSWORD_MIN_LENGTH_MESSAGE);
     }
 
     @Test
@@ -109,12 +105,12 @@ class RegisterTests extends TestBase {
     @Tag("negative")
     @DisplayName("Duplicate username shows readable error")
     void shouldShowErrorWhenUsernameIsTaken() {
-        registerPage.openPage()
+        app.register.open()
                 .typeUsername("user1")
                 .typePassword(REGISTER_PASSWORD)
                 .typeConfirmPassword(REGISTER_PASSWORD)
-                .submitExpectingError()
-                .shouldHaveErrorMessage(DUPLICATE_USERNAME_MESSAGE);
+                .submitExpectingError();
+        assertThat(app.register.errorMessage).containsText(DUPLICATE_USERNAME_MESSAGE);
     }
 
     @Test
@@ -122,12 +118,12 @@ class RegisterTests extends TestBase {
     @Tag("negative")
     @DisplayName("Short username shows validation error")
     void shouldShowValidationErrorWhenUsernameIsTooShort() {
-        registerPage.openPage()
+        app.register.open()
                 .typeUsername("ab")
                 .typePassword("password123")
                 .typeConfirmPassword("password123")
-                .submitExpectingError()
-                .shouldHaveErrorMessage(LOGIN_MIN_LENGTH_MESSAGE);
+                .submitExpectingError();
+        assertThat(app.register.errorMessage).containsText(LOGIN_MIN_LENGTH_MESSAGE);
     }
 
     @Test
@@ -135,11 +131,11 @@ class RegisterTests extends TestBase {
     @Tag("negative")
     @DisplayName("Empty username shows validation error")
     void shouldShowValidationErrorWhenUsernameIsEmpty() {
-        registerPage.openPage()
+        app.register.open()
                 .typePassword("password123")
                 .typeConfirmPassword("password123")
-                .submitExpectingError()
-                .shouldHaveErrorMessage(LOGIN_REQUIRED_MESSAGE);
+                .submitExpectingError();
+        assertThat(app.register.errorMessage).containsText(LOGIN_REQUIRED_MESSAGE);
     }
 
     @Test
@@ -147,10 +143,10 @@ class RegisterTests extends TestBase {
     @Tag("negative")
     @DisplayName("Empty password shows validation error")
     void shouldShowValidationErrorWhenPasswordIsEmpty() {
-        registerPage.openPage()
+        app.register.open()
                 .typeUsername("newuser")
-                .submitExpectingError()
-                .shouldHaveErrorMessage(PASSWORD_REQUIRED_MESSAGE);
+                .submitExpectingError();
+        assertThat(app.register.errorMessage).containsText(PASSWORD_REQUIRED_MESSAGE);
     }
 
     @Test
@@ -158,8 +154,7 @@ class RegisterTests extends TestBase {
     @Tag("negative")
     @DisplayName("Empty username and password show validation error")
     void shouldShowValidationErrorWhenCredentialsAreEmpty() {
-        registerPage.openPage()
-                .submitExpectingError()
-                .shouldHaveErrorMessage(BOTH_REQUIRED_MESSAGE);
+        app.register.open().submitExpectingError();
+        assertThat(app.register.errorMessage).containsText(BOTH_REQUIRED_MESSAGE);
     }
 }

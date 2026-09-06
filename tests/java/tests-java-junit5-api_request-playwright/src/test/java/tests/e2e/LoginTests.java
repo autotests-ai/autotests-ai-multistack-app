@@ -14,6 +14,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+
 @Layer("e2e")
 @Epic("Authentication")
 @Feature("Login")
@@ -49,9 +51,8 @@ class LoginTests extends TestBase {
     @Tag("positive")
     @DisplayName("User is logged in with valid credentials")
     void shouldLoginWithValidCredentials() {
-        loginPage.openPage()
-                .fillAndSubmitForm("user1", "password1")
-                .shouldHaveWelcomeMessage("Welcome, user1!");
+        app.login.open().login("user1", "password1");
+        assertThat(app.home.welcomeMessage).containsText("Welcome, user1!");
     }
 
     @Test
@@ -61,9 +62,8 @@ class LoginTests extends TestBase {
     void shouldLoginWithMinimumLengthCredentials() {
         minLengthUser = new User(DataFaker.usernameAtMinLength(), DataFaker.passwordAtMinLength());
         AuthApiClient.register(minLengthUser.username(), minLengthUser.password());
-        loginPage.openPage()
-                .fillAndSubmitForm(minLengthUser.username(), minLengthUser.password())
-                .shouldHaveWelcomeMessage(minLengthUser.welcomeMessage());
+        app.login.open().login(minLengthUser.username(), minLengthUser.password());
+        assertThat(app.home.welcomeMessage).containsText(minLengthUser.welcomeMessage());
     }
 
     @Test
@@ -71,10 +71,10 @@ class LoginTests extends TestBase {
     @Tag("negative")
     @DisplayName("Empty username shows validation error")
     void shouldShowValidationErrorWhenUsernameIsEmpty() {
-        loginPage.openPage()
+        app.login.open()
                 .typePassword("password1")
-                .submitExpectingError()
-                .shouldHaveErrorMessage(LOGIN_REQUIRED_MESSAGE);
+                .submitExpectingError();
+        assertThat(app.login.errorMessage).containsText(LOGIN_REQUIRED_MESSAGE);
     }
 
     @Test
@@ -82,10 +82,10 @@ class LoginTests extends TestBase {
     @Tag("negative")
     @DisplayName("Empty password shows validation error")
     void shouldShowValidationErrorWhenPasswordIsEmpty() {
-        loginPage.openPage()
+        app.login.open()
                 .typeUsername("user1")
-                .submitExpectingError()
-                .shouldHaveErrorMessage(PASSWORD_REQUIRED_MESSAGE);
+                .submitExpectingError();
+        assertThat(app.login.errorMessage).containsText(PASSWORD_REQUIRED_MESSAGE);
     }
 
     @Test
@@ -93,11 +93,11 @@ class LoginTests extends TestBase {
     @Tag("negative")
     @DisplayName("Wrong password shows readable error")
     void shouldShowErrorWhenPasswordIsWrong() {
-        loginPage.openPage()
+        app.login.open()
                 .typeUsername("user1")
                 .typePassword("wrongpassword")
-                .submitExpectingError()
-                .shouldHaveErrorMessage(WRONG_CREDENTIALS_MESSAGE);
+                .submitExpectingError();
+        assertThat(app.login.errorMessage).containsText(WRONG_CREDENTIALS_MESSAGE);
     }
 
     @Test
@@ -105,11 +105,11 @@ class LoginTests extends TestBase {
     @Tag("negative")
     @DisplayName("Short username shows validation error")
     void shouldShowValidationErrorWhenUsernameIsTooShort() {
-        loginPage.openPage()
+        app.login.open()
                 .typeUsername("ab")
                 .typePassword("password1")
-                .submitExpectingError()
-                .shouldHaveErrorMessage(LOGIN_MIN_LENGTH_MESSAGE);
+                .submitExpectingError();
+        assertThat(app.login.errorMessage).containsText(LOGIN_MIN_LENGTH_MESSAGE);
     }
 
     @Test
@@ -117,11 +117,11 @@ class LoginTests extends TestBase {
     @Tag("negative")
     @DisplayName("Short password shows validation error")
     void shouldShowValidationErrorWhenPasswordIsTooShort() {
-        loginPage.openPage()
+        app.login.open()
                 .typeUsername("user1")
                 .typePassword("123")
-                .submitExpectingError()
-                .shouldHaveErrorMessage(PASSWORD_MIN_LENGTH_MESSAGE);
+                .submitExpectingError();
+        assertThat(app.login.errorMessage).containsText(PASSWORD_MIN_LENGTH_MESSAGE);
     }
 
     @Test
@@ -129,11 +129,11 @@ class LoginTests extends TestBase {
     @Tag("negative")
     @DisplayName("Unknown username shows readable error")
     void shouldShowErrorWhenUsernameIsUnknown() {
-        loginPage.openPage()
+        app.login.open()
                 .typeUsername("nouser")
                 .typePassword("password1")
-                .submitExpectingError()
-                .shouldHaveErrorMessage(WRONG_CREDENTIALS_MESSAGE);
+                .submitExpectingError();
+        assertThat(app.login.errorMessage).containsText(WRONG_CREDENTIALS_MESSAGE);
     }
 
     @Test
@@ -141,8 +141,7 @@ class LoginTests extends TestBase {
     @Tag("negative")
     @DisplayName("Empty username and password show validation error")
     void shouldShowValidationErrorWhenCredentialsAreEmpty() {
-        loginPage.openPage()
-                .submitExpectingError()
-                .shouldHaveErrorMessage(BOTH_REQUIRED_MESSAGE);
+        app.login.open().submitExpectingError();
+        assertThat(app.login.errorMessage).containsText(BOTH_REQUIRED_MESSAGE);
     }
 }

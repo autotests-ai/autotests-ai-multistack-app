@@ -3,6 +3,7 @@ package tests.e2e
 import tests.TestBase
 import annotations.Layer
 import api.AuthApiClient
+import com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat
 import helpers.DataFaker
 import helpers.User
 import io.qameta.allure.Epic
@@ -37,10 +38,9 @@ class LoginTests : TestBase() {
 
     @AfterEach
     fun cleanupMinLengthUser() {
-        if (minLengthUser != null) {
-            AuthApiClient.deleteAccountQuietly(minLengthUser!!.username(), minLengthUser!!.password())
-            minLengthUser = null
-        }
+        val user = minLengthUser ?: return
+        AuthApiClient.deleteAccountQuietly(user.username(), user.password())
+        minLengthUser = null
     }
 
     @Test
@@ -49,9 +49,8 @@ class LoginTests : TestBase() {
     @Tag("positive")
     @DisplayName("User is logged in with valid credentials")
     fun shouldLoginWithValidCredentials() {
-        loginPage.openPage()
-                .fillAndSubmitForm("user1", "password1")
-                .shouldHaveWelcomeMessage("Welcome, user1!")
+        app.login.open().login("user1", "password1")
+        assertThat(app.home.welcomeMessage).containsText("Welcome, user1!")
     }
 
     @Test
@@ -59,11 +58,11 @@ class LoginTests : TestBase() {
     @Tag("positive")
     @DisplayName("User is logged in with 3-character login and 6-character password")
     fun shouldLoginWithMinimumLengthCredentials() {
-        minLengthUser = User(DataFaker.usernameAtMinLength(), DataFaker.passwordAtMinLength())
-        AuthApiClient.register(minLengthUser!!.username(), minLengthUser!!.password())
-        loginPage.openPage()
-                .fillAndSubmitForm(minLengthUser!!.username(), minLengthUser!!.password())
-                .shouldHaveWelcomeMessage(minLengthUser!!.welcomeMessage())
+        val user = User(DataFaker.usernameAtMinLength(), DataFaker.passwordAtMinLength())
+        minLengthUser = user
+        AuthApiClient.register(user.username(), user.password())
+        app.login.open().login(user.username(), user.password())
+        assertThat(app.home.welcomeMessage).containsText(user.welcomeMessage())
     }
 
     @Test
@@ -71,10 +70,10 @@ class LoginTests : TestBase() {
     @Tag("negative")
     @DisplayName("Empty username shows validation error")
     fun shouldShowValidationErrorWhenUsernameIsEmpty() {
-        loginPage.openPage()
-                .typePassword("password1")
-                .submitExpectingError()
-                .shouldHaveErrorMessage(LOGIN_REQUIRED_MESSAGE)
+        app.login.open()
+            .typePassword("password1")
+            .submitExpectingError()
+        assertThat(app.login.errorMessage).containsText(LOGIN_REQUIRED_MESSAGE)
     }
 
     @Test
@@ -82,10 +81,10 @@ class LoginTests : TestBase() {
     @Tag("negative")
     @DisplayName("Empty password shows validation error")
     fun shouldShowValidationErrorWhenPasswordIsEmpty() {
-        loginPage.openPage()
-                .typeUsername("user1")
-                .submitExpectingError()
-                .shouldHaveErrorMessage(PASSWORD_REQUIRED_MESSAGE)
+        app.login.open()
+            .typeUsername("user1")
+            .submitExpectingError()
+        assertThat(app.login.errorMessage).containsText(PASSWORD_REQUIRED_MESSAGE)
     }
 
     @Test
@@ -93,11 +92,11 @@ class LoginTests : TestBase() {
     @Tag("negative")
     @DisplayName("Wrong password shows readable error")
     fun shouldShowErrorWhenPasswordIsWrong() {
-        loginPage.openPage()
-                .typeUsername("user1")
-                .typePassword("wrongpassword")
-                .submitExpectingError()
-                .shouldHaveErrorMessage(WRONG_CREDENTIALS_MESSAGE)
+        app.login.open()
+            .typeUsername("user1")
+            .typePassword("wrongpassword")
+            .submitExpectingError()
+        assertThat(app.login.errorMessage).containsText(WRONG_CREDENTIALS_MESSAGE)
     }
 
     @Test
@@ -105,11 +104,11 @@ class LoginTests : TestBase() {
     @Tag("negative")
     @DisplayName("Short username shows validation error")
     fun shouldShowValidationErrorWhenUsernameIsTooShort() {
-        loginPage.openPage()
-                .typeUsername("ab")
-                .typePassword("password1")
-                .submitExpectingError()
-                .shouldHaveErrorMessage(LOGIN_MIN_LENGTH_MESSAGE)
+        app.login.open()
+            .typeUsername("ab")
+            .typePassword("password1")
+            .submitExpectingError()
+        assertThat(app.login.errorMessage).containsText(LOGIN_MIN_LENGTH_MESSAGE)
     }
 
     @Test
@@ -117,11 +116,11 @@ class LoginTests : TestBase() {
     @Tag("negative")
     @DisplayName("Short password shows validation error")
     fun shouldShowValidationErrorWhenPasswordIsTooShort() {
-        loginPage.openPage()
-                .typeUsername("user1")
-                .typePassword("123")
-                .submitExpectingError()
-                .shouldHaveErrorMessage(PASSWORD_MIN_LENGTH_MESSAGE)
+        app.login.open()
+            .typeUsername("user1")
+            .typePassword("123")
+            .submitExpectingError()
+        assertThat(app.login.errorMessage).containsText(PASSWORD_MIN_LENGTH_MESSAGE)
     }
 
     @Test
@@ -129,11 +128,11 @@ class LoginTests : TestBase() {
     @Tag("negative")
     @DisplayName("Unknown username shows readable error")
     fun shouldShowErrorWhenUsernameIsUnknown() {
-        loginPage.openPage()
-                .typeUsername("nouser")
-                .typePassword("password1")
-                .submitExpectingError()
-                .shouldHaveErrorMessage(WRONG_CREDENTIALS_MESSAGE)
+        app.login.open()
+            .typeUsername("nouser")
+            .typePassword("password1")
+            .submitExpectingError()
+        assertThat(app.login.errorMessage).containsText(WRONG_CREDENTIALS_MESSAGE)
     }
 
     @Test
@@ -141,8 +140,7 @@ class LoginTests : TestBase() {
     @Tag("negative")
     @DisplayName("Empty username and password show validation error")
     fun shouldShowValidationErrorWhenCredentialsAreEmpty() {
-        loginPage.openPage()
-                .submitExpectingError()
-                .shouldHaveErrorMessage(BOTH_REQUIRED_MESSAGE)
+        app.login.open().submitExpectingError()
+        assertThat(app.login.errorMessage).containsText(BOTH_REQUIRED_MESSAGE)
     }
 }
