@@ -10,9 +10,8 @@ import annotations.Framework;
 import annotations.Scope;
 import config.ConfigReader;
 import config.TestConfig;
+import drivers.BrowserDriverProvider;
 import helpers.BrowserSessionHelper;
-import helpers.HarCapture;
-import helpers.LocalChromePin;
 import pages.HomePage;
 import pages.LoginPage;
 import pages.RegisterPage;
@@ -21,11 +20,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
-import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.SessionNotCreatedException;
-import org.openqa.selenium.chrome.ChromeOptions;
-
-import java.util.HashMap;
 
 import static com.codeborne.selenide.Selenide.closeWebDriver;
 import static com.codeborne.selenide.Selenide.open;
@@ -59,45 +54,10 @@ public class TestBase extends AllureMeta {
         }
 
         Configuration.baseUrl = config.baseUrl();
-        Configuration.browser = config.browser();
+        Configuration.browser = BrowserDriverProvider.class.getName();
         Configuration.browserSize = config.browserSize();
         Configuration.headless = config.headless();
         Configuration.timeout = 5_000;
-
-        // enableHar = collect CDP network events in the test process (not a hub capability).
-        // attachHarLogs = put that HAR into Allure; implies capture so the attachment is not empty.
-        boolean captureHar = config.enableHar() || config.attachHarLogs();
-
-        if (!config.remoteUrl().isBlank()) {
-            // Remote hub (Selenoid): any browser the hub has; image tag = browserVersion.
-            Configuration.browserVersion = config.browserVersion();
-            Configuration.remote = config.remoteUrl();
-            var selenoidOpts = new HashMap<String, Object>();
-            selenoidOpts.put("enableVNC", config.enableVnc());
-            selenoidOpts.put("enableVideo", config.enableVideo());
-            var capabilities = new MutableCapabilities();
-            capabilities.setCapability("selenoid:options", selenoidOpts);
-            if (captureHar && HarCapture.supportsBrowser(config.browser())) {
-                HarCapture.enablePerformanceLogging(capabilities);
-            }
-            Configuration.browserCapabilities = capabilities;
-        } else if ("chrome".equals(config.browser())) {
-            // Local Chrome only — Chrome for Testing pin, not system Chrome.
-            LocalChromePin.apply(config.browserVersion());
-            ChromeOptions chrome = new ChromeOptions();
-            if (config.headless()) {
-                chrome.addArguments("--disable-gpu", "--no-sandbox", "--disable-dev-shm-usage");
-            }
-            if (captureHar && HarCapture.supportsBrowser(config.browser())) {
-                HarCapture.enablePerformanceLogging(chrome);
-            }
-            if (config.headless() || captureHar) {
-                Configuration.browserCapabilities = chrome;
-            }
-        } else {
-            // Local non-Chrome: Selenide / Selenium Manager; LocalChromePin does not apply.
-            Configuration.browserVersion = config.browserVersion();
-        }
 
         if (AllureSelenideListeners.isGloballyEnabled(config)) {
             AllureSelenideListeners.setEnabled(true);

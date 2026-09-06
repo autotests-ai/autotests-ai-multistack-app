@@ -2,7 +2,6 @@ package helpers;
 
 import com.codeborne.selenide.SelenideElement;
 import com.codeborne.selenide.WebDriverRunner;
-import config.AppPlatform;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.HidesKeyboard;
 
@@ -20,7 +19,7 @@ public final class NativeInput {
     }
 
     public static void typeInto(SelenideElement field, String value) {
-        if (AppPlatform.current() == AppPlatform.IOS) {
+        if (ios()) {
             // Keyboard covers the lower Register plaques (password + confirm).
             // A click then sendKeys hits the keyboard, not the field — password
             // stays short and the suite sees "must be at least 6 characters".
@@ -42,7 +41,7 @@ public final class NativeInput {
      * iOS never uses that call — tap a non-nav control (the form title) instead.
      */
     public static void dismissIme(SelenideElement blurTarget) {
-        if (AppPlatform.current() == AppPlatform.IOS) {
+        if (ios()) {
             blurTarget.shouldBe(visible).click();
             return;
         }
@@ -65,7 +64,7 @@ public final class NativeInput {
     }
 
     public static void hideKeyboard() {
-        if (AppPlatform.current() != AppPlatform.ANDROID) {
+        if (ios()) {
             return;
         }
         var driver = WebDriverRunner.getWebDriver();
@@ -76,5 +75,9 @@ public final class NativeInput {
                 // already hidden
             }
         }
+    }
+
+    private static boolean ios() {
+        return "ios".equalsIgnoreCase(System.getProperty("platform", "android"));
     }
 }

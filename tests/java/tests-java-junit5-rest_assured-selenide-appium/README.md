@@ -1,88 +1,49 @@
 # tests-java-junit5-rest_assured-selenide-appium
 
-Native **e2e** of the default Java school (JUnit 5 · Selenide · Rest Assured lineage)
-against the Multistack apps in `mobile/`. One suite, both platforms: Appium
-`accessibility id` is the same string as web `data-testid`.
+Native e2e (JUnit 5 · Selenide · Rest Assured · Appium) against the apps in
+`mobile/`. Locators are `AppiumBy.accessibilityId` — the same string as web
+`data-testid`.
 
-Web UI and the `/api` catalog stay in
+Web UI and `/api` stay in
 [`tests-java-junit5-rest_assured-selenide`](../tests-java-junit5-rest_assured-selenide/).
-Burger e2e stays in `design-system-home/tests` `HeaderBurgerMenuTests`.
-Default CI stays the web Selenide cell. This cell has no mock and no
-screenshot stand.
-
 Contract: [`../../../_contract/native-shell.md`](../../../_contract/native-shell.md).
 
-Two axes — do not mix them:
-
-| Flag | Meaning | Default |
-|------|---------|---------|
-| `-Denv=` | which API (`apiBase`, like web `apiBaseUrl`) | `prod` (GitHub APK live pair) |
-| `-DdeviceHost=` | where the session runs | host task name; `emulator` on plain `test` |
-| `-Dplatform=` | which app cell | `android` on plain `test`; `ios` is explicit |
+`TestBase` picks the provider by `-Dplatform=` (`AndroidDriverProvider` /
+`IosDriverProvider`). Host is `-DdeviceHost=` inside that class.
 
 ```bash
-# Android emulator, prod live pair (APK default / GitHub pair)
 cd mobile/kotlin/mobile-kotlin-compose && ./gradlew :app:assembleDebug
 cd tests/java/tests-java-junit5-rest_assured-selenide-appium
 ./gradlew emulator
 
-# USB phone (adb serial is not emulator-*). Same prod APK as emulator.
-./gradlew real -DincludeTags=smoke
-
-# compose CI: bake APK for 10.0.2.2:8800, then AVD (deviceHost stays emulator)
+./gradlew real -Dudid=<adb-serial> -DincludeTags=smoke
 ./gradlew assembleApp emulator -Denv=ci
+./gradlew selenoid -Denv=prod
+./gradlew browserstack
 
-# iOS simulator (full Xcode, license accepted). No host task — flags only.
 cd mobile/swift/mobile-swift-swiftui && scripts/build-sim.sh
-xcrun simctl boot "iPhone 16"        # a booted sim is a precondition, like an AVD
+xcrun simctl boot "iPhone 16"
 cd ../../../tests/java/tests-java-junit5-rest_assured-selenide-appium
 ./gradlew test -Dplatform=ios -DdeviceHost=simulator -DincludeTags=smoke
-# -Denv=ci injects MULTISTACK_API_BASE at session start (no rebuild)
 ```
 
-| Host | Run | Needs |
-|------|-----|--------|
-| emulator | `./gradlew emulator` | Appium 2 · AVD · `multistack-app.apk` |
-| real | `./gradlew real` | USB debugging · APK |
-| selenoid | `./gradlew selenoid` | GitHub Release APK by default; override with `ANDROID_APP_URL` |
-| browserstack | `./gradlew browserstack` | `BROWSERSTACK_USERNAME` / `ACCESS_KEY` / `BROWSERSTACK_APP_ID` |
-| simulator | `./gradlew test -Dplatform=ios -DdeviceHost=simulator` | Xcode license · booted sim · `multistack-app.app` |
-| ios real | `./gradlew test -Dplatform=ios -DdeviceHost=real` | signing · `IOS_UDID` |
-| ios browserstack | `./gradlew test -Dplatform=ios -DdeviceHost=browserstack` | `BROWSERSTACK_IOS_APP_ID` |
+| Flag | Meaning | Default |
+|------|---------|---------|
+| `-Denv=` | API (`apiBase` in `config/${env}.properties`) | `prod` |
+| `-Dplatform=` | android or ios | `android` on Gradle host tasks |
+| `-DdeviceHost=` | emulator · real · selenoid · browserstack · simulator | `emulator` on `test` |
 
-Host tasks are Android shorthands only; iOS travels on the two flags.
+`-Denv=ci` is laptop compose (`localhost:8800`). Selenoid and BrowserStack
+cannot reach it — use `prod` or `stage`. Android bakes the URL at
+`./gradlew assembleApp` (`-Penv=`). iOS gets `MULTISTACK_API_BASE` from
+`processArguments` (localhost → 127.0.0.1).
 
-The udid is resolved before the session — `adb devices` for Android,
-`xcrun simctl list devices --json` for iOS — so neither driver picks a device on
-its own. A booted simulator is required, and one whose name matches
-`IOS_DEVICE_NAME`: the suite fails with the booted list rather than falling back
-to a neighbour, because `iPhone 16` exists on several runtimes at once. Left to
-itself, XCUITest creates a throwaway simulator on the newest runtime Xcode
-carries, and on iOS 26 SwiftUI no longer backs `TextField` / `SecureField` with a
-UIKit `UITextField` — typed text reaches no editable responder and every login
-lands on the password validation error. `_contract/native-shell.md` has the detail.
+BrowserStack: `browserstack.properties` (Owner). Env
+`BROWSERSTACK_USERNAME` / `ACCESS_KEY` / `BROWSERSTACK_APP_ID` (iOS:
+`BROWSERSTACK_IOS_APP_ID`), or `-Dbrowserstack.user=` etc.
 
-Overrides: `-Denv=` · `-DdeviceHost=` · `-Dplatform=` · `APPIUM_URL` · `ANDROID_APP` · `IOS_APP` · `ANDROID_UDID` · `IOS_UDID` · `IOS_DEVICE_NAME` · `ANDROID_APP_URL` · `DEVELOPER_DIR`.
+iOS simulator: pin `deviceName` + `platformVersion` (defaults iPhone 16 / 18.4)
+so XCUITest does not spawn a throwaway sim on the newest Xcode runtime.
+Override with `-DdeviceName=` / `-DplatformVersion=` / `-Dudid=`.
 
-Selenoid is **android only** (`qaguru/android`). No iOS image, no `./gradlew selenoid` with `-Dplatform=ios`. `-Denv=ci` on selenoid/BrowserStack is rejected — those hosts cannot reach laptop compose.
-
-Selenoid default APK: [`multistack-app.apk`](https://github.com/autotests-ai/autotests-ai-multistack-app/releases/download/apk/multistack-app.apk)
-(`gh release upload apk multistack-app.apk --clobber` when the UI changes).
-That artifact is the prod live pair, not CI, not the `/stack/` board.
-
-iOS simulator bundle for GitHub (`.app` is a directory, so the asset is a zip;
-tag `ios`, never `android-debug`):
-
-```bash
-gh release upload ios multistack-app.app.zip --clobber
-```
-
-| `-Denv=` | AuthSetup (`apiBase`) | Android bake (`-Penv=`) | iOS `MULTISTACK_API_BASE` |
-|----------|------------------------|--------------------------|---------------------------|
-| `prod` | `https://autotests.ai/stack/backend-java-spring/api` | same | same |
-| `stage` | `https://stage.autotests.ai/stack/backend-java-spring/api` | same | same |
-| `ci` | `http://localhost:8800/api` | `http://10.0.2.2:8800/api` | `http://127.0.0.1:8800/api` |
-
-Seed `user1` / `password1` → `Welcome, user1!`.
-
-No BrowserStack SDK (`browserstack.yml` / javaagent). Caps and hub URL are explicit W3C.
+Selenoid is Android only (`qaguru/android`).

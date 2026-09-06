@@ -98,21 +98,12 @@ flags on `test`: `-Dplatform=ios` with `-DdeviceHost=simulator|real|browserstack
 
 ### Pinning the simulator
 
-The device is resolved before the session — Android from `adb devices`, iOS from
-`xcrun simctl list devices --json`. A **booted** simulator is a precondition,
-exactly as `emulator` needs a running AVD, and `Simctl` fails with the booted
-list rather than substituting a neighbour: `iPhone 16` exists on several
-runtimes, so the name identifies a device only together with its `Booted` state.
+Set `appium:deviceName` and `appium:platformVersion` in `IosDriverProvider`
+(defaults: iPhone 16 / 18.4). Without them XCUITest creates a throwaway
+simulator on the newest runtime Xcode carries — today iOS 26, which has no
+`iPhone 16` and whose SwiftUI `TextField` is not a `UITextField`, so typed
+text never lands.
 
-Without `appium:udid` XCUITest creates a throwaway simulator on the newest
-runtime Xcode carries — today iOS 26.5, which ships the iPhone 17 family and no
-`iPhone 16` at all. iOS 26 is also where SwiftUI stopped backing `TextField` /
-`SecureField` with a UIKit `UITextField`, leaving automation no editable
-responder: the typed password never lands. The artifact is not the variable —
-built against the 26.5 SDK with `MinimumOSVersion 17.0`, it installs and renders
-on 26.5 fine.
+Override with `-DdeviceName=` / `-DplatformVersion=` / `-Dudid=`. A booted
+simulator is a precondition, the same as a running AVD for `emulator`.
 
-`IOS_DEVICE_NAME` (default `iPhone 16`) picks among booted simulators, `IOS_UDID`
-pins one outright. Full Xcode must be reachable: CommandLineTools carries no
-`simctl`, so stand and suite both fall back to `/Applications/Xcode.app` unless
-`DEVELOPER_DIR` says otherwise.

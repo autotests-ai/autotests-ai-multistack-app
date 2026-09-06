@@ -23,6 +23,8 @@ buildscript {
         sonarPluginVersion  = '6.2.0.5505'
         selenideVersion     = '7.17.0'
         appiumVersion       = '10.0.0'
+        restAssuredVersion  = '5.5.7'
+        jacksonVersion      = '2.18.2'
         ownerVersion        = '1.0.12'
         testParallelForks   = 1
         defaultEnv          = 'prod'
@@ -83,6 +85,8 @@ dependencies {
             "com.codeborne:selenide:${selenideVersion}",
             "io.appium:java-client:${appiumVersion}",
             "org.aeonbits.owner:owner:${ownerVersion}",
+            "io.rest-assured:rest-assured:${restAssuredVersion}",
+            "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}",
             "org.junit.jupiter:junit-jupiter:${junitVersion}")
     testRuntimeOnly (
             'org.junit.platform:junit-platform-launcher',

@@ -4,8 +4,8 @@ import annotations.Framework;
 import annotations.Scope;
 import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.logevents.SelenideLogger;
-import config.NativeEnv;
-import drivers.MobileDriver;
+import drivers.AndroidDriverProvider;
+import drivers.IosDriverProvider;
 import io.qameta.allure.selenide.AllureSelenide;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -23,8 +23,24 @@ public class TestBase {
 
     @BeforeAll
     static void beforeAll() {
-        NativeEnv.requireCompatibleHost();
-        Configuration.browser = MobileDriver.class.getName();
+        if (blank(System.getProperty("env"))) {
+            System.setProperty("env", "prod");
+        }
+        if (blank(System.getProperty("deviceHost"))) {
+            System.setProperty("deviceHost", "emulator");
+        }
+        if (blank(System.getProperty("platform"))) {
+            System.setProperty("platform", "android");
+        }
+
+        String platform = System.getProperty("platform");
+        if ("ios".equalsIgnoreCase(platform)) {
+            Configuration.browser = IosDriverProvider.class.getName();
+        } else if ("android".equalsIgnoreCase(platform)) {
+            Configuration.browser = AndroidDriverProvider.class.getName();
+        } else {
+            throw new IllegalArgumentException("platform: android or ios. Got: " + platform);
+        }
         Configuration.browserSize = null;
         Configuration.timeout = 30_000;
         Configuration.pageLoadTimeout = 1;
@@ -43,5 +59,9 @@ public class TestBase {
     @AfterEach
     void afterEach() {
         closeWebDriver();
+    }
+
+    private static boolean blank(String value) {
+        return value == null || value.isBlank();
     }
 }

@@ -1,96 +1,72 @@
 package helpers;
 
-import config.ConfigReader;
+import config.TestConfig;
 import io.qameta.allure.Step;
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
+import org.aeonbits.owner.ConfigFactory;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Map;
 
-/**
- * Fixture calls against the same {@code /api} the app talks to
- * ({@link ConfigReader#apiBase()} from {@code -Denv}).
- * Not the 31-test API catalog — that stays in the web Selenide cell.
- */
+import static io.restassured.RestAssured.given;
+
 public final class AuthSetup {
-
-    private static final HttpClient HTTP = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(15))
-            .build();
-    private static final Pattern TOKEN = Pattern.compile("\"token\"\\s*:\\s*\"([^\"]+)\"");
 
     private AuthSetup() {
     }
 
     @Step("API: register user {username}")
     public static void register(String username, String password) {
-        HttpResponse<String> response = send("POST", "/auth/register", json(username, password), null);
-        if (response.statusCode() != 201) {
-            throw new IllegalStateException(
-                    "register failed: " + response.statusCode() + " " + response.body());
-        }
+        useApi();
+        given()
+                .contentType(ContentType.JSON)
+                .body(Map.of("username", username, "password", password))
+                .when()
+                .post("/auth/register")
+                .then()
+                .statusCode(201);
     }
 
     @Step("API: login as {username}")
     public static void login(String username, String password) {
-        HttpResponse<String> response = send("POST", "/auth/login", json(username, password), null);
-        if (response.statusCode() != 200) {
-            throw new IllegalStateException(
-                    "login failed: " + response.statusCode() + " " + response.body());
-        }
+        useApi();
+        given()
+                .contentType(ContentType.JSON)
+                .body(Map.of("username", username, "password", password))
+                .when()
+                .post("/auth/login")
+                .then()
+                .statusCode(200);
     }
 
-    /** Best-effort cleanup: must not mask the original test failure. */
     public static void deleteAccountQuietly(String username, String password) {
         try {
-            HttpResponse<String> login = send("POST", "/auth/login", json(username, password), null);
-            if (login.statusCode() != 200) {
-                return;
-            }
-            Matcher matcher = TOKEN.matcher(login.body());
-            if (!matcher.find()) {
-                return;
-            }
-            send("DELETE", "/auth/me", null, matcher.group(1));
-        } catch (RuntimeException ignored) {
+            useApi();
+            String token = given()
+                    .contentType(ContentType.JSON)
+                    .body(Map.of("username", username, "password", password))
+                    .when()
+                    .post("/auth/login")
+                    .then()
+                    .statusCode(200)
+                    .extract()
+                    .path("token");
+            given()
+                    .header("Authorization", "Bearer " + token)
+                    .when()
+                    .delete("/auth/me");
+        } catch (AssertionError | RuntimeException ignored) {
             // The test that created the user owns assertions; cleanup must not re-fail it.
         }
     }
 
-    private static String apiBase() {
-        return ConfigReader.apiBase();
-    }
-
-    private static HttpResponse<String> send(String method, String path, String body, String token) {
-        try {
-            HttpRequest.Builder builder = HttpRequest.newBuilder()
-                    .uri(URI.create(apiBase() + path))
-                    .timeout(Duration.ofSeconds(15))
-                    .header("Accept", "application/json");
-            if (token != null) {
-                builder.header("Authorization", "Bearer " + token);
-            }
-            if (body != null) {
-                builder.header("Content-Type", "application/json");
-                builder.method(method, HttpRequest.BodyPublishers.ofString(body));
-            } else {
-                builder.method(method, HttpRequest.BodyPublishers.noBody());
-            }
-            return HTTP.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-        } catch (Exception e) {
-            throw new IllegalStateException("HTTP " + method + " " + path + " failed", e);
+    private static void useApi() {
+        TestConfig config = ConfigFactory.create(TestConfig.class, System.getProperties());
+        String apiBase = config.apiBase();
+        if (apiBase == null || apiBase.isBlank()) {
+            throw new IllegalStateException("Set apiBase in config/${env}.properties");
         }
-    }
-
-    private static String json(String username, String password) {
-        return "{\"username\":" + quote(username) + ",\"password\":" + quote(password) + "}";
-    }
-
-    private static String quote(String value) {
-        return "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
+        RestAssured.baseURI = apiBase.endsWith("/") ? apiBase.substring(0, apiBase.length() - 1) : apiBase;
+        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     }
 }

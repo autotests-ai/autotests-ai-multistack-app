@@ -10,25 +10,42 @@ import org.aeonbits.owner.Config;
 })
 public interface TestConfig extends Config {
 
-    /** Host-reachable API, already ending at {@code /api}. AuthSetup uses this. */
     @Key("apiBase")
-    @DefaultValue("")
     String apiBase();
 
     @Key("backendId")
     @DefaultValue("backend-java-spring")
     String backendId();
 
-    /**
-     * Empty → {@link #apiBase()}. Android emulator loopback for {@code ci}
-     * ({@code 10.0.2.2}). Baked at assemble, not injected at session start.
-     */
-    @Key("androidApiBase")
-    @DefaultValue("")
-    String androidApiBase();
+    @Key("appiumUrl")
+    @DefaultValue("http://127.0.0.1:4723/wd/hub")
+    String appiumUrl();
 
-    /** Empty → {@link #apiBase()}. Appium {@code processArguments.env} for iOS. */
-    @Key("iosApiBase")
+    @Key("selenoidUrl")
+    @DefaultValue("https://user1:1234@selenoid.qa.guru/wd/hub")
+    String selenoidUrl();
+
+    @Key("android.app")
     @DefaultValue("")
-    String iosApiBase();
+    String androidApp();
+
+    @Key("ios.app")
+    @DefaultValue("")
+    String iosApp();
+
+    @Key("android.app.url")
+    @DefaultValue("https://github.com/autotests-ai/autotests-ai-multistack-app/releases/download/apk/multistack-app.apk")
+    String androidAppUrl();
+
+    @Key("udid")
+    @DefaultValue("")
+    String udid();
+
+    @Key("deviceName")
+    @DefaultValue("")
+    String deviceName();
+
+    @Key("platformVersion")
+    @DefaultValue("")
+    String platformVersion();
 }
