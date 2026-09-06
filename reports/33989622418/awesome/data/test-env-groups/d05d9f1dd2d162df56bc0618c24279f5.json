@@ -1,1 +1,0 @@
-{"id":"d05d9f1dd2d162df56bc0618c24279f5","fullName":"dev.multistack.app.config.CorsConfigTest.apiCorsChecksOrigin","name":"admits a configured dev server origin and rejects an unknown one","status":"passed","testResultsByEnv":{"default":"6bd77ba292f7ae0b79f6fced64c1c28b"}}
