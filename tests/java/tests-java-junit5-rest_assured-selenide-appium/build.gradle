@@ -6,6 +6,7 @@
  *   ./gradlew real -DincludeTags=smoke
  *   ./gradlew selenoid -Denv=prod
  *   ./gradlew test -Dplatform=ios -DdeviceHost=simulator -DincludeTags=smoke
+ *   ./gradlew test -Dplatform=ios -DdeviceHost=real -Dudid= -Dios.app=
  *
  * Same school as tests-java-junit5-rest_assured-selenide; web UI and /api
  * catalog stay in that folder. This cell drives mobile-kotlin-compose and

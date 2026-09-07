@@ -54,11 +54,12 @@ public class IosDriverProvider implements WebDriverProvider {
 
     private static MutableCapabilities localCaps(TestConfig config, boolean realDevice) {
         MutableCapabilities caps = iosCaps(config);
-        caps.setCapability("appium:app", localApp(config));
+        caps.setCapability("appium:app", localApp(config, realDevice));
         if (realDevice) {
             String udid = config.udid();
             if (udid == null || udid.isBlank()) {
-                throw new IllegalStateException("Set -Dudid= to the iPhone (Xcode / window → devices)");
+                throw new IllegalStateException(
+                        "Set -Dudid= to the iPhone (Xcode → Window → Devices)");
             }
             caps.setCapability("appium:udid", udid);
             return caps;
@@ -109,8 +110,12 @@ public class IosDriverProvider implements WebDriverProvider {
         return caps;
     }
 
-    private static String localApp(TestConfig config) {
+    private static String localApp(TestConfig config, boolean realDevice) {
         String configured = config.iosApp();
+        if (realDevice && (configured == null || configured.isBlank())) {
+            throw new IllegalStateException(
+                    "Set -Dios.app= to the device .app (iphoneos), not the simulator build");
+        }
         Path path;
         if (configured == null || configured.isBlank()) {
             path = Path.of(System.getProperty("user.dir")).resolve(DEFAULT_APP);
@@ -121,10 +126,16 @@ public class IosDriverProvider implements WebDriverProvider {
             }
         }
         path = path.toAbsolutePath().normalize();
+        if (realDevice && path.toString().contains("iphonesimulator")) {
+            throw new IllegalStateException(
+                    "iOS real needs an iphoneos .app, not " + path);
+        }
         if (!Files.exists(path)) {
             throw new IllegalStateException(
                     "App not found at " + path
-                            + ". Build: cd mobile/swift/mobile-swift-swiftui && scripts/build-sim.sh");
+                            + (realDevice
+                            ? ". Pass -Dios.app= to a Debug-iphoneos .app"
+                            : ". Build: cd mobile/swift/mobile-swift-swiftui && scripts/build-sim.sh"));
         }
         return path.toString();
     }

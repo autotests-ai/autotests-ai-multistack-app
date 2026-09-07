@@ -90,11 +90,14 @@ cd tests/java/tests-java-junit5-rest_assured-selenide-appium
 ./gradlew real -DincludeTags=smoke        # USB phone in adb, not an emulator
 ./gradlew selenoid -Denv=prod             # GitHub APK; do not pass -Denv=ci
 ./gradlew test -Dplatform=ios -DdeviceHost=simulator -DincludeTags=smoke
+./gradlew test -Dplatform=ios -DdeviceHost=real -Dudid=<udid> \
+  -Dios.app=<Debug-iphoneos/multistack-app.app> -DincludeTags=smoke
 ```
 
 Host tasks are Android shorthands. **iOS has no task** — platform and host are
 flags on `test`: `-Dplatform=ios` with `-DdeviceHost=simulator|real|browserstack`.
 `processArguments` still come from `-Denv` (default `prod`).
+iOS real needs USB and a device `.app` (`-Dios.app=`), not the simulator build.
 
 ### Pinning the simulator
 

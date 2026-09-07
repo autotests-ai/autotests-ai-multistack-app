@@ -25,6 +25,8 @@ cd mobile/swift/mobile-swift-swiftui && scripts/build-sim.sh
 xcrun simctl boot "iPhone 16"
 cd ../../../tests/java/tests-java-junit5-rest_assured-selenide-appium
 ./gradlew test -Dplatform=ios -DdeviceHost=simulator -DincludeTags=smoke
+./gradlew test -Dplatform=ios -DdeviceHost=real -Dudid=<udid> \
+  -Dios.app=<Debug-iphoneos/multistack-app.app> -DincludeTags=smoke
 ```
 
 | Flag | Meaning | Default |
@@ -45,3 +47,7 @@ Selenoid is Android only (`qaguru/android`).
 
 iOS simulator: pin `-DdeviceName=` / `-DplatformVersion=` / `-Dudid=`
 (defaults iPhone 16 / 18.4) so XCUITest does not spawn a throwaway runtime.
+
+iOS real: USB (this Appium talks usbmux), unlocked, Developer Mode, Trust the
+Personal Team. Pass `-Dudid=` and `-Dios.app=` to a **device** `.app`
+(iphoneos), not the simulator default.
