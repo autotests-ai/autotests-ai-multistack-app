@@ -17,7 +17,7 @@ class UserSeeder(
             userRepository.save(
                 UserEntity(
                     username = SEED_USERNAME,
-                    passwordHash = passwordEncoder.encode(SEED_PASSWORD),
+                    passwordHash = requireNotNull(passwordEncoder.encode(SEED_PASSWORD)),
                 ),
             )
         }

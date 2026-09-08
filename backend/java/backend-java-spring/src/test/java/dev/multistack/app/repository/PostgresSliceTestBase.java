@@ -1,10 +1,10 @@
 package dev.multistack.app.repository;
 
 import dev.multistack.app.allure.SliceTestBase;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
  * Persistence slice against the same PostgreSQL the app ships with (docker-compose uses
@@ -21,8 +21,8 @@ import org.testcontainers.containers.PostgreSQLContainer;
 public abstract class PostgresSliceTestBase extends SliceTestBase {
 
     @ServiceConnection
-    protected static final PostgreSQLContainer<?> POSTGRES =
-            new PostgreSQLContainer<>("postgres:16-alpine");
+    protected static final PostgreSQLContainer POSTGRES =
+            new PostgreSQLContainer("postgres:16-alpine");
 
     static {
         POSTGRES.start();

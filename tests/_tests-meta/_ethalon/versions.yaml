@@ -14,9 +14,9 @@
 | Key | Value | `ext` name | Notes |
 |-----|-------|------------|-------|
 | `java` | `21` | `javaVersion` | toolchain + CI `JAVA_VERSION` |
-| `gradle` | `9.6.0` | — (wrapper only) | `gradle-*-bin.zip` |
-| `junit` | `5.11.4` | `junitVersion` | tests pin; backend via Boot starter-test (must match) |
-| `slf4j` | `2.0.17` | `slf4jVersion` | tests `slf4j-simple`; backend → `ext['slf4j.version']` |
-| `spring-boot` | `3.4.1` | `springBootVersion` | backend plugin |
-| `spring-dependency-management` | `1.1.7` | `springDependencyManagementVersion` | backend plugin |
+| `gradle` | `9.6.0` | — (wrapper only) | `gradle-*-bin.zip`; Boot 4.1.1 accepts Gradle 8.14+ and 9.x — wrapper already in range, not bumped |
+| `junit` | `6.0.3` | `junitVersion` | tests pin; backend via Boot starter-*-test (must match BOM `junit-jupiter.version`) |
+| `slf4j` | `2.0.18` | `slf4jVersion` | tests `slf4j-simple`; backend → `ext['slf4j.version']` (Boot 4.1.1 BOM) |
+| `spring-boot` | `4.1.1` | `springBootVersion` | backend plugin; GA 2026-08-20. Not 4.2 (M1), not 4.0, not 3.5.x |
+| `spring-dependency-management` | `1.1.7` | `springDependencyManagementVersion` | Boot 4.1.1 `spring-boot-gradle-plugin` still depends on 1.1.7 (Maven Central POM) — 4.1 line, not a leftover 3.x pin |
 | `datafaker` | `2.4.4` | `datafakerVersion` | tests pin (`net.datafaker`) |

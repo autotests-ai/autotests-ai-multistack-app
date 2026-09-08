@@ -10,8 +10,8 @@
 buildscript {
     ext {
         javaVersion         = 21
-        junitVersion        = '5.11.4'
-        slf4jVersion        = '2.0.17'
+        junitVersion        = '6.0.3'
+        slf4jVersion        = '2.0.18'
         allurePluginVersion = '4.1.0'
         allureVersion       = '3.13.0'
         allureBomVersion    = '2.35.2'

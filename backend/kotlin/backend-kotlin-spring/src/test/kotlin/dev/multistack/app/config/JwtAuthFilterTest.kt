@@ -91,7 +91,7 @@ class JwtAuthFilterTest {
         filter.doFilterInternal(request, response, filterChain)
 
         verify(filterChain).doFilter(request, response)
-        val authentication = SecurityContextHolder.getContext().authentication
+        val authentication = requireNotNull(SecurityContextHolder.getContext().authentication)
         assertEquals("user1", authentication.principal)
         assertEquals("user1", authentication.name)
     }

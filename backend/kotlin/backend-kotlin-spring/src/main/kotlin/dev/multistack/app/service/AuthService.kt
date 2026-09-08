@@ -26,7 +26,7 @@ class AuthService(
 
         val user = UserEntity(
             username = request.username,
-            passwordHash = passwordEncoder.encode(request.password),
+            passwordHash = requireNotNull(passwordEncoder.encode(request.password)),
         )
         try {
             // Flush inside the try so a concurrent insert that won the race surfaces here as 409

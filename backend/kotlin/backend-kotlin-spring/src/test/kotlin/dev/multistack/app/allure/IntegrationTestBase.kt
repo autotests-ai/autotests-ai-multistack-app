@@ -4,15 +4,16 @@ import io.qameta.allure.Allure
 import io.qameta.allure.Owner
 import org.junit.jupiter.api.Tag
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.resttestclient.TestRestTemplate
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.postgresql.PostgreSQLContainer
 
 /**
  * Full Spring Boot context against real PostgreSQL — classical application integration.
@@ -27,18 +28,19 @@ import org.testcontainers.containers.PostgreSQLContainer
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = ["management.server.port=0"],
 )
+@AutoConfigureTestRestTemplate
 abstract class IntegrationTestBase {
 
     @Autowired
     protected lateinit var rest: TestRestTemplate
 
-    protected fun <T> getJson(url: String, type: Class<T>): ResponseEntity<T> =
+    protected fun <T : Any> getJson(url: String, type: Class<T>): ResponseEntity<T> =
         Allure.step("GET $url", Allure.ThrowableRunnable { rest.getForEntity(url, type) })
 
-    protected fun <T> postJson(url: String, body: Any, type: Class<T>): ResponseEntity<T> =
+    protected fun <T : Any> postJson(url: String, body: Any, type: Class<T>): ResponseEntity<T> =
         Allure.step("POST $url", Allure.ThrowableRunnable { rest.postForEntity(url, jsonEntity(body), type) })
 
-    protected fun <T> exchangeJson(
+    protected fun <T : Any> exchangeJson(
         url: String,
         method: HttpMethod,
         entity: HttpEntity<*>,
@@ -55,7 +57,7 @@ abstract class IntegrationTestBase {
         return HttpEntity(headers)
     }
 
-    protected fun <T> jsonEntity(body: T): HttpEntity<T> {
+    protected fun <T : Any> jsonEntity(body: T): HttpEntity<T> {
         val headers = HttpHeaders()
         headers.contentType = MediaType.APPLICATION_JSON
         return HttpEntity(body, headers)
@@ -64,7 +66,7 @@ abstract class IntegrationTestBase {
     companion object {
         @ServiceConnection
         @JvmField
-        val POSTGRES: PostgreSQLContainer<*> =
+        val POSTGRES: PostgreSQLContainer =
             PostgreSQLContainer("postgres:16-alpine").apply { start() }
     }
 }
