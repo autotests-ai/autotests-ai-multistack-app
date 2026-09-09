@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Fail if teaching ci.yml grows a GHA sibling matrix.
+"""Fail if teaching ci.yml grows a GHA sibling matrix or tool-named jobs.
 
 Teaching CD is one cell from env knobs (FRONTEND_LANG + FRONTEND_FRAMEWORK),
 same rule as backend. Sibling SPAs stay on host compose (/stack/), not
 jobs.*.strategy.matrix. Header/nav fixes belong in the SPA source.
+Load/performance injectors stay in module folders — not jmeter-* / gatling-*
+boxes on the teaching graph.
 
 Usage: python3 assert_teaching_ci.py [path-to-ci.yml]
 """
@@ -24,6 +26,14 @@ BUILD_FE_DOCKER = re.compile(
     r"build-frontend:[\s\S]*?uses:\s*\./\.github/actions/docker-build"
 )
 FRONTEND_SIBLING = re.compile(r"frontend-[a-z0-9-]+")
+TOOLISH_JOB = re.compile(
+    r"(?m)^[ \t]+("
+    r"build-backend-(?:kotlin|python|go|javascript|typescript|csharp|rust)|"
+    r"(?:jmeter|gatling|k6|locust|tank)-[A-Za-z0-9_-]+|"
+    r"deploy-backend-load-[A-Za-z0-9_-]+"
+    r"):"
+)
+TOOLISH_COMPOSITE = re.compile(r"(?:jmeter|gatling)-load-cell")
 
 
 def without_comments(text: str) -> str:
@@ -65,6 +75,16 @@ def problems(text: str) -> list[str]:
                 "DEPLOY_COMPOSE_SERVICES lists sibling frontends "
                 f"({', '.join(names)}); leave unset so deploy uses the active cell basename"
             )
+    tool_jobs = TOOLISH_JOB.findall(body)
+    if tool_jobs:
+        found.append(
+            "named language/tool jobs are forbidden in teaching CI "
+            f"({', '.join(tool_jobs)}); one cell from knobs, load injectors stay in modules"
+        )
+    if TOOLISH_COMPOSITE.search(body):
+        found.append(
+            "jmeter-load-cell / gatling-load-cell must not be wired from teaching ci.yml"
+        )
     return found
 
 
@@ -86,6 +106,16 @@ def _self_test() -> None:
       DEPLOY_COMPOSE_SERVICES: frontend-javascript-vanilla frontend-typescript-react
   catalog-build:
     runs-on: ubuntu-24.04
+  build-backend-kotlin:
+    runs-on: ubuntu-24.04
+  jmeter-smoke:
+    steps:
+      - uses: ./.github/actions/jmeter-load-cell
+  gatling-java-cell:
+    steps:
+      - uses: ./.github/actions/gatling-load-cell
+  deploy-backend-load-flask:
+    runs-on: ubuntu-24.04
 """
     good = """
   build-frontend:
@@ -95,12 +125,14 @@ def _self_test() -> None:
           module_dir: ${{ format('frontend/{0}/frontend-{0}-{1}', env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
   deploy-backend-load:
     env:
-      DEPLOY_COMPOSE_SERVICES: postgres backend-java-spring
+      DEPLOY_COMPOSE_SERVICES: ${{ format('postgres backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
   # Do not GHA-matrix sibling test modules (same rule as frontends).
 """
     bad_found = problems(bad)
-    if len(bad_found) < 5:
-        raise SystemExit(f"assert-teaching-ci self-test: expected ≥5 hits, got {bad_found}")
+    if len(bad_found) < 6:
+        raise SystemExit(f"assert-teaching-ci self-test: expected ≥6 hits, got {bad_found}")
+    if not any("named language/tool" in item for item in bad_found):
+        raise SystemExit(f"assert-teaching-ci self-test: missing tool-job check: {bad_found}")
     if problems(good):
         raise SystemExit(f"assert-teaching-ci self-test: false positive on good YAML: {problems(good)}")
 

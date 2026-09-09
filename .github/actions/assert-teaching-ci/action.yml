@@ -1,6 +1,7 @@
 name: assert-teaching-ci
 description: >-
-  Fail if teaching ci.yml grows jobs.*.strategy / sibling frontend matrix.
+  Fail if teaching ci.yml grows jobs.*.strategy, sibling frontend matrix, or
+  named language/tool jobs (jmeter-*, gatling-*, build-backend-kotlin).
   One cell from knobs; other SPAs stay on host compose.
 runs:
   using: composite
