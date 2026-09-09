@@ -126,6 +126,11 @@ def _self_test() -> None:
   deploy-backend-load:
     env:
       DEPLOY_COMPOSE_SERVICES: ${{ format('postgres backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
+  load-tests:
+    steps:
+      - uses: ./tests/.github/actions/load
+        with:
+          module_dir: ${{ format('tests/{0}/tests-{0}-{1}', env.LOAD_LANG, env.LOAD_TOOL) }}
   # Do not GHA-matrix sibling test modules (same rule as frontends).
 """
     bad_found = problems(bad)

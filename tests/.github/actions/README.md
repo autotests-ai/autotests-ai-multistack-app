@@ -2,7 +2,12 @@
 
 `ci.yml` calls `./tests/.github/actions/<verb>` with `module_dir` from stack knobs.
 
-GitHub does not interpolate `uses:`. This adapter dispatches on `TESTS_LANG`:
+GitHub does not interpolate `uses:`. Pyramid adapters dispatch on `TESTS_LANG`.
+Load job `load-tests` uses `./tests/.github/actions/load` and dispatches on `LOAD_TOOL`
+(`jmeter` → `performance`, `gatling` → `gatling`; else STOP). `module_dir` =
+`tests/{LOAD_LANG}/tests-{LOAD_LANG}-{LOAD_TOOL}`. Not a second GHA job per tool.
+
+| LANG | Action | `module_dir` |
 
 | LANG | Action | `module_dir` |
 |------|--------|----------------|

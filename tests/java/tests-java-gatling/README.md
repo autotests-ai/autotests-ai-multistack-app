@@ -15,4 +15,4 @@ Stand: `apiBaseUrl` / `API_BASE_URL` → [http://localhost:8800](http://localhos
 
 Isolated public SUT (Grafana VM, not shared prod): `-Dgatling.allowPublic=true`.
 
-Report: `build/reports/gatling/`. Sibling JMeter JMX is the **etalon living** cell: [`tests-java-jmeter`](../tests-java-jmeter/). Kotlin DSL sibling: [`tests-kotlin-gatling`](../../kotlin/tests-kotlin-gatling/). Teaching `ci.yml` does not name Gatling jobs — run this folder locally (or against the isolated load host). Student emit: `java-gatling` (templates still planned — do not copy this folder).
+Report: `build/reports/gatling/`. Sibling JMeter JMX is the **etalon living** cell: [`tests-java-jmeter`](../tests-java-jmeter/). Kotlin DSL sibling: [`tests-kotlin-gatling`](../../kotlin/tests-kotlin-gatling/). Teaching job is `load-tests` (`LOAD_TOOL: gatling`) — not a `gatling-*` box. Student emit: `java-gatling` (templates still planned — do not copy this folder).
