@@ -125,7 +125,7 @@ def _self_test() -> None:
           module_dir: ${{ format('frontend/{0}/frontend-{0}-{1}', env.FRONTEND_LANG, env.FRONTEND_FRAMEWORK) }}
   deploy-backend-load:
     env:
-      DEPLOY_COMPOSE_SERVICES: ${{ format('postgres backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
+      DEPLOY_COMPOSE_SERVICES: postgres backend-java-spring
   load-tests:
     steps:
       - uses: ./tests/.github/actions/load

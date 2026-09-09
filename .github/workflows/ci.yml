@@ -796,7 +796,6 @@ jobs:
       DEPLOY_APP_DIR: ${{ vars.LOAD_APP_DIR }}
       DEPLOY_COMPOSE_PROJECT: ${{ vars.LOAD_COMPOSE_PROJECT || 'autotests-ai-multistack-app-load' }}
       DEPLOY_COMPOSE_ENV_FILE: ${{ vars.LOAD_COMPOSE_ENV_FILE || '' }}
-      DEPLOY_COMPOSE_SERVICES: ${{ format('postgres backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
       DEPLOY_SINGLE_BACKEND: "true"
       DEPLOY_HEALTH_URL: ${{ vars.LOAD_HEALTH_URL || 'http://127.0.0.1:8800/api/health' }}
       DEPLOY_HOST: ${{ vars.LOAD_HOST }}
@@ -805,6 +804,8 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - *checkout
+      # jobs.*.env cannot read env.* (circular). Knobs are already in the runner env.
+      - run: echo "DEPLOY_COMPOSE_SERVICES=postgres backend-${BACKEND_LANG}-${BACKEND_FRAMEWORK}" >> "$GITHUB_ENV"
       - uses: ./backend/.github/actions/deploy
         with:
           module_dir: ${{ format('backend/{0}/backend-{0}-{1}', env.BACKEND_LANG, env.BACKEND_FRAMEWORK) }}
