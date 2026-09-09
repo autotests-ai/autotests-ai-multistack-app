@@ -1,1 +1,0 @@
-{"id":"0b63d73c9d6719f0c0fc9bd59509d7e3","fullName":"dev.multistack.app.service.ItemServiceTest.listItemsReturnsEmptyWhenNoRows","name":"listItems returns empty list when repository is empty","status":"passed","testResultsByEnv":{"default":"a50993f055dc2181bd8369162f6e14cb"}}
