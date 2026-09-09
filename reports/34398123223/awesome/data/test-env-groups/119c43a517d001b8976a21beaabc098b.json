@@ -1,1 +1,0 @@
-{"id":"119c43a517d001b8976a21beaabc098b","fullName":"frontend-typescript-react:src/test/lib/auth.test.ts#network failures login throws Request failed when the error body has no message","name":"login throws Request failed when the error body has no message","status":"passed","testResultsByEnv":{"default":"a8aea4efb9eb6f65fdff3790f3d1c606"}}
