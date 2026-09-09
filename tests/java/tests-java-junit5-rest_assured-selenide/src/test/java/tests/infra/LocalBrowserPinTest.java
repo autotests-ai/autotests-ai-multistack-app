@@ -1,18 +1,23 @@
 package tests.infra;
 
-import tests.AllureMeta;
 import annotations.Layer;
+import config.ConfigReader;
+import drivers.BrowserDriverProvider;
+import helpers.LocalChromePin;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
-import config.ConfigReader;
-import helpers.LocalChromePin;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.openqa.selenium.chrome.ChromeOptions;
+import tests.AllureMeta;
+
+import java.nio.file.Path;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -21,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Local browser pin (infra-frontend): the suite is not Chrome-only.
  * <p>
- * Living helper is {@link LocalChromePin} (Chrome for Testing). {@code TestBase}
+ * Living helper is {@link LocalChromePin} (Chrome for Testing). {@code BrowserDriverProvider}
  * applies it only when {@code remoteUrl} is empty and {@code browser=chrome}.
  * Selenoid uses the hub image tag; {@code -Dbrowser=firefox} skips the pin.
  * Do not grow this helper into a multi-browser installer until there is a
@@ -70,5 +75,15 @@ class LocalBrowserPinTest extends AllureMeta {
     void applyRejectsBlankBrowserVersion() {
         var error = assertThrows(IllegalStateException.class, () -> LocalChromePin.apply(" "));
         assertTrue(error.getMessage().contains("browserVersion is required"), error.getMessage());
+    }
+
+    @Test
+    @DisplayName("local ChromeOptions setBinary is the CFT path, not system Chrome")
+    void localChromeOptionsPinTheCftBinary() {
+        var cft = Path.of("/tmp/chrome-for-testing");
+        ChromeOptions options = BrowserDriverProvider.pinnedLocalChrome(cft, true, false);
+        @SuppressWarnings("unchecked")
+        var goog = (Map<String, Object>) options.getCapability("goog:chromeOptions");
+        assertEquals(cft.toAbsolutePath().toString(), goog.get("binary"));
     }
 }

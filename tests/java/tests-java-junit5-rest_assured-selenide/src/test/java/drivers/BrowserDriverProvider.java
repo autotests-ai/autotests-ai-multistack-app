@@ -16,6 +16,7 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,19 +53,8 @@ public class BrowserDriverProvider implements WebDriverProvider {
     private static WebDriver local(TestConfig config, boolean captureHar) {
         String browser = config.browser();
         if ("chrome".equals(browser)) {
-            LocalChromePin.apply(config.browserVersion());
-            ChromeOptions chrome = new ChromeOptions();
-            if (config.headless()) {
-                chrome.addArguments(
-                        "--headless=new",
-                        "--disable-gpu",
-                        "--no-sandbox",
-                        "--disable-dev-shm-usage");
-            }
-            if (captureHar && HarCapture.supportsBrowser(browser)) {
-                HarCapture.enablePerformanceLogging(chrome);
-            }
-            return new ChromeDriver(chrome);
+            var chromeBinary = LocalChromePin.apply(config.browserVersion());
+            return new ChromeDriver(pinnedLocalChrome(chromeBinary, config.headless(), captureHar));
         }
         if ("firefox".equals(browser)) {
             FirefoxOptions firefox = new FirefoxOptions();
@@ -76,5 +66,26 @@ public class BrowserDriverProvider implements WebDriverProvider {
         }
         throw new IllegalStateException(
                 "Local BrowserDriverProvider supports chrome or firefox. Got: " + browser);
+    }
+
+    /**
+     * ChromeDriver launched from a {@code WebDriverProvider} never reads
+     * {@code Configuration.browserBinary}. Pin the CFT binary on the options
+     * or chromedriver uses the runner's {@code /opt/google/chrome}.
+     */
+    public static ChromeOptions pinnedLocalChrome(Path chromeBinary, boolean headless, boolean captureHar) {
+        ChromeOptions chrome = new ChromeOptions();
+        chrome.setBinary(chromeBinary.toFile());
+        if (headless) {
+            chrome.addArguments(
+                    "--headless=new",
+                    "--disable-gpu",
+                    "--no-sandbox",
+                    "--disable-dev-shm-usage");
+        }
+        if (captureHar && HarCapture.supportsBrowser("chrome")) {
+            HarCapture.enablePerformanceLogging(chrome);
+        }
+        return chrome;
     }
 }

@@ -13,7 +13,7 @@ import java.util.Properties;
  * {@code chrome-for-testing.properties}. Bypasses Selenium Manager so system
  * Chrome is never used silently.
  * <p>
- * Not a Chrome-only suite. {@code TestBase} calls {@link #apply} only when
+ * Not a Chrome-only suite. {@code BrowserDriverProvider} calls {@link #apply} only when
  * {@code remoteUrl} is empty and {@code browser=chrome}. A remote hub uses the
  * image tag; other local browsers ({@code -Dbrowser=firefox}) skip this class.
  * Do not generalize until there is a matching pin + installer for that browser.
@@ -29,7 +29,15 @@ public final class LocalChromePin {
     private LocalChromePin() {
     }
 
-    public static void apply(String browserVersion) {
+    /**
+     * Resolves the pinned binaries and points Selenide at them.
+     * Callers that construct {@code ChromeDriver} themselves must also
+     * {@code ChromeOptions.setBinary} — {@link Configuration#browserBinary}
+     * is ignored by {@code WebDriverProvider}.
+     *
+     * @return Chrome for Testing browser binary (never system Chrome)
+     */
+    public static Path apply(String browserVersion) {
         if (browserVersion == null || browserVersion.isBlank()) {
             throw new IllegalStateException(
                     "browserVersion is required for local Chrome (canon: 148). "
@@ -60,6 +68,7 @@ public final class LocalChromePin {
         Configuration.browserBinary = chrome.toString();
         System.setProperty("webdriver.chrome.driver", driver.toString());
         Configuration.browserVersion = null;
+        return chrome;
     }
 
     private static Path executableOverride(String environmentVariable) {
