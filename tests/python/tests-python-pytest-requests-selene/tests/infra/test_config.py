@@ -161,3 +161,22 @@ class TestConfig:
         assert cfg.browser_version == "148.0"
         assert cfg.browser_size == "1280x800"
         assert cfg.remote_url == "http://hub/wd/hub"
+
+    def test_remote_url_alias_from_jenkins_remote_url(self, monkeypatch):
+        monkeypatch.delenv("SELENOID_WEBDRIVER_URL", raising=False)
+        monkeypatch.setenv("REMOTE_URL", "https://user1:1234@selenoid.qa.guru/wd/hub")
+        assert load_config().remote_url == "https://user1:1234@selenoid.qa.guru/wd/hub"
+
+    def test_selenoid_webdriver_url_wins_over_remote_url(self, monkeypatch):
+        monkeypatch.setenv("SELENOID_WEBDRIVER_URL", "http://hub/wd/hub")
+        monkeypatch.setenv("REMOTE_URL", "http://ignored/wd/hub")
+        assert load_config().remote_url == "http://hub/wd/hub"
+
+    def test_api_base_url_ignores_frontend_mount(self, monkeypatch):
+        monkeypatch.setenv("STAND", "prod")
+        monkeypatch.delenv("BASE_URL", raising=False)
+        monkeypatch.setenv(
+            "API_BASE_URL",
+            "https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/",
+        )
+        assert load_config().api_base_url == "https://autotests.ai/stack/backend-java-spring/"

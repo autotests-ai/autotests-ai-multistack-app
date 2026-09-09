@@ -2,21 +2,21 @@
 const { defineConfig, devices } = require('@playwright/test');
 const dotenv = require('dotenv');
 const path = require('path');
-const { envBool, attachFull, attachVideo } = require('./src/helpers/env');
+const { envBool, attachFull, attachVideo, playwrightWsEndpoint } = require('./src/helpers/env');
 
 if (!process.env.CI) {
   dotenv.config({ path: path.resolve(__dirname, '.env') });
 }
 
 /**
- * When SELENOID_PLAYWRIGHT_URL is set, connect to Selenoid Playwright.
+ * When SELENOID_PLAYWRIGHT_URL or PW_WS_ENDPOINT is set, connect to Selenoid Playwright.
  * Otherwise launch local Chromium.
  *
  * Video: Playwright recordVideo → Allure mp4 attachment (primary).
  * Fallback: PW_VIDEO_NAME on WS query → Selenoid hub URL in HTML player.
  */
 function remoteConnectOptions() {
-  const ws = process.env.SELENOID_PLAYWRIGHT_URL;
+  const ws = playwrightWsEndpoint();
   if (!ws) {
     return undefined;
   }

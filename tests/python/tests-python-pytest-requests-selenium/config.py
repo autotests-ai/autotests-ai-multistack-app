@@ -63,6 +63,25 @@ def _slash(url: str) -> str:
     return url.rstrip("/") + "/"
 
 
+def _first_env(*names: str) -> str:
+    for name in names:
+        raw = os.environ.get(name)
+        if raw is not None and str(raw).strip():
+            return str(raw).strip()
+    return ""
+
+
+def _api_base_url(defaults: dict[str, str]) -> str:
+    raw = os.environ.get("API_BASE_URL")
+    if raw is None or not str(raw).strip():
+        return _slash(defaults["api_base_url"])
+    api = _slash(raw)
+    # Jenkins copies used API_BASE_URL=$BASE_URL (SPA). Never treat a frontend mount as API.
+    if "/frontend-" in api:
+        return _slash(defaults["api_base_url"])
+    return api
+
+
 def resolve_stand() -> str:
     raw = (os.environ.get("STAND") or os.environ.get("ENV") or "prod").strip().lower()
     return raw if raw in _STANDS else "prod"
@@ -100,7 +119,7 @@ def load_config() -> TestConfig:
     stand = resolve_stand()
     defaults = _STANDS[stand]
     base = _slash(os.environ.get("BASE_URL", defaults["base_url"]))
-    api = _slash(os.environ.get("API_BASE_URL", defaults["api_base_url"]))
+    api = _api_base_url(defaults)
     full = _attach_full()
     enable_video = full or _bool("ENABLE_VIDEO")
     enable_har = full or _bool("ENABLE_HAR")
@@ -117,7 +136,7 @@ def load_config() -> TestConfig:
         browser_version=os.environ.get("BROWSER_VERSION", "148.0"),
         browser_size=os.environ.get("BROWSER_SIZE", "1740x1080"),
         headless=_bool("HEADLESS", True),
-        remote_url=os.environ.get("SELENOID_WEBDRIVER_URL", "").strip(),
+        remote_url=_first_env("SELENOID_WEBDRIVER_URL", "REMOTE_URL"),
         chrome_binary_path=os.environ.get("CHROME_BINARY_PATH", "").strip(),
         chromedriver_path=os.environ.get("CHROMEDRIVER_PATH", "").strip(),
         enable_vnc=full or _bool("ENABLE_VNC"),

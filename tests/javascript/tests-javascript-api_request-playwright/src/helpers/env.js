@@ -64,6 +64,13 @@ function attachVideo() {
   return attachFull() || envBool('ATTACH_VIDEO') || envBool('PW_ENABLE_VIDEO');
 }
 
+/** Selenoid Playwright WS. Jobs often export PW_WS_ENDPOINT. */
+function playwrightWsEndpoint() {
+  return String(
+    process.env.SELENOID_PLAYWRIGHT_URL || process.env.PW_WS_ENDPOINT || '',
+  ).trim();
+}
+
 module.exports = {
   envBool,
   slash,
@@ -71,6 +78,7 @@ module.exports = {
   BASE_URL,
   apiRootFrom,
   apiRoot,
+  playwrightWsEndpoint,
   attachFull,
   attachBrowserConsoleLogs,
   attachHarLogs,
