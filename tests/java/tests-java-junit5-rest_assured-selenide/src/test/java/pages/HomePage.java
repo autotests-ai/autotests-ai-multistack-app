@@ -160,8 +160,8 @@ public class HomePage extends BasePage<HomePage> {
 
     @Step("Click logout button")
     public LoginPage clickLogoutButton() {
-        logoutButton.click();
-        return new LoginPage();
+        logoutButton.shouldBe(visible).click();
+        return new LoginPage().shouldBeOpen();
     }
 
     @Step("Click delete account and confirm")

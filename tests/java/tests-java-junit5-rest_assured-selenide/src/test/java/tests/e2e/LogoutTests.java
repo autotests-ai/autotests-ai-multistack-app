@@ -24,9 +24,9 @@ class LogoutTests extends TestBase {
     void shouldLogoutAfterFormLogin() {
         loginPage.openPage()
                 .fillAndSubmitForm("user1", "password1")
-                .shouldHaveWelcomeMessage("Welcome, user1!");
-
-        homePage.clickLogoutButton()
+                .shouldHaveWelcomeMessage("Welcome, user1!")
+                .shouldShowSessionActions()
+                .clickLogoutButton()
                 .shouldHaveFormTitle("Login Form");
     }
 
