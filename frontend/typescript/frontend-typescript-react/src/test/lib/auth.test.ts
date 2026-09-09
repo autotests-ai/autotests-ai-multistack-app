@@ -96,14 +96,20 @@ describe('network failures', () => {
 
   it('logout clears the token without waiting for a hanging logout API', async () => {
     saveSession('token-123');
+    let releaseFetch: (value: { ok: boolean; status: number }) => void = () => {};
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockReturnValue(new Promise(() => {})),
+      vi.fn().mockReturnValue(
+        new Promise((resolve) => {
+          releaseFetch = resolve;
+        }),
+      ),
     );
 
     await logout();
 
     expect(getToken()).toBeNull();
+    releaseFetch({ ok: true, status: 204 });
   });
 
   it('logout is a no-op when there is no session', async () => {
