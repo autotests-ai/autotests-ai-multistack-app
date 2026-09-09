@@ -94,6 +94,18 @@ describe('network failures', () => {
     expect(localStorage.getItem(AUTH_TOKEN_KEY)).toBeNull();
   });
 
+  it('logout clears the token without waiting for a hanging logout API', async () => {
+    saveSession('token-123');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockReturnValue(new Promise(() => {})),
+    );
+
+    await logout();
+
+    expect(getToken()).toBeNull();
+  });
+
   it('logout is a no-op when there is no session', async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);

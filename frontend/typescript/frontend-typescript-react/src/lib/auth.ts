@@ -158,7 +158,9 @@ export function fetchProfile(): Promise<UserProfile> {
 export async function logout(): Promise<void> {
   const token = readLocalStorage(AUTH_TOKEN_KEY);
   if (token) {
-    await fetch(apiUrl('/auth/logout'), {
+    // Fire-and-forget: logout is stateless. Awaiting POST /auth/logout blocked
+    // navigate('/login') when the hub was slow, so e2e still sat on home.
+    void fetch(apiUrl('/auth/logout'), {
       method: 'POST',
       headers: { Authorization: 'Bearer ' + token },
     }).catch(() => {});
