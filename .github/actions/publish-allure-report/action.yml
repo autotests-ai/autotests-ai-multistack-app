@@ -255,6 +255,9 @@ runs:
             --report build/reports/allure-report/allureReport
           node allure/attach-ci-jobs-quality-gate.mjs \
             --report build/reports/allure-report/allureReport
+          node "${GITHUB_WORKSPACE}/tests/_tests-meta/scripts/enrich-search-index.mjs" \
+            --report build/reports/allure-report/allureReport \
+            --results build/allure-results
         fi
         set -e
         exit "${REPORT_EXIT}"
