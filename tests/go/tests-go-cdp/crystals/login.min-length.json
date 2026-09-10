@@ -1,0 +1,45 @@
+{
+  "id": "login-min-length",
+  "kind": "cdp",
+  "version": 1,
+  "source": {
+    "as_id": "Пользователь входит с логином из 3 символов и паролем из 6",
+    "lang": "typescript-playwright",
+    "fingerprint": "b669d25ffd2b4eedfa0597bac9b88f3bcdc1626c4ac52814f2dbd3b04e3713d4"
+  },
+  "steps": [
+    {
+      "op": "navigate",
+      "url": "login"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=login-form]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=login-input]",
+      "value": "abc"
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=password-input]",
+      "value": "123456"
+    },
+    {
+      "op": "click",
+      "selector": "[data-testid=submit-button]"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=welcome-message]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "text",
+      "selector": "[data-testid=welcome-message]",
+      "value": "Welcome, abc!"
+    }
+  ]
+}

@@ -54,6 +54,10 @@
         location.href = "/home";
         return;
       }
+      if (u === "abc" && p === "123456") {
+        location.href = "/home?user=" + encodeURIComponent(u);
+        return;
+      }
       fail("Wrong login or password");
     });
   </script>
