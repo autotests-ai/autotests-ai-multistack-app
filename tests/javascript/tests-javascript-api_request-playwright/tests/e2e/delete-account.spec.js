@@ -7,12 +7,13 @@ const PASSWORD = 'password123';
 test.describe('Delete account', { tag: ['@e2e'] }, () => {
   test('Confirming delete account clears the session and navigates to login', async ({
     webApp,
+    request,
   }) => {
     const name = username();
-    const created = await apiRequest('POST', '/api/auth/register', {
+    const created = await apiRequest(request, 'POST', '/api/auth/register', {
       json: { username: name, password: PASSWORD },
     });
-    expect(created.status).toBe(201);
+    expect(created.status()).toBe(201);
     const token = (await created.json()).token;
     try {
       await webApp.home.openWithLocalStorageAuth(token);
@@ -22,19 +23,20 @@ test.describe('Delete account', { tag: ['@e2e'] }, () => {
       await expect(webApp.login.formTitle).toContainText('Login Form');
       expect(await webApp.home.authToken()).toBeNull();
     } catch (err) {
-      await apiRequest('DELETE', '/api/auth/me', { token });
+      await apiRequest(request, 'DELETE', '/api/auth/me', { token });
       throw err;
     }
   });
 
   test('Cancelling the confirm keeps the session and sends no delete request', async ({
     webApp,
+    request,
   }) => {
     const name = username();
-    const created = await apiRequest('POST', '/api/auth/register', {
+    const created = await apiRequest(request, 'POST', '/api/auth/register', {
       json: { username: name, password: PASSWORD },
     });
-    expect(created.status).toBe(201);
+    expect(created.status()).toBe(201);
     const token = (await created.json()).token;
     try {
       await webApp.home.openWithLocalStorageAuth(token);
@@ -42,12 +44,12 @@ test.describe('Delete account', { tag: ['@e2e'] }, () => {
       await webApp.home.clickDeleteAccountAndCancel();
       await expect(webApp.home.getWelcomeText()).toContainText(`Welcome, ${name}!`);
       expect(await webApp.home.authToken()).toBeTruthy();
-      const still = await apiRequest('POST', '/api/auth/login', {
+      const still = await apiRequest(request, 'POST', '/api/auth/login', {
         json: { username: name, password: PASSWORD },
       });
-      expect(still.status).toBe(200);
+      expect(still.status()).toBe(200);
     } finally {
-      await apiRequest('DELETE', '/api/auth/me', { token });
+      await apiRequest(request, 'DELETE', '/api/auth/me', { token });
     }
   });
 });

@@ -20,11 +20,11 @@ test.describe('Login', { tag: ['@e2e'] }, () => {
   test('Пользователь входит с логином из 3 символов и паролем из 6', async ({ webApp, request }) => {
     const user = new UserBuilder().withMinLengthCredentials().build();
     try {
-      const created = await apiRequest('POST', '/api/auth/register', {
+      const created = await apiRequest(request, 'POST', '/api/auth/register', {
         json: { username: user.username, password: user.password },
       });
-      if (!created.ok) {
-        throw new Error(`register ${user.username}: ${created.status}`);
+      if (!created.ok()) {
+        throw new Error(`register ${user.username}: ${created.status()}`);
       }
       await webApp.login.open();
       await webApp.login.login(user.username, user.password);

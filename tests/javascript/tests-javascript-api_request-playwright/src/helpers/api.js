@@ -15,7 +15,17 @@ function passwordAtMinLength() {
   return '123456';
 }
 
-async function apiRequest(method, path, { token, json, raw } = {}) {
+/**
+ * Product HTTP via Playwright APIRequestContext — not `fetch`, not Axios.
+ * Absolute URL from apiRoot(): the request fixture's baseURL is the UI origin.
+ *
+ * @param {import('@playwright/test').APIRequestContext} request
+ * @param {string} method
+ * @param {string} path
+ * @param {{ token?: string, json?: unknown, raw?: string }} [opts]
+ * @returns {Promise<import('@playwright/test').APIResponse>}
+ */
+async function apiRequest(request, method, path, { token, json, raw } = {}) {
   const headers = {};
   if (json !== undefined || raw !== undefined) {
     headers['Content-Type'] = 'application/json';
@@ -23,21 +33,39 @@ async function apiRequest(method, path, { token, json, raw } = {}) {
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
-  let body;
+  const url = `${apiRoot()}${path}`;
+  const options = { headers };
   if (raw !== undefined) {
-    body = raw;
+    options.data = raw;
   } else if (json !== undefined) {
-    body = JSON.stringify(json);
+    options.data = json;
   }
-  return fetch(`${apiRoot()}${path}`, { method, headers, body });
+  switch (method.toUpperCase()) {
+    case 'GET':
+      return request.get(url, options);
+    case 'POST':
+      return request.post(url, options);
+    case 'PUT':
+      return request.put(url, options);
+    case 'DELETE':
+      return request.delete(url, options);
+    default:
+      throw new Error(`Unsupported HTTP method: ${method}`);
+  }
 }
 
-async function loginToken(name, password) {
-  const response = await apiRequest('POST', '/api/auth/login', {
+/**
+ * @param {import('@playwright/test').APIRequestContext} request
+ * @param {string} name
+ * @param {string} password
+ * @returns {Promise<string>}
+ */
+async function loginToken(request, name, password) {
+  const response = await apiRequest(request, 'POST', '/api/auth/login', {
     json: { username: name, password },
   });
-  if (!response.ok) {
-    throw new Error(`login ${name}: ${response.status}`);
+  if (!response.ok()) {
+    throw new Error(`login ${name}: ${response.status()}`);
   }
   const body = await response.json();
   if (!body.token) {
@@ -57,17 +85,17 @@ async function loginToken(name, password) {
  */
 async function deleteAccountQuietly(request, username, password) {
   try {
-    const root = apiRoot();
-    const login = await request.post(`${root}/api/auth/login`, {
-      data: { username, password },
+    const login = await apiRequest(request, 'POST', '/api/auth/login', {
+      json: { username, password },
     });
     if (!login.ok()) {
       return;
     }
     const { token } = await login.json();
-    await request.delete(`${root}/api/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    if (!token) {
+      return;
+    }
+    await apiRequest(request, 'DELETE', '/api/auth/me', { token });
   } catch {
     // stand unreachable / user never created — nothing to clean
   }
