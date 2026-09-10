@@ -64,8 +64,23 @@ func uniqueRegisterUser() string {
 	return "user_" + hex.EncodeToString(b[:])
 }
 
-// registerIRForRun copies register/delete crystals and fills a crypto/rand
-// username (stdlib, not faker) so mill replay does not collide if the store is sticky.
+func uniqueMinLengthUser() string {
+	const alphabet = "abcdefghijklmnopqrstuvwxyz0123456789"
+	var b [3]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		panic(err)
+	}
+	out := [3]byte{
+		alphabet[int(b[0])%len(alphabet)],
+		alphabet[int(b[1])%len(alphabet)],
+		alphabet[int(b[2])%len(alphabet)],
+	}
+	return string(out[:])
+}
+
+// registerIRForRun copies register/delete/register-min-length crystals and fills
+// a crypto/rand username (stdlib, not faker) so mill replay does not collide if
+// the store is sticky. Min-length stays 3 characters (not user_*).
 func registerIRForRun(t *testing.T, path string) string {
 	t.Helper()
 	raw, err := os.ReadFile(path)
@@ -76,10 +91,16 @@ func registerIRForRun(t *testing.T, path string) string {
 	if err := json.Unmarshal(raw, &doc); err != nil {
 		t.Fatal(err)
 	}
-	if doc["id"] != "register" && doc["id"] != "delete" {
+	id, _ := doc["id"].(string)
+	var name string
+	switch id {
+	case "register", "delete":
+		name = uniqueRegisterUser()
+	case "register-min-length":
+		name = uniqueMinLengthUser()
+	default:
 		return path
 	}
-	name := uniqueRegisterUser()
 	steps, _ := doc["steps"].([]any)
 	for _, step := range steps {
 		m, ok := step.(map[string]any)
@@ -164,6 +185,38 @@ func TestRegisterIRForRunPatchesDelete(t *testing.T) {
 	text := steps[1].(map[string]any)["value"].(string)
 	if fill == "deluser1" || !strings.HasPrefix(fill, "user_") {
 		t.Fatalf("want crypto/rand user, got %q", fill)
+	}
+	if text != "Welcome, "+fill+"!" {
+		t.Fatalf("welcome %q", text)
+	}
+}
+
+func TestRegisterIRForRunPatchesMinLength(t *testing.T) {
+	src := filepath.Join(t.TempDir(), "in.json")
+	if err := os.WriteFile(src, []byte(`{
+  "id": "register-min-length",
+  "steps": [
+    {"op": "fill", "selector": "[data-testid=register-login-input]", "value": "abc"},
+    {"op": "text", "selector": "[data-testid=welcome-message]", "value": "Welcome, abc!"}
+  ]
+}
+`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	out := registerIRForRun(t, src)
+	raw, err := os.ReadFile(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var doc map[string]any
+	if err := json.Unmarshal(raw, &doc); err != nil {
+		t.Fatal(err)
+	}
+	steps := doc["steps"].([]any)
+	fill := steps[0].(map[string]any)["value"].(string)
+	text := steps[1].(map[string]any)["value"].(string)
+	if len(fill) != 3 || fill == "abc" {
+		t.Fatalf("want minted 3-char user, got %q", fill)
 	}
 	if text != "Welcome, "+fill+"!" {
 		t.Fatalf("welcome %q", text)

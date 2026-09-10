@@ -1,0 +1,50 @@
+{
+  "id": "register-min-length",
+  "kind": "cdp",
+  "version": 1,
+  "source": {
+    "as_id": "Пользователь регистрируется с логином из 3 символов и паролем из 6",
+    "lang": "typescript-playwright",
+    "fingerprint": "03cdfa4d7a83a689312d8b9628db8bf11e0389bf785821ec96d2bc2b179a4365"
+  },
+  "steps": [
+    {
+      "op": "navigate",
+      "url": "register"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=register-form]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=register-login-input]",
+      "value": "abc"
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=register-password-input]",
+      "value": "123456"
+    },
+    {
+      "op": "fill",
+      "selector": "[data-testid=confirm-password-input]",
+      "value": "123456"
+    },
+    {
+      "op": "click",
+      "selector": "[data-testid=register-submit-button]"
+    },
+    {
+      "op": "wait",
+      "selector": "[data-testid=welcome-message]",
+      "timeout_ms": 5000
+    },
+    {
+      "op": "text",
+      "selector": "[data-testid=welcome-message]",
+      "value": "Welcome, abc!"
+    }
+  ]
+}
