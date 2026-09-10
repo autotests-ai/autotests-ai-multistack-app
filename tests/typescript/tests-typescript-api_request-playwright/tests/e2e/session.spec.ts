@@ -9,8 +9,8 @@ test.describe('Session', { tag: ['@e2e'] }, () => {
     await expect.poll(async () => webApp.home.authToken()).toBeNull();
   });
 
-  test('Session survives a page reload (token in localStorage)', async ({ webApp }) => {
-    const token = await loginToken('user1', 'password1');
+  test('Session survives a page reload (token in localStorage)', async ({ webApp, request }) => {
+    const token = await loginToken(request, 'user1', 'password1');
     await webApp.home.openWithLocalStorageAuth(token);
     await expect(webApp.home.getWelcomeText()).toContainText('Welcome, user1!');
     await webApp.home.reload();

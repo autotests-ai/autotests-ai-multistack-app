@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import type { APIRequestContext } from '@playwright/test';
+import type { APIRequestContext, APIResponse } from '@playwright/test';
 import { apiRoot } from './env';
 
 export const WRONG_CREDENTIALS_MESSAGE = 'Wrong login or password';
@@ -22,11 +22,16 @@ type ApiRequestOpts = {
   raw?: string;
 };
 
+/**
+ * Product HTTP via Playwright {@link APIRequestContext} — not `fetch`, not Axios.
+ * Absolute URL from {@link apiRoot}: the request fixture's baseURL is the UI origin.
+ */
 export async function apiRequest(
+  request: APIRequestContext,
   method: string,
   path: string,
   { token, json, raw }: ApiRequestOpts = {},
-): Promise<Response> {
+): Promise<APIResponse> {
   const headers: Record<string, string> = {};
   if (json !== undefined || raw !== undefined) {
     headers['Content-Type'] = 'application/json';
@@ -34,21 +39,37 @@ export async function apiRequest(
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
-  let body: string | undefined;
+  const url = `${apiRoot()}${path}`;
+  const options: { headers: Record<string, string>; data?: unknown } = { headers };
   if (raw !== undefined) {
-    body = raw;
+    options.data = raw;
   } else if (json !== undefined) {
-    body = JSON.stringify(json);
+    options.data = json;
   }
-  return fetch(`${apiRoot()}${path}`, { method, headers, body });
+  switch (method.toUpperCase()) {
+    case 'GET':
+      return request.get(url, options);
+    case 'POST':
+      return request.post(url, options);
+    case 'PUT':
+      return request.put(url, options);
+    case 'DELETE':
+      return request.delete(url, options);
+    default:
+      throw new Error(`Unsupported HTTP method: ${method}`);
+  }
 }
 
-export async function loginToken(name: string, password: string): Promise<string> {
-  const response = await apiRequest('POST', '/api/auth/login', {
+export async function loginToken(
+  request: APIRequestContext,
+  name: string,
+  password: string,
+): Promise<string> {
+  const response = await apiRequest(request, 'POST', '/api/auth/login', {
     json: { username: name, password },
   });
-  if (!response.ok) {
-    throw new Error(`login ${name}: ${response.status}`);
+  if (!response.ok()) {
+    throw new Error(`login ${name}: ${response.status()}`);
   }
   const body = (await response.json()) as { token?: string };
   if (!body.token) {
@@ -68,9 +89,8 @@ export async function deleteAccountQuietly(
   password: string,
 ): Promise<void> {
   try {
-    const root = apiRoot();
-    const login = await request.post(`${root}/api/auth/login`, {
-      data: { username: name, password },
+    const login = await apiRequest(request, 'POST', '/api/auth/login', {
+      json: { username: name, password },
     });
     if (!login.ok()) {
       return;
@@ -79,9 +99,7 @@ export async function deleteAccountQuietly(
     if (!token) {
       return;
     }
-    await request.delete(`${root}/api/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    await apiRequest(request, 'DELETE', '/api/auth/me', { token });
   } catch {
     // stand unreachable / user never created — nothing to clean
   }
