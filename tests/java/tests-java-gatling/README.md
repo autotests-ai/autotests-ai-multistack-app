@@ -8,7 +8,8 @@ Smoke is **1 VU** against the local Java Spring API. This is not a load against 
 cd tests/java/tests-java-gatling
 ./gradlew gatlingRun
 ./gradlew gatlingRun -DapiBaseUrl=http://localhost:8800 -Dgatling.profile=smoke
-./gradlew gatlingRun -Dgatling.profile=load -Dgatling.users=10 -Dgatling.duringSeconds=30
+./gradlew gatlingRun -Dgatling.profile=load -Dgatling.users=10 -Dgatling.duringSeconds=60
+# load = N concurrent (closed), not 10 users fired once.
 ```
 
 Stand: `apiBaseUrl` / `API_BASE_URL` → [http://localhost:8800](http://localhost:8800/) (compose `backend-java-spring`). Seed `user1` / `password1`.

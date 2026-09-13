@@ -10,7 +10,8 @@ import java.time.Duration;
 
 /**
  * Contract chain against teaching {@code /api}: health → login → me → items → logout.
- * Default injection is 1 VU (CI / local smoke). {@code -Dgatling.profile=load} ramps N users.
+ * Default injection is 1 VU (CI / local smoke). {@code -Dgatling.profile=load}
+ * holds N concurrent users (closed model, like JMeter loops=-1).
  */
 public class AuthApiSimulation extends Simulation {
 
@@ -49,7 +50,10 @@ public class AuthApiSimulation extends Simulation {
         LoadConfig.refuseSharedProd(baseUrl);
 
         var population = "load".equals(LoadConfig.profile())
-                ? authApi.injectOpen(rampUsers(LoadConfig.users()).during(Duration.ofSeconds(LoadConfig.duringSeconds())))
+                ? authApi.injectClosed(
+                        rampConcurrentUsers(0).to(LoadConfig.users()).during(Duration.ofSeconds(10)),
+                        constantConcurrentUsers(LoadConfig.users())
+                                .during(Duration.ofSeconds(LoadConfig.duringSeconds())))
                 : authApi.injectOpen(atOnceUsers(1));
 
         setUp(population)
