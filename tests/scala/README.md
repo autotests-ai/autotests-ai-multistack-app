@@ -2,4 +2,4 @@
 
 | Folder | Role |
 |--------|------|
-| `tests-scala-gatling/` | slot — Gatling Scala DSL (`layers: [performance]`) |
+| `tests-scala-gatling/` | **active** — Gatling Scala DSL sibling (`layers: [performance]`) |

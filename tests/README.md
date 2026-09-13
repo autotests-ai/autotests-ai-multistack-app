@@ -44,7 +44,7 @@ tests/
     tests-kotlin-gatling/                     # active — Gatling Kotlin DSL sibling
     tests-kotlin-jmeter/                      # active — JMeter Kotlin TreeBuilder sibling
   scala/
-    tests-scala-gatling/                             # slot — Gatling Scala DSL
+    tests-scala-gatling/                             # active — Gatling Scala DSL sibling
   javascript/
     tests-javascript-api_request-playwright/         # active — UI+HTTP, APIRequest in-cell; c8 + sonar
     tests-javascript-playwright/                     # active — UI-only Playwright (no REST)
