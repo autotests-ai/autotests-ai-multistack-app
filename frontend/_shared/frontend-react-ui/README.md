@@ -14,4 +14,7 @@ Refresh from the ethalon or live clone root:
 bash frontend/scripts/sync-react-ui.sh
 ```
 
+`*-canon.js` re-exports resolve through sibling `vendor/design-system/js`
+(`../../design-system/js` from `src/`), not through `vendor/ds`.
+
 Consumed via Vite alias `@zero-design-system/react` → `src/index.ts`.

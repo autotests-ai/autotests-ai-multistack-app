@@ -65,8 +65,56 @@ Refresh from the ethalon or live clone root:
 bash frontend/scripts/sync-react-ui.sh
 ```
 
+`*-canon.js` re-exports resolve through sibling `vendor/design-system/js`
+(`../../design-system/js` from `src/`), not through `vendor/ds`.
+
 Consumed via Vite alias `@zero-design-system/react` → `src/index.ts`.
 EOF
+
+DS_JS="$MONOREPO_ROOT/projects/design-system-home/design-system/js"
+CANON_JS=(
+  code-highlight.js
+  dom-utils.js
+  qg-info.js
+  quality-gate-source.mjs
+  quality-gate.js
+  sonar-quality-gate.js
+  sparkline.js
+  stability-cell.js
+)
+for name in "${CANON_JS[@]}"; do
+  if [[ ! -f "$DS_JS/$name" ]]; then
+    echo "STOP: missing $DS_JS/$name (canon re-export graph)" >&2
+    exit 1
+  fi
+done
+
+write_design_system_vendor() {
+  local dest_dir="$1"
+  mkdir -p "$dest_dir/js"
+  local name
+  for name in "${CANON_JS[@]}"; do
+    cp "$DS_JS/$name" "$dest_dir/js/$name"
+  done
+  cat > "$dest_dir/README.md" <<'EOF'
+# vendor/design-system
+
+JS graph for react-ui `*-canon.js` re-exports.
+
+From `vendor/react-ui/src`, SSOT paths are `../../design-system/js/*.js`
+(monorepo: `design-system-home/design-system/js`). This sibling matches that
+relative path so Vite can bundle the barrel without a monorepo checkout.
+
+Not the lean CSS/runtime slice (`vendor/ds`). Not overlay (`app-base.js`,
+`env-hosts.js`). Do not `rsync --delete` over `vendor/ds`.
+
+Refresh via `bash frontend/scripts/sync-react-ui.sh`. Keep in lockstep with
+the canon wrappers in `vendor/react-ui/src`.
+EOF
+}
+
+# Path from frontend/_shared/frontend-react-ui/src → ../../design-system/js
+write_design_system_vendor "$(dirname "$DEST")/design-system"
 
 FANOUT_COUNT=0
 for dest in \
@@ -75,8 +123,9 @@ for dest in \
 do
   mkdir -p "$dest"
   rsync -a --delete "$DEST/" "$dest/"
+  write_design_system_vendor "$(dirname "$dest")/design-system"
   FANOUT_COUNT=$((FANOUT_COUNT + 1))
 done
 
 echo "sync-react-ui: $SRC → $DEST/src"
-echo "sync-react-ui fan-out: ${FANOUT_COUNT} vendor/react-ui"
+echo "sync-react-ui fan-out: ${FANOUT_COUNT} vendor/react-ui + vendor/design-system"
