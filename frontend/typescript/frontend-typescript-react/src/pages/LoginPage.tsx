@@ -66,7 +66,7 @@ export function LoginPage() {
     try {
       const response = await login(trimmedLogin, trimmedPassword);
       saveSession(response.token);
-      navigate(response.redirectUrl || '/');
+      navigate(response.redirectUrl || '/', { replace: true });
     } catch (err) {
       const text = resolveAuthErrorMessage(err, messages, messages.errorWrongCredentials!);
       if ((err as { network?: boolean } | undefined)?.network) {

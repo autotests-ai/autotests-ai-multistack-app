@@ -1,5 +1,6 @@
 package pages;
 
+import static com.codeborne.selenide.ClickOptions.usingJavaScript;
 import static com.codeborne.selenide.Condition.attribute;
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
@@ -160,7 +161,7 @@ public class HomePage extends BasePage<HomePage> {
 
     @Step("Click logout button")
     public LoginPage clickLogoutButton() {
-        logoutButton.shouldBe(visible).click();
+        logoutButton.shouldBe(visible).click(usingJavaScript());
         return new LoginPage().shouldBeOpen();
     }
 

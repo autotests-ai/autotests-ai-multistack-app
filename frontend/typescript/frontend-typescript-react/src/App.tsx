@@ -1,6 +1,6 @@
 import { AppHeader } from '@zero-design-system/react';
 import { useEffect, useMemo, useRef } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, ScrollRestoration } from 'react-router-dom';
 import { useI18n } from './i18n';
 import { appPath } from './lib/appBase';
 import { buildHeaderConfig, syncHeaderNav } from './lib/headerConfig';
@@ -16,6 +16,7 @@ export function App() {
 
   return (
     <>
+      <ScrollRestoration />
       <AppHeader config={config} scriptSrc={appPath('/js/header.js')} />
       <Outlet />
     </>

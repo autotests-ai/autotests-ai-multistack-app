@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { act } from 'react';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -86,5 +87,43 @@ describe('App', { tags: ['smoke'] }, () => {
 
     dispatchLang('ru');
     expect(remount).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns to the login form after form login and logout', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/api/auth/login')) {
+          return Promise.resolve(
+            jsonResponse({ token: 'tok-1', username: 'user1', redirectUrl: '/' }),
+          );
+        }
+        if (url.includes('/api/auth/me')) {
+          return Promise.resolve(jsonResponse({ username: 'user1' }));
+        }
+        if (url.includes('/api/auth/logout')) {
+          return Promise.resolve({ ok: true, status: 204, json: async () => ({}) } as Response);
+        }
+        if (url.includes('/api/health')) {
+          return Promise.resolve(jsonResponse({ status: 'UP', service: 'backend-java-spring' }));
+        }
+        if (url.includes('/api/items')) {
+          return Promise.resolve(jsonResponse({ items: [] }));
+        }
+        return Promise.reject(new Error(`unexpected request: ${url}`));
+      }),
+    );
+
+    renderApp('/login');
+    await user.type(screen.getByTestId('login-input'), 'user1');
+    await user.type(screen.getByTestId('password-input'), 'password1');
+    await user.click(screen.getByTestId('submit-button'));
+
+    expect(await screen.findByText('Welcome, user1!')).toBeInTheDocument();
+    await user.click(screen.getByTestId('logout-button'));
+    expect(await screen.findByTestId('login-form')).toBeInTheDocument();
+    expect(localStorage.getItem('authToken')).toBeNull();
   });
 });
