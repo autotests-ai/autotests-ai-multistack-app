@@ -46,12 +46,12 @@ export interface PanelProps {
   /**
    * Terminal output tone. Only applies when `variant="terminal"`.
    * `dark` (default) → `#1a1917`; `light` → `panel--terminal-light` paper.
-   * Independent of `html.theme-light`.
+   * Page `html.theme-light` also switches default terminal paper to light.
    */
   tone?: PanelTone;
   /**
    * Optional content inside `.panel__trail` after the title — canonical slot for
-   * terminal format tabs (`.tabs` / `.tab` / `.tab--active`) in the bar.
+   * terminal format tabs (`Tabs` / `Tab` → `.tabs` / `.tab` / `.tab--active`).
    */
   trail?: ReactNode;
   /**
