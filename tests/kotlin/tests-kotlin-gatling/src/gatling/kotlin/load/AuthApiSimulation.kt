@@ -2,9 +2,10 @@ package load
 
 import io.gatling.javaapi.core.CoreDsl.StringBody
 import io.gatling.javaapi.core.CoreDsl.atOnceUsers
+import io.gatling.javaapi.core.CoreDsl.constantConcurrentUsers
 import io.gatling.javaapi.core.CoreDsl.global
 import io.gatling.javaapi.core.CoreDsl.jsonPath
-import io.gatling.javaapi.core.CoreDsl.rampUsers
+import io.gatling.javaapi.core.CoreDsl.rampConcurrentUsers
 import io.gatling.javaapi.core.CoreDsl.scenario
 import io.gatling.javaapi.core.Simulation
 import io.gatling.javaapi.http.HttpDsl.http
@@ -13,7 +14,8 @@ import java.time.Duration
 
 /**
  * Contract chain against teaching `/api`: health → login → me → items → logout.
- * Default injection is 1 VU (local smoke). `-Dgatling.profile=load` ramps N users.
+ * Default injection is 1 VU (CI / local smoke). `-Dgatling.profile=load`
+ * holds N concurrent users (closed model, like JMeter loops=-1).
  */
 class AuthApiSimulation : Simulation() {
 
@@ -62,8 +64,10 @@ class AuthApiSimulation : Simulation() {
         LoadConfig.refuseSharedProd(baseUrl)
 
         val population = if (LoadConfig.profile() == "load") {
-            authApi.injectOpen(
-                rampUsers(LoadConfig.users()).during(Duration.ofSeconds(LoadConfig.duringSeconds().toLong()))
+            authApi.injectClosed(
+                rampConcurrentUsers(0).to(LoadConfig.users()).during(Duration.ofSeconds(10)),
+                constantConcurrentUsers(LoadConfig.users())
+                    .during(Duration.ofSeconds(LoadConfig.duringSeconds().toLong()))
             )
         } else {
             authApi.injectOpen(atOnceUsers(1))
