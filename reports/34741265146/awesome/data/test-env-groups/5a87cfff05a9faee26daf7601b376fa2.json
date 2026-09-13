@@ -1,1 +1,0 @@
-{"id":"5a87cfff05a9faee26daf7601b376fa2","fullName":"dev.multistack.app.controller.AuthControllerTest.meRequiresAuthentication","name":"GET /api/auth/me without token returns 401","status":"passed","testResultsByEnv":{"default":"5b7e47b3a21b752cc83c920d8168fba7"}}

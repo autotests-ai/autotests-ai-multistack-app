@@ -1,1 +1,0 @@
-{"id":"94c20757aed14fdac28013a1ed79341f","fullName":"frontend-typescript-react:src/test/lib/auth.test.ts#network failures logout clears the token without waiting for a hanging logout API","name":"logout clears the token without waiting for a hanging logout API","status":"passed","testResultsByEnv":{"default":"6d0dd8e5be8ebd256bed9d20c4421c2f"}}
