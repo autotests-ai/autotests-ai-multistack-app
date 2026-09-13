@@ -1,0 +1,1 @@
+{"id":"7d3dacfad8bb65485bd74c4f94d50152","fullName":"tests.e2e.LoginTests.shouldShowErrorWhenPasswordIsWrong","name":"Wrong password shows readable error","status":"passed","testResultsByEnv":{"default":"72c09dd2f9edf08310e36a18c6b9a680"}}
