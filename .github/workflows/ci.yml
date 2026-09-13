@@ -26,7 +26,7 @@ name: CI
 #   deploy-*-stage ← matching build + sonar-backend / sonar-frontend + preempt/yield (STAGE_APP_DIR, cd_stage)
 #   api-tests-stage ← deploy-backend-stage + infra-tests (STAGE_APP_DIR, run_api_stage)
 #   deploy-backend-load ← api-tests-stage + build-backend (LOAD_APP_DIR; skip if unset; active cell)
-#   load-tests ← deploy-backend-load (LOAD_LANG+LOAD_TOOL; skip if LOAD_APP_DIR unset)
+#   load-tests ← deploy-backend-load (LOAD_LANG+LOAD_TOOL; HTML → load-sut /runs/; skip if LOAD_APP_DIR unset)
 #   e2e-tests-stage ← api-tests-stage + deploy-frontend-stage + infra-tests (STAGE_APP_DIR, run_e2e_stage)
 #   (load jobs run parallel with e2e-tests-stage; prod deploy-* must NOT need them)
 #   deploy-* ← matching build + sonar-backend / sonar-frontend + e2e-tests-stage (cd_production)
@@ -824,6 +824,9 @@ jobs:
       JMETER_ALLOW_PUBLIC: "true"
       GATLING_ALLOW_PUBLIC: "true"
       GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+      LOAD_HOST: ${{ vars.LOAD_HOST }}
+      LOAD_USER: ${{ vars.LOAD_USER }}
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
     steps:
       - *checkout
       - uses: ./tests/.github/actions/load

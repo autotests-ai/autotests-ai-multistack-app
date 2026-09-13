@@ -17,4 +17,4 @@ Stand: `apiBaseUrl` / `API_BASE_URL` → local Java API on port 8800 (compose `b
 
 Isolated public SUT (dedicated load VM, not shared prod): `-Djmeter.allowPublic=true` or `JMETER_ALLOW_PUBLIC=true`.
 
-Results: `build/jmeter/results.jtl` · HTML `build/jmeter/report/`. Teaching job is `load-tests` (default knobs `LOAD_LANG: java`, `LOAD_TOOL: jmeter`). Student emit: `java-jmeter` (templates still planned — do not copy this folder).
+Results: `build/jmeter/results.jtl` · HTML `build/jmeter/report/`. Teaching job is `load-tests` (default knobs `LOAD_LANG: java`, `LOAD_TOOL: jmeter`); that job copies the JMeter dashboard to [load.autotests.ai/runs/](https://load.autotests.ai/) (not Allure). Student emit: `java-jmeter` (templates still planned — do not copy this folder).

@@ -5,7 +5,9 @@
 GitHub does not interpolate `uses:`. Pyramid adapters dispatch on `TESTS_LANG`.
 Load job `load-tests` uses `./tests/.github/actions/load` and dispatches on `LOAD_TOOL`
 (`jmeter` → `performance`, `gatling` → `gatling`; else STOP). `module_dir` =
-`tests/{LOAD_LANG}/tests-{LOAD_LANG}-{LOAD_TOOL}`. Not a second GHA job per tool.
+`tests/{LOAD_LANG}/tests-{LOAD_LANG}-{LOAD_TOOL}`. After the injector smoke, the same
+job copies the tool HTML (not Allure) to load-sut `/runs/{injector}::{backend}/{run_id}/`.
+Not a second GHA job per tool.
 
 | LANG | Action | `module_dir` |
 
