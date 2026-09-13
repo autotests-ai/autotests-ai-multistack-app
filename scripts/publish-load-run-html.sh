@@ -8,6 +8,7 @@
 #
 # GHA: LOAD_HOST + LOAD_USER + DEPLOY_SSH_KEY (same secret as deploy-backend-load).
 # Laptop: ssh alias load-sut (LOAD_SSH_HOST).
+# PATCH_BOARD=0 (GHA smoke): copy HTML only, do not overwrite featured ramp numbers.
 #
 set -euo pipefail
 export COPYFILE_DISABLE=1
@@ -50,6 +51,7 @@ BACKEND="${BACKEND:-${BACKEND_LANG:+backend-${BACKEND_LANG}-${BACKEND_FRAMEWORK}
 RUN_ID="${RUN_ID:-${GITHUB_RUN_ID:-}}"
 GITHUB_URL="${GITHUB_URL:-}"
 DRY_RUN="${DRY_RUN:-0}"
+PATCH_BOARD="${PATCH_BOARD:-1}"
 
 if [ -z "$INJECTOR" ] || [ -z "$BACKEND" ] || [ -z "$RUN_ID" ]; then
   echo "STOP: need INJECTOR, BACKEND, RUN_ID (or LOAD_LANG+LOAD_TOOL, BACKEND_LANG+BACKEND_FRAMEWORK, GITHUB_RUN_ID)" >&2
@@ -178,9 +180,10 @@ sudo find '${REMOTE_RUN}' -type f -exec chmod 644 {} +
 test -f '${REMOTE_RUN}/index.html'
 REMOTE
 
-scp_c "$PATCH" "${DEST}:/tmp/patch-load-matrix-run.py"
-META="$(mktemp)"
-python3 - "$META" "$INJECTOR" "$BACKEND" "$REPORT" "$GITHUB_URL" "${VALUES[@]+"${VALUES[@]}"}" <<'PY'
+if [ "$PATCH_BOARD" != "0" ]; then
+  scp_c "$PATCH" "${DEST}:/tmp/patch-load-matrix-run.py"
+  META="$(mktemp)"
+  python3 - "$META" "$INJECTOR" "$BACKEND" "$REPORT" "$GITHUB_URL" "${VALUES[@]+"${VALUES[@]}"}" <<'PY'
 import json, sys
 from pathlib import Path
 path, injector, backend, report, github, *values = sys.argv[1:]
@@ -193,9 +196,12 @@ payload = {
 }
 Path(path).write_text(json.dumps(payload), encoding="utf-8")
 PY
-scp_c "$META" "${DEST}:/tmp/load-run-meta.json"
-rm -f "$META"
-ssh_c "sudo python3 /tmp/patch-load-matrix-run.py --matrix ${REMOTE_WWW}/matrix.json --from-json /tmp/load-run-meta.json"
+  scp_c "$META" "${DEST}:/tmp/load-run-meta.json"
+  rm -f "$META"
+  ssh_c "sudo python3 /tmp/patch-load-matrix-run.py --matrix ${REMOTE_WWW}/matrix.json --from-json /tmp/load-run-meta.json"
+else
+  echo "skip board patch PATCH_BOARD=0 (HTML at ${REPORT})"
+fi
 
 URL="https://load.autotests.ai${REPORT}"
 log "smoke ${URL}index.html"
