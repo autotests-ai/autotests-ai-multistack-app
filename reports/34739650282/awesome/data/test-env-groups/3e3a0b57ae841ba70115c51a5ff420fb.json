@@ -1,1 +1,1 @@
-{"id":"3e3a0b57ae841ba70115c51a5ff420fb","fullName":"tests.e2e.RegisterTests.shouldRegisterWithMinimumLengthCredentials","name":"New user can register with 3-character login and 6-character password","status":"passed","testResultsByEnv":{"default":"db8a7bc49ad3a746a8975654da4af18d"}}
+{"id":"3e3a0b57ae841ba70115c51a5ff420fb","fullName":"tests.e2e.RegisterTests.shouldRegisterWithMinimumLengthCredentials","name":"New user can register with 3-character login and 6-character password","status":"passed","testResultsByEnv":{"default":"23f17c60a5c5cf8a1cc47c5408da3e5c"}}

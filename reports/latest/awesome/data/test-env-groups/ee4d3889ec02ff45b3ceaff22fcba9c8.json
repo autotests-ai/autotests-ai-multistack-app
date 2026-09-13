@@ -1,1 +1,1 @@
-{"id":"ee4d3889ec02ff45b3ceaff22fcba9c8","fullName":"tests.e2e.RegisterTests.shouldShowValidationErrorWhenUsernameIsTooShort","name":"Short username shows validation error","status":"passed","testResultsByEnv":{"default":"1513a787bfacd26ec59b246a9bf8798c"}}
+{"id":"ee4d3889ec02ff45b3ceaff22fcba9c8","fullName":"tests.e2e.RegisterTests.shouldShowValidationErrorWhenUsernameIsTooShort","name":"Short username shows validation error","status":"passed","testResultsByEnv":{"default":"93d50a75b2429d90facabd66a5664beb"}}
