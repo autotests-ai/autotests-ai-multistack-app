@@ -118,7 +118,7 @@ Full IDs live in hub [`matrix.yaml`](../../matrix.yaml) `tests.modules` (`status
 | `tests-rust-testing-selenium` | **active** — **UI-only** `cargo test` · Selenium / thirtyfour (no REST catalog) |
 | `tests-rust-testing-reqwest-selenium` | **active** — UI+HTTP reqwest + Selenium |
 | `tests-rust-goose` | slot — Goose Rust, `layers: [performance]` |
-| `tests-lua-wrk` | slot — wrk Lua scripts, `layers: [performance]` |
+| `tests-lua-wrk` | **active** — wrk Lua scripts, `layers: [performance]` |
 
 ```
 tests-javascript-api_request-playwright

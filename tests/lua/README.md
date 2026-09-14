@@ -4,4 +4,4 @@ Load-script language for wrk. No Lua backend in the catalog.
 
 | Folder | Role |
 |--------|------|
-| `tests-lua-wrk/` | slot — wrk Lua scripts (`layers: [performance]`) |
+| `tests-lua-wrk/` | **active** — wrk Lua scripts (`layers: [performance]`) |

@@ -85,7 +85,7 @@ tests/
     tests-rust-testing-reqwest-selenium/              # active — UI+HTTP reqwest + Selenium
     tests-rust-goose/                                # slot — Goose
   lua/
-    tests-lua-wrk/                                   # slot — wrk Lua scripts
+    tests-lua-wrk/                                   # active — wrk Lua scripts
   _deferred/
 ```
 

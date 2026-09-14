@@ -1,0 +1,7 @@
+.idea/
+.vscode/
+*.iml
+build/
+results/
+__pycache__/
+*.pyc
