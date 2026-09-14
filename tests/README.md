@@ -54,7 +54,7 @@ tests/
     tests-javascript-axios/                         # active — HTTP-only Axios (Vitest; not PW client)
     tests-javascript-k6/                             # active — k6 JavaScript sibling
     tests-javascript-gatling/                       # active — Gatling JS SDK
-    tests-javascript-artillery/                     # slot — Artillery JS
+    tests-javascript-artillery/                     # active — Artillery JS
   python/
     tests-python-pytest-requests-selenium/                   # active — UI+HTTP Selenium + in-cell requests
     tests-python-pytest-requests-selene/                     # active — UI+HTTP Selene + in-cell requests
@@ -72,7 +72,7 @@ tests/
     tests-typescript-axios/                          # active — HTTP block axios (Vitest)
     tests-typescript-k6/                             # active — k6 TypeScript sibling
     tests-typescript-gatling/                       # active — Gatling TS SDK
-    tests-typescript-artillery/                     # slot — Artillery TS
+    tests-typescript-artillery/                     # active — Artillery TS
   go/
     tests-go-testing-net_http/                         # active — HTTP block (31 api + 9 ConfigReader)
     tests-go-testing-api_request-playwright/             # active — UI+HTTP Playwright + in-cell APIRequest

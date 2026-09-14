@@ -75,13 +75,13 @@ Full IDs live in hub [`matrix.yaml`](../../matrix.yaml) `tests.modules` (`status
 | `tests-javascript-axios` | **active** — HTTP-only Axios (Vitest; not in-cell Playwright) |
 | `tests-javascript-k6` | **active** — k6 JavaScript, `layers: [performance]` |
 | `tests-javascript-gatling` | **active** — Gatling JS SDK, `layers: [performance]` |
-| `tests-javascript-artillery` | slot — Artillery JS, `layers: [performance]` |
+| `tests-javascript-artillery` | **active** — Artillery JS, `layers: [performance]` |
 | `tests-typescript-api_request-playwright` | **active** — UI+HTTP Playwright (`APIRequest` in-cell); c8 + sonar |
 | `tests-typescript-playwright` | slot — **UI-only** Playwright (no REST) |
 | `tests-typescript-axios` | **active** — HTTP-only Axios (Vitest; not in-cell Playwright) |
 | `tests-typescript-k6` | **active** — k6 TypeScript, `layers: [performance]` |
 | `tests-typescript-gatling` | **active** — Gatling TS SDK, `layers: [performance]` |
-| `tests-typescript-artillery` | slot — Artillery TS, `layers: [performance]` |
+| `tests-typescript-artillery` | **active** — Artillery TS, `layers: [performance]` |
 | `tests-python-pytest-requests-selenium` | **active** — UI+HTTP Selenium + in-cell requests |
 | `tests-python-pytest-requests-selene` | **active** — UI+HTTP Selene + in-cell requests |
 | `tests-python-pytest-api_request-playwright` | **active** — UI+HTTP Playwright (`APIRequest` in-cell) |

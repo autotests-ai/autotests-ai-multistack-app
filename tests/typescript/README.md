@@ -7,4 +7,4 @@
 | `tests-typescript-axios/` | **active** — HTTP block axios (`api` / `infra`, no `manual`, Vitest); `sonar-tests` on `config.ts` |
 | `tests-typescript-k6/` | **active** — k6 TypeScript (`layers: [performance]`; native .ts, not CI) |
 | `tests-typescript-gatling/` | **active** — Gatling TS SDK (`layers: [performance]`; `*.gatling.ts`, not tsc, not CI) |
-| `tests-typescript-artillery/` | slot — Artillery TS (`layers: [performance]`) |
+| `tests-typescript-artillery/` | **active** — Artillery TS (`layers: [performance]`; native .ts, not CI, not tsc) |

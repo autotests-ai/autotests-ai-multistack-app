@@ -1,0 +1,50 @@
+# Official artillery.io JavaScript school: YAML + processor.js (not k6, not Gatling JS).
+# Phases come from run.sh --overrides (smoke 1 rps / 25s, load arrivalRate).
+config:
+  target: "http://localhost:8800"
+  processor: "./processor.js"
+  http:
+    timeout: 15
+  defaults:
+    headers:
+      Accept: application/json
+      Content-Type: application/json
+      User-Agent: tests-javascript-artillery
+  phases:
+    - duration: 25
+      arrivalRate: 1
+      name: auth-api
+before:
+  flow:
+    - function: "openJsonl"
+scenarios:
+  - name: auth-api
+    flow:
+      - get:
+          url: "/api/health"
+          name: health
+          afterResponse: "recordSample"
+      - post:
+          url: "/api/auth/login"
+          name: login
+          json:
+            username: "{{ $processEnvironment.LOAD_USERNAME }}"
+            password: "{{ $processEnvironment.LOAD_PASSWORD }}"
+          capture:
+            - json: "$.token"
+              as: token
+          afterResponse: "recordSample"
+      - get:
+          url: "/api/auth/me"
+          name: me
+          headers:
+            Authorization: "Bearer {{ token }}"
+          afterResponse: "recordSample"
+      - get:
+          url: "/api/items"
+          name: items
+          afterResponse: "recordSample"
+      - post:
+          url: "/api/auth/logout"
+          name: logout
+          afterResponse: "recordSample"
