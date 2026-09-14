@@ -61,7 +61,7 @@ def _http_request(method: str, path: str, headers: list[tuple[str, str]], body: 
     for key, value in hdrs:
         lines.append(f"{key}: {value}")
     lines.append("")
-    head = "\n".join(lines) + "\n"
+    head = "\r\n".join(lines) + "\r\n"
     return head.encode("utf-8") + raw
 
 
