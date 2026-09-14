@@ -75,6 +75,7 @@ tests/
     tests-go-testing-api_request-playwright/             # active — UI+HTTP Playwright + in-cell APIRequest
     tests-go-testing-playwright/                     # slot — UI-only Playwright (no REST)
     tests-go-cdp/                                    # mill IR (greedy run)
+    tests-go-vegeta/                                 # active — Vegeta sibling
   rust/
     tests-rust-testing-reqwest/                      # active — HTTP block reqwest
     tests-rust-testing-selenium/                     # active — UI-only Selenium / thirtyfour

@@ -14,7 +14,7 @@ Do **not** put `gradle`, `maven`, `allure2`, `allure3`, or `no_allure` in the fo
 |---------|----------|-------|
 | `language` | `java`, `kotlin`, `scala`, `groovy`, `javascript`, `typescript`, `python`, `go`, `csharp`, `rust` | top-level under `tests/` |
 | `framework` | `junit4`, `junit5`, `junit6`, `testng`, `pytest`, `vitest`, `testing`, `nunit`, `xunit` | test runner |
-| `automation` | `selenium`, `selenide`, `selene`, `playwright`, `cypress`, `appium`, `rest_assured`, `retrofit2`, `requests`, `httpx`, `axios`, `ktor`, `restsharp`, `net_http`, `reqwest`, `api_request`, `jmeter`, `gatling`, `k6`, `yandex_tank`, `locust`, `none` | UI/HTTP school or load tool; `api_request` = Playwright `APIRequest` in combo ids; `_` in compounds (`rest_assured`, `yandex_tank`); `none` for api-only when unnamed; `appium` tails the default Java school as `rest_assured-selenide-appium` |
+| `automation` | `selenium`, `selenide`, `selene`, `playwright`, `cypress`, `appium`, `rest_assured`, `retrofit2`, `requests`, `httpx`, `axios`, `ktor`, `restsharp`, `net_http`, `reqwest`, `api_request`, `jmeter`, `gatling`, `k6`, `yandex_tank`, `locust`, `vegeta`, `none` | UI/HTTP school or load tool; `api_request` = Playwright `APIRequest` in combo ids; `_` in compounds (`rest_assured`, `yandex_tank`); `none` for api-only when unnamed; `appium` tails the default Java school as `rest_assured-selenide-appium` |
 
 ## Java — matrix
 
@@ -105,6 +105,7 @@ Full IDs live in hub [`matrix.yaml`](../../matrix.yaml) `tests.modules` (`status
 | `tests-go-testing-api_request-playwright` | **active** — UI+HTTP Playwright + in-cell APIRequest |
 | `tests-go-testing-playwright` | slot — **UI-only** Playwright (no REST) |
 | `tests-go-cdp` | mill — IR / `greedy run`, not a Selenide peer |
+| `tests-go-vegeta` | **active** — Vegeta sibling, `layers: [performance]` |
 | `tests-csharp-nunit-restsharp-selenium` | **active** — UI+HTTP Selenium + in-cell RestSharp |
 | `tests-csharp-nunit-selenium` | slot — **UI-only** NUnit · Selenium (no REST) |
 | `tests-csharp-nunit-restsharp` | **active** — HTTP block RestSharp |
