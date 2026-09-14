@@ -63,7 +63,7 @@ tests/
     tests-python-pytest-requests/                            # active — HTTP block requests (31 api + 9 ConfigReader)
     tests-python-pytest-httpx/                               # active — HTTP block httpx
     tests-python-yandex_tank/                         # slot — Yandex.Tank
-    tests-python-locust/                             # slot — Locust
+    tests-python-locust/                             # active — Locust sibling
   typescript/
     tests-typescript-api_request-playwright/         # active — UI+HTTP, APIRequest in-cell; c8 + sonar
     tests-typescript-playwright/                     # slot — UI-only Playwright (no REST)

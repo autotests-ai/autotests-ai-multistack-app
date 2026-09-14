@@ -89,7 +89,7 @@ Full IDs live in hub [`matrix.yaml`](../../matrix.yaml) `tests.modules` (`status
 | `tests-python-pytest-requests` | **active** — HTTP block requests (31 api + 9 ConfigReader) |
 | `tests-python-pytest-httpx` | **active** — HTTP block httpx (HTTP-only; not a UI in-cell client) |
 | `tests-python-yandex_tank` | slot — Yandex.Tank, `layers: [performance]` |
-| `tests-python-locust` | slot — Locust, `layers: [performance]` |
+| `tests-python-locust` | **active** — Locust, `layers: [performance]` |
 | `tests-kotlin-junit5-ktor-selenide` | **active** — UI+HTTP Selenide + in-cell Ktor |
 | `tests-kotlin-junit5-ktor-selenium` | **active** — UI+HTTP Selenium + in-cell Ktor |
 | `tests-kotlin-junit5-api_request-playwright` | **active** — UI+HTTP Playwright + in-cell APIRequest |

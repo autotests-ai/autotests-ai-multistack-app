@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copy JMeter/Gatling/k6 HTML to load.autotests.ai/runs/{injector}::{backend}/{run_id}/.
+# Copy JMeter/Gatling/k6/Locust HTML to load.autotests.ai/runs/{injector}::{backend}/{run_id}/.
 # Teaching job load-tests calls this after the injector smoke. Not Allure.
 #
 #   HTML_DIR=build/jmeter/report RUN_ID=123 \
@@ -79,8 +79,9 @@ resolve_html_dir() {
             done | sort | tail -1)"
         ;;
       k6) dir="${module}/build/k6/report" ;;
+      locust) dir="${module}/build/locust/report" ;;
       *)
-        echo "STOP: set HTML_DIR or LOAD_TOOL=jmeter|gatling|k6" >&2
+        echo "STOP: set HTML_DIR or LOAD_TOOL=jmeter|gatling|k6|locust" >&2
         return 1
         ;;
     esac
@@ -98,14 +99,14 @@ resolve_html_dir() {
 }
 
 HTML="$(resolve_html_dir)"
-TOOL_HTML_RE='Apache JMeter Dashboard|[Gg]atling|k6 report|k6-web-dashboard|xk6-dashboard|Grafana k6'
+TOOL_HTML_RE='Apache JMeter Dashboard|[Gg]atling|k6 report|k6-web-dashboard|xk6-dashboard|Grafana k6|[Ll]ocust'
 
 if grep -q 'Stub. Replace' "${HTML}/index.html"; then
   echo "STOP: ${HTML}/index.html is the stub, not a tool dashboard" >&2
   exit 1
 fi
 if ! grep -Eq "$TOOL_HTML_RE" "${HTML}/index.html"; then
-  echo "STOP: ${HTML}/index.html is not a JMeter/Gatling/k6 dashboard" >&2
+  echo "STOP: ${HTML}/index.html is not a JMeter/Gatling/k6/Locust dashboard" >&2
   exit 1
 fi
 
@@ -237,7 +238,7 @@ if grep -q 'Stub. Replace' /tmp/load-run-index.html; then
   exit 1
 fi
 if ! grep -Eq "$TOOL_HTML_RE" /tmp/load-run-index.html; then
-  echo "STOP: live HTML is not a JMeter/Gatling/k6 dashboard" >&2
+  echo "STOP: live HTML is not a JMeter/Gatling/k6/Locust dashboard" >&2
   exit 1
 fi
 echo "ok ${URL}"
