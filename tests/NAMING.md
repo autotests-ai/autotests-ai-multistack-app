@@ -12,9 +12,9 @@ Do **not** put `gradle`, `maven`, `allure2`, `allure3`, or `no_allure` in the fo
 
 | Segment | Examples | Notes |
 |---------|----------|-------|
-| `language` | `java`, `kotlin`, `scala`, `groovy`, `javascript`, `typescript`, `python`, `go`, `csharp`, `rust` | top-level under `tests/` |
+| `language` | `java`, `kotlin`, `scala`, `groovy`, `javascript`, `typescript`, `python`, `go`, `csharp`, `rust`, `lua` | top-level under `tests/` |
 | `framework` | `junit4`, `junit5`, `junit6`, `testng`, `pytest`, `vitest`, `testing`, `nunit`, `xunit` | test runner |
-| `automation` | `selenium`, `selenide`, `selene`, `playwright`, `cypress`, `appium`, `rest_assured`, `retrofit2`, `requests`, `httpx`, `axios`, `ktor`, `restsharp`, `net_http`, `reqwest`, `api_request`, `jmeter`, `gatling`, `k6`, `yandex_tank`, `locust`, `vegeta`, `none` | UI/HTTP school or load tool; `api_request` = Playwright `APIRequest` in combo ids; `_` in compounds (`rest_assured`, `yandex_tank`); `none` for api-only when unnamed; `appium` tails the default Java school as `rest_assured-selenide-appium` |
+| `automation` | `selenium`, `selenide`, `selene`, `playwright`, `cypress`, `appium`, `rest_assured`, `retrofit2`, `requests`, `httpx`, `axios`, `ktor`, `restsharp`, `net_http`, `reqwest`, `api_request`, `jmeter`, `gatling`, `k6`, `yandex_tank`, `locust`, `vegeta`, `artillery`, `nbomber`, `goose`, `wrk`, `none` | UI/HTTP school or load tool; `api_request` = Playwright `APIRequest` in combo ids; `_` in compounds (`rest_assured`, `yandex_tank`); `none` for api-only when unnamed; `appium` tails the default Java school as `rest_assured-selenide-appium` |
 
 ## Java — matrix
 
@@ -74,12 +74,14 @@ Full IDs live in hub [`matrix.yaml`](../../matrix.yaml) `tests.modules` (`status
 | `tests-javascript-cypress` | slot — UI block |
 | `tests-javascript-axios` | **active** — HTTP-only Axios (Vitest; not in-cell Playwright) |
 | `tests-javascript-k6` | **active** — k6 JavaScript, `layers: [performance]` |
-| `tests-javascript-gatling` | slot — Gatling JS SDK, `layers: [performance]` |
+| `tests-javascript-gatling` | **active** — Gatling JS SDK, `layers: [performance]` |
+| `tests-javascript-artillery` | slot — Artillery JS, `layers: [performance]` |
 | `tests-typescript-api_request-playwright` | **active** — UI+HTTP Playwright (`APIRequest` in-cell); c8 + sonar |
 | `tests-typescript-playwright` | slot — **UI-only** Playwright (no REST) |
 | `tests-typescript-axios` | **active** — HTTP-only Axios (Vitest; not in-cell Playwright) |
 | `tests-typescript-k6` | **active** — k6 TypeScript, `layers: [performance]` |
-| `tests-typescript-gatling` | slot — Gatling TS SDK, `layers: [performance]` |
+| `tests-typescript-gatling` | **active** — Gatling TS SDK, `layers: [performance]` |
+| `tests-typescript-artillery` | slot — Artillery TS, `layers: [performance]` |
 | `tests-python-pytest-requests-selenium` | **active** — UI+HTTP Selenium + in-cell requests |
 | `tests-python-pytest-requests-selene` | **active** — UI+HTTP Selene + in-cell requests |
 | `tests-python-pytest-api_request-playwright` | **active** — UI+HTTP Playwright (`APIRequest` in-cell) |
@@ -111,9 +113,12 @@ Full IDs live in hub [`matrix.yaml`](../../matrix.yaml) `tests.modules` (`status
 | `tests-csharp-nunit-restsharp` | **active** — HTTP block RestSharp |
 | `tests-csharp-xunit-api_request-playwright` | **active** — UI+HTTP xUnit · Playwright + in-cell APIRequest |
 | `tests-csharp-xunit-playwright` | slot — **UI-only** xUnit · Playwright (no REST) |
+| `tests-csharp-nbomber` | slot — NBomber C#, `layers: [performance]` |
 | `tests-rust-testing-reqwest` | **active** — HTTP block reqwest |
 | `tests-rust-testing-selenium` | **active** — **UI-only** `cargo test` · Selenium / thirtyfour (no REST catalog) |
 | `tests-rust-testing-reqwest-selenium` | **active** — UI+HTTP reqwest + Selenium |
+| `tests-rust-goose` | slot — Goose Rust, `layers: [performance]` |
+| `tests-lua-wrk` | slot — wrk Lua scripts, `layers: [performance]` |
 
 ```
 tests-javascript-api_request-playwright

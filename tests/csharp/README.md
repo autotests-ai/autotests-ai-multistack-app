@@ -9,4 +9,5 @@ Pattern: see [../NAMING.md](../NAMING.md). **UI-only** slots: `tests-csharp-nuni
 | `tests-csharp-nunit-restsharp` | **active** — HTTP block NUnit · RestSharp; coverlet + `sonar-tests` |
 | `tests-csharp-xunit-api_request-playwright` | **active** — UI+HTTP xUnit · Playwright + in-cell APIRequest; coverlet + `sonar-tests` |
 | `tests-csharp-xunit-playwright` | slot — **UI-only** xUnit · Playwright (no REST) |
+| `tests-csharp-nbomber` | slot — NBomber (`layers: [performance]`) |
 

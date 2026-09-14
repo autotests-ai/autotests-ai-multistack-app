@@ -31,6 +31,7 @@ tests/
     tests-csharp-nunit-restsharp/             # active — HTTP block RestSharp (31 api + 9 ConfigReader)
     tests-csharp-xunit-api_request-playwright/           # active — UI+HTTP Playwright + in-cell APIRequest
     tests-csharp-xunit-playwright/                   # slot — UI-only Playwright (no REST)
+    tests-csharp-nbomber/                            # slot — NBomber C#
   groovy/
     tests-groovy-jmeter/                             # active — JMeter JSR223 Groovy sibling
   kotlin/
@@ -52,7 +53,8 @@ tests/
     tests-javascript-cypress/                       # slot — UI block
     tests-javascript-axios/                         # active — HTTP-only Axios (Vitest; not PW client)
     tests-javascript-k6/                             # active — k6 JavaScript sibling
-    tests-javascript-gatling/                       # slot — Gatling JS SDK
+    tests-javascript-gatling/                       # active — Gatling JS SDK
+    tests-javascript-artillery/                     # slot — Artillery JS
   python/
     tests-python-pytest-requests-selenium/                   # active — UI+HTTP Selenium + in-cell requests
     tests-python-pytest-requests-selene/                     # active — UI+HTTP Selene + in-cell requests
@@ -69,7 +71,8 @@ tests/
     tests-typescript-playwright/                     # slot — UI-only Playwright (no REST)
     tests-typescript-axios/                          # active — HTTP block axios (Vitest)
     tests-typescript-k6/                             # active — k6 TypeScript sibling
-    tests-typescript-gatling/                       # slot — Gatling TS SDK
+    tests-typescript-gatling/                       # active — Gatling TS SDK
+    tests-typescript-artillery/                     # slot — Artillery TS
   go/
     tests-go-testing-net_http/                         # active — HTTP block (31 api + 9 ConfigReader)
     tests-go-testing-api_request-playwright/             # active — UI+HTTP Playwright + in-cell APIRequest
@@ -80,6 +83,9 @@ tests/
     tests-rust-testing-reqwest/                      # active — HTTP block reqwest
     tests-rust-testing-selenium/                     # active — UI-only Selenium / thirtyfour
     tests-rust-testing-reqwest-selenium/              # active — UI+HTTP reqwest + Selenium
+    tests-rust-goose/                                # slot — Goose
+  lua/
+    tests-lua-wrk/                                   # slot — wrk Lua scripts
   _deferred/
 ```
 
