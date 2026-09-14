@@ -3,7 +3,7 @@
 #
 #   ./run.sh
 #   TANK_PROFILE=smoke API_BASE_URL=http://localhost:8800 ./run.sh
-#   TANK_PROFILE=load LOAD_VUS=10 LOAD_DURING_SECONDS=60 ./run.sh
+#   TANK_PROFILE=load LOAD_RPS=10 LOAD_DURING_SECONDS=60 ./run.sh
 #
 # phout overlay + HTML report land in build/tank/. Not docker-tank, not Overload.
 set -euo pipefail

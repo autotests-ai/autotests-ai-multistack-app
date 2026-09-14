@@ -48,7 +48,13 @@ def profile() -> str:
 
 
 def users() -> int:
-    return max(1, _parse_int(_first_non_blank(os.environ.get("LOAD_VUS"), "1"), 1))
+    return max(
+        1,
+        _parse_int(
+            _first_non_blank(os.environ.get("LOAD_RPS"), os.environ.get("LOAD_VUS"), "1"),
+            1,
+        ),
+    )
 
 
 def during_seconds() -> int:

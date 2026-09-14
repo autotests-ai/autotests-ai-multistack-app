@@ -8,8 +8,9 @@ Smoke is **1 instance / ~30s** against the local Java Spring API. This is not a 
 cd tests/python/tests-python-yandex_tank
 ./run.sh
 TANK_PROFILE=smoke API_BASE_URL=http://localhost:8800 ./run.sh
-TANK_PROFILE=load LOAD_VUS=10 LOAD_DURING_SECONDS=60 ./run.sh
+TANK_PROFILE=load LOAD_RPS=10 LOAD_DURING_SECONDS=60 ./run.sh
 # load = phantom rps line(1, N, 10s) const(N, hold) with instances=N, not docker-tank.
+# LOAD_RPS is the open-loop rate (LOAD_VUS is the same knob).
 ```
 
 Stand: `API_BASE_URL` → [http://localhost:8800](http://localhost:8800/) (compose `backend-java-spring`). Seed `user1` / `password1`.
