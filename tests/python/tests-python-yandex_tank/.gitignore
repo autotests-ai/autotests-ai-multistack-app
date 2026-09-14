@@ -1,0 +1,10 @@
+.idea/
+.vscode/
+*.iml
+.venv/
+build/
+results/
+__pycache__/
+*.pyc
+*.lock
+*.stpd

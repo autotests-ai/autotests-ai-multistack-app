@@ -1,0 +1,59 @@
+# Teaching Yandex.Tank + phantom. run.sh writes a resolved copy to build/tank/load.yaml.
+# Do not enable Overload / DataUploader / Telegraf / JMeter / Pandora / docker-tank.
+core:
+  artifacts_base_dir: build/tank
+  artifacts_dir: build/tank
+  lock_dir: build/tank
+  ignore_lock: true
+phantom:
+  enabled: true
+  package: yandextank.plugins.Phantom
+  address: localhost:8800
+  ssl: false
+  header_http: "1.1"
+  ammo_type: phantom
+  ammofile: build/tank/ammo.txt
+  phout_file: build/tank/phout.log
+  instances: 1
+  timeout: 15s
+  use_caching: false
+  force_stepping: 1
+  load_profile:
+    load_type: rps
+    schedule: "const(1, 25s)"
+json_report:
+  enabled: true
+  package: yandextank.plugins.JsonReport
+autostop:
+  enabled: false
+  package: yandextank.plugins.Autostop
+telegraf:
+  enabled: false
+  package: yandextank.plugins.Telegraf
+jmeter:
+  enabled: false
+  package: yandextank.plugins.JMeter
+bfg:
+  enabled: false
+  package: yandextank.plugins.Bfg
+pandora:
+  enabled: false
+  package: yandextank.plugins.Pandora
+overload:
+  enabled: false
+  package: yandextank.plugins.DataUploader
+uploader:
+  enabled: false
+  package: yandextank.plugins.DataUploader
+influx:
+  enabled: false
+  package: yandextank.plugins.InfluxUploader
+shellexec:
+  enabled: false
+  package: yandextank.plugins.ShellExec
+platform:
+  enabled: false
+  package: yandextank.plugins.Platform
+console:
+  enabled: true
+  package: yandextank.plugins.Console

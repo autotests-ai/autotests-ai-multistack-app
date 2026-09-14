@@ -16,4 +16,4 @@ Stand: `API_BASE_URL` → [http://localhost:8800](http://localhost:8800/) (compo
 
 Isolated public SUT (dedicated load VM, not shared prod): `LOCUST_ALLOW_PUBLIC=true`.
 
-JSON overlay: `build/locust/results.json`. HTML: `build/locust/report/` (Locust `--html`, same `/runs/` path as JMeter/Gatling/k6). Yandex.Tank stays a slot: [`tests-python-yandex_tank`](../tests-python-yandex_tank/). JMeter JMX is the **etalon living** cell: [`tests-java-jmeter`](../../java/tests-java-jmeter/). Not CI (`ci.yml` stays the JMeter/Gatling orchestrator). Student emit: `python-locust` (templates still planned — do not copy this folder).
+JSON overlay: `build/locust/results.json`. HTML: `build/locust/report/` (Locust `--html`, same `/runs/` path as JMeter/Gatling/k6). Yandex.Tank sibling: [`tests-python-yandex_tank`](../tests-python-yandex_tank/). JMeter JMX is the **etalon living** cell: [`tests-java-jmeter`](../../java/tests-java-jmeter/). Not CI (`ci.yml` stays the JMeter/Gatling orchestrator). Student emit: `python-locust` (templates still planned — do not copy this folder).

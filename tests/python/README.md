@@ -12,7 +12,7 @@ UI-only slots keep the runner: `tests-python-pytest-{selenium,selene,playwright}
 | `tests-python-pytest-playwright/` | slot — **UI-only** Playwright (no REST) |
 | `tests-python-pytest-requests/` | **active** — HTTP block requests (`api` / `infra`, no `manual`); pytest-cov **100%** on `config.py` |
 | `tests-python-pytest-httpx/` | **active** — HTTP block httpx (`api` / `infra`, no `manual`); `sonar-tests` on `config.py` |
-| `tests-python-yandex_tank/` | slot — Yandex.Tank (`layers: [performance]`) |
+| `tests-python-yandex_tank/` | **active** — Yandex.Tank (`layers: [performance]`; not CI) |
 | `tests-python-locust/` | **active** — Locust (`layers: [performance]`; not CI) |
 
 Live CI verbs: `tests/python/.github/actions/{infra,api,mock,e2e,manual,sonar}`.
