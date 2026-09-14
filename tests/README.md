@@ -51,7 +51,7 @@ tests/
     tests-javascript-axios-playwright/               # bad-practice — Axios + Playwright (do not fill)
     tests-javascript-cypress/                       # slot — UI block
     tests-javascript-axios/                         # active — HTTP-only Axios (Vitest; not PW client)
-    tests-javascript-k6/                             # slot — k6 JavaScript
+    tests-javascript-k6/                             # active — k6 JavaScript sibling
     tests-javascript-gatling/                       # slot — Gatling JS SDK
   python/
     tests-python-pytest-requests-selenium/                   # active — UI+HTTP Selenium + in-cell requests

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copy JMeter/Gatling HTML to load.autotests.ai/runs/{injector}::{backend}/{run_id}/.
+# Copy JMeter/Gatling/k6 HTML to load.autotests.ai/runs/{injector}::{backend}/{run_id}/.
 # Teaching job load-tests calls this after the injector smoke. Not Allure.
 #
 #   HTML_DIR=build/jmeter/report RUN_ID=123 \
@@ -78,8 +78,9 @@ resolve_html_dir() {
               [ -f "${candidate}/index.html" ] && printf '%s\n' "$candidate"
             done | sort | tail -1)"
         ;;
+      k6) dir="${module}/build/k6/report" ;;
       *)
-        echo "STOP: set HTML_DIR or LOAD_TOOL=jmeter|gatling" >&2
+        echo "STOP: set HTML_DIR or LOAD_TOOL=jmeter|gatling|k6" >&2
         return 1
         ;;
     esac
@@ -97,12 +98,14 @@ resolve_html_dir() {
 }
 
 HTML="$(resolve_html_dir)"
+TOOL_HTML_RE='Apache JMeter Dashboard|[Gg]atling|k6 report|k6-web-dashboard|xk6-dashboard|Grafana k6'
+
 if grep -q 'Stub. Replace' "${HTML}/index.html"; then
   echo "STOP: ${HTML}/index.html is the stub, not a tool dashboard" >&2
   exit 1
 fi
-if ! grep -Eq 'Apache JMeter Dashboard|[Gg]atling' "${HTML}/index.html"; then
-  echo "STOP: ${HTML}/index.html is not a JMeter/Gatling dashboard" >&2
+if ! grep -Eq "$TOOL_HTML_RE" "${HTML}/index.html"; then
+  echo "STOP: ${HTML}/index.html is not a JMeter/Gatling/k6 dashboard" >&2
   exit 1
 fi
 
@@ -125,6 +128,28 @@ rps = float(total["throughput"])
 print(f"p95 {p95}ms")
 print(f"{rps:.1f} rps")
 ' "${HTML}/statistics.json")
+elif [ -f "${HTML}/summary.json" ]; then
+  while IFS= read -r line; do
+    VALUES+=("$line")
+  done < <(python3 -c '
+import json, sys
+from pathlib import Path
+
+data = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+metrics = data.get("metrics") or data
+duration = metrics.get("http_req_duration") or {}
+reqs = metrics.get("http_reqs") or {}
+values = duration.get("values") if isinstance(duration.get("values"), dict) else duration
+req_values = reqs.get("values") if isinstance(reqs.get("values"), dict) else reqs
+p95 = values.get("p(95)")
+if p95 is None:
+    p95 = values.get("p95")
+rate = req_values.get("rate")
+if p95 is None or rate is None:
+    raise SystemExit("STOP: k6 summary.json missing p95/rate")
+print(f"p95 {int(round(float(p95)))}ms")
+print(f"{float(rate):.1f} rps")
+' "${HTML}/summary.json")
 fi
 
 if [ -n "${LOAD_SSH_HOST:-}" ]; then
@@ -211,8 +236,8 @@ if grep -q 'Stub. Replace' /tmp/load-run-index.html; then
   echo "STOP: live HTML is still the stub" >&2
   exit 1
 fi
-if ! grep -Eq 'Apache JMeter Dashboard|[Gg]atling' /tmp/load-run-index.html; then
-  echo "STOP: live HTML is not a JMeter/Gatling dashboard" >&2
+if ! grep -Eq "$TOOL_HTML_RE" /tmp/load-run-index.html; then
+  echo "STOP: live HTML is not a JMeter/Gatling/k6 dashboard" >&2
   exit 1
 fi
 echo "ok ${URL}"

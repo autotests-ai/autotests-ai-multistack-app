@@ -7,5 +7,5 @@
 | `tests-javascript-axios-playwright/` | **bad-practice** — Axios + Playwright; do not fill (living combo is APIRequest) |
 | `tests-javascript-cypress/` | slot — UI block Cypress |
 | `tests-javascript-axios/` | **active** — HTTP-only Axios (Vitest; sibling of Playwright, not its client) |
-| `tests-javascript-k6/` | slot — k6 JavaScript (`layers: [performance]`) |
+| `tests-javascript-k6/` | **active** — k6 JavaScript (`layers: [performance]`; not CI) |
 | `tests-javascript-gatling/` | slot — Gatling JS SDK (`layers: [performance]`) |
