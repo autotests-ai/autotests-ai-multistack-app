@@ -6,4 +6,4 @@
 | `tests-typescript-playwright/` | slot — **UI-only** Playwright (no REST) |
 | `tests-typescript-axios/` | **active** — HTTP block axios (`api` / `infra`, no `manual`, Vitest); `sonar-tests` on `config.ts` |
 | `tests-typescript-k6/` | **active** — k6 TypeScript (`layers: [performance]`; native .ts, not CI) |
-| `tests-typescript-gatling/` | slot — Gatling TS SDK (`layers: [performance]`) |
+| `tests-typescript-gatling/` | **active** — Gatling TS SDK (`layers: [performance]`; `*.gatling.ts`, not tsc, not CI) |
