@@ -25,8 +25,6 @@ if ! command -v vegeta >/dev/null 2>&1; then
 fi
 
 python3 "${SRC}/prepare.py"
-rm -f "${OUT_DIR}/results.bin" "${OUT_DIR}/results.json"
-: > "${OUT_DIR}/results.json"
 
 if [ "${PROFILE}" = "load" ]; then
   RATE="${LOAD_VUS:-10}"
@@ -36,20 +34,18 @@ else
   HOLD=25
 fi
 
+rm -f "${OUT_DIR}/results.bin" "${OUT_DIR}/results.json"
+
+# Gob on stdout → tee keeps a binary copy; encode JSONL live so load_injector_*
+# can scrape the same window (not vegeta_* names, not closed VU).
 vegeta attack \
   -name=auth-api \
   -targets="${OUT_DIR}/targets.txt" \
   -rate="${RATE}/s" \
   -duration="${HOLD}s" \
   -timeout=15s \
-  -output="${OUT_DIR}/results.bin"
-
-if [ ! -s "${OUT_DIR}/results.bin" ]; then
-  echo "STOP: vegeta results.bin is empty (attack did not shoot)" >&2
-  exit 1
-fi
-
-vegeta encode -to=json "${OUT_DIR}/results.bin" > "${OUT_DIR}/results.json"
+| tee "${OUT_DIR}/results.bin" \
+| vegeta encode -to=json > "${OUT_DIR}/results.json"
 if [ ! -s "${OUT_DIR}/results.json" ]; then
   echo "STOP: vegeta JSONL is empty (encode did not write samples)" >&2
   exit 1
