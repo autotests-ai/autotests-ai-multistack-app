@@ -49,7 +49,7 @@ if [ ! -s "${OUT_DIR}/results.bin" ]; then
   exit 1
 fi
 
-vegeta encode json < "${OUT_DIR}/results.bin" > "${OUT_DIR}/results.json"
+vegeta encode -to=json "${OUT_DIR}/results.bin" > "${OUT_DIR}/results.json"
 if [ ! -s "${OUT_DIR}/results.json" ]; then
   echo "STOP: vegeta JSONL is empty (encode did not write samples)" >&2
   exit 1
