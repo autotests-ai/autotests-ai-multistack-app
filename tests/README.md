@@ -68,7 +68,7 @@ tests/
     tests-typescript-api_request-playwright/         # active — UI+HTTP, APIRequest in-cell; c8 + sonar
     tests-typescript-playwright/                     # slot — UI-only Playwright (no REST)
     tests-typescript-axios/                          # active — HTTP block axios (Vitest)
-    tests-typescript-k6/                             # slot — k6 TypeScript
+    tests-typescript-k6/                             # active — k6 TypeScript sibling
     tests-typescript-gatling/                       # slot — Gatling TS SDK
   go/
     tests-go-testing-net_http/                         # active — HTTP block (31 api + 9 ConfigReader)

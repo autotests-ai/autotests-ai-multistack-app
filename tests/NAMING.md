@@ -78,7 +78,7 @@ Full IDs live in hub [`matrix.yaml`](../../matrix.yaml) `tests.modules` (`status
 | `tests-typescript-api_request-playwright` | **active** — UI+HTTP Playwright (`APIRequest` in-cell); c8 + sonar |
 | `tests-typescript-playwright` | slot — **UI-only** Playwright (no REST) |
 | `tests-typescript-axios` | **active** — HTTP-only Axios (Vitest; not in-cell Playwright) |
-| `tests-typescript-k6` | slot — k6 TypeScript, `layers: [performance]` |
+| `tests-typescript-k6` | **active** — k6 TypeScript, `layers: [performance]` |
 | `tests-typescript-gatling` | slot — Gatling TS SDK, `layers: [performance]` |
 | `tests-python-pytest-requests-selenium` | **active** — UI+HTTP Selenium + in-cell requests |
 | `tests-python-pytest-requests-selene` | **active** — UI+HTTP Selene + in-cell requests |
