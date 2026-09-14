@@ -8,4 +8,4 @@
 | `tests-javascript-cypress/` | slot — UI block Cypress |
 | `tests-javascript-axios/` | **active** — HTTP-only Axios (Vitest; sibling of Playwright, not its client) |
 | `tests-javascript-k6/` | **active** — k6 JavaScript (`layers: [performance]`; not CI) |
-| `tests-javascript-gatling/` | slot — Gatling JS SDK (`layers: [performance]`) |
+| `tests-javascript-gatling/` | **active** — Gatling JS SDK (`layers: [performance]`; not CI) |

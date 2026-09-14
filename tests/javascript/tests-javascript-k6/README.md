@@ -17,4 +17,4 @@ Stand: `API_BASE_URL` → [http://localhost:8800](http://localhost:8800/) (compo
 
 Isolated public SUT (dedicated load VM, not shared prod): `K6_ALLOW_PUBLIC=true`.
 
-JSON overlay: `build/k6/results.json`. HTML: `build/k6/report/` (k6 web dashboard export, same `/runs/` path as JMeter/Gatling). TypeScript sibling: [`tests-typescript-k6`](../../typescript/tests-typescript-k6/). JS Gatling stays a slot. JMeter JMX is the **etalon living** cell: [`tests-java-jmeter`](../../java/tests-java-jmeter/). Not CI (`ci.yml` stays the JMeter/Gatling orchestrator). Student emit: `javascript-k6` (templates still planned — do not copy this folder).
+JSON overlay: `build/k6/results.json`. HTML: `build/k6/report/` (k6 web dashboard export, same `/runs/` path as JMeter/Gatling). TypeScript sibling: [`tests-typescript-k6`](../../typescript/tests-typescript-k6/). JS Gatling sibling: [`tests-javascript-gatling`](../tests-javascript-gatling/). JMeter JMX is the **etalon living** cell: [`tests-java-jmeter`](../../java/tests-java-jmeter/). Not CI (`ci.yml` stays the JMeter/Gatling orchestrator). Student emit: `javascript-k6` (templates still planned — do not copy this folder).
