@@ -105,7 +105,7 @@ resolve_html_dir() {
 }
 
 HTML="$(resolve_html_dir)"
-TOOL_HTML_RE='Apache JMeter Dashboard|[Gg]atling|k6 report|k6-web-dashboard|xk6-dashboard|Grafana k6|[Ll]ocust|Yandex\.Tank|[Vv]egeta|[Aa]rtillery|[Gg]oose|[Nn][Bb]omber|wrk'
+TOOL_HTML_RE='Apache JMeter Dashboard|[Gg]atling|k6 report|k6-web-dashboard|xk6-dashboard|Grafana k6|[Ll]ocust|Yandex\.Tank|Vegeta Plot|[Vv]egeta|Artillery report|[Aa]rtillery|Goose Attack|[Gg]oose|HtmlReport|[Nn][Bb]omber|wrk'
 
 if grep -q 'Stub. Replace' "${HTML}/index.html"; then
   echo "STOP: ${HTML}/index.html is the stub, not a tool dashboard" >&2

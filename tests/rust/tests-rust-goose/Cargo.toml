@@ -1,0 +1,13 @@
+[package]
+name = "tests-rust-goose"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Official tag1consulting/goose closed-VU school · layers: performance"
+publish = false
+
+[dependencies]
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+goose = "0.18.1"
+serde_json = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

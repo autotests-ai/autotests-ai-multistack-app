@@ -72,16 +72,33 @@ print(
 PY
 )"
 
-rm -f "${OUT_DIR}/results.json"
+OFFICIAL_JSON="${OUT_DIR}/artillery-report.json"
+rm -f "${OUT_DIR}/results.json" "${OFFICIAL_JSON}"
 mkdir -p "${OUT_DIR}"
 
 artillery run \
+  --output "${OFFICIAL_JSON}" \
   --target "${API_BASE_URL}" \
   --overrides "${OVERRIDES}" \
   "${SRC}/auth-api.yml"
 
 if [ ! -s "${OUT_DIR}/results.json" ]; then
   echo "STOP: artillery JSONL is empty (processor did not write samples)" >&2
+  exit 1
+fi
+if [ ! -s "${OFFICIAL_JSON}" ]; then
+  echo "STOP: artillery official JSON report is empty (${OFFICIAL_JSON})" >&2
+  exit 1
+fi
+
+# Native HTML: `artillery report` when it still writes the official page. 2.0.34
+# lists the subcommand but only prints a deprecation notice — same 2.0.21 template.
+if ! artillery report --output "${REPORT_DIR}/index.html" "${OFFICIAL_JSON}" 2>/dev/null \
+  || ! grep -q '<title>Artillery report</title>' "${REPORT_DIR}/index.html"; then
+  node "${SRC}/artillery-report.js" --output "${REPORT_DIR}/index.html" "${OFFICIAL_JSON}"
+fi
+if [ ! -s "${REPORT_DIR}/index.html" ]; then
+  echo "STOP: artillery HTML report is missing (${REPORT_DIR}/index.html)" >&2
   exit 1
 fi
 

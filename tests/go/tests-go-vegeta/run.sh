@@ -46,8 +46,19 @@ vegeta attack \
   -timeout=15s \
 | tee "${OUT_DIR}/results.bin" \
 | vegeta encode -to=json > "${OUT_DIR}/results.json"
+if [ ! -s "${OUT_DIR}/results.bin" ]; then
+  echo "STOP: vegeta results.bin is empty" >&2
+  exit 1
+fi
 if [ ! -s "${OUT_DIR}/results.json" ]; then
   echo "STOP: vegeta JSONL is empty (encode did not write samples)" >&2
+  exit 1
+fi
+
+vegeta plot -output "${REPORT_DIR}/index.html" "${OUT_DIR}/results.bin"
+vegeta report "${OUT_DIR}/results.bin" > "${OUT_DIR}/report.txt"
+if [ ! -s "${REPORT_DIR}/index.html" ]; then
+  echo "STOP: vegeta plot did not write ${REPORT_DIR}/index.html" >&2
   exit 1
 fi
 

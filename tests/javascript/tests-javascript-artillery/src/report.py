@@ -1,14 +1,14 @@
-"""Build Artillery HTML + k6-shaped summary.json from vegeta-compatible JSONL."""
+"""Build k6-shaped summary.json from vegeta-compatible JSONL.
+
+Native HTML is `artillery report` (index.html). This script must not overwrite it.
+"""
 from __future__ import annotations
 
-import html
 import json
 import math
 import sys
-from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import urlparse
 
 
 def _percentile(values: list[float], p: float) -> float:
@@ -54,21 +54,6 @@ def latency_ms(raw: object) -> float | None:
         return None
 
 
-def tag_for(url: str) -> str:
-    path = urlparse(url).path.rstrip("/")
-    if path.endswith("/api/health"):
-        return "health"
-    if path.endswith("/api/auth/login"):
-        return "login"
-    if path.endswith("/api/auth/me"):
-        return "me"
-    if path.endswith("/api/items"):
-        return "items"
-    if path.endswith("/api/auth/logout"):
-        return "logout"
-    return path.rsplit("/", 1)[-1] or "request"
-
-
 def parse_jsonl(path: Path) -> list[dict]:
     rows: list[dict] = []
     if not path.is_file():
@@ -96,7 +81,6 @@ def parse_jsonl(path: Path) -> list[dict]:
         rows.append(
             {
                 "ts": (ts or 0) / 1000.0,
-                "tag": tag_for(str(row.get("url") or "")),
                 "elapsed_ms": max(elapsed, 0),
                 "code": code,
                 "ok": ok,
@@ -119,8 +103,6 @@ def main() -> int:
     span = max(rows[-1]["ts"] - rows[0]["ts"], 1.0)
     p95 = _percentile(elapsed, 0.95)
     rate = total / span
-    tags = Counter(row["tag"] for row in rows)
-    fail_tags = Counter(row["tag"] for row in rows if not row["ok"])
     payload = {
         "metrics": {
             "http_req_duration": {"values": {"p(95)": p95}},
@@ -131,39 +113,6 @@ def main() -> int:
     (report_dir / "summary.json").write_text(
         json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
-    rows_html = []
-    for tag, count in sorted(tags.items()):
-        rows_html.append(
-            f"<tr><td>{html.escape(tag)}</td><td>{count}</td><td>{fail_tags.get(tag, 0)}</td></tr>"
-        )
-    page = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Artillery · AuthApi</title>
-  <style>
-    body {{ font-family: ui-sans-serif, system-ui, sans-serif; margin: 2rem; color: #111; }}
-    h1 {{ margin-bottom: 0.25rem; }}
-    .meta {{ color: #444; margin-bottom: 1.5rem; }}
-    table {{ border-collapse: collapse; }}
-    th, td {{ border: 1px solid #ccc; padding: 0.4rem 0.7rem; text-align: left; }}
-    th {{ background: #f4f4f4; }}
-  </style>
-</head>
-<body>
-  <h1>Artillery</h1>
-  <p class="meta">artillery.io JSONL · health → login → me → items → logout</p>
-  <p><strong>p95 {int(round(p95))}ms</strong> · <strong>{rate:.1f} rps</strong> · {total}/{total} ({fails} failed)</p>
-  <table>
-    <thead><tr><th>tag</th><th>count</th><th>failed</th></tr></thead>
-    <tbody>
-      {''.join(rows_html)}
-    </tbody>
-  </table>
-</body>
-</html>
-"""
-    (report_dir / "index.html").write_text(page, encoding="utf-8")
     print(f"p95 {int(round(p95))}ms")
     print(f"{rate:.1f} rps")
     print(f"{total}/{total} ({fails} failed)")

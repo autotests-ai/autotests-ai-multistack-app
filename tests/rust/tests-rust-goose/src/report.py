@@ -1,6 +1,6 @@
-"""Build k6-shaped summary.json from vegeta encode JSONL.
+"""Build k6-shaped summary.json from vegeta-compatible JSONL.
 
-Native HTML is `vegeta plot` (index.html). This script must not overwrite it.
+Native HTML is Goose Html report (index.html). This script must not overwrite it.
 """
 from __future__ import annotations
 
@@ -46,7 +46,6 @@ def latency_ms(raw: object) -> float | None:
     if isinstance(raw, bool):
         return None
     if isinstance(raw, (int, float)):
-        # vegeta encode JSON: latency is nanoseconds, including samples < 1ms.
         return float(raw) / 1_000_000.0
     text = str(raw).strip()
     try:
@@ -97,7 +96,7 @@ def main() -> int:
     report_dir = Path(sys.argv[2])
     rows = parse_jsonl(src)
     if not rows:
-        raise SystemExit(f"STOP: vegeta JSONL has no samples: {src}")
+        raise SystemExit(f"STOP: goose JSONL has no samples: {src}")
     elapsed = [row["elapsed_ms"] for row in rows]
     fails = sum(1 for row in rows if not row["ok"])
     total = len(rows)
