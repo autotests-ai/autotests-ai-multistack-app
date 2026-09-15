@@ -11,6 +11,7 @@ cd tests/groovy/tests-groovy-jmeter
 ./gradlew jmeterSmoke
 ./gradlew jmeterSmoke -DapiBaseUrl=http://localhost:8800
 ./gradlew jmeter -Dthreads=10 -Dloops=-1 -Dduration=30
+# duration needs ThreadGroup.scheduler as stringProp (boolProp ignores -Jscheduler).
 ```
 
 Stand: `apiBaseUrl` / `API_BASE_URL` → local Java API on port 8800 (compose `backend-java-spring`), health [`/api/health`](http://localhost:8800/api/health). Seed `user1` / `password1`.
