@@ -152,7 +152,7 @@ def main() -> int:
 </head>
 <body>
   <h1>wrk</h1>
-  <p class="meta">wg/wrk JSONL · health → me → items → logout</p>
+  <p class="meta">wg/wrk JSONL · health → login → me → items → logout</p>
   <p><strong>p95 {int(round(p95))}ms</strong> · <strong>{rate:.1f} rps</strong> · {total}/{total} ({fails} failed)</p>
   <table>
     <thead><tr><th>tag</th><th>count</th><th>failed</th></tr></thead>

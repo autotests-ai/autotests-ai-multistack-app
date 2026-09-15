@@ -1,6 +1,8 @@
--- Official wg/wrk Lua school. Login once in init (vegeta prepare analogue),
--- then Bearer on health / me / items / logout. JSONL overlay from response()
--- during the run (not only done()). Open 10 HTTP/s via delay(), not wrk2, not -R.
+-- Official wg/wrk Lua school. Login once in init (vegeta prepare analogue)
+-- to stamp Bearer for me / logout. Attack mix matches Vegeta targets:
+-- health, POST login, me Bearer, items without Bearer, logout Bearer.
+-- JSONL overlay from response() during the run (not only done()).
+-- Open 10 HTTP/s via delay(), not wrk2, not -R.
 
 local ffi = require("ffi")
 ffi.cdef[[
@@ -50,16 +52,19 @@ local function strip_slash(url)
 end
 
 local token = ""
+local login_body = ""
 local prefix = ""
 local jsonl = nil
 local last_start = 0
 local last_step = nil
 local counter = 1
+-- Same 5 packets as tests-go-vegeta prepare.py (open-loop ammo, not a VU session).
 local steps = {
-  { method = "GET", path = "/api/health" },
-  { method = "GET", path = "/api/auth/me" },
-  { method = "GET", path = "/api/items" },
-  { method = "POST", path = "/api/auth/logout" },
+  { method = "GET", path = "/api/health", auth = false },
+  { method = "POST", path = "/api/auth/login", auth = false, body = "login" },
+  { method = "GET", path = "/api/auth/me", auth = true },
+  { method = "GET", path = "/api/items", auth = false },
+  { method = "POST", path = "/api/auth/logout", auth = true },
 }
 
 local function origin()
@@ -127,6 +132,9 @@ function init(args)
     prefix = ""
   end
   prefix = prefix:gsub("/+$", "")
+  local user = env_or("LOAD_USERNAME", env_or("username", "user1"))
+  local password = env_or("LOAD_PASSWORD", env_or("password", "password1"))
+  login_body = string.format('{"username":"%s","password":"%s"}', user, password)
   token = login()
   jsonl = open_jsonl()
 end
@@ -154,9 +162,16 @@ function request()
   local hdrs = {
     ["Accept"] = "application/json",
     ["User-Agent"] = "tests-lua-wrk",
-    ["Authorization"] = "Bearer " .. token,
   }
-  return wrk.format(step.method, prefix .. step.path, hdrs, nil)
+  local body = nil
+  if step.body == "login" then
+    hdrs["Content-Type"] = "application/json"
+    body = login_body
+  end
+  if step.auth then
+    hdrs["Authorization"] = "Bearer " .. token
+  end
+  return wrk.format(step.method, prefix .. step.path, hdrs, body)
 end
 
 function response(status, headers, body)

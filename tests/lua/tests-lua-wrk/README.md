@@ -2,7 +2,7 @@
 
 Official **[wg/wrk](https://github.com/wg/wrk)** (Lua scripts, not wrk2, not `-R`, not Vegeta, not hey) · `layers: [performance]` (not pyramid `@Layer`).
 
-Smoke is **1 thread / 1 connection / 10s** against the local Java Spring API. This is not a load against [autotests.ai](https://autotests.ai/) or Box2. Load is **open 10 HTTP/s × 60s**: wrk `-t10 -c10 -d60s` plus Lua `delay()` (`1000 * connections / LOAD_RPS` ms; wrk 4.2 ae loop, not µs). wrk has no ramp — do not invent one. Not wrk2, not `-R`. JSONL is ~600 lines, then rotated off the exporter glob.
+Smoke is **1 thread / 1 connection / 10s** against the local Java Spring API. This is not a load against [autotests.ai](https://autotests.ai/) or Box2. Load is **open 10 HTTP/s × 60s**: wrk `-t10 -c10 -d60s` plus Lua `delay()` (`1000 * connections / LOAD_RPS` ms; wrk 4.2 ae loop, not µs). wrk has no ramp — do not invent one. Not wrk2, not `-R`. Attack mix matches Vegeta: health, POST login, me Bearer, items without Bearer, logout Bearer (`init` login stamps the token, like vegeta prepare). JSONL is ~600 lines, then rotated off the exporter glob.
 
 ```bash
 cd tests/lua/tests-lua-wrk
