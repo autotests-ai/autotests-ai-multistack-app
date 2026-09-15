@@ -93,6 +93,8 @@ fi
 
 # Native HTML: `artillery report` when it still writes the official page. 2.0.34
 # lists the subcommand but only prints a deprecation notice — same 2.0.21 template.
+# Drop a previous index.html first: grep on a leftover native page would skip regenerate.
+rm -f "${REPORT_DIR}/index.html"
 if ! artillery report --output "${REPORT_DIR}/index.html" "${OFFICIAL_JSON}" 2>/dev/null \
   || ! grep -q '<title>Artillery report</title>' "${REPORT_DIR}/index.html"; then
   node "${SRC}/artillery-report.js" --output "${REPORT_DIR}/index.html" "${OFFICIAL_JSON}"
