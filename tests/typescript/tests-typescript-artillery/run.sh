@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Official artillery.io TypeScript school (native .ts, not tsc). Smoke or open arrivalRate.
+# arrivalRate is HTTP/s (one HTTP per scenario), not 10 five-step chains/s.
 #
 #   ./run.sh
 #   ARTILLERY_PROFILE=smoke API_BASE_URL=http://localhost:8800 ./run.sh
@@ -51,7 +52,7 @@ if ("autotests.ai" in url or "qa.guru" in url) and not allow:
 PY
 
 OFFICIAL_JSON="${OUT_DIR}/artillery-report.json"
-rm -f "${OUT_DIR}/results.json" "${OFFICIAL_JSON}"
+rm -f "${OUT_DIR}/results.json" "${OFFICIAL_JSON}" "${OUT_DIR}/prepare-token"
 mkdir -p "${OUT_DIR}"
 
 artillery run \

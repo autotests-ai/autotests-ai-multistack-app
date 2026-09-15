@@ -2,14 +2,14 @@
 
 Official **[wg/wrk](https://github.com/wg/wrk)** (Lua scripts, not wrk2, not `-R`, not Vegeta, not hey) · `layers: [performance]` (not pyramid `@Layer`).
 
-Smoke is **1 thread / 1 connection / 10s** against the local Java Spring API. This is not a load against [autotests.ai](https://autotests.ai/) or Box2. Load is **wrk -t10 -c10 -d60s**. wrk has no ramp — do not invent one.
+Smoke is **1 thread / 1 connection / 10s** against the local Java Spring API. This is not a load against [autotests.ai](https://autotests.ai/) or Box2. Load is **open 10 HTTP/s × 60s**: wrk `-t10 -c10 -d60s` plus Lua `delay()` (`1000 * connections / LOAD_RPS` ms; wrk 4.2 ae loop, not µs). wrk has no ramp — do not invent one. Not wrk2, not `-R`. JSONL is ~600 lines, then rotated off the exporter glob.
 
 ```bash
 cd tests/lua/tests-lua-wrk
 ./run.sh
 WRK_PROFILE=smoke API_BASE_URL=http://localhost:8800 ./run.sh
-WRK_PROFILE=load WRK_THREADS=10 WRK_CONNECTIONS=10 LOAD_DURING_SECONDS=60 ./run.sh
-# load = wrk -t10 -c10 -d60s (no ramp), not wrk2, not -R, not Vegeta, not hey.
+WRK_PROFILE=load WRK_THREADS=10 WRK_CONNECTIONS=10 LOAD_RPS=10 LOAD_DURING_SECONDS=60 ./run.sh
+# load = wrk -t10 -c10 -d60s + Lua delay() ms ≈ 10 HTTP/s (no ramp, not wrk2, not -R, not Vegeta, not hey).
 ```
 
 Stand: `API_BASE_URL` → [http://localhost:8800](http://localhost:8800/) (compose `backend-java-spring`). Seed `user1` / `password1`. Live check is `GET /api/health` → 200. Root `/` = 401 (Spring Security) is ok. `API_BASE_URL` is the origin without a path.

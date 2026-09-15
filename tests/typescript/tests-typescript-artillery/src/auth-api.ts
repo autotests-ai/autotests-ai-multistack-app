@@ -1,6 +1,7 @@
 /**
- * Contract chain against teaching /api: health → login → me → items → logout.
- * Official artillery.io native TypeScript (esbuild, not tsc). Open arrivalRate.
+ * One HTTP per scenario (health / login / me / items / logout), not a 5-step flow.
+ * Login token is prepared once in processor openJsonl (vegeta analogue).
+ * Official artillery.io native TypeScript (esbuild, not tsc). Open arrivalRate = HTTP/s.
  */
 import {
   apiBaseUrl,
@@ -39,18 +40,29 @@ export const before = {
 
 export const scenarios = [
   {
-    name: 'auth-api',
+    name: 'health',
+    weight: 1,
+    flow: [{ get: { url: '/api/health', name: 'health', afterResponse } }],
+  },
+  {
+    name: 'login',
+    weight: 1,
     flow: [
-      { get: { url: '/api/health', name: 'health', afterResponse } },
       {
         post: {
           url: '/api/auth/login',
           name: 'login',
           json: { username: username(), password: password() },
-          capture: [{ json: '$.token', as: 'token' }],
           afterResponse,
         },
       },
+    ],
+  },
+  {
+    name: 'me',
+    weight: 1,
+    flow: [
+      { function: 'bindToken' },
       {
         get: {
           url: '/api/auth/me',
@@ -59,8 +71,26 @@ export const scenarios = [
           afterResponse,
         },
       },
-      { get: { url: '/api/items', name: 'items', afterResponse } },
-      { post: { url: '/api/auth/logout', name: 'logout', afterResponse } },
+    ],
+  },
+  {
+    name: 'items',
+    weight: 1,
+    flow: [{ get: { url: '/api/items', name: 'items', afterResponse } }],
+  },
+  {
+    name: 'logout',
+    weight: 1,
+    flow: [
+      { function: 'bindToken' },
+      {
+        post: {
+          url: '/api/auth/logout',
+          name: 'logout',
+          headers: { Authorization: 'Bearer {{ token }}' },
+          afterResponse,
+        },
+      },
     ],
   },
 ];

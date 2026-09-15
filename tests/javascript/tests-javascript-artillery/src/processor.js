@@ -1,31 +1,102 @@
 /**
  * Stream vegeta-compatible JSONL while Artillery runs (not only the final report.json).
  * Overlay: build/artillery/results.json → load_injector_* (not artillery_*).
+ * Login once (vegeta prepare analogue); scenarios are one HTTP each.
  */
 'use strict';
 
 const fs = require('fs');
 const path = require('path');
-const { apiBaseUrl, refuseSharedProd } = require('./config');
+const {
+  apiBaseUrl,
+  jsonHeaders,
+  password,
+  refuseSharedProd,
+  username,
+} = require('./config');
 
 refuseSharedProd(apiBaseUrl());
 
 const OUT =
   process.env.ARTILLERY_JSONL ||
   path.join(__dirname, '..', 'build', 'artillery', 'results.json');
+const TOKEN_FILE = path.join(path.dirname(OUT), 'prepare-token');
 
 let fd = null;
+let sharedToken = '';
 
-function openJsonl(_context, _events, done) {
-  fs.mkdirSync(path.dirname(OUT), { recursive: true });
+function ensureFd() {
   if (fd != null) {
-    try {
-      fs.closeSync(fd);
-    } catch (_err) {
-      /* already closed */
-    }
+    return;
   }
+  fs.mkdirSync(path.dirname(OUT), { recursive: true });
   fd = fs.openSync(OUT, 'w');
+}
+
+function persistToken(token) {
+  sharedToken = token;
+  fs.mkdirSync(path.dirname(TOKEN_FILE), { recursive: true });
+  fs.writeFileSync(TOKEN_FILE, token, 'utf8');
+}
+
+function loadToken() {
+  if (sharedToken) {
+    return sharedToken;
+  }
+  try {
+    sharedToken = fs.readFileSync(TOKEN_FILE, 'utf8').trim();
+  } catch (_err) {
+    return '';
+  }
+  return sharedToken;
+}
+
+function loginOnce() {
+  const existing = loadToken();
+  if (existing) {
+    return Promise.resolve(existing);
+  }
+  const base = apiBaseUrl();
+  return fetch(`${base}/api/auth/login`, {
+    method: 'POST',
+    headers: jsonHeaders(),
+    body: JSON.stringify({ username: username(), password: password() }),
+  }).then((res) => {
+    return res.text().then((raw) => {
+      let body = {};
+      try {
+        body = raw ? JSON.parse(raw) : {};
+      } catch (err) {
+        throw new Error(`STOP: artillery prepare login is not JSON: ${raw}`);
+      }
+      const token = String(body.token || '');
+      if (body.username !== username() || !token) {
+        throw new Error(`STOP: artillery prepare login rejected: ${raw}`);
+      }
+      persistToken(token);
+      return token;
+    });
+  });
+}
+
+function openJsonl(context, _events, done) {
+  ensureFd();
+  loginOnce()
+    .then((token) => {
+      if (context && context.vars) {
+        context.vars.token = token;
+      }
+      done();
+    })
+    .catch(done);
+}
+
+function bindToken(context, _events, done) {
+  const token = loadToken();
+  if (!token) {
+    return done(new Error('STOP: artillery prepare token is empty'));
+  }
+  context.vars.token = token;
   return done();
 }
 
@@ -46,9 +117,7 @@ function requestUrl(req) {
 }
 
 function recordSample(req, res, _context, _events, next) {
-  if (fd == null) {
-    openJsonl(null, null, function noop() {});
-  }
+  ensureFd();
   const code = Number(res && res.statusCode) || 0;
   const error = code === 0 || code >= 400 ? String((res && res.statusCode) || 'error') : '';
   const line =
@@ -64,4 +133,4 @@ function recordSample(req, res, _context, _events, next) {
   return next();
 }
 
-module.exports = { openJsonl, recordSample };
+module.exports = { openJsonl, bindToken, recordSample };

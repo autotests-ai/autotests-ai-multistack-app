@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Official wg/wrk Lua school. Smoke (default) or closed threads/connections load.
+# Official wg/wrk Lua school. Smoke (default) or open HTTP/s via Lua delay().
 # wrk has no ramp — do not invent one. Not wrk2, not -R, not Vegeta, not hey.
 #
 #   ./run.sh
 #   WRK_PROFILE=smoke API_BASE_URL=http://localhost:8800 ./run.sh
-#   WRK_PROFILE=load WRK_THREADS=10 WRK_CONNECTIONS=10 LOAD_DURING_SECONDS=60 ./run.sh
+#   WRK_PROFILE=load WRK_THREADS=10 WRK_CONNECTIONS=10 LOAD_RPS=10 LOAD_DURING_SECONDS=60 ./run.sh
 #
-# JSONL overlay + HTML report land in build/wrk/.
+# JSONL overlay + HTML report land in build/wrk/. Load JSONL is ~600 lines, then rotated.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -37,11 +37,15 @@ if [ "${PROFILE}" = "load" ]; then
   THREADS="${WRK_THREADS:-10}"
   CONNECTIONS="${WRK_CONNECTIONS:-10}"
   HOLD="${LOAD_DURING_SECONDS:-60}"
+  export LOAD_RPS="${LOAD_RPS:-10}"
 else
   THREADS=1
   CONNECTIONS=1
   HOLD=10
+  unset LOAD_RPS
 fi
+export WRK_THREADS="${THREADS}"
+export WRK_CONNECTIONS="${CONNECTIONS}"
 
 python3 - <<'PY'
 import os
@@ -70,7 +74,7 @@ rm -f "${OUT_DIR}/results.json"
 mkdir -p "${OUT_DIR}"
 : > "${OUT_DIR}/results.json"
 
-echo "wrk host=${API_BASE_URL} profile=${PROFILE} -t${THREADS} -c${CONNECTIONS} -d${HOLD}s jsonl=${WRK_JSONL}" >&2
+echo "wrk host=${API_BASE_URL} profile=${PROFILE} -t${THREADS} -c${CONNECTIONS} -d${HOLD}s rps=${LOAD_RPS:-0} jsonl=${WRK_JSONL}" >&2
 
 wrk -t"${THREADS}" -c"${CONNECTIONS}" -d"${HOLD}s" -T15s \
   -s "${SRC}/auth-api.lua" \
@@ -82,3 +86,10 @@ if [ ! -s "${OUT_DIR}/results.json" ]; then
 fi
 
 python3 "${SRC}/report.py" "${OUT_DIR}/results.json" "${REPORT_DIR}"
+
+# Exporter globs only results.json. Do not leave a newest giant JSONL after load.
+if [ "${PROFILE}" = "load" ] && [ -f "${OUT_DIR}/results.json" ]; then
+  bak="${OUT_DIR}/results.json.$(date -u +%Y%m%dT%H%MZ).bak"
+  mv "${OUT_DIR}/results.json" "${bak}"
+  echo "rotated jsonl ${bak} lines=$(wc -l < "${bak}" | tr -d ' ')" >&2
+fi

@@ -1,6 +1,6 @@
 -- Official wg/wrk Lua school. Login once in init (vegeta prepare analogue),
 -- then Bearer on health / me / items / logout. JSONL overlay from response()
--- during the run (not only done()). Not wrk2, not -R, not Vegeta.
+-- during the run (not only done()). Open 10 HTTP/s via delay(), not wrk2, not -R.
 
 local ffi = require("ffi")
 ffi.cdef[[
@@ -52,7 +52,8 @@ end
 local token = ""
 local prefix = ""
 local jsonl = nil
-local starts = {}
+local last_start = 0
+local last_step = nil
 local counter = 1
 local steps = {
   { method = "GET", path = "/api/health" },
@@ -130,10 +131,26 @@ function init(args)
   jsonl = open_jsonl()
 end
 
+-- milliseconds (wrk 4.2 ae loop; official scripts/delay.lua returns 10-50).
+-- LOAD_RPS=10 and WRK_CONNECTIONS=10 → 1000ms per connection → 10 HTTP/s.
+-- Not wrk2, not -R. Smoke leaves LOAD_RPS unset → no delay.
+function delay()
+  local rps = tonumber(env_or("LOAD_RPS", "0")) or 0
+  if rps <= 0 then
+    return 0
+  end
+  local connections = tonumber(env_or("WRK_CONNECTIONS", "1")) or 1
+  if connections < 1 then
+    connections = 1
+  end
+  return math.floor(1000 * connections / rps)
+end
+
 function request()
   local step = steps[((counter - 1) % #steps) + 1]
   counter = counter + 1
-  starts[#starts + 1] = { t = now_ns(), step = step }
+  last_step = step
+  last_start = now_ns()
   local hdrs = {
     ["Accept"] = "application/json",
     ["User-Agent"] = "tests-lua-wrk",
@@ -143,8 +160,7 @@ function request()
 end
 
 function response(status, headers, body)
-  local item = table.remove(starts, 1) or { t = now_ns(), step = steps[1] }
-  local latency = now_ns() - item.t
+  local latency = now_ns() - last_start
   if latency < 0 then
     latency = 0
   end
@@ -154,7 +170,7 @@ function response(status, headers, body)
     err = tostring(code)
   end
   local sec, nsec = now_parts()
-  local step = item.step or steps[1]
+  local step = last_step or steps[1]
   local line = string.format(
     '{"timestamp":"%s","latency":%d,"code":%d,"error":"%s","method":"%s","url":"%s"}\n',
     iso8601(sec, nsec),

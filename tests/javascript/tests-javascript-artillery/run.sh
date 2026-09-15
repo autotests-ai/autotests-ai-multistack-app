@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Official artillery.io JavaScript school (YAML + processor.js). Smoke or open arrivalRate.
+# arrivalRate is HTTP/s (one HTTP per scenario), not 10 five-step chains/s.
 #
 #   ./run.sh
 #   ARTILLERY_PROFILE=smoke API_BASE_URL=http://localhost:8800 ./run.sh
@@ -73,7 +74,7 @@ PY
 )"
 
 OFFICIAL_JSON="${OUT_DIR}/artillery-report.json"
-rm -f "${OUT_DIR}/results.json" "${OFFICIAL_JSON}"
+rm -f "${OUT_DIR}/results.json" "${OFFICIAL_JSON}" "${OUT_DIR}/prepare-token"
 mkdir -p "${OUT_DIR}"
 
 artillery run \
