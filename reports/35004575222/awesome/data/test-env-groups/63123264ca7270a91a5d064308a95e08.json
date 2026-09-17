@@ -1,1 +1,0 @@
-{"id":"63123264ca7270a91a5d064308a95e08","fullName":"dev.multistack.app.config.CorsConfigTest.sameHostFallsBackWhenHostHeaderBlank","name":"sameHost falls back to server name when Host header is blank","status":"passed","testResultsByEnv":{"default":"238543166ed8b2e1f965a6d88c14f6d2"}}

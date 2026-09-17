@@ -1,1 +1,0 @@
-{"id":"46293a51412eecb42756739828c1944d","fullName":"dev.multistack.app.config.JwtAuthFilterTest.ignoresNonBearerAuthorizationHeader","name":"ignores non-bearer authorization header","status":"passed","testResultsByEnv":{"default":"ac03d716ad7a352a637734d02df4f944"}}
