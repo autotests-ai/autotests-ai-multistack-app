@@ -1,6 +1,6 @@
-# yandextank 2.0.12 wants pandas<=2.0.3 (no cp312 wheel). Pin a 3.12 wheel and install tank --no-deps.
+# yandextank 2.0.12 via --no-deps. pandas 2.3.3 + numpy 2.2.x ship cp314 wheels (1.26.4 does not).
 pandas==2.3.3
-numpy==1.26.4
+numpy==2.2.6
 psutil>=5.9.8
 requests>=2.31.0
 pyyaml>=5.4

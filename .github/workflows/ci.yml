@@ -158,7 +158,7 @@ env:
   APP_SLUG: autotests-ai-multistack-app
   JAVA_VERSION: "21"
   NODE_VERSION: "26"
-  PYTHON_VERSION: "3.12"
+  PYTHON_VERSION: "3.14"
   DOTNET_VERSION: "8.0.x"
   CHECKOUT_FETCH_DEPTH: "1"
   GRADLE_CACHE_READ_ONLY: "false"
