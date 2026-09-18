@@ -10,8 +10,8 @@ import annotations.Framework;
 import annotations.Scope;
 import config.ConfigReader;
 import config.TestConfig;
-import drivers.BrowserDriverProvider;
 import helpers.BrowserSessionHelper;
+import helpers.LocalChromePin;
 import pages.HomePage;
 import pages.LoginPage;
 import pages.RegisterPage;
@@ -54,10 +54,13 @@ public class TestBase extends AllureMeta {
         }
 
         Configuration.baseUrl = config.baseUrl();
-        Configuration.browser = BrowserDriverProvider.class.getName();
+        Configuration.browser = config.browser();
         Configuration.browserSize = config.browserSize();
         Configuration.headless = config.headless();
         Configuration.timeout = 5_000;
+        if (config.remoteUrl().isBlank() && "chrome".equals(config.browser())) {
+            LocalChromePin.apply(config.browserVersion());
+        }
 
         if (AllureSelenideListeners.isGloballyEnabled(config)) {
             AllureSelenideListeners.setEnabled(true);
