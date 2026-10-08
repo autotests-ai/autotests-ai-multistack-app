@@ -53,17 +53,23 @@ public class TestBase extends AllureMeta {
             System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "off");
         }
 
-        Configuration.baseUrl = config.baseUrl();
-        Configuration.browser = config.browser();
-        Configuration.browserSize = config.browserSize();
-        Configuration.headless = config.headless();
-        Configuration.timeout = 5_000;
-        if (config.remoteUrl().isBlank() && "chrome".equals(config.browser())) {
-            LocalChromePin.apply(config.browserVersion());
-        }
+        configureBrowser(config);
 
         if (AllureSelenideListeners.isGloballyEnabled(config)) {
             AllureSelenideListeners.setEnabled(true);
+        }
+    }
+
+    public static void configureBrowser(TestConfig browserConfig) {
+        Configuration.baseUrl = browserConfig.baseUrl();
+        Configuration.browser = browserConfig.browser();
+        Configuration.browserSize = browserConfig.browserSize();
+        Configuration.remote = browserConfig.remoteUrl().isBlank() ? null : browserConfig.remoteUrl();
+        Configuration.browserVersion = browserConfig.browserVersion();
+        Configuration.headless = browserConfig.headless();
+        Configuration.timeout = 5_000;
+        if (browserConfig.remoteUrl().isBlank() && "chrome".equals(browserConfig.browser())) {
+            LocalChromePin.apply(browserConfig.browserVersion());
         }
     }
 
