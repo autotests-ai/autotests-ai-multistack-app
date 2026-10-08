@@ -1,0 +1,1 @@
+{"id":"8d0a0d179c8693856188d18f2a4b58c5","fullName":"dev.multistack.app.integration.ActuatorPrometheusIntegrationTest.managementPortIsNotApiPort","name":"API and management bind distinct ports","status":"passed","testResultsByEnv":{"default":"a478bee2c1336baa6307aaced4f2cd46"}}
