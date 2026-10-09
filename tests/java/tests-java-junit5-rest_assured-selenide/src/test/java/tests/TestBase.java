@@ -11,6 +11,7 @@ import annotations.Scope;
 import config.ConfigReader;
 import config.TestConfig;
 import helpers.BrowserSessionHelper;
+import helpers.HarCapture;
 import helpers.LocalChromePin;
 import pages.HomePage;
 import pages.LoginPage;
@@ -20,7 +21,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
+import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.SessionNotCreatedException;
+import org.openqa.selenium.chrome.ChromeOptions;
 
 import static com.codeborne.selenide.Selenide.closeWebDriver;
 import static com.codeborne.selenide.Selenide.open;
@@ -70,7 +73,23 @@ public class TestBase extends AllureMeta {
         Configuration.timeout = 5_000;
         if (browserConfig.remoteUrl().isBlank() && "chrome".equals(browserConfig.browser())) {
             LocalChromePin.apply(browserConfig.browserVersion());
+            Configuration.browserCapabilities = localChromeCapabilities(browserConfig);
+        } else {
+            Configuration.browserCapabilities = new MutableCapabilities();
         }
+    }
+
+    // Linux CI runners cannot create Chrome's kernel sandbox (unprivileged
+    // user namespaces are restricted), so the browser exits before DevTools
+    // comes up — sibling lanes pass the same flag for local Chrome.
+    private static ChromeOptions localChromeCapabilities(TestConfig browserConfig) {
+        var chrome = new ChromeOptions();
+        chrome.addArguments("--no-sandbox");
+        boolean captureHar = browserConfig.enableHar() || browserConfig.attachHarLogs();
+        if (captureHar && HarCapture.supportsBrowser(browserConfig.browser())) {
+            HarCapture.enablePerformanceLogging(chrome);
+        }
+        return chrome;
     }
 
     /**
