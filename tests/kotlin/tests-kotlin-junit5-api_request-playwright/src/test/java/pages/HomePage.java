@@ -5,15 +5,13 @@ import com.microsoft.playwright.Page;
 import io.qameta.allure.Step;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
-import static api.AuthApiClient.login;
 
-public class HomePage {
+public class HomePage extends BasePage<HomePage> {
 
     /** Mirrors frontend DELETE_ACCOUNT_CONFIRM. */
     private static final String DELETE_ACCOUNT_CONFIRM =
             "Delete this account? This cannot be undone.";
 
-    private final Page page;
     public final Locator layout;
     public final Locator healthStatus;
     public final Locator itemsList;
@@ -24,7 +22,7 @@ public class HomePage {
     public final Locator header;
 
     public HomePage(Page page) {
-        this.page = page;
+        super(page);
         this.layout = page.getByTestId("multistack-layout");
         this.healthStatus = page.getByTestId("health-status");
         this.itemsList = page.getByTestId("items-list");
@@ -43,6 +41,7 @@ public class HomePage {
         return shouldBeOpen();
     }
 
+    @Override
     @Step("Verify home layout is open")
     public HomePage shouldBeOpen() {
         layout.waitFor();
@@ -114,18 +113,13 @@ public class HomePage {
 
     @Step("Open home page with local storage authentication")
     public HomePage openWithLocalStorageAuthentication(String username, String password) {
-        return openWithLocalStorageAuth(login(username, password));
+        return openWithLocalStorageAuth(authenticate(username, password));
     }
 
     @Step("Seed localStorage auth token")
     public HomePage openWithLocalStorageAuth(String token) {
-        page.navigate("login");
-        page.getByTestId("login-form").waitFor();
-        var key = authTokenKey();
-        page.evaluate(
-                "arg => localStorage.setItem(arg.key, arg.token)",
-                java.util.Map.of("key", key, "token", token));
-        return open();
+        openPageWithLocalStorageToken("./", token);
+        return shouldBeOpen();
     }
 
     @Step("Verify welcome panel stays hidden")
@@ -136,13 +130,7 @@ public class HomePage {
 
     @Step("Verify auth token was cleared from localStorage")
     public HomePage shouldClearAuthToken() {
-        page.waitForFunction("""
-                () => {
-                  const m = location.pathname.match(/\\/(backend-[^/]+)\\//);
-                  const key = m ? `authToken:${m[1]}` : 'authToken';
-                  return localStorage.getItem(key) === null;
-                }
-                """);
+        waitForAuthTokenToBeCleared();
         return this;
     }
 
@@ -158,19 +146,5 @@ public class HomePage {
     @Step("Open home with a garbage auth token")
     public HomePage openWithInvalidToken() {
         return openWithLocalStorageAuth("invalid-token");
-    }
-
-    public String authTokenKey() {
-        var key = (String) page.evaluate("""
-                () => {
-                  const m = location.pathname.match(/\\/(backend-[^/]+)\\//);
-                  return m ? `authToken:${m[1]}` : 'authToken';
-                }
-                """);
-        return key;
-    }
-
-    public String authToken() {
-        return (String) page.evaluate("k => localStorage.getItem(k)", authTokenKey());
     }
 }

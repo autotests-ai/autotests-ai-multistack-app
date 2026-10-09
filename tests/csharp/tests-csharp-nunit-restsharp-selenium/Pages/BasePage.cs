@@ -1,4 +1,5 @@
 using Allure.NUnit.Attributes;
+using Api;
 using Helpers;
 using OpenQA.Selenium;
 
@@ -6,6 +7,10 @@ namespace Pages;
 
 public abstract class BasePage<T> where T : BasePage<T>
 {
+    private const string AuthTokenKeyJs =
+        "var m=location.pathname.match(/\\/(backend-[^/]+)\\//);"
+        + "return m ? 'authToken:' + m[1] : 'authToken';";
+
     public readonly HeaderComponent Header = new();
 
     public abstract T ShouldBeOpen();
@@ -16,6 +21,26 @@ public abstract class BasePage<T> where T : BasePage<T>
         Ui.Refresh();
         return ShouldBeOpen();
     }
+
+    protected void OpenPageWithLocalStorageAuthentication(string pagePath, string username, string password) =>
+        OpenPageWithLocalStorageToken(pagePath, AuthApiClient.Login(username, password));
+
+    protected void OpenPageWithLocalStorageToken(string pagePath, string token)
+    {
+        Ui.Open("/icons/qa-guru-logo.svg");
+        Ui.Js("localStorage.setItem(arguments[0], arguments[1]);", AuthTokenKey(), token);
+        Ui.Open(pagePath);
+    }
+
+    protected void WaitForAuthTokenToBeCleared() =>
+        Ui.WaitUntil(_ => AuthToken() == null ? true : (bool?)null);
+
+    protected void WaitForAuthTokenToBePresent() =>
+        Ui.WaitUntil(_ => AuthToken() != null ? true : (bool?)null);
+
+    private static string AuthTokenKey() => Convert.ToString(Ui.Js(AuthTokenKeyJs)) ?? "authToken";
+
+    private static object? AuthToken() => Ui.Js("return localStorage.getItem(arguments[0]);", AuthTokenKey());
 }
 
 public sealed class HeaderComponent
