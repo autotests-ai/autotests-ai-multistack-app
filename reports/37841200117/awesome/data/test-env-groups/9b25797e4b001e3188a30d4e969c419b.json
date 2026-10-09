@@ -1,1 +1,0 @@
-{"id":"9b25797e4b001e3188a30d4e969c419b","fullName":"dev.multistack.app.config.CorsConfigTest.corsForRequestSkipsNonApiPaths","name":"corsForRequest ignores non-API paths and null requests","status":"passed","testResultsByEnv":{"default":"c7d653c8fb9d42d13e8db27d348f65d8"}}
