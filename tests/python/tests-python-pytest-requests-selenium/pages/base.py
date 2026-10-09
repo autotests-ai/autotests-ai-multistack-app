@@ -5,7 +5,13 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+from api_client import login as api_login
 from config import TestConfig
+
+AUTH_TOKEN_KEY_JS = (
+    "var m=location.pathname.match(/\\/(backend-[^/]+)\\//);"
+    "return m ? 'authToken:' + m[1] : 'authToken';"
+)
 
 
 class BasePage:
@@ -21,6 +27,32 @@ class BasePage:
         base = self.config.base_url.rstrip("/")
         suffix = path if path.startswith("/") else f"/{path}"
         self.driver.get(f"{base}{suffix}")
+
+    def _open_page_with_local_storage_authentication(
+        self, path: str, username: str, password: str
+    ) -> None:
+        self._open_page_with_local_storage_token(path, api_login(self.config, username, password))
+
+    def _open_page_with_local_storage_token(self, path: str, token: str) -> None:
+        self.open_path("/icons/qa-guru-logo.svg")
+        self.driver.execute_script(
+            "localStorage.setItem(arguments[0], arguments[1]);", self._auth_token_key(), token
+        )
+        self.open_path(path)
+
+    def _wait_for_auth_token_to_be_cleared(self) -> None:
+        self.wait().until(lambda driver: self._auth_token() is None)
+
+    def _wait_for_auth_token_to_be_present(self) -> None:
+        self.wait().until(lambda driver: self._auth_token() is not None)
+
+    def _auth_token_key(self) -> str:
+        return self.driver.execute_script(AUTH_TOKEN_KEY_JS)
+
+    def _auth_token(self) -> str | None:
+        return self.driver.execute_script(
+            "return localStorage.getItem(arguments[0]);", self._auth_token_key()
+        )
 
     def find(self, by: By, value: str):
         return self.driver.find_element(by, value)

@@ -170,6 +170,9 @@ public static class Ui
     public static object? Js(string script, params object?[] args) =>
         ((IJavaScriptExecutor)Driver()).ExecuteScript(script, args);
 
+    public static bool WaitUntil(Func<IWebDriver, bool?> condition, TimeSpan? timeout = null) =>
+        WaitUntil<bool>(driver => condition(driver) == true, timeout);
+
     public static T WaitUntil<T>(Func<IWebDriver, T?> condition, TimeSpan? timeout = null)
     {
         var wait = new WebDriverWait(Driver(), timeout ?? Timeout)
