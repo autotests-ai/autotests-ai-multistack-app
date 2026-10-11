@@ -344,8 +344,8 @@ func findGreedyGuru(start string) string {
 	dir := start
 	for i := 0; i < 12; i++ {
 		for _, rel := range []string{
-			filepath.Join("greedy-token-home", "greedy-guru", "go.mod"),
-			filepath.Join("projects", "greedy-token-home", "greedy-guru", "go.mod"),
+			filepath.Join("greedy-guru-home", "greedy-guru", "go.mod"),
+			filepath.Join("projects", "greedy-guru-home", "greedy-guru", "go.mod"),
 		} {
 			cand := filepath.Join(dir, rel)
 			if _, err := os.Stat(cand); err == nil {
@@ -399,6 +399,8 @@ func chromeFlags(userDataDir string, debugPort int, debugAddr string) []string {
 		"--disable-dev-shm-usage",
 		"--no-first-run",
 		"--no-default-browser-check",
+		"--use-mock-keychain",
+		"--password-store=basic",
 		"--disable-extensions",
 		"--disable-component-extensions-with-background-pages",
 		"--disable-background-networking",

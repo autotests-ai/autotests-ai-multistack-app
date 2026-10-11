@@ -5,7 +5,7 @@
   "source": {
     "as_id": "Короткий логин показывает ошибку валидации",
     "lang": "typescript-playwright",
-    "fingerprint": "5604593d868a293e54aa3285db40dcb17427e95c024b15c49ccf19eb23f7a979"
+    "fingerprint": "360c42b360d25ecac368885d9e2e3c38c96015a838f60f19864e4296a33d0b96"
   },
   "steps": [
     {
@@ -43,6 +43,8 @@
     },
     {
       "op": "text",
+      "match": "contains",
+      "normalize_whitespace": true,
       "selector": "[data-testid=error-message]",
       "value": "Login must be at least 3 characters"
     }

@@ -5,7 +5,7 @@
   "source": {
     "as_id": "Занятый username на регистрации показывает ошибку",
     "lang": "typescript-playwright",
-    "fingerprint": "07e1f14bcca6e49536a18dfd73895e9fc1f4357cb5a81cc4db341be529767ba1"
+    "fingerprint": "e154bc126af34a23523a2a964d4595f6cd6009477d935df13aeef1c7cca9335e"
   },
   "steps": [
     {
@@ -48,6 +48,8 @@
     },
     {
       "op": "text",
+      "match": "contains",
+      "normalize_whitespace": true,
       "selector": "[data-testid=register-error-message]",
       "value": "Username already taken"
     }

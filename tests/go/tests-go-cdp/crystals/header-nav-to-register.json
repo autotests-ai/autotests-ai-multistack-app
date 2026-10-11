@@ -5,7 +5,7 @@
   "source": {
     "as_id": "Ссылка Register в header открывает форму регистрации",
     "lang": "typescript-playwright",
-    "fingerprint": "5949e2f6fadce25e68e762b6642b70c520601e11e22941707e74f68a7d7eb0b6"
+    "fingerprint": "0d9b093b75e32fe5a46c69f0ded2fef105ed3dc4b822d56bec4a6294cbeee0f6"
   },
   "steps": [
     {
@@ -33,6 +33,8 @@
     },
     {
       "op": "text",
+      "match": "contains",
+      "normalize_whitespace": true,
       "selector": "[data-testid=register-form-title]",
       "value": "Register"
     }

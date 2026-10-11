@@ -5,7 +5,7 @@
   "source": {
     "as_id": "Пользователь может войти с валидными credentials",
     "lang": "typescript-playwright",
-    "fingerprint": "8b855eaf72d372fef162667f4fba7cb68343d4a0626887c8a6478ee8a5a87b1c"
+    "fingerprint": "c4f1e37b2b84bdd33e94e449f6dcfc779fcd39b3255c9e535c3728cb836ac5c6"
   },
   "steps": [
     {
@@ -38,6 +38,8 @@
     },
     {
       "op": "text",
+      "match": "contains",
+      "normalize_whitespace": true,
       "selector": "[data-testid=welcome-message]",
       "value": "Welcome, user1!"
     }

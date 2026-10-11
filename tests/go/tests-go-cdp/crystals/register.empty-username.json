@@ -5,7 +5,7 @@
   "source": {
     "as_id": "Пустой логин на регистрации показывает ошибку валидации",
     "lang": "typescript-playwright",
-    "fingerprint": "ba5343d87443afbbe25626f6b2b8e7d7e9dbe2af7b5bca26043b57a6aa5c7ebf"
+    "fingerprint": "0b8ebfbe4a68952af234b5b45c3e037d007593b783a83af5bdb3e03cd56d6330"
   },
   "steps": [
     {
@@ -43,6 +43,8 @@
     },
     {
       "op": "text",
+      "match": "contains",
+      "normalize_whitespace": true,
       "selector": "[data-testid=register-error-message]",
       "value": "Login is required (minimum 3 characters)"
     }

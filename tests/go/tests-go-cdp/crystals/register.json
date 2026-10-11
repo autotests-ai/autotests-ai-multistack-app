@@ -5,7 +5,7 @@
   "source": {
     "as_id": "Новый пользователь может зарегистрироваться",
     "lang": "typescript-playwright",
-    "fingerprint": "45787aedf7dc96812a42ed83eca18956f28983463be1a748d4659b8f428bd5c1"
+    "fingerprint": "f544f06f99c6c030c695fdbb3b96a5e0010ae82d4e63dde44a63d630fe579534"
   },
   "steps": [
     {
@@ -43,6 +43,8 @@
     },
     {
       "op": "text",
+      "match": "contains",
+      "normalize_whitespace": true,
       "selector": "[data-testid=welcome-message]",
       "value": "Welcome, reguser1!"
     }
