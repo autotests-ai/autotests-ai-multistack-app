@@ -74,7 +74,7 @@
     try {
       var response = await ReferenceAuth.register(username, password);
       ReferenceAuth.saveSession(response.token);
-      window.location.href = response.redirectUrl || appPath('/');
+      window.location.href = appPath(response.redirectUrl || '/');
     } catch (err) {
       var text = ReferenceAuth.resolveAuthErrorMessage(
         err,

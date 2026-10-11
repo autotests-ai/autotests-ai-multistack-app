@@ -63,7 +63,7 @@
     try {
       var response = await ReferenceAuth.login(username, password);
       ReferenceAuth.saveSession(response.token);
-      window.location.href = response.redirectUrl || appPath('/');
+      window.location.href = appPath(response.redirectUrl || '/');
     } catch (err) {
       var text = ReferenceAuth.resolveAuthErrorMessage(err, pack, pack.errorWrongCredentials);
       if (err && err.network) {

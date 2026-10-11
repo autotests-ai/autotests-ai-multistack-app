@@ -119,6 +119,21 @@ describe('login page', () => {
     expect(localStorage.getItem('authToken')).toBe('fresh-token');
   });
 
+  it('stays on the stack mount when the API sends redirectUrl /', async () => {
+    location = stubLocation(
+      '/stack/backend-java-spring/frontend-typescript-vanilla/login.html',
+    );
+    await renderLogin();
+
+    submit('user1', 'password1');
+
+    await waitFor(() =>
+      expect(location.href).toBe(
+        '/stack/backend-java-spring/frontend-typescript-vanilla/',
+      ),
+    );
+  });
+
   it('falls back to the mount root when the API sends no redirectUrl', async () => {
     stubReferenceApi((url) =>
       url.includes('/api/auth/login')
