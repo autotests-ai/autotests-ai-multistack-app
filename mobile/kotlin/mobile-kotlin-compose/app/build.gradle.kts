@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
 
@@ -35,12 +34,12 @@ fun resolvedApiBase(): String {
 
 android {
     namespace = "dev.multistack.compose"
-    compileSdk = 34
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "dev.multistack.compose"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 37
         versionCode = 1
         versionName = "0.1.0"
 
@@ -78,8 +77,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
     }
 
     buildFeatures {
@@ -89,13 +90,6 @@ android {
 
     packaging {
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
-    }
-}
-
-android.applicationVariants.configureEach {
-    outputs.configureEach {
-        (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl)
-            .outputFileName = "multistack-app.apk"
     }
 }
 

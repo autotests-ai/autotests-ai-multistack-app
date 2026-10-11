@@ -26,7 +26,7 @@ sealed interface HealthState {
 
 /**
  * Screen state + auth flow for the whole cell. Kept outside composition so
- * [MainActivity.dispatchKeyEvent] can close the burger menu on Escape, the way
+ * [MainActivity.onKeyUp] can close the burger menu on Escape, the way
  * `js/header.js` listens for `keydown`.
  */
 class AppState(

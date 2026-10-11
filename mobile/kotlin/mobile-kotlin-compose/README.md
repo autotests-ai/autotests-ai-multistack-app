@@ -11,13 +11,14 @@ Not a WebView wrapper and not a mock: the app talks to a real matrix backend
 ```bash
 ./gradlew :app:assembleDebug                 # prod live pair (GitHub Release APK)
 ./gradlew :app:assembleDebug -Penv=ci       # compose :8800 via 10.0.2.2
-adb install -r app/build/outputs/apk/debug/multistack-app.apk
+adb install -r app/build/outputs/apk/debug/app-debug.apk
 adb shell am start -n dev.multistack.compose/.MainActivity
 ```
 
-Toolchain: JDK 17+, Android SDK platform 34, Gradle wrapper 8.14.3, AGP 8.13,
-Kotlin 2.1.21, Compose BOM 2024.09.03. `local.properties` (`sdk.dir=…`) is
-local-only and gitignored.
+Toolchain: JDK 17+, Android SDK platform 37, Gradle wrapper 9.8.1, AGP 9.4.1
+(built-in Kotlin — no separate `kotlin-android` plugin), Kotlin 2.4.21,
+Compose BOM 2026.09.00. `local.properties` (`sdk.dir=…`) is local-only and
+gitignored.
 
 ## Screens
 
@@ -91,7 +92,7 @@ driver.findElement(AppiumBy.id("login-input"));
   "appium:automationName": "UiAutomator2",
   "appium:appPackage": "dev.multistack.compose",
   "appium:appActivity": "dev.multistack.compose.MainActivity",
-  "appium:app": "<path>/multistack-app.apk"
+  "appium:app": "<path>/app-debug.apk"
 }
 ```
 

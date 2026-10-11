@@ -36,13 +36,11 @@ class MainActivity : ComponentActivity() {
      * phone, but Appium can send one (`pressKeyCode(111)`), so the same
      * assertion runs on all three cells.
      */
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.keyCode == KeyEvent.KEYCODE_ESCAPE && event.action == KeyEvent.ACTION_UP) {
-            if (state.back()) {
-                return true
-            }
+    override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_ESCAPE && state.back()) {
+            return true
         }
-        return super.dispatchKeyEvent(event)
+        return super.onKeyUp(keyCode, event)
     }
 
     private fun openInBrowser(url: String) {
