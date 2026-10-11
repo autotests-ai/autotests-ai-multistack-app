@@ -13,8 +13,10 @@ under Vite by [`@analogjs/vite-plugin-angular`](https://analogjs.org), so the mo
 and tests exactly like the other bundled modules in the matrix.
 Lean design-system CSS from
 [`vendor/ds`](vendor/ds/);
-the only local component wrappers are `Panel` (panel chrome) and `AppHeader`
-(header markup stays SSOT in `js/header.js`).
+local wrappers are `Panel`, `Button`, `PlaqueField`, and `AppHeader`
+(header markup stays SSOT in `js/header.js`). Host selectors match
+`frontend-javascript-angular`: `div[appPanel]`, `button[app-button]`,
+`label[app-plaque-field]`.
 
 Vitest + `@angular/core/testing` TestBed live in [`src/test/`](src/test/) — same module as
 the product.
@@ -48,6 +50,20 @@ same logged-out state at `/login`:
 Delete account asks `window.confirm('Delete this account? This cannot be undone.')` first;
 cancel sends no request. Both calls are best effort and both drop the local token even when
 the API fails — a token the server has already rejected must never keep the UI signed in.
+
+## Components
+
+`data-testid`, extra classes and `hidden` are plain attributes and native property
+bindings at the call site, never component inputs — Angular reflects a static attribute
+that matches an input onto the element too, which would emit a stray lowercase `testid`
+next to `data-testid`. Literal input values are therefore bound (`[panelTitle]="'Session'"`).
+
+| Wrapper | Selector | Why |
+|---------|----------|-----|
+| `appPanel` | `div[appPanel]`, `.panel` on the host | `panel.css` / `auth.css` need `.panel__bar` and `.panel__body` as direct children and `.auth-panel.panel` as one element |
+| `app-button` | `button[app-button]` | the host **is** the native `<button>`, so `type="submit"` still submits |
+| `app-plaque-field` | `label[app-plaque-field]` | the host **is** the `<label>`; `plaque-field.css` targets `> .plaque-field__control` |
+| `app-header` | element, `id="app-header"` on the host | that id is the mount `js/header.js` looks up |
 
 ## Contracts preserved for Selenide
 

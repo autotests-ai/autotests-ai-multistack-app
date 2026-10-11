@@ -1,14 +1,9 @@
-import {
-  Component,
-  computed,
-  inject,
-  signal,
-  type OnInit,
-  type WritableSignal,
-} from '@angular/core';
+import { Component, computed, inject, signal, type OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { I18nService } from '../../i18n';
+import { ButtonComponent } from '../components/button.component';
 import { PanelComponent } from '../components/panel.component';
+import { PlaqueFieldComponent } from '../components/plaque-field.component';
 import {
   getToken,
   login,
@@ -44,7 +39,7 @@ function loginErrorText(
 
 @Component({
   selector: 'app-login-page',
-  imports: [PanelComponent, RouterLink],
+  imports: [ButtonComponent, PanelComponent, PlaqueFieldComponent, RouterLink],
   providers: [I18nService],
   template: `
     <main class="auth-page">
@@ -62,34 +57,28 @@ function loginErrorText(
           (submit)="handleSubmit($event)"
         >
           <div class="plaque-field-list">
-            <label class="plaque-field plaque-field--divided plaque-field--stretch">
-              <span class="plaque-field__text">{{ copy().login.loginLabel }}</span>
-              <span class="plaque-divider" aria-hidden="true"></span>
-              <input
-                id="login-input"
-                name="username"
-                class="input plaque-field__control"
-                type="text"
-                autocomplete="username"
-                data-testid="login-input"
-                [value]="username()"
-                (input)="update(username, $event)"
-              />
-            </label>
-            <label class="plaque-field plaque-field--divided plaque-field--stretch">
-              <span class="plaque-field__text">{{ copy().login.passwordLabel }}</span>
-              <span class="plaque-divider" aria-hidden="true"></span>
-              <input
-                id="password-input"
-                name="password"
-                class="input plaque-field__control"
-                type="password"
-                autocomplete="current-password"
-                data-testid="password-input"
-                [value]="password()"
-                (input)="update(password, $event)"
-              />
-            </label>
+            <label
+              app-plaque-field
+              [label]="copy().login.loginLabel"
+              [controlId]="'login-input'"
+              [controlName]="'username'"
+              [type]="'text'"
+              [autocomplete]="'username'"
+              [testId]="'login-input'"
+              [value]="username()"
+              (valueChange)="username.set($event)"
+            ></label>
+            <label
+              app-plaque-field
+              [label]="copy().login.passwordLabel"
+              [controlId]="'password-input'"
+              [controlName]="'password'"
+              [type]="'password'"
+              [autocomplete]="'current-password'"
+              [testId]="'password-input'"
+              [value]="password()"
+              (valueChange)="password.set($event)"
+            ></label>
           </div>
 
           <p id="error-message" class="auth-error" aria-live="polite" data-testid="error-message">
@@ -98,9 +87,11 @@ function loginErrorText(
 
           <div class="auth-form__actions">
             <button
+              app-button
               id="submit-button"
               type="submit"
-              class="btn btn--primary btn--block"
+              class="btn--block"
+              [variant]="'primary'"
               data-testid="submit-button"
               [disabled]="submitting()"
             >
@@ -139,10 +130,6 @@ export class LoginPageComponent implements OnInit {
     if (getToken()) {
       void this.router.navigate(['/'], { replaceUrl: true });
     }
-  }
-
-  update(target: WritableSignal<string>, event: Event): void {
-    target.set((event.target as HTMLInputElement).value);
   }
 
   async handleSubmit(event: Event): Promise<void> {

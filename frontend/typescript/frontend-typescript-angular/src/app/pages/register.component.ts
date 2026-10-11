@@ -1,14 +1,9 @@
-import {
-  Component,
-  computed,
-  inject,
-  signal,
-  type OnInit,
-  type WritableSignal,
-} from '@angular/core';
+import { Component, computed, inject, signal, type OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { I18nService } from '../../i18n';
+import { ButtonComponent } from '../components/button.component';
 import { PanelComponent } from '../components/panel.component';
+import { PlaqueFieldComponent } from '../components/plaque-field.component';
 import {
   getToken,
   register,
@@ -48,7 +43,7 @@ function registerErrorText(
 
 @Component({
   selector: 'app-register-page',
-  imports: [PanelComponent, RouterLink],
+  imports: [ButtonComponent, PanelComponent, PlaqueFieldComponent, RouterLink],
   providers: [I18nService],
   template: `
     <main class="auth-page">
@@ -66,48 +61,39 @@ function registerErrorText(
           (submit)="handleSubmit($event)"
         >
           <div class="plaque-field-list">
-            <label class="plaque-field plaque-field--divided plaque-field--stretch">
-              <span class="plaque-field__text">{{ copy().register.loginLabel }}</span>
-              <span class="plaque-divider" aria-hidden="true"></span>
-              <input
-                id="login-input"
-                name="username"
-                class="input plaque-field__control"
-                type="text"
-                autocomplete="username"
-                data-testid="login-input"
-                [value]="username()"
-                (input)="update(username, $event)"
-              />
-            </label>
-            <label class="plaque-field plaque-field--divided plaque-field--stretch">
-              <span class="plaque-field__text">{{ copy().register.passwordLabel }}</span>
-              <span class="plaque-divider" aria-hidden="true"></span>
-              <input
-                id="password-input"
-                name="password"
-                class="input plaque-field__control"
-                type="password"
-                autocomplete="new-password"
-                data-testid="password-input"
-                [value]="password()"
-                (input)="update(password, $event)"
-              />
-            </label>
-            <label class="plaque-field plaque-field--divided plaque-field--stretch">
-              <span class="plaque-field__text">{{ copy().register.confirmLabel }}</span>
-              <span class="plaque-divider" aria-hidden="true"></span>
-              <input
-                id="confirm-password-input"
-                name="confirm-password"
-                class="input plaque-field__control"
-                type="password"
-                autocomplete="new-password"
-                data-testid="confirm-password-input"
-                [value]="confirmPassword()"
-                (input)="update(confirmPassword, $event)"
-              />
-            </label>
+            <label
+              app-plaque-field
+              [label]="copy().register.loginLabel"
+              [controlId]="'login-input'"
+              [controlName]="'username'"
+              [type]="'text'"
+              [autocomplete]="'username'"
+              [testId]="'login-input'"
+              [value]="username()"
+              (valueChange)="username.set($event)"
+            ></label>
+            <label
+              app-plaque-field
+              [label]="copy().register.passwordLabel"
+              [controlId]="'password-input'"
+              [controlName]="'password'"
+              [type]="'password'"
+              [autocomplete]="'new-password'"
+              [testId]="'password-input'"
+              [value]="password()"
+              (valueChange)="password.set($event)"
+            ></label>
+            <label
+              app-plaque-field
+              [label]="copy().register.confirmLabel"
+              [controlId]="'confirm-password-input'"
+              [controlName]="'confirm-password'"
+              [type]="'password'"
+              [autocomplete]="'new-password'"
+              [testId]="'confirm-password-input'"
+              [value]="confirmPassword()"
+              (valueChange)="confirmPassword.set($event)"
+            ></label>
           </div>
 
           <p id="error-message" class="auth-error" aria-live="polite" data-testid="error-message">
@@ -116,9 +102,11 @@ function registerErrorText(
 
           <div class="auth-form__actions">
             <button
+              app-button
               id="submit-button"
               type="submit"
-              class="btn btn--primary btn--block"
+              class="btn--block"
+              [variant]="'primary'"
               data-testid="submit-button"
               [disabled]="submitting()"
             >
@@ -158,10 +146,6 @@ export class RegisterPageComponent implements OnInit {
     if (getToken()) {
       void this.router.navigate(['/'], { replaceUrl: true });
     }
-  }
-
-  update(target: WritableSignal<string>, event: Event): void {
-    target.set((event.target as HTMLInputElement).value);
   }
 
   async handleSubmit(event: Event): Promise<void> {
