@@ -79,3 +79,4 @@ htmlcov/
 
 # OS
 .DS_Store
+TestResults/
