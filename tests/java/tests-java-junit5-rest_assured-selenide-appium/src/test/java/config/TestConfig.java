@@ -12,6 +12,47 @@ public interface TestConfig extends Config {
 
     String apiBase();
 
+    /** Web UI target for tests/ui (WebBrowserDriver), empty = fail fast. */
+    @DefaultValue("")
+    String baseUrl();
+
+    @DefaultValue("chrome")
+    String browser();
+
+    /** Selenoid image tag when remoteUrl is set; ignored by local Chrome. */
+    @DefaultValue("148")
+    String browserVersion();
+
+    @DefaultValue("1920x1280")
+    String browserSize();
+
+    @DefaultValue("false")
+    boolean headless();
+
+    /** Web hub (selenoid:options apply). Empty = local Chrome. */
+    @DefaultValue("")
+    String remoteUrl();
+
+    @DefaultValue("false")
+    boolean enableVnc();
+
+    @DefaultValue("false")
+    boolean enableVideo();
+
+    @DefaultValue("false")
+    boolean attachLastScreenshot();
+
+    @DefaultValue("false")
+    boolean attachPageSource();
+
+    /** Driver logs — logcat/syslog/server on devices, browser/driver/client on web. */
+    @DefaultValue("false")
+    boolean attachDriverLogs();
+
+    /** Local screen recording (mp4) and farm video fetch. */
+    @DefaultValue("false")
+    boolean attachVideo();
+
     @DefaultValue("backend-java-spring")
     String backendId();
 
@@ -62,7 +103,7 @@ public interface TestConfig extends Config {
     String browserstackDevice();
 
     @Key("browserstack.osVersion")
-    @DefaultValue("13.0")
+    @DefaultValue("16")
     String browserstackOsVersion();
 
     @Key("browserstack.ios.device")

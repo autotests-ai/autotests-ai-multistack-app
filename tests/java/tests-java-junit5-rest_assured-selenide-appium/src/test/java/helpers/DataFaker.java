@@ -1,19 +1,24 @@
 package helpers;
 
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Throwaway identities for native e2e. The web cell keeps DataFaker/UserBuilder;
- * this is the slice Login / Register / DeleteAccount need.
+ * Throwaway test identities. Username fits backend {@code @Size(min = 3, max = 64)}.
  */
 public final class DataFaker {
 
     private DataFaker() {
     }
 
-    /** Exactly backend {@code @Size(min = 3)} — unique hex slice. */
+    /** Exactly backend {@code @Size(min = 3)} — a-z0-9, 46656-strong namespace on the stand. */
     public static String usernameAtMinLength() {
-        return UUID.randomUUID().toString().replace("-", "").substring(0, 3);
+        String alphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
+        StringBuilder username = new StringBuilder(3);
+        for (int i = 0; i < 3; i++) {
+            username.append(alphabet.charAt(ThreadLocalRandom.current().nextInt(alphabet.length())));
+        }
+        return username.toString();
     }
 
     /** Exactly backend {@code @Size(min = 6)}. */

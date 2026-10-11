@@ -1,9 +1,9 @@
-package tests.e2e;
+package tests.e2e.mobile;
 
+import tests.MobileTestBase;
 import annotations.Layer;
-import helpers.AuthSetup;
+import api.AuthApiClient;
 import helpers.DataFaker;
-import helpers.User;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -12,14 +12,15 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import tests.TestBase;
+import testdata.User;
+import testdata.UserBuilder;
 
 @Layer("e2e")
 @Epic("Authentication")
 @Feature("Register")
 @Severity(SeverityLevel.CRITICAL)
 @DisplayName("Register")
-class RegisterTests extends TestBase {
+class RegisterTests extends MobileTestBase {
 
     private static final String LOGIN_REQUIRED_MESSAGE =
             "Login is required (minimum 3 characters)";
@@ -41,8 +42,7 @@ class RegisterTests extends TestBase {
     @AfterEach
     void cleanupRegisteredUser() {
         if (registeredUser != null) {
-            AuthSetup.deleteAccountQuietly(registeredUser.username(), registeredUser.password());
-            registeredUser = null;
+            AuthApiClient.deleteAccountQuietly(registeredUser.username(), registeredUser.password());
         }
     }
 
@@ -51,7 +51,7 @@ class RegisterTests extends TestBase {
     @Tag("positive")
     @DisplayName("New user can register and land on home")
     void shouldRegisterNewUser() {
-        registeredUser = new User(DataFaker.username(), DataFaker.password());
+        registeredUser = new UserBuilder().withUsername().withPassword().build();
 
         loginScreen.shouldBeOpen()
                 .clickRegisterLink()

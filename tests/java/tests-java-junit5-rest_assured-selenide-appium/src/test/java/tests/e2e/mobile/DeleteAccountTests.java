@@ -1,36 +1,38 @@
-package tests.e2e;
+package tests.e2e.mobile;
 
+import tests.MobileTestBase;
 import annotations.Layer;
-import helpers.AuthSetup;
-import helpers.DataFaker;
+import api.AuthApiClient;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import tests.TestBase;
+import testdata.User;
+import testdata.UserBuilder;
 
 @Layer("e2e")
 @Epic("Authentication")
 @Feature("Delete account")
 @Severity(SeverityLevel.CRITICAL)
 @DisplayName("Delete account")
-class DeleteAccountTests extends TestBase {
-
-    private static final String PASSWORD = "password123";
+class DeleteAccountTests extends MobileTestBase {
 
     /** Throwaway — never seeded user1. Deleted through the API if the UI did not. */
-    private String throwawayUsername;
+    private final User registeredUser = new UserBuilder().withUsername().withPassword().build();
+
+    @BeforeEach
+    void registerUser() {
+        AuthApiClient.register(registeredUser.username(), registeredUser.password());
+    }
 
     @AfterEach
-    void cleanupThrowawayUser() {
-        if (throwawayUsername != null) {
-            AuthSetup.deleteAccountQuietly(throwawayUsername, PASSWORD);
-            throwawayUsername = null;
-        }
+    void cleanupRegisteredUser() {
+        AuthApiClient.deleteAccountQuietly(registeredUser.username(), registeredUser.password());
     }
 
     @Test
@@ -38,17 +40,12 @@ class DeleteAccountTests extends TestBase {
     @Tag("positive")
     @DisplayName("Confirming delete account clears the session and navigates to login")
     void confirmingDeleteClearsSessionAndNavigatesToLogin() {
-        throwawayUsername = DataFaker.username();
-        AuthSetup.register(throwawayUsername, PASSWORD);
-
         loginScreen.shouldBeOpen()
-                .fillAndSubmitForm(throwawayUsername, PASSWORD)
-                .shouldHaveWelcomeMessage("Welcome, " + throwawayUsername + "!")
+                .fillAndSubmitForm(registeredUser.username(), registeredUser.password())
+                .shouldHaveWelcomeMessage(registeredUser.welcomeMessage())
                 .shouldShowSessionActions()
                 .clickDeleteAccountAndConfirm()
                 .shouldHaveFormTitle("Login Form");
-
-        throwawayUsername = null;
     }
 
     @Test
@@ -56,15 +53,12 @@ class DeleteAccountTests extends TestBase {
     @Tag("positive")
     @DisplayName("Cancelling the confirm keeps the session")
     void cancellingConfirmKeepsSession() {
-        throwawayUsername = DataFaker.username();
-        AuthSetup.register(throwawayUsername, PASSWORD);
-
         loginScreen.shouldBeOpen()
-                .fillAndSubmitForm(throwawayUsername, PASSWORD)
-                .shouldHaveWelcomeMessage("Welcome, " + throwawayUsername + "!")
+                .fillAndSubmitForm(registeredUser.username(), registeredUser.password())
+                .shouldHaveWelcomeMessage(registeredUser.welcomeMessage())
                 .clickDeleteAccountAndCancel()
-                .shouldHaveWelcomeMessage("Welcome, " + throwawayUsername + "!");
+                .shouldHaveWelcomeMessage(registeredUser.welcomeMessage());
 
-        AuthSetup.login(throwawayUsername, PASSWORD);
+        AuthApiClient.login(registeredUser.username(), registeredUser.password());
     }
 }
