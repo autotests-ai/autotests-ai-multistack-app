@@ -1,1 +1,1 @@
-{"id":"98d7083182b4f229b1e5142cb340b57b","fullName":"dev.multistack.app.service.AuthServiceTest.loginUnknownUser","name":"login rejects unknown username","status":"passed","testResultsByEnv":{"default":"40eddeb84e00ea4f470de5ae6f5bca75"}}
+{"id":"98d7083182b4f229b1e5142cb340b57b","fullName":"dev.multistack.app.service.AuthServiceTest.loginUnknownUser","name":"login rejects unknown username","status":"passed","testResultsByEnv":{"default":"f99c13f5cf53ab23d97176fb15cb8436"}}

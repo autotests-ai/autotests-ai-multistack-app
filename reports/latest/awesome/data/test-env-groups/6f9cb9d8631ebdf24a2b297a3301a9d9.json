@@ -1,1 +1,1 @@
-{"id":"6f9cb9d8631ebdf24a2b297a3301a9d9","fullName":"frontend-typescript-react:src/test/lib/auth.test.ts#validateCredentials requires both when empty","name":"requires both when empty","status":"passed","testResultsByEnv":{"default":"64a15582b9495a70b5cf9596ebb6d466"}}
+{"id":"6f9cb9d8631ebdf24a2b297a3301a9d9","fullName":"frontend-typescript-react:src/test/lib/auth.test.ts#validateCredentials requires both when empty","name":"requires both when empty","status":"passed","testResultsByEnv":{"default":"7d449af8cdaee524ec6218de6678c529"}}

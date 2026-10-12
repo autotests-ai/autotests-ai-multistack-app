@@ -1,1 +1,1 @@
-{"id":"080a05cea99492fe878549962d409aff","fullName":"frontend-typescript-react:src/test/lib/auth.test.ts#deleteAccount never calls the logout endpoint","name":"never calls the logout endpoint","status":"passed","testResultsByEnv":{"default":"0cf4490c5cd407a7c9ee9864158de3c4"}}
+{"id":"080a05cea99492fe878549962d409aff","fullName":"frontend-typescript-react:src/test/lib/auth.test.ts#deleteAccount never calls the logout endpoint","name":"never calls the logout endpoint","status":"passed","testResultsByEnv":{"default":"f33cecd5a84dff8f1c60135975b9ff38"}}
