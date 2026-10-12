@@ -1,6 +1,6 @@
 ---
 id: login-flow
-version: 0.5
+version: 0.6
 acceptance:
   - User opens login page
   - Empty login → validation error visible
@@ -11,9 +11,11 @@ acceptance:
   - User can register on /register
   - Valid register → 201, session created immediately, lands on home welcome (register is a login)
   - Duplicate username on register → API 409, form error verbatim, no session created
-  - Logged-in user can logout → back to login
+  - Logged-in user can logout → back to login, `authToken` cleared (client-side; the JWT is not revoked server-side)
   - Logged-in user can delete account after confirm → back to login, session cleared
   - Cancelling delete confirm keeps the session
+  - Logged-in session survives a page reload (token read from localStorage)
+  - Invalid or expired stored token → session cleared on home, welcome hidden
   - Auth controls expose id + name (Chrome autofill / Issues audit)
 
 pages:
@@ -185,6 +187,33 @@ validLogin:
     welcome: welcome-panel unhidden, `#welcome-message` = 'Welcome, {username}!' (en) / 'Добро пожаловать, {username}!' (ru) — the username comes from GET /api/auth/me with the fresh Bearer token, not from the login body (HomePage.tsx)
     degraded: /me failure → clearSession() → welcome-panel stays hidden
   ownedBy: tests/api AuthApiTests#loginWithValidCredentials · tests/e2e LoginTests#shouldLoginWithValidCredentials ('Welcome, user1!')
+
+# Session lifecycle — one place for when `authToken` is written, read and cleared.
+session:
+  transport: Bearer JWT in `Authorization` — backend STATELESS (SecurityConfig), no cookie session, CSRF off; clearing cookies does not end a session (CorsConfig, SecurityConfig)
+  storage: localStorage only — key from `storage.authToken`; e2e derives it from the pathname (BasePage AUTH_TOKEN_KEY_JS)
+  lifetime: JWT exp = auth.jwt.expiration-ms (default 86400000 = 24h, env JWT_EXPIRATION_MS) — JwtService
+  write: saveSession(response.token) only after a 2xx login (validLogin.session) or 201 register (register.positive.session) — async, after the response resolves; never on 4xx
+  read:
+    login: getToken() on mount → navigate('/', replace) — a stored token skips the form (LoginPage.tsx)
+    home: getToken() → GET /api/auth/me with Bearer → welcome (validLogin.home)
+    reload: session survives a reload — the token stays in localStorage and home re-reads it
+  clear:
+    logout: auth.ts logout() fires POST /api/auth/logout without awaiting it, then removeItem(authToken); HomePage navigates to /login (replace)
+    deleteAccount: auth.ts deleteAccount() awaits DELETE /api/auth/me, then removeItem(authToken) even if the call failed; HomePage navigates to /login only after window.confirm
+    invalidToken: /me failure on home → clearSession(), welcome-panel stays hidden (validLogin.home.degraded)
+  logout:
+    api: 'POST /api/auth/logout → 204, empty body — permitAll, no server state (AuthController)'
+    tokenAfter: still valid server-side until exp — GET /api/auth/me with the same token → 200; by design, not a bug
+  deleteAccount:
+    api: 'DELETE /api/auth/me (Bearer) → 204; no/invalid token → 401'
+    tokenAfter: still verifies cryptographically, but the row is gone → GET /api/auth/me and DELETE /api/auth/me → 401 (AuthService.deleteAccount)
+    cancel: window.confirm false → no request, token kept
+  e2eShortcut:
+    method: BasePage.openPageWithLocalStorageAuthentication — API login, setItem(authToken) on a static same-origin asset, then open the page
+    scope: precondition only; it does not test the login form, and its token write is synchronous (no async race)
+    reset: BrowserSessionHelper.resetPageState clears local/session storage and cookies — a hook, not an assertion of "no session"
+  ownedBy: tests/api AuthRoundTripApiTests#accountLifecycleRoundTrip · tests/e2e SessionTests#sessionSurvivesReload / invalidTokenClearsSession · LogoutTests · DeleteAccountTests · component test/lib/auth.test.ts (logout clears token even when the API call fails or hangs)
 
 implementation:
   canon: projects/autotests-ai-multistack-home/autotests-ai-multistack-app/
