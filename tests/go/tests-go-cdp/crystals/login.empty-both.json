@@ -5,7 +5,7 @@
   "source": {
     "as_id": "Пустые логин и пароль показывают ошибку валидации",
     "lang": "typescript-playwright",
-    "fingerprint": "0965c27b5cdd86204876940c96047983981952e983d005c2d68388f31f07b932"
+    "fingerprint": "ca1f88ecb0a8003981d3c924e24930940ad9ef2038c271582b51a3feabad9466"
   },
   "steps": [
     {
@@ -33,6 +33,8 @@
     },
     {
       "op": "text",
+      "match": "contains",
+      "normalize_whitespace": true,
       "selector": "[data-testid=error-message]",
       "value": "Login and password are required (minimum 3 and 6 characters)"
     }

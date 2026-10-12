@@ -5,7 +5,7 @@
   "source": {
     "as_id": "Home загружает health и items",
     "lang": "typescript-playwright",
-    "fingerprint": "140dfbd2de196abcc342dd2b7b6031a8b71721606935da963077ba9a078e91be"
+    "fingerprint": "3750a6f63aff4db3a5c601d3f400558063fc3e7a607cba9c3b84222db0b9dcbb"
   },
   "steps": [
     {
@@ -24,6 +24,8 @@
     },
     {
       "op": "text",
+      "match": "contains",
+      "normalize_whitespace": true,
       "selector": "[data-testid=health-status]",
       "value": "service: backend-java-spring"
     },
@@ -34,6 +36,8 @@
     },
     {
       "op": "text",
+      "match": "contains",
+      "normalize_whitespace": true,
       "selector": "[data-testid=items-list]",
       "value": "Alpha"
     }

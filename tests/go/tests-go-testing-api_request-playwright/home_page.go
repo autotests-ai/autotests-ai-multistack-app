@@ -113,19 +113,13 @@ func (p *HomePage) ClickDeleteAccountAndCancel() *HomePage {
 
 func (p *HomePage) OpenWithLocalStorageAuthentication(username, password string) *HomePage {
 	p.app.t.Helper()
-	token := Login(p.app.t, p.app.a, username, password)
-	return p.OpenWithLocalStorageAuth(token)
+	return p.OpenWithLocalStorageAuth(p.app.authenticate(username, password))
 }
 
 func (p *HomePage) OpenWithLocalStorageAuth(token string) *HomePage {
 	p.app.t.Helper()
-	_, err := p.page.Goto("login")
-	require.NoError(p.app.t, err)
-	waitVisible(p.app.t, p.page.GetByTestId("login-form"))
-	key := p.AuthTokenKey()
-	_, err = p.page.Evaluate("([k, t]) => localStorage.setItem(k, t)", []any{key, token})
-	require.NoError(p.app.t, err)
-	return p.Open()
+	p.app.openPageWithLocalStorageToken("./", token)
+	return p.ShouldBeOpen()
 }
 
 func (p *HomePage) ShouldHideWelcomePanel() *HomePage {
@@ -136,12 +130,7 @@ func (p *HomePage) ShouldHideWelcomePanel() *HomePage {
 
 func (p *HomePage) ShouldClearAuthToken() *HomePage {
 	p.app.t.Helper()
-	_, err := p.page.WaitForFunction(`() => {
-		const m = location.pathname.match(/\/(backend-[^/]+)\//);
-		const key = m ? `+"`authToken:${m[1]}`"+` : 'authToken';
-		return localStorage.getItem(key) === null;
-	}`, nil)
-	require.NoError(p.app.t, err)
+	p.app.waitForAuthTokenToBeCleared()
 	return p
 }
 
@@ -159,23 +148,9 @@ func (p *HomePage) OpenWithInvalidToken() *HomePage {
 }
 
 func (p *HomePage) AuthTokenKey() string {
-	p.app.t.Helper()
-	value, err := p.page.Evaluate(`() => {
-		const m = location.pathname.match(/\/(backend-[^/]+)\//);
-		return m ? ` + "`authToken:${m[1]}`" + ` : 'authToken';
-	}`)
-	require.NoError(p.app.t, err)
-	s, _ := value.(string)
-	return s
+	return p.app.authTokenKey()
 }
 
 func (p *HomePage) AuthToken() *string {
-	p.app.t.Helper()
-	value, err := p.page.Evaluate("k => localStorage.getItem(k)", p.AuthTokenKey())
-	require.NoError(p.app.t, err)
-	if value == nil {
-		return nil
-	}
-	s, _ := value.(string)
-	return &s
+	return p.app.authToken()
 }

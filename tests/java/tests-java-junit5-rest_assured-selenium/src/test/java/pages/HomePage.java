@@ -1,22 +1,13 @@
 package pages;
 
-import api.AuthApiClient;
 import helpers.Ui;
 import io.qameta.allure.Step;
 import org.openqa.selenium.WebElement;
 
 public class HomePage extends BasePage<HomePage> {
 
-    private static final String AUTH_TOKEN_KEY_JS =
-            "var m=location.pathname.match(/\\/(backend-[^/]+)\\//);"
-                    + "return m ? 'authToken:' + m[1] : 'authToken';";
-
     private static final String DELETE_ACCOUNT_CONFIRM =
             "Delete this account? This cannot be undone.";
-
-    private String authTokenKey() {
-        return String.valueOf(Ui.js(AUTH_TOKEN_KEY_JS));
-    }
 
     @Step("Open home page")
     public HomePage openPage() {
@@ -26,26 +17,13 @@ public class HomePage extends BasePage<HomePage> {
 
     @Step("Open home page with local storage authentication")
     public HomePage openPageWithLocalStorageAuthentication(String username, String password) {
-        String token = AuthApiClient.login(username, password);
-        Ui.open("/login");
-        Ui.js(
-                "localStorage.setItem(arguments[0], arguments[1]);",
-                authTokenKey(),
-                token
-        );
-        Ui.open("/");
+        super.openPageWithLocalStorageAuthentication("/", username, password);
         return shouldBeOpen();
     }
 
     @Step("Open home page with invalid local storage token")
     public HomePage openPageWithInvalidToken() {
-        Ui.open("/login");
-        Ui.js(
-                "localStorage.setItem(arguments[0], arguments[1]);",
-                authTokenKey(),
-                "invalid-token"
-        );
-        Ui.open("/");
+        openPageWithLocalStorageToken("/", "invalid-token");
         return shouldBeOpen();
     }
 
@@ -88,7 +66,7 @@ public class HomePage extends BasePage<HomePage> {
 
     @Step("Verify auth token was cleared from localStorage")
     public HomePage shouldClearAuthToken() {
-        Ui.waitUntil(driver -> Ui.js("return localStorage.getItem(arguments[0]);", authTokenKey()) == null);
+        waitForAuthTokenToBeCleared();
         return this;
     }
 
@@ -154,7 +132,7 @@ public class HomePage extends BasePage<HomePage> {
 
     @Step("Verify auth token remains in localStorage")
     public HomePage shouldKeepAuthToken() {
-        Ui.waitUntil(driver -> Ui.js("return localStorage.getItem(arguments[0]);", authTokenKey()) != null);
+        waitForAuthTokenToBePresent();
         return this;
     }
 }

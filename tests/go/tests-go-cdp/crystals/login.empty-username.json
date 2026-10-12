@@ -5,7 +5,7 @@
   "source": {
     "as_id": "Пустой логин показывает ошибку валидации",
     "lang": "typescript-playwright",
-    "fingerprint": "1c0bff04b8c5d439dece58cfdea3abdf153dfbd4fcf0adc9c428e84f250abd5a"
+    "fingerprint": "405eebf1e9a68d585a2599f4142581365e95bc876362b2b998dfd8197e4d69c4"
   },
   "steps": [
     {
@@ -38,6 +38,8 @@
     },
     {
       "op": "text",
+      "match": "contains",
+      "normalize_whitespace": true,
       "selector": "[data-testid=error-message]",
       "value": "Login is required (minimum 3 characters)"
     }

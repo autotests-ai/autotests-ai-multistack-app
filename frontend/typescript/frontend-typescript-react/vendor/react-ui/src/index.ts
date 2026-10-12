@@ -135,6 +135,8 @@ export type {
   TestsTableRow,
   TestsTableLang,
 } from './TestsTable';
+export { HelpInfo } from './HelpInfo';
+export type { HelpInfoProps, HelpInfoItem } from './HelpInfo';
 export { QgInfo } from './QgInfo';
 export type { QgInfoProps, QgInfoFileSource } from './QgInfo';
 export { QualityGate } from './QualityGate';
@@ -167,6 +169,11 @@ export type {
   PlaqueFieldLabelVariant,
   PlaqueFieldControlElement,
 } from './PlaqueField';
+export { PlaqueFieldValue } from './PlaqueFieldValue';
+export type {
+  PlaqueFieldValueProps,
+  PlaqueFieldValueAs,
+} from './PlaqueFieldValue';
 export { PlaqueSelect } from './PlaqueSelect';
 export type { PlaqueSelectProps, PlaqueSelectOption } from './PlaqueSelect';
 export { PlaqueNumber } from './PlaqueNumber';

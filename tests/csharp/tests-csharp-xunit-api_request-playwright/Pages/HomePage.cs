@@ -1,15 +1,13 @@
 using Allure.Net.Commons.Attributes;
-using Api;
 using Helpers;
 using Microsoft.Playwright;
 
 namespace Pages;
 
-public sealed class HomePage
+public sealed class HomePage : BasePage<HomePage>
 {
     private const string DeleteAccountConfirm = "Delete this account? This cannot be undone.";
 
-    private readonly IPage _page;
     public readonly ILocator Layout;
     public readonly ILocator HealthStatus;
     public readonly ILocator ItemsList;
@@ -19,9 +17,8 @@ public sealed class HomePage
     public readonly ILocator DeleteAccountButton;
     public HeaderPage Header { get; set; } = null!;
 
-    public HomePage(IPage page)
+    public HomePage(IPage page) : base(page)
     {
-        _page = page;
         Layout = page.GetByTestId("multistack-layout");
         HealthStatus = page.GetByTestId("health-status");
         ItemsList = page.GetByTestId("items-list");
@@ -39,7 +36,7 @@ public sealed class HomePage
     }
 
     [AllureStep("Verify home layout is open")]
-    public HomePage ShouldBeOpen()
+    public override HomePage ShouldBeOpen()
     {
         Pw.Run(Layout.WaitForAsync());
         return this;
@@ -87,14 +84,7 @@ public sealed class HomePage
     [AllureStep("Verify auth token was cleared from localStorage")]
     public HomePage ShouldClearAuthToken()
     {
-        Pw.Run(_page.WaitForFunctionAsync(
-            """
-            () => {
-              const m = location.pathname.match(/\/(backend-[^/]+)\//);
-              const key = m ? `authToken:${m[1]}` : 'authToken';
-              return localStorage.getItem(key) === null;
-            }
-            """));
+        WaitForAuthTokenToBeCleared();
         return this;
     }
 
@@ -170,24 +160,19 @@ public sealed class HomePage
     [AllureStep("Verify auth token remains in localStorage")]
     public HomePage ShouldKeepAuthToken()
     {
-        Assert.NotNull(AuthToken());
+        VerifyAuthTokenPresent();
         return this;
     }
 
     [AllureStep("Open home page with local storage authentication")]
     public HomePage OpenPageWithLocalStorageAuthentication(string username, string password) =>
-        OpenWithLocalStorageAuth(AuthApiClient.Login(username, password));
+        OpenWithLocalStorageAuth(Authenticate(username, password));
 
     [AllureStep("Seed localStorage auth token")]
     public HomePage OpenWithLocalStorageAuth(string token)
     {
-        Pw.Run(_page.GotoAsync("login"));
-        Pw.Run(_page.GetByTestId("login-form").WaitForAsync());
-        var key = AuthTokenKey();
-        Pw.Run(_page.EvaluateAsync(
-            "arg => localStorage.setItem(arg.key, arg.token)",
-            new { key, token }));
-        return OpenPage();
+        OpenPageWithLocalStorageToken("./", token);
+        return ShouldBeOpen();
     }
 
     [AllureStep("Open home with a garbage auth token")]
@@ -200,22 +185,10 @@ public sealed class HomePage
         return ShouldBeOpen();
     }
 
-    public string AuthTokenKey() =>
-        Pw.Run(_page.EvaluateAsync<string>(
-            """
-            () => {
-              const m = location.pathname.match(/\/(backend-[^/]+)\//);
-              return m ? `authToken:${m[1]}` : 'authToken';
-            }
-            """)) ?? "authToken";
-
-    public string? AuthToken() =>
-        Pw.Run(_page.EvaluateAsync<string?>("k => localStorage.getItem(k)", AuthTokenKey()));
-
     private void HandleDialog(bool accept)
     {
         EventHandler<IDialog>? handler = null;
-        handler = (_, dialog) =>
+        handler = async (_, dialog) =>
         {
             _page.Dialog -= handler!;
             if (dialog.Message != DeleteAccountConfirm)
@@ -224,7 +197,7 @@ public sealed class HomePage
                     $"Confirm text: expected <{DeleteAccountConfirm}> but was <{dialog.Message}>");
             }
 
-            Pw.Run(accept ? dialog.AcceptAsync() : dialog.DismissAsync());
+            await (accept ? dialog.AcceptAsync() : dialog.DismissAsync());
         };
         _page.Dialog += handler;
     }

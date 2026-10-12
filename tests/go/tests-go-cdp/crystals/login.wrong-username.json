@@ -5,7 +5,7 @@
   "source": {
     "as_id": "Неверный логин показывает читаемую ошибку",
     "lang": "typescript-playwright",
-    "fingerprint": "e496de03aa2bade17f19ea080afb06d03521df7bcc3f3129475047c1c5fff364"
+    "fingerprint": "9c92085aa65caa9f5271c526c9a63a4aca14102e837ec41dfd8a9d551087de6e"
   },
   "steps": [
     {
@@ -43,6 +43,8 @@
     },
     {
       "op": "text",
+      "match": "contains",
+      "normalize_whitespace": true,
       "selector": "[data-testid=error-message]",
       "value": "Wrong login or password"
     }

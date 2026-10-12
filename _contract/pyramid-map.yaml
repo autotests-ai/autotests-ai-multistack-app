@@ -24,7 +24,12 @@ stacks:
     unit_tests_helpers: tests/java/tests-java-junit5-rest_assured-selenide/src/test/java/helpers  # *Test + config.*Test via testUnit
     integration: backend/java/backend-java-spring/src/test
     component: frontend/typescript/frontend-typescript-react/src  # Vitest + RTL; CI job component-tests
+    api: tests/java/tests-java-junit5-rest_assured-selenide/src/test/java/tests/api
     ui: tests/java/tests-java-junit5-rest_assured-selenide/src/test/java/tests/ui
+    # native e2e lives in the appium cell (tests/e2e/mobile, device); it also
+    # mirrors an api slice (educational/integration, same apiBase) and a web ui
+    # slice — layer×platform layout: tests/{api, e2e/mobile, ui/web} in
+    # tests-java-junit5-rest_assured-selenide-appium/src/test/java/tests/
     e2e: tests/java/tests-java-junit5-rest_assured-selenide/src/test/java/tests/e2e
     manual: tests/java/tests-java-junit5-rest_assured-selenide/src/test/java/tests/manual
     testRunner: gradle
@@ -65,6 +70,10 @@ layers:
       layer: component
       scope: react
       framework: react-testing-library
+  api:
+    description: HTTP against a running stand (tests/api) — Rest Assured or Retrofit 2; appium cell mirrors the slice
+    required: true
+    living_canon: projects/autotests-ai-multistack-home/autotests-ai-multistack-app/tests/java/tests-java-junit5-rest_assured-selenide/src/test/java/tests/api
   ui:
     description: Browser SPA on stub API (layout, chrome, WireMock) — job ui-tests
     required: true

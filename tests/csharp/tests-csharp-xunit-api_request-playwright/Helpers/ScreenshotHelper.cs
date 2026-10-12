@@ -1,8 +1,7 @@
 using Allure.Net.Commons;
 using Config;
 using Microsoft.Playwright;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using StbImageSharp;
 using Xunit.Sdk;
 
 namespace Helpers;
@@ -10,8 +9,8 @@ namespace Helpers;
 public static class ScreenshotHelper
 {
     private static readonly string DiffDir = Path.Combine("screenshot-diff");
-    private static readonly Rgba32 DiffHighlight = new(255, 0, 255);
-    private static readonly Rgba32 SizeMismatch = new(255, 0, 0);
+    private static readonly byte[] DiffHighlight = { 255, 0, 255, 255 };
+    private static readonly byte[] SizeMismatch = { 255, 0, 0, 255 };
 
     public static void CaptureAndCompare(ILocator element, string area, int viewport, string attachmentName)
     {
@@ -205,12 +204,12 @@ public static class ScreenshotHelper
         File.WriteAllBytes(screenshotPath, png);
     }
 
-    private sealed record ImageComparison(bool Passed, byte[] DiffPng, string Message);
+    internal sealed record ImageComparison(bool Passed, byte[] DiffPng, string Message);
 
-    private static ImageComparison CompareImages(byte[] expectedBytes, byte[] actualBytes, string label)
+    internal static ImageComparison CompareImages(byte[] expectedBytes, byte[] actualBytes, string label, double? threshold = null)
     {
-        using var expected = Image.Load<Rgba32>(expectedBytes);
-        using var actual = Image.Load<Rgba32>(actualBytes);
+        var expected = ImageResult.FromMemory(expectedBytes, ColorComponents.RedGreenBlueAlpha);
+        var actual = ImageResult.FromMemory(actualBytes, ColorComponents.RedGreenBlueAlpha);
         var diffPng = CreateDiffPng(expected, actual);
 
         if (expected.Width != actual.Width || expected.Height != actual.Height)
@@ -221,27 +220,17 @@ public static class ScreenshotHelper
                 $"Screenshot size changed for {label}: expected {expected.Width}x{expected.Height}, actual {actual.Width}x{actual.Height}");
         }
 
-        var width = expected.Width;
-        var height = expected.Height;
         var diffPixels = 0;
-        var totalPixels = width * height;
-        expected.ProcessPixelRows(actual, (expAccessor, actAccessor) =>
+        var totalPixels = expected.Width * expected.Height;
+        for (var offset = 0; offset < expected.Data.Length; offset += 4)
         {
-            for (var y = 0; y < height; y++)
+            if (!expected.Data.AsSpan(offset, 4).SequenceEqual(actual.Data.AsSpan(offset, 4)))
             {
-                var expRow = expAccessor.GetRowSpan(y);
-                var actRow = actAccessor.GetRowSpan(y);
-                for (var x = 0; x < width; x++)
-                {
-                    if (expRow[x] != actRow[x])
-                    {
-                        diffPixels++;
-                    }
-                }
+                diffPixels++;
             }
-        });
+        }
 
-        var maxDiffRatio = ConfigReader.TestConfig.ScreenshotDiffThreshold;
+        var maxDiffRatio = threshold ?? ConfigReader.TestConfig.ScreenshotDiffThreshold;
         var diffRatio = (double)diffPixels / totalPixels;
         if (diffRatio > maxDiffRatio)
         {
@@ -254,45 +243,49 @@ public static class ScreenshotHelper
         return new ImageComparison(true, diffPng, "");
     }
 
-    private static byte[] CreateDiffPng(Image<Rgba32> expected, Image<Rgba32> actual)
+    private static byte[] CreateDiffPng(ImageResult expected, ImageResult actual)
     {
         var width = Math.Max(expected.Width, actual.Width);
         var height = Math.Max(expected.Height, actual.Height);
-        using var diff = new Image<Rgba32>(width, height);
+        var diff = new byte[checked(width * height * 4)];
         for (var y = 0; y < height; y++)
         {
             for (var x = 0; x < width; x++)
             {
+                var pixel = diff.AsSpan((y * width + x) * 4, 4);
                 var inExpected = x < expected.Width && y < expected.Height;
                 var inActual = x < actual.Width && y < actual.Height;
                 if (inExpected && inActual)
                 {
-                    var expectedRgb = expected[x, y];
-                    if (expectedRgb == actual[x, y])
+                    var expectedRgba = expected.Data.AsSpan((y * expected.Width + x) * 4, 4);
+                    var actualRgba = actual.Data.AsSpan((y * actual.Width + x) * 4, 4);
+                    if (expectedRgba.SequenceEqual(actualRgba))
                     {
-                        diff[x, y] = Dim(expectedRgb);
+                        Dim(expectedRgba, pixel);
                     }
                     else
                     {
-                        diff[x, y] = DiffHighlight;
+                        DiffHighlight.AsSpan().CopyTo(pixel);
                     }
                 }
                 else
                 {
-                    diff[x, y] = SizeMismatch;
+                    SizeMismatch.AsSpan().CopyTo(pixel);
                 }
             }
         }
 
         using var ms = new MemoryStream();
-        diff.SaveAsPng(ms);
+        new StbImageWriteSharp.ImageWriter().WritePng(
+            diff, width, height, StbImageWriteSharp.ColorComponents.RedGreenBlueAlpha, ms);
         return ms.ToArray();
     }
 
-    private static Rgba32 Dim(Rgba32 rgb)
+    private static void Dim(ReadOnlySpan<byte> rgba, Span<byte> pixel)
     {
-        var dim = (byte)((rgb.R + rgb.G + rgb.B) / 9);
-        return new Rgba32(dim, dim, dim);
+        var dim = (byte)((rgba[0] + rgba[1] + rgba[2]) / 9);
+        pixel[0] = pixel[1] = pixel[2] = dim;
+        pixel[3] = 255;
     }
 
     private static void SaveFailArtifacts(string label, byte[] actual, byte[] diff)

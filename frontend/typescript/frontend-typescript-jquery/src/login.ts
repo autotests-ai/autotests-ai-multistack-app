@@ -82,7 +82,7 @@ $(() => {
     try {
       const response = await login(username, password);
       saveSession(response.token);
-      window.location.href = response.redirectUrl || appPath('/');
+      window.location.href = appPath(response.redirectUrl || '/');
     } catch (err) {
       const text = resolveAuthErrorMessage(err, pack, pack.errorWrongCredentials ?? '');
       error =

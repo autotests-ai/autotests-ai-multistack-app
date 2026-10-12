@@ -1,5 +1,6 @@
-package tests.e2e;
+package tests.e2e.mobile;
 
+import tests.MobileTestBase;
 import annotations.Layer;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -8,14 +9,13 @@ import io.qameta.allure.SeverityLevel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import tests.TestBase;
 
 @Layer("e2e")
 @Epic("Authentication")
 @Feature("Logout")
 @Severity(SeverityLevel.CRITICAL)
 @DisplayName("Logout")
-class LogoutTests extends TestBase {
+class LogoutTests extends MobileTestBase {
 
     @Test
     @Tag("e2e")

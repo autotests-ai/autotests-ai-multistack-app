@@ -6,7 +6,7 @@ testids appear natively, so **one Appium suite drives both platforms**.
 
 | Cell | Path | Artifact | Id |
 |------|------|----------|----|
-| `mobile-kotlin-compose` | [`../mobile/kotlin/mobile-kotlin-compose/`](../mobile/kotlin/mobile-kotlin-compose/) | `multistack-app.apk` | package `dev.multistack.compose`, activity `.MainActivity` |
+| `mobile-kotlin-compose` | [`../mobile/kotlin/mobile-kotlin-compose/`](../mobile/kotlin/mobile-kotlin-compose/) | `app-debug.apk` | package `dev.multistack.compose`, activity `.MainActivity` |
 | `mobile-swift-swiftui` | [`../mobile/swift/mobile-swift-swiftui/`](../mobile/swift/mobile-swift-swiftui/) | `multistack-app.app` / `.ipa` | bundle `dev.multistack.swiftui` |
 
 ## Locator mapping
@@ -61,7 +61,7 @@ never substitutes for each other:
 | `-Denv=` / Android `-Penv=` / iOS `MULTISTACK_ENV=` | which API (`apiBase`) | `ci` · `stage` · `prod` |
 | `-DdeviceHost=` | where the session runs | `emulator` · `real` · `selenoid` · `browserstack` · `simulator` |
 
-| env | `apiBase` — host, AuthSetup and both apps |
+| env | `apiBase` — host, tests/api, AuthApiClient and both apps |
 |-----|--------------------------------------------|
 | `prod` — default, and the GitHub Release APK | `https://autotests.ai/stack/backend-java-spring/api` |
 | `stage` | `https://stage.autotests.ai/stack/backend-java-spring/api` |
@@ -80,11 +80,16 @@ on Android, `UserDefaults` on iOS. Seed `user1` / `password1` → `Welcome, user
 ## Tests
 
 Living cell: [`../tests/java/tests-java-junit5-rest_assured-selenide-appium/`](../tests/java/tests-java-junit5-rest_assured-selenide-appium/).
-One suite, both apps — `AppiumBy.accessibilityId("login-input")`. Web UI and
-`/api` stay in `tests-java-junit5-rest_assured-selenide`, which is also default CI.
+One suite, both apps — `AppiumBy.accessibilityId("login-input")` in
+`tests/e2e/mobile` (`screens/`). The cell also carries a web `tests/ui/web`
+slice (`pages/`, `WebBrowserDriver`) and an api slice (`tests/api` + `api/`, Rest
+Assured on the same `apiBase`) so one module covers api+e2e+ui; the
+canonical web pyramid (`/api`, e2e, manual, screenshot) still lives in
+`tests-java-junit5-rest_assured-selenide`, which is also default CI.
 
 ```bash
 cd tests/java/tests-java-junit5-rest_assured-selenide-appium
+./gradlew api -Denv=prod                  # api slice over HTTP (apiBase)
 ./gradlew emulator                        # deviceHost=emulator, env=prod
 ./gradlew assembleApp emulator -Denv=ci   # bake APK for compose, then AVD
 ./gradlew real -DincludeTags=smoke        # USB phone in adb, not an emulator
@@ -94,6 +99,17 @@ cd tests/java/tests-java-junit5-rest_assured-selenide-appium
   -Dios.app=<Debug-iphoneos/multistack-app.app> -DincludeTags=smoke
 ```
 
+Attachments via `allure/Attach` — local hosts record the device screen
+(`CanRecordScreen` → mp4); BrowserStack: video mp4, device/appium/network
+logs, session link polled from `api-cloud.browserstack.com/app-automate/
+sessions/<id>.json` (`bstack:options` `debug`/`appiumLogs`/`networkLogs`/
+`video`); Selenoid: `<hub>/video/<id>.mp4` with creds taken from
+`selenoidUrl`. Each attach kind toggles by its own flag —
+`attachLastScreenshot`, `attachPageSource`, `attachDriverLogs`
+(logcat / syslog / server), `attachVideo`. Live kinds attach inside
+`@AfterEach` while the driver is still alive; farm session artifacts are
+fetched post-session (after `closeWebDriver`) by `allure/SessionArtifacts`.
+
 Host tasks are Android shorthands. **iOS has no task** — platform and host are
 flags on `test`: `-Dplatform=ios` with `-DdeviceHost=simulator|real|browserstack`.
 `processArguments` still come from `-Denv` (default `prod`).
@@ -101,7 +117,7 @@ iOS real needs USB and a device `.app` (`-Dios.app=`), not the simulator build.
 
 ### Pinning the simulator
 
-Set `appium:deviceName` and `appium:platformVersion` in `IosDriverProvider`
+Set `appium:deviceName` and `appium:platformVersion` in `LocalMobileDriver`
 (defaults: iPhone 16 / 18.4). Without them XCUITest creates a throwaway
 simulator on the newest runtime Xcode carries — today iOS 26, which has no
 `iPhone 16` and whose SwiftUI `TextField` is not a `UITextField`, so typed

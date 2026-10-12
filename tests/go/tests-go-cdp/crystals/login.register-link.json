@@ -5,7 +5,7 @@
   "source": {
     "as_id": "Ссылка Register на логине открывает форму регистрации",
     "lang": "typescript-playwright",
-    "fingerprint": "bb7795ef4342e254f3d7312d140f3327910dd5359dc171b764fadba65fa25a33"
+    "fingerprint": "c6975e37f0005fbe4f42b213b31d68651d7f02afc834ac77d6961f68f845bc07"
   },
   "steps": [
     {
@@ -33,6 +33,8 @@
     },
     {
       "op": "text",
+      "match": "contains",
+      "normalize_whitespace": true,
       "selector": "[data-testid=register-form-title]",
       "value": "Register"
     }

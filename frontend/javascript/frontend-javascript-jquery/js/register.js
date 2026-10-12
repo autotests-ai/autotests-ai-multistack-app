@@ -78,7 +78,7 @@ $(function () {
     try {
       const response = await window.ReferenceAuth.register(username, password);
       window.ReferenceAuth.saveSession(response.token);
-      window.location.href = response.redirectUrl || window.appPath('/');
+      window.location.href = window.appPath(response.redirectUrl || '/');
     } catch (err) {
       var text = window.ReferenceAuth.resolveAuthErrorMessage(
         err,

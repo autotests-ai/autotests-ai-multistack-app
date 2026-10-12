@@ -5,7 +5,7 @@
   "source": {
     "as_id": "Пользователь может удалить аккаунт",
     "lang": "typescript-playwright",
-    "fingerprint": "64dc392b8f38abe8aca50b0b655f5762efbe5df9b2accae72e3eaceb8d541320"
+    "fingerprint": "f245e60efe6b1b942a95b833394304c819263d72340db088f1f6ab947ea1d7a0"
   },
   "steps": [
     {
@@ -43,6 +43,8 @@
     },
     {
       "op": "text",
+      "match": "contains",
+      "normalize_whitespace": true,
       "selector": "[data-testid=welcome-message]",
       "value": "Welcome, deluser1!"
     },
@@ -57,6 +59,8 @@
     },
     {
       "op": "text",
+      "match": "contains",
+      "normalize_whitespace": true,
       "selector": "[data-testid=login-form-title]",
       "value": "Login Form"
     }

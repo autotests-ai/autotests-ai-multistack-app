@@ -4,22 +4,14 @@ import static com.codeborne.selenide.Condition.attribute;
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.$;
-import static com.codeborne.selenide.Selenide.Wait;
 import static com.codeborne.selenide.Selenide.confirm;
 import static com.codeborne.selenide.Selenide.dismiss;
-import static com.codeborne.selenide.Selenide.executeJavaScript;
 import static com.codeborne.selenide.Selenide.open;
 
-import api.AuthApiClient;
 import com.codeborne.selenide.SelenideElement;
 import io.qameta.allure.Step;
 
 public class HomePage extends BasePage<HomePage> {
-
-    /** Mirrors frontend authTokenStorageKey (backend-scoped on matrix paths). */
-    private static final String AUTH_TOKEN_KEY_JS =
-            "var m=location.pathname.match(/\\/(backend-[^/]+)\\//);"
-                    + "return m ? 'authToken:' + m[1] : 'authToken';";
 
     /** Mirrors frontend DELETE_ACCOUNT_CONFIRM. */
     private static final String DELETE_ACCOUNT_CONFIRM =
@@ -33,10 +25,6 @@ public class HomePage extends BasePage<HomePage> {
     private final SelenideElement deleteAccountButton = $("[data-testid='delete-account-button']");
     private final SelenideElement welcomePanel = $("[data-testid='welcome-panel']");
 
-    private String authTokenKey() {
-        return executeJavaScript(AUTH_TOKEN_KEY_JS);
-    }
-
     @Step("Open home page")
     public HomePage openPage() {
         open("/");
@@ -45,27 +33,13 @@ public class HomePage extends BasePage<HomePage> {
 
     @Step("Open home page with local storage authentication")
     public HomePage openPageWithLocalStorageAuthentication(String username, String password) {
-        String token = AuthApiClient.login(username, password);
-
-        open("/login");
-        executeJavaScript(
-                "localStorage.setItem(arguments[0], arguments[1]);",
-                authTokenKey(),
-                token
-        );
-        open("/");
+        super.openPageWithLocalStorageAuthentication("/", username, password);
         return shouldBeOpen();
     }
 
     @Step("Open home page with invalid local storage token")
     public HomePage openPageWithInvalidToken() {
-        open("/login");
-        executeJavaScript(
-                "localStorage.setItem(arguments[0], arguments[1]);",
-                authTokenKey(),
-                "invalid-token"
-        );
-        open("/");
+        openPageWithLocalStorageToken("/", "invalid-token");
         return shouldBeOpen();
     }
 
@@ -109,10 +83,7 @@ public class HomePage extends BasePage<HomePage> {
 
     @Step("Verify auth token was cleared from localStorage")
     public HomePage shouldClearAuthToken() {
-        Wait().until(driver -> {
-            String key = executeJavaScript(AUTH_TOKEN_KEY_JS);
-            return executeJavaScript("return localStorage.getItem(arguments[0]);", key) == null;
-        });
+        waitForAuthTokenToBeCleared();
         return this;
     }
 
@@ -180,10 +151,7 @@ public class HomePage extends BasePage<HomePage> {
 
     @Step("Verify auth token remains in localStorage")
     public HomePage shouldKeepAuthToken() {
-        Wait().until(driver -> {
-            String key = executeJavaScript(AUTH_TOKEN_KEY_JS);
-            return executeJavaScript("return localStorage.getItem(arguments[0]);", key) != null;
-        });
+        waitForAuthTokenToBePresent();
         return this;
     }
 }

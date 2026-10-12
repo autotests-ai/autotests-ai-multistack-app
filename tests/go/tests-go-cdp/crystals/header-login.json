@@ -5,7 +5,7 @@
   "source": {
     "as_id": "Header на логине показывает Login",
     "lang": "typescript-playwright",
-    "fingerprint": "f3f7ff6a618ae927f64099fbdd358bec325563ef5d50c493c9f27396a8d9e649"
+    "fingerprint": "f23b176aea22145d97edbacf3e2a63f9d1f747f56a6c82cc38c15fcbe90a5a46"
   },
   "steps": [
     {
@@ -19,6 +19,8 @@
     },
     {
       "op": "text",
+      "match": "contains",
+      "normalize_whitespace": true,
       "selector": "[data-testid=header-nav-login]",
       "value": "Login"
     }

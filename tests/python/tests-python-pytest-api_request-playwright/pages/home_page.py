@@ -3,15 +3,14 @@ from __future__ import annotations
 import allure
 from playwright.sync_api import Locator, Page, expect
 
-from api_client import login
+from pages.base import BasePage
 
 DELETE_ACCOUNT_CONFIRM = "Delete this account? This cannot be undone."
 
 
-class HomePage:
+class HomePage(BasePage):
     def __init__(self, page: Page, api) -> None:
-        self.page = page
-        self.api = api
+        super().__init__(page, api)
         self.layout: Locator = page.get_by_test_id("multistack-layout")
         self.health_status: Locator = page.get_by_test_id("health-status")
         self.items_list: Locator = page.get_by_test_id("items-list")
@@ -75,18 +74,12 @@ class HomePage:
 
     @allure.step("Open home page with local storage authentication")
     def open_with_local_storage_authentication(self, username: str, password: str) -> HomePage:
-        return self.open_with_local_storage_auth(login(self.api, username, password))
+        return self.open_with_local_storage_auth(self._authenticate(username, password))
 
     @allure.step("Seed localStorage auth token")
     def open_with_local_storage_auth(self, token: str) -> HomePage:
-        self.page.goto("login")
-        self.page.get_by_test_id("login-form").wait_for()
-        key = self.auth_token_key()
-        self.page.evaluate(
-            "([k, t]) => localStorage.setItem(k, t)",
-            [key, token],
-        )
-        return self.open()
+        self._open_page_with_local_storage_token("./", token)
+        return self.should_be_open()
 
     @allure.step("Verify welcome panel stays hidden")
     def should_hide_welcome_panel(self) -> HomePage:
@@ -95,13 +88,7 @@ class HomePage:
 
     @allure.step("Verify auth token was cleared from localStorage")
     def should_clear_auth_token(self) -> HomePage:
-        self.page.wait_for_function(
-            """() => {
-              const m = location.pathname.match(/\\/(backend-[^/]+)\\//);
-              const key = m ? `authToken:${m[1]}` : 'authToken';
-              return localStorage.getItem(key) === null;
-            }"""
-        )
+        self._wait_for_auth_token_to_be_cleared()
         return self
 
     @allure.step("Verify session panel offers logout and delete account")
@@ -115,17 +102,6 @@ class HomePage:
     @allure.step("Open home with a garbage auth token")
     def open_with_invalid_token(self) -> HomePage:
         return self.open_with_local_storage_auth("invalid-token")
-
-    def auth_token_key(self) -> str:
-        return self.page.evaluate(
-            """() => {
-              const m = location.pathname.match(/\\/(backend-[^/]+)\\//);
-              return m ? `authToken:${m[1]}` : 'authToken';
-            }"""
-        )
-
-    def auth_token(self) -> str | None:
-        return self.page.evaluate("k => localStorage.getItem(k)", self.auth_token_key())
 
 
 def _accept_confirm(dialog) -> None:

@@ -75,6 +75,7 @@ DS_JS="$MONOREPO_ROOT/projects/design-system-home/design-system/js"
 CANON_JS=(
   code-highlight.js
   dom-utils.js
+  help-info.js
   qg-info.js
   quality-gate-source.mjs
   quality-gate.js

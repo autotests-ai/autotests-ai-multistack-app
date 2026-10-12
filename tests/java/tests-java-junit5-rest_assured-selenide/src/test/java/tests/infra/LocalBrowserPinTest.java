@@ -1,8 +1,11 @@
 package tests.infra;
 
 import annotations.Layer;
+import com.codeborne.selenide.Configuration;
 import config.ConfigReader;
+import config.TestConfig;
 import helpers.LocalChromePin;
+import org.aeonbits.owner.ConfigFactory;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -12,9 +15,18 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import tests.AllureMeta;
+import tests.TestBase;
 
+import java.io.IOException;
+import java.util.Map;
+import java.util.Properties;
+
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -42,18 +54,52 @@ class LocalBrowserPinTest extends AllureMeta {
     }
 
     @Test
+    @DisplayName("remote browser setup applies the configured hub and browser version")
+    void remoteBrowserSetupAppliesHubAndVersion() {
+        var remoteConfig = ConfigFactory.create(TestConfig.class,
+                Map.of("remoteUrl", "https://selenium.example.test/wd/hub"));
+        var baseUrl = Configuration.baseUrl;
+        var browser = Configuration.browser;
+        var browserSize = Configuration.browserSize;
+        var headless = Configuration.headless;
+        var timeout = Configuration.timeout;
+        var remote = Configuration.remote;
+        var browserVersion = Configuration.browserVersion;
+        try {
+            TestBase.configureBrowser(remoteConfig);
+            assertAll(
+                    () -> assertEquals(remoteConfig.remoteUrl(), Configuration.remote),
+                    () -> assertEquals(remoteConfig.browserVersion(), Configuration.browserVersion));
+        } finally {
+            Configuration.baseUrl = baseUrl;
+            Configuration.browser = browser;
+            Configuration.browserSize = browserSize;
+            Configuration.headless = headless;
+            Configuration.timeout = timeout;
+            Configuration.remote = remote;
+            Configuration.browserVersion = browserVersion;
+        }
+    }
+
+    @Test
     @DisplayName("pinnedVersion is a full Chrome for Testing build number")
     void pinnedVersionIsFullBuildNumber() {
         assertTrue(LocalChromePin.pinnedVersion().matches("\\d+\\.\\d+\\.\\d+\\.\\d+"),
                 "chrome-for-testing.properties must pin an exact build, got: " + LocalChromePin.pinnedVersion());
     }
 
-    @Test
+    @ParameterizedTest(name = "{0} uses the pinned browser major")
+    @ValueSource(strings = {"ci", "mock", "stage", "prod"})
     @DisplayName("configured browserVersion stays on the pinned major")
-    void configuredBrowserVersionMatchesPin() {
-        assertEquals(major(LocalChromePin.pinnedVersion()),
-                major(ConfigReader.testConfig.browserVersion()),
-                "browserVersion and chrome-for-testing.properties drifted apart");
+    void configuredBrowserVersionMatchesPin(String stand) throws IOException {
+        var properties = new Properties();
+        try (var input = getClass().getResourceAsStream("/config/" + stand + ".properties")) {
+            assertNotNull(input, "Missing browser config for " + stand);
+            properties.load(input);
+        }
+        var browserVersion = properties.getProperty("browserVersion", ConfigReader.testConfig.browserVersion());
+        assertEquals(major(LocalChromePin.pinnedVersion()), major(browserVersion),
+                "browserVersion and chrome-for-testing.properties drifted apart for " + stand);
     }
 
     @Test

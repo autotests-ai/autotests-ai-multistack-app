@@ -4,25 +4,13 @@ from urllib.parse import urlparse
 
 import allure
 from selene import be, browser, have
-from selenium.webdriver.support.ui import WebDriverWait
 
-from api_client import login as api_login
 from pages.base import BasePage
 
-AUTH_TOKEN_KEY_JS = (
-    "var m=location.pathname.match(/\\/(backend-[^/]+)\\//);"
-    "return m ? 'authToken:' + m[1] : 'authToken';"
-)
 DELETE_ACCOUNT_CONFIRM = "Delete this account? This cannot be undone."
 
 
 class HomePage(BasePage):
-    def _wait(self) -> WebDriverWait:
-        return WebDriverWait(browser.driver, browser.config.timeout or 5.0)
-
-    def _auth_token_key(self) -> str:
-        return browser.driver.execute_script(AUTH_TOKEN_KEY_JS)
-
     def _stub_confirm(self, accepted: bool) -> None:
         browser.driver.execute_script(
             "window.__deleteConfirm = null;"
@@ -50,23 +38,12 @@ class HomePage(BasePage):
     def open_page_with_local_storage_authentication(
         self, username: str, password: str
     ) -> HomePage:
-        token = api_login(self.config, username, password)
-        self.open_path("/login")
-        key = self._auth_token_key()
-        browser.driver.execute_script(
-            "localStorage.setItem(arguments[0], arguments[1]);", key, token
-        )
-        self.open_path("/")
+        self._open_page_with_local_storage_authentication("/", username, password)
         return self.should_be_open()
 
     @allure.step("Open home page with invalid local storage token")
     def open_page_with_invalid_token(self) -> HomePage:
-        self.open_path("/login")
-        key = self._auth_token_key()
-        browser.driver.execute_script(
-            "localStorage.setItem(arguments[0], arguments[1]);", key, "invalid-token"
-        )
-        self.open_path("/")
+        self._open_page_with_local_storage_token("/", "invalid-token")
         return self.should_be_open()
 
     @allure.step("Verify home page is open")
@@ -134,20 +111,12 @@ class HomePage(BasePage):
 
     @allure.step("Verify auth token was cleared from localStorage")
     def should_clear_auth_token(self) -> HomePage:
-        key = self._auth_token_key()
-        self._wait().until(
-            lambda driver: driver.execute_script("return localStorage.getItem(arguments[0]);", key)
-            is None
-        )
+        self._wait_for_auth_token_to_be_cleared()
         return self
 
     @allure.step("Verify auth token remains in localStorage")
     def should_keep_auth_token(self) -> HomePage:
-        key = self._auth_token_key()
-        self._wait().until(
-            lambda driver: driver.execute_script("return localStorage.getItem(arguments[0]);", key)
-            is not None
-        )
+        self._wait_for_auth_token_to_be_present()
         return self
 
     @allure.step("Verify session panel offers logout and delete account")

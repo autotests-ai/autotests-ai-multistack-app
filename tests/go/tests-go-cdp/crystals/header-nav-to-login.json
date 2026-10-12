@@ -5,7 +5,7 @@
   "source": {
     "as_id": "Ссылка Login в header открывает форму логина",
     "lang": "typescript-playwright",
-    "fingerprint": "00989580a8725fb65a4cec5b6da08453386d864758302d6a3298487088a80526"
+    "fingerprint": "891d9d346c99f76cce9127a3ef8716b7b6bccb8367cd71069c89b0514855692f"
   },
   "steps": [
     {
@@ -33,6 +33,8 @@
     },
     {
       "op": "text",
+      "match": "contains",
+      "normalize_whitespace": true,
       "selector": "[data-testid=login-form-title]",
       "value": "Login Form"
     }

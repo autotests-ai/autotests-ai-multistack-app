@@ -1,5 +1,4 @@
 using Allure.NUnit.Attributes;
-using Api;
 using Helpers;
 using OpenQA.Selenium;
 
@@ -7,14 +6,8 @@ namespace Pages;
 
 public sealed class HomePage : BasePage<HomePage>
 {
-    private const string AuthTokenKeyJs =
-        "var m=location.pathname.match(/\\/(backend-[^/]+)\\//);"
-        + "return m ? 'authToken:' + m[1] : 'authToken';";
-
     private const string DeleteAccountConfirm =
         "Delete this account? This cannot be undone.";
-
-    private static string AuthTokenKey() => Convert.ToString(Ui.Js(AuthTokenKeyJs)) ?? "authToken";
 
     [AllureStep("Open home page")]
     public HomePage OpenPage()
@@ -26,19 +19,14 @@ public sealed class HomePage : BasePage<HomePage>
     [AllureStep("Open home page with local storage authentication")]
     public HomePage OpenPageWithLocalStorageAuthentication(string username, string password)
     {
-        var token = AuthApiClient.Login(username, password);
-        Ui.Open("/login");
-        Ui.Js("localStorage.setItem(arguments[0], arguments[1]);", AuthTokenKey(), token);
-        Ui.Open("/");
+        base.OpenPageWithLocalStorageAuthentication("/", username, password);
         return ShouldBeOpen();
     }
 
     [AllureStep("Open home page with invalid local storage token")]
     public HomePage OpenPageWithInvalidToken()
     {
-        Ui.Open("/login");
-        Ui.Js("localStorage.setItem(arguments[0], arguments[1]);", AuthTokenKey(), "invalid-token");
-        Ui.Open("/");
+        OpenPageWithLocalStorageToken("/", "invalid-token");
         return ShouldBeOpen();
     }
 
@@ -81,7 +69,7 @@ public sealed class HomePage : BasePage<HomePage>
     [AllureStep("Verify auth token was cleared from localStorage")]
     public HomePage ShouldClearAuthToken()
     {
-        Ui.WaitUntil(_ => Ui.Js("return localStorage.getItem(arguments[0]);", AuthTokenKey()) == null ? true : (bool?)null);
+        WaitForAuthTokenToBeCleared();
         return this;
     }
 
@@ -157,7 +145,7 @@ public sealed class HomePage : BasePage<HomePage>
     [AllureStep("Verify auth token remains in localStorage")]
     public HomePage ShouldKeepAuthToken()
     {
-        Ui.WaitUntil(_ => Ui.Js("return localStorage.getItem(arguments[0]);", AuthTokenKey()) != null ? true : (bool?)null);
+        WaitForAuthTokenToBePresent();
         return this;
     }
 }

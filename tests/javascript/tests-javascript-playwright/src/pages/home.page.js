@@ -1,9 +1,11 @@
-exports.HomePage = class HomePage {
+const { BasePage } = require('./base.page');
+
+exports.HomePage = class HomePage extends BasePage {
   /**
    * @param {import('@playwright/test').Page} page
    */
   constructor(page) {
-    this.page = page;
+    super(page);
     this.layout = page.getByTestId('multistack-layout');
     this.healthStatus = page.getByTestId('health-status');
     this.itemsList = page.getByTestId('items-list');
@@ -28,18 +30,9 @@ exports.HomePage = class HomePage {
     return this.welcomeMessage;
   }
 
-  async authTokenKey() {
-    return this.page.evaluate(() => {
-      const m = location.pathname.match(/\/(backend-[^/]+)\//);
-      return m ? `authToken:${m[1]}` : 'authToken';
-    });
-  }
-
   async openWithLocalStorageAuth(token) {
-    await this.page.goto('login');
-    const key = await this.authTokenKey();
-    await this.page.evaluate(([k, t]) => localStorage.setItem(k, t), [key, token]);
-    await this.open();
+    await this.openPageWithLocalStorageToken('.', token);
+    await this.shouldBeOpen();
   }
 
   async openWithInvalidToken() {
@@ -88,10 +81,5 @@ exports.HomePage = class HomePage {
     } catch {
       // not logged in / already gone
     }
-  }
-
-  async authToken() {
-    const key = await this.authTokenKey();
-    return this.page.evaluate((k) => localStorage.getItem(k), key);
   }
 };

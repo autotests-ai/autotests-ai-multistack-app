@@ -5,7 +5,7 @@
   "source": {
     "as_id": "Пользователь может выйти после логина",
     "lang": "typescript-playwright",
-    "fingerprint": "681aa31a5177a37f46cfd38a4d5904e98d98155bbbb1461c4ed0e4a447d2c2af"
+    "fingerprint": "faacd18c8cff35609b1c415b671838342ea9c51e0c357e5e2fc9c0de8cf7cb22"
   },
   "steps": [
     {
@@ -38,6 +38,8 @@
     },
     {
       "op": "text",
+      "match": "contains",
+      "normalize_whitespace": true,
       "selector": "[data-testid=welcome-message]",
       "value": "Welcome, user1!"
     },
@@ -52,6 +54,8 @@
     },
     {
       "op": "text",
+      "match": "contains",
+      "normalize_whitespace": true,
       "selector": "[data-testid=login-form-title]",
       "value": "Login Form"
     }

@@ -5,7 +5,7 @@
   "source": {
     "as_id": "Ссылка Login на регистрации открывает форму логина",
     "lang": "typescript-playwright",
-    "fingerprint": "bbf6226da2d642513b87e584085e1c82f21dac6d8554485f34cbb3e072970f84"
+    "fingerprint": "195b57d61361e4be499e35a6291247a766113d144f19abd078161bb03bea2eaf"
   },
   "steps": [
     {
@@ -33,6 +33,8 @@
     },
     {
       "op": "text",
+      "match": "contains",
+      "normalize_whitespace": true,
       "selector": "[data-testid=login-form-title]",
       "value": "Login Form"
     }

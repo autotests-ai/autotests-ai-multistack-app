@@ -5,7 +5,7 @@
   "source": {
     "as_id": "Пользователь регистрируется с логином из 3 символов и паролем из 6",
     "lang": "typescript-playwright",
-    "fingerprint": "03cdfa4d7a83a689312d8b9628db8bf11e0389bf785821ec96d2bc2b179a4365"
+    "fingerprint": "82f2505f4678bb5b3204ea191a40037ceb09da2652470cbc2cfebcadde21a2db"
   },
   "steps": [
     {
@@ -43,6 +43,8 @@
     },
     {
       "op": "text",
+      "match": "contains",
+      "normalize_whitespace": true,
       "selector": "[data-testid=welcome-message]",
       "value": "Welcome, abc!"
     }
