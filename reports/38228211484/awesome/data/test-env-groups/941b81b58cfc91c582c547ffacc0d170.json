@@ -1,0 +1,1 @@
+{"id":"941b81b58cfc91c582c547ffacc0d170","fullName":"dev.multistack.app.controller.AuthControllerTest.registerReturnsCreated","name":"POST /api/auth/register returns 201","status":"passed","testResultsByEnv":{"default":"0ee044c759908ee47e9f3d6a5a88e721"}}

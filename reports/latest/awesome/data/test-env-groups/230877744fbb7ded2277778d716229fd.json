@@ -1,1 +1,1 @@
-{"id":"230877744fbb7ded2277778d716229fd","fullName":"tests.e2e.LoginTests.shouldLoginWithMinimumLengthCredentials","name":"User is logged in with 3-character login and 6-character password","status":"passed","testResultsByEnv":{"default":"79675b8f5f1a74cd07064fa770ed0522"}}
+{"id":"230877744fbb7ded2277778d716229fd","fullName":"tests.e2e.LoginTests.shouldLoginWithMinimumLengthCredentials","name":"User is logged in with 3-character login and 6-character password","status":"passed","testResultsByEnv":{"default":"26a57ccddf006a27d6997aa921182b2f"}}

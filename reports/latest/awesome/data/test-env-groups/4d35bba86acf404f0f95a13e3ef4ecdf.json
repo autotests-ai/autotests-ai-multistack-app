@@ -1,1 +1,1 @@
-{"id":"4d35bba86acf404f0f95a13e3ef4ecdf","fullName":"dev.multistack.app.repository.UserRepositoryTest.findByUsernameEmptyForUnknownUser","name":"findByUsername is empty for an unknown user","status":"passed","testResultsByEnv":{"default":"5e0861f3dbca8ad1aa7d26036084c3f0"}}
+{"id":"4d35bba86acf404f0f95a13e3ef4ecdf","fullName":"dev.multistack.app.repository.UserRepositoryTest.findByUsernameEmptyForUnknownUser","name":"findByUsername is empty for an unknown user","status":"passed","testResultsByEnv":{"default":"15dc46111f2425c3ebad5712fb052fae"}}

@@ -1,1 +1,1 @@
-{"id":"9b25797e4b001e3188a30d4e969c419b","fullName":"dev.multistack.app.config.CorsConfigTest.corsForRequestSkipsNonApiPaths","name":"corsForRequest ignores non-API paths and null requests","status":"passed","testResultsByEnv":{"default":"6c8ec69657ebb96e0f5c59ae8d3d9298"}}
+{"id":"9b25797e4b001e3188a30d4e969c419b","fullName":"dev.multistack.app.config.CorsConfigTest.corsForRequestSkipsNonApiPaths","name":"corsForRequest ignores non-API paths and null requests","status":"passed","testResultsByEnv":{"default":"51bd6d07329859e8c893bc309a6b251e"}}

@@ -1,1 +1,1 @@
-{"id":"8d755a4fd488e0b506d33c904a7ad287","fullName":"tests.e2e.RegisterTests.shouldShowValidationErrorWhenUsernameIsEmpty","name":"Empty username shows validation error","status":"passed","testResultsByEnv":{"default":"97a208d4907bcdb947b8708cc3f6486c"}}
+{"id":"8d755a4fd488e0b506d33c904a7ad287","fullName":"tests.e2e.RegisterTests.shouldShowValidationErrorWhenUsernameIsEmpty","name":"Empty username shows validation error","status":"passed","testResultsByEnv":{"default":"27503c5b28f0da98c5cb5044707b72a3"}}

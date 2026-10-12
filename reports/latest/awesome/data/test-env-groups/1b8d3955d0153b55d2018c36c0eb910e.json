@@ -1,1 +1,1 @@
-{"id":"1b8d3955d0153b55d2018c36c0eb910e","fullName":"tests.api.AuthApiTests.loginRejectsMalformedJson","name":"POST /api/auth/login answers a malformed JSON body with 400, not 401","status":"passed","testResultsByEnv":{"default":"ee2138d15c32307ae7fb2f720057b653"}}
+{"id":"1b8d3955d0153b55d2018c36c0eb910e","fullName":"tests.api.AuthApiTests.loginRejectsMalformedJson","name":"POST /api/auth/login answers a malformed JSON body with 400, not 401","status":"passed","testResultsByEnv":{"default":"4025242c01c5c0c5d562349ce14b7a7e"}}

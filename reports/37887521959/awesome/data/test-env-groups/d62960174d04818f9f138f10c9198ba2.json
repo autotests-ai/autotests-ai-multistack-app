@@ -1,1 +1,0 @@
-{"id":"d62960174d04818f9f138f10c9198ba2","fullName":"dev.multistack.app.repository.UserRepositoryTest.findByUsernameReturnsSavedUser","name":"findByUsername returns the saved user with generated id and created_at","status":"passed","testResultsByEnv":{"default":"f6a83d1c41446a53894ef322133a02aa"}}

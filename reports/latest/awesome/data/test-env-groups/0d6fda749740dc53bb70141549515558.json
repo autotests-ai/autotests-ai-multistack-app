@@ -1,1 +1,1 @@
-{"id":"0d6fda749740dc53bb70141549515558","fullName":"dev.multistack.app.controller.AuthControllerTest.registerDuplicateUsername","name":"POST /api/auth/register maps duplicate username to 409","status":"passed","testResultsByEnv":{"default":"a50a39e0d2b1eb3ddc414acdab4bc1e3"}}
+{"id":"0d6fda749740dc53bb70141549515558","fullName":"dev.multistack.app.controller.AuthControllerTest.registerDuplicateUsername","name":"POST /api/auth/register maps duplicate username to 409","status":"passed","testResultsByEnv":{"default":"550c6e50fdca50f8a74d61161c346f19"}}
