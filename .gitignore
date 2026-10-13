@@ -20,6 +20,10 @@ backend/java/backend-java-spring/bin/
 backend/kotlin/backend-kotlin-spring/build/
 backend/kotlin/backend-kotlin-spring/.gradle/
 backend/kotlin/backend-kotlin-spring/bin/
+backend/kotlin/backend-kotlin-ktor/build/
+backend/kotlin/backend-kotlin-ktor/.gradle/
+backend/kotlin/backend-kotlin-ktor/.kotlin/
+backend/kotlin/backend-kotlin-ktor/bin/
 backend/rust/backend-rust-axum/target/
 tests/rust/**/target/
 tests/java/tests-java-junit5-rest_assured-selenide/build/

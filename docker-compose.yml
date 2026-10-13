@@ -103,6 +103,40 @@ services:
       # do not collide. Java stays 8801 (already live on the load VM).
       - "${BACKEND_KOTLIN_MANAGEMENT_PORT:-127.0.0.1:8910}:8081"
 
+  backend-kotlin-ktor:
+    image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-kotlin-ktor:${IMAGE_TAG:-latest}
+    build:
+      labels:
+        org.opencontainers.image.title: autotests-ai-multistack-app-backend-kotlin-ktor
+        org.opencontainers.image.description: autotests-ai-multistack-app · backend-kotlin-ktor
+        org.opencontainers.image.source: https://github.com/autotests-ai/autotests-ai-multistack-app
+        org.opencontainers.image.url: https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/
+        org.opencontainers.image.vendor: autotests-ai
+      context: ./backend/kotlin/backend-kotlin-ktor
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: multistack_app_kotlin_ktor
+      DB_USER: multistack
+      DB_PASSWORD: multistack
+      SERVER_PORT: 8080
+      MANAGEMENT_PORT: 8081
+      JWT_SECRET: ${JWT_SECRET:-autotests-ai-multistack-dev-secret-change-in-production-min-32-chars}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      postgres-ensure-dbs:
+        condition: service_completed_successfully
+    networks:
+      - autotests_ai_multistack_internal
+    ports:
+      - "${BACKEND_KOTLIN_KTOR_PORT:-8811}:8080"
+      # Prometheus scrape (loopback). Docker publish bypasses ufw.
+      # Host 89xx = API 88xx + 100 so packed cells (flask/fastapi, gin/stdlib, …)
+      # do not collide. Java stays 8801 (already live on the load VM).
+      - "${BACKEND_KOTLIN_KTOR_MANAGEMENT_PORT:-127.0.0.1:8911}:8081"
+
   backend-python-flask:
     image: ghcr.io/autotests-ai/autotests-ai-multistack-app-backend-python-flask:${IMAGE_TAG:-latest}
     build:

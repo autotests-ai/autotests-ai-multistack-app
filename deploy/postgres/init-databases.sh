@@ -14,6 +14,8 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres <<-EOSQL
     WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'multistack_app_python_django')\gexec
   SELECT 'CREATE DATABASE multistack_app_kotlin_spring'
     WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'multistack_app_kotlin_spring')\gexec
+  SELECT 'CREATE DATABASE multistack_app_kotlin_ktor'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'multistack_app_kotlin_ktor')\gexec
   SELECT 'CREATE DATABASE multistack_app_go_gin'
     WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'multistack_app_go_gin')\gexec
   SELECT 'CREATE DATABASE multistack_app_go_stdlib'

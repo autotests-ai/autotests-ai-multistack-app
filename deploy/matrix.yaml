@@ -9,10 +9,12 @@
 #
 # Port canon (local publish = prod host upstream; same numbers):
 #   backend: language base +10 · stack +1 within language
-#     8800 java · 8810 kotlin · 8820 python · 8830 go · 8840 javascript · 8850 typescript · 8860 csharp · 8870 rust · next lang 8880…
+#     8800 java · 8810 kotlin · 8820 python · 8830 go · 8840 javascript · 8850 typescript · 8860 csharp · 8870 rust
+#     8880 php · 8890 ruby · 8900 scala · 8910 elixir · 8920 dart · next lang 8930…
 #   frontend (compose publish = host nginx upstream): language base +10 · stack +1
-#     9800 javascript · 9810 typescript · next lang 9820…
+#     9800 javascript · 9810 typescript · 9820 elm · 9830 dart · 9840 clojurescript · 9850 rescript · next lang 9860…
 # Container-internal listen stays 8080 (backends) / 80 (frontends).
+# Slot rows reserve publish_port per canon; no compose service until sources land.
 # Path routing SSOT: deploy/nginx (host). Local: hit published ports directly.
 
 public_host: autotests.ai
@@ -182,6 +184,211 @@ backends:
     db_name: multistack_app_rust_axum
     health_service: backend-rust-axum
 
+  # --- Slot rows: empty teaching folders (README only). Ports reserved per canon. ---
+  - id: backend-java-quarkus
+    status: slot
+    language: java
+    module: backend/java/backend-java-quarkus
+    compose_service: null
+    compose_profile: null
+    image: null
+    internal_port: 8080
+    publish_port: 8801
+    db_name: null
+    health_service: backend-java-quarkus
+
+  - id: backend-java-micronaut
+    status: slot
+    language: java
+    module: backend/java/backend-java-micronaut
+    compose_service: null
+    compose_profile: null
+    image: null
+    internal_port: 8080
+    publish_port: 8802
+    db_name: null
+    health_service: backend-java-micronaut
+
+  - id: backend-kotlin-ktor
+    status: active
+    language: kotlin
+    module: backend/kotlin/backend-kotlin-ktor
+    compose_service: backend-kotlin-ktor
+    compose_profile: null
+    image: autotests-ai-multistack-app-backend-kotlin-ktor:latest
+    internal_port: 8080
+    publish_port: 8811
+    db_name: multistack_app_kotlin_ktor
+    health_service: backend-kotlin-ktor
+
+  - id: backend-python-aiohttp
+    status: slot
+    language: python
+    module: backend/python/backend-python-aiohttp
+    compose_service: null
+    compose_profile: null
+    image: null
+    internal_port: 8080
+    publish_port: 8823
+    db_name: null
+    health_service: backend-python-aiohttp
+
+  - id: backend-go-echo
+    status: slot
+    language: go
+    module: backend/go/backend-go-echo
+    compose_service: null
+    compose_profile: null
+    image: null
+    internal_port: 8080
+    publish_port: 8832
+    db_name: null
+    health_service: backend-go-echo
+
+  - id: backend-javascript-fastify
+    status: slot
+    language: javascript
+    module: backend/javascript/backend-javascript-fastify
+    compose_service: null
+    compose_profile: null
+    image: null
+    internal_port: 8080
+    publish_port: 8842
+    db_name: null
+    health_service: backend-javascript-fastify
+
+  - id: backend-typescript-fastify
+    status: slot
+    language: typescript
+    module: backend/typescript/backend-typescript-fastify
+    compose_service: null
+    compose_profile: null
+    image: null
+    internal_port: 8080
+    publish_port: 8852
+    db_name: null
+    health_service: backend-typescript-fastify
+
+  - id: backend-csharp-minimal
+    status: slot
+    language: csharp
+    module: backend/csharp/backend-csharp-minimal
+    compose_service: null
+    compose_profile: null
+    image: null
+    internal_port: 8080
+    publish_port: 8861
+    db_name: null
+    health_service: backend-csharp-minimal
+
+  - id: backend-rust-actix
+    status: slot
+    language: rust
+    module: backend/rust/backend-rust-actix
+    compose_service: null
+    compose_profile: null
+    image: null
+    internal_port: 8080
+    publish_port: 8871
+    db_name: null
+    health_service: backend-rust-actix
+
+  - id: backend-php-laravel
+    status: slot
+    language: php
+    module: backend/php/backend-php-laravel
+    compose_service: null
+    compose_profile: null
+    image: null
+    internal_port: 8080
+    publish_port: 8880
+    db_name: null
+    health_service: backend-php-laravel
+
+  - id: backend-php-slim
+    status: slot
+    language: php
+    module: backend/php/backend-php-slim
+    compose_service: null
+    compose_profile: null
+    image: null
+    internal_port: 8080
+    publish_port: 8881
+    db_name: null
+    health_service: backend-php-slim
+
+  - id: backend-ruby-rails
+    status: slot
+    language: ruby
+    module: backend/ruby/backend-ruby-rails
+    compose_service: null
+    compose_profile: null
+    image: null
+    internal_port: 8080
+    publish_port: 8890
+    db_name: null
+    health_service: backend-ruby-rails
+
+  - id: backend-ruby-sinatra
+    status: slot
+    language: ruby
+    module: backend/ruby/backend-ruby-sinatra
+    compose_service: null
+    compose_profile: null
+    image: null
+    internal_port: 8080
+    publish_port: 8891
+    db_name: null
+    health_service: backend-ruby-sinatra
+
+  - id: backend-scala-play
+    status: slot
+    language: scala
+    module: backend/scala/backend-scala-play
+    compose_service: null
+    compose_profile: null
+    image: null
+    internal_port: 8080
+    publish_port: 8900
+    db_name: null
+    health_service: backend-scala-play
+
+  - id: backend-scala-http4s
+    status: slot
+    language: scala
+    module: backend/scala/backend-scala-http4s
+    compose_service: null
+    compose_profile: null
+    image: null
+    internal_port: 8080
+    publish_port: 8901
+    db_name: null
+    health_service: backend-scala-http4s
+
+  - id: backend-elixir-phoenix
+    status: slot
+    language: elixir
+    module: backend/elixir/backend-elixir-phoenix
+    compose_service: null
+    compose_profile: null
+    image: null
+    internal_port: 8080
+    publish_port: 8910
+    db_name: null
+    health_service: backend-elixir-phoenix
+
+  - id: backend-dart-shelf
+    status: slot
+    language: dart
+    module: backend/dart/backend-dart-shelf
+    compose_service: null
+    compose_profile: null
+    image: null
+    internal_port: 8080
+    publish_port: 8920
+    db_name: null
+    health_service: backend-dart-shelf
+
 frontends:
   - id: frontend-javascript-vanilla
     status: active
@@ -273,3 +480,94 @@ frontends:
     compose_service: frontend-typescript-jquery
     image: autotests-ai-multistack-app-frontend-typescript-jquery:latest
     publish_port: 9814
+
+  # --- Slot rows: empty teaching folders (README only). Ports reserved per canon. ---
+  - id: frontend-javascript-svelte
+    status: slot
+    kind: vite
+    module: frontend/javascript/frontend-javascript-svelte
+    mount: frontend-javascript-svelte
+    compose_service: null
+    image: null
+    publish_port: 9805
+
+  - id: frontend-javascript-solid
+    status: slot
+    kind: vite
+    module: frontend/javascript/frontend-javascript-solid
+    mount: frontend-javascript-solid
+    compose_service: null
+    image: null
+    publish_port: 9806
+
+  - id: frontend-javascript-htmx
+    status: slot
+    kind: static
+    module: frontend/javascript/frontend-javascript-htmx
+    mount: frontend-javascript-htmx
+    compose_service: null
+    image: null
+    publish_port: 9807
+
+  - id: frontend-typescript-svelte
+    status: slot
+    kind: vite
+    module: frontend/typescript/frontend-typescript-svelte
+    mount: frontend-typescript-svelte
+    compose_service: null
+    image: null
+    publish_port: 9815
+
+  - id: frontend-typescript-solid
+    status: slot
+    kind: vite
+    module: frontend/typescript/frontend-typescript-solid
+    mount: frontend-typescript-solid
+    compose_service: null
+    image: null
+    publish_port: 9816
+
+  - id: frontend-typescript-htmx
+    status: slot
+    kind: static
+    module: frontend/typescript/frontend-typescript-htmx
+    mount: frontend-typescript-htmx
+    compose_service: null
+    image: null
+    publish_port: 9817
+
+  - id: frontend-elm-elm
+    status: slot
+    kind: static
+    module: frontend/elm/frontend-elm-elm
+    mount: frontend-elm-elm
+    compose_service: null
+    image: null
+    publish_port: 9820
+
+  - id: frontend-dart-flutter_web
+    status: slot
+    kind: static
+    module: frontend/dart/frontend-dart-flutter_web
+    mount: frontend-dart-flutter_web
+    compose_service: null
+    image: null
+    publish_port: 9830
+
+  - id: frontend-clojurescript-reagent
+    status: slot
+    kind: static
+    module: frontend/clojurescript/frontend-clojurescript-reagent
+    mount: frontend-clojurescript-reagent
+    compose_service: null
+    image: null
+    publish_port: 9840
+
+  - id: frontend-rescript-react
+    status: slot
+    kind: static
+    module: frontend/rescript/frontend-rescript-react
+    mount: frontend-rescript-react
+    compose_service: null
+    image: null
+    publish_port: 9850

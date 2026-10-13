@@ -23,8 +23,20 @@ tests/
     tests-java-junit5-retrofit2/    # active — HTTP block Retrofit 2
     tests-java-junit4-selenium/        # slot — JUnit 4
     tests-java-testng-selenium/       # slot — TestNG
+    tests-java-junit6-selenide/       # slot — JUnit 6 (UI-only Selenide)
+    tests-java-junit5-karate/         # slot — Karate API DSL
+    tests-java-junit5-cucumber-selenide/  # slot — Cucumber + Selenide (BDD UI)
     tests-java-jmeter/                               # active — JMeter JMX etalon
     tests-java-gatling/                       # active — Gatling Java DSL sibling
+  clojure/
+    tests-clojure-etaoin/             # slot — clojure.test + etaoin (UI-only)
+  dart/
+    tests-dart-test-http/             # slot — package:test + package:http (HTTP-only)
+    tests-dart-flutter_test/          # slot — flutter_test widget/integration e2e
+  elixir/
+    tests-elixir-exunit-req/          # slot — ExUnit + Req (HTTP-only)
+    tests-elixir-exunit-wallaby/      # slot — ExUnit + Wallaby (UI-only)
+    tests-elixir-exunit-req-wallaby/  # slot — UI+HTTP
   csharp/
     tests-csharp-nunit-restsharp-selenium/              # active — UI+HTTP Selenium + in-cell RestSharp
     tests-csharp-nunit-selenium/                      # slot — UI-only Selenium (no REST)
@@ -34,6 +46,8 @@ tests/
     tests-csharp-nbomber/                            # slot — NBomber C#
   groovy/
     tests-groovy-jmeter/                             # active — JMeter JSR223 Groovy sibling
+    tests-groovy-spock-rest_assured/                 # slot — Spock + Rest Assured (HTTP-only)
+    tests-groovy-spock-selenium/                     # slot — Spock + Selenium (UI-only)
   kotlin/
     tests-kotlin-junit5-ktor-selenide/     # active — UI+HTTP Selenide + in-cell Ktor
     tests-kotlin-junit5-ktor-selenium/    # active — UI+HTTP Selenium + in-cell Ktor
@@ -44,8 +58,21 @@ tests/
     tests-kotlin-junit5-ktor/         # active — HTTP block Ktor
     tests-kotlin-gatling/                     # active — Gatling Kotlin DSL sibling
     tests-kotlin-jmeter/                      # active — JMeter Kotlin TreeBuilder sibling
+    tests-kotlin-espresso/                    # slot — Espresso native e2e (vs mobile-kotlin-*)
+  php/
+    tests-php-phpunit-selenium/               # slot — PHPUnit + Selenium (UI-only)
+    tests-php-phpunit-guzzle/                 # slot — PHPUnit + Guzzle (HTTP-only)
+    tests-php-phpunit-guzzle-selenium/        # slot — UI+HTTP
+    tests-php-codeception/                    # slot — Codeception acceptance (UI)
+  ruby/
+    tests-ruby-rspec-capybara/                # slot — RSpec + Capybara (UI-only)
+    tests-ruby-rspec-httparty/                # slot — RSpec + httparty (HTTP-only)
+    tests-ruby-rspec-httparty-capybara/       # slot — UI+HTTP
   scala/
     tests-scala-gatling/                             # active — Gatling Scala DSL sibling
+    tests-scala-scalatest-selenium/           # slot — ScalaTest + Selenium (UI-only)
+    tests-scala-scalatest-sttp/               # slot — ScalaTest + sttp (HTTP-only)
+    tests-scala-scalatest-sttp-selenium/      # slot — UI+HTTP
   javascript/
     tests-javascript-api_request-playwright/         # active — UI+HTTP, APIRequest in-cell; c8 + sonar
     tests-javascript-playwright/                     # active — UI-only Playwright (no REST)
@@ -55,6 +82,7 @@ tests/
     tests-javascript-k6/                             # active — k6 JavaScript sibling
     tests-javascript-gatling/                       # active — Gatling JS SDK
     tests-javascript-artillery/                     # active — Artillery JS
+    tests-javascript-webdriverio/                   # slot — WebdriverIO (UI-only)
   python/
     tests-python-pytest-requests-selenium/                   # active — UI+HTTP Selenium + in-cell requests
     tests-python-pytest-requests-selene/                     # active — UI+HTTP Selene + in-cell requests
@@ -73,6 +101,8 @@ tests/
     tests-typescript-k6/                             # active — k6 TypeScript sibling
     tests-typescript-gatling/                       # active — Gatling TS SDK
     tests-typescript-artillery/                     # active — Artillery TS
+    tests-typescript-webdriverio/                   # slot — WebdriverIO + TS (UI-only)
+    tests-typescript-cypress/                       # slot — Cypress + TS (UI-only)
   go/
     tests-go-testing-net_http/                         # active — HTTP block (31 api + 9 ConfigReader)
     tests-go-testing-api_request-playwright/             # active — UI+HTTP Playwright + in-cell APIRequest
@@ -86,6 +116,8 @@ tests/
     tests-rust-goose/                                # slot — Goose
   lua/
     tests-lua-wrk/                                   # active — wrk Lua scripts
+  swift/
+    tests-swift-xcuitest/                            # slot — XCUITest native e2e (vs mobile-swift-*)
   _deferred/
 ```
 

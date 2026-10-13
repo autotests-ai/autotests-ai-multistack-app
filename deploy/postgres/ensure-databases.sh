@@ -9,7 +9,7 @@ USER="${POSTGRES_USER:-multistack}"
 
 for db in multistack_app_java_spring multistack_app_python_flask \
           multistack_app_python_fastapi multistack_app_python_django \
-          multistack_app_kotlin_spring multistack_app_go_gin \
+          multistack_app_kotlin_spring multistack_app_kotlin_ktor multistack_app_go_gin \
           multistack_app_go_stdlib multistack_app_javascript_express \
           multistack_app_javascript_nest multistack_app_typescript_express \
           multistack_app_typescript_nest multistack_app_csharp_aspnet \

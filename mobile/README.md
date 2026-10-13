@@ -6,9 +6,20 @@ Native UI by **language** → product module (stack in the name), same shape as 
 ```
 mobile/
   kotlin/
-    mobile-kotlin-compose/         # Android — Jetpack Compose, APK
+    mobile-kotlin-compose/         # Android — Jetpack Compose, APK (active)
+    mobile-kotlin-view/            # slot — Android Views/XML
+    mobile-kotlin-multiplatform/   # niche — Kotlin/Compose Multiplatform
   swift/
-    mobile-swift-swiftui/          # iOS — SwiftUI, IPA / simulator .app
+    mobile-swift-swiftui/          # iOS — SwiftUI, IPA / simulator .app (active)
+    mobile-swift-uikit/            # slot — UIKit
+  dart/
+    mobile-dart-flutter/           # slot — Flutter (Android + iOS)
+  typescript/
+    mobile-typescript-react_native/  # slot — React Native + TS
+  java/
+    mobile-java-view/              # historical — Android Views, Java era
+  objectivec/
+    mobile-objectivec-uikit/       # historical — UIKit, Objective-C era
 ```
 
 Both cells are the same product as the ten web frontends — login / register / home, minus

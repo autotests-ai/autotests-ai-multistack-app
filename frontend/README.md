@@ -16,16 +16,32 @@ frontend/
     frontend-javascript-angular/   # product + src/test/ (JIT + Babel decorators); vendor/ds
     frontend-javascript-vue/       # product + src/test/; vendor/ds
     frontend-javascript-jquery/    # static app + src/test/ (vendored jQuery + vendor/ds)
+    frontend-javascript-svelte/    # slot — Svelte (JS)
+    frontend-javascript-solid/     # slot — SolidJS
+    frontend-javascript-htmx/      # slot — htmx hypermedia (static)
   typescript/
     frontend-typescript-vanilla/   # product + src/test/ (multi-page, no framework); vendor/ds
     frontend-typescript-react/     # product + src/test/ (component_rtl) — deploy default
     frontend-typescript-angular/   # product + src/test/; vendor/ds
     frontend-typescript-vue/       # product + src/test/ (component_vue); vendor/ds
     frontend-typescript-jquery/    # product + src/test/ (multi-page); vendor/ds
+    frontend-typescript-svelte/    # slot — Svelte + TS
+    frontend-typescript-solid/     # slot — Solid + TS
+    frontend-typescript-htmx/      # slot — htmx + TS (static)
+  elm/
+    frontend-elm-elm/              # slot — Elm (Browser.element)
+  dart/
+    frontend-dart-flutter_web/     # slot — Flutter web
+  clojurescript/
+    frontend-clojurescript-reagent/  # slot — ClojureScript + Reagent
+  rescript/
+    frontend-rescript-react/       # slot — ReScript + rescript-react
 ```
 
-All ten are `status: active` in [`deploy/matrix.yaml`](../deploy/matrix.yaml) — there are no
-frontend slots left. Each is an **independent copy**: same screens, same `data-testid`
+The ten `frontend-{javascript,typescript}-{vanilla,react,angular,vue,jquery}` modules are
+`status: active` in [`deploy/matrix.yaml`](../deploy/matrix.yaml); the svelte/solid/htmx and
+elm/dart/clojurescript/rescript folders are `status: slot` (README only, no sources). Each
+active module is an **independent copy**: same screens, same `data-testid`
 contract, same auth surface, no shared application code. A change to the contract is a
 change in ten places, on purpose.
 
@@ -105,8 +121,14 @@ Same numbers = compose publish ports (host nginx upstreams).
 | 9800 | `frontend-javascript-vanilla` |
 | 9801–9803 | javascript react / angular / vue |
 | 9804 | `frontend-javascript-jquery` |
+| 9805–9807 | javascript svelte / solid / htmx (slots) |
 | 9810 | `frontend-typescript-vanilla` |
 | 9811 | `frontend-typescript-react` |
 | 9812 | `frontend-typescript-angular` |
 | 9813 | `frontend-typescript-vue` |
 | 9814 | `frontend-typescript-jquery` |
+| 9815–9817 | typescript svelte / solid / htmx (slots) |
+| 9820 | `frontend-elm-elm` (slot) |
+| 9830 | `frontend-dart-flutter_web` (slot) |
+| 9840 | `frontend-clojurescript-reagent` (slot) |
+| 9850 | `frontend-rescript-react` (slot) |

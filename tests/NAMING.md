@@ -12,9 +12,9 @@ Do **not** put `gradle`, `maven`, `allure2`, `allure3`, or `no_allure` in the fo
 
 | Segment | Examples | Notes |
 |---------|----------|-------|
-| `language` | `java`, `kotlin`, `scala`, `groovy`, `javascript`, `typescript`, `python`, `go`, `csharp`, `rust`, `lua` | top-level under `tests/` |
-| `framework` | `junit4`, `junit5`, `junit6`, `testng`, `pytest`, `vitest`, `testing`, `nunit`, `xunit` | test runner |
-| `automation` | `selenium`, `selenide`, `selene`, `playwright`, `cypress`, `appium`, `rest_assured`, `retrofit2`, `requests`, `httpx`, `axios`, `ktor`, `restsharp`, `net_http`, `reqwest`, `api_request`, `jmeter`, `gatling`, `k6`, `yandex_tank`, `locust`, `vegeta`, `artillery`, `nbomber`, `goose`, `wrk`, `none` | UI/HTTP school or load tool; `api_request` = Playwright `APIRequest` in combo ids; `_` in compounds (`rest_assured`, `yandex_tank`); `none` for api-only when unnamed; `appium` tails the UI school: `rest_assured-selenide-appium`, `rest_assured-selenium-appium`, `requests-selenium-appium`, `requests-selene-appium` |
+| `language` | `java`, `kotlin`, `scala`, `groovy`, `javascript`, `typescript`, `python`, `go`, `csharp`, `rust`, `lua`, `ruby`, `php`, `elixir`, `dart`, `clojure`, `swift` | top-level under `tests/` |
+| `framework` | `junit4`, `junit5`, `junit6`, `testng`, `pytest`, `vitest`, `testing`, `nunit`, `xunit`, `rspec`, `phpunit`, `codeception`, `exunit`, `scalatest`, `spock`, `test`, `flutter_test` | test runner |
+| `automation` | `selenium`, `selenide`, `selene`, `playwright`, `cypress`, `webdriverio`, `appium`, `rest_assured`, `retrofit2`, `requests`, `httpx`, `axios`, `ktor`, `restsharp`, `net_http`, `reqwest`, `api_request`, `capybara`, `httparty`, `guzzle`, `req`, `wallaby`, `sttp`, `etaoin`, `karate`, `cucumber`, `espresso`, `xcuitest`, `flutter_test`, `jmeter`, `gatling`, `k6`, `yandex_tank`, `locust`, `vegeta`, `artillery`, `nbomber`, `goose`, `wrk`, `none` | UI/HTTP school, load tool or native mobile driver; `api_request` = Playwright `APIRequest` in combo ids; `_` in compounds (`rest_assured`, `yandex_tank`, `net_http`, `flutter_test`); `none` for api-only when unnamed; `appium` tails the UI school: `rest_assured-selenide-appium`, `rest_assured-selenium-appium`, `requests-selenium-appium`, `requests-selene-appium` |
 
 ## Java — matrix
 
@@ -34,6 +34,9 @@ Do **not** put `gradle`, `maven`, `allure2`, `allure3`, or `no_allure` in the fo
 | `tests-java-junit5-playwright` | slot — **UI-only** Playwright (no REST) |
 | `tests-java-junit4-selenium` | slot — JUnit 4 |
 | `tests-java-testng-selenium` | slot — TestNG |
+| `tests-java-junit6-selenide` | slot — **UI-only** JUnit 6 · Selenide (no REST) |
+| `tests-java-junit5-karate` | slot — Karate API DSL, `layers: [api]` |
+| `tests-java-junit5-cucumber-selenide` | slot — **BDD UI** Cucumber + Selenide, `layers: [ui, e2e]` |
 | `tests-java-jmeter` | **active** — JMeter JMX etalon, `layers: [performance]` |
 | `tests-java-gatling` | **active** — Gatling Java DSL sibling, `layers: [performance]` |
 
@@ -122,6 +125,34 @@ Full IDs live in hub [`matrix.yaml`](../../matrix.yaml) `tests.modules` (`status
 | `tests-rust-testing-reqwest-selenium` | **active** — UI+HTTP reqwest + Selenium |
 | `tests-rust-goose` | slot — Goose Rust, `layers: [performance]` |
 | `tests-lua-wrk` | **active** — wrk Lua scripts, `layers: [performance]` |
+
+## Newer language axes (slots — README only, no sources)
+
+| Folder / id | Status |
+|-------------|--------|
+| `tests-ruby-rspec-capybara` | slot — **UI-only** RSpec · Capybara |
+| `tests-ruby-rspec-httparty` | slot — HTTP-only RSpec · httparty |
+| `tests-ruby-rspec-httparty-capybara` | slot — UI+HTTP httparty + Capybara |
+| `tests-php-phpunit-selenium` | slot — **UI-only** PHPUnit · Selenium (php-webdriver) |
+| `tests-php-phpunit-guzzle` | slot — HTTP-only PHPUnit · Guzzle |
+| `tests-php-phpunit-guzzle-selenium` | slot — UI+HTTP Guzzle + Selenium |
+| `tests-php-codeception` | slot — Codeception acceptance UI |
+| `tests-elixir-exunit-req` | slot — HTTP-only ExUnit · Req |
+| `tests-elixir-exunit-wallaby` | slot — **UI-only** ExUnit · Wallaby |
+| `tests-elixir-exunit-req-wallaby` | slot — UI+HTTP Req + Wallaby |
+| `tests-dart-test-http` | slot — HTTP-only `package:test` · `package:http` |
+| `tests-dart-flutter_test` | slot — `flutter_test` widget/integration e2e vs `mobile-dart-flutter` |
+| `tests-scala-scalatest-selenium` | slot — **UI-only** ScalaTest · Selenium |
+| `tests-scala-scalatest-sttp` | slot — HTTP-only ScalaTest · sttp |
+| `tests-scala-scalatest-sttp-selenium` | slot — UI+HTTP sttp + Selenium |
+| `tests-groovy-spock-rest_assured` | slot — HTTP-only Spock · Rest Assured |
+| `tests-groovy-spock-selenium` | slot — **UI-only** Spock · Selenium |
+| `tests-kotlin-espresso` | slot — Espresso native e2e vs `mobile-kotlin-*` |
+| `tests-swift-xcuitest` | slot — XCUITest native e2e vs `mobile-swift-*` |
+| `tests-javascript-webdriverio` | slot — **UI-only** WebdriverIO |
+| `tests-typescript-webdriverio` | slot — **UI-only** WebdriverIO + TS |
+| `tests-typescript-cypress` | slot — **UI-only** Cypress + TS |
+| `tests-clojure-etaoin` | slot — **UI-only** clojure.test · etaoin |
 
 ```
 tests-javascript-api_request-playwright

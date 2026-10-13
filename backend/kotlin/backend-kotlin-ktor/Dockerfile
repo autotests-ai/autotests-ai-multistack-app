@@ -1,0 +1,22 @@
+# API-only Ktor (Kotlin) image. UI is served by per-frontend nginx containers, not this app.
+FROM eclipse-temurin:21-jdk-alpine AS build
+WORKDIR /app
+COPY gradlew settings.gradle build.gradle ./
+COPY gradle ./gradle
+COPY src ./src
+RUN chmod +x gradlew && ./gradlew installDist --no-daemon
+
+FROM eclipse-temurin:21-jre-alpine
+LABEL org.opencontainers.image.source=https://github.com/autotests-ai/autotests-ai-multistack-app
+RUN apk add --no-cache wget \
+    && addgroup -S app && adduser -S app -G app
+WORKDIR /app
+COPY --from=build /app/build/install/backend-kotlin-ktor ./
+RUN chown -R app:app /app
+USER app
+ENV SERVER_PORT=8080
+ENV MANAGEMENT_PORT=8081
+EXPOSE 8080 8081
+HEALTHCHECK --interval=10s --timeout=3s --start-period=30s --retries=3 \
+    CMD wget -qO- "http://127.0.0.1:${SERVER_PORT}/api/health" >/dev/null || exit 1
+ENTRYPOINT ["/app/bin/backend-kotlin-ktor"]
