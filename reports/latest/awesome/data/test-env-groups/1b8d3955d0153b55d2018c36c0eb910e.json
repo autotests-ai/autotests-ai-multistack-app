@@ -1,1 +1,0 @@
-{"id":"1b8d3955d0153b55d2018c36c0eb910e","fullName":"tests.api.AuthApiTests.loginRejectsMalformedJson","name":"POST /api/auth/login answers a malformed JSON body with 400, not 401","status":"passed","testResultsByEnv":{"default":"8631c0a8f7c3062e659a3ba0e094ae42"}}

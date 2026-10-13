@@ -1,0 +1,1 @@
+{"id":"8bda2f3b2c8a95ebbce448f102b2c75b","fullName":"dev.multistack.app.service.JwtServiceTest.isValidRejectsExpiredToken","name":"isValid rejects expired token","status":"passed","testResultsByEnv":{"default":"1c259f4e3ec02f217ff392dfa661627e"}}
