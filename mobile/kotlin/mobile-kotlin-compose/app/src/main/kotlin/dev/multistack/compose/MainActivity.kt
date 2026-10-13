@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.lifecycleScope
 import dev.multistack.compose.data.AuthRepository
 import dev.multistack.compose.data.Session
@@ -28,6 +29,7 @@ class MainActivity : ComponentActivity() {
             state.loadHome()
         }
 
+        enableEdgeToEdge()
         setContent { MultistackRoot(state) }
     }
 

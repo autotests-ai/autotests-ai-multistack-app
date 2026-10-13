@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -47,6 +48,9 @@ fun MultistackRoot(state: AppState) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(palette.surface)
+                // targetSdk 35+ is edge-to-edge: keep the shell out of the
+                // status/navigation bars and above the IME (adjustResize).
+                .safeDrawingPadding()
                 .semantics { testTagsAsResourceId = true },
         ) {
             // Shell edge: ≤768 burger, ≥769 inline nav (rule `layout-standard`).

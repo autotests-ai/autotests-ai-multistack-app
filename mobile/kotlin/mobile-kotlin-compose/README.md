@@ -20,6 +20,12 @@ Toolchain: JDK 17+, Android SDK platform 37, Gradle wrapper 9.8.1, AGP 9.4.1
 Compose BOM 2026.09.00. `local.properties` (`sdk.dir=…`) is local-only and
 gitignored.
 
+targetSdk 37 is edge-to-edge: `MainActivity` calls `enableEdgeToEdge()` and the
+root keeps the shell out of the system bars and above the IME with
+`safeDrawingPadding()`. The Selenoid farm installs the GitHub Release APK —
+re-upload it (`gh release upload apk multistack-app.apk --clobber`) after app
+changes.
+
 ## Screens
 
 Login, Register, Home — the teaching SPA **minus the note surface**. No items
