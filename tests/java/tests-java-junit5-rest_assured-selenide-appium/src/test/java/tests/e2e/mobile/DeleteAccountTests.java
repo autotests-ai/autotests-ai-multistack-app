@@ -15,6 +15,10 @@ import org.junit.jupiter.api.Test;
 import testdata.User;
 import testdata.UserBuilder;
 
+import static org.hamcrest.Matchers.emptyOrNullString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.not;
+
 @Layer("e2e")
 @Epic("Authentication")
 @Feature("Delete account")
@@ -46,6 +50,11 @@ class DeleteAccountTests extends MobileTestBase {
                 .shouldShowSessionActions()
                 .clickDeleteAccountAndConfirm()
                 .shouldHaveFormTitle("Login Form");
+
+        AuthApiClient.loginResponse(registeredUser.username(), registeredUser.password())
+                .then()
+                .statusCode(401)
+                .body("message", equalTo("Wrong login or password"));
     }
 
     @Test
@@ -59,6 +68,10 @@ class DeleteAccountTests extends MobileTestBase {
                 .clickDeleteAccountAndCancel()
                 .shouldHaveWelcomeMessage(registeredUser.welcomeMessage());
 
-        AuthApiClient.login(registeredUser.username(), registeredUser.password());
+        AuthApiClient.loginResponse(registeredUser.username(), registeredUser.password())
+                .then()
+                .statusCode(200)
+                .body("username", equalTo(registeredUser.username()))
+                .body("token", not(emptyOrNullString()));
     }
 }

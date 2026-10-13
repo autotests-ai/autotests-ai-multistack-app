@@ -85,7 +85,7 @@ Device host tasks (`emulator`, `real`, `selenoid`, `browserstack`) exclude the
 `ui` and `api` tags — `./gradlew api`, `./gradlew web` or `test -DincludeTags=`
 are their entry points. Farm tasks run all tests in a shared JUnit pool —
 `fixed` strategy, `executor-service=worker_thread_pool` (JUnit 6.1+, caps at
-exactly 4 threads; the default `fork_join_pool` spawns extra workers on
+exactly the pool size — BrowserStack 4, Selenoid 3; the default `fork_join_pool` spawns extra workers on
 blocked joins and blocking calls — work-stealing evens out uneven class
 sizes); local hosts stay sequential — one device serves one session at a time.
 
@@ -108,12 +108,18 @@ local Appium. Secrets: `BROWSERSTACK_USERNAME` / `ACCESS_KEY` /
 Selenoid is Android only (`qaguru/android`, `-DplatformVersion=` picks the
 image, `16.0` by default).
 
-The shared `selenoid.qa.guru` android pool runs emulator containers whose
-system processes (SystemUI / launcher) sometimes show *"isn't responding"*
-dialogs — while the app underneath stays alive. That is farm capacity, not
-the app or the tests: the same suite is green on a local emulator. Tests
-never dismiss system dialogs — the app under test has no reason to know
-about a wedged launcher.
+Selenoid runs **3** sessions at once. Every session cold-boots its own
+Android 16 emulator (`qaguru/android:16`, 2 vCPU + host rendering ≈ 2.5 cores)
+on a 12-thread host: four saturated it (load ~31) and System UI missed
+Android's 15 s `bindApplication` deadline — an *"isn't responding"* dialog over
+the app. The image-side causes (IPv6 modem spin, GL shader priming, guest OOM,
+overlay copy-up, sessions handed out mid-boot) are fixed in
+`selenoid-home/browser-image/android` (README "Параллельные cold boot").
+Tests never dismiss system dialogs.
+
+The farm installs the GitHub Release APK (`android.app.url`), not a local
+build: after app changes run `../../../mobile/kotlin/mobile-kotlin-compose`
+`./gradlew :app:assembleDebug` and `gh release upload apk multistack-app.apk --clobber`.
 
 iOS simulator: pin `-DdeviceName=` / `-DplatformVersion=` / `-Dudid=`
 (defaults iPhone 16 / 18.4) so XCUITest does not spawn a throwaway runtime.

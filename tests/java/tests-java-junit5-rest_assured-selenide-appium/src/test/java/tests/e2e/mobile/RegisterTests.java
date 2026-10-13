@@ -3,7 +3,6 @@ package tests.e2e.mobile;
 import tests.MobileTestBase;
 import annotations.Layer;
 import api.AuthApiClient;
-import helpers.DataFaker;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -37,13 +36,14 @@ class RegisterTests extends MobileTestBase {
 
     private static final String REGISTER_PASSWORD = "password123";
 
-    private User registeredUser;
+    /** Throwaways registered through the UI; the API postcondition deletes them (401 = never created). */
+    private final User registeredUser = new UserBuilder().withUsername().withPassword().build();
+    private final User minLengthUser = new UserBuilder().withMinLengthCredentials().build();
 
     @AfterEach
-    void cleanupRegisteredUser() {
-        if (registeredUser != null) {
-            AuthApiClient.deleteAccountQuietly(registeredUser.username(), registeredUser.password());
-        }
+    void deleteRegisteredUsers() {
+        AuthApiClient.deleteAccountQuietly(registeredUser.username(), registeredUser.password());
+        AuthApiClient.deleteAccountQuietly(minLengthUser.username(), minLengthUser.password());
     }
 
     @Test
@@ -51,8 +51,6 @@ class RegisterTests extends MobileTestBase {
     @Tag("positive")
     @DisplayName("New user can register and land on home")
     void shouldRegisterNewUser() {
-        registeredUser = new UserBuilder().withUsername().withPassword().build();
-
         loginScreen.shouldBeOpen()
                 .clickRegisterLink()
                 .shouldBeOpen()
@@ -68,16 +66,14 @@ class RegisterTests extends MobileTestBase {
     @Tag("positive")
     @DisplayName("New user can register with 3-character login and 6-character password")
     void shouldRegisterWithMinimumLengthCredentials() {
-        registeredUser = new User(DataFaker.usernameAtMinLength(), DataFaker.passwordAtMinLength());
-
         loginScreen.shouldBeOpen()
                 .clickRegisterLink()
                 .shouldBeOpen()
                 .fillAndSubmitForm(
-                        registeredUser.username(),
-                        registeredUser.password(),
-                        registeredUser.password())
-                .shouldHaveWelcomeMessage(registeredUser.welcomeMessage());
+                        minLengthUser.username(),
+                        minLengthUser.password(),
+                        minLengthUser.password())
+                .shouldHaveWelcomeMessage(minLengthUser.welcomeMessage());
     }
 
     @Test

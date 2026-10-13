@@ -68,7 +68,7 @@ public final class AuthApiClient {
         }
     }
 
-    private static Response loginResponse(String username, String password) {
+    public static Response loginResponse(String username, String password) {
         return given()
                 .contentType(ContentType.JSON)
                 .body(new LoginRequest(username, password))

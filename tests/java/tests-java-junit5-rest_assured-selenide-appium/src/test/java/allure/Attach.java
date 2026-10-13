@@ -10,15 +10,14 @@ import io.qameta.allure.AttachmentOptions;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.logging.LogEntries;
 import org.openqa.selenium.remote.RemoteWebDriver;
-import org.openqa.selenium.remote.SessionId;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import static com.codeborne.selenide.Selenide.closeWebDriver;
 
@@ -44,158 +43,123 @@ public class Attach {
     private boolean mobile;
     private boolean recording;
 
-    // ---- lifecycle hooks -------------------------------------------------
-
     /** After the session starts: remembers the kind, starts recording on local mobile. */
     public void beforeTest() {
-        WebDriver driver = driver();
+        WebDriver driver = liveDriver();
         mobile = driver instanceof AppiumDriver;
         if (!farm() && config().attachVideo() && driver instanceof CanRecordScreen recorder) {
-            try {
+            recording = bestEffort(() -> {
                 recorder.startRecordingScreen();
-                recording = true;
-            } catch (RuntimeException ignored) {
-                // recording is best-effort — it must never fail the test
-            }
+                return true;
+            }) != null;
         }
     }
 
     /** In @AfterEach: live artifacts (each by its flag) → closeWebDriver → post-session. */
     public void afterTest() {
-        String sessionId = sessionId();
         TestConfig config = config();
+        WebDriver driver = liveDriver();
+        String sessionId = driver instanceof RemoteWebDriver remote && remote.getSessionId() != null
+                ? remote.getSessionId().toString() : null;
         try {
-            if (recording) {
-                recording = false;
-                stopScreenRecording("Video");
-            } else if (config.attachLastScreenshot()) {
-                screenshot("Screenshot");
-            }
-            if (config.attachPageSource()) {
-                pageSource("Page source");
-            }
-            if (config.attachDriverLogs()) {
-                driverLogs();
+            if (driver != null) {
+                liveArtifacts(driver, config);
             }
         } finally {
+            recording = false;
             closeWebDriver();
         }
-        try {
-            sessionArtifacts(sessionId, config);
-        } catch (RuntimeException ignored) {
-            // artifact fetching is best-effort — it must never mask the test result
+        if (sessionId != null) {
+            bestEffort(() -> {
+                sessionArtifacts(sessionId, config);
+                return null;
+            });
         }
     }
 
-    // ---- live driver -----------------------------------------------------
-
-    private static void screenshot(String name) {
-        if (driver() instanceof TakesScreenshot takesScreenshot) {
-            try {
-                byte[] png = takesScreenshot.getScreenshotAs(OutputType.BYTES);
-                Allure.attachment(name, "image/png", new ByteArrayInputStream(png),
-                        AttachmentOptions.withFileExtension(".png"));
-            } catch (RuntimeException ignored) {
-                // a dead session must not leak closeWebDriver() or farm artifacts
-            }
+    private void liveArtifacts(WebDriver driver, TestConfig config) {
+        if (recording && driver instanceof CanRecordScreen recorder) {
+            attach("Video", "video/mp4", ".mp4",
+                    () -> Base64.getDecoder().decode(recorder.stopRecordingScreen()));
+        } else if (config.attachLastScreenshot() && driver instanceof TakesScreenshot camera) {
+            attach("Screenshot", "image/png", ".png", () -> camera.getScreenshotAs(OutputType.BYTES));
         }
-    }
-
-    /** UI hierarchy XML on devices, DOM HTML on web. */
-    private static void pageSource(String name) {
-        WebDriver driver = driver();
-        if (driver == null) {
-            return;
-        }
-        try {
+        if (config.attachPageSource()) {
             boolean xml = driver instanceof AppiumDriver;
-            Allure.attachment(name, xml ? "text/xml" : "text/html",
-                    new ByteArrayInputStream(driver.getPageSource()
-                            .getBytes(StandardCharsets.UTF_8)),
-                    AttachmentOptions.withFileExtension(xml ? ".xml" : ".html"));
-        } catch (RuntimeException ignored) {
+            attach("Page source", xml ? "text/xml" : "text/html", xml ? ".xml" : ".html",
+                    () -> utf8(driver.getPageSource()));
+        }
+        if (config.attachDriverLogs()) {
+            driverLogs(driver);
         }
     }
 
-    private static void driverLogs() {
-        WebDriver driver = driver();
-        if (driver == null) {
-            return;
-        }
+    /** logcat/syslog + appium server on devices, browser/driver/client on web. */
+    private static void driverLogs(WebDriver driver) {
         List<String> wanted = !(driver instanceof AppiumDriver)
                 ? List.of("browser", "driver", "client")
                 : "ios".equals(System.getProperty("platform"))
                 ? List.of("syslog", "crashlog", "server")
                 : List.of("logcat", "server");
-        try {
-            Set<String> available = driver.manage().logs().getAvailableLogTypes();
-            for (String type : wanted) {
-                if (!available.contains(type)) {
-                    continue;
-                }
-                LogEntries entries = driver.manage().logs().get(type);
-                StringBuilder text = new StringBuilder();
-                entries.forEach(entry -> text.append(entry.getLevel())
-                        .append(' ').append(entry.getMessage()).append('\n'));
-                Allure.attachment(type + " log", "text/plain",
-                        new ByteArrayInputStream(text.toString()
-                                .getBytes(StandardCharsets.UTF_8)),
-                        AttachmentOptions.withFileExtension(".log"));
-            }
-        } catch (RuntimeException ignored) {
+        Set<String> available = bestEffort(() -> driver.manage().logs().getAvailableLogTypes());
+        if (available == null) {
+            return;
         }
+        wanted.stream().filter(available::contains).forEach(type ->
+                attach(type + " log", "text/plain", ".log", () -> {
+                    StringBuilder text = new StringBuilder();
+                    driver.manage().logs().get(type).forEach(entry -> text.append(entry.getLevel())
+                            .append(' ').append(entry.getMessage()).append('\n'));
+                    return utf8(text.toString());
+                }));
     }
-
-    private static void stopScreenRecording(String name) {
-        if (driver() instanceof CanRecordScreen recorder) {
-            try {
-                byte[] video = Base64.getDecoder().decode(recorder.stopRecordingScreen());
-                Allure.attachment(name, "video/mp4", new ByteArrayInputStream(video),
-                        AttachmentOptions.withFileExtension(".mp4"));
-            } catch (RuntimeException ignored) {
-            }
-        }
-    }
-
-    private static String sessionId() {
-        WebDriver driver = driver();
-        if (!(driver instanceof RemoteWebDriver remote)) {
-            return null;
-        }
-        SessionId id = remote.getSessionId();
-        return id == null ? null : id.toString();
-    }
-
-    // ---- post-session artifacts ------------------------------------------
 
     /** Host dispatch — the actual fetching lives in SessionArtifacts. */
     private void sessionArtifacts(String sessionId, TestConfig config) {
-        if (sessionId == null) {
+        if (!mobile) {
+            if (config.enableVideo() && config.attachVideo() && !blank(config.remoteUrl())) {
+                SessionArtifacts.selenoidVideo(sessionId, config.remoteUrl());
+            }
             return;
         }
-        if (mobile) {
-            switch (System.getProperty("deviceHost", "")) {
-                case "browserstack" -> {
-                    if (config.attachVideo() || config.attachDriverLogs()) {
-                        SessionArtifacts.browserstackArtifacts(sessionId, config);
-                    }
-                }
-                case "selenoid" -> {
-                    if (config.attachVideo()) {
-                        SessionArtifacts.selenoidVideo(sessionId, config.selenoidUrl());
-                    }
-                }
-                default -> {
+        switch (System.getProperty("deviceHost", "")) {
+            case "browserstack" -> {
+                if (config.attachVideo() || config.attachDriverLogs()) {
+                    SessionArtifacts.browserstackArtifacts(sessionId, config);
                 }
             }
-        } else if (config.enableVideo() && config.attachVideo() && !blank(config.remoteUrl())) {
-            SessionArtifacts.selenoidVideo(sessionId, config.remoteUrl());
+            case "selenoid" -> {
+                if (config.attachVideo()) {
+                    SessionArtifacts.selenoidVideo(sessionId, config.selenoidUrl());
+                }
+            }
+            default -> {
+            }
         }
     }
 
-    // ---- internals ---------------------------------------------------------
+    /** Artifacts are best-effort: a dead session must never fail or mask the test. */
+    private static void attach(String name, String mimeType, String extension, Supplier<byte[]> content) {
+        byte[] bytes = bestEffort(content);
+        if (bytes != null) {
+            Allure.attachment(name, mimeType, new ByteArrayInputStream(bytes),
+                    AttachmentOptions.withFileExtension(extension));
+        }
+    }
 
-    private static WebDriver driver() {
+    private static <T> T bestEffort(Supplier<T> action) {
+        try {
+            return action.get();
+        } catch (RuntimeException ignored) {
+            return null;
+        }
+    }
+
+    private static byte[] utf8(String text) {
+        return text.getBytes(StandardCharsets.UTF_8);
+    }
+
+    private static WebDriver liveDriver() {
         return WebDriverRunner.hasWebDriverStarted() ? WebDriverRunner.getWebDriver() : null;
     }
 

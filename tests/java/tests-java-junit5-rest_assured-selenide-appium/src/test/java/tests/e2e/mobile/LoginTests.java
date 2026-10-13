@@ -3,7 +3,6 @@ package tests.e2e.mobile;
 import tests.MobileTestBase;
 import annotations.Layer;
 import api.AuthApiClient;
-import helpers.DataFaker;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -13,6 +12,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import testdata.User;
+import testdata.UserBuilder;
 
 @Layer("e2e")
 @Epic("Authentication")
@@ -33,13 +33,12 @@ class LoginTests extends MobileTestBase {
             "Login and password are required (minimum 3 and 6 characters)";
     private static final String WRONG_CREDENTIALS_MESSAGE = "Wrong login or password";
 
-    private User minLengthUser;
+    /** Throwaway; the API postcondition deletes it (no-op when the test never registered it). */
+    private final User minLengthUser = new UserBuilder().withMinLengthCredentials().build();
 
     @AfterEach
-    void cleanupMinLengthUser() {
-        if (minLengthUser != null) {
-            AuthApiClient.deleteAccountQuietly(minLengthUser.username(), minLengthUser.password());
-        }
+    void deleteMinLengthUser() {
+        AuthApiClient.deleteAccountQuietly(minLengthUser.username(), minLengthUser.password());
     }
 
     @Test
@@ -58,7 +57,6 @@ class LoginTests extends MobileTestBase {
     @Tag("positive")
     @DisplayName("User is logged in with 3-character login and 6-character password")
     void shouldLoginWithMinimumLengthCredentials() {
-        minLengthUser = new User(DataFaker.usernameAtMinLength(), DataFaker.passwordAtMinLength());
         AuthApiClient.register(minLengthUser.username(), minLengthUser.password());
         loginScreen.shouldBeOpen()
                 .fillAndSubmitForm(minLengthUser.username(), minLengthUser.password())

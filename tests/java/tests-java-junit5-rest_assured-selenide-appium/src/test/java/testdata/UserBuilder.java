@@ -20,6 +20,13 @@ public final class UserBuilder {
         return this;
     }
 
+    /** Exactly backend {@code @Size(min = 3)} login and {@code @Size(min = 6)} password. */
+    public UserBuilder withMinLengthCredentials() {
+        this.username = DataFaker.usernameAtMinLength();
+        this.password = DataFaker.passwordAtMinLength();
+        return this;
+    }
+
     public User build() {
         return new User(username, password);
     }
