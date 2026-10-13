@@ -1,11 +1,12 @@
 ---
 id: login-flow
-version: 0.6
+version: 0.7
 acceptance:
   - User opens login page
   - Empty login → validation error visible
   - Empty password → validation error visible
   - Credentials below field minimums → client-side form error (exact i18n literals in formValidation)
+  - Client-side validation failure → form error shown, no API call made
   - Known user + wrong password of valid length → API 401, form error visible, no session created
   - Valid credentials → redirect to home (/)
   - User can register on /register
@@ -128,6 +129,7 @@ formValidation:
     - password empty → errorPasswordRequired
     - password below min → errorPasswordMinLength
     - 'register only: password != confirm → errorPasswordMismatch'  # checked after all of the above (RegisterPage.tsx)
+  confirm: register only — confirmPassword is .trim()'ed like the rest (RegisterPage.tsx); the mismatch check runs after validateCredentials, so an empty or whitespace confirm with a valid password → errorPasswordMismatch
   en:                           # i18n/en.ts auth + register blocks, {minLogin}=3 {minPassword}=6 — same dictionary copied into every frontend cell
     errorBothRequired: 'Login and password are required (minimum 3 and 6 characters)'
     errorLoginRequired: 'Login is required (minimum 3 characters)'
@@ -145,8 +147,9 @@ formValidation:
     errorPasswordMismatch: 'Пароли не совпадают'
     errorNetwork: 'Ошибка сети. Проверьте соединение и попробуйте снова.'
   apiPassthrough: a non-empty API body.message is shown verbatim in any lang — 'Username already taken' (409), 'Wrong login or password' (401); empty/missing message → i18n fallback — errorRegistrationFailed 'Registration failed' / 'Регистрация не удалась' (register) or errorWrongCredentials 'Wrong login or password' / 'Неверный логин или пароль' (login)
+  noApiCall: client-side failures — required, min-length, mismatch — show the error without any API request; handleSubmit returns before apiRequest (LoginPage.tsx / RegisterPage.tsx) — a local literal differs from apiPassthrough by the absent call
   shown: single error node — login `#error-message`, register `#register-error-message`; p element, aria-live="polite"
-  lang: UI lang = localStorage `zds-lang` (en|ru), default en (i18n/index.ts) — e2e asserts the en literals
+  lang: UI lang = localStorage `zds-lang` (en|ru), default en (i18n/index.ts) — e2e asserts the en literals; ru e2e hook — `localStorage.setItem('zds-lang','ru')` on a same-origin page before open (lang is read once at mount — useI18n/readStoredLang); live switch — `header:lang-change` document event
   ownedBy: tests/e2e — LoginTests + RegisterTests string constants · component LoginPage.test.tsx / RegisterPage.test.tsx
 
 # Bean-validation envelope — @Valid on the request record; NOT an AuthException, never 401.
