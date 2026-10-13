@@ -8,6 +8,7 @@ Clone folder = teaching **block**. Combo (e.g. Selenium + Retrofit) = generate, 
 |--------|--------|--------|
 | `tests-java-junit5-rest_assured-selenide` | JUnit 5 · Selenide (+ Rest Assured in this default cell) | **active** |
 | `tests-java-junit5-rest_assured-selenide-appium` | native e2e · Selenide + Appium | **active** |
+| `tests-java-junit5-rest_assured-selenium-appium` | native e2e · Selenium + Appium java-client (explicit waits) | **active** |
 | `tests-java-junit5-rest_assured-selenium` | UI+HTTP block · Selenium 4 + Rest Assured | **active** |
 | `tests-java-junit5-api_request-playwright` | UI+HTTP block · Playwright for Java + APIRequest | **active** |
 | `tests-java-junit5-selenide` | **UI-only** · JUnit 5 · Selenide (no REST) | slot |

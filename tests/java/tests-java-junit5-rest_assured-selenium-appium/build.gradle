@@ -1,0 +1,211 @@
+/*
+ * tests-java — api + native e2e · Rest Assured + Selenium (Appium java-client)
+ *
+ *   ./gradlew emulator                 # deviceHost=emulator, env=prod (native)
+ *   ./gradlew assembleApp emulator -Denv=ci
+ *   ./gradlew real -DincludeTags=smoke
+ *   ./gradlew selenoid -Denv=prod
+ *   ./gradlew test -Dplatform=ios -DdeviceHost=simulator -DincludeTags=smoke
+ *   ./gradlew test -Dplatform=ios -DdeviceHost=real -Dudid= -Dios.app=
+ *
+ *   ./gradlew api -Denv=prod           # tests/api over HTTP (apiBase)
+ *
+ * Same hosts, config and Allure artifacts as the Selenide cell
+ * (tests-java-junit5-rest_assured-selenium-appium); screens use plain Appium
+ * java-client with explicit WebDriverWait instead of Selenide.
+ */
+
+buildscript {
+    ext {
+        javaVersion         = 21
+        junitVersion        = '6.1.3'
+        slf4jVersion        = '2.0.20'
+        allurePluginVersion = '4.3.0'
+        allureVersion       = '3.14.3'
+        allureBomVersion    = '3.0.0'
+        sonarPluginVersion  = '7.5.0.8588'
+        appiumVersion       = '11.0.0'
+        seleniumVersion     = '4.50.0'  // java-client 11.0.0 requires [4.50.0, 5.0)
+        restAssuredVersion  = '6.1.0'
+        jacksonVersion      = '2.22.3'
+        ownerVersion        = '1.0.12'
+        testParallelForks   = 1
+        defaultEnv          = 'prod'
+    }
+}
+
+plugins {
+    id 'java-library'
+    id 'jacoco'
+    id 'io.qameta.allure' version "${allurePluginVersion}"
+    id 'org.sonarqube' version "${sonarPluginVersion}"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(javaVersion)
+    }
+}
+
+sonar {
+    properties {
+        property 'sonar.projectKey', System.getenv('SONAR_PROJECT_KEY') ?: 'autotests-ai-multistack-app-tests-java-junit5-rest_assured-selenium-appium'
+        property 'sonar.projectName', System.getenv('SONAR_PROJECT_KEY') ?: 'autotests-ai-multistack-app-tests-java-junit5-rest_assured-selenium-appium'
+        property 'sonar.host.url', System.getenv('SONAR_HOST_URL') ?: 'https://sonar.qa.guru'
+        property 'sonar.sources', 'src/test/java'
+        property 'sonar.tests', ''
+        property 'sonar.java.binaries', 'build/classes/java/test'
+    }
+}
+
+def allureReportMode = System.getProperty('allureReportMode', 'allure3')
+
+repositories {
+    mavenCentral()
+}
+
+allure {
+    version = allureVersion
+    adapter {
+        allureJavaVersion = allureBomVersion
+        resultsDir.set(layout.buildDirectory.dir('allure-results'))
+        autoconfigure.set(allureReportMode != 'none')
+        aspectjWeaver.set(allureReportMode != 'none')
+        frameworks {
+            junit5 {
+                enabled.set(allureReportMode != 'none')
+                autoconfigureListeners.set(allureReportMode != 'none')
+            }
+        }
+    }
+}
+
+// io.qameta.allure's downloadAllure calls Task.project at execution time —
+// mark it so Gradle runs report tasks without the configuration cache.
+tasks.matching { it.name == 'downloadAllure' }.configureEach {
+    notCompatibleWithConfigurationCache('allure plugin reads project at execution time')
+}
+
+dependencies {
+    testImplementation platform("io.qameta.allure:allure-bom:${allureBomVersion}")
+    testImplementation platform("org.seleniumhq.selenium:selenium-bom:${seleniumVersion}")
+    testImplementation (
+            'io.qameta.allure:allure-jupiter',
+            "io.appium:java-client:${appiumVersion}",
+            'org.seleniumhq.selenium:selenium-remote-driver',
+            'org.seleniumhq.selenium:selenium-support',
+            "org.aeonbits.owner:owner:${ownerVersion}",
+            "io.rest-assured:rest-assured:${restAssuredVersion}",
+            "io.rest-assured:json-schema-validator:${restAssuredVersion}",
+            "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}",
+            "org.junit.jupiter:junit-jupiter:${junitVersion}")
+    testRuntimeOnly (
+            'org.junit.platform:junit-platform-launcher',
+            "org.slf4j:slf4j-simple:${slf4jVersion}")
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+def testEnv = System.getProperty('env', defaultEnv)
+if (!(testEnv in ['ci', 'stage', 'prod'])) {
+    throw new GradleException(
+            "Native -Denv=${testEnv} is not ci|stage|prod (no mock). " +
+            "-DdeviceHost= is where the session runs, not which API.")
+}
+
+def forwardSystemProperties = { Test task ->
+    task.systemProperties(System.getProperties())
+    task.systemProperty 'env', testEnv
+    [
+            'BROWSERSTACK_USERNAME'   : 'browserstack.user',
+            'BROWSERSTACK_ACCESS_KEY' : 'browserstack.key',
+            'BROWSERSTACK_APP_ID'     : 'browserstack.app',
+            'BROWSERSTACK_IOS_APP_ID' : 'browserstack.ios.app',
+    ].each { envName, key ->
+        def value = System.getenv(envName)
+        if (value) {
+            task.systemProperty key, value
+        }
+    }
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform {
+        def includeTagsProp = System.getProperty('includeTags')
+        if (includeTagsProp) {
+            includeTags(*(includeTagsProp.split(',')*.trim()))
+        }
+        def excludeTagsProp = System.getProperty('excludeTags')
+        if (excludeTagsProp) {
+            excludeTags(*(excludeTagsProp.split(',')*.trim()))
+        }
+    }
+    forwardSystemProperties(it)
+    maxParallelForks = testParallelForks
+    testLogging {
+        events 'started', 'skipped', 'failed', 'standard_error'
+        exceptionFormat 'full'
+    }
+}
+
+tasks.named('test', Test).configure {
+    systemProperty 'deviceHost', System.getProperty('deviceHost', 'emulator')
+    systemProperty 'platform', System.getProperty('platform', 'android')
+}
+
+def hostTask = { String name, String host, String platform, int parallelism = 1 ->
+    tasks.register(name, Test) {
+        group = 'verification'
+        description = "Native e2e on ${host} (${platform})"
+        testClassesDirs = sourceSets.test.output.classesDirs
+        classpath = sourceSets.test.runtimeClasspath
+        useJUnitPlatform {
+            // Device tasks are native-only; api runs on `api`/`test`.
+            excludeTags 'api'
+        }
+        systemProperty 'deviceHost', host
+        systemProperty 'platform', platform
+        if (parallelism > 1) {
+            // Farms have free slots — every test is a unit in the shared pool.
+            // worker_thread_pool (JUnit 6.1+) keeps exactly `parallelism`
+            // threads: the default ForkJoinPool spawns extra workers on
+            // blocked joins and blocking calls, so its cap is only 'desired'.
+            systemProperty 'junit.jupiter.execution.parallel.enabled', 'true'
+            systemProperty 'junit.jupiter.execution.parallel.mode.default', 'concurrent'
+            systemProperty 'junit.jupiter.execution.parallel.config.strategy', 'fixed'
+            systemProperty 'junit.jupiter.execution.parallel.config.fixed.parallelism', parallelism
+            systemProperty 'junit.jupiter.execution.parallel.config.executor-service', 'worker_thread_pool'
+        }
+    }
+}
+
+// Android hosts only. iOS is an axis, not a task: -Dplatform=ios -DdeviceHost=.
+// Local hosts stay sequential — one device serves one session. BrowserStack
+// gets 4. Selenoid gets 3: every session cold-boots its own Android 16
+// emulator (2 vCPU + host rendering ≈ 2.5 cores) on a 12-thread host; four
+// saturated it (load ~31) and System UI missed its startup deadline (ANR).
+hostTask('emulator', 'emulator', 'android')
+hostTask('real', 'real', 'android')
+hostTask('browserstack', 'browserstack', 'android', 4)
+hostTask('selenoid', 'selenoid', 'android', 3)
+
+// Api layer (tests/api → Rest Assured on apiBase, no driver). Class filter (not
+// includeTags) so a user -DincludeTags= narrows inside the layer.
+tasks.register('api', Test) {
+    group = 'verification'
+    description = 'Api tests over HTTP on apiBase: -Denv= -DincludeTags='
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    filter {
+        includeTestsMatching 'tests.api.*'
+    }
+}
+
+tasks.register('assembleApp', Exec) {
+    group = 'build'
+    description = "Assemble debug APK with -Penv=${testEnv} (apiBase, not deviceHost)"
+    workingDir = file("${project.projectDir}/../../../mobile/kotlin/mobile-kotlin-compose")
+    commandLine './gradlew', ':app:assembleDebug', "-Penv=${testEnv}"
+}

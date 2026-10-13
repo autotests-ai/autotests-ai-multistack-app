@@ -6,6 +6,8 @@ UI-only slots keep the runner: `tests-python-pytest-{selenium,selene,playwright}
 |--------|--------|
 | `tests-python-pytest-requests-selenium/` | **active** — pytest · Selenium + in-cell requests (`api` / `ui` / `e2e`); pytest-cov **100%** on `config.py` |
 | `tests-python-pytest-requests-selene/` | **active** — pytest · Selene + in-cell requests (`api` / `ui` / `e2e`); pytest-cov **100%** on `config.py` |
+| `tests-python-pytest-requests-selene-appium/` | **active** — pytest · Selene + Appium-Python-Client + requests, native e2e (`e2e`); Selenoid `-n 3` |
+| `tests-python-pytest-requests-selenium-appium/` | **active** — pytest · Appium-Python-Client (Selenium) + requests, native e2e (`e2e`); Selenoid `-n 3` |
 | `tests-python-pytest-api_request-playwright/` | **active** — pytest · Playwright + in-cell APIRequest (`api` / `ui` / `e2e`); pytest-cov **100%** on `config.py` |
 | `tests-python-pytest-selenium/` | slot — **UI-only** Selenium (no REST) |
 | `tests-python-pytest-selene/` | slot — **UI-only** Selene (no REST) |
