@@ -1,6 +1,6 @@
 ---
 id: login-flow
-version: 0.7
+version: 0.8
 acceptance:
   - User opens login page
   - Empty login → validation error visible
@@ -138,6 +138,8 @@ formValidation:
     errorPasswordMinLength: 'Password must be at least 6 characters'
     errorPasswordMismatch: 'Passwords do not match'
     errorNetwork: 'Network error. Check your connection and try again.'
+    errorWrongCredentials: 'Wrong login or password'      # i18n login block — login fallback; byte-identical to the 401 body message, so the text alone does not prove the layer-source (noApiCall vs apiPassthrough)
+    errorRegistrationFailed: 'Registration failed'        # i18n register block — register fallback
   ru:                           # i18n/ru.ts — same keys
     errorBothRequired: 'Нужны логин и пароль (минимум 3 и 6 символов)'
     errorLoginRequired: 'Логин обязателен (минимум 3 символов)'
@@ -146,8 +148,10 @@ formValidation:
     errorPasswordMinLength: 'Пароль должен быть не короче 6 символов'
     errorPasswordMismatch: 'Пароли не совпадают'
     errorNetwork: 'Ошибка сети. Проверьте соединение и попробуйте снова.'
+    errorWrongCredentials: 'Неверный логин или пароль'
+    errorRegistrationFailed: 'Регистрация не удалась'
   apiPassthrough: a non-empty API body.message is shown verbatim in any lang — 'Username already taken' (409), 'Wrong login or password' (401); empty/missing message → i18n fallback — errorRegistrationFailed 'Registration failed' / 'Регистрация не удалась' (register) or errorWrongCredentials 'Wrong login or password' / 'Неверный логин или пароль' (login)
-  noApiCall: client-side failures — required, min-length, mismatch — show the error without any API request; handleSubmit returns before apiRequest (LoginPage.tsx / RegisterPage.tsx) — a local literal differs from apiPassthrough by the absent call
+  noApiCall: client-side failures — required, min-length, mismatch — show the error without any API request; handleSubmit returns before apiRequest (LoginPage.tsx / RegisterPage.tsx) — a local literal differs from apiPassthrough by the absent call; ownedBy tests/e2e — the contract-visible fact is «no /api/auth/* request left the page», asserted together with the local literal (the text alone proves nothing — en errorWrongCredentials is byte-identical to the 401 body); how a test observes the browser network is a runtime detail owned by the test harness, not by this contract
   shown: single error node — login `#error-message`, register `#register-error-message`; p element, aria-live="polite"
   lang: UI lang = localStorage `zds-lang` (en|ru), default en (i18n/index.ts) — e2e asserts the en literals; ru e2e hook — `localStorage.setItem('zds-lang','ru')` on a same-origin page before open (lang is read once at mount — useI18n/readStoredLang); live switch — `header:lang-change` document event
   ownedBy: tests/e2e — LoginTests + RegisterTests string constants · component LoginPage.test.tsx / RegisterPage.test.tsx
@@ -202,7 +206,7 @@ session:
     home: getToken() → GET /api/auth/me with Bearer → welcome (validLogin.home)
     reload: session survives a reload — the token stays in localStorage and home re-reads it
   clear:
-    logout: auth.ts logout() fires POST /api/auth/logout without awaiting it, then removeItem(authToken); HomePage navigates to /login (replace)
+    logout: auth.ts logout() fires POST /api/auth/logout without awaiting it, then removeItem(authToken); HomePage navigates to /login (replace); the fire-and-forget dispatch is not contract-visible in the browser — it races the page unload — so e2e owns the cleared `authToken` and the /login landing; the 204 itself stays an api-layer fact (session.logout.api)
     deleteAccount: auth.ts deleteAccount() awaits DELETE /api/auth/me, then removeItem(authToken) even if the call failed; HomePage navigates to /login only after window.confirm
     invalidToken: /me failure on home → clearSession(), welcome-panel stays hidden (validLogin.home.degraded)
   logout:
@@ -211,11 +215,14 @@ session:
   deleteAccount:
     api: 'DELETE /api/auth/me (Bearer) → 204; no/invalid token → 401'
     tokenAfter: still verifies cryptographically, but the row is gone → GET /api/auth/me and DELETE /api/auth/me → 401 (AuthService.deleteAccount)
-    cancel: window.confirm false → no request, token kept
+    cancel: window.confirm false → no request, token kept; the «no request» is the same contract-visible e2e fact class as formValidation.noApiCall — no /api/auth/* request left the page
   e2eShortcut:
     method: BasePage.openPageWithLocalStorageAuthentication — API login, setItem(authToken) on a static same-origin asset, then open the page
     scope: precondition only; it does not test the login form, and its token write is synchronous (no async race)
     reset: BrowserSessionHelper.resetPageState clears local/session storage and cookies — a hook, not an assertion of "no session"
+  stub:
+    mockStand: deploy/mock/mappings — auth-logout.json answers 204 to ANY POST /api/auth/logout; auth-me-delete.json answers 204 to DELETE /api/auth/me when `Authorization` matches `Bearer .+` (priority 1), auth-me-delete-anonymous.json answers 401 without a Bearer (priority 10); GET /api/auth/me mirrors the pair — auth-me.json 200 Bearer, auth-me-anonymous.json 401
+    implication: logout/delete happy paths are stubbed, but the mock is stateless — after a stubbed DELETE /me the same Bearer still gets 200 on GET /me, so session.deleteAccount.tokenAfter and logout.tokenAfter prove nothing on the mock stand; post-delete state stays a real-backend api fact
   ownedBy: tests/api AuthRoundTripApiTests#accountLifecycleRoundTrip · tests/e2e SessionTests#sessionSurvivesReload / invalidTokenClearsSession · LogoutTests · DeleteAccountTests · component test/lib/auth.test.ts (logout clears token even when the API call fails or hangs)
 
 implementation:
