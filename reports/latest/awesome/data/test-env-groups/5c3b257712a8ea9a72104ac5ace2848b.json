@@ -1,1 +1,1 @@
-{"id":"5c3b257712a8ea9a72104ac5ace2848b","fullName":"dev.multistack.app.controller.AuthControllerTest.loginReturnsOk","name":"POST /api/auth/login returns 200","status":"passed","testResultsByEnv":{"default":"274531243c978e5a50752b60c6e55772"}}
+{"id":"5c3b257712a8ea9a72104ac5ace2848b","fullName":"dev.multistack.app.controller.AuthControllerTest.loginReturnsOk","name":"POST /api/auth/login returns 200","status":"passed","testResultsByEnv":{"default":"0a0d7356270b29c1a40d5c98b99479f9"}}

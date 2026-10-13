@@ -1,1 +1,1 @@
-{"id":"4ec8d27be58b8253a363761404765cbf","fullName":"dev.multistack.app.config.SecurityChainTest.nonApiDenied","name":"non-API paths are denied","status":"passed","testResultsByEnv":{"default":"767683956a2e8a8e5951c36b2377963f"}}
+{"id":"4ec8d27be58b8253a363761404765cbf","fullName":"dev.multistack.app.config.SecurityChainTest.nonApiDenied","name":"non-API paths are denied","status":"passed","testResultsByEnv":{"default":"fd76a19214dfd8396350ed425165db10"}}

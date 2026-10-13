@@ -1,0 +1,1 @@
+{"id":"c9bc6d7d13d06811b78236ec76f52639","fullName":"tests.e2e.RegisterTests.shouldShowErrorWhenPasswordIsTooShort","name":"Short password shows validation error","status":"passed","testResultsByEnv":{"default":"bb4c00f7e11847b46f4cafb2fe528ff7"}}

@@ -1,0 +1,1 @@
+{"id":"3e3a0b57ae841ba70115c51a5ff420fb","fullName":"tests.e2e.RegisterTests.shouldRegisterWithMinimumLengthCredentials","name":"New user can register with 3-character login and 6-character password","status":"passed","testResultsByEnv":{"default":"8e284743728059c0beb71193a8407799"}}
