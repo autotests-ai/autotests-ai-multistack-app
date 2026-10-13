@@ -7,6 +7,7 @@ import config.TestConfig;
 import helpers.HarCapture;
 import helpers.HarViewerHtml;
 import io.qameta.allure.Allure;
+import io.qameta.allure.AttachmentOptions;
 import io.qameta.allure.Attachment;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -101,16 +102,14 @@ public class Attachments {
         try {
             Optional<byte[]> har = HarCapture.collectHarJson();
             har.ifPresent(bytes -> {
-                Allure.addAttachment(
+                Allure.attachment(
                         "capture.har",
                         "application/json",
-                        new ByteArrayInputStream(bytes),
-                        ".har");
-                Allure.addAttachment(
+                        new ByteArrayInputStream(bytes), AttachmentOptions.withFileExtension(".har"));
+                Allure.attachment(
                         "HAR Viewer",
                         "text/html",
-                        HarViewerHtml.render(bytes),
-                        ".html");
+                        HarViewerHtml.render(bytes), AttachmentOptions.withFileExtension(".html"));
             });
         } catch (RuntimeException ignored) {
             // dead session or Allure I/O — skip, never mask the test failure

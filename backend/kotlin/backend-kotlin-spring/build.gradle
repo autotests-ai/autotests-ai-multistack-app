@@ -3,12 +3,12 @@ buildscript {
         javaVersion                       = 21
         springBootVersion                 = '4.1.1'
         springDependencyManagementVersion = '1.1.7'
-        slf4jVersion                      = '2.0.18'
-        kotlinVersion                     = '2.3.21'
-        sonarPluginVersion                = '6.2.0.5505'
-        jjwtVersion                       = '0.12.6'
-        mockitoKotlinVersion              = '5.4.0'
-        allureBomVersion                  = '2.35.2'
+        slf4jVersion                      = '2.0.20'
+        kotlinVersion                     = '2.4.21'
+        sonarPluginVersion                = '7.5.0.8588'
+        jjwtVersion                       = '0.13.0'
+        mockitoKotlinVersion              = '6.4.0'
+        allureBomVersion                  = '3.0.0'
     }
 }
 

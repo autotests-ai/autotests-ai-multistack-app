@@ -50,6 +50,12 @@ public final class PlaywrightHttp {
     }
 
     public static HttpResult request(String method, String path, Object json, String raw, String token) {
+        synchronized (GATE) {
+            return doRequest(method, path, json, raw, token);
+        }
+    }
+
+    private static HttpResult doRequest(String method, String path, Object json, String raw, String token) {
         ensure();
         RequestOptions options = RequestOptions.create();
         if (token != null) {

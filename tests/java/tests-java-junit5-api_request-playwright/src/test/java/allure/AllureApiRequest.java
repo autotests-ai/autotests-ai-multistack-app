@@ -22,8 +22,8 @@ public final class AllureApiRequest {
             return;
         }
         try {
-            Allure.addAttachment("Request", "text/plain", method + " " + url);
-            Allure.addAttachment("Response", "text/plain", status + "\n" + (body == null ? "" : body));
+            Allure.attachment("Request", "text/plain", method + " " + url);
+            Allure.attachment("Response", "text/plain", status + "\n" + (body == null ? "" : body));
         } catch (RuntimeException ignored) {
             // Allure context is optional; never mask the HTTP call.
         }

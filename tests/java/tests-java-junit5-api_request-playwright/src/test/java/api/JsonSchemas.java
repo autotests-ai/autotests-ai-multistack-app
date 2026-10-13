@@ -1,21 +1,20 @@
 package api;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.SpecVersion;
-import com.networknt.schema.ValidationMessage;
+import com.networknt.schema.Error;
+import com.networknt.schema.InputFormat;
+import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.SpecificationVersion;
 
 import java.io.InputStream;
-import java.util.Set;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public final class JsonSchemas {
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
-    private static final JsonSchemaFactory FACTORY = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
+    private static final SchemaRegistry REGISTRY =
+            SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_7);
 
     private JsonSchemas() {
     }
@@ -25,15 +24,14 @@ public final class JsonSchemas {
         if (stream == null) {
             throw new IllegalStateException("missing classpath schema " + name);
         }
-        JsonNode node;
+        List<Error> errors;
         try {
-            node = MAPPER.readTree(body);
-        } catch (Exception e) {
+            errors = REGISTRY.getSchema(stream).validate(body, InputFormat.JSON);
+        } catch (RuntimeException e) {
             throw new IllegalStateException(name + " not JSON: " + body, e);
         }
-        Set<ValidationMessage> errors = FACTORY.getSchema(stream).validate(node);
         assertTrue(errors.isEmpty(), () -> name + ": "
-                + errors.stream().map(ValidationMessage::getMessage).collect(Collectors.joining("; "))
+                + errors.stream().map(Error::getMessage).collect(Collectors.joining("; "))
                 + " — " + body);
     }
 }

@@ -4,6 +4,7 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.options.ScreenshotAnimations;
 import config.ConfigReader;
 import io.qameta.allure.Allure;
+import io.qameta.allure.AttachmentOptions;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -89,7 +90,7 @@ public final class ScreenshotHelper {
     }
 
     private static void attachPng(String name, byte[] png) {
-        Allure.addAttachment(name, "image/png", new ByteArrayInputStream(png), ".png");
+        Allure.attachment(name, "image/png", new ByteArrayInputStream(png), AttachmentOptions.withFileExtension(".png"));
     }
 
     private static boolean shouldUpdateScreenshots() {

@@ -2,6 +2,7 @@ package helpers;
 
 import config.ConfigReader;
 import io.qameta.allure.Allure;
+import io.qameta.allure.AttachmentOptions;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
@@ -20,16 +21,15 @@ public final class Attachments {
         if (!(WebDriverHolder.get() instanceof TakesScreenshot camera)) {
             return;
         }
-        Allure.addAttachment(name, "image/png", new ByteArrayInputStream(
-                camera.getScreenshotAs(OutputType.BYTES)), "png");
+        Allure.attachment(name, "image/png", new ByteArrayInputStream(
+                camera.getScreenshotAs(OutputType.BYTES)), AttachmentOptions.withFileExtension(".png"));
     }
 
     public static void pageSource() {
-        Allure.addAttachment(
+        Allure.attachment(
                 "Page source",
                 "text/html",
-                WebDriverHolder.get().getPageSource(),
-                ".html");
+                WebDriverHolder.get().getPageSource(), AttachmentOptions.withFileExtension(".html"));
     }
 
     public static void browserConsoleLogs() {
@@ -38,15 +38,15 @@ public final class Attachments {
             var logs = driver.manage().logs().get(LogType.BROWSER);
             var text = new StringBuilder();
             logs.forEach(entry -> text.append(entry.getLevel()).append(' ').append(entry.getMessage()).append('\n'));
-            Allure.addAttachment("Browser console", "text/plain", text.toString(), ".txt");
+            Allure.attachment("Browser console", "text/plain", text.toString(), AttachmentOptions.withFileExtension(".txt"));
         } catch (RuntimeException ignored) {
             // Some drivers do not expose browser logs.
         }
     }
 
     public static void asUtf8(String name, String body) {
-        Allure.addAttachment(name, "text/plain", new ByteArrayInputStream(
-                body.getBytes(StandardCharsets.UTF_8)), ".txt");
+        Allure.attachment(name, "text/plain", new ByteArrayInputStream(
+                body.getBytes(StandardCharsets.UTF_8)), AttachmentOptions.withFileExtension(".txt"));
     }
 
     public static void video() {
@@ -67,13 +67,12 @@ public final class Attachments {
         try {
             var base = folder.endsWith("/") ? folder : folder + "/";
             var videoUrl = base + sessionId + ".mp4";
-            Allure.addAttachment(
+            Allure.attachment(
                     "Video",
                     "text/html",
                     "<html><body><video width='100%' height='100%' controls autoplay><source src='"
                             + videoUrl
-                            + "' type='video/mp4'></video></body></html>",
-                    ".html");
+                            + "' type='video/mp4'></video></body></html>", AttachmentOptions.withFileExtension(".html"));
         } catch (RuntimeException ignored) {
             // dead session — skip, never mask the test failure
         }
@@ -89,16 +88,14 @@ public final class Attachments {
         }
         try {
             HarCapture.collectHarJson().ifPresent(bytes -> {
-                Allure.addAttachment(
+                Allure.attachment(
                         "capture.har",
                         "application/json",
-                        new ByteArrayInputStream(bytes),
-                        ".har");
-                Allure.addAttachment(
+                        new ByteArrayInputStream(bytes), AttachmentOptions.withFileExtension(".har"));
+                Allure.attachment(
                         "HAR Viewer",
                         "text/html",
-                        HarViewerHtml.render(bytes),
-                        ".html");
+                        HarViewerHtml.render(bytes), AttachmentOptions.withFileExtension(".html"));
             });
         } catch (RuntimeException ignored) {
             // dead session or Allure I/O — skip, never mask the test failure

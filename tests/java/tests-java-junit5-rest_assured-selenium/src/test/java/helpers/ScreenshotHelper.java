@@ -2,6 +2,7 @@ package helpers;
 
 import config.ConfigReader;
 import io.qameta.allure.Allure;
+import io.qameta.allure.AttachmentOptions;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.WebElement;
 
@@ -90,7 +91,7 @@ public final class ScreenshotHelper {
     }
 
     private static void attachPng(String name, byte[] png) {
-        Allure.addAttachment(name, "image/png", new ByteArrayInputStream(png), ".png");
+        Allure.attachment(name, "image/png", new ByteArrayInputStream(png), AttachmentOptions.withFileExtension(".png"));
     }
 
     private static boolean shouldUpdateScreenshots() {

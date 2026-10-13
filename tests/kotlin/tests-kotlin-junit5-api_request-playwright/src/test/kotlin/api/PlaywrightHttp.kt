@@ -45,6 +45,7 @@ object PlaywrightHttp {
         Runtime.getRuntime().addShutdownHook(Thread { close() })
     }
 
+    @Synchronized
     fun request(
         method: String,
         path: String,
@@ -91,8 +92,8 @@ object PlaywrightHttp {
             return
         }
         try {
-            Allure.addAttachment("Request", "text/plain", "$method $url")
-            Allure.addAttachment("Response", "text/plain", "$status\n$body")
+            Allure.attachment("Request", "text/plain", "$method $url")
+            Allure.attachment("Response", "text/plain", "$status\n$body")
         } catch (_: RuntimeException) {
             // Allure context is optional; never mask the HTTP call.
         }

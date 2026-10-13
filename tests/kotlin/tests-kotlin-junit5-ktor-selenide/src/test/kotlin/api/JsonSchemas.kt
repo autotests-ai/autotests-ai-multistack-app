@@ -2,22 +2,20 @@ package api
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.networknt.schema.JsonSchemaFactory
-import com.networknt.schema.SpecVersion
+import com.networknt.schema.InputFormat
+import com.networknt.schema.SchemaRegistry
+import com.networknt.schema.SpecificationVersion
 import org.junit.jupiter.api.Assertions.assertTrue
 
 object JsonSchemas {
 
-    private val mapper = ObjectMapper()
-    private val factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7)
+    private val registry = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_7)
 
     fun assertMatches(body: String, name: String) {
         val stream = checkNotNull(javaClass.getResourceAsStream("/schemas/$name")) {
             "missing classpath schema $name"
         }
-        val schema = factory.getSchema(stream)
-        val node = mapper.readTree(body)
-        val errors = schema.validate(node)
+        val errors = registry.getSchema(stream).validate(body, InputFormat.JSON)
         assertTrue(errors.isEmpty()) {
             "$name: ${errors.joinToString("; ") { it.message }} — $body"
         }

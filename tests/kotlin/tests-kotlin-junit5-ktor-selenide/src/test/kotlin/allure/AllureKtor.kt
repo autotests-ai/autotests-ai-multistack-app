@@ -16,14 +16,14 @@ object AllureKtor {
 
     val plugin = createClientPlugin("AllureKtor") {
         onRequest { request, _ ->
-            Allure.addAttachment(
+            Allure.attachment(
                 "Request",
                 "text/plain",
                 "${request.method.value} ${request.url}",
             )
         }
         onResponse { response ->
-            Allure.addAttachment(
+            Allure.attachment(
                 "Response",
                 "text/plain",
                 "${response.status}",

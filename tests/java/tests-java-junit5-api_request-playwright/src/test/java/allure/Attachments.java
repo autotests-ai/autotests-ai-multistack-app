@@ -5,6 +5,7 @@ import helpers.HarCapture;
 import helpers.HarViewerHtml;
 import helpers.SelenoidPlaywrightEndpoint;
 import io.qameta.allure.Allure;
+import io.qameta.allure.AttachmentOptions;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -19,11 +20,11 @@ public final class Attachments {
 
     public static void screenshot(Page page, String name) {
         try {
-            Allure.addAttachment(
+            Allure.attachment(
                     name,
                     "image/png",
                     new ByteArrayInputStream(page.screenshot()),
-                    "png");
+                    AttachmentOptions.withFileExtension(".png"));
         } catch (RuntimeException ignored) {
             // dead session — skip, never mask the test failure
         }
@@ -31,7 +32,7 @@ public final class Attachments {
 
     public static void pageSource(Page page) {
         try {
-            Allure.addAttachment("Page source", "text/html", page.content(), ".html");
+            Allure.attachment("Page source", "text/html", page.content(), AttachmentOptions.withFileExtension(".html"));
         } catch (RuntimeException ignored) {
             // dead session — skip, never mask the test failure
         }
@@ -42,7 +43,7 @@ public final class Attachments {
             return;
         }
         try {
-            Allure.addAttachment("Browser console", "text/plain", text, ".txt");
+            Allure.attachment("Browser console", "text/plain", text, AttachmentOptions.withFileExtension(".txt"));
         } catch (RuntimeException ignored) {
             // Allure I/O — skip, never mask the test failure
         }
@@ -61,11 +62,10 @@ public final class Attachments {
                 return name.endsWith(".webm") || name.endsWith(".mp4");
             }).findFirst().ifPresent(file -> {
                 try {
-                    Allure.addAttachment(
+                    Allure.attachment(
                             "Video",
                             "video/webm",
-                            new ByteArrayInputStream(Files.readAllBytes(file)),
-                            ".webm");
+                            new ByteArrayInputStream(Files.readAllBytes(file)), AttachmentOptions.withFileExtension(".webm"));
                 } catch (IOException ignored) {
                     // temp video is best-effort
                 }
@@ -86,13 +86,12 @@ public final class Attachments {
             return;
         }
         try {
-            Allure.addAttachment(
+            Allure.attachment(
                     "Video",
                     "text/html",
                     "<html><body><video width='100%' height='100%' controls autoplay><source src='"
                             + videoUrl
-                            + "' type='video/mp4'></video></body></html>",
-                    ".html");
+                            + "' type='video/mp4'></video></body></html>", AttachmentOptions.withFileExtension(".html"));
         } catch (RuntimeException ignored) {
             // Allure I/O — skip, never mask the test failure
         }
@@ -106,16 +105,14 @@ public final class Attachments {
         try {
             Optional<byte[]> har = HarCapture.collectHarJson(harPath);
             har.ifPresent(bytes -> {
-                Allure.addAttachment(
+                Allure.attachment(
                         "capture.har",
                         "application/json",
-                        new ByteArrayInputStream(bytes),
-                        ".har");
-                Allure.addAttachment(
+                        new ByteArrayInputStream(bytes), AttachmentOptions.withFileExtension(".har"));
+                Allure.attachment(
                         "HAR Viewer",
                         "text/html",
-                        HarViewerHtml.render(bytes),
-                        ".html");
+                        HarViewerHtml.render(bytes), AttachmentOptions.withFileExtension(".html"));
             });
         } catch (RuntimeException ignored) {
             // dead session or Allure I/O — skip, never mask the test failure

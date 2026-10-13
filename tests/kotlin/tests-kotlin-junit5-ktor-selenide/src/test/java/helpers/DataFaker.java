@@ -15,7 +15,7 @@ public final class DataFaker {
     }
 
     public static String username() {
-        String base = FAKER.internet().username().replaceAll("[^A-Za-z0-9]", "");
+        String base = FAKER.credentials().username().replaceAll("[^A-Za-z0-9]", "");
         if (base.length() < 3) {
             base = "user" + base;
         }
@@ -27,7 +27,7 @@ public final class DataFaker {
 
     /** Meets backend password {@code @Size(min = 6)}. */
     public static String password() {
-        return FAKER.internet().password(8, 16);
+        return FAKER.credentials().password(8, 16);
     }
 
     /** Exactly {@code @Size(min = 3)} — unique hex slice. */

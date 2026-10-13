@@ -18,11 +18,9 @@ public final class AllureRestAssuredFilters {
     }
 
     public static AllureRestAssured create(TestConfig config) {
-        AllureRestAssured filter = new AllureRestAssured();
-        if ("colored".equalsIgnoreCase(config.allureRestAssuredListenerStyle())) {
-            filter.setRequestTemplate(REQUEST_TEMPLATE);
-            filter.setResponseTemplate(RESPONSE_TEMPLATE);
-        }
-        return filter;
+        // allure-java 3.x dropped freemarker templates (setRequestTemplate/setResponseTemplate);
+        // the structured HttpExchange attachment is rendered by the Allure 3 report itself.
+        // tpl/*.ftl still feeds helpers.AllureHttpHtml (allure-attachments 2.35.5 pin).
+        return new AllureRestAssured();
     }
 }
