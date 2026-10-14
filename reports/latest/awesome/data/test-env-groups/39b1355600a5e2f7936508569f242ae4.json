@@ -1,1 +1,1 @@
-{"id":"39b1355600a5e2f7936508569f242ae4","fullName":"dev.multistack.app.config.SecurityChainTest.openapiDocsPermitAll","name":"GET /api/docs is public","status":"passed","testResultsByEnv":{"default":"8019efc7b87ccc910588ee54198c38c1"}}
+{"id":"39b1355600a5e2f7936508569f242ae4","fullName":"dev.multistack.app.config.SecurityChainTest.openapiDocsPermitAll","name":"GET /api/docs is public","status":"passed","testResultsByEnv":{"default":"9722a079dbbd6098d3901d314f02fd3f"}}

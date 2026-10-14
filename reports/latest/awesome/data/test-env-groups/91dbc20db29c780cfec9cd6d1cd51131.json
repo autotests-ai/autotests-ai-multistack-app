@@ -1,1 +1,1 @@
-{"id":"91dbc20db29c780cfec9cd6d1cd51131","fullName":"dev.multistack.app.controller.AuthControllerTest.logoutReturnsNoContent","name":"POST /api/auth/logout returns 204","status":"passed","testResultsByEnv":{"default":"4ba65f23b83281801d4259c80cdfcfe1"}}
+{"id":"91dbc20db29c780cfec9cd6d1cd51131","fullName":"dev.multistack.app.controller.AuthControllerTest.logoutReturnsNoContent","name":"POST /api/auth/logout returns 204","status":"passed","testResultsByEnv":{"default":"5992bb9fd7ae25dadf39835f20a98cdb"}}

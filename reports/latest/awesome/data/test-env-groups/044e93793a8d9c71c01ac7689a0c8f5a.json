@@ -1,1 +1,1 @@
-{"id":"044e93793a8d9c71c01ac7689a0c8f5a","fullName":"dev.multistack.app.config.SecurityChainTest.unmappedApiPathWithTokenIsNotFound","name":"unmapped /api/** path with a valid token is 404, not 401","status":"passed","testResultsByEnv":{"default":"a57e4163ebf0bc516e1580e4fffab0ee"}}
+{"id":"044e93793a8d9c71c01ac7689a0c8f5a","fullName":"dev.multistack.app.config.SecurityChainTest.unmappedApiPathWithTokenIsNotFound","name":"unmapped /api/** path with a valid token is 404, not 401","status":"passed","testResultsByEnv":{"default":"d9a3ddb7202bbfad520dbca9d9b683c3"}}

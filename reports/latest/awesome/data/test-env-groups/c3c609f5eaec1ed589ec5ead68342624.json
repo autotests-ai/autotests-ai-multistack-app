@@ -1,0 +1,1 @@
+{"id":"c3c609f5eaec1ed589ec5ead68342624","fullName":"tests.api.AuthApiTests.registerRejectsEmptyUsername","name":"POST /api/auth/register rejects an empty username with 400","status":"passed","testResultsByEnv":{"default":"c13d89a2ebbbd4d822ea7f23999c8bb1"}}
