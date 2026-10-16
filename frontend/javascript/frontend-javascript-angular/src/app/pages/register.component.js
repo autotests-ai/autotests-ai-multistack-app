@@ -35,22 +35,22 @@ import { registerMessages } from '../lib/messages.js';
             <label
               app-plaque-field
               [label]="copy().register.loginLabel"
-              [controlId]="'login-input'"
+              [controlId]="'register-login-input'"
               [controlName]="'username'"
               [type]="'text'"
               [autocomplete]="'username'"
-              [testId]="'login-input'"
+              [testId]="'register-login-input'"
               [value]="username()"
               (valueChange)="username.set($event)"
             ></label>
             <label
               app-plaque-field
               [label]="copy().register.passwordLabel"
-              [controlId]="'password-input'"
+              [controlId]="'register-password-input'"
               [controlName]="'password'"
               [type]="'password'"
               [autocomplete]="'new-password'"
-              [testId]="'password-input'"
+              [testId]="'register-password-input'"
               [value]="password()"
               (valueChange)="password.set($event)"
             ></label>
@@ -67,18 +67,18 @@ import { registerMessages } from '../lib/messages.js';
             ></label>
           </div>
 
-          <p id="error-message" class="auth-error" aria-live="polite" data-testid="error-message">
+          <p id="register-error-message" class="auth-error" aria-live="polite" data-testid="register-error-message">
             {{ errorText() }}
           </p>
 
           <div class="auth-form__actions">
             <button
               app-button
-              id="submit-button"
+              id="register-submit-button"
               type="submit"
               class="btn--block"
               [variant]="'primary'"
-              data-testid="submit-button"
+              data-testid="register-submit-button"
               [disabled]="submitting()"
             >
               {{ copy().register.submit }}

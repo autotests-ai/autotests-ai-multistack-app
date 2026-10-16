@@ -17,11 +17,11 @@ type ErrorState =
   | { type: 'api'; message: string };
 
 const registerForm = document.querySelector<HTMLFormElement>('#register-form');
-const loginInput = document.querySelector<HTMLInputElement>('#login-input');
-const passwordInput = document.querySelector<HTMLInputElement>('#password-input');
+const loginInput = document.querySelector<HTMLInputElement>('#register-login-input');
+const passwordInput = document.querySelector<HTMLInputElement>('#register-password-input');
 const confirmPasswordInput = document.querySelector<HTMLInputElement>('#confirm-password-input');
-const errorMessage = document.querySelector<HTMLElement>('#error-message');
-const submitButton = document.querySelector<HTMLButtonElement>('#submit-button');
+const errorMessage = document.querySelector<HTMLElement>('#register-error-message');
+const submitButton = document.querySelector<HTMLButtonElement>('#register-submit-button');
 const loginLink = document.querySelector<HTMLAnchorElement>('[data-testid="login-link"]');
 
 let error: ErrorState = { type: 'none' };

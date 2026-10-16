@@ -104,20 +104,20 @@ async function handleSubmit(event) {
           <PlaqueField
             v-model="username"
             :label="copy.register.loginLabel"
-            id="login-input"
+            id="register-login-input"
             name="username"
             type="text"
             autocomplete="username"
-            data-testid="login-input"
+            data-testid="register-login-input"
           />
           <PlaqueField
             v-model="password"
             :label="copy.register.passwordLabel"
-            id="password-input"
+            id="register-password-input"
             name="password"
             type="password"
             autocomplete="new-password"
-            data-testid="password-input"
+            data-testid="register-password-input"
           />
           <PlaqueField
             v-model="confirmPassword"
@@ -130,17 +130,17 @@ async function handleSubmit(event) {
           />
         </div>
 
-        <p id="error-message" class="auth-error" aria-live="polite" data-testid="error-message">
+        <p id="register-error-message" class="auth-error" aria-live="polite" data-testid="register-error-message">
           {{ errorText }}
         </p>
 
         <div class="auth-form__actions">
           <Button
-            id="submit-button"
+            id="register-submit-button"
             type="submit"
             variant="primary"
             block
-            data-testid="submit-button"
+            data-testid="register-submit-button"
             :disabled="submitting"
           >
             {{ copy.register.submit }}

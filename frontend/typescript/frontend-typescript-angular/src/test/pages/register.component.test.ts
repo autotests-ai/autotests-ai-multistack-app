@@ -49,10 +49,10 @@ describe('RegisterPage', () => {
 
     expect(screen.getByTestId('register-panel')).toBeInTheDocument();
     expect(screen.getByTestId('register-form-title')).toHaveTextContent('Register');
-    expect(screen.getByTestId('login-input')).toBeInTheDocument();
-    expect(screen.getByTestId('password-input')).toBeInTheDocument();
+    expect(screen.getByTestId('register-login-input')).toBeInTheDocument();
+    expect(screen.getByTestId('register-password-input')).toBeInTheDocument();
     expect(screen.getByTestId('confirm-password-input')).toBeInTheDocument();
-    expect(screen.getByTestId('submit-button')).toHaveTextContent('Register');
+    expect(screen.getByTestId('register-submit-button')).toHaveTextContent('Register');
     expect(screen.getByTestId('login-link')).toBeInTheDocument();
   });
 
@@ -60,12 +60,12 @@ describe('RegisterPage', () => {
     const user = userEvent.setup();
     await renderRegister();
 
-    await user.type(screen.getByTestId('login-input'), 'newuser');
-    await user.type(screen.getByTestId('password-input'), 'password123');
+    await user.type(screen.getByTestId('register-login-input'), 'newuser');
+    await user.type(screen.getByTestId('register-password-input'), 'password123');
     await user.type(screen.getByTestId('confirm-password-input'), 'password124');
-    await user.click(screen.getByTestId('submit-button'));
+    await user.click(screen.getByTestId('register-submit-button'));
 
-    expect(screen.getByTestId('error-message')).toHaveTextContent('Passwords do not match');
+    expect(screen.getByTestId('register-error-message')).toHaveTextContent('Passwords do not match');
   });
 
   it('saves the session and follows redirectUrl on a successful registration', async () => {
@@ -82,10 +82,10 @@ describe('RegisterPage', () => {
     );
     const { router } = await renderRegister();
 
-    await user.type(screen.getByTestId('login-input'), 'newuser');
-    await user.type(screen.getByTestId('password-input'), 'password123');
+    await user.type(screen.getByTestId('register-login-input'), 'newuser');
+    await user.type(screen.getByTestId('register-password-input'), 'password123');
     await user.type(screen.getByTestId('confirm-password-input'), 'password123');
-    await user.click(screen.getByTestId('submit-button'));
+    await user.click(screen.getByTestId('register-submit-button'));
 
     await waitFor(() => expect(localStorage.getItem('authToken')).toBe('new-token'));
     await waitFor(() => expect(router.url).toBe('/'));
@@ -105,13 +105,13 @@ describe('RegisterPage', () => {
     );
     await renderRegister();
 
-    await user.type(screen.getByTestId('login-input'), 'newuser');
-    await user.type(screen.getByTestId('password-input'), 'password123');
+    await user.type(screen.getByTestId('register-login-input'), 'newuser');
+    await user.type(screen.getByTestId('register-password-input'), 'password123');
     await user.type(screen.getByTestId('confirm-password-input'), 'password123');
-    await user.click(screen.getByTestId('submit-button'));
+    await user.click(screen.getByTestId('register-submit-button'));
 
     await waitFor(() =>
-      expect(screen.getByTestId('error-message')).toHaveTextContent('Login already exists'),
+      expect(screen.getByTestId('register-error-message')).toHaveTextContent('Login already exists'),
     );
     expect(localStorage.getItem('authToken')).toBeNull();
   });
@@ -127,38 +127,38 @@ describe('RegisterPage', () => {
     const user = userEvent.setup();
     await renderRegister();
 
-    await user.type(screen.getByTestId('login-input'), 'newuser');
-    await user.type(screen.getByTestId('password-input'), 'password123');
+    await user.type(screen.getByTestId('register-login-input'), 'newuser');
+    await user.type(screen.getByTestId('register-password-input'), 'password123');
     await user.type(screen.getByTestId('confirm-password-input'), 'password124');
-    await user.click(screen.getByTestId('submit-button'));
-    expect(screen.getByTestId('error-message')).toHaveTextContent('Passwords do not match');
+    await user.click(screen.getByTestId('register-submit-button'));
+    expect(screen.getByTestId('register-error-message')).toHaveTextContent('Passwords do not match');
 
     dispatchLang('ru');
 
     expect(screen.getByTestId('register-form-title')).toHaveTextContent(ru.register.title);
-    expect(screen.getByTestId('submit-button')).toHaveTextContent(ru.register.submit);
+    expect(screen.getByTestId('register-submit-button')).toHaveTextContent(ru.register.submit);
     expect(screen.getByTestId('login-link')).toHaveTextContent(ru.register.loginLink);
-    expect(screen.getByTestId('error-message')).toHaveTextContent(ru.register.errorPasswordMismatch);
+    expect(screen.getByTestId('register-error-message')).toHaveTextContent(ru.register.errorPasswordMismatch);
   });
 
   it('retranslates a validation error and clears it when fields become valid', async () => {
     const user = userEvent.setup();
     await renderRegister();
 
-    await user.type(screen.getByTestId('login-input'), 'ab');
-    await user.type(screen.getByTestId('password-input'), 'password123');
+    await user.type(screen.getByTestId('register-login-input'), 'ab');
+    await user.type(screen.getByTestId('register-password-input'), 'password123');
     await user.type(screen.getByTestId('confirm-password-input'), 'password123');
-    await user.click(screen.getByTestId('submit-button'));
-    expect(screen.getByTestId('error-message')).toHaveTextContent(
+    await user.click(screen.getByTestId('register-submit-button'));
+    expect(screen.getByTestId('register-error-message')).toHaveTextContent(
       'Login must be at least 3 characters',
     );
 
     dispatchLang('ru');
-    expect(screen.getByTestId('error-message')).toHaveTextContent(
+    expect(screen.getByTestId('register-error-message')).toHaveTextContent(
       'Логин должен быть не короче 3 символов',
     );
 
-    await user.type(screen.getByTestId('login-input'), 'c');
-    expect(screen.getByTestId('error-message')).toHaveTextContent('');
+    await user.type(screen.getByTestId('register-login-input'), 'c');
+    expect(screen.getByTestId('register-error-message')).toHaveTextContent('');
   });
 });

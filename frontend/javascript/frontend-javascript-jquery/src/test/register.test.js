@@ -25,10 +25,10 @@ async function renderRegister() {
 }
 
 async function fillForm(user, { username, password, confirmPassword }) {
-  await user.type(screen.getByTestId('login-input'), username);
-  await user.type(screen.getByTestId('password-input'), password);
+  await user.type(screen.getByTestId('register-login-input'), username);
+  await user.type(screen.getByTestId('register-password-input'), password);
   await user.type(screen.getByTestId('confirm-password-input'), confirmPassword);
-  await user.click(screen.getByTestId('submit-button'));
+  await user.click(screen.getByTestId('register-submit-button'));
 }
 
 beforeAll(() => {
@@ -75,7 +75,7 @@ describe('register page', () => {
       confirmPassword: 'password2',
     });
 
-    expect(screen.getByTestId('error-message')).toHaveTextContent('Passwords do not match');
+    expect(screen.getByTestId('register-error-message')).toHaveTextContent('Passwords do not match');
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -121,10 +121,10 @@ describe('register page', () => {
     });
 
     await waitFor(() =>
-      expect(screen.getByTestId('error-message')).toHaveTextContent('Username already taken'),
+      expect(screen.getByTestId('register-error-message')).toHaveTextContent('Username already taken'),
     );
     expect(localStorage.getItem('authToken')).toBeNull();
-    expect(screen.getByTestId('submit-button')).not.toBeDisabled();
+    expect(screen.getByTestId('register-submit-button')).not.toBeDisabled();
   });
 
   it('reads zds-lang after a second render', async () => {
@@ -161,18 +161,18 @@ describe('register page', () => {
       password: 'password1',
       confirmPassword: 'password2',
     });
-    expect(screen.getByTestId('error-message')).toHaveTextContent('Passwords do not match');
+    expect(screen.getByTestId('register-error-message')).toHaveTextContent('Passwords do not match');
 
     dispatchLang('ru');
 
     expect(screen.getByTestId('register-form-title')).toHaveTextContent(window.I18n.ru.register.title);
-    expect(screen.getByTestId('submit-button')).toHaveTextContent(window.I18n.ru.register.submit);
+    expect(screen.getByTestId('register-submit-button')).toHaveTextContent(window.I18n.ru.register.submit);
     expect(screen.getByTestId('login-link')).toHaveTextContent(window.I18n.ru.register.loginLink);
     expect(screen.getByTestId('confirm-password-input')).toHaveAttribute(
       'data-testid',
       'confirm-password-input',
     );
-    expect(screen.getByTestId('error-message')).toHaveTextContent(
+    expect(screen.getByTestId('register-error-message')).toHaveTextContent(
       window.I18n.ru.register.errorPasswordMismatch,
     );
     expect(fetchMock).not.toHaveBeenCalled();
@@ -193,11 +193,11 @@ describe('register page', () => {
       confirmPassword: 'password1',
     });
     await waitFor(() =>
-      expect(screen.getByTestId('error-message')).toHaveTextContent('Username already taken'),
+      expect(screen.getByTestId('register-error-message')).toHaveTextContent('Username already taken'),
     );
 
     dispatchLang('ru');
     expect(screen.getByTestId('register-form-title')).toHaveTextContent(window.I18n.ru.register.title);
-    expect(screen.getByTestId('error-message')).toHaveTextContent('Username already taken');
+    expect(screen.getByTestId('register-error-message')).toHaveTextContent('Username already taken');
   });
 });

@@ -31,11 +31,11 @@ $(() => {
   }
 
   const $form = $('[data-testid="register-form"]');
-  const $login = $('[data-testid="login-input"]');
-  const $password = $('[data-testid="password-input"]');
+  const $login = $('[data-testid="register-login-input"]');
+  const $password = $('[data-testid="register-password-input"]');
   const $confirmPassword = $('[data-testid="confirm-password-input"]');
-  const $error = $('[data-testid="error-message"]');
-  const $submit = $('[data-testid="submit-button"]');
+  const $error = $('[data-testid="register-error-message"]');
+  const $submit = $('[data-testid="register-submit-button"]');
   const $loginLink = $('[data-testid="login-link"]');
 
   let lang: Lang = 'en';

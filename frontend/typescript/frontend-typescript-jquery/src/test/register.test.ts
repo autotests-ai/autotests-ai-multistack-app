@@ -27,8 +27,8 @@ function $testId(testId: string): JQuery<HTMLElement> {
 }
 
 function fillForm(username: string, password: string, confirmPassword: string): void {
-  $testId('login-input').val(username);
-  $testId('password-input').val(password);
+  $testId('register-login-input').val(username);
+  $testId('register-password-input').val(password);
   $testId('confirm-password-input').val(confirmPassword);
 }
 
@@ -54,7 +54,7 @@ describe('register', () => {
     expect($testId('register-panel')).toHaveLength(1);
     expect($testId('register-form-title').text()).toBe('Register');
     expect($testId('confirm-password-input').attr('name')).toBe('confirm-password');
-    expect($testId('submit-button').text()).toBe('Register');
+    expect($testId('register-submit-button').text()).toBe('Register');
     expect($testId('login-link').attr('href')).toBe('/login');
     expect(
       window.headerConfig?.nav.find((item) => item.testid === 'header-nav-register')?.active,
@@ -67,7 +67,7 @@ describe('register', () => {
     fillForm('user1', 'password1', 'password2');
     submit();
 
-    expect($testId('error-message').text()).toBe('Passwords do not match');
+    expect($testId('register-error-message').text()).toBe('Passwords do not match');
     expect(fetchCalls('POST', '/api/auth/register')).toHaveLength(0);
   });
 
@@ -77,7 +77,7 @@ describe('register', () => {
     fillForm('ab', 'password1', 'password1');
     submit();
 
-    expect($testId('error-message').text()).toBe('Login must be at least 3 characters');
+    expect($testId('register-error-message').text()).toBe('Login must be at least 3 characters');
     expect(fetchCalls('POST', '/api/auth/register')).toHaveLength(0);
   });
 
@@ -108,9 +108,9 @@ describe('register', () => {
     submit();
 
     await vi.waitFor(() => {
-      expect($testId('error-message').text()).toBe('Username already taken');
+      expect($testId('register-error-message').text()).toBe('Username already taken');
     });
-    expect($testId('submit-button').prop('disabled')).toBe(false);
+    expect($testId('register-submit-button').prop('disabled')).toBe(false);
     expect(localStorage.getItem('authToken')).toBeNull();
   });
 
@@ -127,14 +127,14 @@ describe('register', () => {
 
     fillForm('user1', 'password1', 'password2');
     submit();
-    expect($testId('error-message').text()).toBe('Passwords do not match');
+    expect($testId('register-error-message').text()).toBe('Passwords do not match');
 
     dispatchLang('ru');
 
     expect($testId('register-form-title').text()).toBe(ru.register.title);
-    expect($testId('submit-button').text()).toBe(ru.register.submit);
+    expect($testId('register-submit-button').text()).toBe(ru.register.submit);
     expect($testId('login-link').text()).toBe(ru.register.loginLink);
-    expect($testId('error-message').text()).toBe(ru.register.errorPasswordMismatch);
+    expect($testId('register-error-message').text()).toBe(ru.register.errorPasswordMismatch);
     expect(document.documentElement.lang).toBe('ru');
   });
 
@@ -143,9 +143,9 @@ describe('register', () => {
 
     fillForm('ab', 'password1', 'password1');
     submit();
-    expect($testId('error-message').text()).toBe('Login must be at least 3 characters');
+    expect($testId('register-error-message').text()).toBe('Login must be at least 3 characters');
 
     dispatchLang('ru');
-    expect($testId('error-message').text()).toBe('Логин должен быть не короче 3 символов');
+    expect($testId('register-error-message').text()).toBe('Логин должен быть не короче 3 символов');
   });
 });

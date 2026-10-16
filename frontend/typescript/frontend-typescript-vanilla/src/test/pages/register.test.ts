@@ -19,8 +19,8 @@ async function renderRegister(): Promise<void> {
 }
 
 function submit(username: string, password: string, confirmPassword: string): void {
-  testId<HTMLInputElement>('login-input').value = username;
-  testId<HTMLInputElement>('password-input').value = password;
+  testId<HTMLInputElement>('register-login-input').value = username;
+  testId<HTMLInputElement>('register-password-input').value = password;
   testId<HTMLInputElement>('confirm-password-input').value = confirmPassword;
   testId('register-form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 }
@@ -66,7 +66,7 @@ describe('register page', () => {
     submit('ab', 'password1', 'password2');
 
     await waitFor(() =>
-      expect(testId('error-message')).toHaveTextContent('Login must be at least 3 characters'),
+      expect(testId('register-error-message')).toHaveTextContent('Login must be at least 3 characters'),
     );
     expect(fetchCalls('/api/auth/register')).toHaveLength(0);
   });
@@ -77,7 +77,7 @@ describe('register page', () => {
     submit('user1', 'password1', 'password2');
 
     await waitFor(() =>
-      expect(testId('error-message')).toHaveTextContent('Passwords do not match'),
+      expect(testId('register-error-message')).toHaveTextContent('Passwords do not match'),
     );
     expect(fetchCalls('/api/auth/register')).toHaveLength(0);
   });
@@ -103,9 +103,9 @@ describe('register page', () => {
     submit('user1', 'password1', 'password1');
 
     await waitFor(() =>
-      expect(testId('error-message')).toHaveTextContent('Username already exists'),
+      expect(testId('register-error-message')).toHaveTextContent('Username already exists'),
     );
-    expect(testId<HTMLButtonElement>('submit-button').disabled).toBe(false);
+    expect(testId<HTMLButtonElement>('register-submit-button').disabled).toBe(false);
     expect(localStorage.getItem('authToken')).toBeNull();
   });
 
@@ -117,7 +117,7 @@ describe('register page', () => {
 
     submit('user1', 'password1', 'password1');
 
-    await waitFor(() => expect(testId('error-message')).toHaveTextContent('Request failed'));
+    await waitFor(() => expect(testId('register-error-message')).toHaveTextContent('Request failed'));
   });
 
   it('shows the network error copy when the request never lands', async () => {
@@ -127,7 +127,7 @@ describe('register page', () => {
     submit('user1', 'password1', 'password1');
 
     await waitFor(() =>
-      expect(testId('error-message')).toHaveTextContent(
+      expect(testId('register-error-message')).toHaveTextContent(
         'Network error. Check your connection and try again.',
       ),
     );

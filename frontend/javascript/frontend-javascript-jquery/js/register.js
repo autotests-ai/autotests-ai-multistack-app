@@ -3,11 +3,11 @@ $(function () {
   var activeLang = 'en';
 
   const $registerForm = $('[data-testid="register-form"]');
-  const $loginInput = $('[data-testid="login-input"]');
-  const $passwordInput = $('[data-testid="password-input"]');
+  const $loginInput = $('[data-testid="register-login-input"]');
+  const $passwordInput = $('[data-testid="register-password-input"]');
   const $confirmPasswordInput = $('[data-testid="confirm-password-input"]');
-  const $errorMessage = $('[data-testid="error-message"]');
-  const $submitButton = $('[data-testid="submit-button"]');
+  const $errorMessage = $('[data-testid="register-error-message"]');
+  const $submitButton = $('[data-testid="register-submit-button"]');
   const $loginLink = $('[data-testid="login-link"]');
 
   function messages() {
