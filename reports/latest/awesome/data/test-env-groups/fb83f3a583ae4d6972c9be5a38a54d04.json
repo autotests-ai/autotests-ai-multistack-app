@@ -1,1 +1,1 @@
-{"id":"fb83f3a583ae4d6972c9be5a38a54d04","fullName":"dev.multistack.app.service.AuthServiceTest.profileForExistingUser","name":"profile returns username for existing user","status":"passed","testResultsByEnv":{"default":"dffecdca458a0ac2699fccc56db6ce1d"}}
+{"id":"fb83f3a583ae4d6972c9be5a38a54d04","fullName":"dev.multistack.app.service.AuthServiceTest.profileForExistingUser","name":"profile returns username for existing user","status":"passed","testResultsByEnv":{"default":"022762c4d68444d9733538ec447d29c8"}}

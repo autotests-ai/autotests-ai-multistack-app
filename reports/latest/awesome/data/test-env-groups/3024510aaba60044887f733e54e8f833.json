@@ -1,1 +1,1 @@
-{"id":"3024510aaba60044887f733e54e8f833","fullName":"tests.e2e.WelcomePanelScreenshotTests.welcomePanelMatchesScreenshot","name":"Welcome panel matches screenshot at 1280px","status":"passed","testResultsByEnv":{"default":"b4e720cf7ed5ea91e6bbd02f3cc125a1"}}
+{"id":"3024510aaba60044887f733e54e8f833","fullName":"tests.e2e.WelcomePanelScreenshotTests.welcomePanelMatchesScreenshot","name":"Welcome panel matches screenshot at 768px","status":"passed","testResultsByEnv":{"default":"1011e44a443e60e1a6ff2bdafba3afa4"}}

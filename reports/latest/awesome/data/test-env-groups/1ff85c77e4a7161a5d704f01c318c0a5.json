@@ -1,1 +1,1 @@
-{"id":"1ff85c77e4a7161a5d704f01c318c0a5","fullName":"tests.e2e.LoginTests.shouldShowValidationErrorWhenCredentialsAreEmpty","name":"Empty username and password show validation error","status":"passed","testResultsByEnv":{"default":"917d040af1f3065a1699a4dd9c5e21bd"}}
+{"id":"1ff85c77e4a7161a5d704f01c318c0a5","fullName":"tests.e2e.LoginTests.shouldShowValidationErrorWhenCredentialsAreEmpty","name":"Empty username and password show validation error","status":"passed","testResultsByEnv":{"default":"e1faf079ffe4f57d58bd6fb0b4e4fb0a"}}
