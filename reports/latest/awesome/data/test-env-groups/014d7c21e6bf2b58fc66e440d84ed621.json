@@ -1,1 +1,1 @@
-{"id":"014d7c21e6bf2b58fc66e440d84ed621","fullName":"dev.multistack.app.service.JwtServiceTest.isValidRejectsMalformedToken","name":"isValid rejects malformed token","status":"passed","testResultsByEnv":{"default":"2b24b734bfcbbf6223b8293d074ef3df"}}
+{"id":"014d7c21e6bf2b58fc66e440d84ed621","fullName":"dev.multistack.app.service.JwtServiceTest.isValidRejectsMalformedToken","name":"isValid rejects malformed token","status":"passed","testResultsByEnv":{"default":"2f4205601cb6c69461c59087cf0bec2b"}}

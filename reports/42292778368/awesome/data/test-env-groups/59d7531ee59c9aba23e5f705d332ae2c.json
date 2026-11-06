@@ -1,0 +1,1 @@
+{"id":"59d7531ee59c9aba23e5f705d332ae2c","fullName":"dev.multistack.app.controller.AuthControllerTest.meReturnsProfile","name":"GET /api/auth/me returns profile for authenticated user","status":"passed","testResultsByEnv":{"default":"bbf4e84d3ea027ffc6c8e06195efcfb0"}}

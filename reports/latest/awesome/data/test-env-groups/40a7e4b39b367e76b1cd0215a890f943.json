@@ -1,1 +1,1 @@
-{"id":"40a7e4b39b367e76b1cd0215a890f943","fullName":"dev.multistack.app.service.AuthServiceTest.loginWithValidCredentials","name":"login returns token for valid credentials","status":"passed","testResultsByEnv":{"default":"3e078306a8b8dfb7a19af772c122c4a1"}}
+{"id":"40a7e4b39b367e76b1cd0215a890f943","fullName":"dev.multistack.app.service.AuthServiceTest.loginWithValidCredentials","name":"login returns token for valid credentials","status":"passed","testResultsByEnv":{"default":"bb858154d1fc3c4b1af52f0ba4af8ab6"}}
