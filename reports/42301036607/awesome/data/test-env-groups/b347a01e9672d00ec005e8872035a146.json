@@ -1,1 +1,0 @@
-{"id":"b347a01e9672d00ec005e8872035a146","fullName":"dev.multistack.app.config.UserSeederTest.skipsSeedingWhenCredentialsMissing","name":"skips seeding when credentials are not configured username=\"\"\"\" password=\"\"\"\"","status":"passed","testResultsByEnv":{"default":"cb893fe26a989175efd1b708d3f584d6"}}
