@@ -36,7 +36,7 @@ public final class LocalChromePin {
     public static Binaries resolve(String browserVersion) {
         if (browserVersion == null || browserVersion.isBlank()) {
             throw new IllegalStateException(
-                    "browserVersion is required for local Chrome (canon: 148). "
+                    "browserVersion is required for local Chrome (canon: 157). "
                             + "Do not run e2e on system Chrome without explicit override.");
         }
         var version = pinnedVersion();

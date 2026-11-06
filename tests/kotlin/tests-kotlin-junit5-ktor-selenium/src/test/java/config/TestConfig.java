@@ -60,7 +60,7 @@ public interface TestConfig extends Config {
     @DefaultValue("chrome")
     String browser();
 
-    @DefaultValue("148")
+    @DefaultValue("157")
     String browserVersion();
 
     @DefaultValue("1920x1280")

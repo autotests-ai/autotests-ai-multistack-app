@@ -138,7 +138,7 @@ fn screenshot_browser() -> String {
 fn screenshot_browser_major() -> String {
     local_chrome_pin::pinned_version()
         .map(|v| local_chrome_pin::major(&v))
-        .unwrap_or_else(|_| "148".into())
+        .unwrap_or_else(|_| "157".into())
 }
 
 fn os_family() -> String {

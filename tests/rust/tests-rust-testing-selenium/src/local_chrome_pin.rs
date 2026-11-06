@@ -19,7 +19,7 @@ pub fn apply(browser_version: &str) -> Result<ChromeBinaries, String> {
 pub fn resolve(browser_version: &str) -> Result<ChromeBinaries, String> {
     if browser_version.trim().is_empty() {
         return Err(
-            "browserVersion is required for local Chrome (canon: 148). \
+            "browserVersion is required for local Chrome (canon: 157). \
              Do not run e2e on system Chrome without explicit override."
                 .into(),
         );

@@ -83,7 +83,7 @@ func LoadPlaywrightSettings() PlaywrightSettings {
 	}
 	return PlaywrightSettings{
 		Browser:                  firstNonEmpty(os.Getenv("BROWSER"), "chrome"),
-		BrowserVersion:           firstNonEmpty(os.Getenv("BROWSER_VERSION"), "148.0"),
+		BrowserVersion:           firstNonEmpty(os.Getenv("BROWSER_VERSION"), "157.0"),
 		BrowserSize:              firstNonEmpty(os.Getenv("BROWSER_SIZE"), "1740x1080"),
 		Headless:                 envBool("HEADLESS", true),
 		RemoteURL:                strings.TrimSpace(os.Getenv("SELENOID_PLAYWRIGHT_URL")),

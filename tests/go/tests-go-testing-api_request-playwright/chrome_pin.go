@@ -48,7 +48,7 @@ func majorVersion(version string) string {
 // ApplyChromePin rejects a blank or foreign-major browserVersion (Java LocalChromePin.apply).
 func ApplyChromePin(browserVersion string) error {
 	if strings.TrimSpace(browserVersion) == "" {
-		return fmt.Errorf("browserVersion is required for local Chrome (canon: 148). Do not run e2e on system Chrome without explicit override.")
+		return fmt.Errorf("browserVersion is required for local Chrome (canon: 157). Do not run e2e on system Chrome without explicit override.")
 	}
 	pin := PinnedChromeVersion()
 	if majorVersion(browserVersion) != majorVersion(pin) {

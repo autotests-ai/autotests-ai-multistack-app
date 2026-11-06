@@ -35,7 +35,7 @@ impl Default for TestConfig {
             api_health_service: "backend-java-spring".into(),
             welcome_username: "user1".into(),
             browser: "chrome".into(),
-            browser_version: "148".into(),
+            browser_version: "157".into(),
             browser_size: "1920x1280".into(),
             headless: false,
             close_browser_after_each: true,
@@ -238,7 +238,7 @@ pub fn load_config() -> TestConfig {
         browser_version: first_non_empty(&[
             &env_or_empty("BROWSER_VERSION"),
             prop(&values, "browserVersion"),
-            "148",
+            "157",
         ]),
         browser_size: first_non_empty(&[
             &env_or_empty("BROWSER_SIZE"),

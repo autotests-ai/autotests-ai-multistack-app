@@ -31,7 +31,7 @@ LAYER_DESC = {
 
 COMMON_BROWSER = {
     "browser": "chrome",
-    "browserVersion": "148.0",
+    "browserVersion": "157.0",
     "browserSize": "1920x1280",
     "headless": "true",
     "closeBrowserAfterAll": "true",

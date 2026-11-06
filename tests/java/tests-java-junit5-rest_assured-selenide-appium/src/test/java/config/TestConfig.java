@@ -20,7 +20,7 @@ public interface TestConfig extends Config {
     String browser();
 
     /** Selenoid image tag when remoteUrl is set; ignored by local Chrome. */
-    @DefaultValue("148")
+    @DefaultValue("157")
     String browserVersion();
 
     @DefaultValue("1920x1280")

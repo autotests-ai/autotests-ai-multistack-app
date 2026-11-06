@@ -148,7 +148,7 @@ public final class ScreenshotHelper {
     }
 
     /**
-     * Major segment of the screenshot folder ({@code chrome-148/}). Canon PNG
+     * Major segment of the screenshot folder ({@code chrome-157/}). Canon PNG
      * tree is Chrome for Testing; other browsers are sibling folders and need
      * {@code SCREENSHOT_BROWSER} — this major still comes from the Chrome pin.
      */

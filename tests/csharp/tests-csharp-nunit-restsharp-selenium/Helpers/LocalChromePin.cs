@@ -21,7 +21,7 @@ public static class LocalChromePin
         if (string.IsNullOrWhiteSpace(browserVersion))
         {
             throw new InvalidOperationException(
-                "browserVersion is required for local Chrome (canon: 148). "
+                "browserVersion is required for local Chrome (canon: 157). "
                 + "Do not run e2e on system Chrome without explicit override.");
         }
 

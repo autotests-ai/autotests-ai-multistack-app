@@ -31,7 +31,7 @@ internal static class ConfigFiles
             BrowserVersion = FirstNonEmpty(
                 Environment.GetEnvironmentVariable("BROWSER_VERSION"),
                 Get(values, "browserVersion"),
-                "148"),
+                "157"),
             BrowserSize = FirstNonEmpty(
                 Environment.GetEnvironmentVariable("BROWSER_SIZE"),
                 Get(values, "browserSize"),

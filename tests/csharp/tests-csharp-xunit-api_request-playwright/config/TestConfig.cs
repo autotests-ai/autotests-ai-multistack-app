@@ -10,7 +10,7 @@ public sealed class TestConfig
     public string WelcomeUsername { get; init; } = "user1";
     public bool EnableAllureRestAssuredListener { get; init; }
     public string Browser { get; init; } = "chrome";
-    public string BrowserVersion { get; init; } = "148";
+    public string BrowserVersion { get; init; } = "157";
     public string BrowserSize { get; init; } = "1920x1280";
     public bool Headless { get; init; }
     public bool CloseBrowserAfterEach { get; init; } = true;

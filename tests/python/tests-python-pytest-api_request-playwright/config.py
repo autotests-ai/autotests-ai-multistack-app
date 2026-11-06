@@ -117,7 +117,7 @@ def load_config() -> TestConfig:
         api_base_url=api,
         api_health_service=os.environ.get("API_HEALTH_SERVICE", "backend-java-spring"),
         browser=os.environ.get("BROWSER", "chrome"),
-        browser_version=os.environ.get("BROWSER_VERSION", "148.0"),
+        browser_version=os.environ.get("BROWSER_VERSION", "157.0"),
         browser_size=os.environ.get("BROWSER_SIZE", "1740x1080"),
         headless=_bool("HEADLESS", True),
         remote_url=os.environ.get("SELENOID_PLAYWRIGHT_URL", "").strip(),

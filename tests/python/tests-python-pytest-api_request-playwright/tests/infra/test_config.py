@@ -148,7 +148,7 @@ class TestConfig:
         monkeypatch.setenv("SCREENSHOTS_DIR", "")
         monkeypatch.setenv("API_HEALTH_SERVICE", "backend-python-flask")
         monkeypatch.setenv("BROWSER", "chrome")
-        monkeypatch.setenv("BROWSER_VERSION", "148.0")
+        monkeypatch.setenv("BROWSER_VERSION", "157.0")
         monkeypatch.setenv("BROWSER_SIZE", "1280x800")
         monkeypatch.setenv("SELENOID_PLAYWRIGHT_URL", "wss://hub/playwright/playwright-chromium/1.61.1")
         cfg = load_config()
@@ -156,7 +156,7 @@ class TestConfig:
         assert cfg.screenshots_dir == "screenshots"
         assert cfg.api_health_service == "backend-python-flask"
         assert cfg.browser == "chrome"
-        assert cfg.browser_version == "148.0"
+        assert cfg.browser_version == "157.0"
         assert cfg.browser_size == "1280x800"
         assert cfg.remote_url == "wss://hub/playwright/playwright-chromium/1.61.1"
 
