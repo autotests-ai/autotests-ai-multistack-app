@@ -1,1 +1,1 @@
-{"id":"2bbbe53e396d966cd1bceb468a523d14","fullName":"dev.multistack.app.config.JwtAuthFilterTest.ignoresInvalidBearerToken","name":"ignores invalid bearer token","status":"passed","testResultsByEnv":{"default":"d540b6372b3a83810ff65cd9148fbfb5"}}
+{"id":"2bbbe53e396d966cd1bceb468a523d14","fullName":"dev.multistack.app.config.JwtAuthFilterTest.ignoresInvalidBearerToken","name":"ignores invalid bearer token","status":"passed","testResultsByEnv":{"default":"a553a4cb9224294c9a65bb613f83a14b"}}

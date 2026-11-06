@@ -1,0 +1,1 @@
+{"id":"044e93793a8d9c71c01ac7689a0c8f5a","fullName":"dev.multistack.app.config.SecurityChainTest.unmappedApiPathWithTokenIsNotFound","name":"unmapped /api/** path with a valid token is 404, not 401","status":"passed","testResultsByEnv":{"default":"652b1f584eb4960cd9409327bf1863f1"}}

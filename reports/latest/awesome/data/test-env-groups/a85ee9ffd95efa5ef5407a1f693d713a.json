@@ -1,1 +1,1 @@
-{"id":"a85ee9ffd95efa5ef5407a1f693d713a","fullName":"dev.multistack.app.config.SecurityChainTest.unmappedApiPathRequiresAuthentication","name":"unmapped /api/** path requires authentication (catch-all)","status":"passed","testResultsByEnv":{"default":"52b61a32e20dd04cc90796f87145328e"}}
+{"id":"a85ee9ffd95efa5ef5407a1f693d713a","fullName":"dev.multistack.app.config.SecurityChainTest.unmappedApiPathRequiresAuthentication","name":"unmapped /api/** path requires authentication (catch-all)","status":"passed","testResultsByEnv":{"default":"e12ca8fba40e239c1e81deed67d6e3be"}}
