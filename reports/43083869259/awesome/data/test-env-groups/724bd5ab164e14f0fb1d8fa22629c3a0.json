@@ -1,0 +1,1 @@
+{"id":"724bd5ab164e14f0fb1d8fa22629c3a0","fullName":"dev.multistack.app.config.UserSeederTest.skipsSeedingWhenUserExists","name":"skips seeding when user already exists","status":"passed","testResultsByEnv":{"default":"be767c731351099139bbe1dc25d0a1e5"}}
